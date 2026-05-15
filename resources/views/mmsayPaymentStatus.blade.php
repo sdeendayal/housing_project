@@ -209,8 +209,8 @@
         <!-- Menu -->
         <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
 
-            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
-                href="#">
+            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2  text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
+                href="/mmsay.citizen.dashboard">
 
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
                     dashboard
@@ -218,7 +218,7 @@
 
                 Dashboard
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
+            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-surface-variant hover:bg-surface-container-high transition-all"
                 href="/mmsay-payment-status">
 
                 <span class="material-symbols-outlined">
@@ -322,180 +322,337 @@
         </header>
         <!-- Main Canvas -->
         <main class="flex-1 p-margin-mobile md:p-gutter max-w-container-max mx-auto w-full mt-16 md:mt-0 pb-stack-lg">
-
-
-
-
-
-            <div class="mb-stack-lg">
-                <h4><b>Welcome back, Anita Devi</b></h4>
-                <p class="font-body-lg text-body-lg text-on-surface-variant">Application ID: <span
-                        class="font-bold text-primary">HR-MMSAY-2023-8942</span></p>
-            </div>
-            <!-- Status Tracker -->
-            <section
-                class="bg-surface-container-lowest rounded-xl p-stack-md md:p-gutter shadow-sm border border-border-gray mb-stack-lg relative overflow-hidden">
-                <div
-                    class="absolute inset-0 bg-gradient-to-br from-primary-fixed/20 to-transparent pointer-events-none">
-                </div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-stack-md relative z-10">Application
-                    Status</h3>
-                <div
-                    class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center mt-stack-lg gap-6 md:gap-0">
-                    <!-- Progress Line background -->
-                    <div class="hidden md:block absolute top-6 left-8 right-8 h-1 bg-surface-variant z-0 rounded-full">
-                    </div>
-                    <!-- Progress Line active -->
-                    <div class="hidden md:block absolute top-6 left-8 w-1/2 h-1 bg-success-green z-0 rounded-full">
-                    </div>
-                    <!-- Mobile Progress Line -->
-                    <div class="md:hidden absolute left-[27px] top-12 bottom-4 w-1 bg-surface-variant z-0 rounded-full">
-                    </div>
-                    <div class="md:hidden absolute left-[27px] top-12 h-1/2 w-1 bg-success-green z-0 rounded-full">
-                    </div>
-                    <!-- Step 1 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
-                        <div
-                            class="w-10 h-10 rounded-full bg-success-green text-on-primary flex items-center justify-center shadow-sm shrink-0">
-                            <span class="material-symbols-outlined"
-                                style="font-variation-settings: 'FILL' 1;">check</span>
-                        </div>
-                        <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-on-surface">Submitted</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">12 Oct 2023</p>
-                        </div>
-                    </div>
-                    <!-- Step 2 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
-                        <div
-                            class="w-10 h-10 rounded-full bg-success-green text-on-primary flex items-center justify-center shadow-sm shrink-0">
-                            <span class="material-symbols-outlined"
-                                style="font-variation-settings: 'FILL' 1;">check</span>
-                        </div>
-                        <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-on-surface">Verified</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">28 Oct 2023</p>
-                        </div>
-                    </div>
-                    <!-- Step 3 (Current) -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
-                        <div
-                            class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md ring-4 ring-primary/20 shrink-0 relative">
-                            <span class="material-symbols-outlined">real_estate_agent</span>
-                            <span class="absolute w-full h-full rounded-full animate-ping bg-primary opacity-20"></span>
-                        </div>
-                        <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-primary font-bold">Allotted</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">In Progress</p>
-                        </div>
-                    </div>
-                    <!-- Step 4 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
-                        <div
-                            class="w-10 h-10 rounded-full bg-surface-variant text-outline flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined">hourglass_empty</span>
-                        </div>
-                        <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-outline">Pending</p>
-                        </div>
-                    </div>
-                    <!-- Step 5 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
-                        <div
-                            class="w-10 h-10 rounded-full bg-surface-variant text-outline flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined">verified</span>
-                        </div>
-                        <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-outline">Registered</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-
                 <!-- Purchase Date -->
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-
                     <p class="text-sm text-gray-500 mb-2">
                         Purchase Date
                     </p>
-
                     <h4 class="text-2xl font-bold text-[#0B3B66]">
                         12 Oct 2023
                     </h4>
-
                     <div class="mt-4 text-[#0B5CAD]">
                         <span class="material-symbols-outlined">
                             calendar_today
                         </span>
                     </div>
-
                 </div>
-
-
                 <!-- Total Paid -->
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-
                     <p class="text-sm text-gray-500 mb-2">
                         Total Paid Amount
                     </p>
-
                     <h4 class="text-2xl font-bold text-green-700">
                         ₹ 14,50,000
                     </h4>
-
                     <div class="mt-5 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-
                         <div class="bg-green-700 h-full w-[65%] rounded-full"></div>
-
                     </div>
-
                 </div>
-
-
                 <!-- Outstanding -->
                 <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-
                     <p class="text-sm text-gray-500 mb-2">
                         Total Outstanding
                     </p>
-
                     <h4 class="text-2xl font-bold text-red-600">
                         ₹ 7,25,000
                     </h4>
-
                     <div class="mt-4 flex items-center gap-1 text-red-600 text-sm">
-
                         <span class="material-symbols-outlined text-[18px]">
                             warning
                         </span>
-
                         Due in 15 days
+                    </div>
+                </div>
+                <!-- Status -->
+                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                    <p class="text-sm text-gray-500 mb-2">
+                        Flat/Plot Status
+                    </p>
+                    <h4 class="text-2xl font-bold text-[#0B3B66]">
+                        Allotted
+                    </h4>
+                    <div class="mt-4">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                            Category A-1
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-8 flex flex-col gap-6">
+
+                <!-- Payment Action Card -->
+                <div
+                    class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border-l-4 border-green-600">
+
+                    <div>
+                        <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-1">
+                            Next Payment Due
+                        </p>
+
+                        <h2 class="text-3xl font-bold text-[#0B3B66]">
+                            ₹ 1,20,000
+                        </h2>
+
+                        <p class="text-sm text-gray-500 mt-1">
+                            Due Date : 15 Nov 2024
+                        </p>
+                    </div>
+
+                    <div class="flex gap-3 w-full md:w-auto">
+
+                        <button
+                            class="w-full md:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold shadow-md transition-all duration-200">
+
+                            Pay Now
+
+                        </button>
+
+                    </div>
+                </div>
+
+
+                <!-- Payment History -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+                    <!-- Header -->
+                    <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+
+                        <h3 class="text-xl font-bold text-[#0B3B66]">
+                            Payment History
+                        </h3>
+
+                        <div class="flex gap-3">
+
+                            <button class="p-2 rounded-lg hover:bg-gray-100 transition-all">
+
+                                <span class="material-symbols-outlined text-gray-600">
+                                    filter_list
+                                </span>
+
+                            </button>
+
+                            <button class="p-2 rounded-lg hover:bg-gray-100 transition-all">
+
+                                <span class="material-symbols-outlined text-gray-600">
+                                    download
+                                </span>
+
+                            </button>
+
+                        </div>
+                    </div>
+
+
+                    <!-- Table -->
+                    <div class="overflow-x-auto">
+
+                        <table class="w-full">
+
+                            <thead class="bg-gray-50">
+
+                                <tr>
+
+                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                        Receipt No.
+                                    </th>
+
+                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                        Date
+                                    </th>
+
+                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                        Amount
+                                    </th>
+
+                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                        Status
+                                    </th>
+
+                                    <th class="px-5 py-4 text-right text-sm font-semibold text-gray-600">
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody class="divide-y divide-gray-100">
+
+                                <!-- Row -->
+                                <tr class="hover:bg-gray-50 transition-all">
+
+                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                        RCPT/2023/1029
+                                    </td>
+
+                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                        12 Oct 2023
+                                    </td>
+
+                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                        ₹ 5,00,000
+                                    </td>
+
+                                    <td class="px-5 py-4">
+
+                                        <span
+                                            class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+
+                                            Paid
+
+                                        </span>
+
+                                    </td>
+
+                                    <td class="px-5 py-4 text-right">
+
+                                        <button
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                download
+                                            </span>
+
+                                            Receipt
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <!-- Row -->
+                                <tr class="hover:bg-gray-50 transition-all">
+
+                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                        RCPT/2024/0245
+                                    </td>
+
+                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                        15 Jan 2024
+                                    </td>
+
+                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                        ₹ 4,50,000
+                                    </td>
+
+                                    <td class="px-5 py-4">
+
+                                        <span
+                                            class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+
+                                            Paid
+
+                                        </span>
+
+                                    </td>
+
+                                    <td class="px-5 py-4 text-right">
+
+                                        <button
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                download
+                                            </span>
+
+                                            Receipt
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+
+                                <!-- Row -->
+                                <tr class="hover:bg-gray-50 transition-all">
+
+                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                        RCPT/2024/0591
+                                    </td>
+
+                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                        20 May 2024
+                                    </td>
+
+                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                        ₹ 5,00,000
+                                    </td>
+
+                                    <td class="px-5 py-4">
+
+                                        <span
+                                            class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
+
+                                            Paid
+
+                                        </span>
+
+                                    </td>
+
+                                    <td class="px-5 py-4 text-right">
+
+                                        <button
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                download
+                                            </span>
+
+                                            Receipt
+
+                                        </button>
+
+                                    </td>
+
+                                </tr>
+
+                            </tbody>
+
+                        </table>
 
                     </div>
 
                 </div>
 
 
-                <!-- Status -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <!-- Notifications -->
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 border-l-4 border-[#0B5CAD]">
 
-                    <p class="text-sm text-gray-500 mb-2">
-                        Flat/Plot Status
-                    </p>
+                    <h3 class="text-xl font-bold text-[#0B3B66] mb-5">
+                        System Notifications
+                    </h3>
 
-                    <h4 class="text-2xl font-bold text-[#0B3B66]">
-                        Allotted
-                    </h4>
+                    <div class="flex gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100 items-start">
 
-                    <div class="mt-4">
+                        <div class="w-10 h-10 rounded-full bg-[#0B5CAD] text-white flex items-center justify-center">
 
-                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                            <span class="material-symbols-outlined text-[20px]">
+                                info
+                            </span>
 
-                            Category A-1
+                        </div>
 
-                        </span>
+                        <div>
+
+                            <p class="font-semibold text-[#0B3B66]">
+                                Allotment Certificate Available
+                            </p>
+
+                            <p class="text-sm text-gray-600 mt-1 leading-6">
+                                Your allotment certificate for Sector 12 project is now available in the downloads
+                                section.
+                            </p>
+
+                            <p class="text-xs text-gray-400 mt-2">
+                                2 hours ago
+                            </p>
+
+                        </div>
 
                     </div>
 

@@ -21,3 +21,7 @@ Route::get('/mmsay-profile', function () {
     return view('mmsayCitizenProfile');
 });
 
+Route::get('/mmsay-payment-status', function () {
+    return view('mmsayPaymentStatus');
+});
+

@@ -210,7 +210,7 @@
         <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
 
             <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
-                href="#">
+                href="/mmsay.citizen.dashboard">
 
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
                     dashboard
@@ -218,8 +218,18 @@
 
                 Dashboard
             </a>
-
             <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
+                href="/mmsay-payment-status">
+
+                <span class="material-symbols-outlined">
+                    payments
+                </span>
+
+                Payment Status
+
+            </a>
+
+            {{-- <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
                 href="#">
 
                 <span class="material-symbols-outlined">
@@ -227,7 +237,7 @@
                 </span>
 
                 Statutory Docs
-            </a>
+            </a> --}}
 
             <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
                 href="#">
@@ -338,12 +348,7 @@
 
                     </div>
 
-                    <a href="/citizen-dashboard"
-                        class="bg-white text-[#0B3B66] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-100 transition-all">
-
-                        Back to Dashboard
-
-                    </a>
+                   
 
                 </div>
 
@@ -454,27 +459,29 @@
 
         </main>
         <!-- Footer -->
-        <footer
-            class="bg-tertiary text-on-tertiary font-body-sm text-body-sm font-label-sm text-label-sm full-width bottom-0 border-t border-tertiary-container flat w-full mt-auto">
+        <footer class="bg-tertiary text-on-tertiary border-t border-tertiary-container w-full mt-auto">
+
             <div
-                class="py-stack-lg px-margin-mobile md:px-gutter flex flex-col md:flex-row justify-between items-start md:items-center max-w-container-max mx-auto gap-6">
-                <div>
-                    <h4 class="font-headline-md text-headline-md text-on-tertiary mb-2">Haryana Housing For All</h4>
-                    <p class="text-on-tertiary-container">© 2024 Government of Haryana. All rights reserved.</p>
+                class="py-4 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto gap-2">
+
+                <div class="text-center md:text-left leading-5">
+
+                    <p class="text-xs text-on-tertiary-container">
+                        Designed & Developed by <b>Citizen Resources Information Department, Haryana (CRID)</b>
+                    </p>
+
+                    <p class="text-xs text-on-tertiary-container">
+                        Content Owned by <b>Department of Housing For All</b>
+                    </p>
+
+                    <p class="text-xs text-on-tertiary-container mt-1">
+                        <b>© 2026 Department of Housing For All, Government of Haryana, India.</b>
+                    </p>
+
                 </div>
-                <div class="flex flex-wrap gap-4 md:gap-6">
-                    <a class="text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                        href="#">Privacy Policy</a>
-                    <a class="text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                        href="#">Terms of Use</a>
-                    <a class="text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                        href="#">Helpdesk</a>
-                    <a class="text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                        href="#">Sitemap</a>
-                    <a class="text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                        href="#">Digital India</a>
-                </div>
+
             </div>
+
         </footer>
     </div>
 </body>
