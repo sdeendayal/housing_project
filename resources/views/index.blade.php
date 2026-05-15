@@ -115,7 +115,10 @@
     <!-- END: Top Utility Bar -->
     <!-- BEGIN: Header -->
     <header
-        class="bg-primary text-on-primary docked full-width top-0 sticky backdrop-blur-md bg-opacity-90 border-b border-outline-variant shadow-sm z-50">
+        class="text-on-primary docked full-width top-0 sticky border-b border-outline-variant shadow-md z-50
+bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] 
+bg-[url('../header-tp-bg.png')] 
+bg-no-repeat bg-right bg-cover">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <!-- Placeholder for Department Logo -->
@@ -262,48 +265,147 @@
             <div class="grid grid-cols-3 gap-4 mb-6">
 
                 <!-- MMSAY -->
-                <a href="/mmsay-login"
-                    class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
+                <div class="relative group">
 
-                    <span class="material-symbols-outlined text-primary text-4xl"
-                        style="font-variation-settings: 'FILL' 0;">
-                        apartment
-                    </span>
+                    <a href="#"
+                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300">
 
-                    <div>
-                        <div class="text-sm font-bold text-primary">MMSAY</div>
-                        
+                        <span
+                            class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
+                            style="font-variation-settings: 'FILL' 0;">
+                            apartment
+                        </span>
+
+                        <div>
+                            <div class="text-sm font-bold text-primary">
+                                MMSAY
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Dropdown -->
+                    <div
+                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                        <a href="/mmsay-login"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all" target="_blank">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                person
+                            </span>
+
+                            Citizen Login
+                        </a>
+
+                        <a href="/mmsay-login"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100" target="_blank">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                business
+                            </span>
+
+                            Department Login
+                        </a>
+
                     </div>
-                </a>
+
+                </div>
+
 
                 <!-- MMGAY -->
-                <a href="/mmgay-login"
-                    class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-sm transition-shadow relative">
+                <div class="relative group">
 
-                    <span class="material-symbols-outlined text-secondary text-4xl"
-                        style="font-variation-settings: 'FILL' 0;">
-                        domain
-                    </span>                   
+                    <a href="#"
+                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300">
 
-                    <div>
-                        <div class="text-sm font-bold text-primary">MMGAY</div>
-                        
+                        <span
+                            class="material-symbols-outlined text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
+                            style="font-variation-settings: 'FILL' 0;">
+                            domain
+                        </span>
+
+                        <div>
+                            <div class="text-sm font-bold text-primary">
+                                MMGAY
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Dropdown -->
+                    <div
+                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                        <a href="#"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                person
+                            </span>
+
+                            Citizen Login
+                        </a>
+
+                        <a href="#"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                business
+                            </span>
+
+                            Department Login
+                        </a>
+
                     </div>
-                </a>
+
+                </div>
+
 
                 <!-- EWS -->
-                <a href="/ews-login"
-                    class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-sm transition-shadow">
+                <div class="relative group">
 
-                    <span class="material-symbols-outlined text-on-tertiary-container text-4xl"
-                        style="font-variation-settings: 'FILL' 0;">
-                        foundation
-                    </span>
+                    <a href="#"
+                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300">
 
-                    <div>
-                        <div class="text-sm font-bold text-primary">EWS</div>                        
+                        <span
+                            class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
+                            style="font-variation-settings: 'FILL' 0;">
+                            foundation
+                        </span>
+
+                        <div>
+                            <div class="text-sm font-bold text-primary">
+                                EWS
+                            </div>
+                        </div>
+                    </a>
+
+                    <!-- Dropdown -->
+                    <div
+                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                        <a href="#"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                person
+                            </span>
+
+                            Citizen Login
+                        </a>
+
+                        <a href="#"
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                business
+                            </span>
+
+                            Department Login
+                        </a>
+
                     </div>
-                </a>
+
+                </div>
 
             </div>
             <!-- Main Visual / Carousel Area -->
@@ -521,8 +623,8 @@
     <!-- BEGIN: Footer -->
     <footer class="bg-slate-800 text-slate-300 py-8 text-sm">
         <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>© 2024 Department of Housing For All. All Rights Reserved.</p>
-            <p class="mt-2 text-slate-500">Designed &amp; Developed by NIC.</p>
+            <p>© 2026 Department of Housing For All, Government of Haryana, India.</p>
+            <p class="mt-2 text-slate-500">Designed & Developed by Citizen Resources Information Department, Haryana (CRID)</p>
         </div>
     </footer>
     <!-- END: Footer -->
