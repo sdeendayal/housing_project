@@ -179,10 +179,15 @@
         }
     </script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
+    body {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+    }
+
+    .material-symbols-outlined {
+        font-size: 20px;
+    }
+</style>
 </head>
 
 <body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row">
@@ -200,7 +205,7 @@
                     Department of Housing For All
                 </h1>
 
-                <p class="text-sm text-on-surface-variant">
+                <p class="text-xs text-on-surface-variant">
                     Government of Haryana
                 </p>
             </div>
@@ -285,8 +290,7 @@
                         class="md:hidden text-on-primary hover:bg-on-primary-fixed-variant/20 p-2 rounded-full transition-colors">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <span class="font-headline-md text-headline-md font-bold text-on-primary">Citizen Dashboard
-                    </span>
+                    <span class="text-lg md:text-lg font-semibold text-on-primary"> Citizen Dashboard</span>
                 </div>
 
 
@@ -298,7 +302,7 @@
                             account_circle
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Profile
                         </span>
 
@@ -311,7 +315,7 @@
                             logout
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Logout
                         </span>
 
@@ -324,25 +328,30 @@
         <main class="flex-1 p-margin-mobile md:p-gutter max-w-container-max mx-auto w-full mt-16 md:mt-0 pb-stack-lg">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <!-- Purchase Date -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-sm text-gray-500 mb-2">
+                <div
+                    class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300">
+
+                    <p class="text-xs text-gray-500 mb-1">
                         Purchase Date
                     </p>
-                    <h4 class="text-2xl font-bold text-[#0B3B66]">
+
+                    <h4 class="text-lg font-bold text-[#0B3B66]">
                         12 Oct 2023
                     </h4>
-                    <div class="mt-4 text-[#0B5CAD]">
-                        <span class="material-symbols-outlined">
+
+                    <div class="mt-3 text-[#0B5CAD]">
+                        <span class="material-symbols-outlined text-[20px]">
                             calendar_today
                         </span>
                     </div>
+
                 </div>
                 <!-- Total Paid -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-sm text-gray-500 mb-2">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-2">
                         Total Paid Amount
                     </p>
-                    <h4 class="text-2xl font-bold text-green-700">
+                    <h4 class="text-lg font-bold text-green-700">
                         ₹ 14,50,000
                     </h4>
                     <div class="mt-5 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
@@ -350,14 +359,14 @@
                     </div>
                 </div>
                 <!-- Outstanding -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-sm text-gray-500 mb-2">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-2">
                         Total Outstanding
                     </p>
-                    <h4 class="text-2xl font-bold text-red-600">
+                    <h4 class="text-lg font-bold text-red-600">
                         ₹ 7,25,000
                     </h4>
-                    <div class="mt-4 flex items-center gap-1 text-red-600 text-sm">
+                    <div class="mt-4 flex items-center gap-1 text-red-600 text-xs">
                         <span class="material-symbols-outlined text-[18px]">
                             warning
                         </span>
@@ -365,15 +374,15 @@
                     </div>
                 </div>
                 <!-- Status -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
-                    <p class="text-sm text-gray-500 mb-2">
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <p class="text-xs text-gray-500 mb-2">
                         Flat/Plot Status
                     </p>
-                    <h4 class="text-2xl font-bold text-[#0B3B66]">
+                    <h4 class="text-lg font-bold text-[#0B3B66]">
                         Allotted
                     </h4>
                     <div class="mt-4">
-                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
                             Category A-1
                         </span>
                     </div>
@@ -383,18 +392,18 @@
 
                 <!-- Payment Action Card -->
                 <div
-                    class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border-l-4 border-green-600">
+                    class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-5 border-l-4 border-green-600">
 
                     <div>
-                        <p class="text-sm font-semibold text-green-700 uppercase tracking-wide mb-1">
+                        <p class="text-xs font-semibold text-green-700 uppercase tracking-wide mb-1">
                             Next Payment Due
                         </p>
 
-                        <h2 class="text-3xl font-bold text-[#0B3B66]">
+                        <h2 class="text-2xl font-bold text-[#0B3B66]">
                             ₹ 1,20,000
                         </h2>
 
-                        <p class="text-sm text-gray-500 mt-1">
+                        <p class="text-xs text-gray-500 mt-1">
                             Due Date : 15 Nov 2024
                         </p>
                     </div>
@@ -416,9 +425,9 @@
                 <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
                     <!-- Header -->
-                    <div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
 
-                        <h3 class="text-xl font-bold text-[#0B3B66]">
+                        <h3 class="text-lg font-bold text-[#0B3B66]">
                             Payment History
                         </h3>
 
@@ -453,23 +462,23 @@
 
                                 <tr>
 
-                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                                         Receipt No.
                                     </th>
 
-                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                                         Date
                                     </th>
 
-                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                                         Amount
                                     </th>
 
-                                    <th class="px-5 py-4 text-left text-sm font-semibold text-gray-600">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600">
                                         Status
                                     </th>
 
-                                    <th class="px-5 py-4 text-right text-sm font-semibold text-gray-600">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600">
                                         Action
                                     </th>
 
@@ -483,19 +492,19 @@
                                 <!-- Row -->
                                 <tr class="hover:bg-gray-50 transition-all">
 
-                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                    <td class="px-4 py-3 font-medium text-[#0B3B66]">
                                         RCPT/2023/1029
                                     </td>
 
-                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                    <td class="px-4 py-3 text-xs text-gray-600">
                                         12 Oct 2023
                                     </td>
 
-                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                    <td class="px-4 py-3 font-semibold text-green-700">
                                         ₹ 5,00,000
                                     </td>
 
-                                    <td class="px-5 py-4">
+                                    <td class="px-4 py-3">
 
                                         <span
                                             class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
@@ -506,10 +515,10 @@
 
                                     </td>
 
-                                    <td class="px-5 py-4 text-right">
+                                    <td class="px-4 py-3 text-right">
 
                                         <button
-                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-xs font-medium">
 
                                             <span class="material-symbols-outlined text-[18px]">
                                                 download
@@ -527,19 +536,19 @@
                                 <!-- Row -->
                                 <tr class="hover:bg-gray-50 transition-all">
 
-                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                    <td class="px-4 py-3 font-medium text-[#0B3B66]">
                                         RCPT/2024/0245
                                     </td>
 
-                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                    <td class="px-4 py-3 text-xs text-gray-600">
                                         15 Jan 2024
                                     </td>
 
-                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                    <td class="px-4 py-3 font-semibold text-green-700">
                                         ₹ 4,50,000
                                     </td>
 
-                                    <td class="px-5 py-4">
+                                    <td class="px-4 py-3">
 
                                         <span
                                             class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
@@ -550,10 +559,10 @@
 
                                     </td>
 
-                                    <td class="px-5 py-4 text-right">
+                                    <td class="px-4 py-3 text-right">
 
                                         <button
-                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-xs font-medium">
 
                                             <span class="material-symbols-outlined text-[18px]">
                                                 download
@@ -571,19 +580,19 @@
                                 <!-- Row -->
                                 <tr class="hover:bg-gray-50 transition-all">
 
-                                    <td class="px-5 py-4 font-medium text-[#0B3B66]">
+                                    <td class="px-4 py-3 font-medium text-[#0B3B66]">
                                         RCPT/2024/0591
                                     </td>
 
-                                    <td class="px-5 py-4 text-sm text-gray-600">
+                                    <td class="px-4 py-3 text-xs text-gray-600">
                                         20 May 2024
                                     </td>
 
-                                    <td class="px-5 py-4 font-semibold text-green-700">
+                                    <td class="px-4 py-3 font-semibold text-green-700">
                                         ₹ 5,00,000
                                     </td>
 
-                                    <td class="px-5 py-4">
+                                    <td class="px-4 py-3">
 
                                         <span
                                             class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold">
@@ -594,10 +603,10 @@
 
                                     </td>
 
-                                    <td class="px-5 py-4 text-right">
+                                    <td class="px-4 py-3 text-right">
 
                                         <button
-                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-sm font-medium">
+                                            class="inline-flex items-center gap-1 text-[#0B5CAD] hover:underline text-xs font-medium">
 
                                             <span class="material-symbols-outlined text-[18px]">
                                                 download
@@ -621,9 +630,9 @@
 
 
                 <!-- Notifications -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 border-l-4 border-[#0B5CAD]">
+                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 border-l-4 border-[#0B5CAD]">
 
-                    <h3 class="text-xl font-bold text-[#0B3B66] mb-5">
+                    <h3 class="text-lg font-bold text-[#0B3B66] mb-5">
                         System Notifications
                     </h3>
 
@@ -643,7 +652,7 @@
                                 Allotment Certificate Available
                             </p>
 
-                            <p class="text-sm text-gray-600 mt-1 leading-6">
+                            <p class="text-xs text-gray-600 mt-1 leading-6">
                                 Your allotment certificate for Sector 12 project is now available in the downloads
                                 section.
                             </p>
@@ -668,15 +677,15 @@
 
                 <div class="text-center md:text-left leading-5">
 
-                    <p class="text-xs text-on-tertiary-container">
+                    <p class="text-[11px] text-on-tertiary-container">
                         Designed & Developed by <b>Citizen Resources Information Department, Haryana (CRID)</b>
                     </p>
 
-                    <p class="text-xs text-on-tertiary-container">
+                    <p class="text-[11px] text-on-tertiary-container">
                         Content Owned by <b>Department of Housing For All</b>
                     </p>
 
-                    <p class="text-xs text-on-tertiary-container mt-1">
+                    <p class="text-[11px] text-on-tertiary-container mt-1">
                         <b>© 2026 Department of Housing For All, Government of Haryana, India.</b>
                     </p>
 

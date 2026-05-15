@@ -380,27 +380,10 @@
         </div>
     </main>
     <!-- Footer Component -->
-    <footer
-        class="bg-tertiary dark:bg-on-tertiary-fixed full-width bottom-0 border-t border-tertiary-container mt-auto">
-        <div
-            class="w-full py-stack-lg px-margin-mobile md:px-gutter flex flex-col md:flex-row justify-between items-start max-w-container-max mx-auto gap-stack-md">
-            <div>
-                <p class="font-headline-md text-headline-md text-on-tertiary mb-2">Haryana Housing For All</p>
-                <p class="font-body-sm text-body-sm text-on-tertiary-container">© 2024 Government of Haryana. All
-                    rights reserved.</p>
-            </div>
-            <nav class="flex flex-wrap gap-x-stack-lg gap-y-stack-sm">
-                <a class="font-label-sm text-label-sm text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                    href="#">Privacy Policy</a>
-                <a class="font-label-sm text-label-sm text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                    href="#">Terms of Use</a>
-                <a class="font-label-sm text-label-sm text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                    href="#">Helpdesk</a>
-                <a class="font-label-sm text-label-sm text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                    href="#">Sitemap</a>
-                <a class="font-label-sm text-label-sm text-on-tertiary-container hover:text-secondary-fixed-dim underline transition-all focus:ring-2 focus:ring-primary-fixed rounded"
-                    href="#">Digital India</a>
-            </nav>
+    <footer class="bg-slate-800 text-slate-300 py-8 text-sm">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p>© 2026 Department of Housing For All, Government of Haryana, India.</p>
+            <p class="mt-2 text-slate-500">Designed & Developed by Citizen Resources Information Department, Haryana (CRID)</p>
         </div>
     </footer>
 </body>

@@ -327,121 +327,205 @@
 
 
 
-            <div class="mb-stack-lg">
-                <h4><b>Welcome back, Anita Devi</b></h4>
-                <p class="font-body-lg text-body-lg text-on-surface-variant">Application ID: <span
-                        class="font-bold text-primary">HR-MMSAY-2023-8942</span></p>
+            <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+
+                <!-- Left Side -->
+                <p text-sm md:text-base text-on-surface-variant>
+                    Welcome back,<span class="font-semibold text-primary">
+                        Anita Devi
+                    </span> 
+                </p>
+
+                <!-- Right Side -->
+                <p class="text-sm md:text-base text-on-surface-variant">
+                    Application ID:
+                    <span class="font-semibold text-primary">
+                        HR-MMSAY-2023-8942
+                    </span>
+                </p>
+
             </div>
             <!-- Status Tracker -->
             <section
-                class="bg-surface-container-lowest rounded-xl p-stack-md md:p-gutter shadow-sm border border-border-gray mb-stack-lg relative overflow-hidden">
-                <div
-                    class="absolute inset-0 bg-gradient-to-br from-primary-fixed/20 to-transparent pointer-events-none">
+                class="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-200 mb-6 relative overflow-hidden">
+
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent pointer-events-none">
                 </div>
-                <h3 class="font-headline-md text-headline-md text-on-surface mb-stack-md relative z-10">Application
-                    Status</h3>
+
+                <h3 class="text-lg md:text-xl font-semibold text-primary mb-6 relative z-10">
+                    Application Status
+                </h3>
+
                 <div
-                    class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center mt-stack-lg gap-6 md:gap-0">
-                    <!-- Progress Line background -->
-                    <div class="hidden md:block absolute top-6 left-8 right-8 h-1 bg-surface-variant z-0 rounded-full">
+                    class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0">
+
+                    <!-- Desktop Progress Line -->
+                    <div class="hidden md:block absolute top-5 left-8 right-8 h-1 bg-gray-200 z-0 rounded-full">
                     </div>
-                    <!-- Progress Line active -->
-                    <div class="hidden md:block absolute top-6 left-8 w-1/2 h-1 bg-success-green z-0 rounded-full">
+
+                    <div class="hidden md:block absolute top-5 left-8 w-1/2 h-1 bg-green-600 z-0 rounded-full">
                     </div>
-                    <!-- Mobile Progress Line -->
-                    <div class="md:hidden absolute left-[27px] top-12 bottom-4 w-1 bg-surface-variant z-0 rounded-full">
+
+                    <!-- Mobile Progress -->
+                    <div class="md:hidden absolute left-[19px] top-10 bottom-4 w-1 bg-gray-200 rounded-full">
                     </div>
-                    <div class="md:hidden absolute left-[27px] top-12 h-1/2 w-1 bg-success-green z-0 rounded-full">
+
+                    <div class="md:hidden absolute left-[19px] top-10 h-1/2 w-1 bg-green-600 rounded-full">
                     </div>
+
                     <!-- Step 1 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
+                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
+
                         <div
-                            class="w-10 h-10 rounded-full bg-success-green text-on-primary flex items-center justify-center shadow-sm shrink-0">
-                            <span class="material-symbols-outlined"
-                                style="font-variation-settings: 'FILL' 1;">check</span>
+                            class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center shadow-sm shrink-0">
+
+                            <span class="material-symbols-outlined text-[20px]"
+                                style="font-variation-settings: 'FILL' 1;">
+                                check
+                            </span>
+
                         </div>
+
                         <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-on-surface">Submitted</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">12 Oct 2023</p>
+
+                            <p class="text-sm font-semibold text-on-surface">
+                                Submitted
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                12 Oct 2023
+                            </p>
+
                         </div>
                     </div>
+
                     <!-- Step 2 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
+                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
+
                         <div
-                            class="w-10 h-10 rounded-full bg-success-green text-on-primary flex items-center justify-center shadow-sm shrink-0">
-                            <span class="material-symbols-outlined"
-                                style="font-variation-settings: 'FILL' 1;">check</span>
+                            class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center shadow-sm shrink-0">
+
+                            <span class="material-symbols-outlined text-[20px]"
+                                style="font-variation-settings: 'FILL' 1;">
+                                check
+                            </span>
+
                         </div>
+
                         <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-on-surface">Verified</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">28 Oct 2023</p>
+
+                            <p class="text-sm font-semibold text-on-surface">
+                                Verified
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                28 Oct 2023
+                            </p>
+
                         </div>
                     </div>
-                    <!-- Step 3 (Current) -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
+
+                    <!-- Step 3 -->
+                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
+
                         <div
-                            class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md ring-4 ring-primary/20 shrink-0 relative">
-                            <span class="material-symbols-outlined">real_estate_agent</span>
-                            <span class="absolute w-full h-full rounded-full animate-ping bg-primary opacity-20"></span>
+                            class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md ring-4 ring-blue-100 shrink-0 relative">
+
+                            <span class="material-symbols-outlined text-[20px]">
+                                real_estate_agent
+                            </span>
+
                         </div>
+
                         <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-primary font-bold">Allotted</p>
-                            <p class="font-body-sm text-body-sm text-on-surface-variant">In Progress</p>
+
+                            <p class="text-sm font-bold text-primary">
+                                Allotted
+                            </p>
+
+                            <p class="text-xs text-on-surface-variant">
+                                In Progress
+                            </p>
+
                         </div>
                     </div>
+
                     <!-- Step 4 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
+                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
+
                         <div
-                            class="w-10 h-10 rounded-full bg-surface-variant text-outline flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined">hourglass_empty</span>
+                            class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
+
+                            <span class="material-symbols-outlined text-[20px]">
+                                hourglass_empty
+                            </span>
+
                         </div>
+
                         <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-outline">Pending</p>
+
+                            <p class="text-sm font-medium text-gray-500">
+                                Pending
+                            </p>
+
                         </div>
                     </div>
+
                     <!-- Step 5 -->
-                    <div class="flex md:flex-col items-center gap-4 md:gap-2 z-10 w-full md:w-auto">
+                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
+
                         <div
-                            class="w-10 h-10 rounded-full bg-surface-variant text-outline flex items-center justify-center shrink-0">
-                            <span class="material-symbols-outlined">verified</span>
+                            class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
+
+                            <span class="material-symbols-outlined text-[20px]">
+                                verified
+                            </span>
+
                         </div>
+
                         <div class="md:text-center">
-                            <p class="font-label-md text-label-md text-outline">Registered</p>
+
+                            <p class="text-sm font-medium text-gray-500">
+                                Registered
+                            </p>
+
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
 
                 <!-- Purchase Date -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div
+                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
 
-                    <p class="text-sm text-gray-500 mb-2">
+                    <p class="text-sm font-medium text-gray-500 mb-2">
                         Purchase Date
                     </p>
 
-                    <h4 class="text-2xl font-bold text-[#0B3B66]">
+                    <h4 class="text-xl font-bold text-[#0B3B66]">
                         12 Oct 2023
                     </h4>
 
                     <div class="mt-4 text-[#0B5CAD]">
-                        <span class="material-symbols-outlined">
+
+                        <span class="material-symbols-outlined text-[28px]">
                             calendar_today
                         </span>
-                    </div>
 
+                    </div>
                 </div>
 
-
                 <!-- Total Paid -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div
+                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
 
-                    <p class="text-sm text-gray-500 mb-2">
+                    <p class="text-sm font-medium text-gray-500 mb-2">
                         Total Paid Amount
                     </p>
 
-                    <h4 class="text-2xl font-bold text-green-700">
+                    <h4 class="text-xl font-bold text-green-700">
                         ₹ 14,50,000
                     </h4>
 
@@ -450,22 +534,21 @@
                         <div class="bg-green-700 h-full w-[65%] rounded-full"></div>
 
                     </div>
-
                 </div>
 
-
                 <!-- Outstanding -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div
+                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
 
-                    <p class="text-sm text-gray-500 mb-2">
+                    <p class="text-sm font-medium text-gray-500 mb-2">
                         Total Outstanding
                     </p>
 
-                    <h4 class="text-2xl font-bold text-red-600">
+                    <h4 class="text-xl font-bold text-red-600">
                         ₹ 7,25,000
                     </h4>
 
-                    <div class="mt-4 flex items-center gap-1 text-red-600 text-sm">
+                    <div class="mt-4 flex items-center gap-2 text-red-600 text-sm">
 
                         <span class="material-symbols-outlined text-[18px]">
                             warning
@@ -474,33 +557,30 @@
                         Due in 15 days
 
                     </div>
-
                 </div>
 
-
                 <!-- Status -->
-                <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                <div
+                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
 
-                    <p class="text-sm text-gray-500 mb-2">
+                    <p class="text-sm font-medium text-gray-500 mb-2">
                         Flat/Plot Status
                     </p>
 
-                    <h4 class="text-2xl font-bold text-[#0B3B66]">
+                    <h4 class="text-xl font-bold text-[#0B3B66]">
                         Allotted
                     </h4>
 
                     <div class="mt-4">
 
-                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                        <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
 
                             Category A-1
 
                         </span>
 
                     </div>
-
                 </div>
-
             </div>
         </main>
         <!-- Footer -->
