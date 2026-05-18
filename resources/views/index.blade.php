@@ -6,6 +6,7 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>Department of Housing For All</title>
+    <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <style data-purpose="custom-utilities">
         .custom-scroll::-webkit-scrollbar {
@@ -92,11 +93,13 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
         rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
 
-<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+<body class="bg-slate-50 text-slate-800 antialiased font-[Poppins]">
     <!-- BEGIN: Top Utility Bar -->
-    <div class="bg-civic-blue text-white text-xs py-1 px-4">
+    {{-- <div class="bg-civic-blue text-white text-xs py-1 px-4">
         <div class="max-w-7xl mx-auto flex justify-between items-center">
             <div class="hidden sm:block"></div>
             <div class="flex space-x-4 items-center">
@@ -111,14 +114,11 @@
 
             </div>
         </div>
-    </div>
+    </div> --}}
     <!-- END: Top Utility Bar -->
     <!-- BEGIN: Header -->
     <header
-        class="text-on-primary docked full-width top-0 sticky border-b border-outline-variant shadow-md z-50
-bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] 
-bg-[url('../header-tp-bg.png')] 
-bg-no-repeat bg-right bg-cover">
+        class="text-on-primary docked full-width top-0 sticky border-b border-outline-variant shadow-md z-50 bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] bg-[url('../header-tp-bg.png')] bg-no-repeat bg-right bg-cover">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <!-- Placeholder for Department Logo -->
@@ -129,35 +129,81 @@ bg-no-repeat bg-right bg-cover">
                 </div>
             </div>
             <!-- National Emblem Placeholder -->
-            <img alt="National Emblem" class="h-16 w-auto object-contain hidden md:block" src="emblem-black.png" />
+            <div class="flex items-center space-x-4 bg-white/5 p-2 rounded-lg border border-white/10">
+                <img alt="Sh. Nayab Singh Saini"
+                    class="h-16 w-16 rounded-full object-cover border-2 border-white/20 shadow-sm"
+                    src="cm-picture-new1.jpg" />
+                <div class="text-left">
+                    <p class="text-sm font-bold text-white leading-tight">Sh. Nayab Singh Saini</p>
+                    <p class="text-[10px] text-slate-300">Hon'ble Chief Minister of Haryana</p>
+                </div>
+            </div>
         </div>
     </header>
     <!-- END: Header -->
     <!-- BEGIN: Navigation -->
     <nav class="bg-white border-b border-slate-200 shadow-sm relative z-40">
         <div class="max-w-7xl mx-auto px-4">
+
             <div
-                class="flex flex-wrap items-center justify-center md:justify-start space-x-1 md:space-x-6 py-2 text-center">
-                <a class="px-3 py-2 text-sm font-medium text-civic-blue border-b-2 border-civic-accent" href="#">
-                    Home</a>
-                <a class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
-                    href="#">About Us</a>
-                <a class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
-                    href="#">Our Vision</a>
-                <a class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
-                    href="#">Gallery</a>
-                <!-- Highlighted Button -->
-                <a class="px-4 py-2 text-sm font-bold text-civic-blue bg-civic-highlight hover:bg-yellow-500 rounded-md shadow-sm transition-colors uppercase tracking-wide"
+                class="flex flex-wrap items-center justify-center md:justify-start space-x-1 md:space-x-4 py-2 text-center">
+
+                <!-- Home -->
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-civic-blue border-b-2 border-civic-accent"
+                    href="/">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        home
+                    </span>
+
+                    Home
+                </a>
+
+                <!-- About Us -->
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
                     href="#">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        info
+                    </span>
+
+                    About Us
+                </a>
+
+                <!-- Vision -->
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
+                    href="#">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        visibility
+                    </span>
+
+                    Our Vision
+                </a>
+
+                <!-- Gallery -->
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
+                    href="#">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        photo_library
+                    </span>
+
+                    Gallery
+                </a>
+
+                <!-- Help -->
+                <a class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-civic-blue bg-civic-highlight hover:bg-yellow-500 rounded-md shadow-sm transition-colors uppercase tracking-wide"
+                    href="/help">
+
+                    <span class="material-symbols-outlined text-[18px]">
+                        help
+                    </span>
+
                     Help
                 </a>
-                <!-- <a class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors" href="#">Contact Us</a>
-<a class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors" href="#">Suggestion Box</a>
-<div class="relative ml-auto flex-1 md:flex-none mt-2 md:mt-0 w-full md:w-auto">
-<input class="w-full md:w-48 pl-3 pr-8 py-1.5 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-civic-accent focus:border-civic-accent" placeholder="Search..." type="text"/>
-<svg class="w-4 h-4 text-slate-400 absolute right-2.5 top-2" fill="none" stroke="currentColor" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg> -->
+
             </div>
-        </div>
         </div>
     </nav>
     <!-- END: Navigation -->
@@ -187,36 +233,134 @@ bg-no-repeat bg-right bg-cover">
         <aside class="space-y-6 lg:col-span-1">
             <!-- Panel: Statutory Docs -->
             <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-                <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm">
-                    Scheme Documents
+
+                <!-- Header -->
+                <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
+
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">
+                            campaign
+                        </span>
+                        <span>Latest News</span>
+                    </div>
+
+                    <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full">
+                        LIVE
+                    </span>
+
                 </div>
-                <ul class="divide-y divide-slate-100 text-sm">
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-start space-x-2" href="#">
-                            <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">Notifications &amp;
-                                Circulars</span>
-                        </a>
-                    </li>
-                </ul>
+
+                <!-- Scroll Area -->
+                <div class="h-[360px] overflow-hidden relative">
+
+                    <ul id="newsScroller"
+                        class="divide-y divide-slate-100 text-sm absolute w-full animate-news-scroll hover:[animation-play-state:paused]">
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Strategy to implement AHP-PMAY(U) in Haryana-comments/suggestions thereof
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Charki Dadri under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Fatehabad under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Gohana under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Jagadhri under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Jhajjar under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-start space-x-2" href="#">
+                                <span class="text-green-500 mt-0.5">●</span>
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Draw Results of Rohtak under MMSAY
+                                </span>
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+
             </div>
             <!-- Panel: Data Download -->
             <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-                <div class="bg-green-500 text-white px-4 py-2 font-semibold text-sm">
-                    Data Download
+                <div class="bg-green-500 text-white px-4 py-3 font-semibold text-sm flex items-center justify-between">
+
+                    <!-- Left Side -->
+                    <div class="flex items-center gap-2">
+
+                        <span class="material-symbols-outlined text-[20px]">
+                            download
+                        </span>
+
+                        <span class="tracking-wide">
+                            Data Download
+                        </span>
+
+                    </div>
+
+                    <!-- Right Icon -->
+                    <span class="material-symbols-outlined text-[18px] opacity-90">
+                        cloud_download
+                    </span>
+
                 </div>
                 <ul class="divide-y divide-slate-100 text-sm">
                     <li class="p-3 hover:bg-slate-50">
                         <a class="flex items-start space-x-2" href="#">
                             <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">List of Approved MMSAY
+                            <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">List of
+                                Approved MMSAY
                                 Beneficiaries</span>
                         </a>
                     </li>
                     <li class="p-3 hover:bg-slate-50">
                         <a class="flex items-start space-x-2" href="#">
                             <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">MMGAY Progress
+                            <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">MMGAY
+                                Progress
                                 Reports</span>
                         </a>
                     </li>
@@ -224,7 +368,9 @@ bg-no-repeat bg-right bg-cover">
                         <a class="flex items-start space-x-2" href="#">
                             <span class="text-green-500 mt-0.5">●</span>
                             <div>
-                                <span class="text-slate-700 hover:text-civic-blue hover:underline">Application Forms
+                                <span
+                                    class="text-slate-700 hover:text-civic-blue transition-colors duration-200">Application
+                                    Forms
                                     Download</span>
                                 <span
                                     class="inline-block bg-red-500 text-white text-[10px] px-1 rounded ml-1">NEW</span>
@@ -234,7 +380,7 @@ bg-no-repeat bg-right bg-cover">
                 </ul>
             </div>
             <!-- Panel: Public Notice -->
-            <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+            {{-- <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
                 <div class="bg-sky-400 text-white px-4 py-2 font-semibold text-sm">
                     Important Public Notice
                 </div>
@@ -242,7 +388,8 @@ bg-no-repeat bg-right bg-cover">
                     <li class="p-3 hover:bg-slate-50">
                         <a class="flex items-start space-x-2" href="#">
                             <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700">ALERT: Beware of fraudulent calls regarding housing allotment
+                            <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">ALERT:
+                                Beware of fraudulent calls regarding housing allotment
                                 fees.</span>
                         </a>
                     </li>
@@ -257,7 +404,7 @@ bg-no-repeat bg-right bg-cover">
                 <div class="bg-slate-50 px-4 py-2 text-right border-t border-slate-100">
                     <a class="text-sm text-sky-600 hover:underline" href="#">View more</a>
                 </div>
-            </div>
+            </div> --}}
         </aside>
         <!-- CENTER AREA -->
         <section class="lg:col-span-2 space-y-6">
@@ -268,7 +415,12 @@ bg-no-repeat bg-right bg-cover">
                 <div class="relative group">
 
                     <a href="#"
-                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300">
+                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300 overflow-hidden">
+
+                        <!-- Bottom Line -->
+                        <span
+                            class="absolute bottom-0 left-0 w-full h-1 bg-blue-200 group-hover:bg-blue-600 transition-all duration-300">
+                        </span>
 
                         <span
                             class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
@@ -281,6 +433,7 @@ bg-no-repeat bg-right bg-cover">
                                 MMSAY
                             </div>
                         </div>
+
                     </a>
 
                     <!-- Dropdown -->
@@ -288,7 +441,8 @@ bg-no-repeat bg-right bg-cover">
                         class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
 
                         <a href="/mmsay-login"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all" target="_blank">
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all"
+                            target="_blank">
 
                             <span class="material-symbols-outlined text-[18px]">
                                 person
@@ -298,7 +452,8 @@ bg-no-repeat bg-right bg-cover">
                         </a>
 
                         <a href="/mmsay-login"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100" target="_blank">
+                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100"
+                            target="_blank">
 
                             <span class="material-symbols-outlined text-[18px]">
                                 business
@@ -312,11 +467,17 @@ bg-no-repeat bg-right bg-cover">
                 </div>
 
 
+
                 <!-- MMGAY -->
                 <div class="relative group">
 
                     <a href="#"
-                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300">
+                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300 overflow-hidden">
+
+                        <!-- Bottom Line -->
+                        <span
+                            class="absolute bottom-0 left-0 w-full h-1 bg-green-200 group-hover:bg-green-600 transition-all duration-300">
+                        </span>
 
                         <span
                             class="material-symbols-outlined text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
@@ -329,6 +490,7 @@ bg-no-repeat bg-right bg-cover">
                                 MMGAY
                             </div>
                         </div>
+
                     </a>
 
                     <!-- Dropdown -->
@@ -364,7 +526,12 @@ bg-no-repeat bg-right bg-cover">
                 <div class="relative group">
 
                     <a href="#"
-                        class="bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300">
+                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden">
+
+                        <!-- Bottom Line -->
+                        <span
+                            class="absolute bottom-0 left-0 w-full h-1 bg-orange-200 group-hover:bg-orange-600 transition-all duration-300">
+                        </span>
 
                         <span
                             class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
@@ -377,6 +544,7 @@ bg-no-repeat bg-right bg-cover">
                                 EWS
                             </div>
                         </div>
+
                     </a>
 
                     <!-- Dropdown -->
@@ -410,28 +578,89 @@ bg-no-repeat bg-right bg-cover">
             </div>
             <!-- Main Visual / Carousel Area -->
             <div
-                class="bg-white rounded-lg shadow-sm border border-surface-container-highest p-6 mb-6 flex flex-col items-center">
-                {{-- <h2 class="text-lg font-bold text-primary mb-4">HOUSING DEVELOPMENT MAP</h2> --}}
-                <div
-                    class="relative w-full aspect-video bg-surface-container flex items-center justify-center rounded overflow-hidden group">
-                    <img alt="Map"
-                        class="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                        src="banner.jpeg" />
-                    <div
-                        class="absolute inset-0 flex items-center justify-between px-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <span
-                            class="material-symbols-outlined text-white bg-black/30 rounded-full p-1">chevron_left</span><span
-                            class="material-symbols-outlined text-white bg-black/30 rounded-full p-1">chevron_right</span>
+                class="bg-white rounded-lg shadow-sm border border-surface-container-highest p-4 mb-6 overflow-hidden">
+
+                <div class="relative w-full overflow-hidden rounded-xl group">
+
+                    <!-- Slider Wrapper -->
+                    <div id="slider" class="flex gap-4 transition-transform duration-700 ease-in-out">
+
+                        <!-- Slide 1 -->
+                        <div class="min-w-[calc(100%-16px)] flex justify-center">
+                            <img src="banner.jpeg"
+                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                alt="Banner 1">
+                        </div>
+
+                        <!-- Slide 2 -->
+                        {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
+                            <img src="banner8.jpg"
+                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                alt="Banner 2">
+                        </div> --}}
+
+                        <!-- Slide 3 -->
+                        {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
+                            <img src="banner2.jpg"
+                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                alt="Banner 3">
+                        </div> --}}
+
                     </div>
+
+                    <!-- Left Button -->
+                    <button id="prevBtn"
+                        class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10">
+
+                        <span class="material-symbols-outlined">
+                            chevron_left
+                        </span>
+
+                    </button>
+
+                    <!-- Right Button -->
+                    <button id="nextBtn"
+                        class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10">
+
+                        <span class="material-symbols-outlined">
+                            chevron_right
+                        </span>
+
+                    </button>
+
                 </div>
-                {{-- <p class="mt-4 text-secondary text-sm font-medium hover:underline cursor-pointer">Click to enlarge</p> --}}
+
             </div>
             <!-- What's New Section -->
             <div class="bg-white rounded-lg shadow-sm border border-surface-container-highest overflow-hidden">
                 <div
-                    class="px-4 py-2 bg-surface-container-low border-b border-surface-container-highest flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-primary uppercase">What's New</h3><a
-                        class="text-xs text-secondary font-medium hover:underline" href="#">View All</a>
+                    class="px-4 py-3 bg-surface-container-low border-b border-surface-container-highest flex justify-between items-center">
+
+                    <!-- Left Side -->
+                    <div class="flex items-center gap-2">
+
+                        <span class="material-symbols-outlined text-secondary text-[20px]">
+                            notifications_active
+                        </span>
+
+                        <h3 class="text-sm font-bold text-primary uppercase tracking-wide">
+                            What's New
+                        </h3>
+
+                    </div>
+
+                    <!-- Right Side -->
+                    <a class="flex items-center gap-1 text-sm font-semibold text-sky-600 hover:text-sky-800 transition-all duration-200 hover:underline"
+                        href="#">
+
+                        View All
+
+                        <span class="material-symbols-outlined text-[18px]">
+                            arrow_forward
+                        </span>
+
+                    </a>
+
                 </div>
                 <div class="divide-y divide-surface-container-low max-h-48 overflow-y-auto custom-scroll">
                     <div class="p-3 flex items-start space-x-3"><span
@@ -455,96 +684,128 @@ bg-no-repeat bg-right bg-cover">
         <aside class="space-y-6 lg:col-span-1">
             <!-- Panel: e-Governance -->
             <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-                <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm">
-                    e-Services
+
+                <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
+
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">
+                            policy
+                        </span>
+                        <span>Policy / Guidelines</span>
+                    </div>
+
+                    <span class="text-xs bg-white/20 px-2 py-1 rounded-full">
+                        Docs
+                    </span>
+
                 </div>
-                <ul class="divide-y divide-slate-100 text-sm">
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-center space-x-3" href="#">
-                            <span class="bg-green-100 text-green-600 p-1.5 rounded">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <span class="text-slate-700 font-medium hover:text-civic-blue">New Beneficiary? Register
-                                Here</span>
-                        </a>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-center space-x-3" href="#">
-                            <span class="bg-blue-100 text-blue-600 p-1.5 rounded">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <span class="text-slate-700 font-medium hover:text-civic-blue">Applicant Login</span>
-                        </a>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50 bg-blue-50/50">
-                        <div class="flex items-start space-x-3">
-                            <span class="text-sky-500 mt-1">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <div>
-                                <span class="text-slate-800 font-medium block mb-1">Track Application Status</span>
-                                <ul class="text-xs text-slate-500 space-y-1 list-disc pl-4">
-                                    <li>Help Desk support</li>
-                                    <li>Call at: 1800-123-4567</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-center space-x-3" href="#">
-                            <span class="text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">List of
-                                e-Services</span>
-                        </a>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-center space-x-3" href="#">
-                            <span class="text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">Verify Payment</span>
-                        </a>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-center space-x-3" href="#">
-                            <span class="text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
-                                    <path
-                                        d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                                        stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
-                                </svg>
-                            </span>
-                            <span class="text-slate-700 hover:text-civic-blue hover:underline">Department Login</span>
-                        </a>
-                    </li>
-                </ul>
+
+                <!-- Scroll Container -->
+                <div class="h-[320px] overflow-hidden relative">
+
+                    <ul class="divide-y divide-slate-100 text-sm animate-news-scroll">
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    ARHC Scheme Guideline
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Redesignation of Department of Housing for All
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Pradhan Mantri Awaas Yojana (Gramin)
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Affordable Rental Housing Complexes
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Pradhan Mantri Awaas Yojana (Urban)
+                                </span>
+                            </a>
+                        </li>
+
+                        <li class="p-3 hover:bg-slate-50">
+                            <a class="flex items-center space-x-3 no-underline" href="#">
+                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    description
+                                </span>
+
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                    Mukhya Mantri Gramin Awas Yojana
+                                </span>
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+
             </div>
             <!-- Panel: Citizen Services -->
             <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-                <div class="bg-green-500 text-white px-4 py-2 font-semibold text-sm">
-                    Citizen Services: Docs
+                <div class="bg-green-500 text-white px-4 py-3 font-semibold text-sm flex items-center justify-between">
+
+                    <div class="flex items-center gap-2">
+
+                        <!-- Left Icon -->
+                        <span class="material-symbols-outlined text-[20px]">
+                            support_agent
+                        </span>
+
+                        <span class="tracking-wide">
+                            Citizen Services: Docs
+                        </span>
+
+                    </div>
+
+                    <!-- Right Icon -->
+                    <span class="material-symbols-outlined text-[18px] opacity-90">
+                        description
+                    </span>
+
                 </div>
                 <ul class="divide-y divide-slate-100 text-sm">
                     <li class="p-3 hover:bg-slate-50">
@@ -577,6 +838,136 @@ bg-no-repeat bg-right bg-cover">
             </div>
         </aside>
     </main>
+    <section class="w-full bg-white py-10">
+
+        <div class="max-w-6xl mx-auto px-4">
+
+            <!-- Center Grid Wrapper -->
+            <div class="grid place-items-center">
+
+                <!-- Card -->
+                <div
+                    class="w-full bg-white border border-slate-200 rounded-2xl shadow-sm p-8 
+                        transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+
+                    <!-- Title -->
+                    <h2 class="text-2xl font-bold text-slate-800 text-center mb-5 relative">
+
+                        ABOUT US
+
+                        <span class="block w-20 h-[3px] bg-slate-900 mx-auto mt-2 rounded-full"></span>
+
+                    </h2>
+
+                    <!-- Content -->
+                    <p class="text-sm md:text-base text-slate-600 leading-relaxed text-justify">
+
+                        Hon’ble Chief Minister-cum-Finance Minister, Haryana in the Budget Speech of the financial year
+                        2020-2021 on 28.02.2020 had stated that there will be a department namely ‘Department of Housing
+                        for All’
+                        by subsuming various housing schemes currently undertaken by several departments like housing
+                        scheme for
+                        BPL/EWS by Housing Board Haryana, Pradhan Mantri Awas Yojna-Urban, Rajiv Awas Yojna by
+                        Department of
+                        Urban Local Bodies, Pradhan Mantri Awas Yojna-Gramin by Department of Rural Development, Housing
+                        Advance
+                        Scheme for registered construction worker by Haryana Building and other Construction Worker
+                        Welfare Board,
+                        Ashiana Scheme by Haryana Shehri Vikas Pradhikaran, Dr. B. R. Ambedkar Awas Navinikaran Yojna
+                        for house
+                        repair by Department of SC & BC Welfare. The Legislative Assembly has accorded consent in this
+                        regard.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="bg-white border-t border-slate-200 py-12">
+        <div class="max-w-7xl mx-auto px-4">
+
+            <!-- Heading -->
+            <div class="text-center mb-10">
+
+                <h2 class="text-3xl font-bold text-civic-blue uppercase tracking-tight">
+                    Gallery
+                </h2>
+
+                <!-- Underline -->
+                <div class="w-24 h-1 bg-sky-500 mx-auto mt-3 rounded-full"></div>
+
+            </div>
+
+            <!-- Gallery -->
+            <div class="flex flex-wrap justify-center gap-6">
+
+                <!-- Card 1 -->
+                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
+                    <img alt="Project Alpha"
+                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
+                        src="1654693046606798243.jpg" />
+                    {{-- <div class="p-4 bg-white border-t border-slate-100">
+                        <p class="font-semibold text-civic-blue">
+                            Sector 42 Housing Complex
+                        </p>
+                    </div> --}}
+                </div>
+
+                <!-- Card 2 -->
+                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
+                    <img alt="Project Beta"
+                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
+                        src="16546930511289561504.jpg" />
+                    {{-- <div class="p-4 bg-white border-t border-slate-100">
+                        <p class="font-semibold text-civic-blue">
+                            Green Valley Apartments
+                        </p>
+                    </div> --}}
+                </div>
+
+                <!-- Card 3 -->
+                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
+                    <img alt="Project Gamma"
+                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
+                        src="16546930602025626684.jpg" />
+                    {{-- <div class="p-4 bg-white border-t border-slate-100">
+                        <p class="font-semibold text-civic-blue">
+                            Urban Residency Phase II
+                        </p>
+                    </div> --}}
+                </div>
+
+                <!-- Card 4 -->
+                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
+                    <img alt="Project Delta"
+                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
+                        src="1654693080605359150.jpg" />
+                    {{-- <div class="p-4 bg-white border-t border-slate-100">
+                        <p class="font-semibold text-civic-blue">
+                            Skyview Towers
+                        </p>
+                    </div> --}}
+                </div>
+
+
+
+            </div>
+
+            <!-- Button -->
+            <div class="mt-10 text-center">
+                <a class="inline-block px-8 py-3 bg-civic-blue text-white font-bold rounded-lg shadow hover:bg-slate-700 transition-colors uppercase tracking-wider text-sm"
+                    href="#">
+                    View All
+                </a>
+            </div>
+
+        </div>
+    </section>
     <!-- END: Main Content Layout -->
     <!-- BEGIN: Bottom Grid Navigation -->
     <section class="max-w-7xl mx-auto px-4 pb-12">
@@ -599,35 +990,298 @@ bg-no-repeat bg-right bg-cover">
     <!-- END: Bottom Grid Navigation -->
     <!-- BEGIN: Partner Logos -->
     <section class="bg-white border-t border-slate-200 py-6">
-        <div
-            class="max-w-7xl mx-auto px-4 flex flex-wrap justify-center gap-4 md:gap-8 opacity-80 hover:opacity-100 transition-opacity">
-            <img alt="MyGov" class="h-12 object-contain border border-slate-200 rounded" src="saral-logo.png" />
-            <img alt="Web Directory" class="h-12 object-contain border border-slate-200 rounded"
-                src="data-gov.png" />
-            <img alt="India.gov.in" class="h-12 object-contain border border-slate-200 rounded"
-                src="digital-india.png" />
-            <img alt="data.gov.in" class="h-12 object-contain border border-slate-200 rounded"
-                src="govt-of-haryana.png" />
-            <img alt="Digital India" class="h-12 object-contain border border-slate-200 rounded"
-                src="pmay-logo.jpg" />
-            <img alt="Make in India" class="h-12 object-contain border border-slate-200 rounded"
-                src="nhb-logo.png" />
-            <img alt="Make in India" class="h-12 object-contain border border-slate-200 rounded"
-                src="hsvp-logo.jpg" />
-            <img alt="Make in India" class="h-12 object-contain border border-slate-200 rounded"
-                src="hbh-logo.png" />
-            <img alt="Make in India" class="h-12 object-contain border border-slate-200 rounded" src="my-gov.png" />
+
+        <div class="max-w-7xl mx-auto px-4 relative">
+
+            <!-- Left Button -->
+            <button id="logoPrev"
+                class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
+
+                <span class="material-symbols-outlined text-slate-700">
+                    chevron_left
+                </span>
+
+            </button>
+
+            <!-- Slider Wrapper -->
+            <div class="overflow-hidden mx-12">
+
+                <div id="logoSlider" class="flex items-center gap-6 transition-transform duration-500 ease-in-out">
+
+                    <a href="https://saralharyana.gov.in/" target="_blank">
+                        <img alt="Saral"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="saral-logo.png" />
+                    </a>
+
+                    <a href="https://www.data.gov.in/" target="_blank">
+                        <img alt="Data Gov"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="data-gov.png" />
+                    </a>
+
+                    <a href="https://www.digitalindia.gov.in/" target="_blank">
+                        <img alt="Digital India"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="digital-india.png" />
+                    </a>
+
+                    <a href="https://haryana.gov.in/" target="_blank">
+                        <img alt="Govt of Haryana"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="govt-of-haryana.png" />
+                    </a>
+
+                    <a href="https://pmaymis.gov.in/" target="_blank">
+                        <img alt="PMAY"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="pmay-logo.jpg" />
+                    </a>
+
+                    <a href="https://nhb.org.in/" target="_blank">
+                        <img alt="NHB"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="nhb-logo.png" />
+                    </a>
+
+                    <a href="https://hsvphry.org.in/" target="_blank">
+                        <img alt="HSVP"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="hsvp-logo.jpg" />
+                    </a>
+
+                    <a href="#" target="_blank">
+                        <img alt="HBH"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="hbh-logo.png" />
+                    </a>
+
+                    <a href="https://www.mygov.in/" target="_blank">
+                        <img alt="My Gov"
+                            class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                            src="my-gov.png" />
+                    </a>
+
+                </div>
+
+            </div>
+
+            <!-- Right Button -->
+            <button id="logoNext"
+                class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
+
+                <span class="material-symbols-outlined text-slate-700">
+                    chevron_right
+                </span>
+
+            </button>
+
         </div>
+
     </section>
     <!-- END: Partner Logos -->
     <!-- BEGIN: Footer -->
-    <footer class="bg-slate-800 text-slate-300 py-8 text-sm">
-        <div class="max-w-7xl mx-auto px-4 text-center">
-            <p>© 2026 Department of Housing For All, Government of Haryana, India.</p>
-            <p class="mt-2 text-slate-500">Designed & Developed by Citizen Resources Information Department, Haryana (CRID)</p>
+    <footer class="bg-slate-900 border-t border-slate-700 text-slate-300 py-5">
+
+        <div class="max-w-7xl mx-auto px-4">
+
+            <!-- TOP: Menu (Centered) -->
+            <div class="pb-4 border-b border-slate-700 flex flex-wrap justify-center gap-4 text-sm text-slate-400">
+
+                <a href="#" class="hover:text-white transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">language</span>
+                    Web Information Manager
+                </a>
+
+                <a href="#" class="hover:text-white transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">feedback</span>
+                    Feedback
+                </a>
+
+                <a href="#" class="hover:text-white transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">privacy_tip</span>
+                    Privacy Policy
+                </a>
+
+                <a href="#" class="hover:text-white transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">copyright</span>
+                    Copyright Policy
+                </a>
+
+                <a href="#" class="hover:text-white transition flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[16px]">gavel</span>
+                    Terms & Conditions
+                </a>
+
+            </div>
+
+            <!-- CENTER: Logo + Department -->
+            <div class="flex flex-col items-center justify-center gap-4 py-5 text-center">
+
+                <div>
+
+                    <p class="text-base font-semibold text-white">
+                        © 2026 Department of Housing For All, Government of Haryana
+                    </p>
+
+                    <p class="text-sm text-slate-400 mt-1">
+                        Designed & Developed by Citizen Resources Information Department, Haryana (CRID)
+                    </p>
+
+                </div>
+
+            </div>
+
+            <!-- BOTTOM: Visitor Counter + Image (Right Side) -->
+            <div class="flex justify-center items-center gap-6 mt-4">
+
+                <!-- Visitor Counter -->
+                <div class="flex items-center gap-3">
+
+                    <span class="material-symbols-outlined text-slate-300 text-[26px]">
+                        monitoring
+                    </span>
+
+                    <div class="flex flex-col leading-tight text-left">
+                        <span class="text-xs uppercase tracking-wider text-slate-500">
+                            Visitors
+                        </span>
+                        <span class="text-lg font-bold text-white tracking-wide">
+                            12,45,892
+                        </span>
+                    </div>
+
+                </div>
+
+                <!-- Image -->
+                <img src="emblem-black.png" alt="Haryana Logo"
+                    class="h-14 w-14 object-contain opacity-95 hover:scale-105 transition-transform duration-300">
+
+            </div>
+
         </div>
+
     </footer>
     <!-- END: Footer -->
+    <script>
+        const slider = document.getElementById('slider');
+        const slides = document.querySelectorAll('#slider > div');
+
+        let index = 0;
+        const totalSlides = slides.length;
+
+        function showSlide(i) {
+            slider.style.transform = `translateX(calc(-${i * 100}% - ${i * 16}px))`;
+        }
+
+        // Next Slide
+        function nextSlide() {
+            index = (index + 1) % totalSlides;
+            showSlide(index);
+        }
+
+        // Previous Slide
+        function prevSlide() {
+            index = (index - 1 + totalSlides) % totalSlides;
+            showSlide(index);
+        }
+
+        // Auto Slide
+        let autoSlide = setInterval(nextSlide, 3000);
+
+        // Button Events
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            nextSlide();
+            resetAutoSlide();
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            prevSlide();
+            resetAutoSlide();
+        });
+
+        // Reset Auto Timer
+        function resetAutoSlide() {
+            clearInterval(autoSlide);
+            autoSlide = setInterval(nextSlide, 3000);
+        }
+    </script>
+    <style>
+        @keyframes newsScroll {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-50%);
+            }
+        }
+
+        .animate-news-scroll {
+            animation: newsScroll 18s linear infinite;
+        }
+    </style>
+    <style>
+        @keyframes newsScroll {
+            0% {
+                transform: translateY(0);
+            }
+
+            100% {
+                transform: translateY(-50%);
+            }
+        }
+
+        .animate-news-scroll {
+            animation: newsScroll 18s linear infinite;
+        }
+
+        .animate-news-scroll:hover {
+            animation-play-state: paused;
+        }
+
+        a {
+            text-decoration: none !important;
+        }
+    </style>
+    <script>
+        const logoSlider = document.getElementById('logoSlider');
+
+        let logoIndex = 0;
+
+        function moveLogos() {
+            logoSlider.style.transform = `translateX(-${logoIndex * 140}px)`;
+        }
+
+        document.getElementById('logoNext').addEventListener('click', () => {
+            const maxScroll = logoSlider.children.length - 4;
+
+            if (logoIndex < maxScroll) {
+                logoIndex++;
+                moveLogos();
+            }
+        });
+
+        document.getElementById('logoPrev').addEventListener('click', () => {
+            if (logoIndex > 0) {
+                logoIndex--;
+                moveLogos();
+            }
+        });
+
+        // Auto Slide
+        setInterval(() => {
+            const maxScroll = logoSlider.children.length - 4;
+
+            if (logoIndex >= maxScroll) {
+                logoIndex = 0;
+            } else {
+                logoIndex++;
+            }
+
+            moveLogos();
+        }, 2500);
+    </script>
 </body>
 
 </html>

@@ -181,6 +181,11 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
+
+        .material-symbols-outlined {
+            font-size: 20px;
         }
     </style>
 </head>
@@ -285,8 +290,7 @@
                         class="md:hidden text-on-primary hover:bg-on-primary-fixed-variant/20 p-2 rounded-full transition-colors">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <span class="font-headline-md text-headline-md font-bold text-on-primary">Citizen Dashboard
-                    </span>
+                    <span class="text-lg md:text-lg font-semibold text-on-primary"> Citizen Dashboard</span>
                 </div>
 
 
@@ -298,7 +302,7 @@
                             account_circle
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Profile
                         </span>
 
@@ -311,7 +315,7 @@
                             logout
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Logout
                         </span>
 
@@ -333,7 +337,7 @@
                 <p text-sm md:text-base text-on-surface-variant>
                     Welcome back,<span class="font-semibold text-primary">
                         Anita Devi
-                    </span> 
+                    </span>
                 </p>
 
                 <!-- Right Side -->

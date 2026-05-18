@@ -146,7 +146,7 @@
 <body class="bg-bg-subtle text-on-background font-body-md flex flex-col min-h-screen">
     <!-- TopAppBar Component -->
     <header
-        class="bg-primary text-on-primary docked full-width top-0 sticky backdrop-blur-md bg-opacity-90 border-b border-outline-variant shadow-sm z-50">
+        class="text-on-primary docked full-width top-0 sticky border-b border-outline-variant shadow-md z-50 bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] bg-[url('../header-tp-bg.png')] bg-no-repeat bg-right bg-cover">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center space-x-4">
                 <!-- Placeholder for Department Logo -->

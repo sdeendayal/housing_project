@@ -5,6 +5,10 @@ Route::get('/', function () {
     return view('index');
 });
 
+Route::get('/help', function () {
+    return view('help');
+});
+
 Route::get('/mmsay-login', function () {
     return view('mmsayLogin');
 });

@@ -179,15 +179,15 @@
         }
     </script>
     <style>
-    body {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-    }
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+        }
 
-    .material-symbols-outlined {
-        font-size: 20px;
-    }
-</style>
+        .material-symbols-outlined {
+            font-size: 20px;
+        }
+    </style>
 </head>
 
 <body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row">
@@ -205,7 +205,7 @@
                     Department of Housing For All
                 </h1>
 
-                <p class="text-xs text-on-surface-variant">
+                <p class="text-sm text-on-surface-variant">
                     Government of Haryana
                 </p>
             </div>
@@ -214,25 +214,28 @@
         <!-- Menu -->
         <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
 
-            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2  text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
+            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
                 href="/mmsay.citizen.dashboard">
 
-                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
+                <span class="material-symbols-outlined">
                     dashboard
                 </span>
 
                 Dashboard
             </a>
-            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-surface-variant hover:bg-surface-container-high transition-all"
+
+            <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
                 href="/mmsay-payment-status">
 
-                <span class="material-symbols-outlined">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
                     payments
                 </span>
 
                 Payment Status
-
             </a>
+
+
+
 
             {{-- <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
                 href="#">
