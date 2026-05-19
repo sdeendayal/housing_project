@@ -285,10 +285,8 @@
                         class="md:hidden text-on-primary hover:bg-on-primary-fixed-variant/20 p-2 rounded-full transition-colors">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
-                    <span class="font-headline-md text-headline-md font-bold text-on-primary">Citizen Dashboard
-                    </span>
+                    <span class="text-lg md:text-lg font-semibold text-on-primary"> Citizen Dashboard</span>
                 </div>
-
 
                 <div class="flex items-center gap-2">
                     <a href="/mmsay-profile"
@@ -298,7 +296,7 @@
                             account_circle
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Profile
                         </span>
 
@@ -311,7 +309,7 @@
                             logout
                         </span>
 
-                        <span class="text-sm font-medium">
+                        <span class="text-xs font-medium">
                             Logout
                         </span>
 
@@ -323,108 +321,134 @@
         <!-- Main Canvas -->
         <main class="flex-1 p-margin-mobile md:p-gutter max-w-container-max mx-auto w-full mt-16 md:mt-0 pb-stack-lg">
             <!-- Profile Page -->
-            <div class="bg-white rounded-2xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
 
-                <!-- Header -->
-                <div class="bg-[#0B3B66] px-6 py-5 flex items-center justify-between">
+                <!-- Compact Header -->
+                <div class="bg-[#0B3B66] px-4 py-3 flex items-center justify-between">
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
 
-                        <div class="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-white text-4xl">
+                        <!-- Small Avatar -->
+                        <div class="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-white text-3xl">
                                 account_circle
                             </span>
                         </div>
 
-                        <div>
-                            <h2 class="text-2xl font-bold text-white">
+                        <!-- User Info -->
+                        <div class="leading-tight">
+
+                            <h2 class="text-base md:text-lg font-semibold text-white tracking-wide">
                                 ANITA DEVI
                             </h2>
 
-                            <p class="text-blue-100 text-sm">
-                                Application No. : HR-MMSAY-274751
+                            <p class="text-[11px] md:text-xs text-blue-100 mt-0.5">
+                                App No : HR-MMSAY-274751
                             </p>
-                        </div>
 
+                        </div>
                     </div>
 
-                   
+                    <!-- Status Badge -->
+                    <span
+                        class="hidden md:inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-100 text-xs font-medium border border-green-300/20">
+                        Active
+                    </span>
 
                 </div>
 
 
                 <!-- Profile Content -->
-                <div class="p-6">
+                <div class="p-4">
 
-                    <!-- Grid -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Compact Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 
-                        <!-- Full Name -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Full Name</p>
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                        <!-- Item -->
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Full Name
+                            </p>
+
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 ANITA DEVI
                             </h4>
                         </div>
 
-                        <!-- Father Name -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Father Name</p>
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                        <!-- Item -->
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Father Name
+                            </p>
+
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 DALSINGHAR
                             </h4>
                         </div>
 
                         <!-- Mobile -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Mobile Number</p>
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Mobile
+                            </p>
+
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 8950886886
                             </h4>
                         </div>
 
                         <!-- Aadhaar -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Aadhaar Card Number</p>
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Aadhaar
+                            </p>
+
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 XXXX-XXXX-8081
                             </h4>
                         </div>
 
                         <!-- Category -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Category</p>
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Category
+                            </p>
 
                             <span
-                                class="inline-block bg-blue-100 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
-
+                                class="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
                                 Ghumantu
-
                             </span>
                         </div>
 
                         <!-- District -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">District</p>
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                District
+                            </p>
+
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 ROHTAK MC
                             </h4>
                         </div>
 
                         <!-- Income -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Annual Income</p>
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Annual Income
+                            </p>
 
-                            <h4 class="text-lg font-semibold text-green-700">
+                            <h4 class="text-sm font-semibold text-green-700">
                                 ₹ 1.40 - 1.80 Lakh
                             </h4>
                         </div>
 
-                        <!-- Application Number -->
-                        <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
-                            <p class="text-sm text-gray-500 mb-1">Application Number</p>
+                        <!-- App Number -->
+                        <div class="border border-gray-200 rounded-lg p-2.5 bg-gray-50">
+                            <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
+                                Application No.
+                            </p>
 
-                            <h4 class="text-lg font-semibold text-[#0B3B66]">
+                            <h4 class="text-sm font-semibold text-[#0B3B66]">
                                 274751
                             </h4>
                         </div>
@@ -433,13 +457,13 @@
 
 
                     <!-- Address -->
-                    <div class="mt-5 border border-gray-200 rounded-xl p-5 bg-gray-50">
+                    <div class="mt-3 border border-gray-200 rounded-lg p-3 bg-gray-50">
 
-                        <p class="text-sm text-gray-500 mb-2">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">
                             Residential Address
                         </p>
 
-                        <p class="text-base font-medium text-[#0B3B66] leading-relaxed">
+                        <p class="text-sm font-medium text-[#0B3B66] leading-5">
                             231 J P COLONY HISAR ROAD ROHTAK 124001
                         </p>
 
