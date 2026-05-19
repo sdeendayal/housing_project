@@ -8,7 +8,6 @@
     <title>Department of Housing For All</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <style data-purpose="custom-utilities">
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
@@ -28,42 +27,136 @@
         }
     </style>
     <style>
-        /* Contact Card */
-        .contact-card {
-            transition: all 0.35s ease;
+        /* Wrapper */
+        #whoTable_wrapper {
+            font-size: 12px;
+            color: #334155;
         }
 
-        .contact-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 14px 30px rgba(0, 82, 168, 0.12);
+        /* Top Section (Show entries + Search) */
+        .dataTables_length,
+        .dataTables_filter {
+            margin-bottom: 18px !important;
         }
 
-        /* Small Icon Circle */
-        .contact-icon {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, #0f75c8, #0b3c74);
-            border-radius: 999px;
+        .dataTables_length label,
+        .dataTables_filter label {
             display: flex;
             align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 18px rgba(15, 117, 200, 0.25);
-            transition: all 0.35s ease;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
         }
 
-        .contact-icon span {
-            font-size: 32px !important;
-            color: #fff;
-            transition: all 0.35s ease;
+        /* Select Box */
+        .dataTables_length select {
+            border: 1px solid #dbe3ef !important;
+            border-radius: 12px !important;
+            padding: 6px 30px 6px 12px !important;
+            background: #f8fbff !important;
+            font-size: 13px !important;
+            min-width: 70px;
+            height: 38px;
+            outline: none;
+            box-shadow: none !important;
         }
 
-        /* Hover effect */
-        .contact-card:hover .contact-icon {
-            transform: scale(1.08) rotate(4deg);
+        /* Search Box */
+        .dataTables_filter input {
+            border: 1px solid #dbe3ef !important;
+            border-radius: 12px !important;
+            padding: 8px 14px !important;
+            background: #f8fbff !important;
+            font-size: 13px !important;
+            width: 240px !important;
+            height: 38px;
+            margin-left: 8px !important;
+            outline: none;
         }
 
-        .contact-card:hover .contact-icon span {
-            transform: scale(1.12);
+        .dataTables_filter input:focus,
+        .dataTables_length select:focus {
+            border-color: #0f75c8 !important;
+            box-shadow: 0 0 0 3px rgba(15, 117, 200, 0.12) !important;
+        }
+
+        /* Table */
+        #whoTable {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+            font-size: 12px !important;
+        }
+
+        #whoTable thead th {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            border: none !important;
+        }
+
+        #whoTable tbody td {
+            padding: 14px 16px !important;
+            vertical-align: middle;
+            border-bottom: 1px solid #edf2f7 !important;
+            font-size: 12px;
+        }
+
+        /* Hover */
+        #whoTable tbody tr:hover {
+            background: #f3f8ff !important;
+        }
+
+        /* Footer */
+        .dataTables_info {
+            font-size: 12px !important;
+            color: #64748b !important;
+            padding-top: 18px !important;
+        }
+
+        /* Pagination */
+        .dataTables_paginate {
+            padding-top: 12px !important;
+        }
+
+        .paginate_button {
+            border-radius: 10px !important;
+            padding: 6px 12px !important;
+            border: none !important;
+            margin: 0 3px;
+            font-size: 12px !important;
+        }
+
+        .paginate_button.current {
+            background: linear-gradient(to right, #0f75c8, #0b3c74) !important;
+            color: white !important;
+            border: none !important;
+        }
+
+        .paginate_button:hover {
+            background: #e8f1fb !important;
+            color: #0b3c74 !important;
+        }
+
+        /* Remove weird default borders */
+        table.dataTable.no-footer {
+            border-bottom: none !important;
+        }
+
+        /* Responsive */
+        @media(max-width:768px) {
+
+            .dataTables_length,
+            .dataTables_filter {
+                width: 100%;
+                text-align: left !important;
+            }
+
+            .dataTables_filter input {
+                width: 100% !important;
+                margin-left: 0 !important;
+                margin-top: 6px;
+            }
         }
     </style>
     <script>
@@ -280,196 +373,235 @@
         </div>
     </nav>
 
-    <section class="bg-[#eef3f9] py-14">
+    <section class="bg-[#eef3f9] py-8">
         <div class="max-w-7xl mx-auto px-4">
 
             <!-- Heading -->
-            <div class="text-center mb-10">
+            <div class="text-center mb-8">
 
-                <h2 class="text-[42px] font-bold text-[#0b3c74]">
-                    Get in Touch
-                </h2>
+                <div
+                    class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-[12px] font-semibold shadow-sm">
 
-                <div class="flex justify-center items-center gap-3 mt-3">
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
-                    <div class="w-3 h-3 bg-[#0f75c8] rounded-full"></div>
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
+                    <span class="material-symbols-outlined text-[17px]">
+                        groups
+                    </span>
+
+                    Who's Who
+
                 </div>
-
-                <p class="text-slate-600 text-[15px] mt-4">
-                    We are here to help you
-                </p>
 
             </div>
 
-            <!-- Cards -->
-            <div class="bg-white rounded-[35px] shadow-lg border border-slate-200 p-8">
+            <!-- Card -->
+            <div class="bg-white rounded-[26px] shadow-lg border border-slate-200 px-6 py-6">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+                <div class="overflow-x-auto">
 
-                    <!-- Address -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+                    <table id="whoTable" class="w-full text-[13px] text-left border-collapse">
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    location_on
-                                </span>
-                            </div>
-                        </div>
+                        <!-- Header -->
+                        <thead>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Address
-                        </h3>
+                            <tr class="bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white">
 
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
+                                <th class="px-4 py-4 font-semibold rounded-tl-2xl">
+                                    Sr.<br>No.
+                                </th>
 
-                        <p class="text-[13px] text-slate-600 leading-7">
-                            C-15, Awas Bhawan,<br>
-                            Sector 6,<br>
-                            Panchkula, Haryana
-                        </p>
+                                <th class="px-4 py-4 font-semibold">
+                                    Name of Officer / Official
+                                </th>
 
-                    </div>
+                                <th class="px-4 py-4 font-semibold">
+                                    Designation
+                                </th>
 
-                    <!-- Email -->
-                    <!-- Email -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+                                <th class="px-4 py-4 font-semibold">
+                                    Mobile No.
+                                </th>
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    mail
-                                </span>
-                            </div>
-                        </div>
+                                <th class="px-4 py-4 font-semibold">
+                                    Tel(O)
+                                </th>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Email ID
-                        </h3>
+                                <th class="px-4 py-4 font-semibold rounded-tr-2xl">
+                                    Email ID
+                                </th>
 
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
+                            </tr>
 
-                        <p class="text-[13px] text-slate-600 leading-6 mb-5">
-                            admin-hfa[at]<br>
-                            hry[dot]gov[dot]in
-                        </p>
+                        </thead>
 
-                        <!-- Button -->
-                        <a href="mailto:admin-hfa@hry.gov.in"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
+                        <!-- Body -->
+                        <tbody class="text-slate-700">
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                send
-                            </span>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">1</td>
+                                <td class="px-4 py-4 font-medium">Sh. Nayab Singh Saini</td>
+                                <td class="px-4 py-4">Hon’ble Chief Minister</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-2749396 / 2749409</td>
+                                <td class="px-4 py-4 text-blue-700">cmharyana@nic.in</td>
+                            </tr>
 
-                            Email Us
-                        </a>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">2</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">-</td>
+                            </tr>
 
-                    </div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">3</td>
+                                <td class="px-4 py-4 font-medium">Sh. Mohammad Shayin, IAS</td>
+                                <td class="px-4 py-4">Commissioner & Secretary to Govt. Haryana</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-5022402</td>
+                                <td class="px-4 py-4 text-blue-700">commissionersecretaryhfa@gmail.com</td>
+                            </tr>
 
-                    <!-- Phone 1 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">4</td>
+                                <td class="px-4 py-4 font-medium">Sh. Dinesh Kumar</td>
+                                <td class="px-4 py-4">PS/C&S</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-5022402</td>
+                                <td class="px-4 py-4 text-blue-700">md@hpgcl.org.in</td>
+                            </tr>
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">5</td>
+                                <td class="px-4 py-4 font-medium">Sh. J. Ganesan, IAS</td>
+                                <td class="px-4 py-4">Director General</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-2568006, 0172-2568005 Fax</td>
+                                <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">6</td>
+                                <td class="px-4 py-4 font-medium">Sh. Roop Kishore and Smt. Nancy</td>
+                                <td class="px-4 py-4">PA to Director General</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-2568006</td>
+                                <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">7</td>
+                                <td class="px-4 py-4 font-medium">Smt. Ruchi Singh Bedi, HCS</td>
+                                <td class="px-4 py-4">Additional Director</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-2578288</td>
+                                <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2585852
-                        </p>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">8</td>
+                                <td class="px-4 py-4 font-medium">Smt. Rajni Sharma</td>
+                                <td class="px-4 py-4">PA to Additional Director</td>
+                                <td class="px-4 py-4">-</td>
+                                <td class="px-4 py-4">0172-2578288</td>
+                                <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <a href="tel:01722585852"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td class="px-4 py-4 font-medium">9</td>
+                                <td class="px-4 py-4 font-medium">Sh. Lalit Kumar</td>
+                                <td class="px-4 py-4">Accounts Officer</td>
+                                <td class="px-4 py-4">8901776677</td>
+                                <td class="px-4 py-4">0172-2568006</td>
+                                <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>10</td>
+                                <td>Sh. Aman Godara</td>
+                                <td>Assistant Town Planner</td>
+                                <td>-</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                            Call Now
-                        </a>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>11</td>
+                                <td>Sh. Mahender Singh</td>
+                                <td>State Urban Economist (PMAY-U)</td>
+                                <td>9464741686</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                    </div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>12</td>
+                                <td>Sh. Harpreet Singh</td>
+                                <td>State Municipal Finance (PMAY-U)</td>
+                                <td>8901003521</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                    <!-- Phone 2 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>13</td>
+                                <td>Sh. Sandeep Kumar</td>
+                                <td>State Municipal Civil Engineer (PMAY-U)</td>
+                                <td>9466029111</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>14</td>
+                                <td>Ms. Vinita</td>
+                                <td>State MIS (PMAY-U)</td>
+                                <td>8146071337</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>15</td>
+                                <td>Smt. Seema Sharma</td>
+                                <td>CBT Specialist (PMAY-U)</td>
+                                <td>9988403111</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>16</td>
+                                <td>Sh. Devender Singh</td>
+                                <td>State Co-ordinator (PMAY-G)</td>
+                                <td>9417900220</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2568687
-                        </p>
+                            <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
+                                <td>17</td>
+                                <td>Smt. Nancy</td>
+                                <td>State MIS (PMAY-G)</td>
+                                <td>-</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                        <a href="tel:01722568687"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
+                            <tr class="hover:bg-blue-50 transition">
+                                <td>18</td>
+                                <td>Ms. Raveena</td>
+                                <td>State Finance Expert (PMAY-G)</td>
+                                <td>-</td>
+                                <td>0172-2568006</td>
+                                <td>admin-hfa@hry.gov.in</td>
+                            </tr>
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
+                        </tbody>
 
-                            Call Now
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 3 -->
-                    <!-- Phone 3 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2567233
-                        </p>
-
-                        <a href="tel:01722567233"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
+                    </table>
 
                 </div>
-
             </div>
         </div>
     </section>

@@ -8,7 +8,6 @@
     <title>Department of Housing For All</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <style data-purpose="custom-utilities">
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
@@ -25,45 +24,6 @@
 
         .custom-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
-        }
-    </style>
-    <style>
-        /* Contact Card */
-        .contact-card {
-            transition: all 0.35s ease;
-        }
-
-        .contact-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 14px 30px rgba(0, 82, 168, 0.12);
-        }
-
-        /* Small Icon Circle */
-        .contact-icon {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, #0f75c8, #0b3c74);
-            border-radius: 999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 18px rgba(15, 117, 200, 0.25);
-            transition: all 0.35s ease;
-        }
-
-        .contact-icon span {
-            font-size: 32px !important;
-            color: #fff;
-            transition: all 0.35s ease;
-        }
-
-        /* Hover effect */
-        .contact-card:hover .contact-icon {
-            transform: scale(1.08) rotate(4deg);
-        }
-
-        .contact-card:hover .contact-icon span {
-            transform: scale(1.12);
         }
     </style>
     <script>
@@ -135,7 +95,6 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased font-[Poppins]">
@@ -266,7 +225,7 @@
 
                 <!-- Help -->
                 <a class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-civic-blue bg-civic-highlight hover:bg-yellow-500 rounded-md shadow-sm transition-colors uppercase tracking-wide"
-                    href="/help">
+                    href="#">
 
                     <span class="material-symbols-outlined text-[18px]">
                         help
@@ -279,200 +238,274 @@
 
         </div>
     </nav>
+    <!-- BEGIN: Introduction Section -->
+    <section class="bg-gradient-to-b from-slate-50 to-white py-10 border-b border-slate-200">
 
-    <section class="bg-[#eef3f9] py-14">
-        <div class="max-w-7xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto px-4">
 
-            <!-- Heading -->
-            <div class="text-center mb-10">
+        <!-- Heading -->
+        <div class="text-center mb-10">
 
-                <h2 class="text-[42px] font-bold text-[#0b3c74]">
-                    Get in Touch
-                </h2>
+            <div
+                class="inline-flex items-center gap-2 bg-blue-100 text-civic-blue px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
 
-                <div class="flex justify-center items-center gap-3 mt-3">
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
-                    <div class="w-3 h-3 bg-[#0f75c8] rounded-full"></div>
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
-                </div>
+                <span class="material-symbols-outlined text-[16px]">
+                    apartment
+                </span>
 
-                <p class="text-slate-600 text-[15px] mt-4">
-                    We are here to help you
-                </p>
+                Introduction
 
             </div>
 
-            <!-- Cards -->
-            <div class="bg-white rounded-[35px] shadow-lg border border-slate-200 p-8">
+            <h2 class="text-2xl md:text-3xl font-bold text-civic-blue mb-4">
+                Department of Housing For All
+            </h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+            <p class="max-w-4xl mx-auto text-slate-600 text-base leading-7">
+                The State Government vide notification dated 15.12.2020 has created a new Department
+                <span class="font-semibold text-civic-blue">“Housing For All”</span>
+                with the objective to work as the Nodal Agency for promotion, development and facilitation
+                of housing requirements especially for socio-economically marginalized sections of society
+                in urban and rural areas of the State.
+            </p>
 
-                    <!-- Address -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    location_on
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Address
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[13px] text-slate-600 leading-7">
-                            C-15, Awas Bhawan,<br>
-                            Sector 6,<br>
-                            Panchkula, Haryana
-                        </p>
-
-                    </div>
-
-                    <!-- Email -->
-                    <!-- Email -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    mail
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Email ID
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[13px] text-slate-600 leading-6 mb-5">
-                            admin-hfa[at]<br>
-                            hry[dot]gov[dot]in
-                        </p>
-
-                        <!-- Button -->
-                        <a href="mailto:admin-hfa@hry.gov.in"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                send
-                            </span>
-
-                            Email Us
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 1 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2585852
-                        </p>
-
-                        <a href="tel:01722585852"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 2 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2568687
-                        </p>
-
-                        <a href="tel:01722568687"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 3 -->
-                    <!-- Phone 3 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2567233
-                        </p>
-
-                        <a href="tel:01722567233"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
-
-                </div>
-
-            </div>
         </div>
-    </section>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+            <!-- Left Content -->
+            <div class="lg:col-span-2">
+
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+
+                    <!-- Title -->
+                    <div
+                        class="bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] px-5 py-4">
+
+                        <h3 class="text-xl font-semibold text-white flex items-center gap-2">
+
+                            <span class="material-symbols-outlined text-[20px]">
+                                policy
+                            </span>
+
+                            Mandate for the Department
+
+                        </h3>
+
+                    </div>
+
+                    <!-- List -->
+                    <div class="p-6 space-y-5 text-sm text-slate-700 leading-7">
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                1
+                            </div>
+                            <p>
+                                Administration of the Haryana Housing Board Act, 1971 (20 of the 1971)
+                                and rules made there under.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                2
+                            </div>
+                            <p>
+                                Administration of the Haryana Housing Board.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                3
+                            </div>
+
+                            <div>
+
+                                <p class="font-semibold text-civic-blue mb-2 text-sm">
+                                    Implementation of Housing Schemes:
+                                </p>
+
+                                <ul class="space-y-1 ml-4 list-disc text-slate-600 text-sm">
+
+                                    <li>Land acquisition and development Scheme.</li>
+                                    <li>Low Income Group Housing Scheme.</li>
+                                    <li>Middle Income Group Housing Scheme.</li>
+                                    <li>Rental Housing Scheme.</li>
+                                    <li>Rural Housing Scheme.</li>
+                                    <li>Subsidized Industrial Housing Schemes.</li>
+
+                                </ul>
+
+                            </div>
+
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                4
+                            </div>
+                            <p>
+                                Constitution of State Advisory Committee in respect of Housing Scheme(s).
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                5
+                            </div>
+                            <p>
+                                Implementation of Pradhan Mantri Awas Yojana-Urban.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                6
+                            </div>
+                            <p>
+                                Implementation of Rajiv Awas Yojana.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                7
+                            </div>
+                            <p>
+                                Implementation of any other housing schemes to be launched by GoI/Government of Haryana.
+                            </p>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div
+                                class="h-8 w-8 rounded-full bg-blue-100 text-civic-blue flex items-center justify-center font-semibold text-sm shrink-0">
+                                8
+                            </div>
+                            <p>
+                                All Housing Development schemes including formulation, proposal,
+                                planning, budget and their implementation in the state.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Right Side Cards -->
+            <div class="space-y-5">
+
+                <!-- Vision Card -->
+                <div class="bg-white rounded-2xl shadow-md border border-slate-200 p-5">
+
+                    <div class="flex items-center gap-3 mb-4">
+
+                        <div
+                            class="h-12 w-12 rounded-xl bg-blue-100 flex items-center justify-center text-civic-blue">
+
+                            <span class="material-symbols-outlined text-2xl">
+                                visibility
+                            </span>
+
+                        </div>
+
+                        <div>
+                            <h4 class="text-lg font-bold text-civic-blue">
+                                Our Vision
+                            </h4>
+
+                            <p class="text-xs text-slate-500">
+                                Housing for Every Citizen
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <p class="text-slate-600 leading-6 text-sm">
+                        To ensure affordable, inclusive and sustainable housing for all citizens
+                        through transparent governance and welfare-oriented policies.
+                    </p>
+
+                </div>
+
+                <!-- Stats Card -->
+                <div
+                    class="bg-[linear-gradient(135deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] rounded-2xl p-6 text-white shadow-lg">
+
+                    <h4 class="text-xl font-bold mb-6">
+                        Department Highlights
+                    </h4>
+
+                    <div class="space-y-5">
+
+                        <div class="flex items-center justify-between border-b border-white/20 pb-3">
+
+                            <span class="text-xs uppercase tracking-wide">
+                                Established
+                            </span>
+
+                            <span class="text-xl font-bold">
+                                2020
+                            </span>
+
+                        </div>
+
+                        <div class="flex items-center justify-between border-b border-white/20 pb-3">
+
+                            <span class="text-xs uppercase tracking-wide">
+                                Coverage
+                            </span>
+
+                            <span class="text-lg font-bold">
+                                Urban & Rural
+                            </span>
+
+                        </div>
+
+                        <div class="flex items-center justify-between">
+
+                            <span class="text-xs uppercase tracking-wide">
+                                Focus
+                            </span>
+
+                            <span class="text-lg font-bold">
+                                Housing For All
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+    <!-- END: Introduction Section -->
+
+
+
+
+
+
+
+
 
     <section class="bg-white border-t border-slate-200 py-6">
 
@@ -641,34 +674,10 @@
                     class="h-14 w-14 object-contain opacity-95 hover:scale-105 transition-transform duration-300">
 
             </div>
+
         </div>
+
     </footer>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-
-            if ($.fn.DataTable.isDataTable('#whoTable')) {
-                $('#whoTable').DataTable().destroy();
-            }
-
-            $('#whoTable').DataTable({
-                responsive: true,
-                pageLength: 10,
-                ordering: true,
-                autoWidth: false,
-                lengthMenu: [10, 25, 50, 100],
-
-                language: {
-                    search: "Search Officer:",
-                    lengthMenu: "Show _MENU_ entries",
-                }
-            });
-
-        });
-    </script>
 </body>
 
 </html>

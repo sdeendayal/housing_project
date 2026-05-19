@@ -8,7 +8,6 @@
     <title>Department of Housing For All</title>
     <link rel="icon" type="image/png" href="favicon.png">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
     <style data-purpose="custom-utilities">
         .custom-scroll::-webkit-scrollbar {
             width: 6px;
@@ -25,45 +24,6 @@
 
         .custom-scroll::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
-        }
-    </style>
-    <style>
-        /* Contact Card */
-        .contact-card {
-            transition: all 0.35s ease;
-        }
-
-        .contact-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 14px 30px rgba(0, 82, 168, 0.12);
-        }
-
-        /* Small Icon Circle */
-        .contact-icon {
-            width: 72px;
-            height: 72px;
-            background: linear-gradient(135deg, #0f75c8, #0b3c74);
-            border-radius: 999px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 18px rgba(15, 117, 200, 0.25);
-            transition: all 0.35s ease;
-        }
-
-        .contact-icon span {
-            font-size: 32px !important;
-            color: #fff;
-            transition: all 0.35s ease;
-        }
-
-        /* Hover effect */
-        .contact-card:hover .contact-icon {
-            transform: scale(1.08) rotate(4deg);
-        }
-
-        .contact-card:hover .contact-icon span {
-            transform: scale(1.12);
         }
     </style>
     <script>
@@ -135,7 +95,6 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
 </head>
 
 <body class="bg-slate-50 text-slate-800 antialiased font-[Poppins]">
@@ -280,199 +239,228 @@
         </div>
     </nav>
 
-    <section class="bg-[#eef3f9] py-14">
-        <div class="max-w-7xl mx-auto px-4">
-
-            <!-- Heading -->
+    <section class="bg-[#eef2f7] py-10 overflow-x-auto">
+        <div class="min-w-[1250px] flex flex-col items-center text-[12px]">
             <div class="text-center mb-10">
+                <div
+                    class="inline-flex items-center gap-2 bg-blue-100 text-civic-blue px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
+                    <span class="material-symbols-outlined text-[16px]">
+                        account_tree
+                    </span>
+                    Organisation Chart
+                </div>
+            </div>
 
-                <h2 class="text-[42px] font-bold text-[#0b3c74]">
-                    Get in Touch
+            <!-- Department -->
+            <div
+                class="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl shadow-md px-10 py-3 w-[420px] text-center whitespace-nowrap">
+
+                <h2 class="font-semibold text-[18px]">
+                    Department of Housing For All
                 </h2>
 
-                <div class="flex justify-center items-center gap-3 mt-3">
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
-                    <div class="w-3 h-3 bg-[#0f75c8] rounded-full"></div>
-                    <div class="w-16 h-[2px] bg-[#0f75c8] rounded"></div>
-                </div>
+            </div>
 
-                <p class="text-slate-600 text-[15px] mt-4">
-                    We are here to help you
-                </p>
+            <!-- Line -->
+            <div class="w-[2px] h-8 bg-red-500"></div>
+            <!-- Minister -->
+            <!-- Minister -->
+            <div
+                class="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl shadow-lg px-5 py-4 w-[420px] text-center whitespace-nowrap">
+
+                <h3 class="font-semibold text-[14px]">
+                    Minister-In-Charge - Dr. Kamal Gupta
+                </h3>
 
             </div>
 
-            <!-- Cards -->
-            <div class="bg-white rounded-[35px] shadow-lg border border-slate-200 p-8">
+            <!-- Line -->
+            <div class="w-[2px] h-8 bg-blue-500"></div>
+            <!-- Secretary -->
+            <div
+                class="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl shadow-lg px-5 py-4 w-[520px] text-center whitespace-nowrap">
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
+                <h3 class="font-semibold text-[14px]">
+                    Administrative Secretary - Dr. Raja Sekhar Vundru, I.A.S.
+                </h3>
 
-                    <!-- Address -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+            </div>
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    location_on
-                                </span>
-                            </div>
-                        </div>
+            <!-- Connector -->
+            <div class="relative w-[650px] h-[70px]">
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Address
-                        </h3>
+                <!-- center line -->
+                <div class="absolute left-1/2 top-0 w-[2px] h-[30px] bg-blue-500"></div>
 
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
+                <!-- horizontal -->
+                <div class="absolute top-[30px] left-[90px] w-[470px] h-[2px] bg-blue-500"></div>
 
-                        <p class="text-[13px] text-slate-600 leading-7">
-                            C-15, Awas Bhawan,<br>
-                            Sector 6,<br>
-                            Panchkula, Haryana
+                <!-- vertical left -->
+                <div class="absolute left-[90px] top-[30px] w-[2px] h-[40px] bg-blue-500"></div>
+
+                <!-- vertical right -->
+                <div class="absolute right-[90px] top-[30px] w-[2px] h-[40px] bg-blue-500"></div>
+            </div>
+
+            <!-- Main Branches -->
+            <div class="flex gap-28">
+
+                <!-- LEFT SIDE -->
+                <div class="flex flex-col items-center">
+
+                    <!-- Heading -->
+                    <div
+                        class="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-xl shadow-md px-8 py-3 w-[290px] text-center font-semibold text-[13px]">
+                        Directorate of Housing For All
+                    </div>
+
+                    <div class="w-[2px] h-6 bg-blue-500"></div>
+
+                    <!-- DG -->
+                    <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
+                        <h4 class="font-semibold text-[14px] text-blue-900">
+                            Director General
+                        </h4>
+                        <p class="text-slate-600 text-[12px] mt-1">
+                            Sh. Ajit Balaji Joshi, I.A.S
                         </p>
+                    </div>
+
+                    <div class="w-[2px] h-6 bg-blue-500"></div>
+
+                    <!-- Joint Director -->
+                    <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
+                        <h4 class="font-semibold text-[14px] text-blue-900">
+                            Joint Director
+                        </h4>
+                        <p class="text-slate-600 text-[12px] mt-1">
+                            Sh. Rakesh Sandhu, H.C.S.
+                        </p>
+                    </div>
+
+                    <!-- Bottom connector -->
+                    <div class="relative w-[320px] h-[50px]">
+
+                        <div class="absolute left-1/2 top-0 w-[2px] h-[20px] bg-blue-500"></div>
+
+                        <div class="absolute top-[20px] left-[35px] w-[250px] h-[2px] bg-blue-500"></div>
+
+                        <div class="absolute left-[35px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+                        <div class="absolute left-1/2 top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+                        <div class="absolute right-[35px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
 
                     </div>
 
-                    <!-- Email -->
-                    <!-- Email -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
+                    <!-- Officers -->
+                    <div class="flex gap-4">
 
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    mail
-                                </span>
-                            </div>
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">
+                                ATP
+                            </h5>
+                            <p class="text-[11px] text-slate-600 mt-1">
+                                Sh. Aman Godara
+                            </p>
                         </div>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Email ID
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[13px] text-slate-600 leading-6 mb-5">
-                            admin-hfa[at]<br>
-                            hry[dot]gov[dot]in
-                        </p>
-
-                        <!-- Button -->
-                        <a href="mailto:admin-hfa@hry.gov.in"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                send
-                            </span>
-
-                            Email Us
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 1 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">
+                                Coordinator
+                            </h5>
+                            <p class="text-[11px] text-slate-600 mt-1">
+                                Sh. Devender
+                            </p>
                         </div>
 
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2585852
-                        </p>
-
-                        <a href="tel:01722585852"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 2 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">
+                                A.O/Supdt.
+                            </h5>
+                            <p class="text-[11px] text-slate-600 mt-1">
+                                Sh. Dev Kant Sharma
+                            </p>
                         </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2568687
-                        </p>
-
-                        <a href="tel:01722568687"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
-
-                    </div>
-
-                    <!-- Phone 3 -->
-                    <!-- Phone 3 -->
-                    <div class="contact-card bg-white border border-slate-200 rounded-[28px] p-6 text-center">
-
-                        <div class="flex justify-center mb-5">
-                            <div class="contact-icon">
-                                <span class="material-symbols-outlined">
-                                    call
-                                </span>
-                            </div>
-                        </div>
-
-                        <h3 class="text-[18px] font-semibold text-[#0b3c74]">
-                            Phone
-                        </h3>
-
-                        <div class="w-10 h-[2px] bg-[#0f75c8] mx-auto my-3"></div>
-
-                        <p class="text-[16px] font-medium text-slate-700 mb-5">
-                            0172-2567233
-                        </p>
-
-                        <a href="tel:01722567233"
-                            class="inline-flex items-center gap-2 bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white px-5 py-2 rounded-full text-[13px] font-medium shadow-md hover:scale-105 transition duration-300">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                call
-                            </span>
-
-                            Call Now
-                        </a>
 
                     </div>
 
                 </div>
 
+                <!-- RIGHT SIDE -->
+                <div class="flex flex-col items-center">
+
+                    <div
+                        class="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-xl shadow-md px-8 py-3 w-[290px] text-center font-semibold text-[13px]">
+                        Housing Board Haryana
+                    </div>
+
+                    <div class="w-[2px] h-6 bg-blue-500"></div>
+
+                    <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
+                        <h4 class="font-semibold text-[14px] text-blue-900">
+                            Chief Administrator
+                        </h4>
+                        <p class="text-slate-600 text-[12px] mt-1">
+                            Sh. Ajit Balaji Joshi, I.A.S
+                        </p>
+                    </div>
+
+                    <div class="w-[2px] h-6 bg-blue-500"></div>
+
+                    <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
+                        <h4 class="font-semibold text-[14px] text-blue-900">
+                            Secretary
+                        </h4>
+                        <p class="text-slate-600 text-[12px] mt-1">
+                            Sh. Rakesh Sandhu, H.C.S.
+                        </p>
+                    </div>
+
+                    <!-- Bottom connector -->
+                    <div class="relative w-[470px] h-[50px]">
+
+                        <div class="absolute left-1/2 top-0 w-[2px] h-[20px] bg-blue-500"></div>
+
+                        <div class="absolute top-[20px] left-[25px] w-[420px] h-[2px] bg-blue-500"></div>
+
+                        <div class="absolute left-[25px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+                        <div class="absolute left-[155px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+                        <div class="absolute right-[155px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+                        <div class="absolute right-[25px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
+
+                    </div>
+
+                    <!-- Officers -->
+                    <div class="flex gap-3">
+
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">Chief Engineer</h5>
+                            <p class="text-[11px] text-slate-600">Sh. Kabul Singh</p>
+                        </div>
+
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">CRO (PM)</h5>
+                            <p class="text-[11px] text-slate-600">Sh. Lalit</p>
+                        </div>
+
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">CAO</h5>
+                            <p class="text-[11px] text-slate-600">Sh. Chander Mohan</p>
+                        </div>
+
+                        <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
+                            <h5 class="font-semibold text-[13px] text-blue-900">STP</h5>
+                            <p class="text-[11px] text-slate-600">Sh. Satish Punia</p>
+                        </div>
+
+                    </div>
+
+                </div>
+
             </div>
+
         </div>
     </section>
+
 
     <section class="bg-white border-t border-slate-200 py-6">
 
@@ -641,34 +629,10 @@
                     class="h-14 w-14 object-contain opacity-95 hover:scale-105 transition-transform duration-300">
 
             </div>
+
         </div>
+
     </footer>
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
-    <script>
-        $(document).ready(function() {
-
-            if ($.fn.DataTable.isDataTable('#whoTable')) {
-                $('#whoTable').DataTable().destroy();
-            }
-
-            $('#whoTable').DataTable({
-                responsive: true,
-                pageLength: 10,
-                ordering: true,
-                autoWidth: false,
-                lengthMenu: [10, 25, 50, 100],
-
-                language: {
-                    search: "Search Officer:",
-                    lengthMenu: "Show _MENU_ entries",
-                }
-            });
-
-        });
-    </script>
 </body>
 
 </html>

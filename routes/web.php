@@ -9,6 +9,18 @@ Route::get('/help', function () {
     return view('help');
 });
 
+Route::get('introduction', function () {
+    return view('introduction');
+});
+
+Route::get('organisation-chart', function () {
+    return view('organisationChart');
+});
+
+Route::get('whos-who', function () {
+    return view('whosWho');
+});
+
 Route::get('/mmsay-login', function () {
     return view('mmsayLogin');
 });

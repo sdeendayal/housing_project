@@ -149,7 +149,7 @@
                 class="flex flex-wrap items-center justify-center md:justify-start space-x-1 md:space-x-4 py-2 text-center">
 
                 <!-- Home -->
-                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-civic-blue border-b-2 border-civic-accent"
+                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
                     href="/">
 
                     <span class="material-symbols-outlined text-[18px]">
@@ -159,16 +159,65 @@
                     Home
                 </a>
 
-                <!-- About Us -->
-                <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
-                    href="#">
+                <!-- About Us Dropdown -->
+                <div class="relative group">
 
-                    <span class="material-symbols-outlined text-[18px]">
-                        info
-                    </span>
+                    <!-- ACTIVE MENU -->
+                    <button
+                        class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-civic-blue border-b-2 border-civic-accent bg-slate-50 rounded-md transition-colors">
 
-                    About Us
-                </a>
+                        <span class="material-symbols-outlined text-[18px]">
+                            info
+                        </span>
+
+                        About Us
+
+                        <span class="material-symbols-outlined text-[18px] transition-transform group-hover:rotate-180">
+                            expand_more
+                        </span>
+
+                    </button>
+
+                    <!-- Dropdown Menu -->
+                    <div
+                        class="absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+
+                        <!-- Introduction -->
+                        <a href="introduction"
+                            class="flex items-center gap-3 px-5 py-3 text-sm font-medium bg-blue-50 text-civic-blue border-l-4 border-civic-accent">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                description
+                            </span>
+
+                            Introduction
+                        </a>
+
+                        <!-- Organisation Chart -->
+                        <a href="organisation-chart"
+                            class="flex items-center gap-3 px-5 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-civic-blue transition border-t border-slate-100">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                account_tree
+                            </span>
+
+                            Organisation Chart
+                        </a>
+
+                        <!-- Who's Who -->
+                        <a href="whos-who"
+                            class="flex items-center gap-3 px-5 py-3 text-sm text-slate-700 hover:bg-slate-50 hover:text-civic-blue transition border-t border-slate-100">
+
+                            <span class="material-symbols-outlined text-[18px]">
+                                groups
+                            </span>
+
+                            Who's Who
+                        </a>
+
+                    </div>
+
+                </div>
 
                 <!-- Vision -->
                 <a class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors"
@@ -204,6 +253,7 @@
                 </a>
 
             </div>
+
         </div>
     </nav>
     <!-- END: Navigation -->
