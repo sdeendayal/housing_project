@@ -888,46 +888,121 @@
             </div>
         </aside>
     </main>
-    <section class="w-full bg-white py-10">
+    <section class="py-14 bg-gradient-to-b from-slate-50 to-white">
 
-        <div class="max-w-6xl mx-auto px-4">
+        <div class="max-w-7xl mx-auto px-4">
 
-            <!-- Center Grid Wrapper -->
-            <div class="grid place-items-center">
+            <!-- Top Badge -->
+            <div class="text-center mb-5">
 
-                <!-- Card -->
+                <span
+                    class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-full text-xs font-semibold">
+
+                    <span class="material-symbols-outlined text-[16px]">
+                        apartment
+                    </span>
+
+                    About Department
+
+                </span>
+
+            </div>
+
+            <!-- Content Card -->
+            <div
+                class="bg-white rounded-[28px] border border-slate-200 shadow-lg p-8 md:p-10 hover:shadow-xl transition duration-300">
+
+                <!-- Heading -->
+                <h2 class="text-[30px] font-bold text-slate-800 text-center">
+                    Department of Housing For All
+                </h2>
+
+                <!-- Underline -->
                 <div
-                    class="w-full bg-white border border-slate-200 rounded-2xl shadow-sm p-8 
-                        transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                    class="w-24 h-1 bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] rounded-full mx-auto mt-3 mb-7">
+                </div>
 
-                    <!-- Title -->
-                    <h2 class="text-2xl font-bold text-slate-800 text-center mb-5 relative">
+                <!-- Description -->
+                <p class="text-[14px] text-slate-600 leading-8 text-justify">
 
-                        ABOUT US
+                    Hon’ble Chief Minister-cum-Finance Minister, Haryana in the Budget
+                    Speech of the financial year 2020–2021 on 28.02.2020 had stated
+                    that there will be a department namely
 
-                        <span class="block w-20 h-[3px] bg-slate-900 mx-auto mt-2 rounded-full"></span>
+                    <span class="font-semibold text-slate-800">
+                        ‘Department of Housing for All’
+                    </span>
 
-                    </h2>
+                    by subsuming various housing schemes currently undertaken by
+                    several departments like housing scheme for BPL/EWS by Housing
+                    Board Haryana, Pradhan Mantri Awas Yojna-Urban, Rajiv Awas
+                    Yojna by Department of Urban Local Bodies, Pradhan Mantri
+                    Awas Yojna-Gramin by Department of Rural Development,
+                    Housing Advance Scheme for registered construction worker by
+                    Haryana Building and Other Construction Worker Welfare Board,
+                    Ashiana Scheme by Haryana Shehri Vikas Pradhikaran,
+                    Dr. B. R. Ambedkar Awas Navinikaran Yojna for house repair by
+                    Department of SC & BC Welfare. The Legislative Assembly has
+                    accorded consent in this regard.
 
-                    <!-- Content -->
-                    <p class="text-sm md:text-base text-slate-600 leading-relaxed text-justify">
+                </p>
 
-                        Hon’ble Chief Minister-cum-Finance Minister, Haryana in the Budget Speech of the financial year
-                        2020-2021 on 28.02.2020 had stated that there will be a department namely ‘Department of Housing
-                        for All’
-                        by subsuming various housing schemes currently undertaken by several departments like housing
-                        scheme for
-                        BPL/EWS by Housing Board Haryana, Pradhan Mantri Awas Yojna-Urban, Rajiv Awas Yojna by
-                        Department of
-                        Urban Local Bodies, Pradhan Mantri Awas Yojna-Gramin by Department of Rural Development, Housing
-                        Advance
-                        Scheme for registered construction worker by Haryana Building and other Construction Worker
-                        Welfare Board,
-                        Ashiana Scheme by Haryana Shehri Vikas Pradhikaran, Dr. B. R. Ambedkar Awas Navinikaran Yojna
-                        for house
-                        repair by Department of SC & BC Welfare. The Legislative Assembly has accorded consent in this
-                        regard.
+            </div>
 
+        </div>
+
+    </section>
+
+    <section class="py-10 bg-white">
+
+        <div class="max-w-7xl mx-auto px-4">
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
+
+                <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
+
+                    <h3 class="text-3xl font-bold text-sky-600">
+                        25K+
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-2">
+                        Houses Approved
+                    </p>
+
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
+
+                    <h3 class="text-3xl font-bold text-green-600">
+                        12K+
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-2">
+                        Beneficiaries
+                    </p>
+
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
+
+                    <h3 class="text-3xl font-bold text-orange-500">
+                        22
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-2">
+                        District Covered
+                    </p>
+
+                </div>
+
+                <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
+
+                    <h3 class="text-3xl font-bold text-indigo-600">
+                        100%
+                    </h3>
+
+                    <p class="text-sm text-slate-600 mt-2">
+                        Transparency
                     </p>
 
                 </div>
@@ -938,85 +1013,55 @@
 
     </section>
 
-    <section class="bg-white border-t border-slate-200 py-12">
+    <section class="py-14 bg-slate-50">
+
         <div class="max-w-7xl mx-auto px-4">
 
-            <!-- Heading -->
-            <div class="text-center mb-10">
+            <div class="flex justify-between items-center mb-8">
 
-                <h2 class="text-3xl font-bold text-civic-blue uppercase tracking-tight">
-                    Gallery
-                </h2>
+                <div>
 
-                <!-- Underline -->
-                <div class="w-24 h-1 bg-sky-500 mx-auto mt-3 rounded-full"></div>
+                    <h2 class="text-3xl font-bold text-slate-800">
+                        Gallery
+                    </h2>
 
-            </div>
+                    <div class="w-20 h-1 bg-sky-500 rounded-full mt-2"></div>
 
-            <!-- Gallery -->
-            <div class="flex flex-wrap justify-center gap-6">
-
-                <!-- Card 1 -->
-                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
-                    <img alt="Project Alpha"
-                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                        src="1654693046606798243.jpg" />
-                    {{-- <div class="p-4 bg-white border-t border-slate-100">
-                        <p class="font-semibold text-civic-blue">
-                            Sector 42 Housing Complex
-                        </p>
-                    </div> --}}
                 </div>
 
-                <!-- Card 2 -->
-                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
-                    <img alt="Project Beta"
-                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                        src="16546930511289561504.jpg" />
-                    {{-- <div class="p-4 bg-white border-t border-slate-100">
-                        <p class="font-semibold text-civic-blue">
-                            Green Valley Apartments
-                        </p>
-                    </div> --}}
-                </div>
+                <a href="#" class="text-sky-600 font-semibold hover:underline text-sm">
 
-                <!-- Card 3 -->
-                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
-                    <img alt="Project Gamma"
-                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                        src="16546930602025626684.jpg" />
-                    {{-- <div class="p-4 bg-white border-t border-slate-100">
-                        <p class="font-semibold text-civic-blue">
-                            Urban Residency Phase II
-                        </p>
-                    </div> --}}
-                </div>
-
-                <!-- Card 4 -->
-                <div class="flex-none w-64 rounded-xl overflow-hidden shadow-lg">
-                    <img alt="Project Delta"
-                        class="w-full h-44 object-cover hover:scale-105 transition-transform duration-500"
-                        src="1654693080605359150.jpg" />
-                    {{-- <div class="p-4 bg-white border-t border-slate-100">
-                        <p class="font-semibold text-civic-blue">
-                            Skyview Towers
-                        </p>
-                    </div> --}}
-                </div>
-
-
-
-            </div>
-
-            <!-- Button -->
-            <div class="mt-10 text-center">
-                <a class="inline-block px-8 py-3 bg-civic-blue text-white font-bold rounded-lg shadow hover:bg-slate-700 transition-colors uppercase tracking-wider text-sm"
-                    href="#">
-                    View All
+                    View All →
                 </a>
+
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-6">
+
+                <div class="group rounded-3xl overflow-hidden shadow-lg">
+                    <img src="1654693046606798243.jpg"
+                        class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+
+                <div class="group rounded-3xl overflow-hidden shadow-lg">
+                    <img src="16546930511289561504.jpg"
+                        class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+
+                <div class="group rounded-3xl overflow-hidden shadow-lg">
+                    <img src="16546930602025626684.jpg"
+                        class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+
+                <div class="group rounded-3xl overflow-hidden shadow-lg">
+                    <img src="1654693080605359150.jpg"
+                        class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                </div>
+
             </div>
 
         </div>
+
     </section>
     <!-- END: Main Content Layout -->
     <!-- BEGIN: Bottom Grid Navigation -->
