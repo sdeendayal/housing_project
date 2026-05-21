@@ -33,7 +33,7 @@
             </div> --}}
 
         <!-- CENTER: Logo + Department -->
-        <div class="flex flex-col items-center justify-center gap-4 py-5 text-center">
+        <div class="flex flex-col items-center justify-center gap-4  text-center">
 
             <div>
 
