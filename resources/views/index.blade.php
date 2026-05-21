@@ -97,26 +97,7 @@
         rel="stylesheet">
 </head>
 
-<body class="bg-slate-50 text-slate-800 antialiased font-[Poppins]">
-    <!-- BEGIN: Top Utility Bar -->
-    {{-- <div class="bg-civic-blue text-white text-xs py-1 px-4">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <div class="hidden sm:block"></div>
-            <div class="flex space-x-4 items-center">
-
-                <a class="hover:text-civic-highlight" href="#">Skip to main content</a>
-                <div class="flex space-x-2">
-                    <button aria-label="Decrease font size" class="hover:text-civic-highlight">A-</button>
-                    <button aria-label="Default font size" class="hover:text-civic-highlight">A</button>
-                    <button aria-label="Increase font size" class="hover:text-civic-highlight">A+</button>
-                    <a class="hover:text-civic-highlight" href="#">Site Map</a>
-                </div>
-
-            </div>
-        </div>
-    </div> --}}
-    <!-- END: Top Utility Bar -->
-    <!-- BEGIN: Header -->
+<body class="bg-slate-50 text-slate-800 antialiased font-[Poppins]">   
     <header
         class="text-on-primary docked full-width top-0 sticky border-b border-outline-variant shadow-md z-50 bg-[linear-gradient(90deg,rgba(6,127,208,1)_0%,rgba(0,51,88,1)_100%)] bg-[url('../header-tp-bg.png')] bg-no-repeat bg-right bg-cover">
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -312,6 +293,14 @@
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                     Strategy to implement AHP-PMAY(U) in Haryana-comments/suggestions thereof
                                 </span>
+                                <span
+                                    class="relative inline-block bg-red-600 text-yellow-300 font-bold text-[9px] px-1.5 py-[1px] rounded-sm border border-red-700 leading-none animate-pulse">
+                                    NEW
+                                    <span
+                                        class="absolute left-2 -bottom-[3px] w-1.5 h-1.5 bg-red-600 rotate-45 border-r border-b border-red-700">
+                                    </span>
+                                </span>
+
                             </a>
                         </li>
 
@@ -330,6 +319,13 @@
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                     Draw Results of Fatehabad under MMSAY
                                 </span>
+                                <span
+                                    class="relative inline-block bg-red-600 text-yellow-300 font-bold text-[9px] px-1.5 py-[1px] rounded-sm border border-red-700 leading-none animate-pulse">
+                                    NEW
+                                    <span
+                                        class="absolute left-2 -bottom-[3px] w-1.5 h-1.5 bg-red-600 rotate-45 border-r border-b border-red-700">
+                                    </span>
+                                </span>
                             </a>
                         </li>
 
@@ -338,6 +334,13 @@
                                 <span class="text-green-500 mt-0.5">●</span>
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                     Draw Results of Gohana under MMSAY
+                                </span>
+                                <span
+                                    class="relative inline-block bg-red-600 text-yellow-300 font-bold text-[9px] px-1.5 py-[1px] rounded-sm border border-red-700 leading-none animate-pulse">
+                                    NEW
+                                    <span
+                                        class="absolute left-2 -bottom-[3px] w-1.5 h-1.5 bg-red-600 rotate-45 border-r border-b border-red-700">
+                                    </span>
                                 </span>
                             </a>
                         </li>
@@ -946,9 +949,7 @@
                     accorded consent in this regard.
 
                 </p>
-
             </div>
-
         </div>
 
     </section>
