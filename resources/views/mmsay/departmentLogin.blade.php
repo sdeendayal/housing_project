@@ -173,7 +173,7 @@
          <div class="row g-0">
             <!-- LEFT SECTION -->
             <div class="col-lg-5">
-               <div class="left-panel h-100 d-flex flex-column justify-content-between">
+               <div class="left-panel h-100 d-flex flex-column justify-content-center">
                   <div>
                      <!-- LOGO -->
                      <div class="d-flex align-items-start gap-4">
@@ -262,7 +262,7 @@
                   <form action="/mmsay.citizen.dashboard" method="GET">
                      @csrf
                      <!-- MOBILE -->
-                     <div class="mb-2">
+                     <div class="1">
                         <label class="form-label">
                         Department ID
                         </label>
@@ -277,7 +277,7 @@
                         </div>
                      </div>
                      <!-- MOBILE -->
-                     <div class="mb-2">
+                     <div class="mb-1">
                         <label class="form-label">
                         Mobile Number
                         </label>
@@ -295,7 +295,7 @@
                         </div>
                      </div>
                      <!-- OTP -->
-                     <div class="mb-2">
+                     <div class="mb-1">
                         <label class="form-label">
                         OTP Verification
                         </label>
@@ -309,24 +309,25 @@
                                  required
                                  >
                            </div>
-                           <div class="login-icon-new rotating-icon">
-                              <span class="material-symbols-outlined  ">
-                              refresh
-                              </span>
-                           </div>
+                          
                            <button type="button" class="otp-btn">
                            Send OTP
                            </button>
                         </div>
                      </div>
                      <!-- CAPTCHA -->
-                     <div class="mb-2">
+                     <div class="mb-1">
                         <label class="form-label">
                         Captcha Verification
                         </label>
-                        <div class="d-flex gap-3">
+                        <div class="d-flex  align-items-center gap-3">
                            <div class="captcha-box">
                               7XK92
+                           </div>
+                            <div class="login-icon-new rotating-icon">
+                              <span class="material-symbols-outlined  ">
+                              refresh
+                              </span>
                            </div>
                            <div class="input-group-custom flex-grow-1 d-flex">
                               <input
