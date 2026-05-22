@@ -192,24 +192,57 @@
 
 <body class="bg-background text-on-background min-h-screen flex flex-col md:flex-row">
     <!-- SideNavBar -->
-    <nav
-        class="hidden md:flex flex-col bg-surface text-primary font-label-md text-label-md border-r border-dotted border-outline-variant fixed left-0 top-0 h-full w-[260px] z-40">
+   <nav id="sidebar"
+    class="fixed md:flex flex-col bg-surface text-primary font-label-md text-label-md border-r border-dotted border-outline-variant left-0 top-0 h-full w-[260px] z-50 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out">
 
-        <!-- Logo Section -->
-        <div class="px-gutter pt-6 pb-6 flex items-center gap-3 border-b border-outline-variant">
+      <!-- Premium Logo Section -->
+<div
+    class="relative overflow-hidden px-5 py-5 border-b border-gray-200/70 bg-gradient-to-br from-white via-[#f8fbff] to-[#eef4ff]">
 
-            <img alt="Haryana State Emblem" class="w-10 h-10 object-contain" src="Haryana_emblem.png" />
+    <!-- Decorative Blur -->
+    <div
+        class="absolute -top-10 -right-10 w-28 h-28 bg-blue-200/30 rounded-full blur-3xl">
+    </div>
 
-            <div>
-                <h1 class="text-lg font-extrabold leading-tight text-primary">
-                    Department of Housing For All
-                </h1>
+    <div
+        class="absolute -bottom-10 -left-10 w-24 h-24 bg-indigo-200/20 rounded-full blur-3xl">
+    </div>
 
-                <p class="text-sm text-on-surface-variant">
+    <!-- Content -->
+    <div class="relative z-10 flex items-center gap-3">
+
+        <!-- Logo -->
+        <div
+            class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#0B5CAD] to-[#003358] flex items-center justify-center shadow-lg shadow-blue-200/40 border border-white/30 shrink-0">
+
+            <img alt="Haryana State Emblem"
+                class="w-8 h-8 object-contain drop-shadow-sm"
+                src="Haryana_emblem.png" />
+
+        </div>
+
+        <!-- Text -->
+        <div>
+
+            <h1
+                class="text-sm font-extrabold leading-tight text-[#0B2C4D] tracking-wide">
+                Department of Housing For All
+            </h1>
+
+            <div class="flex items-center gap-1 mt-1">
+
+                <span
+                    class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse">
+                </span>
+
+                <p class="text-[11px] font-medium text-gray-500 tracking-wide">
                     Government of Haryana
                 </p>
+
             </div>
         </div>
+    </div>
+</div>
 
         <!-- Menu -->
         <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
@@ -277,6 +310,11 @@
         </div>
 
     </nav>
+
+    <!-- Mobile Overlay -->
+<div id="sidebarOverlay"
+    class="fixed inset-0 bg-black/40 z-40 hidden md:hidden">
+</div>
     <!-- Main Content Area -->
     <div class="flex-1 flex flex-col md:ml-[260px] min-h-screen">
         <!-- TopAppBar -->
@@ -286,8 +324,8 @@
                 class="flex justify-between items-center w-full px-margin-mobile md:px-gutter max-w-container-max mx-auto h-16">
                 <div class="flex items-center gap-4">
                     <!-- Mobile Menu Button -->
-                    <button
-                        class="md:hidden text-on-primary hover:bg-on-primary-fixed-variant/20 p-2 rounded-full transition-colors">
+                   <button id="menuToggle"
+    class="md:hidden text-on-primary hover:bg-on-primary-fixed-variant/20 p-2 rounded-full transition-colors">
                         <span class="material-symbols-outlined">menu</span>
                     </button>
                     <span class="text-lg md:text-lg font-semibold text-on-primary"> Citizen Dashboard</span>
@@ -331,178 +369,267 @@
 
 
 
-            <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+           <!-- Premium Welcome Bar -->
+<div
+    class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#ffffff] via-[#f8fbff] to-[#eef4ff] border border-white/30 shadow-[0_8px_30px_rgba(0,0,0,0.06)] px-4 md:px-6 py-4 mb-6 backdrop-blur-xl">
 
-                <!-- Left Side -->
-                <p text-sm md:text-base text-on-surface-variant>
-                    Welcome back,<span class="font-semibold text-primary">
-                        Anita Devi
-                    </span>
+    <!-- Decorative Blur -->
+    <div
+        class="absolute -top-10 -right-10 w-32 h-32 bg-blue-200/30 rounded-full blur-3xl">
+    </div>
+
+    <div
+        class="absolute -bottom-10 -left-10 w-32 h-32 bg-indigo-200/20 rounded-full blur-3xl">
+    </div>
+
+    <!-- Content -->
+    <div
+        class="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+        <!-- Left Side -->
+        <div class="flex items-center gap-3">
+
+            <!-- Avatar -->
+            <div
+                class="w-11 h-11 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-lg shrink-0">
+
+                <span class="material-symbols-outlined text-[20px]">
+                    person
+                </span>
+
+            </div>
+
+            <!-- Welcome Text -->
+            <div>
+
+                <p class="text-xs uppercase tracking-wider text-gray-400 font-semibold">
+                    Welcome Back
                 </p>
 
-                <!-- Right Side -->
-                <p class="text-sm md:text-base text-on-surface-variant">
-                    Application ID:
-                    <span class="font-semibold text-primary">
-                        HR-MMSAY-2023-8942
-                    </span>
+                <h3 class="text-sm md:text-base font-bold text-gray-800">
+                    Anita Devi
+                </h3>
+
+            </div>
+        </div>
+
+        <!-- Right Side -->
+        <div
+            class="flex items-center gap-3 bg-white/70 border border-gray-100 px-4 py-3 rounded-xl shadow-sm">
+
+            <div
+                class="w-9 h-9 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+
+                <span class="material-symbols-outlined text-[18px]">
+                    badge
+                </span>
+
+            </div>
+
+            <div>
+
+                <p class="text-[11px] uppercase tracking-wide text-gray-400 font-semibold">
+                    Application ID
+                </p>
+
+                <h4 class="text-sm font-bold text-primary tracking-wide">
+                    HR-MMSAY-2023-8942
+                </h4>
+
+            </div>
+        </div>
+    </div>
+</div>
+           <!-- Compact Premium Application Status Tracker -->
+<section
+    class="relative overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-[#ffffff] via-[#f8fbff] to-[#eef4ff] p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl mb-5">
+
+    <!-- Blur Effects -->
+    <div
+        class="absolute -top-16 -right-16 w-52 h-52 bg-blue-200/20 rounded-full blur-3xl pointer-events-none">
+    </div>
+
+    <div
+        class="absolute -bottom-16 -left-16 w-52 h-52 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none">
+    </div>
+
+    <!-- Header -->
+    <div class="relative z-10 flex items-center justify-between mb-7">
+
+        <div>
+            <h2 class="text-lg md:text-xl font-bold text-gray-800">
+                Application Status
+            </h2>
+
+            <p class="text-xs text-gray-500 mt-1">
+                Track your application progress
+            </p>
+        </div>
+
+        <div
+            class="hidden md:flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
+
+            <span class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
+            Live
+
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div
+        class="relative z-10 flex flex-col lg:flex-row justify-between gap-7 lg:gap-0">
+
+        <!-- Desktop Line -->
+        <div
+            class="hidden lg:block absolute top-5 left-0 right-0 h-[4px] bg-gray-200 rounded-full">
+        </div>
+
+        <div
+            class="hidden lg:block absolute top-5 left-0 w-[58%] h-[4px] bg-gradient-to-r from-green-500 to-blue-600 rounded-full">
+        </div>
+
+        <!-- Mobile Line -->
+        <div
+            class="lg:hidden absolute left-[15px] top-0 bottom-0 w-[4px] bg-gray-200 rounded-full">
+        </div>
+
+        <div
+            class="lg:hidden absolute left-[15px] top-0 h-[55%] w-[4px] bg-gradient-to-b from-green-500 to-blue-600 rounded-full">
+        </div>
+
+        <!-- Step -->
+        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
+
+            <div
+                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+
+                <span class="material-symbols-outlined text-[18px]"
+                    style="font-variation-settings:'FILL' 1;">
+                    check
+                </span>
+
+            </div>
+
+            <div class="lg:text-center">
+
+                <h4 class="font-semibold text-sm text-gray-800">
+                    Submitted
+                </h4>
+
+                <p class="text-[11px] text-gray-500">
+                    12 Oct 2023
                 </p>
 
             </div>
-            <!-- Status Tracker -->
-            <section
-                class="bg-white rounded-xl p-5 md:p-6 shadow-sm border border-gray-200 mb-6 relative overflow-hidden">
+        </div>
 
-                <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent pointer-events-none">
-                </div>
+        <!-- Step -->
+        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
 
-                <h3 class="text-lg md:text-xl font-semibold text-primary mb-6 relative z-10">
-                    Application Status
-                </h3>
+            <div
+                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+
+                <span class="material-symbols-outlined text-[18px]"
+                    style="font-variation-settings:'FILL' 1;">
+                    verified
+                </span>
+
+            </div>
+
+            <div class="lg:text-center">
+
+                <h4 class="font-semibold text-sm text-gray-800">
+                    Verified
+                </h4>
+
+                <p class="text-[11px] text-gray-500">
+                    28 Oct 2023
+                </p>
+
+            </div>
+        </div>
+
+        <!-- Active Step -->
+        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
+
+            <div class="relative">
 
                 <div
-                    class="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0">
-
-                    <!-- Desktop Progress Line -->
-                    <div class="hidden md:block absolute top-5 left-8 right-8 h-1 bg-gray-200 z-0 rounded-full">
-                    </div>
-
-                    <div class="hidden md:block absolute top-5 left-8 w-1/2 h-1 bg-green-600 z-0 rounded-full">
-                    </div>
-
-                    <!-- Mobile Progress -->
-                    <div class="md:hidden absolute left-[19px] top-10 bottom-4 w-1 bg-gray-200 rounded-full">
-                    </div>
-
-                    <div class="md:hidden absolute left-[19px] top-10 h-1/2 w-1 bg-green-600 rounded-full">
-                    </div>
-
-                    <!-- Step 1 -->
-                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
-
-                        <div
-                            class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center shadow-sm shrink-0">
-
-                            <span class="material-symbols-outlined text-[20px]"
-                                style="font-variation-settings: 'FILL' 1;">
-                                check
-                            </span>
-
-                        </div>
-
-                        <div class="md:text-center">
-
-                            <p class="text-sm font-semibold text-on-surface">
-                                Submitted
-                            </p>
-
-                            <p class="text-xs text-on-surface-variant">
-                                12 Oct 2023
-                            </p>
-
-                        </div>
-                    </div>
-
-                    <!-- Step 2 -->
-                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
-
-                        <div
-                            class="w-10 h-10 rounded-full bg-green-600 text-white flex items-center justify-center shadow-sm shrink-0">
-
-                            <span class="material-symbols-outlined text-[20px]"
-                                style="font-variation-settings: 'FILL' 1;">
-                                check
-                            </span>
-
-                        </div>
-
-                        <div class="md:text-center">
-
-                            <p class="text-sm font-semibold text-on-surface">
-                                Verified
-                            </p>
-
-                            <p class="text-xs text-on-surface-variant">
-                                28 Oct 2023
-                            </p>
-
-                        </div>
-                    </div>
-
-                    <!-- Step 3 -->
-                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
-
-                        <div
-                            class="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-md ring-4 ring-blue-100 shrink-0 relative">
-
-                            <span class="material-symbols-outlined text-[20px]">
-                                real_estate_agent
-                            </span>
-
-                        </div>
-
-                        <div class="md:text-center">
-
-                            <p class="text-sm font-bold text-primary">
-                                Allotted
-                            </p>
-
-                            <p class="text-xs text-on-surface-variant">
-                                In Progress
-                            </p>
-
-                        </div>
-                    </div>
-
-                    <!-- Step 4 -->
-                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
-
-                        <div
-                            class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
-
-                            <span class="material-symbols-outlined text-[20px]">
-                                hourglass_empty
-                            </span>
-
-                        </div>
-
-                        <div class="md:text-center">
-
-                            <p class="text-sm font-medium text-gray-500">
-                                Pending
-                            </p>
-
-                        </div>
-                    </div>
-
-                    <!-- Step 5 -->
-                    <div class="flex md:flex-col items-center gap-3 z-10 w-full md:w-auto">
-
-                        <div
-                            class="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center shrink-0">
-
-                            <span class="material-symbols-outlined text-[20px]">
-                                verified
-                            </span>
-
-                        </div>
-
-                        <div class="md:text-center">
-
-                            <p class="text-sm font-medium text-gray-500">
-                                Registered
-                            </p>
-
-                        </div>
-                    </div>
+                    class="absolute inset-0 rounded-xl bg-blue-500 blur-lg opacity-30 animate-pulse">
                 </div>
-            </section>
+
+                <div
+                    class="relative w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-xl ring-2 ring-blue-100 shrink-0">
+
+                    <span class="material-symbols-outlined text-[20px]">
+                        real_estate_agent
+                    </span>
+
+                </div>
+            </div>
+
+            <div class="lg:text-center">
+
+                <h4 class="font-bold text-sm text-blue-700">
+                    Allotted
+                </h4>
+
+                <p class="text-[11px] text-blue-500">
+                    In Progress
+                </p>
+
+            </div>
+        </div>
+
+        <!-- Step -->
+        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
+
+            <div
+                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-gray-200 text-gray-400 flex items-center justify-center shadow-sm shrink-0">
+
+                <span class="material-symbols-outlined text-[18px]">
+                    pending
+                </span>
+
+            </div>
+
+            <div class="lg:text-center">
+
+                <h4 class="font-medium text-sm text-gray-400">
+                    Pending
+                </h4>
+
+            </div>
+        </div>
+
+        <!-- Step -->
+        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
+
+            <div
+                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-gray-200 text-gray-400 flex items-center justify-center shadow-sm shrink-0">
+
+                <span class="material-symbols-outlined text-[18px]">
+                    task_alt
+                </span>
+
+            </div>
+
+            <div class="lg:text-center">
+
+                <h4 class="font-medium text-sm text-gray-400">
+                    Registered
+                </h4>
+
+            </div>
+        </div>
+    </div>
+</section>
 
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
 
                 <!-- Purchase Date -->
                 <div
-                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    class="bg-gradient-to-br from-white to-gray-50 border border-white/40 rounded-2xl p-4 shadow-xl hover:shadow-2xl hover:shadow-indigo-300/30 hover:-translate-y-2 transition-all duration-500 backdrop-blur-md">
 
                     <p class="text-sm font-medium text-gray-500 mb-2">
                         Purchase Date
@@ -512,7 +639,7 @@
                         12 Oct 2023
                     </h4>
 
-                    <div class="mt-4 text-[#0B5CAD]">
+                    <div class="mt-2 text-[#0B5CAD]">
 
                         <span class="material-symbols-outlined text-[28px]">
                             calendar_today
@@ -523,7 +650,7 @@
 
                 <!-- Total Paid -->
                 <div
-                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    class="bg-gradient-to-br from-white to-gray-50 border border-white/40 rounded-2xl p-4 shadow-xl hover:shadow-2xl hover:shadow-indigo-300/30 hover:-translate-y-2 transition-all duration-500 backdrop-blur-md">
 
                     <p class="text-sm font-medium text-gray-500 mb-2">
                         Total Paid Amount
@@ -533,7 +660,7 @@
                         ₹ 14,50,000
                     </h4>
 
-                    <div class="mt-5 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
+                    <div class="mt-2 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
 
                         <div class="bg-green-700 h-full w-[65%] rounded-full"></div>
 
@@ -542,7 +669,7 @@
 
                 <!-- Outstanding -->
                 <div
-                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                   class="bg-gradient-to-br from-white to-gray-50 border border-white/40 rounded-2xl p-4 shadow-xl hover:shadow-2xl hover:shadow-indigo-300/30 hover:-translate-y-2 transition-all duration-500 backdrop-blur-md">
 
                     <p class="text-sm font-medium text-gray-500 mb-2">
                         Total Outstanding
@@ -552,7 +679,7 @@
                         ₹ 7,25,000
                     </h4>
 
-                    <div class="mt-4 flex items-center gap-2 text-red-600 text-sm">
+                    <div class="mt-2 flex items-center gap-2 text-red-600 text-sm">
 
                         <span class="material-symbols-outlined text-[18px]">
                             warning
@@ -565,7 +692,7 @@
 
                 <!-- Status -->
                 <div
-                    class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    class="bg-gradient-to-br from-white to-gray-50 border border-white/40 rounded-2xl p-4 shadow-xl hover:shadow-2xl hover:shadow-indigo-300/30 hover:-translate-y-2 transition-all duration-500 backdrop-blur-md">
 
                     <p class="text-sm font-medium text-gray-500 mb-2">
                         Flat/Plot Status
@@ -575,7 +702,7 @@
                         Allotted
                     </h4>
 
-                    <div class="mt-4">
+                    <div class="mt-2">
 
                         <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
 
@@ -587,32 +714,74 @@
                 </div>
             </div>
         </main>
-        <!-- Footer -->
-        <footer class="bg-tertiary text-on-tertiary border-t border-tertiary-container w-full mt-auto">
+        <!-- Premium Compact Footer -->
+<footer
+    class="relative overflow-hidden bg-gradient-to-r from-[#0B2C4D] via-[#123B63] to-[#0B2C4D] text-white border-t border-white/10 mt-auto">
 
-            <div
-                class="py-4 px-4 md:px-6 flex flex-col md:flex-row justify-between items-center max-w-[1280px] mx-auto gap-2">
+    <!-- Blur Effect -->
+    <div
+        class="absolute -top-10 right-0 w-40 h-40 bg-blue-400/10 rounded-full blur-3xl">
+    </div>
 
-                <div class="text-center md:text-left leading-5">
+    <div
+        class="max-w-[1280px] mx-auto px-4 md:px-6 py-3 relative z-10">
 
-                    <p class="text-xs text-on-tertiary-container">
-                        Designed & Developed by <b>Citizen Resources Information Department, Haryana (CRID)</b>
-                    </p>
+        <div
+            class="flex flex-col md:flex-row items-center justify-between gap-3">
 
-                    <p class="text-xs text-on-tertiary-container">
-                        Content Owned by <b>Department of Housing For All</b>
-                    </p>
+            <!-- Left Side -->
+            <div class="text-center md:text-left">
 
-                    <p class="text-xs text-on-tertiary-container mt-1">
-                        <b>© 2026 Department of Housing For All, Government of Haryana, India.</b>
-                    </p>
+                <h4 class="text-sm font-semibold tracking-wide text-white">
+                    Department of Housing For All
+                </h4>
 
-                </div>
+                <p class="text-[11px] text-blue-100 mt-1 leading-5">
+                    Government of Haryana, India
+                </p>
 
             </div>
 
-        </footer>
+            <!-- Center -->
+            <div
+                class="hidden md:block w-px h-10 bg-white/10">
+            </div>
+
+            <!-- Right Side -->
+            <div class="text-center md:text-right leading-5">
+
+                <p class="text-[11px] text-blue-100">
+                    Designed & Developed by
+                    <span class="font-semibold text-white">
+                        CRID Haryana
+                    </span>
+                </p>
+
+                <p class="text-[11px] text-blue-100">
+                    © 2026 All Rights Reserved
+                </p>
+
+            </div>
+        </div>
+    </div>
+</footer>
     </div>
 </body>
+
+<script>
+    const menuToggle = document.getElementById('menuToggle');
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+
+    menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+        overlay.classList.toggle('hidden');
+    });
+
+    overlay.addEventListener('click', () => {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('hidden');
+    });
+</script>
 
 </html>

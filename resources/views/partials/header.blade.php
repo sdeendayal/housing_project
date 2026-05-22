@@ -10,14 +10,6 @@
             </div>
         </div>
         <!-- National Emblem Placeholder -->
-        <div class="flex items-center space-x-4 bg-white/5 p-2 rounded-lg border border-white/10">
-            <img alt="Sh. Nayab Singh Saini"
-                class="h-16 w-16 rounded-full object-cover border-2 border-white/20 shadow-sm"
-                src="cm-picture-new1.jpg" />
-            <div class="text-left">
-                <p class="text-sm font-bold text-white leading-tight">Sh. Nayab Singh Saini</p>
-                <p class="text-[10px] text-slate-300">Hon'ble Chief Minister of Haryana</p>
-            </div>
-        </div>
+       
     </div>
 </header>
