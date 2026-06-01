@@ -78,6 +78,11 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/export-properties', [PropertyManagementController::class, 'export'])
     ->name('properties.export');
+
+    Route::get('/mmsay-department-cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
+    
+
+
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

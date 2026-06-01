@@ -45,9 +45,9 @@ class PropertyManagementController extends Controller
             $query->where('s.SectorName', $request->sector);
         }
 
-        if ($request->status !== null && $request->status !== '') {
-            $query->where('pr.Status', $request->status);
-        }
+        // if ($request->status !== null && $request->status !== '') {
+        //     $query->where('pr.Status', $request->status);
+        // }
 
         $properties = $query->paginate(20)->withQueryString();
 
@@ -80,12 +80,11 @@ class PropertyManagementController extends Controller
 
     public function getSectors($name)
     {
-        return DB::table('sectors as s')
-            ->join('cities as c', 's.CityId', '=', 'c.CityId')
+        return DB::table('city_sector_associations as csa')
+            ->join('cities as c', 'csa.CityId', '=', 'c.CityId')
+            ->join('sectors as s', 'csa.SectorId', '=', 's.SectorId')
             ->where('c.CityName', $name)
-            ->select('s.SectorName')
-            ->distinct()
-            ->pluck('SectorName');
+            ->pluck('s.SectorName');
     }
 
     // EXCEL EXPORT
@@ -93,4 +92,31 @@ class PropertyManagementController extends Controller
     {
         return Excel::download(new PropertyExport($request), 'properties.xlsx');
     }
+
+    public function mmsayDepartmentCashReceipt(Request $request)
+    {
+        $receipts = DB::table('cash_receipt_details as cr')
+            ->leftJoin('em_offices as eo', 'cr.BranchId', '=', 'eo.BranchId')
+            ->leftJoin('districts as d', 'cr.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'cr.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'cr.SectorId', '=', 's.SectorId')
+            ->select(
+                'cr.id',
+                'eo.BranchName as em_office',
+                'd.DistrictName as district_office',
+                'c.CityName as city_office',
+                's.SectorName as sector',
+                'cr.asset_number',
+                'cr.created_date as payment_date',
+                'cr.receipt_number',
+                'cr.total_paid_amount'
+            )
+            ->where('cr.IsDeleted', 0)
+            ->where('cr.IsActive', 1)
+            ->orderByDesc('cr.id')
+            ->paginate(20); // 20 records per page
+
+        return view('mmsay.mmsayDepartmentCashReceipt', compact('receipts'));
+    }
+
 }

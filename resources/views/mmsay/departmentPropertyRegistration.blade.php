@@ -35,46 +35,49 @@
                 <div
                     class="px-4 py-3 border-b border-outline-variant flex items-center justify-between flex-wrap gap-2 bg-surface-container-lowest">
 
-                    <h3 class="text-sm font-semibold text-primary">
-                        Assets List Details
-                    </h3>
-                    <form method="GET" class="mb-3 flex flex-wrap gap-2">
+                    <div class="mb-4 flex items-center justify-between border-b pb-3">
+                        <h2 class="text-xl font-semibold text-gray-800">
+                            Assets List Details
+                        </h2>
+                    </div>
+                    <form method="GET" class="flex flex-wrap items-center justify-end gap-3 mb-4">
 
                         <!-- EM OFFICE -->
-                        <select name="em_office" id="emOffice">
+                        <select name="em_office" id="emOffice"
+                            class="h-11 min-w-[220px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">EM Office</option>
                             @foreach ($emOffices as $em)
                                 <option value="{{ $em->BranchName }}">{{ $em->BranchName }}</option>
                             @endforeach
                         </select>
+
                         <!-- DISTRICT -->
-                        <select name="district" id="district" class="border p-2 text-sm rounded">
+                        <select name="district" id="district"
+                            class="h-11 min-w-[150px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">District</option>
                         </select>
 
                         <!-- CITY -->
-                        <select name="city" id="city" class="border p-2 text-sm rounded">
+                        <select name="city" id="city"
+                            class="h-11 min-w-[150px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">City</option>
                         </select>
 
                         <!-- SECTOR -->
-                        <select name="sector" id="sector" class="border p-2 text-sm rounded">
+                        <select name="sector" id="sector"
+                            class="h-11 min-w-[150px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">Sector</option>
                         </select>
 
-                        <!-- STATUS -->
-                        <select name="status" class="border p-2 text-sm rounded">
-                            <option value="">Status</option>
-                            <option value="1">Active</option>
-                            <option value="0">Inactive</option>
-                        </select>
-
-                        <button class="bg-blue-600 text-white px-3 py-2 rounded text-sm">
+                        <!-- FILTER BUTTON -->
+                        <button type="submit"
+                            class="h-11 rounded-lg bg-blue-600 px-5 text-sm font-medium text-white transition hover:bg-blue-700">
                             Filter
                         </button>
 
+                        <!-- EXPORT BUTTON -->
                         <a href="{{ route('properties.export', request()->all()) }}"
-                            class="bg-green-600 text-white px-3 py-2 rounded text-sm">
+                            class="flex h-11 items-center rounded-lg bg-green-600 px-5 text-sm font-medium text-white transition hover:bg-green-700">
                             Export Excel
                         </a>
 
@@ -240,7 +243,7 @@
     <div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-[100] hidden items-center justify-center overflow-y-auto p-4 md:p-8"
         id="modalOverlay">
         <!-- Modal Content -->
-        <div class="bg-white w-full max-w-4xl rounded-xl shadow-2xl border border-outline-variant overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col max-h-full"
+        <div class="bg-white w-full max-w-6xl rounded-xl shadow-2xl border border-outline-variant overflow-hidden transform scale-95 opacity-0 transition-all duration-300 flex flex-col max-h-full"
             id="modalContent">
             <!-- Modal Header -->
             <div class="bg-primary p-6 flex items-center justify-between text-white shrink-0">
@@ -265,43 +268,58 @@
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Estate Manager Office
                                 <span class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select EM</option>
+                            <select id="formEmOffice" name="BranchId"
+                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select EM Office</option>
+
+                                @foreach ($emOffices as $em)
+                                    <option value="{{ $em->BranchName }}">
+                                        {{ $em->BranchName }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">District Office <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select District</option>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                id="formDistrict" name="DistrictId">
+                                <option value="">Select District</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">City Office <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select City</option>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                id="formCity" name="CityId">
+                                <option value="">Select City</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Sector <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Sector</option>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                id="formSector" name="SectorId">
+                                <option value="">Select Sector</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Scheme <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Scheme</option>
+                            <select name="scheme" id="scheme"
+                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">HBH</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Location Status <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Location</option>
+                            <select name="location_status" id="location_status"
+                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select Status</option>
+                                <option value="Yes">Yes</option>
+                                <option value="Preference">Preference</option>
+                                <option value="Normal">Normal</option>
                             </select>
                         </div>
                     </div>
@@ -316,24 +334,316 @@
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Property type <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Property Type</option>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                name="propertType">
+                                <option value="">Select Property Type</option>
+                                <option value="Residential">Residential</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Property Category
                                 <span class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Category</option>
+                            <select name="property_category" id="property_category"
+                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+
+                                <option value="">Select Property Category</option>
+
+                                <option value="2MIGA">2MIGA</option>
+                                <option value="A1TYP">A1TYP</option>
+                                <option value="A2TYP">A2TYP</option>
+                                <option value="ALIG2">ALIG2</option>
+                                <option value="ASHOP">ASHOP</option>
+                                <option value="ATYPE">ATYPE</option>
+                                <option value="AUHIG">AUHIG</option>
+                                <option value="AULII">AULII</option>
+                                <option value="B1TYP">B1TYP</option>
+                                <option value="B2TYP">B2TYP</option>
+                                <option value="B3TYP">B3TYP</option>
+
+                                <option value="Backword Classes Other">Backword Classes Other</option>
+                                <option value="Backword Classes Women">Backword Classes Women</option>
+                                <option value="BPL">BPL</option>
+
+                                <option value="Commercial">Commercial</option>
+                                <option value="EWS">EWS</option>
+                                <option value="EWS BPL Other">EWS BPL Other</option>
+
+                                <option value="General Category Other">General Category Other</option>
+                                <option value="General Category Women">General Category Women</option>
+
+                                <option value="Handicap and blind person women">
+                                    Handicap and blind person women
+                                </option>
+
+                                <option value="Handicap and Blind Person-Other">
+                                    Handicap and Blind Person-Other
+                                </option>
+
+                                <option value="HIG">HIG</option>
+                                <option value="HIG_I">HIG_I</option>
+                                <option value="HIG2">HIG2</option>
+                                <option value="HIG-A">HIG-A</option>
+                                <option value="HIG-L">HIG-L</option>
+                                <option value="HIG-U">HIG-U</option>
+
+                                <option value="Housing Board Haryana employee others">
+                                    Housing Board Haryana employee others
+                                </option>
+
+                                <option value="Housing Board Haryana employee Women">
+                                    Housing Board Haryana employee Women
+                                </option>
+
+                                <option value="LIG">LIG</option>
+                                <option value="LIG-A">LIG-A</option>
+                                <option value="LIG-I">LIG-I</option>
+                                <option value="LIG-2">LIG-2</option>
+
+                                <option value="MIG">MIG</option>
+                                <option value="MIG-A">MIG-A</option>
+                                <option value="MIG-B">MIG-B</option>
+                                <option value="MIG-L">MIG-L</option>
+                                <option value="MIG-U">MIG-U</option>
+
+                                <option value="Old Person/Senior Citizens -Other">
+                                    Old Person/Senior Citizens -Other
+                                </option>
+
+                                <option value="Old Person/Senior Citizens -Women">
+                                    Old Person/Senior Citizens -Women
+                                </option>
+
+                                <option value="PLOT">PLOT</option>
+
+                                <option value="Police Force Kill in Action-Other">
+                                    Police Force Kill in Action-Other
+                                </option>
+
+                                <option value="Residential">Residential</option>
+
+                                <option value="Retired Haryana Govt. Employee Other">
+                                    Retired Haryana Govt. Employee Other
+                                </option>
+
+                                <option value="Scheduled Caste Other">
+                                    Scheduled Caste Other
+                                </option>
+
+                                <option value="Scheduled Caste Women">
+                                    Scheduled Caste Women
+                                </option>
+
+                                <option value="Serving/Ex-Defence and Para Military as Haryana">
+                                    Serving/Ex-Defence and Para Military as Haryana
+                                </option>
+
+                                <option value="SHOP">SHOP</option>
+                                <option value="SHOPA">SHOPA</option>
+                                <option value="SHOPP">SHOPP</option>
+
+                                <option value="War Widow Disable Soldier Other">
+                                    War Widow Disable Soldier Other
+                                </option>
+
+                                <option value="Widow Other">Widow Other</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Property Status <span
                                     class="text-error">*</span></label>
-                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Status</option>
+                            <select name="category" id="category"
+                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select Category</option>
+                                <option value="Surrender">Surrender</option>
+                                <option value="Cancelled">Cancelled</option>
+                                <option value="Auction">Auction</option>
+                                <option value="DRAW">DRAW</option>
+                                <option value="PMAY">PMAY</option>
+                                <option value="E-Auction">E-Auction</option>
+                                <option value="Direct">Direct</option>
                             </select>
                         </div>
+                    </div>
+                </section>
+
+                <!-- Category Details Section -->
+                <section>
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="w-1 h-6 bg-secondary rounded-full"></span>
+                        <h3 class="text-secondary font-bold uppercase tracking-wider text-[12px]">
+                            Category Details
+                        </h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                        <!-- Applicant Type -->
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant block">
+                                Applicant Type <span class="text-error">*</span>
+                            </label>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select Applicant Type</option>
+                                <option value="General">General</option>
+                            </select>
+                        </div>
+
+                        <!-- Original Reservation Category -->
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant block">
+                                Original Reservation Category <span class="text-error">*</span>
+                            </label>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select Category</option>
+                                <option value="2MIGA">2MIGA</option>
+                                <option value="A1TYP">A1TYP</option>
+                                <option value="A2TYP">A2TYP</option>
+                                <option value="ALIG2">ALIG2</option>
+                                <option value="ASHOP">ASHOP</option>
+                                <option value="ATYPE">ATYPE</option>
+                                <option value="AUHIG">AUHIG</option>
+                                <option value="AULII">AULII</option>
+                                <option value="B1TYP">B1TYP</option>
+                                <option value="B2TYP">B2TYP</option>
+                                <option value="B3TYP">B3TYP</option>
+                                <option value="Backword Classes Other">Backword Classes Other</option>
+                                <option value="Backword Classes Women">Backword Classes Women</option>
+                                <option value="BPL">BPL</option>
+                                <option value="C1TYP">C1TYP</option>
+                                <option value="C2IIT">C2IIT</option>
+                                <option value="C2ITY">C2ITY</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="COMSH">COMSH</option>
+                                <option value="COREU">COREU</option>
+                                <option value="DDYQ">DDYQ</option>
+                                <option value="DIQY">DIQY</option>
+                                <option value="DRII">DRII</option>
+                                <option value="DTQY">DTQY</option>
+                                <option value="DTYPE">DTYPE</option>
+                                <option value="E1TYP">E1TYP</option>
+                                <option value="E2TYP">E2TYP</option>
+                                <option value="E3TYP">E3TYP</option>
+                                <option value="EWS">EWS</option>
+                                <option value="EWS BPL Other">EWS BPL Other</option>
+                                <option value="EWSA">EWSA</option>
+                                <option value="EWSBP">EWSBP</option>
+                                <option value="EWSEH">EWSEH</option>
+                                <option value="EWSHY">EWSHY</option>
+                                <option value="EWSI">EWSI</option>
+                                <option value="EWSII">EWSII</option>
+                                <option value="EWSM">EWSM</option>
+                                <option value="EWSY">EWSY</option>
+                                <option value="FTPYE">FTPYE</option>
+                                <option value="General Category Other">General Category Other</option>
+                                <option value="General Category Women">General Category Women</option>
+                                <option value="GIITP">GIITP</option>
+                                <option value="GITYP">GITYP</option>
+                                <option value="Handicap and blind person women">Handicap and blind person women</option>
+                                <option value="Handicap and Blind Person-Other">Handicap and Blind Person-Other</option>
+                                <option value="Haryana Retired Gov. employee Women">Haryana Retired Gov. employee Women
+                                </option>
+                                <option value="Haryana State Employee less than 5 year from retirement Other">Haryana State
+                                    Employee less than 5 year from retirement Other</option>
+                                <option value="Haryana State Employee less than 5 year from retirement Women">Haryana State
+                                    Employee less than 5 year from retirement Women</option>
+                                <option value="Haryana State Employee more than 5 year from retirement Other">Haryana State
+                                    Employee more than 5 year from retirement Other</option>
+                                <option value="HDGQ">HDGQ</option>
+                                <option value="HE1-W">HE1-W</option>
+                                <option value="HGLAM">HGLAM</option>
+                                <option value="HGLAY">HGLAY</option>
+                                <option value="HGQI">HGQI</option>
+                                <option value="HGUAM">HGUAM</option>
+                                <option value="HIG">HIG</option>
+                                <option value="HIG_I">HIG_I</option>
+                                <option value="HIG2">HIG2</option>
+                                <option value="HIGA">HIGA</option>
+                                <option value="HIG-A">HIG-A</option>
+                                <option value="HIGAH">HIGAH</option>
+                                <option value="HIGAL">HIGAL</option>
+                                <option value="HIGAM">HIGAM</option>
+                                <option value="HIGAU">HIGAU</option>
+                                <option value="HIGAY">HIGAY</option>
+                                <option value="HIGDI">HIGDI</option>
+                                <option value="HIGDL">HIGDL</option>
+                                <option value="HIGHY">HIGHY</option>
+                                <option value="HIGI">HIGI</option>
+                                <option value="HIGII">HIGII</option>
+                                <option value="HIG-L">HIG-L</option>
+                                <option value="HIGLA">HIGLA</option>
+                                <option value="HIGLM">HIGLM</option>
+                                <option value="HIGQU">HIGQU</option>
+                                <option value="HIGSA">HIGSA</option>
+                                <option value="HIGSD">HIGSD</option>
+                                <option value="HIG-U">HIG-U</option>
+                                <option value="HIGUA">HIGUA</option>
+                                <option value="HIGY">HIGY</option>
+                            </select>
+                        </div>
+
+                        <!-- Current Reservation Category -->
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant block">
+                                Current Reservation Category <span class="text-error">*</span>
+                            </label>
+                            <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
+                                <option value="">Select Category</option>
+                                <option value="2MIGA">2MIGA</option>
+                                <option value="A1TYP">A1TYP</option>
+                                <option value="A2TYP">A2TYP</option>
+                                <option value="ALIG2">ALIG2</option>
+                                <option value="ASHOP">ASHOP</option>
+                                <option value="ATYPE">ATYPE</option>
+                                <option value="AUHIG">AUHIG</option>
+                                <option value="AULII">AULII</option>
+                                <option value="B1TYP">B1TYP</option>
+                                <option value="B2TYP">B2TYP</option>
+                                <option value="B3TYP">B3TYP</option>
+                                <option value="Backword Classes Other">Backword Classes Other</option>
+                                <option value="Backword Classes Women">Backword Classes Women</option>
+                                <option value="BPL">BPL</option>
+                                <option value="C1TYP">C1TYP</option>
+                                <option value="C2IIT">C2IIT</option>
+                                <option value="C2ITY">C2ITY</option>
+                                <option value="Commercial">Commercial</option>
+                                <option value="COMSH">COMSH</option>
+                                <option value="COREU">COREU</option>
+                                <option value="DDYQ">DDYQ</option>
+                                <option value="DIQY">DIQY</option>
+                                <option value="DRII">DRII</option>
+                                <option value="DTQY">DTQY</option>
+                                <option value="DTYPE">DTYPE</option>
+                                <option value="E1TYP">E1TYP</option>
+                                <option value="E2TYP">E2TYP</option>
+                                <option value="E3TYP">E3TYP</option>
+                                <option value="EWS">EWS</option>
+                                <option value="EWS BPL Other">EWS BPL Other</option>
+                                <option value="EWSA">EWSA</option>
+                                <option value="EWSBP">EWSBP</option>
+                                <option value="EWSEH">EWSEH</option>
+                                <option value="EWSHY">EWSHY</option>
+                                <option value="EWSI">EWSI</option>
+                                <option value="EWSII">EWSII</option>
+                                <option value="EWSM">EWSM</option>
+                                <option value="EWSY">EWSY</option>
+                                <option value="FTPYE">FTPYE</option>
+                                <option value="General Category Other">General Category Other</option>
+                                <option value="General Category Women">General Category Women</option>
+                                <option value="GIITP">GIITP</option>
+                                <option value="GITYP">GITYP</option>
+                                <option value="Handicap and blind person women">Handicap and blind person women</option>
+                                <option value="Handicap and Blind Person-Other">Handicap and Blind Person-Other</option>
+                                <option value="Haryana Retired Gov. employee Women">Haryana Retired Gov. employee Women
+                                </option>
+                                <option value="Haryana State Employee less than 5 year from retirement Other">Haryana State
+                                    Employee less than 5 year from retirement Other</option>
+                                <option value="Haryana State Employee less than 5 year from retirement Women">Haryana State
+                                    Employee less than 5 year from retirement Women</option>
+                                <option value="Haryana State Employee more than 5 year from retirement Other">Haryana State
+                                    Employee more than 5 year from retirement Other</option>
+                            </select>
+                        </div>
+
                     </div>
                 </section>
                 <!-- Assets Details Section -->
@@ -347,7 +657,10 @@
                             <label class="font-label-md text-label-md text-on-surface-variant block">Asset Size Unit <span
                                     class="text-error">*</span></label>
                             <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Unit</option>
+                                <option value="">Select Unit</option>
+                                <option value="Sq. Yards">Sq. Yards</option>
+                                <option value="Sq. Mtr">Sq. Mtr</option>
+                                <option value="Sq. feet">Sq. feet</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
@@ -366,14 +679,22 @@
                             <label class="font-label-md text-label-md text-on-surface-variant block">Floor Status <span
                                     class="text-error">*</span></label>
                             <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Status</option>
+                                <option value="">Select Status</option>
+                                <option value="Yes">Yes</option>
+                                <option value="No">No</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">Floor <span
                                     class="text-error">*</span></label>
                             <select class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option>Select Floor</option>
+                                <option value="">Select Floor</option>
+                                <option value="1st">1st</option>
+                                <option value="2nd">2nd</option>
+                                <option value="3rd">3rd</option>
+                                <option value="4th">4th</option>
+                                <option value="5th">5th</option>
+                                <option value="6th">6th</option>
                             </select>
                         </div>
                         <div class="space-y-1.5">
@@ -381,6 +702,20 @@
                                 (Optional)</label>
                             <input class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
                                 placeholder="Area details" type="text" />
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant block">
+                                Incidental Area (Corner) (Optional)
+                            </label>
+                            <input class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                placeholder="Enter incidental area" type="text" />
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="font-label-md text-label-md text-on-surface-variant block">
+                                Application Number (Optional)
+                            </label>
+                            <input class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary"
+                                placeholder="Enter application number" type="text" />
                         </div>
                     </div>
                 </section>

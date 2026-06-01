@@ -1,5 +1,84 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
+$(document).ready(function () {
+
+    // EM Office -> District
+    $('#formEmOffice').on('change', function () {
+
+        let name = $(this).val();
+
+        $('#formDistrict').html('<option value="">Select District</option>');
+        $('#formCity').html('<option value="">Select City</option>');
+        $('#formSector').html('<option value="">Select Sector</option>');
+
+        if (!name) return;
+
+        $.get('/get-districts/' + encodeURIComponent(name), function (res) {
+
+            res.forEach(function (d) {
+
+                $('#formDistrict').append(
+                    `<option value="${d}">${d}</option>`
+                );
+
+            });
+
+        });
+
+    });
+
+
+    // District -> City
+    $('#formDistrict').on('change', function () {
+
+        let name = $(this).val();
+
+        $('#formCity').html('<option value="">Select City</option>');
+        $('#formSector').html('<option value="">Select Sector</option>');
+
+        if (!name) return;
+
+        $.get('/get-cities/' + encodeURIComponent(name), function (res) {
+
+            res.forEach(function (c) {
+
+                $('#formCity').append(
+                    `<option value="${c}">${c}</option>`
+                );
+
+            });
+
+        });
+
+    });
+
+
+    // City -> Sector
+    $('#formCity').on('change', function () {
+
+        let name = $(this).val();
+
+        $('#formSector').html('<option value="">Select Sector</option>');
+
+        if (!name) return;
+
+        $.get('/get-sectors/' + encodeURIComponent(name), function (res) {
+
+            res.forEach(function (s) {
+
+                $('#formSector').append(
+                    `<option value="${s}">${s}</option>`
+                );
+
+            });
+
+        });
+
+    });
+
+});
+</script>
+<script>
     $('#emOffice').on('change', function() {
         let name = $(this).val();
 

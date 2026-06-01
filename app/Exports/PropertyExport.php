@@ -44,7 +44,7 @@ class PropertyExport implements FromCollection, WithHeadings
         return $query->select(
             'pr.AssetId',
             'pr.AssetName',
-            'pr.Size',
+            'pr.AssetSize',
             'eo.BranchName as em_office',
             'd.DistrictName as district',
             'c.CityName as city',
