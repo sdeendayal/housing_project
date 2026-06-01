@@ -79,3 +79,81 @@
     </div>
 
 </footer>
+<script src="https://cdn.jsdelivr.net/npm/captcha-mini/dist/captcha-mini.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+function refreshCaptcha() {
+    fetch("/refresh-captcha", {
+        method: "POST",
+        headers: {
+            "X-CSRF-TOKEN": "{{ csrf_token() }}",
+            "Content-Type": "application/json"
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("captchaText").innerText = data.captcha;
+        document.getElementById("captchaInput").value = "";
+    });
+}
+</script>
+
+<script>
+$(document).ready(function () {
+
+    // EM → District
+    $('#branch').on('change', function () {
+        let branchId = $(this).val();
+
+        $('#district').html('<option>Loading...</option>');
+        $('#city').html('<option value="">City</option>');
+        $('#sector').html('<option value="">Sector</option>');
+
+        if (branchId) {
+            $.get('/get-districts/' + branchId, function (data) {
+                let html = '<option value="">District</option>';
+                data.forEach(d => {
+                    html += `<option value="${d.DistrictId}">${d.DistrictName}</option>`;
+                });
+                $('#district').html(html);
+            });
+        }
+    });
+
+    // District → City
+    $('#district').on('change', function () {
+        let districtId = $(this).val();
+
+        $('#city').html('<option>Loading...</option>');
+        $('#sector').html('<option value="">Sector</option>');
+
+        if (districtId) {
+            $.get('/get-cities/' + districtId, function (data) {
+                let html = '<option value="">City</option>';
+                data.forEach(c => {
+                    html += `<option value="${c.CityId}">${c.CityName}</option>`;
+                });
+                $('#city').html(html);
+            });
+        }
+    });
+
+    // City → Sector
+    $('#city').on('change', function () {
+        let cityId = $(this).val();
+
+        $('#sector').html('<option>Loading...</option>');
+
+        if (cityId) {
+            $.get('/get-sectors/' + cityId, function (data) {
+                let html = '<option value="">Sector</option>';
+                data.forEach(s => {
+                    html += `<option value="${s.SectorId}">${s.SectorName}</option>`;
+                });
+                $('#sector').html(html);
+            });
+        }
+    });
+
+});
+</script>

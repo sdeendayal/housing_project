@@ -1,0 +1,386 @@
+﻿SectorId,SectorName,Is_Active,Is_Deleted,CreatedDate,CretedBy,ModifiedDate,ModifiedBy,CompanyId
+681,Ward 1,1,0,,,,,544
+682,Ward 2,1,0,,,,,544
+683,Ward 3,1,0,,,,,544
+684,Ward 4,1,0,,,,,544
+685,Ward 5,1,0,,,,,544
+686,Ward 6,1,0,,,,,544
+687,Ward 7,1,0,,,,,544
+688,Ward 8,1,0,,,,,544
+689,Ward 9,1,0,,,,,544
+690,Ward 10,1,0,,,,,544
+691,Ward 11,1,0,,,,,544
+692,Ward 12,1,0,,,,,544
+693,Ward 13,1,0,,,,,544
+694,Ward 14,1,0,,,,,544
+695,Ward 15,1,0,,,,,544
+696,Ward 16,1,0,,,,,544
+697,Ward 17,1,0,,,,,544
+698,Ward 18,1,0,,,,,544
+699,Ward 19,1,0,,,,,544
+700,Ward 20,1,0,,,,,544
+701,Ward 21,1,0,,,,,544
+702,Ward 22,1,0,,,,,544
+703,Ward 23,1,0,,,,,544
+704,Ward 24,1,0,,,,,544
+705,Ward 25,1,0,,,,,544
+706,Ward 26,1,0,,,,,544
+707,Ward 27,1,0,,,,,544
+708,Ward 28,1,0,,,,,544
+709,Ward 29,1,0,,,,,544
+710,Ward 30,1,0,,,,,544
+711,Ward 31,1,0,,,,,544
+712,Ward 32,1,0,,,,,544
+713,Ward 33,1,0,,,,,544
+714,Ward 34,1,0,,,,,544
+715,Ward 35,1,0,,,,,544
+716,Ward 36,1,0,,,,,544
+717,Ward 37,1,0,,,,,544
+718,Ward 38,1,0,,,,,544
+719,Ward 39,1,0,,,,,544
+720,Ward 40,1,0,,,,,544
+721,Ward 99,1,0,,,,,544
+722,Malerna,1,0,,,,,544
+723,Dangdehri,1,0,,,,,544
+724,Dhana,1,0,,,,,544
+725,Palwali,1,0,,,,,544
+726,Basharia,1,0,,,,,544
+727,Dharampur,1,0,,,,,544
+728,Manakpur,1,0,,,,,544
+729,Nagal Moginand,1,0,,,,,544
+730,Shahupura,1,0,,,,,544
+731,Badshahpur,1,0,,,,,544
+732,Baskushla,1,0,,,,,544
+733,Dadri,1,0,,,,,544
+734,Lohgarh,1,0,,,,,544
+735,Mohmadheri,1,0,,,,,544
+736,Bhang Rola,1,0,,,,,544
+737,Kalanaur Khurd Part,1,0,,,,,544
+738,Manka,1,0,,,,,544
+739,Narwana Rural,1,0,,,,,544
+740,Nurpur Jharsa,1,0,,,,,544
+741,Tekawli,1,0,,,,,544
+742,Bajghera,1,0,,,,,544
+743,Kalanaur Kalan Part,1,0,,,,,544
+744,Rawajpur,1,0,,,,,544
+745,SamalkhaRural,1,0,,,,,544
+746,Sitoo  Majra,1,0,,,,,544
+747,Bihla,1,0,,,,,544
+748,Dhumaspur,1,0,,,,,544
+749,Jakhal,1,0,,,,,544
+750,Kalarheri,1,0,,,,,544
+751,Bhanoo,1,0,,,,,544
+752,KalayatRural,1,0,,,,,544
+753,Nasibpur,1,0,,,,,544
+754,Tikampur,1,0,,,,,544
+755,Bhuna,1,0,,,,,544
+756,Jaswantgarh,1,0,,,,,544
+757,Siwani Rural,1,0,,,,,544
+758,Dhankot,1,0,,,,,544
+759,Fazalpur,1,0,,,,,544
+760,Garhi Harsaru,1,0,,,,,544
+761,Kheirpur,1,0,,,,,544
+762,Palwal Part,1,0,,,,,544
+763,Shekh Majra,1,0,,,,,544
+764,Badshahpur,1,0,,,,,544
+765,Bawani Khera Rural,1,0,,,,,544
+766,Chattar Garh,1,0,,,,,544
+767,Dabkauri,1,0,,,,,544
+768,Aghwanpur,1,0,,,,,544
+769,Dadiana,1,0,,,,,544
+770,Harsaru,1,0,,,,,544
+771,Janaula,1,0,,,,,544
+772,Kot,1,0,,,,,544
+773,Tigaon,1,0,,,,,544
+774,Alapur,1,0,,,,,544
+775,Devinagar,1,0,,,,,544
+776,Nimka,1,0,,,,,544
+777,Rohtak RuralPart,1,0,,,,,544
+778,Darbaripur,1,0,,,,,544
+779,Faridpur,1,0,,,,,544
+780,Gharaunda RuralPart,1,0,,,,,544
+781,Khangesra,1,0,,,,,544
+782,Nizampur,1,0,,,,,544
+783,Alipur,1,0,,,,,544
+784,Beri Dopana,1,0,,,,,544
+785,Faizupur Majra Neemka,1,0,,,,,544
+786,Ghel,1,0,,,,,544
+787,Ramnagar,1,0,,,,,544
+788,Ulhawas,1,0,,,,,544
+789,Kadarpur,1,0,,,,,544
+790,Khalilpur,1,0,,,,,544
+791,Kolu Majra,1,0,,,,,544
+792,Mortzapur,1,0,,,,,544
+793,Wazirpur,1,0,,,,,544
+794,Dhorka,1,0,,,,,544
+795,Liharsa,1,0,,,,,544
+796,Mujeri,1,0,,,,,544
+797,Nagal,1,0,,,,,544
+798,Pundri Rural,1,0,,,,,544
+799,Rajaund,1,0,,,,,544
+800,Meoka,1,0,,,,,544
+801,Nawada Tigaon,1,0,,,,,544
+802,Sirsa Rural,1,0,,,,,544
+803,Bhatola,1,0,,,,,544
+804,Dhulkot Part,1,0,,,,,544
+805,Fatehabad Rural,1,0,,,,,544
+806,Jalouli,1,0,,,,,544
+807,Kankrola,1,0,,,,,544
+808,Milakpur,1,0,,,,,544
+809,Ferozepur Khadar,1,0,,,,,544
+810,Hayatpur,1,0,,,,,544
+811,Kheri Kalan,1,0,,,,,544
+812,Mirzapur,1,0,,,,,544
+813,Shamsabad Khechatan,1,0,,,,,544
+814,Dewlawas,1,0,,,,,544
+815,Nawada Fatehpur,1,0,,,,,544
+816,Uchana Kalan,1,0,,,,,544
+817,UKLANA MANDI,1,0,,,,,544
+818,Badha,1,0,,,,,544
+819,Chandpura,1,0,,,,,544
+820,Chhawan,1,0,,,,,544
+821,Nuh RuralPart,1,0,,,,,544
+822,Pahladpur Majra Badrola,1,0,,,,,544
+823,Chandaoli,1,0,,,,,544
+824,Meerpur,1,0,,,,,544
+825,Ram Nagaria,1,0,,,,,544
+826,Sikanderpur Badha,1,0,,,,,544
+827,Lakhnola,1,0,,,,,544
+828,Machhgar,1,0,,,,,544
+829,Narnaund Rural,1,0,,,,,544
+830,Bhopani,1,0,,,,,544
+831,Naharpur Kasan,1,0,,,,,544
+832,Adampur Mandi,1,0,,,,,544
+833,Dhadar,1,0,,,,,544
+834,Kasan,1,0,,,,,544
+835,Raipur,1,0,,,,,544
+836,Ratia Rural,1,0,,,,,544
+837,Khoh,1,0,,,,,544
+838,Beri Khas,1,0,,,,,544
+839,Fatehpur Viran,1,0,,,,,544
+840,Sehrawan,1,0,,,,,544
+841,Hodal RuralPart,1,0,,,,,544
+842,Momanpur,1,0,,,,,544
+843,Nainwal,1,0,,,,,544
+844,Bar Gujar,1,0,,,,,544
+845,Bhiwani Lohar,1,0,,,,,544
+846,Jawahar Nagar,1,0,,,,,544
+847,Majra Mehtab,1,0,,,,,544
+848,Khuda Khurd,1,0,,,,,544
+849,Navrangpur,1,0,,,,,544
+850,Bhiwani Jonpal,1,0,,,,,544
+851,Khaja Khera Part,1,0,,,,,544
+852,Khatauli,1,0,,,,,544
+853,Rasoi,1,0,,,,,544
+854,Shikohpur,1,0,,,,,544
+855,Siwan,1,0,,,,,544
+856,GanaurRural Part,1,0,,,,,544
+857,Kherki,1,0,,,,,544
+858,Nangal Kalan,1,0,,,,,544
+859,Naraingarh RuralPart,1,0,,,,,544
+860,Neerpur  N  185,1,0,,,,,544
+861,Tagra Kali Ram,1,0,,,,,544
+862,Tohana Rural,1,0,,,,,544
+863,Shahpur Begu,1,0,,,,,544
+864,Tagra Hari Singh,1,0,,,,,544
+865,BAPURA,1,0,,,,,544
+866,Kan Ganpur,1,0,,,,,544
+867,Manesar,1,0,,,,,544
+868,Sukh Darshanpur,1,0,,,,,544
+869,Tagra Kangan,1,0,,,,,544
+870,Babiyal,1,0,,,,,544
+871,Bajeka,1,0,,,,,544
+872,Gual Pahari,1,0,,,,,544
+873,Harsana Khurd,1,0,,,,,544
+874,Kanina Rural,1,0,,,,,544
+875,Toka,1,0,,,,,544
+876,AZIZULLAPUR,1,0,,,,,544
+877,Balola,1,0,,,,,544
+878,Chhota Bass,1,0,,,,,544
+879,Farrukhnagar Rural,1,0,,,,,544
+880,Jandli Part,1,0,,,,,544
+881,Majri Jattan,1,0,,,,,544
+882,Nolayeja,1,0,,,,,544
+883,Bandhwari,1,0,,,,,544
+884,Kanwla,1,0,,,,,544
+885,Khera,1,0,,,,,544
+886,Nachauli,1,0,,,,,544
+887,Azad Nagar,1,0,,,,,544
+888,Bamdoli,1,0,,,,,544
+889,Loharu Rural,1,0,,,,,544
+890,Nilokheri Township,1,0,,,,,544
+891,SARSEHRI,1,0,,,,,544
+892,SONDHAPUR,1,0,,,,,544
+893,Sotai,1,0,,,,,544
+894,Tagra Sahoo,1,0,,,,,544
+895,Daultabad,1,0,,,,,544
+896,JULANA RURAL,1,0,,,,,544
+897,Tagra Hasua,1,0,,,,,544
+898,Ferozepur,1,0,,,,,544
+899,PANIPAT TARAF AFGHAN,1,0,,,,,544
+900,RAMPUR PART,1,0,,,,,544
+901,Tagra Hakimpur,1,0,,,,,544
+902,Basdevpura,1,0,,,,,544
+903,Gobindpura,1,0,,,,,544
+904,Rampura,1,0,,,,,544
+905,Dhamala,1,0,,,,,544
+906,Taraori RuralPart,1,0,,,,,544
+907,GOPALPUR,1,0,,,,,544
+908,Ismailabad,1,0,,,,,544
+909,Kapuri,1,0,,,,,544
+910,Kirarod Afganan,1,0,,,,,544
+911,Sonda,1,0,,,,,544
+912,HARSARU,1,0,,,,,544
+913,Lohgarh,1,0,,,,,544
+914,Taoru RuralPart,1,0,,,,,544
+915,Ghasitpur,1,0,,,,,544
+916,Khanpur,1,0,,,,,544
+917,KHARKHODA,1,0,,,,,544
+918,Machhonda,1,0,,,,,544
+919,Manakpur Devilal,1,0,,,,,544
+920,ADAMPUR,1,0,,,,,544
+921,Dholagarh,1,0,,,,,544
+922,Hera Heri,1,0,,,,,544
+923,Lohari Tiba,1,0,,,,,544
+924,Manakpur Nanak Chand,1,0,,,,,544
+925,Pehowa Rural Part,1,0,,,,,544
+926,GHASULA,1,0,,,,,544
+927,Kheri Khurd,1,0,,,,,544
+928,Khusropur,1,0,,,,,544
+929,Manakpur Thakar Dass,1,0,,,,,544
+930,SATROD KHURD,1,0,,,,,544
+931,Shahpur,1,0,,,,,544
+932,Badoli,1,0,,,,,544
+933,Maujgarh,1,0,,,,,544
+934,SATROD KHAS,1,0,,,,,544
+935,Surajpur,1,0,,,,,544
+936,TIKAMPUR,1,0,,,,,544
+937,BALDHI PART,1,0,,,,,544
+938,KHARKI MAJRA DHANKOT,1,0,,,,,544
+939,Lohagarh,1,0,,,,,544
+940,Rajipur  Part,1,0,,,,,544
+941,Tilpat,1,0,,,,,544
+942,Kithwari,1,0,,,,,544
+943,Nakhrola 110,1,0,,,,,544
+944,Rampur Seori Part,1,0,,,,,544
+945,UCHANA,1,0,,,,,544
+946,Bhogpur,1,0,,,,,544
+947,Ronija,1,0,,,,,544
+948,ZARIFA WIRAN,1,0,,,,,544
+949,Damdama,1,0,,,,,544
+950,Dodwa Part,1,0,,,,,544
+951,Jhund Sarai Abad,1,0,,,,,544
+952,Nagal Chaudhry,1,0,,,,,544
+953,Narnaul Rural,1,0,,,,,544
+954,Rampur,1,0,,,,,544
+955,SAIDPURA,1,0,,,,,544
+956,Jhund Sarai Viran,1,0,,,,,544
+957,LADWA RURALPART,1,0,,,,,544
+958,Narhera,1,0,,,,,544
+959,Patikara,1,0,,,,,544
+960,Ram Garh,1,0,,,,,544
+961,ALIPUR,1,0,,,,,544
+962,Bitna,1,0,,,,,544
+963,Shahpur Doyam,1,0,,,,,544
+964,Dhani Jakhandadi,1,0,,,,,544
+965,KanguwalaPart,1,0,,,,,544
+966,Lakhuwas,1,0,,,,,544
+967,Baluda,1,0,,,,,544
+968,Bharon Ki Ser Part,1,0,,,,,544
+969,KAMBOH PURA PART,1,0,,,,,544
+970,Khurda,1,0,,,,,544
+971,DAHA,1,0,,,,,544
+972,Kodinja,1,0,,,,,544
+973,Palwal Rural Part,1,0,,,,,544
+974,Tipra,1,0,,,,,544
+975,KARNAL RURALPART,1,0,,,,,544
+976,Lohatki,1,0,,,,,544
+977,Shahpur Awal,1,0,,,,,544
+978,Hans Colony,1,0,,,,,544
+979,Siraska,1,0,,,,,544
+980,Khaika,1,0,,,,,544
+981,MANGALPUR PART,1,0,,,,,544
+982,PUNAHANA RURAL,1,0,,,,,544
+983,PATAKPUR PUNAHANA,1,0,,,,,544
+984,Sohna RuralPart,1,0,,,,,544
+985,GARHI KESRI,1,0,,,,,544
+986,NAKANPUR PART,1,0,,,,,544
+987,Sadaura,1,0,,,,,544
+988,Zakupur,1,0,,,,,544
+989,BASDALLA,1,0,,,,,544
+990,Raipur,1,0,,,,,544
+991,Sampki Nagli,1,0,,,,,544
+992,Swami Nagar,1,0,,,,,544
+993,Mohammadpur Gujar,1,0,,,,,544
+994,Dhunela,1,0,,,,,544
+995,Berka,1,0,,,,,544
+996,JIND RURAL,1,0,,,,,544
+997,Sekhpura,1,0,,,,,544
+998,Gudah Part,1,0,,,,,544
+999,Raisena,1,0,,,,,544
+1000,Ramgarh,1,0,,,,,544
+1001,Bhondsi,1,0,,,,,544
+1002,Fazalwas,1,0,,,,,544
+1003,Kukrola,1,0,,,,,544
+1004,Barara,1,0,,,,,544
+1005,Behrampur 80,1,0,,,,,544
+1006,Naya Gao  168,1,0,,,,,544
+1007,JHANJHARI,1,0,,,,,544
+1008,Islamnagar,1,0,,,,,544
+1009,MUNDA KHERA,1,0,,,,,544
+1010,Radaur,1,0,,,,,544
+1011,Sasauli,1,0,,,,,544
+1012,Badhi Majra,1,0,,,,,544
+1013,KAMI MAJRA,1,0,,,,,544
+1014,RAIPUR,1,0,,,,,544
+1015,SHADIPUR,1,0,,,,,544
+1016,GARHI GUJRAN,1,0,,,,,544
+1017,Mukarapur,1,0,,,,,544
+1018,AURANGABAD,1,0,,,,,544
+1019,PANSRA,1,0,,,,,544
+1020,BURIA JAGIR,1,0,,,,,544
+1021,NABH,1,0,,,,,544
+1022,Raipur,1,0,,,,,544
+1023,GARHI BANJARA,1,0,,,,,544
+1024,MODHUWALA,1,0,,,,,544
+1025,Palra,1,0,,,,,544
+1026,Gumthala,1,0,,,,,544
+1027,MANAKPUR,1,0,,,,,544
+1028,Bhagwanpur,1,0,,,,,544
+1029,Medawas,1,0,,,,,544
+1030,PATASGARH,1,0,,,,,544
+1031,ISHOPUR,1,0,,,,,544
+1032,Suketri,1,0,,,,,544
+1033,Babupur,1,0,,,,,544
+1034,Chaunki,1,0,,,,,544
+1035,JAURIAN,1,0,,,,,544
+1036,Ghasula,1,0,,,,,544
+1037,MANDEBAR,1,0,,,,,544
+1038,Nada,1,0,,,,,544
+1039,Chandi Mandir,1,0,,,,,544
+1040,JAMPUR,1,0,,,,,544
+1041,BHUT MAJRA,1,0,,,,,544
+1042,Bir Ghaghar,1,0,,,,,544
+1043,KHERI RANGHRAN,1,0,,,,,544
+1044,RATTOLI,1,0,,,,,544
+1045,KHERA,1,0,,,,,544
+1046,KHERA SITA RAM,1,0,,,,,544
+1047,BHATAULI,1,0,,,,,544
+1048,HMT PINJORE,1,0,,,,,544
+1049,JARAUDA,1,0,,,,,544
+1050,TELIPURA,1,0,,,,,544
+1051,CHANETI,1,0,,,,,544
+1052,SOORAJPUR,1,0,,,,,544
+1053,BURIA SARKAR,1,0,,,,,544
+1054,BHAGWAN GARH,1,0,,,,,544
+1055,TEJLI,1,0,,,,,544
+1056,GADHAULI,1,0,,,,,544
+1057,Basawal,1,0,,,,,544
+1058,TAJAKPUR,1,0,,,,,544
+1059,MUMIDI,1,0,,,,,544
+1060,Manakpur,1,0,,,,,544
+1061,NAGAL SODHIAN,1,0,,,,,544
+1062,PIWARA,1,0,,,,,544
+1063,MANDLI,1,0,,,,,544
+1078,Sector 28,1,0,,,,,544
+1079,sector 28,1,0,,,,,544
