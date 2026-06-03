@@ -274,61 +274,10 @@ class CitizenAuthController extends Controller
             : 0;
 
         $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
-        $verifiedAt = ($purchaser?->ModifiedDate && $purchaser->ModifiedDate !== $purchaser->CreateDate)
-            ? Carbon::parse($purchaser->ModifiedDate)
-            : ($submittedAt ? $submittedAt->copy()->addDays(16) : null);
-        $allottedAt = $auction?->CreatedDate ? Carbon::parse($auction->CreatedDate) : null;
 
         $isAllotted = $auction !== null;
         $isFullyPaid = $isAllotted && $outstanding <= 0 && $flatCost > 0;
         $hasOutstanding = $isAllotted && $outstanding > 0;
-
-        $statusSteps = [
-            [
-                'key' => 'submitted',
-                'label' => 'Submitted',
-                'icon' => 'check',
-                'state' => $submittedAt ? 'completed' : 'pending',
-                'date' => $submittedAt?->format('d M Y'),
-            ],
-            [
-                'key' => 'verified',
-                'label' => 'Verified',
-                'icon' => 'verified',
-                'state' => $verifiedAt ? 'completed' : 'pending',
-                'date' => $verifiedAt?->format('d M Y'),
-            ],
-            [
-                'key' => 'allotted',
-                'label' => 'Allotted',
-                'icon' => 'real_estate_agent',
-                'state' => ! $isAllotted ? 'pending' : ($hasOutstanding ? 'active' : 'completed'),
-                'date' => $hasOutstanding ? 'In Progress' : $allottedAt?->format('d M Y'),
-            ],
-            [
-                'key' => 'payment',
-                'label' => 'Pending',
-                'icon' => 'pending',
-                'state' => $hasOutstanding ? 'active' : ($isFullyPaid ? 'completed' : 'pending'),
-                'date' => null,
-            ],
-            [
-                'key' => 'registered',
-                'label' => 'Registered',
-                'icon' => 'task_alt',
-                'state' => $isFullyPaid ? 'completed' : 'pending',
-                'date' => null,
-            ],
-        ];
-
-        $completedCount = collect($statusSteps)->where('state', 'completed')->count();
-        $hasActive = collect($statusSteps)->contains('state', 'active');
-        $timelineProgress = match (true) {
-            $isFullyPaid => 100,
-            $hasActive => min(90, 35 + ($completedCount * 12)),
-            $completedCount > 0 => min(85, $completedCount * 20),
-            default => 0,
-        };
 
         $applicationNo = $purchaser?->ApplicationNo;
         $applicationId = $applicationNo
@@ -350,8 +299,6 @@ class CitizenAuthController extends Controller
             'paymentProgress' => $paymentProgress,
             'flatStatus' => $flatStatus,
             'category' => $category,
-            'statusSteps' => $statusSteps,
-            'timelineProgress' => $timelineProgress,
             'hasOutstanding' => $hasOutstanding,
             'assetName' => $assetName,
         ]);
