@@ -269,6 +269,8 @@ class CitizenAuthController extends Controller
             }
         }
 
+        // dd($auction);
+
         $paymentProgress = $flatCost > 0
             ? (int) min(100, round(($totalPaid / $flatCost) * 100))
             : 0;
@@ -423,9 +425,12 @@ class CitizenAuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/mmsay-citizen-login')->with('success', 'Logged out successfully.');
+        return redirect()
+            ->route('citizen.login')
+            ->with('success', 'Logged out successfully.');
     }
 }

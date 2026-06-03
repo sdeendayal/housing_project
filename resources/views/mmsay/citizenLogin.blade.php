@@ -68,7 +68,7 @@
                      @csrf
 
                      <div class="mb-1">
-                        <label class="form-label">Mobile Number</label>
+                        <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
                         <div class="input-group-custom d-flex">
                            <div class="country-code">+91</div>
                            <input
@@ -86,7 +86,7 @@
                      </div>
 
                      <div class="mb-1">
-                        <label class="form-label">Captcha Verification</label>
+                        <label class="form-label">Captcha Verification <span class="text-danger">*</span></label>
                         <div class="d-flex align-items-center gap-3">
                            <div class="captcha-box" id="captchaText">{{ $captcha }}</div>
                            <div

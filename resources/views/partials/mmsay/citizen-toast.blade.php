@@ -88,11 +88,14 @@
             }, duration);
         };
 
-        @if (! request()->routeIs('citizen.login', 'citizen.login.verify-page'))
-            @if (session('success'))
+        {{-- OTP verify page uses SweetAlert for success; login page needs toast (e.g. logout) --}}
+        @if (session('success'))
+            @unless (request()->routeIs('citizen.login.verify-page'))
                 showCitizenToast(@json(session('success')), 'success');
-            @endif
+            @endunless
+        @endif
 
+        @if (! request()->routeIs('citizen.login', 'citizen.login.verify-page'))
             @if (session('error'))
                 showCitizenToast(@json(session('error')), 'error');
             @endif

@@ -57,7 +57,7 @@
 
                   <!-- Display mobile number (read-only) -->
                   <div class="mb-3">
-                     <label class="form-label">Mobile Number</label>
+                     <label class="form-label">Mobile Number <span class="text-danger">*</span></label>
                      <div class="input-group-custom d-flex">
                         <div class="country-code">+91</div>
                         <input
@@ -74,7 +74,7 @@
                      @csrf
 
                      <div class="mb-1">
-                        <label class="form-label">OTP</label>
+                        <label class="form-label">OTP <span class="text-danger">*</span></label>
                         <div class="input-group-custom d-flex">
                            <input
                               type="text"
