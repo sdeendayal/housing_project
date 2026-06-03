@@ -142,8 +142,12 @@
                                             {{ $captcha }}
                                         </div>
 
-                                        <div onclick="refreshCaptcha()"
-                                            class="w-10 h-10 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 cursor-pointer transition shadow">
+                                        <div
+                                            role="button"
+                                            tabindex="0"
+                                            aria-label="Refresh captcha"
+                                            onclick="refreshCaptcha(this)"
+                                            class="captcha-refresh-btn w-10 h-10 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 cursor-pointer transition shadow">
 
                                             <span class="material-symbols-outlined text-white text-xl">
                                                 refresh

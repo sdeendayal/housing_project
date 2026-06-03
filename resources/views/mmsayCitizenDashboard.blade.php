@@ -346,7 +346,7 @@
 
                     </a>
 
-                    <a href="/mmsay-login"
+                    <a href="{{ route('citizen.logout') }}"
                         class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200">
 
                         <span class="material-symbols-outlined text-[20px]">
@@ -407,7 +407,7 @@
                 </p>
 
                 <h3 class="text-sm md:text-base font-bold text-gray-800">
-                    Anita Devi
+                    {{ $displayName }}
                 </h3>
 
             </div>
@@ -433,7 +433,7 @@
                 </p>
 
                 <h4 class="text-sm font-bold text-primary tracking-wide">
-                    HR-MMSAY-2023-8942
+                    {{ $applicationId }}
                 </h4>
 
             </div>
@@ -441,190 +441,7 @@
     </div>
 </div>
            <!-- Compact Premium Application Status Tracker -->
-<section
-    class="relative overflow-hidden rounded-2xl border border-white/20 bg-gradient-to-br from-[#ffffff] via-[#f8fbff] to-[#eef4ff] p-4 md:p-5 shadow-[0_8px_30px_rgba(0,0,0,0.06)] backdrop-blur-xl mb-5">
-
-    <!-- Blur Effects -->
-    <div
-        class="absolute -top-16 -right-16 w-52 h-52 bg-blue-200/20 rounded-full blur-3xl pointer-events-none">
-    </div>
-
-    <div
-        class="absolute -bottom-16 -left-16 w-52 h-52 bg-indigo-200/20 rounded-full blur-3xl pointer-events-none">
-    </div>
-
-    <!-- Header -->
-    <div class="relative z-10 flex items-center justify-between mb-7">
-
-        <div>
-            <h2 class="text-lg md:text-xl font-bold text-gray-800">
-                Application Status
-            </h2>
-
-            <p class="text-xs text-gray-500 mt-1">
-                Track your application progress
-            </p>
-        </div>
-
-        <div
-            class="hidden md:flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">
-
-            <span class="w-2 h-2 rounded-full bg-green-600 animate-pulse"></span>
-            Live
-
-        </div>
-    </div>
-
-    <!-- Timeline -->
-    <div
-        class="relative z-10 flex flex-col lg:flex-row justify-between gap-7 lg:gap-0">
-
-        <!-- Desktop Line -->
-        <div
-            class="hidden lg:block absolute top-5 left-0 right-0 h-[4px] bg-gray-200 rounded-full">
-        </div>
-
-        <div
-            class="hidden lg:block absolute top-5 left-0 w-[58%] h-[4px] bg-gradient-to-r from-green-500 to-blue-600 rounded-full">
-        </div>
-
-        <!-- Mobile Line -->
-        <div
-            class="lg:hidden absolute left-[15px] top-0 bottom-0 w-[4px] bg-gray-200 rounded-full">
-        </div>
-
-        <div
-            class="lg:hidden absolute left-[15px] top-0 h-[55%] w-[4px] bg-gradient-to-b from-green-500 to-blue-600 rounded-full">
-        </div>
-
-        <!-- Step -->
-        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
-
-            <div
-                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
-
-                <span class="material-symbols-outlined text-[18px]"
-                    style="font-variation-settings:'FILL' 1;">
-                    check
-                </span>
-
-            </div>
-
-            <div class="lg:text-center">
-
-                <h4 class="font-semibold text-sm text-gray-800">
-                    Submitted
-                </h4>
-
-                <p class="text-[11px] text-gray-500">
-                    12 Oct 2023
-                </p>
-
-            </div>
-        </div>
-
-        <!-- Step -->
-        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
-
-            <div
-                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
-
-                <span class="material-symbols-outlined text-[18px]"
-                    style="font-variation-settings:'FILL' 1;">
-                    verified
-                </span>
-
-            </div>
-
-            <div class="lg:text-center">
-
-                <h4 class="font-semibold text-sm text-gray-800">
-                    Verified
-                </h4>
-
-                <p class="text-[11px] text-gray-500">
-                    28 Oct 2023
-                </p>
-
-            </div>
-        </div>
-
-        <!-- Active Step -->
-        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
-
-            <div class="relative">
-
-                <div
-                    class="absolute inset-0 rounded-xl bg-blue-500 blur-lg opacity-30 animate-pulse">
-                </div>
-
-                <div
-                    class="relative w-10 h-10 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-xl ring-2 ring-blue-100 shrink-0">
-
-                    <span class="material-symbols-outlined text-[20px]">
-                        real_estate_agent
-                    </span>
-
-                </div>
-            </div>
-
-            <div class="lg:text-center">
-
-                <h4 class="font-bold text-sm text-blue-700">
-                    Allotted
-                </h4>
-
-                <p class="text-[11px] text-blue-500">
-                    In Progress
-                </p>
-
-            </div>
-        </div>
-
-        <!-- Step -->
-        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
-
-            <div
-                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-gray-200 text-gray-400 flex items-center justify-center shadow-sm shrink-0">
-
-                <span class="material-symbols-outlined text-[18px]">
-                    pending
-                </span>
-
-            </div>
-
-            <div class="lg:text-center">
-
-                <h4 class="font-medium text-sm text-gray-400">
-                    Pending
-                </h4>
-
-            </div>
-        </div>
-
-        <!-- Step -->
-        <div class="relative flex lg:flex-col items-start lg:items-center gap-3 z-10">
-
-            <div
-                class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-white border border-gray-200 text-gray-400 flex items-center justify-center shadow-sm shrink-0">
-
-                <span class="material-symbols-outlined text-[18px]">
-                    task_alt
-                </span>
-
-            </div>
-
-            <div class="lg:text-center">
-
-                <h4 class="font-medium text-sm text-gray-400">
-                    Registered
-                </h4>
-
-            </div>
-        </div>
-    </div>
-</section>
-
+          
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-6">
 
                 <!-- Purchase Date -->
@@ -636,7 +453,7 @@
                     </p>
 
                     <h4 class="text-xl font-bold text-[#0B3B66]">
-                        12 Oct 2023
+                        {{ $purchaseDate }}
                     </h4>
 
                     <div class="mt-2 text-[#0B5CAD]">
@@ -657,12 +474,12 @@
                     </p>
 
                     <h4 class="text-xl font-bold text-green-700">
-                        ₹ 14,50,000
+                        {{ $totalPaidFormatted }}
                     </h4>
 
                     <div class="mt-2 w-full bg-gray-200 h-2 rounded-full overflow-hidden">
 
-                        <div class="bg-green-700 h-full w-[65%] rounded-full"></div>
+                        <div class="bg-green-700 h-full rounded-full" style="width: {{ $paymentProgress }}%;"></div>
 
                     </div>
                 </div>
@@ -676,18 +493,20 @@
                     </p>
 
                     <h4 class="text-xl font-bold text-red-600">
-                        ₹ 7,25,000
+                        {{ $outstandingFormatted }}
                     </h4>
 
+                    @if ($hasOutstanding)
                     <div class="mt-2 flex items-center gap-2 text-red-600 text-sm">
 
                         <span class="material-symbols-outlined text-[18px]">
                             warning
                         </span>
 
-                        Due in 15 days
+                        Payment pending
 
                     </div>
+                    @endif
                 </div>
 
                 <!-- Status -->
@@ -699,14 +518,14 @@
                     </p>
 
                     <h4 class="text-xl font-bold text-[#0B3B66]">
-                        Allotted
+                        {{ $flatStatus }}
                     </h4>
 
                     <div class="mt-2">
 
                         <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-semibold">
 
-                            Category A-1
+                            {{ $category }}
 
                         </span>
 
@@ -783,5 +602,7 @@
         overlay.classList.add('hidden');
     });
 </script>
+
+@include('partials.mmsay.citizen-toast')
 
 </html>

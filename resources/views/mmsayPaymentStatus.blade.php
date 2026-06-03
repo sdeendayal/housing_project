@@ -229,7 +229,7 @@
          <!-- Menu -->
          <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
             <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 text-on-surface-variant hover:bg-surface-container-high transition-all"
-               href="/mmsay.citizen.dashboard">
+               href="/mmsay/citizen/dashboard">
             <span class="material-symbols-outlined">
             dashboard
             </span>
@@ -300,7 +300,7 @@
                   Profile
                   </span>
                   </a>
-                  <a href="/mmsay-login"
+                  <a href="{{ route('citizen.logout') }}"
                      class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200">
                   <span class="material-symbols-outlined text-[20px]">
                   logout
@@ -834,4 +834,6 @@
       
       
    </script>
+
+@include('partials.mmsay.citizen-toast')
 </html>

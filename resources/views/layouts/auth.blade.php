@@ -156,6 +156,8 @@
 
     {{-- Footer --}}
     @include('partials.mmsay.footer')
+
+    @include('partials.mmsay.citizen-toast')
 </body>
 
 </html>

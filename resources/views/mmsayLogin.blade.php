@@ -181,7 +181,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 <!-- Citizen Login -->
-                <form action="/mmsay.citizen.dashboard" method="GET"
+                <form action="/mmsay/citizen/dashboard" method="GET"
                     class="bg-surface-container-lowest rounded-xl border border-outline-variant shadow-[0_4px_20px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden h-full">
 
                     <!-- Header -->

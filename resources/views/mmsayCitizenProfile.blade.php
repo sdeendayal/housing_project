@@ -210,7 +210,7 @@
         <div class="flex-1 overflow-y-auto px-margin-mobile py-4">
 
             <a class="flex items-center gap-3 px-4 py-3 rounded-DEFAULT mb-2 bg-primary-fixed text-on-primary-fixed border-l-4 border-primary font-bold hover:bg-surface-container-high transition-all"
-                href="/mmsay.citizen.dashboard">
+                href="/mmsay/citizen/dashboard">
 
                 <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">
                     dashboard
@@ -302,7 +302,7 @@
 
                     </a>
 
-                    <a href="/mmsay-login"
+                    <a href="{{ route('citizen.logout') }}"
                         class="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg shadow-md transition-all duration-200">
 
                         <span class="material-symbols-outlined text-[20px]">
@@ -339,11 +339,11 @@
                         <div class="leading-tight">
 
                             <h2 class="text-base md:text-lg font-semibold text-white tracking-wide">
-                                ANITA DEVI
+                                {{ $fullName }}
                             </h2>
 
                             <p class="text-[11px] md:text-xs text-blue-100 mt-0.5">
-                                App No : HR-MMSAY-274751
+                                App No : {{ $applicationId }}
                             </p>
 
                         </div>
@@ -351,8 +351,8 @@
 
                     <!-- Status Badge -->
                     <span
-                        class="hidden md:inline-flex items-center px-3 py-1 rounded-full bg-green-500/20 text-green-100 text-xs font-medium border border-green-300/20">
-                        Active
+                        class="hidden md:inline-flex items-center px-3 py-1 rounded-full {{ $accountStatus === 'Active' ? 'bg-green-500/20 text-green-100 border-green-300/20' : 'bg-red-500/20 text-red-100 border-red-300/20' }} text-xs font-medium border">
+                        {{ $accountStatus }}
                     </span>
 
                 </div>
@@ -371,7 +371,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                ANITA DEVI
+                                {{ $fullName }}
                             </h4>
                         </div>
 
@@ -382,7 +382,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                DALSINGHAR
+                                {{ $fatherName }}
                             </h4>
                         </div>
 
@@ -393,7 +393,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                8950886886
+                                {{ $mobile }}
                             </h4>
                         </div>
 
@@ -404,7 +404,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                XXXX-XXXX-8081
+                                {{ $aadhaarMasked }}
                             </h4>
                         </div>
 
@@ -416,7 +416,7 @@
 
                             <span
                                 class="inline-block bg-blue-100 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
-                                Ghumantu
+                                {{ $category }}
                             </span>
                         </div>
 
@@ -427,7 +427,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                ROHTAK MC
+                                {{ $district }}
                             </h4>
                         </div>
 
@@ -438,7 +438,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-green-700">
-                                ₹ 1.40 - 1.80 Lakh
+                                {{ $annualIncome }}
                             </h4>
                         </div>
 
@@ -449,7 +449,7 @@
                             </p>
 
                             <h4 class="text-sm font-semibold text-[#0B3B66]">
-                                274751
+                                {{ $applicationNo }}
                             </h4>
                         </div>
 
@@ -464,7 +464,7 @@
                         </p>
 
                         <p class="text-sm font-medium text-[#0B3B66] leading-5">
-                            231 J P COLONY HISAR ROAD ROHTAK 124001
+                            {{ $address }}
                         </p>
 
                     </div>
@@ -508,6 +508,8 @@
 
         </footer>
     </div>
+
+@include('partials.mmsay.citizen-toast')
 </body>
 
 </html>
