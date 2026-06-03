@@ -1,6 +1,44 @@
 @extends('layouts.mmsayDepartmentAuth')
 @section('title', 'MMSAY Department Dashboard')
 @section('content')
+    <style>
+        .success-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #16a34a;
+            color: white;
+            padding: 14px 20px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 9999;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .2);
+            animation: slideIn .4s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+    @if (session('success'))
+        <div id="successToast" class="success-toast">
+            <span class="material-symbols-outlined me-2">
+                check_circle
+            </span>
+
+            {{ session('success') }}
+        </div>
+    @endif
     <main class="ml-64 pt-20 p-md min-h-screen">
         <div class="max-w-container-max mx-auto space-y-md">
             <!-- Dashboard Header Section -->
@@ -44,129 +82,77 @@
                 </div>
             </div>
             <!-- Bento Grid - Summary Metrics -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 
-                <!-- Card 1 -->
-                <div
-                    class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
-
-                    <div class="flex items-center justify-between">
-
-                        <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                description
-                            </span>
+                <!-- Total Applications -->
+                <div class="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-lg transition">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Properties</p>
+                            <h3 class="text-3xl font-bold text-blue-600 mt-2">
+                                {{ number_format($totalApplications) }}
+                            </h3>
                         </div>
 
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
+                        <div class="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-blue-600 text-3xl">
+                                home
                             </span>
-                            +12%
-                        </span>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Total Applications
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-primary">
-                            12,845
-                        </h4>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Card 2 -->
-                <div
-                    class="bg-yellow-50 border border-yellow-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
+                <!-- Allotted -->
+                <div class="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-lg transition">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500 text-sm">Allotted Units</p>
+                            <h3 class="text-3xl font-bold text-green-600 mt-2">
+                                {{ number_format($allottedUnits) }}
+                            </h3>
+                        </div>
 
-                    <div class="flex items-center justify-between">
+                        <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-green-600 text-3xl">
+                                apartment
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-                        <div class="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
+                <!-- Pending -->
+                <div class="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-lg transition">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500 text-sm">Pending Installments</p>
+                            <h3 class="text-3xl font-bold text-orange-600 mt-2">
+                                {{ number_format($pendingInstallments) }}
+                            </h3>
+                        </div>
+
+                        <div class="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-orange-600 text-3xl">
                                 pending_actions
                             </span>
                         </div>
-
-                        <span class="text-red-500 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_down
-                            </span>
-                            -4%
-                        </span>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Pending Verifications
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-primary">
-                            2,412
-                        </h4>
                     </div>
                 </div>
 
-                <!-- Card 3 -->
-                <div
-                    class="bg-green-50 border border-green-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
-
-                    <div class="flex items-center justify-between">
-
-                        <div class="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                holiday_village
-                            </span>
+                <!-- Revenue -->
+                <div class="bg-white rounded-2xl shadow-sm border p-5 hover:shadow-lg transition">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gray-500 text-sm">Total Revenue</p>
+                            <h3 class="text-3xl font-bold text-purple-600 mt-2">
+                                ₹ {{ 34555.7 }}
+                            </h3>
                         </div>
 
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
-                            </span>
-                            +8%
-                        </span>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Allotted Units
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-primary">
-                            8,102
-                        </h4>
-                    </div>
-                </div>
-
-                <!-- Card 4 -->
-                <div
-                    class="bg-purple-50 border border-purple-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
-
-                    <div class="flex items-center justify-between">
-
-                        <div class="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                account_balance_wallet
+                        <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-purple-600 text-3xl">
+                                payments
                             </span>
                         </div>
-
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
-                            </span>
-                            +15%
-                        </span>
-                    </div>
-
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Total Revenue
-                        </p>
-
-                        <h4 class="text-xl font-semibold text-primary">
-                            ₹4.2M
-                        </h4>
                     </div>
                 </div>
 
@@ -175,54 +161,38 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
                 <!-- Analytics Section -->
-                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+                <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
 
-                    <div class="flex items-center justify-between mb-4">
-                        <h5 class="text-sm font-semibold text-primary">
-                            Registration Trends
-                        </h5>
+                    <div class="flex items-center justify-between mb-6">
+
+                        <div>
+                            <h5 class="text-lg font-semibold text-gray-800">
+                                Registration Trends
+                            </h5>
+
+                            <p class="text-xs text-gray-500">
+                                Monthly & Weekly Property Registrations
+                            </p>
+                        </div>
 
                         <div class="flex gap-2">
-                            <button
-                                class="px-3 py-1 text-xs rounded-md bg-surface-container-high text-on-surface border border-outline-variant">
+
+                            <button id="monthlyBtn" class="px-4 py-2 text-xs rounded-lg bg-blue-600 text-white">
                                 Monthly
                             </button>
 
-                            <button
-                                class="px-3 py-1 text-xs rounded-md text-on-surface-variant hover:bg-surface-container border border-outline-variant transition">
+                            <button id="weeklyBtn" class="px-4 py-2 text-xs rounded-lg border border-gray-300">
                                 Weekly
                             </button>
+
                         </div>
+
                     </div>
 
-                    <!-- Chart -->
-                    <div class="h-[220px] w-full flex items-end justify-between gap-2 pb-2">
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:45%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:60%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:35%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:75%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:90%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:55%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:85%;"></div>
+                    <div style="height:350px;">
+                        <canvas id="registrationChart"></canvas>
                     </div>
 
-                    <!-- Month Labels -->
-                    <div class="flex justify-between text-[11px] text-gray-500 mt-2">
-                        <span>Jan</span>
-                        <span>Feb</span>
-                        <span>Mar</span>
-                        <span>Apr</span>
-                        <span>May</span>
-                        <span>Jun</span>
-                        <span>Jul</span>
-                    </div>
                 </div>
 
                 <!-- Right Side -->

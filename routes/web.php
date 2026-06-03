@@ -65,9 +65,11 @@ Route::post('/refresh-captcha', function () {
 });
 
 Route::middleware(['auth', 'role:department'])->group(function () {
-    Route::get('/mmsay-department-dashboard', function () {
-        return view('mmsay.departmentDashboard');
-    });
+
+    Route::get(
+        '/mmsay-department-dashboard',
+        [PropertyManagementController::class, 'dashboard']
+    )->name('mmsay.dashboard');
 
     // LIST PAGE
     Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
@@ -77,10 +79,21 @@ Route::middleware(['auth', 'role:department'])->group(function () {
     Route::get('/get-sectors/{name}', [PropertyManagementController::class, 'getSectors']);
 
     Route::get('/export-properties', [PropertyManagementController::class, 'export'])
-    ->name('properties.export');
+        ->name('properties.export');
 
-    Route::get('/mmsay-department-cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
-    
+    Route::get(
+        '/mmsay-department-cash-receipt',
+        [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']
+    );
+
+    Route::get('/cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
+
+    Route::get('/cash-receipt-districts/{name}', [PropertyManagementController::class, 'cashReceiptDistricts']);
+
+    Route::get('/cash-receipt-cities/{name}', [PropertyManagementController::class, 'cashReceiptCities']);
+
+    Route::get('/cash-receipt-sectors/{name}', [PropertyManagementController::class, 'cashReceiptSectors']);
+
 
 
 });

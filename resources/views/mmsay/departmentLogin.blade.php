@@ -4,9 +4,29 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <!-- Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+<script>
+    document.addEventListener(...)
+</script>
 @extends('layouts.auth')
 @section('title', 'MMSAY Login')
 @section('content')
+    <style>
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            z-index: 9999;
+
+            display: none;
+            /* flex nahi */
+
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 
     <div class="body-div">
         <div class="main-wrapper">
@@ -39,11 +59,11 @@
                                 </div>
                                 <!-- IMAGE -->
                                 <!-- <div class="housing-image">
-                                                                <img
-                                                                    src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
-                                                                    alt="Housing">
-                                                                
-                                                                </div> -->
+                                                                                                        <img
+                                                                                                            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
+                                                                                                            alt="Housing">
+                                                                                                        
+                                                                                                        </div> -->
                             </div>
                             <!-- FEATURES -->
                             <div>
@@ -105,7 +125,7 @@
                                 </div>
                             </div>
                             <!-- FORM -->
-                            <form action="{{ route('mmsay.login') }}" method="POST">
+                            <form id="loginForm" action="{{ route('mmsay.login') }}" method="POST">
                                 @csrf
 
                                 <!-- EMAIL -->
@@ -156,11 +176,20 @@
                                 </div>
 
                                 <!-- BUTTON -->
-                                <button type="submit" class="login-btn">
-                                    Secure Login
-                                    <span class="material-symbols-outlined align-middle ms-2">
-                                        arrow_forward
+                                <button type="submit" class="login-btn" id="loginBtn">
+
+                                    <span id="btnText">
+                                        Secure Login
+                                        <span class="material-symbols-outlined align-middle ms-2">
+                                            arrow_forward
+                                        </span>
                                     </span>
+
+                                    <span id="btnLoader" style="display:none;">
+                                        <span class="spinner-border spinner-border-sm me-2"></span>
+                                        Logging In...
+                                    </span>
+
                                 </button>
                             </form>
 
@@ -170,4 +199,30 @@
             </div>
         </div>
     </div>
+    <div id="pageLoader" class="page-loader" style="display:none;">
+        <div class="text-center">
+            <div class="spinner-border text-success" role="status"></div>
+            <div class="mt-3 fw-bold">Please wait...</div>
+        </div>
+    </div>
+
 @endsection
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const form = document.getElementById('loginForm');
+
+            if (form) {
+                form.addEventListener('submit', function() {
+
+                    document.getElementById('btnText').style.display = 'none';
+                    document.getElementById('btnLoader').style.display = 'inline-block';
+                    document.getElementById('loginBtn').disabled = true;
+                    document.getElementById('pageLoader').style.display = 'flex';
+
+                });
+            }
+        });
+    </script>
+@endpush
