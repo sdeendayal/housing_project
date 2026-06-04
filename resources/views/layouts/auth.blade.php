@@ -163,7 +163,12 @@
 
     {{-- Footer --}}
     @include('partials.mmsay.footer')
+<<<<<<< HEAD
     @stack('scripts')
+=======
+
+    @include('partials.mmsay.citizen-toast')
+>>>>>>> cd06aef2e7e4359bbf50306b38b9ad1f6f118238
 </body>
 
 </html>

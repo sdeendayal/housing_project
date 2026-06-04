@@ -28,10 +28,10 @@
         }
     </style>
 
-    <div class="body-div">
-        <div class="main-wrapper">
-            <div class="premium-login-card">
-                <div class="row g-0">
+    <div class="body-div vh-100 overflow-hidden d-flex align-items-center">
+        <div class="main-wrapper container-fluid h-100 d-flex align-items-center justify-content-center">
+            <div class="premium-login-card w-100">
+                <div class="row g-0">   
                     <!-- LEFT SECTION -->
                     <div class="col-lg-5">
                         <div class="left-panel h-100 d-flex flex-column justify-content-center">
@@ -59,11 +59,11 @@
                                 </div>
                                 <!-- IMAGE -->
                                 <!-- <div class="housing-image">
-                                                                                                        <img
-                                                                                                            src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
-                                                                                                            alt="Housing">
-                                                                                                        
-                                                                                                        </div> -->
+                                                                                                            <img
+                                                                                                                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
+                                                                                                                alt="Housing">
+                                                                                                            
+                                                                                                            </div> -->
                             </div>
                             <!-- FEATURES -->
                             <div>
@@ -103,11 +103,11 @@
                     <!-- RIGHT SECTION -->
                     <div class="col-lg-7">
                         <div class="right-panel h-100 d-flex flex-column justify-content-center">
-                            @if (session('error'))
+                            {{-- @if (session('error'))
                                 <div class="alert alert-danger">
                                     {{ session('error') }}
                                 </div>
-                            @endif
+                            @endif --}}
                             <!-- TOP -->
                             <div class="login-top">
                                 <div class="login-icon">
@@ -162,8 +162,9 @@
                                             {{ $captcha }}
                                         </div>
 
-                                        <div onclick="refreshCaptcha()"
-                                            class="w-10 h-10 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 cursor-pointer transition shadow">
+                                        <div role="button" tabindex="0" aria-label="Refresh captcha"
+                                            onclick="refreshCaptcha(this)"
+                                            class="captcha-refresh-btn w-10 h-10 flex items-center justify-center rounded-full bg-green-500 hover:bg-green-600 cursor-pointer transition shadow">
 
                                             <span class="material-symbols-outlined text-white text-xl">
                                                 refresh

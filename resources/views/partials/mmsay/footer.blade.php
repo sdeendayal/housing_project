@@ -82,19 +82,55 @@
 <script src="https://cdn.jsdelivr.net/npm/captcha-mini/dist/captcha-mini.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script>
-function refreshCaptcha() {
-    fetch("/refresh-captcha", {
-        method: "POST",
+function refreshCaptcha(triggerEl) {
+    var btn = triggerEl || document.querySelector('.captcha-refresh-btn');
+    var box = document.getElementById('captchaText');
+    var input = document.getElementById('captchaInput');
+
+    if (!btn || btn.classList.contains('is-refreshing')) {
+        return;
+    }
+
+    btn.classList.add('is-refreshing');
+    if (box) {
+        box.classList.add('is-refreshing');
+    }
+
+    fetch('/refresh-captcha', {
+        method: 'POST',
         headers: {
-            "X-CSRF-TOKEN": "{{ csrf_token() }}",
-            "Content-Type": "application/json"
-        }
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        },
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("captchaText").innerText = data.captcha;
-        document.getElementById("captchaInput").value = "";
-    });
+        .then(function (res) {
+            if (!res.ok) {
+                throw new Error('Captcha refresh failed');
+            }
+            return res.json();
+        })
+        .then(function (data) {
+            if (box) {
+                box.innerText = data.captcha;
+                box.classList.remove('is-refreshing');
+                box.classList.add('captcha-updated');
+                setTimeout(function () {
+                    box.classList.remove('captcha-updated');
+                }, 450);
+            }
+            if (input) {
+                input.value = '';
+            }
+        })
+        .catch(function () {
+            if (box) {
+                box.classList.remove('is-refreshing');
+            }
+        })
+        .finally(function () {
+            btn.classList.remove('is-refreshing');
+        });
 }
 </script>
 

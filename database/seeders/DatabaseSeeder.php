@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             PropertyPrivatePurchasersSeeder::class,
             PropertyAuctionDetailSeeder::class,
             CashReceiptDetailsSeeder::class,
+            RoleGroupSeeder::class,
+            CitizenUserSeeder::class,
+            DepartmentUserSeeder::class,
         ]);
     }
 }
