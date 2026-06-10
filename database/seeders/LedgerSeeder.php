@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Concerns\DisablesForeignKeyChecks;
 use Database\Seeders\Concerns\ImportsCsvFromDocuments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class LedgerSeeder extends Seeder
 {
+    use DisablesForeignKeyChecks;
     use ImportsCsvFromDocuments;
 
     private const CHUNK_SIZE = 500;
@@ -18,7 +20,7 @@ class LedgerSeeder extends Seeder
 
         $csvFile = $this->csvPath('Ledger.csv');
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
         DB::table('ledger')->truncate();
 
         $file = fopen($csvFile, 'r');
@@ -86,7 +88,8 @@ class LedgerSeeder extends Seeder
             $imported += count($buffer);
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        return $imported;
+        });
 
         $this->command?->info("Ledger imported: {$imported}");
     }

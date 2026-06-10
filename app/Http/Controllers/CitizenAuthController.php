@@ -51,6 +51,11 @@ class CitizenAuthController extends Controller
             (float) ($auction?->BalanceAmount ?? 0),
             $paymentDetails
         );
+
+        
+
+        // dd($paymentSummary);
+
         $totalPaid = $paymentSummary['totalPaid'];
         $outstanding = $paymentSummary['outstanding'];
         $paymentProgress = $paymentSummary['paymentProgress'];
@@ -279,6 +284,8 @@ class CitizenAuthController extends Controller
     ): array {
         $installments = $paymentDetails['installments'];
 
+        // dd($installments);
+
         if ($installments->isEmpty()) {
             $totalPaid = $fallbackPaid;
             $outstanding = $fallbackOutstanding;
@@ -290,6 +297,8 @@ class CitizenAuthController extends Controller
         $paymentProgress = $flatCost > 0
             ? (int) min(100, round(($totalPaid / $flatCost) * 100))
             : 0;
+
+
 
         return [
             'totalPaid' => $totalPaid,
@@ -315,6 +324,8 @@ class CitizenAuthController extends Controller
             ->where('Is_Active', 1)
             ->get()
             ->keyBy('InstallmentNumber');
+
+        // dd($ledgerByNumber);
 
         $installments = DB::table('installment_due')
             ->where('AssetId', $assetId)

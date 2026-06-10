@@ -2,12 +2,14 @@
 
 namespace Database\Seeders;
 
+use Database\Seeders\Concerns\DisablesForeignKeyChecks;
 use Database\Seeders\Concerns\ImportsCsvFromDocuments;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class InstallmentDueSeeder extends Seeder
 {
+    use DisablesForeignKeyChecks;
     use ImportsCsvFromDocuments;
 
     private const CHUNK_SIZE = 500;
@@ -18,7 +20,7 @@ class InstallmentDueSeeder extends Seeder
 
         $csvFile = $this->csvPath('Installment_Due.csv');
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
         DB::table('installment_due')->truncate();
 
         $file = fopen($csvFile, 'r');
@@ -74,7 +76,8 @@ class InstallmentDueSeeder extends Seeder
             $imported += count($buffer);
         }
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        return $imported;
+        });
 
         $this->command?->info("Installment Due imported: {$imported}");
     }
