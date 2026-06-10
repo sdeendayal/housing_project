@@ -290,7 +290,8 @@ class CitizenAuthController extends Controller
             $totalPaid = $fallbackPaid;
             $outstanding = $fallbackOutstanding;
         } else {
-            $totalPaid = (float) $installments->where('status', 'paid')->sum('emi_amount');
+            $emiPaid = (float) $installments->where('status', 'paid')->sum('emi_amount');
+            $totalPaid = $fallbackPaid + $emiPaid;
             $outstanding = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
         }
 
