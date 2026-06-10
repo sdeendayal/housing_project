@@ -94,6 +94,36 @@
             </div>
             @endif
 
+            @if($application->status === 'approved' && $application->citizen_visit_date)
+            <div class="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50/60 p-3 mt-3">
+                <div class="flex items-start gap-2.5">
+                    <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">event</span>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-extrabold text-slate-800 m-0 mb-1">Meeting Schedule</h3>
+                        <p class="text-[13px] font-extrabold text-blue-700 m-0">{{ $application->citizen_visit_date->format('d M Y') }}</p>
+                        <p class="text-[12px] font-bold text-blue-600 m-0 mt-0.5">{{ $application->citizen_visit_date->format('h:i A') }}</p>
+                        @if($application->visit_instructions)
+                        <p class="text-[10px] text-slate-600 m-0 mt-1 leading-relaxed">{{ $application->visit_instructions }}</p>
+                        @else
+                        <p class="text-[10px] text-slate-500 m-0 mt-1">Please visit the Municipal Office on the above date with original documents.</p>
+                        @endif
+                        <div class="flex flex-wrap gap-2 mt-2.5">
+                            <a href="{{ route('pp.user.visit-performa.download', $application) }}"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold no-underline hover:bg-blue-700">
+                                <span class="material-symbols-outlined text-[14px]">download</span> Download Performa
+                            </a>
+                            <a href="{{ route('pp.user.visit-performa.print', $application) }}" target="_blank"
+                               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-[10px] font-bold text-blue-700 no-underline hover:bg-blue-50">
+                                <span class="material-symbols-outlined text-[14px]">print</span> Print Performa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
                 <a href="{{ route('pp.user.slip.print', $application) }}" target="_blank"
                    class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold no-underline hover:bg-indigo-700 shadow-sm">

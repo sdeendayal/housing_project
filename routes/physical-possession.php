@@ -47,6 +47,8 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/success/{application}', [PpUserController::class, 'success'])->name('user.success')->where('application', '[a-f0-9]{32}');
         Route::get('/slip/{application}/download', [PpUserController::class, 'downloadSlip'])->name('user.slip.download')->where('application', '[a-f0-9]{32}');
         Route::get('/slip/{application}/print', [PpUserController::class, 'printSlip'])->name('user.slip.print')->where('application', '[a-f0-9]{32}');
+        Route::get('/visit-performa/{application}/download', [PpUserController::class, 'downloadVisitPerforma'])->name('user.visit-performa.download')->where('application', '[a-f0-9]{32}');
+        Route::get('/visit-performa/{application}/print', [PpUserController::class, 'printVisitPerforma'])->name('user.visit-performa.print')->where('application', '[a-f0-9]{32}');
         Route::get('/profile', fn () => redirect()->route('citizen.profile'))->name('user.profile');
         Route::get('/logout', fn () => redirect()->route('citizen.logout'))->name('user.logout');
     });

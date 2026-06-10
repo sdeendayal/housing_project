@@ -135,13 +135,23 @@ class PpOfficerController extends Controller
         $request->validate([
             'decision' => 'required|in:approved,rejected',
             'remarks' => 'required|string|max:1000',
+            'citizen_visit_date' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
+            'visit_instructions' => 'nullable|string|max:500',
         ], [
             'decision.required' => 'Please select Approve or Reject.',
             'decision.in' => 'Invalid decision selected.',
             'remarks.required' => 'Remarks are required.',
+            'citizen_visit_date.required_if' => 'Meeting schedule (date & time) is required for approval.',
+            'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
         ]);
 
-        return $this->updateStatus($application, $request->decision, $request->remarks);
+        return $this->updateStatus(
+            $application,
+            $request->decision,
+            $request->remarks,
+            $request->decision === 'approved' ? $request->citizen_visit_date : null,
+            $request->decision === 'approved' ? $request->visit_instructions : null
+        );
     }
 
     // Approve karna (legacy route)
@@ -149,11 +159,21 @@ class PpOfficerController extends Controller
     {
         $request->validate([
             'remarks' => 'required|string|max:1000',
+            'citizen_visit_date' => 'required|date|after_or_equal:now',
+            'visit_instructions' => 'nullable|string|max:500',
         ], [
             'remarks.required' => 'Remarks are required.',
+            'citizen_visit_date.required' => 'Meeting schedule (date & time) is required.',
+            'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
         ]);
 
-        return $this->updateStatus($application, 'approved', $request->remarks);
+        return $this->updateStatus(
+            $application,
+            'approved',
+            $request->remarks,
+            $request->citizen_visit_date,
+            $request->visit_instructions
+        );
     }
 
     // Reject karna (legacy route)
@@ -169,13 +189,23 @@ class PpOfficerController extends Controller
     }
 
     // Status update - approve ya reject (single action per application, audit table)
-    private function updateStatus(PhysicalPossessionApplication $application, string $newStatus, ?string $remarks)
-    {
+    private function updateStatus(
+        PhysicalPossessionApplication $application,
+        string $newStatus,
+        ?string $remarks,
+        ?string $citizenVisitDate = null,
+        ?string $visitInstructions = null
+    ) {
         $officer = Auth::user();
         $this->findOfficerApplication($officer, $application);
 
+        if ($newStatus !== 'approved') {
+            $citizenVisitDate = null;
+            $visitInstructions = null;
+        }
+
         try {
-            DB::transaction(function () use ($officer, $application, $newStatus, $remarks) {
+            DB::transaction(function () use ($officer, $application, $newStatus, $remarks, $citizenVisitDate, $visitInstructions) {
                 $locked = PhysicalPossessionApplication::query()
                     ->where('id', $application->id)
                     ->lockForUpdate()
@@ -196,6 +226,8 @@ class PpOfficerController extends Controller
                     'remarks' => $remarks,
                     'approved_by' => $officer->id,
                     'approved_at' => now(),
+                    'citizen_visit_date' => $citizenVisitDate,
+                    'visit_instructions' => $visitInstructions,
                 ]);
 
                 OfficerApplicationAction::create([
@@ -208,6 +240,8 @@ class PpOfficerController extends Controller
                     'application_number' => $locked->application_number,
                     'district_id' => $locked->district_id,
                     'district_name' => $locked->district_name,
+                    'citizen_visit_date' => $citizenVisitDate,
+                    'visit_instructions' => $visitInstructions,
                 ]);
 
                 ApplicationStatusLog::create([

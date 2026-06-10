@@ -70,6 +70,20 @@
                     <textarea name="remarks" class="form-control form-control-sm mb-2 @error('remarks') is-invalid @enderror" rows="3" placeholder="Enter remarks for your decision" required>{{ old('remarks') }}</textarea>
                     @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
 
+                    <div id="ppVisitFields">
+                        <label class="form-label small fw-semibold mb-1">Meeting Schedule (Date & Time) <span class="text-danger">*</span></label>
+                        <input type="datetime-local" name="citizen_visit_date"
+                               class="form-control form-control-sm mb-2 @error('citizen_visit_date') is-invalid @enderror"
+                               value="{{ old('citizen_visit_date') }}"
+                               min="{{ now()->format('Y-m-d\TH:i') }}">
+                        @error('citizen_visit_date')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+                        <p class="text-muted small mb-2">Citizen will be asked to visit the office at this date and time.</p>
+
+                        <label class="form-label small fw-semibold mb-1">Visit Instructions <span class="text-muted fw-normal">(optional)</span></label>
+                        <textarea name="visit_instructions" class="form-control form-control-sm mb-2 @error('visit_instructions') is-invalid @enderror" rows="2" placeholder="e.g. Municipal Office, Rohtak — bring original ID and documents">{{ old('visit_instructions') }}</textarea>
+                        @error('visit_instructions')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+
                     <button type="submit" class="btn w-100 pp-btn-sm-compact" id="ppDecideSubmitBtn">Submit Decision</button>
                 </form>
             </div>
@@ -87,6 +101,14 @@
                     <p class="mb-1"><strong>Application No:</strong> {{ $application->officerAction->application_number }}</p>
                     <p class="mb-1"><strong>Officer:</strong> {{ $application->officerAction->officer?->name ?? '—' }}</p>
                     <p class="mb-1"><strong>Remarks:</strong> {{ $application->officerAction->remarks }}</p>
+                    @if($application->officerAction->action === 'approved')
+                        @if($application->officerAction->citizen_visit_date)
+                        <p class="mb-1"><strong>Meeting Schedule:</strong> {{ $application->officerAction->citizen_visit_date->format('d M Y, h:i A') }}</p>
+                        @endif
+                        @if($application->officerAction->visit_instructions)
+                        <p class="mb-1"><strong>Visit Instructions:</strong> {{ $application->officerAction->visit_instructions }}</p>
+                        @endif
+                    @endif
                     <p class="mb-0"><strong>Action Date:</strong> {{ $application->officerAction->created_at->format('d M Y') }}</p>
                 @else
                     <p class="mb-1"><strong>Status:</strong> {{ ucfirst($application->status) }}</p>
@@ -155,12 +177,24 @@
 (function () {
     const form = document.getElementById('ppDecideForm');
     const submitBtn = document.getElementById('ppDecideSubmitBtn');
+    const visitFields = document.getElementById('ppVisitFields');
+    const visitDateInput = form?.querySelector('[name="citizen_visit_date"]');
     const radios = form?.querySelectorAll('.pp-decision-radio');
 
     function updateSubmitBtn() {
         const selected = form?.querySelector('.pp-decision-radio:checked');
         if (!submitBtn || !selected) return;
-        if (selected.value === 'approved') {
+        const isApprove = selected.value === 'approved';
+        if (visitFields) {
+            visitFields.style.display = isApprove ? '' : 'none';
+        }
+        if (visitDateInput) {
+            visitDateInput.required = isApprove;
+            if (!isApprove) {
+                visitDateInput.value = '';
+            }
+        }
+        if (isApprove) {
             submitBtn.className = 'btn btn-success w-100 pp-btn-sm-compact';
             submitBtn.textContent = 'Submit — Approve';
         } else {
@@ -188,6 +222,7 @@
 
         const selected = form.querySelector('.pp-decision-radio:checked');
         const remarks = form.querySelector('[name="remarks"]')?.value?.trim();
+        const visitDate = form.querySelector('[name="citizen_visit_date"]')?.value?.trim();
 
         if (!selected) {
             ppSwal({ icon: 'warning', title: 'Action Required', text: 'Please select Approve or Reject.' });
@@ -197,8 +232,11 @@
             ppSwal({ icon: 'warning', title: 'Remarks Required', text: 'Please enter remarks before submitting.' });
             return;
         }
-
         const isApprove = selected.value === 'approved';
+        if (isApprove && !visitDate) {
+            ppSwal({ icon: 'warning', title: 'Schedule Required', text: 'Please select the meeting date and time for approval.' });
+            return;
+        }
         Swal.fire({
             icon: 'question',
             title: isApprove ? 'Approve Application?' : 'Reject Application?',

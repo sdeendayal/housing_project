@@ -36,6 +36,8 @@ class PhysicalPossessionApplication extends Model
         'remarks',
         'approved_by',
         'approved_at',
+        'citizen_visit_date',
+        'visit_instructions',
         'created_by',
     ];
 
@@ -43,6 +45,7 @@ class PhysicalPossessionApplication extends Model
     {
         return [
             'approved_at' => 'datetime',
+            'citizen_visit_date' => 'datetime',
         ];
     }
 

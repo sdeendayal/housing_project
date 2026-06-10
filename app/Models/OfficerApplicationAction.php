@@ -17,7 +17,16 @@ class OfficerApplicationAction extends Model
         'application_number',
         'district_id',
         'district_name',
+        'citizen_visit_date',
+        'visit_instructions',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'citizen_visit_date' => 'datetime',
+        ];
+    }
 
     public function application(): BelongsTo
     {

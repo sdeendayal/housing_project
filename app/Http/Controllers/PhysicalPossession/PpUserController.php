@@ -217,11 +217,40 @@ class PpUserController extends Controller
         return view('physical-possession.user.applications', compact('applications', 'ppHasApplication'));
     }
 
+    // Visit performa PDF
+    public function downloadVisitPerforma(PhysicalPossessionApplication $application)
+    {
+        $this->ensureUserOwnsApplication($application);
+        $application->load('officerAction.officer');
+
+        if ($application->status !== 'approved' || ! $application->citizen_visit_date) {
+            return back()->with('error', 'Visit performa is not available yet.');
+        }
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.visit-performa', compact('application'))
+            ->setPaper('a4');
+
+        return $pdf->download('Visit-Performa-'.$application->application_number.'.pdf');
+    }
+
+    // Visit performa print page
+    public function printVisitPerforma(PhysicalPossessionApplication $application)
+    {
+        $this->ensureUserOwnsApplication($application);
+        $application->load('officerAction.officer');
+
+        if ($application->status !== 'approved' || ! $application->citizen_visit_date) {
+            return back()->with('error', 'Visit performa is not available yet.');
+        }
+
+        return view('physical-possession.user.print-visit-performa', compact('application'));
+    }
+
     // Single application detail
     public function showApplication(PhysicalPossessionApplication $application)
     {
         $this->ensureUserOwnsApplication($application);
-        $application->load(['documents', 'statusLogs']);
+        $application->load(['documents', 'statusLogs', 'officerAction.officer']);
 
         return view('physical-possession.user.show-application', compact('application'));
     }

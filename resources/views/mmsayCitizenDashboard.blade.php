@@ -105,9 +105,11 @@
                     <span class="material-symbols-outlined text-[14px]">verified</span>
                     All payments cleared
                 </p>
-                <a href="{{ route('citizen.payment-status') }}" class="text-[10px] font-bold text-indigo-600 hover:underline no-underline shrink-0">View history</a>
+                <a href="{{ route('citizen.payment-status') }}" class="text-[10px] font-bold text-indigo-600 hover:underline no-underline shrink-0">View full details</a>
                 @endif
             </div>
+
+            @include('partials.mmsay.citizen.payment-details')
         </div>
     </div>
 
