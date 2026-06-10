@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -13,10 +14,11 @@ class CitizenUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $citizenRole = RoleGroup::where('slug', 'citizen')->first();
+        $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
+        $citizenRole = Role::where('slug', 'citizen')->first();
 
-        if (! $citizenRole) {
-            $this->command->error('Citizen role group not found. Run RoleGroupSeeder first.');
+        if (! $citizenGroup || ! $citizenRole) {
+            $this->command->error('Citizen role/group not found. Run RoleGroupSeeder and RoleSeeder first.');
 
             return;
         }
@@ -63,7 +65,8 @@ class CitizenUserSeeder extends Seeder
 
             DB::table('role_types')->insert([
                 'user_id' => $userId,
-                'role_group_id' => $citizenRole->id,
+                'role_id' => $citizenRole->id,
+                'role_group_id' => $citizenGroup->id,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

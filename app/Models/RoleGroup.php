@@ -16,7 +16,11 @@ class RoleGroup extends Model
         'description',
     ];
 
-    // A role group can be assigned to many users through role_types
+    public function roles(): HasMany
+    {
+        return $this->hasMany(Role::class);
+    }
+
     public function roleTypes(): HasMany
     {
         return $this->hasMany(RoleType::class);

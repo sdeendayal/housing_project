@@ -1,0 +1,224 @@
+@extends('physical-possession.layouts.officer')
+
+@section('page-title', 'Review Application')
+
+@section('content')
+<div class="row g-2">
+    <div class="col-lg-8">
+        <div class="pp-panel mb-2">
+            <div class="pp-panel-head">
+                <span>{{ $application->application_number }} <small class="text-muted fw-normal">{{ $application->slip_id }}</small></span>
+                <span class="badge bg-{{ $application->statusBadgeClass() }}">{{ ucfirst($application->status) }}</span>
+            </div>
+            <div class="pp-panel-body">
+                <div class="pp-detail-grid">
+                    <div><div class="label">Applicant</div>{{ $application->applicant_name }}</div>
+                    <div><div class="label">Father</div>{{ $application->father_name ?? '—' }}</div>
+                    <div><div class="label">Mobile</div>{{ $application->mobile }}</div>
+                    <div><div class="label">District</div>{{ $application->district_name ?? '—' }}</div>
+                    <div class="col-span-2"><div class="label">Address</div>{{ $application->address ?? '—' }}</div>
+                    <div class="col-span-2"><div class="label">Registration</div>{{ $application->registration_details ?? '—' }}</div>
+                    <div><div class="label">Submitted</div>{{ $application->created_at->format('d M Y') }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pp-panel">
+            <div class="pp-panel-head">Documents</div>
+            <div class="pp-panel-body p-0">
+                @foreach($application->documents as $doc)
+                <div class="d-flex justify-content-between align-items-center px-2 py-2 border-bottom small">
+                    <div class="min-w-0 me-2">
+                        <strong class="d-block">{{ $doc->typeLabel() }}</strong>
+                        <span class="text-muted text-truncate d-block">{{ $doc->original_name }}</span>
+                    </div>
+                    <a href="{{ route('pp.officer.document.download', [$application, $doc]) }}" class="btn btn-outline-primary pp-btn-sm-compact shrink-0">
+                        <i class="bi bi-download"></i>
+                    </a>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        @if($application->status === 'pending' && ! $application->officerAction)
+        <div class="pp-panel mb-2">
+            <div class="pp-panel-head">Officer Decision</div>
+            <div class="pp-panel-body">
+                <form method="POST" action="{{ route('pp.officer.application.decide', $application) }}" id="ppDecideForm">
+                    @csrf
+
+                    <label class="form-label small fw-semibold mb-2">Select Action <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-2 mb-3">
+                        <label class="pp-decision-option flex-fill">
+                            <input type="radio" name="decision" value="approved" class="d-none pp-decision-radio" {{ old('decision', 'approved') === 'approved' ? 'checked' : '' }}>
+                            <span class="pp-decision-card approve">
+                                <i class="bi bi-check-circle"></i> Approve
+                            </span>
+                        </label>
+                        <label class="pp-decision-option flex-fill">
+                            <input type="radio" name="decision" value="rejected" class="d-none pp-decision-radio" {{ old('decision') === 'rejected' ? 'checked' : '' }}>
+                            <span class="pp-decision-card reject">
+                                <i class="bi bi-x-circle"></i> Reject
+                            </span>
+                        </label>
+                    </div>
+                    @error('decision')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
+
+                    <label class="form-label small fw-semibold mb-1">Remarks <span class="text-danger">*</span></label>
+                    <textarea name="remarks" class="form-control form-control-sm mb-2 @error('remarks') is-invalid @enderror" rows="3" placeholder="Enter remarks for your decision" required>{{ old('remarks') }}</textarea>
+                    @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
+
+                    <button type="submit" class="btn w-100 pp-btn-sm-compact" id="ppDecideSubmitBtn">Submit Decision</button>
+                </form>
+            </div>
+        </div>
+        @else
+        <div class="pp-panel mb-2">
+            <div class="pp-panel-head">Officer Action Record</div>
+            <div class="pp-panel-body small">
+                @if($application->officerAction)
+                    <p class="mb-1"><strong>Action:</strong>
+                        <span class="badge bg-{{ $application->officerAction->action === 'approved' ? 'success' : 'danger' }}">
+                            {{ ucfirst($application->officerAction->action) }}
+                        </span>
+                    </p>
+                    <p class="mb-1"><strong>Application No:</strong> {{ $application->officerAction->application_number }}</p>
+                    <p class="mb-1"><strong>Officer:</strong> {{ $application->officerAction->officer?->name ?? '—' }}</p>
+                    <p class="mb-1"><strong>Remarks:</strong> {{ $application->officerAction->remarks }}</p>
+                    <p class="mb-0"><strong>Action Date:</strong> {{ $application->officerAction->created_at->format('d M Y') }}</p>
+                @else
+                    <p class="mb-1"><strong>Status:</strong> {{ ucfirst($application->status) }}</p>
+                    @if($application->remarks)<p class="mb-1"><strong>Remarks:</strong> {{ $application->remarks }}</p>@endif
+                    @if($application->approved_at)<p class="mb-0"><strong>Date:</strong> {{ $application->approved_at->format('d M Y') }}</p>@endif
+                @endif
+            </div>
+        </div>
+        @endif
+
+        <div class="pp-panel">
+            <div class="pp-panel-head">Timeline</div>
+            <div class="pp-panel-body">
+                <div class="pp-timeline">
+                    @foreach($application->statusLogs as $log)
+                    <div class="pp-timeline-item">
+                        <strong>{{ ucfirst($log->new_status) }}</strong>
+                        <div class="text-muted">{{ $log->created_at->format('d M Y') }}</div>
+                        @if($log->remarks)<div>{{ str_ireplace(' by user', '', $log->remarks) }}</div>@endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@push('styles')
+<style>
+.pp-decision-option { cursor: pointer; margin: 0; }
+.pp-decision-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.5rem 0.4rem;
+    border-radius: 8px;
+    border: 2px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #64748b;
+    transition: all 0.15s;
+}
+.pp-decision-card.approve { color: #059669; }
+.pp-decision-card.reject { color: #dc2626; }
+.pp-decision-radio:checked + .pp-decision-card.approve {
+    background: #ecfdf5;
+    border-color: #059669;
+    color: #047857;
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.12);
+}
+.pp-decision-radio:checked + .pp-decision-card.reject {
+    background: #fef2f2;
+    border-color: #dc2626;
+    color: #b91c1c;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+</style>
+@endpush
+
+@push('scripts')
+@if($application->status === 'pending' && ! $application->officerAction)
+<script>
+(function () {
+    const form = document.getElementById('ppDecideForm');
+    const submitBtn = document.getElementById('ppDecideSubmitBtn');
+    const radios = form?.querySelectorAll('.pp-decision-radio');
+
+    function updateSubmitBtn() {
+        const selected = form?.querySelector('.pp-decision-radio:checked');
+        if (!submitBtn || !selected) return;
+        if (selected.value === 'approved') {
+            submitBtn.className = 'btn btn-success w-100 pp-btn-sm-compact';
+            submitBtn.textContent = 'Submit — Approve';
+        } else {
+            submitBtn.className = 'btn btn-danger w-100 pp-btn-sm-compact';
+            submitBtn.textContent = 'Submit — Reject';
+        }
+    }
+
+    radios?.forEach(function (radio) {
+        radio.addEventListener('change', updateSubmitBtn);
+    });
+    updateSubmitBtn();
+
+    let decideConfirmed = false;
+    const ppLoading = document.getElementById('ppLoading');
+
+    form?.addEventListener('submit', function (e) {
+        if (decideConfirmed) {
+            ppLoading?.classList.add('show');
+            return;
+        }
+
+        e.preventDefault();
+        ppLoading?.classList.remove('show');
+
+        const selected = form.querySelector('.pp-decision-radio:checked');
+        const remarks = form.querySelector('[name="remarks"]')?.value?.trim();
+
+        if (!selected) {
+            ppSwal({ icon: 'warning', title: 'Action Required', text: 'Please select Approve or Reject.' });
+            return;
+        }
+        if (!remarks) {
+            ppSwal({ icon: 'warning', title: 'Remarks Required', text: 'Please enter remarks before submitting.' });
+            return;
+        }
+
+        const isApprove = selected.value === 'approved';
+        Swal.fire({
+            icon: 'question',
+            title: isApprove ? 'Approve Application?' : 'Reject Application?',
+            text: 'Please confirm your decision. This cannot be undone.',
+            showCancelButton: true,
+            confirmButtonText: isApprove ? 'Yes, Approve' : 'Yes, Reject',
+            cancelButtonText: 'Cancel',
+            confirmButtonColor: isApprove ? '#059669' : '#dc2626',
+            cancelButtonColor: '#64748b',
+        }).then(function (result) {
+            if (result.isConfirmed) {
+                decideConfirmed = true;
+                ppLoading?.classList.add('show');
+                form.submit();
+            } else {
+                ppLoading?.classList.remove('show');
+            }
+        });
+    });
+})();
+</script>
+@endif
+@endpush

@@ -1,0 +1,70 @@
+@extends('physical-possession.layouts.auth-login', ['loginType' => 'officer'])
+
+@section('title', 'Verify OTP')
+
+@section('authHeading', 'Verify OTP')
+@section('authSubheading')
+    OTP sent to +91 {{ $mobile }}
+@endsection
+
+@section('loginForm')
+@if(app()->environment('local'))
+<div class="alert alert-info py-1 px-2 small mb-2">
+    Local environment: use OTP <strong>111111</strong>
+</div>
+@endif
+
+<form method="POST" action="{{ route('pp.officer.login.verify') }}" id="ppOfficerVerifyOtpForm" data-pp-loading>
+    @csrf
+    <div class="field">
+        <label class="form-label pp-auth-label" for="ppOfficerOtpInput">Enter OTP <span class="text-danger">*</span></label>
+        <input type="text" name="otp" id="ppOfficerOtpInput" class="form-control text-center pp-otp-input @error('otp') is-invalid @enderror"
+               placeholder="6-digit OTP" maxlength="6" inputmode="numeric" autocomplete="one-time-code">
+        @error('otp')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+    </div>
+    <button type="submit" class="pp-auth-btn pp-auth-btn--officer">
+        <i class="bi bi-shield-check me-1"></i> Verify & Sign In
+    </button>
+</form>
+
+<div class="d-flex justify-content-between align-items-center small mt-2">
+    <form method="POST" action="{{ route('pp.officer.login.resend-otp') }}" class="m-0">
+        @csrf
+        <button type="submit" class="btn btn-link btn-sm p-0 text-decoration-none">Resend OTP</button>
+    </form>
+    <a href="{{ route('pp.officer.login') }}" class="text-muted text-decoration-none">Change mobile</a>
+</div>
+@endsection
+
+@push('scripts')
+<script>
+(function () {
+    const otpInput = document.getElementById('ppOfficerOtpInput');
+    const form = document.getElementById('ppOfficerVerifyOtpForm');
+
+    if (otpInput) {
+        otpInput.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 6);
+        });
+        otpInput.focus();
+    }
+
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const otp = otpInput ? otpInput.value.trim() : '';
+
+        if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
+            ppSwal({ icon: 'warning', title: 'Invalid OTP', text: 'OTP must be exactly 6 digits.' });
+            otpInput && otpInput.focus();
+            return;
+        }
+
+        document.getElementById('ppLoading')?.classList.add('show');
+        form.submit();
+    });
+})();
+</script>
+@endpush

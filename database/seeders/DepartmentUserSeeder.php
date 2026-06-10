@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\RoleType;
 use App\Models\User;
@@ -12,10 +13,11 @@ class DepartmentUserSeeder extends Seeder
 {
     public function run(): void
     {
-        $departmentalRole = RoleGroup::where('slug', 'departmental')->first();
+        $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
+        $adminRole = Role::where('slug', 'admin')->first();
 
-        if (! $departmentalRole) {
-            $this->command->error('Departmental role group not found. Run RoleGroupSeeder first.');
+        if (! $departmentGroup || ! $adminRole) {
+            $this->command->error('Department group or admin role not found. Run RoleGroupSeeder and RoleSeeder first.');
 
             return;
         }
@@ -25,9 +27,9 @@ class DepartmentUserSeeder extends Seeder
 
         if ($existing) {
             // Ensure role mapping exists
-            RoleType::firstOrCreate(
+            RoleType::updateOrCreate(
                 ['user_id' => $existing->id],
-                ['role_group_id' => $departmentalRole->id]
+                ['role_id' => $adminRole->id, 'role_group_id' => $departmentGroup->id]
             );
 
             return;
@@ -43,7 +45,8 @@ class DepartmentUserSeeder extends Seeder
 
         RoleType::create([
             'user_id' => $user->id,
-            'role_group_id' => $departmentalRole->id,
+            'role_id' => $adminRole->id,
+            'role_group_id' => $departmentGroup->id,
         ]);
     }
 }

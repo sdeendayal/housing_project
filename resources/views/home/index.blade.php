@@ -4,7 +4,6 @@
 
 @section('content')
     {{-- Left Sidebar --}}
-    @include('partials.newsSidebar')
     {{-- Main Content --}}
     <main class="lg:col-span-2">
         <main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -34,6 +33,16 @@
 
                         <ul id="newsScroller"
                             class="divide-y divide-slate-100 text-sm absolute w-full animate-news-scroll hover:[animation-play-state:paused]">
+
+                            <li class="p-3 hover:bg-slate-50">
+                                <a class="flex items-start space-x-2" href="{{ route('citizen.login') }}">
+                                    <span class="text-green-500 mt-0.5">●</span>
+                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
+                                        Physical Possession Online Apply — Nayi Scheme Shuru! User Login se apply karein
+                                    </span>
+                                    <span class="pp-scheme-new-badge-sm text-[9px] px-1.5 py-0.5 shrink-0">🔥 NEW</span>
+                                </a>
+                            </li>
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-start space-x-2" href="#">
@@ -210,7 +219,7 @@
             <!-- CENTER AREA -->
             <section class="lg:col-span-2 space-y-6">
                 <!-- Scheme Compact Cards -->
-                <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 
                     <!-- MMSAY -->
                     <div class="relative group">
@@ -374,7 +383,34 @@
 
                     </div>
 
+                    <!-- Physical Possession -->
+                    <div class="relative group">
+                        <a href="{{ route('pp.landing') }}"
+                            class="relative bg-surface-container-lowest border-2 border-red-300 rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-red-50 transition-all duration-300 overflow-hidden">
+                            <span class="pp-scheme-new-badge-sm absolute top-1 right-1 text-[8px] px-1.5 py-0.5">NEW</span>
+                            <span class="absolute bottom-0 left-0 w-full h-1 bg-red-200 group-hover:bg-red-600 transition-all duration-300"></span>
+                            <span class="material-symbols-outlined text-red-600 text-4xl group-hover:scale-110 transition-transform duration-300"
+                                style="font-variation-settings: 'FILL' 0;">home_work</span>
+                            <div>
+                                <div class="text-xs font-bold text-red-700 leading-tight">Physical Possession</div>
+                            </div>
+                        </a>
+                        <div class="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+                            <a href="{{ route('citizen.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-amber-50 text-sm font-medium text-gray-700 transition-all">
+                                <span class="material-symbols-outlined text-[18px]">person</span>
+                                User Login / Apply
+                            </a>
+                            <a href="{{ route('pp.department.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-indigo-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+                                <span class="material-symbols-outlined text-[18px]">shield_person</span>
+                                District Officer Login
+                            </a>
+                        </div>
+                    </div>
+
                 </div>
+
                 <!-- Main Visual / Carousel Area -->
                 <div
                     class="bg-white rounded-lg shadow-sm border border-surface-container-highest p-4 mb-6 overflow-hidden">
@@ -462,6 +498,19 @@
 
                     </div>
                     <div class="divide-y divide-surface-container-low max-h-48 overflow-y-auto custom-scroll">
+                        <div class="p-3 flex items-start space-x-3">
+                            <span class="material-symbols-outlined text-red-500 text-sm">campaign</span>
+                            <div>
+                                <div class="text-[10px] text-on-surface-variant mb-0.5">{{ now()->format('d M, Y') }}</div>
+                                <p class="text-xs text-on-surface font-medium">
+                                    <span class="pp-scheme-new-badge-sm text-[8px] px-1 py-0.5 mr-1">NEW</span>
+                                    Physical Possession Application Portal live —
+                                    <a href="{{ route('citizen.login') }}" class="text-sky-600 font-bold hover:underline">User Login</a>
+                                    |
+                                    <a href="{{ route('pp.department.login') }}" class="text-sky-600 font-bold hover:underline">Officer Login</a>
+                                </p>
+                            </div>
+                        </div>
                         <div class="p-3 flex items-start space-x-3"><span
                                 class="material-symbols-outlined text-secondary-container text-sm">calendar_today</span>
                             <div>

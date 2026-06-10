@@ -1,0 +1,221 @@
+@extends('layouts.mmsayCitizen', [
+    'pageTitle' => 'Application Details',
+    'activeNav' => 'pp-application-show',
+])
+
+@section('content')
+@php
+    $statusClass = match($application->status) {
+        'approved' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+        'rejected' => 'bg-red-100 text-red-700 border-red-200',
+        default => 'bg-amber-100 text-amber-700 border-amber-200',
+    };
+    $statusIcon = match($application->status) {
+        'approved' => 'check_circle',
+        'rejected' => 'cancel',
+        default => 'hourglass_top',
+    };
+    $timelineDotClass = fn (string $status) => match($status) {
+        'approved' => 'bg-emerald-500 ring-4 ring-emerald-100',
+        'rejected' => 'bg-red-500 ring-4 ring-red-100',
+        default => 'bg-amber-500 ring-4 ring-amber-100',
+    };
+@endphp
+
+<div class="space-y-2">
+    {{-- Application summary + status + actions --}}
+    <div class="citizen-card overflow-hidden">
+        <div class="relative px-4 py-3.5 bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-500">
+            <div class="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_top_right,white,transparent_55%)]"></div>
+            <div class="relative flex flex-wrap items-start justify-between gap-3">
+                <div class="min-w-0">
+                    <p class="text-[9px] uppercase tracking-wider font-bold text-indigo-100 mb-1">Generated Application ID</p>
+                    <p class="text-[17px] sm:text-[18px] font-extrabold text-white tracking-wide m-0 break-all">{{ $application->application_number }}</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border {{ $statusClass }} shrink-0">
+                    <span class="material-symbols-outlined text-[14px]">{{ $statusIcon }}</span>
+                    {{ $application->status }}
+                </span>
+            </div>
+        </div>
+
+        <div class="p-3 sm:p-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[18px]">receipt_long</span>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="pp-detail-label">Slip ID</p>
+                        <p class="text-[12px] font-bold text-slate-800 truncate">{{ $application->slip_id }}</p>
+                    </div>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 flex items-center gap-2.5">
+                    <span class="w-8 h-8 rounded-lg bg-violet-100 text-violet-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[18px]">calendar_month</span>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="pp-detail-label">Submitted On</p>
+                        <p class="text-[12px] font-bold text-slate-800">{{ $application->created_at->format('d M Y') }}</p>
+                    </div>
+                </div>
+            </div>
+
+            @if($application->statusLogs->isNotEmpty())
+            <div class="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/80 to-violet-50/40 p-3">
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <span class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[15px]">timeline</span>
+                    </span>
+                    <h3 class="text-[11px] font-extrabold text-slate-800 m-0">Status Timeline</h3>
+                </div>
+                <div class="space-y-0">
+                    @foreach($application->statusLogs as $log)
+                    <div class="flex gap-2.5 {{ !$loop->last ? 'pb-3' : '' }}">
+                        <div class="flex flex-col items-center shrink-0 pt-0.5">
+                            <span class="w-2.5 h-2.5 rounded-full {{ $timelineDotClass($log->new_status) }}"></span>
+                            @if(!$loop->last)
+                            <span class="w-px flex-1 min-h-[28px] bg-indigo-200 mt-1"></span>
+                            @endif
+                        </div>
+                        <div class="flex-1 min-w-0 {{ !$loop->last ? 'pb-0.5' : '' }}">
+                            <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                <p class="text-[11px] font-bold text-slate-800 m-0 capitalize">{{ $log->new_status }}</p>
+                                <span class="text-[10px] text-slate-400">·</span>
+                                <p class="text-[10px] font-semibold text-indigo-600 m-0">{{ $log->created_at->format('d M Y') }}</p>
+                            </div>
+                            @if($log->remarks)
+                            <p class="text-[10px] text-slate-600 m-0 mt-0.5 leading-relaxed">{{ str_ireplace(' by user', '', $log->remarks) }}</p>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            <div class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-slate-100">
+                <a href="{{ route('pp.user.slip.print', $application) }}" target="_blank"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold no-underline hover:bg-indigo-700 shadow-sm">
+                    <span class="material-symbols-outlined text-[16px]">print</span> Print Slip
+                </a>
+                <a href="{{ route('pp.user.applications') }}"
+                   class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-[11px] font-bold text-slate-700 no-underline hover:bg-slate-50">
+                    <span class="material-symbols-outlined text-[16px]">arrow_back</span> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="citizen-card">
+        <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+            <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Applicant Details</h2>
+        </div>
+        <div class="p-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                    <p class="pp-detail-label">Applicant</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->applicant_name }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                    <p class="pp-detail-label">Father</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->father_name ?? '—' }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                    <p class="pp-detail-label">Mobile</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->mobile }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                    <p class="pp-detail-label">District</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->district_name ?? '—' }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:col-span-2">
+                    <p class="pp-detail-label">Address</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->address ?? '—' }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:col-span-2">
+                    <p class="pp-detail-label">Registration</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->registration_details ?? '—' }}</p>
+                </div>
+                @if($application->remarks)
+                <div class="rounded-lg border border-amber-100 bg-amber-50 p-2.5 sm:col-span-2">
+                    <p class="pp-detail-label">Officer Remarks</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $application->remarks }}</p>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="citizen-card">
+        <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
+            <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Uploaded Documents ({{ $application->documents->count() }})</h2>
+        </div>
+        <div class="p-3">
+            @if($application->documents->isNotEmpty())
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                @foreach($application->documents as $doc)
+                @php
+                    $docViewUrl = route('pp.user.document.view', [$application, $doc]);
+                    $isImage = str_starts_with($doc->mime_type ?? '', 'image/');
+                    $isPdf = ($doc->mime_type ?? '') === 'application/pdf'
+                        || str_ends_with(strtolower($doc->original_name ?? ''), '.pdf');
+                    $docIcon = match($doc->document_type) {
+                        'filled_form' => 'edit_document',
+                        'registration_certificate' => 'verified',
+                        'provisional_possession_letter' => 'mark_email_read',
+                        default => 'description',
+                    };
+                @endphp
+                <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-indigo-200 hover:shadow-sm transition">
+                    <a href="{{ $docViewUrl }}" target="_blank" rel="noopener"
+                       class="group relative block no-underline bg-gradient-to-b from-slate-50 to-slate-100/80">
+                        <div class="relative mx-auto w-full max-w-[180px] pt-3 px-3">
+                            <div class="relative aspect-[3/4] overflow-hidden rounded-t-md rounded-b-sm bg-white shadow-md ring-1 ring-slate-200/80">
+                                @if($isImage)
+                                <img src="{{ $docViewUrl }}" alt="{{ $doc->typeLabel() }}"
+                                     class="h-full w-full object-cover object-top"
+                                     loading="lazy">
+                                @elseif($isPdf)
+                                <iframe src="{{ $docViewUrl }}#toolbar=0&navpanes=0&view=FitH"
+                                        title="{{ $doc->typeLabel() }} preview"
+                                        class="h-full w-full border-0 pointer-events-none bg-white"
+                                        loading="lazy"></iframe>
+                                @else
+                                <div class="flex h-full items-center justify-center bg-slate-50">
+                                    <span class="material-symbols-outlined text-[32px] text-slate-300">description</span>
+                                </div>
+                                @endif
+                                <div class="absolute inset-0 bg-indigo-900/0 transition group-hover:bg-indigo-900/10"></div>
+                            </div>
+                            @if($isPdf)
+                            <span class="absolute top-5 right-5 inline-flex items-center gap-0.5 rounded-md bg-red-500 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-white shadow-sm">
+                                PDF
+                            </span>
+                            @endif
+                        </div>
+                        <div class="px-2.5 pt-2.5 pb-2 text-center">
+                            <div class="flex items-start justify-center gap-1 mb-1">
+                                <span class="material-symbols-outlined text-[15px] text-indigo-500 shrink-0 mt-px">{{ $docIcon }}</span>
+                                <p class="text-[10px] font-bold text-slate-800 m-0 leading-snug line-clamp-2">{{ $doc->typeLabel() }}</p>
+                            </div>
+                            <p class="text-[9px] text-slate-400 m-0 truncate">{{ $doc->original_name }}</p>
+                        </div>
+                    </a>
+                    <div class="mt-auto border-t border-slate-100 p-2">
+                        <a href="{{ $docViewUrl }}" target="_blank" rel="noopener"
+                           class="flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 py-1.5 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
+                            <span class="material-symbols-outlined text-[14px]">visibility</span>
+                            View Document
+                        </a>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div class="p-4 text-center text-[11px] text-slate-500">No documents uploaded.</div>
+            @endif
+        </div>
+    </div>
+</div>
+@endsection

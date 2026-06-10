@@ -2,239 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SendOtpRequest;
-use App\Http\Requests\VerifyOtpRequest;
-use App\Models\Otp;
+use App\Models\PhysicalPossessionApplication;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CitizenAuthController extends Controller
 {
-    // OTP settings
-    private const OTP_EXPIRY_MINUTES = 10;
-    private const OTP_RESEND_COOLDOWN_SECONDS = 60;
-    private const OTP_MAX_ATTEMPTS = 5;
-
-    // Step 1: Show mobile number + captcha page
-    public function showLogin()
-    {
-        if (Auth::check() && Auth::user()->belongsToRoleGroup('citizen')) {
-            return redirect()->intended('/mmsay/citizen/dashboard');
-        }
-
-        $captcha = rand(1000, 9999);
-        session(['captcha' => $captcha]);
-
-        return view('mmsay.citizenLogin', compact('captcha'));
-    }
-
-    // Step 2: Validate mobile + captcha, generate OTP, go to verify page
-    public function sendOtp(SendOtpRequest $request)
-    {
-        if ($request->captcha != session('captcha')) {
-            return back()->withInput()->with('error', 'Invalid captcha. Please try again.');
-        }
-
-        $mobile = $request->mobile;
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return back()->withInput()->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        // Resend cooldown check
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp && $this->isOtpResendOnCooldown($latestOtp)) {
-            $waitSeconds = $this->remainingOtpCooldownSeconds($latestOtp);
-
-            return back()->withInput()->with('error', "Please wait {$waitSeconds} seconds before requesting a new OTP.");
-        }
-
-        try {
-            DB::transaction(function () use ($mobile) {
-                // Invalidate all previous active OTPs for this mobile
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info('Citizen OTP generated', ['mobile' => $mobile]);
-
-                if (app()->environment('local')) {
-                    Log::info('Local OTP for testing', ['mobile' => $mobile, 'otp' => $otpCode]);
-                }
-            });
-        } catch (\Exception $e) {
-            Log::error('Citizen OTP generation failed', ['mobile' => $mobile, 'error' => $e->getMessage()]);
-
-            return back()->withInput()->with('error', 'Unable to send OTP. Please try again.');
-        }
-
-        // Store mobile in session for the OTP verification page
-        session(['citizen_login_mobile' => $mobile]);
-
-        return redirect()->route('citizen.login.verify-page')
-            ->with('success', 'OTP sent successfully to your mobile number.');
-    }
-
-    // Step 3: Show OTP verification page
-    public function showVerifyOtp()
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Please enter your mobile number first.');
-        }
-
-        return view('mmsay.citizenOtpVerify', compact('mobile'));
-    }
-
-    // Step 4: Verify OTP and login citizen
-    public function verifyOtp(VerifyOtpRequest $request)
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Session expired. Please start again.');
-        }
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        $otpRecord = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if (! $otpRecord) {
-            return back()->with('error', 'No active OTP found. Please request a new OTP.');
-        }
-
-        if ($otpRecord->isExpired()) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'OTP has expired. Please request a new OTP.');
-        }
-
-        if ($otpRecord->attempts >= self::OTP_MAX_ATTEMPTS) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'Too many failed attempts. Please request a new OTP.');
-        }
-
-        if ($request->otp !== $otpRecord->otp) {
-            $otpRecord->increment('attempts');
-
-            Log::warning('Citizen OTP verification failed', [
-                'mobile' => $mobile,
-                'attempts' => $otpRecord->attempts,
-            ]);
-
-            return back()->with('error', 'Invalid OTP. Please try again.');
-        }
-
-        try {
-            DB::transaction(function () use ($mobile, $user, $request) {
-                Otp::where('mobile_number', $mobile)->delete();
-
-                Auth::login($user);
-                $request->session()->regenerate();
-
-                session()->forget('citizen_login_mobile');
-            });
-
-            Log::info('Citizen logged in via OTP', ['user_id' => $user->id, 'mobile' => $mobile]);
-        } catch (\Exception $e) {
-            Log::error('Citizen login failed', ['mobile' => $mobile, 'error' => $e->getMessage()]);
-
-            return back()->with('error', 'Login failed. Please try again.');
-        }
-
-        return redirect()->intended('/mmsay/citizen/dashboard')
-            ->with('success', 'Login successful! Welcome back.');
-    }
-
-    // Resend OTP from verification page (no captcha needed — mobile already verified in step 1)
-    public function resendOtp(Request $request)
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Session expired. Please start again.');
-        }
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp && $this->isOtpResendOnCooldown($latestOtp)) {
-            $waitSeconds = $this->remainingOtpCooldownSeconds($latestOtp);
-
-            return back()->with('warning', "Please wait {$waitSeconds} seconds before resending OTP.");
-        }
-
-        try {
-            DB::transaction(function () use ($mobile) {
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info('Citizen OTP resent', ['mobile' => $mobile]);
-            });
-        } catch (\Exception $e) {
-            return back()->with('error', 'Unable to resend OTP. Please try again.');
-        }
-
-        return back()->with('success', 'A new OTP has been sent to your mobile number.');
-    }
-
     // Citizen dashboard — logged-in user data from DB (no helpers / view composers)
     public function dashboard(): View
     {
@@ -292,6 +68,21 @@ class CitizenAuthController extends Controller
             : ($purchaser ? 'Application Submitted' : '—');
         $category = $purchaser?->CasteCategoryName ?? '—';
 
+        $ppStats = [
+            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->count(),
+            'pending' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'approved' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'approved')->count(),
+            'rejected' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'rejected')->count(),
+        ];
+
+        $ppRecentApplications = PhysicalPossessionApplication::where('user_id', $user->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $ppHasApplication = $ppStats['total'] > 0;
+        $latestPpApplication = $ppHasApplication ? $ppRecentApplications->first() : null;
+
         return view('mmsayCitizenDashboard', [
             'displayName' => $displayName,
             'applicationId' => $applicationId,
@@ -303,6 +94,10 @@ class CitizenAuthController extends Controller
             'category' => $category,
             'hasOutstanding' => $hasOutstanding,
             'assetName' => $assetName,
+            'ppStats' => $ppStats,
+            'ppRecentApplications' => $ppRecentApplications,
+            'ppHasApplication' => $ppHasApplication,
+            'latestPpApplication' => $latestPpApplication,
         ]);
     }
 
@@ -347,23 +142,6 @@ class CitizenAuthController extends Controller
             'annualIncome' => $annualIncome,
             'address' => $address,
         ]);
-    }
-
-    private function isOtpResendOnCooldown(Otp $latestOtp): bool
-    {
-        return $this->otpCooldownElapsedSeconds($latestOtp) < self::OTP_RESEND_COOLDOWN_SECONDS;
-    }
-
-    private function remainingOtpCooldownSeconds(Otp $latestOtp): int
-    {
-        $remaining = self::OTP_RESEND_COOLDOWN_SECONDS - $this->otpCooldownElapsedSeconds($latestOtp);
-
-        return max(1, (int) ceil($remaining));
-    }
-
-    private function otpCooldownElapsedSeconds(Otp $latestOtp): int
-    {
-        return (int) $latestOtp->created_at->diffInSeconds(now());
     }
 
     private function findPurchaserForUser(User $user): ?object
@@ -421,16 +199,4 @@ class CitizenAuthController extends Controller
         return '₹ '.($rest ? $rest.',' : '').$lastThree;
     }
 
-    // Logout citizen
-    public function logout(Request $request)
-    {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()
-            ->route('citizen.login')
-            ->with('success', 'Logged out successfully.');
-    }
 }

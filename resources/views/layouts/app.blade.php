@@ -90,6 +90,9 @@
     {{-- Navbar --}}
     @include('partials.navbar')
 
+    {{-- Top Announcement Marquee --}}
+    @include('partials.newsSidebar')
+
     {{-- Main Content --}}
     @yield('content')
 

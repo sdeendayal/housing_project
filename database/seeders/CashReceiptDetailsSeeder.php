@@ -8,6 +8,8 @@ use Carbon\Carbon;
 
 class CashReceiptDetailsSeeder extends Seeder
 {
+    private const CHUNK_SIZE = 500;
+
     public function run(): void
     {
         $csvFile = database_path('seeders/data/9CashReceiptDetails.csv');
@@ -16,15 +18,19 @@ class CashReceiptDetailsSeeder extends Seeder
             throw new \Exception("CSV file not found: " . $csvFile);
         }
 
+        $branchIds = array_flip(DB::table('em_offices')->pluck('BranchId')->all());
+        $districtIds = array_flip(DB::table('districts')->pluck('DistrictId')->all());
+        $cityIds = array_flip(DB::table('cities')->pluck('CityId')->all());
+        $sectorIds = array_flip(DB::table('sectors')->pluck('SectorId')->all());
+        $assetIds = array_flip(DB::table('property_registration')->pluck('AssetId')->all());
+
         $file = fopen($csvFile, 'r');
 
-        // Encoding fix
         stream_filter_append($file, 'convert.iconv.ISO-8859-1/UTF-8');
 
-        // Header skip
         fgetcsv($file);
 
-        $data = [];
+        $buffer = [];
 
         while (($row = fgetcsv($file, 1000, ',')) !== false) {
 
@@ -38,19 +44,17 @@ class CashReceiptDetailsSeeder extends Seeder
             $sectorId   = (int) ($row[7] ?? 0);
             $assetId    = (int) ($row[1] ?? 0);
 
-            // FK validation
             if (
-                !DB::table('em_offices')->where('BranchId', $branchId)->exists() ||
-                !DB::table('districts')->where('DistrictId', $districtId)->exists() ||
-                !DB::table('cities')->where('CityId', $cityId)->exists() ||
-                !DB::table('sectors')->where('SectorId', $sectorId)->exists() ||
-                !DB::table('property_registration')->where('AssetId', $assetId)->exists()
+                !isset($branchIds[$branchId]) ||
+                !isset($districtIds[$districtId]) ||
+                !isset($cityIds[$cityId]) ||
+                !isset($sectorIds[$sectorId]) ||
+                !isset($assetIds[$assetId])
             ) {
-                dump(['Invalid Row' => $row]);
                 continue;
             }
 
-            $data[] = [
+            $buffer[] = [
                 'id'                => (int) ($row[0] ?? 0),
                 'asset_number'      => $assetId,
                 'total_paid_amount' => (float) ($row[2] ?? 0),
@@ -84,17 +88,24 @@ class CashReceiptDetailsSeeder extends Seeder
                     ? (int) $row[14]
                     : 544,
             ];
+
+            if (count($buffer) >= self::CHUNK_SIZE) {
+                $this->insertChunk($buffer);
+                $buffer = [];
+            }
         }
 
         fclose($file);
 
-        collect($data)->chunk(500)->each(function ($chunk) {
-            DB::table('cash_receipt_details')->upsert(
-                $chunk->toArray(),
-                ['id']
-            );
-        });
+        if (!empty($buffer)) {
+            $this->insertChunk($buffer);
+        }
 
         $this->command->info('Cash Receipt Details seeded successfully!');
+    }
+
+    private function insertChunk(array $rows): void
+    {
+        DB::table('cash_receipt_details')->upsert($rows, ['id']);
     }
 }
