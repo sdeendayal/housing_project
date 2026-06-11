@@ -2,239 +2,16 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SendOtpRequest;
-use App\Http\Requests\VerifyOtpRequest;
-use App\Models\Otp;
+use App\Models\PhysicalPossessionApplication;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class CitizenAuthController extends Controller
 {
-    // OTP settings
-    private const OTP_EXPIRY_MINUTES = 10;
-    private const OTP_RESEND_COOLDOWN_SECONDS = 60;
-    private const OTP_MAX_ATTEMPTS = 5;
-
-    // Step 1: Show mobile number + captcha page
-    public function showLogin()
-    {
-        if (Auth::check() && Auth::user()->belongsToRoleGroup('citizen')) {
-            return redirect()->intended('/mmsay/citizen/dashboard');
-        }
-
-        $captcha = rand(1000, 9999);
-        session(['captcha' => $captcha]);
-
-        return view('mmsay.citizenLogin', compact('captcha'));
-    }
-
-    // Step 2: Validate mobile + captcha, generate OTP, go to verify page
-    public function sendOtp(SendOtpRequest $request)
-    {
-        if ($request->captcha != session('captcha')) {
-            return back()->withInput()->with('error', 'Invalid captcha. Please try again.');
-        }
-
-        $mobile = $request->mobile;
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return back()->withInput()->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        // Resend cooldown check
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp && $this->isOtpResendOnCooldown($latestOtp)) {
-            $waitSeconds = $this->remainingOtpCooldownSeconds($latestOtp);
-
-            return back()->withInput()->with('error', "Please wait {$waitSeconds} seconds before requesting a new OTP.");
-        }
-
-        try {
-            DB::transaction(function () use ($mobile) {
-                // Invalidate all previous active OTPs for this mobile
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info('Citizen OTP generated', ['mobile' => $mobile]);
-
-                if (app()->environment('local')) {
-                    Log::info('Local OTP for testing', ['mobile' => $mobile, 'otp' => $otpCode]);
-                }
-            });
-        } catch (\Exception $e) {
-            Log::error('Citizen OTP generation failed', ['mobile' => $mobile, 'error' => $e->getMessage()]);
-
-            return back()->withInput()->with('error', 'Unable to send OTP. Please try again.');
-        }
-
-        // Store mobile in session for the OTP verification page
-        session(['citizen_login_mobile' => $mobile]);
-
-        return redirect()->route('citizen.login.verify-page')
-            ->with('success', 'OTP sent successfully to your mobile number.');
-    }
-
-    // Step 3: Show OTP verification page
-    public function showVerifyOtp()
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Please enter your mobile number first.');
-        }
-
-        return view('mmsay.citizenOtpVerify', compact('mobile'));
-    }
-
-    // Step 4: Verify OTP and login citizen
-    public function verifyOtp(VerifyOtpRequest $request)
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Session expired. Please start again.');
-        }
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        $otpRecord = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if (! $otpRecord) {
-            return back()->with('error', 'No active OTP found. Please request a new OTP.');
-        }
-
-        if ($otpRecord->isExpired()) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'OTP has expired. Please request a new OTP.');
-        }
-
-        if ($otpRecord->attempts >= self::OTP_MAX_ATTEMPTS) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'Too many failed attempts. Please request a new OTP.');
-        }
-
-        if ($request->otp !== $otpRecord->otp) {
-            $otpRecord->increment('attempts');
-
-            Log::warning('Citizen OTP verification failed', [
-                'mobile' => $mobile,
-                'attempts' => $otpRecord->attempts,
-            ]);
-
-            return back()->with('error', 'Invalid OTP. Please try again.');
-        }
-
-        try {
-            DB::transaction(function () use ($mobile, $user, $request) {
-                Otp::where('mobile_number', $mobile)->delete();
-
-                Auth::login($user);
-                $request->session()->regenerate();
-
-                session()->forget('citizen_login_mobile');
-            });
-
-            Log::info('Citizen logged in via OTP', ['user_id' => $user->id, 'mobile' => $mobile]);
-        } catch (\Exception $e) {
-            Log::error('Citizen login failed', ['mobile' => $mobile, 'error' => $e->getMessage()]);
-
-            return back()->with('error', 'Login failed. Please try again.');
-        }
-
-        return redirect()->intended('/mmsay/citizen/dashboard')
-            ->with('success', 'Login successful! Welcome back.');
-    }
-
-    // Resend OTP from verification page (no captcha needed — mobile already verified in step 1)
-    public function resendOtp(Request $request)
-    {
-        $mobile = session('citizen_login_mobile');
-
-        if (! $mobile) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Session expired. Please start again.');
-        }
-
-        $user = User::where('mobile', $mobile)->first();
-        if (! $user || ! $user->belongsToRoleGroup('citizen')) {
-            return redirect()->route('citizen.login')
-                ->with('error', 'Mobile number is not registered as a citizen account.');
-        }
-
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp && $this->isOtpResendOnCooldown($latestOtp)) {
-            $waitSeconds = $this->remainingOtpCooldownSeconds($latestOtp);
-
-            return back()->with('warning', "Please wait {$waitSeconds} seconds before resending OTP.");
-        }
-
-        try {
-            DB::transaction(function () use ($mobile) {
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info('Citizen OTP resent', ['mobile' => $mobile]);
-            });
-        } catch (\Exception $e) {
-            return back()->with('error', 'Unable to resend OTP. Please try again.');
-        }
-
-        return back()->with('success', 'A new OTP has been sent to your mobile number.');
-    }
-
     // Citizen dashboard — logged-in user data from DB (no helpers / view composers)
     public function dashboard(): View
     {
@@ -260,8 +37,6 @@ class CitizenAuthController extends Controller
 
             if ($auction) {
                 $flatCost = (float) $auction->FlatCost;
-                $totalPaid = (float) $auction->ReceivedAmount;
-                $outstanding = (float) $auction->BalanceAmount;
                 $assetName = $auction->AssetName;
                 $purchaseDate = $auction->CreatedDate
                     ? Carbon::parse($auction->CreatedDate)
@@ -269,9 +44,21 @@ class CitizenAuthController extends Controller
             }
         }
 
-        $paymentProgress = $flatCost > 0
-            ? (int) min(100, round(($totalPaid / $flatCost) * 100))
-            : 0;
+        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentSummary = $this->resolvePaymentSummary(
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0),
+            (float) ($auction?->BalanceAmount ?? 0),
+            $paymentDetails
+        );
+
+        
+
+        // dd($paymentSummary);
+
+        $totalPaid = $paymentSummary['totalPaid'];
+        $outstanding = $paymentSummary['outstanding'];
+        $paymentProgress = $paymentSummary['paymentProgress'];
 
         $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
 
@@ -290,6 +77,21 @@ class CitizenAuthController extends Controller
             : ($purchaser ? 'Application Submitted' : '—');
         $category = $purchaser?->CasteCategoryName ?? '—';
 
+        $ppStats = [
+            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->count(),
+            'pending' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'pending')->count(),
+            'approved' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'approved')->count(),
+            'rejected' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'rejected')->count(),
+        ];
+
+        $ppRecentApplications = PhysicalPossessionApplication::where('user_id', $user->id)
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $ppHasApplication = $ppStats['total'] > 0;
+        $latestPpApplication = $ppHasApplication ? $ppRecentApplications->first() : null;
+
         return view('mmsayCitizenDashboard', [
             'displayName' => $displayName,
             'applicationId' => $applicationId,
@@ -301,6 +103,77 @@ class CitizenAuthController extends Controller
             'category' => $category,
             'hasOutstanding' => $hasOutstanding,
             'assetName' => $assetName,
+            'ppStats' => $ppStats,
+            'ppRecentApplications' => $ppRecentApplications,
+            'ppHasApplication' => $ppHasApplication,
+            'latestPpApplication' => $latestPpApplication,
+            'installments' => $paymentDetails['installments'],
+            'paymentReceipts' => $paymentDetails['receipts'],
+            'installmentStats' => $paymentDetails['installmentStats'],
+        ]);
+    }
+
+    // Payment status page — same data as dashboard payment section
+    public function paymentStatus(): View
+    {
+        $user = Auth::user();
+        $purchaser = $this->findPurchaserForUser($user);
+
+        $auction = null;
+        $totalPaid = 0.0;
+        $outstanding = 0.0;
+        $flatCost = 0.0;
+        $purchaseDate = null;
+        $assetName = null;
+
+        if ($purchaser) {
+            $auction = DB::table('property_auction_detail as pad')
+                ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+                ->where('pad.PurchaserID', $purchaser->PrivatePurchaserId)
+                ->where('pad.IsDeleted', 0)
+                ->where('pad.IsActive', 1)
+                ->select('pad.*', 'pr.AssetName')
+                ->orderByDesc('pad.CreatedDate')
+                ->first();
+
+            if ($auction) {
+                $flatCost = (float) $auction->FlatCost;
+                $assetName = $auction->AssetName;
+                $purchaseDate = $auction->CreatedDate
+                    ? Carbon::parse($auction->CreatedDate)
+                    : null;
+            }
+        }
+
+        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentSummary = $this->resolvePaymentSummary(
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0),
+            (float) ($auction?->BalanceAmount ?? 0),
+            $paymentDetails
+        );
+        $totalPaid = $paymentSummary['totalPaid'];
+        $outstanding = $paymentSummary['outstanding'];
+        $paymentProgress = $paymentSummary['paymentProgress'];
+
+        $hasOutstanding = $auction !== null && $outstanding > 0;
+        $applicationNo = $purchaser?->ApplicationNo;
+        $applicationId = $applicationNo
+            ? 'HR-MMSAY-'.($purchaseDate?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
+            : ($purchaser?->PPPId ?? '—');
+
+        return view('mmsayPaymentStatus', [
+            'displayName' => $user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'),
+            'applicationId' => $applicationId,
+            'assetName' => $assetName,
+            'purchaseDate' => $purchaseDate?->format('d M Y') ?? '—',
+            'totalPaidFormatted' => $this->formatIndianCurrency($totalPaid),
+            'outstandingFormatted' => $this->formatIndianCurrency($outstanding),
+            'paymentProgress' => $paymentProgress,
+            'hasOutstanding' => $hasOutstanding,
+            'installments' => $paymentDetails['installments'],
+            'paymentReceipts' => $paymentDetails['receipts'],
+            'installmentStats' => $paymentDetails['installmentStats'],
         ]);
     }
 
@@ -345,23 +218,6 @@ class CitizenAuthController extends Controller
             'annualIncome' => $annualIncome,
             'address' => $address,
         ]);
-    }
-
-    private function isOtpResendOnCooldown(Otp $latestOtp): bool
-    {
-        return $this->otpCooldownElapsedSeconds($latestOtp) < self::OTP_RESEND_COOLDOWN_SECONDS;
-    }
-
-    private function remainingOtpCooldownSeconds(Otp $latestOtp): int
-    {
-        $remaining = self::OTP_RESEND_COOLDOWN_SECONDS - $this->otpCooldownElapsedSeconds($latestOtp);
-
-        return max(1, (int) ceil($remaining));
-    }
-
-    private function otpCooldownElapsedSeconds(Otp $latestOtp): int
-    {
-        return (int) $latestOtp->created_at->diffInSeconds(now());
     }
 
     private function findPurchaserForUser(User $user): ?object
@@ -419,13 +275,148 @@ class CitizenAuthController extends Controller
         return '₹ '.($rest ? $rest.',' : '').$lastThree;
     }
 
-    // Logout citizen
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+    /** @return array{totalPaid: float, outstanding: float, paymentProgress: int} */
+    private function resolvePaymentSummary(
+        float $flatCost,
+        float $fallbackPaid,
+        float $fallbackOutstanding,
+        array $paymentDetails
+    ): array {
+        $installments = $paymentDetails['installments'];
 
-        return redirect('/mmsay-citizen-login')->with('success', 'Logged out successfully.');
+        // dd($installments);
+
+        if ($installments->isEmpty()) {
+            $totalPaid = $fallbackPaid;
+            $outstanding = $fallbackOutstanding;
+        } else {
+            $emiPaid = (float) $installments->where('status', 'paid')->sum('emi_amount');
+            $totalPaid = $fallbackPaid + $emiPaid;
+            $outstanding = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
+        }
+
+        $paymentProgress = $flatCost > 0
+            ? (int) min(100, round(($totalPaid / $flatCost) * 100))
+            : 0;
+
+
+
+        return [
+            'totalPaid' => $totalPaid,
+            'outstanding' => $outstanding,
+            'paymentProgress' => $paymentProgress,
+        ];
     }
+
+    /** @return array{installments: Collection, receipts: Collection, installmentStats: array{total: int, paid: int, overdue: int, upcoming: int}} */
+    private function getPaymentDetails(?int $assetId): array
+    {
+        if (! $assetId) {
+            return [
+                'installments' => collect(),
+                'receipts' => collect(),
+                'installmentStats' => ['total' => 0, 'paid' => 0, 'overdue' => 0, 'upcoming' => 0],
+            ];
+        }
+
+        $ledgerByNumber = DB::table('ledger')
+            ->where('AssetId', $assetId)
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->get()
+            ->keyBy('InstallmentNumber');
+
+        // dd($ledgerByNumber);
+
+        $installments = DB::table('installment_due')
+            ->where('AssetId', $assetId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->orderBy('InstallmentNumber')
+            ->get()
+            ->map(function ($row) use ($ledgerByNumber) {
+                $ledger = $ledgerByNumber->get($row->InstallmentNumber);
+                $dueDate = Carbon::parse($row->DueDate);
+                $today = Carbon::today();
+
+                if ($ledger && (int) $ledger->RemainingBalance === 0 && (int) $ledger->Payable_amount === 0) {
+                    $status = 'paid';
+                } elseif ($dueDate->lt($today)) {
+                    $status = 'overdue';
+                } else {
+                    $status = 'upcoming';
+                }
+
+                $paidOn = ($status === 'paid' && $row->LastSettledDate)
+                    ? Carbon::parse($row->LastSettledDate)
+                    : null;
+
+                $emiAmount = (float) $row->EMIAmount;
+
+                return (object) [
+                    'installment_number' => (int) $row->InstallmentNumber,
+                    'due_date_formatted' => $dueDate->format('d M Y'),
+                    'emi_amount' => $emiAmount,
+                    'emi_formatted' => $this->formatIndianCurrency($emiAmount),
+                    'principal' => (float) $row->PrincipleAmount,
+                    'interest' => (float) $row->InterestAmount,
+                    'gst' => (float) $row->GSTAmount,
+                    'total_due' => (float) $row->DueAmount,
+                    'total_due_formatted' => $this->formatIndianCurrency((float) $row->DueAmount),
+                    'balance_after' => (float) $row->RunningClosingBalance,
+                    'balance_after_formatted' => $this->formatIndianCurrency((float) $row->RunningClosingBalance),
+                    'paid_on_formatted' => $paidOn?->format('d M Y') ?? '—',
+                    'status' => $status,
+                    'status_label' => match ($status) {
+                        'paid' => 'Paid',
+                        'overdue' => 'Overdue',
+                        default => 'Upcoming',
+                    },
+                ];
+            });
+
+        $installmentStats = [
+            'total' => $installments->count(),
+            'paid' => $installments->where('status', 'paid')->count(),
+            'overdue' => $installments->where('status', 'overdue')->count(),
+            'upcoming' => $installments->where('status', 'upcoming')->count(),
+        ];
+
+        $receipts = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->orderBy('created_date')
+            ->get()
+            ->map(function ($row) {
+                $date = $row->created_date ? Carbon::parse($row->created_date) : null;
+
+                return (object) [
+                    'receipt_number' => $this->formatReceiptNumber($row->receipt_number),
+                    'date_formatted' => $date?->format('d M Y') ?? '—',
+                    'amount_formatted' => $this->formatIndianCurrency((float) $row->total_paid_amount),
+                    'mode' => 'Cash Receipt',
+                ];
+            });
+
+        return [
+            'installments' => $installments,
+            'receipts' => $receipts,
+            'installmentStats' => $installmentStats,
+        ];
+    }
+
+    private function formatReceiptNumber(?string $value): string
+    {
+        if (! $value || trim($value) === '') {
+            return '—';
+        }
+
+        if (stripos($value, 'E') !== false) {
+            return number_format((float) $value, 0, '.', '');
+        }
+
+        return $value;
+    }
+
 }

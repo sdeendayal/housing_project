@@ -42,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'district_officer' => [
+            'driver' => 'session',
+            'provider' => 'district_officers',
+        ],
     ],
 
     /*
@@ -65,6 +69,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+        'district_officers' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\DistrictOfficer::class,
         ],
 
         // 'users' => [

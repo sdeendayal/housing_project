@@ -10,30 +10,61 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, $role)
     {
-        // Citizen routes — separate login flow
         if ($role === 'citizen') {
-            if (! Auth::check()) {
-                return redirect()->guest('/mmsay-citizen-login');
-            }
-
-            if (! Auth::user()->belongsToRoleGroup('citizen') && Auth::user()->role !== 'citizen') {
-                Auth::logout();
-
-                return redirect('/mmsay-citizen-login')->with('error', 'Unauthorized access.');
-            }
-
-            return $next($request);
+            return $this->guardRoleGroup($request, $next, 'citizen', route('citizen.login'));
         }
 
-        // Department routes — original behavior unchanged
+        if (in_array($role, ['department', 'departmental'], true)) {
+            return $this->guardRoleGroup($request, $next, 'department', route('pp.department.login'));
+        }
+
+        if ($role === 'district_officer') {
+            return $this->guardRoleSlug($request, $next, 'district_officer', route('pp.department.login'));
+        }
+
+        // Legacy department email/password routes
         if (! Auth::check()) {
-            return redirect('/mmsay-department-login');
+            return redirect()->route('login');
         }
 
-        if (Auth::user()->role !== $role) {
+        if (Auth::user()->role !== $role && ! Auth::user()->hasRole($role)) {
             Auth::logout();
 
-            return redirect('/mmsay-department-login')->with('error', 'Unauthorized access');
+            return redirect()->route('login')->with('error', 'Unauthorized access');
+        }
+
+        return $next($request);
+    }
+
+    private function guardRoleGroup(Request $request, Closure $next, string $groupSlug, string $loginUrl)
+    {
+        if (! Auth::check()) {
+            return redirect()->guest($loginUrl);
+        }
+
+        $user = Auth::user();
+
+        if (! $user->belongsToRoleGroup($groupSlug)) {
+            Auth::logout();
+
+            return redirect($loginUrl)->with('error', 'Unauthorized access.');
+        }
+
+        return $next($request);
+    }
+
+    private function guardRoleSlug(Request $request, Closure $next, string $roleSlug, string $loginUrl)
+    {
+        if (! Auth::check()) {
+            return redirect()->guest($loginUrl);
+        }
+
+        $user = Auth::user();
+
+        if (! $user->hasRole($roleSlug)) {
+            Auth::logout();
+
+            return redirect($loginUrl)->with('error', 'Unauthorized access.');
         }
 
         return $next($request);

@@ -13,12 +13,12 @@ class RoleGroupSeeder extends Seeder
             [
                 'name' => 'Citizen',
                 'slug' => 'citizen',
-                'description' => 'Public users who login via mobile OTP.',
+                'description' => 'Public users who login via citizen mobile OTP.',
             ],
             [
-                'name' => 'Departmental',
-                'slug' => 'departmental',
-                'description' => 'Department users who login via mobile OTP.',
+                'name' => 'Department',
+                'slug' => 'department',
+                'description' => 'Department officers and staff who login via department mobile OTP.',
             ],
         ];
 
@@ -28,5 +28,14 @@ class RoleGroupSeeder extends Seeder
                 $group
             );
         }
+
+        // Keep legacy slug compatible during transition
+        RoleGroup::updateOrCreate(
+            ['slug' => 'departmental'],
+            [
+                'name' => 'Department',
+                'description' => 'Legacy departmental slug — use department group.',
+            ]
+        );
     }
 }

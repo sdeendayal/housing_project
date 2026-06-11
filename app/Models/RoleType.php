@@ -12,16 +12,20 @@ class RoleType extends Model
 
     protected $fillable = [
         'user_id',
+        'role_id',
         'role_group_id',
     ];
 
-    // Each role type belongs to one user
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    // Each role type belongs to one role group
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
     public function roleGroup(): BelongsTo
     {
         return $this->belongsTo(RoleGroup::class);

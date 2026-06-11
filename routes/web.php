@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenAuthController;
+use App\Http\Controllers\OtpAuthController;
 use App\Http\Controllers\PropertyManagementController;
 
 Route::get('/', function () {
@@ -25,25 +26,27 @@ Route::get('whos-who', function () {
     return view('home.whosWho');
 });
 
-// ─── Citizen Login (OTP flow — two steps) ───────────────────────────────────
-// guest
+// ─── Citizen Login (OTP — shared OtpAuthController) ─────────────────────────
 Route::middleware('')->group(function () {
-    // Step 1: Mobile + Captcha page
-    Route::get('/mmsay-citizen-login', [CitizenAuthController::class, 'showLogin'])
+    Route::get('/mmsay-citizen-login', [OtpAuthController::class, 'showLogin'])
+        ->defaults('context', 'citizen')
         ->name('citizen.login');
 
-    Route::post('/mmsay-citizen-login/send-otp', [CitizenAuthController::class, 'sendOtp'])
+    Route::post('/mmsay-citizen-login/send-otp', [OtpAuthController::class, 'sendOtp'])
+        ->defaults('context', 'citizen')
         ->middleware('throttle:5,1')
         ->name('citizen.login.send-otp');
 
-    // Step 2: OTP verification page
-    Route::get('/mmsay-citizen-login/verify', [CitizenAuthController::class, 'showVerifyOtp'])
+    Route::get('/mmsay-citizen-login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+        ->defaults('context', 'citizen')
         ->name('citizen.login.verify-page');
 
-    Route::post('/mmsay-citizen-login/verify', [CitizenAuthController::class, 'verifyOtp'])
+    Route::post('/mmsay-citizen-login/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->defaults('context', 'citizen')
         ->name('citizen.login.verify');
 
-    Route::post('/mmsay-citizen-login/resend-otp', [CitizenAuthController::class, 'resendOtp'])
+    Route::post('/mmsay-citizen-login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+        ->defaults('context', 'citizen')
         ->middleware('throttle:5,1')
         ->name('citizen.login.resend-otp');
 });
@@ -56,11 +59,10 @@ Route::middleware(['role:citizen'])->group(function () {
     Route::get('/mmsay-profile', [CitizenAuthController::class, 'profile'])
         ->name('citizen.profile');
 
-    Route::get('/mmsay-payment-status', function () {
-        return view('mmsayPaymentStatus');
-    })->name('citizen.payment-status');
+    Route::get('/mmsay-payment-status', [CitizenAuthController::class, 'paymentStatus'])
+        ->name('citizen.payment-status');
 
-    Route::get('/citizen-logout', [CitizenAuthController::class, 'logout'])
+    Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
         ->name('citizen.logout');
 });
 
@@ -80,11 +82,17 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'role:department'])->group(function () {
+<<<<<<< HEAD
 
     Route::get(
         '/mmsay-department-dashboard',
         [PropertyManagementController::class, 'dashboard']
     )->name('mmsay.dashboard');
+=======
+    Route::get('/mmsay-department-dashboard', function () {
+        return view('mmsay.departmentDashboard');
+    })->name('department.dashboard');
+>>>>>>> 9b9cf2ea7e18654b6f7b4bfbc1448f7c788a5f5d
 
     Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
 

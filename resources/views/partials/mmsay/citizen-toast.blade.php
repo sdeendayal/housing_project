@@ -88,20 +88,6 @@
             }, duration);
         };
 
-        @if (! request()->routeIs('citizen.login', 'citizen.login.verify-page'))
-            @if (session('success'))
-                showCitizenToast(@json(session('success')), 'success');
-            @endif
-
-            @if (session('error'))
-                showCitizenToast(@json(session('error')), 'error');
-            @endif
-
-            @if (isset($errors) && $errors->any())
-                @foreach ($errors->all() as $error)
-                    showCitizenToast(@json($error), 'error');
-                @endforeach
-            @endif
-        @endif
+        {{-- Success / errors shown via citizen-swal (SweetAlert) --}}
     })();
 </script>

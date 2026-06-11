@@ -66,8 +66,25 @@
                 overlay.classList.add('hidden');
             });
         }
+
+        const ppNavToggle = document.getElementById('ppNavToggle');
+        const ppNavSubmenu = document.getElementById('ppNavSubmenu');
+        const ppNavChevron = document.getElementById('ppNavChevron');
+
+        if (ppNavToggle && ppNavSubmenu) {
+            ppNavToggle.addEventListener('click', () => {
+                const isOpen = !ppNavSubmenu.classList.contains('hidden');
+                ppNavSubmenu.classList.toggle('hidden');
+                ppNavToggle.classList.toggle('pp-nav-group-open', !isOpen);
+                ppNavToggle.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
+                if (ppNavChevron) {
+                    ppNavChevron.classList.toggle('rotate-180', !isOpen);
+                }
+            });
+        }
     </script>
 
+    @include('partials.mmsay.citizen-swal')
     @stack('scripts')
     @include('partials.mmsay.citizen-toast')
 </body>

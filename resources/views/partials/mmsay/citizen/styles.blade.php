@@ -48,6 +48,19 @@
         background: #f1f5f9; color: #94a3b8; flex-shrink: 0;
     }
 
+    .pp-nav-group .nav-v2.pp-nav-group-open {
+        background: #f1f5f9;
+        color: #334155;
+    }
+
+    .pp-nav-submenu {
+        overflow: hidden;
+    }
+
+    .pp-nav-submenu.hidden {
+        display: none;
+    }
+
     .sidebar-user-v2 {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
@@ -203,6 +216,36 @@
         border: 1px solid #e8ecf4;
         box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 6px 20px rgba(99,102,241,0.06);
         overflow: hidden;
+    }
+
+    .pp-upload-zone {
+        border: 1.5px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 12px;
+        text-align: center;
+        cursor: pointer;
+        background: #f8fafc;
+        transition: border-color 0.18s ease, background 0.18s ease;
+    }
+
+    .pp-upload-zone:hover,
+    .pp-upload-zone.dragover {
+        border-color: #6366f1;
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .pp-upload-zone.pp-upload-error {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.06);
+    }
+
+    .pp-detail-label {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #94a3b8;
+        margin-bottom: 2px;
     }
 
     @media (max-width: 767px) {

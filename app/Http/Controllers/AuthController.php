@@ -33,7 +33,7 @@ class AuthController extends Controller
         if ($request->captcha != session('captcha')) {
             return back()->with('error', '❌ Invalid CAPTCHA');
         }
-
+        
         // USER CHECK (EXISTS OR NOT)
         $user = \App\Models\User::where('email', $request->email)->first();
 
@@ -49,7 +49,7 @@ class AuthController extends Controller
         // LOGIN USER
         if (Auth::loginUsingId($user->id)) {
             $request->session()->regenerate();
-
+            
             // ROLE CHECK (optional)
             if ($user->role == 'department') {
 
@@ -71,6 +71,8 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/mmsay-department-login')->with('success', 'Logged out successfully');
+        return redirect()
+            ->route('login')
+            ->with('success', 'Logged out successfully.');
     }
 }
