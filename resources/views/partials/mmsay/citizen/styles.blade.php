@@ -226,6 +226,11 @@
         cursor: pointer;
         background: #f8fafc;
         transition: border-color 0.18s ease, background 0.18s ease;
+        min-height: 88px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
     }
 
     .pp-upload-zone:hover,
@@ -237,6 +242,173 @@
     .pp-upload-zone.pp-upload-error {
         border-color: #dc2626;
         background: rgba(220, 38, 38, 0.06);
+    }
+
+    .pp-upload-zone.pp-upload-zone-signed {
+        border: 2px dashed #10b981;
+        background: linear-gradient(180deg, #ecfdf5 0%, #f8fafc 100%);
+        min-height: 110px;
+    }
+
+    .pp-upload-zone.pp-upload-zone-signed:hover,
+    .pp-upload-zone.pp-upload-zone-signed.dragover {
+        border-color: #059669;
+        background: #d1fae5;
+    }
+
+    .pp-cert-workflow {
+        border: 1px solid #c7d2fe;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 55%, #ecfdf5 100%);
+        overflow: hidden;
+    }
+
+    .pp-cert-workflow-head {
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+        background: rgba(255, 255, 255, 0.65);
+    }
+
+    .pp-cert-steps {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    @media (min-width: 768px) {
+        .pp-cert-steps {
+            grid-template-columns: 1fr auto 1fr auto 1.2fr;
+            align-items: stretch;
+            gap: 8px;
+        }
+    }
+
+    .pp-cert-step {
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-height: 100%;
+    }
+
+    .pp-cert-step-download {
+        border-color: #bfdbfe;
+        box-shadow: 0 4px 14px rgba(59, 130, 246, 0.08);
+    }
+
+    .pp-cert-step-sign {
+        border-color: #fde68a;
+        background: #fffbeb;
+    }
+
+    .pp-cert-step-upload {
+        border-color: #6ee7b7;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.1);
+    }
+
+    .pp-step-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 9px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 2px 8px;
+        border-radius: 999px;
+        width: fit-content;
+    }
+
+    .pp-step-badge-blue { background: #dbeafe; color: #1d4ed8; }
+    .pp-step-badge-amber { background: #fef3c7; color: #b45309; }
+    .pp-step-badge-green { background: #d1fae5; color: #047857; }
+
+    .pp-cert-step-title {
+        font-size: 11px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .pp-cert-step-desc {
+        font-size: 10px;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.45;
+        flex: 1;
+    }
+
+    .pp-cert-arrow {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        font-size: 20px;
+        padding: 0 2px;
+    }
+
+    @media (min-width: 768px) {
+        .pp-cert-arrow { display: flex; }
+    }
+
+    .pp-cert-arrow-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #94a3b8;
+        padding: 2px 0;
+    }
+
+    @media (min-width: 768px) {
+        .pp-cert-arrow-mobile { display: none; }
+    }
+
+    .pp-cert-action-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 800;
+        text-decoration: none;
+        border: 1px solid transparent;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .pp-cert-action-btn:hover {
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .pp-cert-action-view {
+        background: #4f46e5;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .pp-cert-action-view:hover { color: #fff; background: #4338ca; }
+
+    .pp-cert-action-download {
+        background: #059669;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+    }
+
+    .pp-cert-action-download:hover { color: #fff; background: #047857; }
+
+    .pp-upload-here-label {
+        font-size: 11px;
+        font-weight: 800;
+        color: #047857;
+        margin: 0;
     }
 
     .pp-detail-label {

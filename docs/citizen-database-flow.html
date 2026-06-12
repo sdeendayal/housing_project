@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <title>Citizen Portal - Database Flow Guide</title>
+    <style>
+        @page { margin: 18mm 15mm; }
+        body { font-family: DejaVu Sans, Arial, sans-serif; font-size: 11px; color: #1e293b; line-height: 1.5; }
+        h1 { font-size: 20px; color: #1e3a8a; margin: 0 0 4px; border-bottom: 3px solid #3b82f6; padding-bottom: 8px; }
+        h2 { font-size: 14px; color: #1d4ed8; margin: 18px 0 8px; page-break-after: avoid; }
+        h3 { font-size: 12px; color: #334155; margin: 12px 0 6px; }
+        .subtitle { color: #64748b; font-size: 10px; margin-bottom: 14px; }
+        table { width: 100%; border-collapse: collapse; margin: 8px 0 12px; font-size: 10px; }
+        th { background: #eff6ff; color: #1e40af; text-align: left; padding: 6px 8px; border: 1px solid #cbd5e1; }
+        td { padding: 5px 8px; border: 1px solid #e2e8f0; vertical-align: top; }
+        tr:nth-child(even) td { background: #f8fafc; }
+        .step { background: #1d4ed8; color: #fff; display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9px; font-weight: bold; margin-right: 6px; }
+        .box { background: #f1f5f9; border-left: 4px solid #3b82f6; padding: 8px 10px; margin: 8px 0; font-size: 10px; }
+        .sql { background: #0f172a; color: #e2e8f0; padding: 8px 10px; font-family: Consolas, monospace; font-size: 9px; white-space: pre-wrap; margin: 6px 0; border-radius: 4px; }
+        .flow { background: #fff; border: 1px solid #cbd5e1; padding: 10px; font-family: Consolas, monospace; font-size: 9px; line-height: 1.6; margin: 8px 0; }
+        .highlight { background: #fef3c7; padding: 1px 4px; font-weight: bold; }
+        .note { background: #ecfdf5; border: 1px solid #86efac; padding: 8px; font-size: 10px; margin: 10px 0; }
+        .warn { background: #fff7ed; border: 1px solid #fdba74; padding: 8px; font-size: 10px; margin: 10px 0; }
+        .page-break { page-break-before: always; }
+        ul { margin: 4px 0 8px 18px; padding: 0; }
+        li { margin-bottom: 3px; }
+    </style>
+</head>
+<body>
+
+<h1>Citizen Portal — Database Flow Guide</h1>
+<p class="subtitle">Housing For All (MMSAY) | .NET se migrate hua data | Personal reference document<br>
+Example: Vinod Kumar Sroha | Mobile: 9812489207 | Application: HR-MMSAY-2024-105751 | Flat/Asset: 147462</p>
+
+<h2>1. Suru kahan se karein?</h2>
+<p>Sabse pehle <strong>user identify</strong> karo. Baaki sab tables isi se link hoti hain.</p>
+
+<table>
+    <tr><th>Step</th><th>Table</th><th>Kya search karein</th><th>Kya milega</th></tr>
+    <tr><td>0</td><td><strong>users</strong></td><td>mobile = 9812489207</td><td>Login user (id, name, mobile)</td></tr>
+</table>
+
+<div class="sql">SELECT id, name, mobile FROM users WHERE mobile = '9812489207';</div>
+
+<h2>2. Applicant / Purchaser record</h2>
+<p><span class="step">STEP 1</span> Mobile se purchaser table mein jao — yeh <strong>main applicant table</strong> hai.</p>
+
+<table>
+    <tr><th>Table</th><th>Search column</th><th>Example value</th><th>Milta kya hai</th></tr>
+    <tr><td><strong>property_private_purchasers</strong></td><td>MobileNo</td><td>9812489207</td><td>Naam, Father, Family ID, Member ID, Application No, Flat_Id, SectorId, CityId, DistrictId</td></tr>
+</table>
+
+<div class="sql">SELECT PrivatePurchaserId, Flat_Id, PrivatePurchaserName, PurchaserFatherName,
+       MobileNo, ApplicationNo, PPPId, MemberID, CasteCategoryName,
+       SectorId, CityId, DistrictId, BranchId, Address, CreateDate
+FROM property_private_purchasers
+WHERE MobileNo = 9812489207;</div>
+
+<h3>Vinod ka record (example)</h3>
+<table>
+    <tr><th>Column</th><th>Value</th><th>Matlab</th></tr>
+    <tr><td>PrivatePurchaserId</td><td class="highlight">164926</td><td>Applicant ki unique ID — auction table mein PurchaserID</td></tr>
+    <tr><td>Flat_Id</td><td class="highlight">147462</td><td>Property ID — doosri tables mein AssetId ke naam se</td></tr>
+    <tr><td>ApplicationNo</td><td>105751</td><td>Application number</td></tr>
+    <tr><td>PPPId</td><td>9QRU7717</td><td>Family ID</td></tr>
+    <tr><td>MemberID</td><td>AABE7231</td><td>Member ID</td></tr>
+    <tr><td>SectorId</td><td>686</td><td>Ward/Sector link → sectors table</td></tr>
+    <tr><td>CityId</td><td>3252</td><td>City link → cities table</td></tr>
+    <tr><td>DistrictId</td><td>291</td><td>District link → districts table</td></tr>
+    <tr><td>BranchId</td><td>3205</td><td>EM Office link → em_offices table</td></tr>
+</table>
+
+<div class="note"><strong>Important:</strong> Flat_Id (purchasers) = AssetId (property tables). Same number, alag column naam (.NET legacy).</div>
+
+<h2>3. Property allotted hai ya nahi?</h2>
+<p><span class="step">STEP 2</span> Purchaser ID ya Flat_Id / AssetId se auction table check karo.</p>
+
+<table>
+    <tr><th>Table</th><th>Search column</th><th>Search value</th><th>Milta kya hai</th></tr>
+    <tr><td><strong>property_auction_detail</strong></td><td>PurchaserID</td><td>164926</td><td>Allotment, FlatCost, ReceivedAmount, BalanceAmount, AssetId</td></tr>
+    <tr><td><strong>property_auction_detail</strong></td><td>AssetId</td><td>147462</td><td>Same record — property side se search</td></tr>
+</table>
+
+<div class="sql">SELECT PropertyAuctionId, AssetId, FlatCost, ReceivedAmount, BalanceAmount,
+       PurchaserID, SectorId, CityId, DistrictId, BranchId
+FROM property_auction_detail
+WHERE AssetId = 147462 AND IsActive = 1 AND IsDeleted = 0;</div>
+
+<h3>Vinod ka auction record</h3>
+<table>
+    <tr><th>Column</th><th>Value</th></tr>
+    <tr><td>PropertyAuctionId</td><td>365393</td></tr>
+    <tr><td>AssetId</td><td>147462</td></tr>
+    <tr><td>PurchaserID</td><td>164926</td></tr>
+    <tr><td>FlatCost</td><td>₹ 1,00,000</td></tr>
+    <tr><td>ReceivedAmount</td><td>₹ 20,000</td></tr>
+    <tr><td>BalanceAmount</td><td>₹ 80,000</td></tr>
+    <tr><td>DistrictId / CityId / SectorId</td><td>291 / 3252 / 686</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>4. Property ki detail (flat/plot naam, size)</h2>
+<p><span class="step">STEP 3</span> AssetId se property registration table.</p>
+
+<table>
+    <tr><th>Table</th><th>Search column</th><th>Search value</th><th>Milta kya hai</th></tr>
+    <tr><td><strong>property_registration</strong></td><td>AssetId</td><td>147462</td><td>AssetName, Size, Unit, SectorId, CityId, DistrictId</td></tr>
+</table>
+
+<div class="sql">SELECT AssetId, AssetName, AssetSize, Unit, SectorId, CityId, DistrictId, BranchId
+FROM property_registration
+WHERE AssetId = 147462;</div>
+
+<h3>Vinod ki property</h3>
+<table>
+    <tr><th>Column</th><th>Value</th></tr>
+    <tr><td>AssetName</td><td>RW27.28.26PII_E-1578</td></tr>
+    <tr><td>AssetSize</td><td>30 Sq. Yards</td></tr>
+    <tr><td>SectorId</td><td>686</td></tr>
+    <tr><td>CityId</td><td>3252</td></tr>
+    <tr><td>DistrictId</td><td>291</td></tr>
+</table>
+
+<h2>5. City, District, Sector/Ward — NAAM kahan se?</h2>
+<p><span class="step">STEP 4</span> IDs sirf number hain. Naam master tables se aate hain.</p>
+
+<table>
+    <tr><th>ID mila kahan se</th><th>ID value</th><th>Naam kis table mein</th><th>Search query</th><th>Result (Vinod)</th></tr>
+    <tr><td>DistrictId</td><td>291</td><td><strong>districts</strong></td><td>WHERE DistrictId = 291</td><td>ROHTAK</td></tr>
+    <tr><td>CityId</td><td>3252</td><td><strong>cities</strong></td><td>WHERE CityId = 3252</td><td>ROHTAK MC</td></tr>
+    <tr><td>SectorId</td><td>686</td><td><strong>sectors</strong></td><td>WHERE SectorId = 686</td><td>Ward 6</td></tr>
+    <tr><td>BranchId</td><td>3205</td><td><strong>em_offices</strong></td><td>WHERE BranchId = 3205</td><td>ROHTAK</td></tr>
+</table>
+
+<div class="sql">-- District
+SELECT DistrictName FROM districts WHERE DistrictId = 291;
+
+-- City
+SELECT CityName FROM cities WHERE CityId = 3252;
+
+-- Sector / Ward
+SELECT SectorName FROM sectors WHERE SectorId = 686;
+
+-- EM Office
+SELECT BranchName FROM em_offices WHERE BranchId = 3205;</div>
+
+<div class="sql">-- Ek saath JOIN se sab naam
+SELECT pad.AssetId, d.DistrictName, c.CityName, s.SectorName, eo.BranchName
+FROM property_auction_detail pad
+LEFT JOIN districts d ON pad.DistrictId = d.DistrictId
+LEFT JOIN cities c ON pad.CityId = c.CityId
+LEFT JOIN sectors s ON pad.SectorId = s.SectorId
+LEFT JOIN em_offices eo ON pad.BranchId = eo.BranchId
+WHERE pad.AssetId = 147462;</div>
+
+<div class="warn"><strong>Ward vs Sector:</strong> Alag ward table NAHI hai. Sirf <strong>sectors</strong> table hai. SectorName mein kabhi "Ward 6", kabhi "Sector 28", kabhi gaon ka naam (Malerna) hota hai. Ward hai ya Sector — SectorName padh kar pata chalta hai.</div>
+
+<h2>6. Payment &amp; Installment tables</h2>
+<p><span class="step">STEP 5</span> AssetId = 147462 se payment data.</p>
+
+<table>
+    <tr><th>Table</th><th>Search column</th><th>Kya milta hai</th></tr>
+    <tr><td><strong>installment_due</strong></td><td>AssetId = 147462</td><td>EMI schedule, DueDate, OfferOfPossessionDate (Purchase Date)</td></tr>
+    <tr><td><strong>ledger</strong></td><td>AssetId = 147462</td><td>Installment paid/pending status</td></tr>
+    <tr><td><strong>cash_receipt_details</strong></td><td>asset_number = 147462</td><td>Payment receipts, receipt date</td></tr>
+</table>
+
+<div class="note"><strong>Purchase Date:</strong> property_auction_detail.CreatedDate mostly empty hai (.NET export). Use karo: installment_due.OfferOfPossessionDate → fallback: property_private_purchasers.CreateDate</div>
+
+<div class="page-break"></div>
+
+<h2>7. Poora flow — ek diagram</h2>
+<div class="flow">users (mobile: 9812489207)
+    │
+    ▼
+property_private_purchasers
+    ├── PrivatePurchaserId = 164926  ──────────► property_auction_detail.PurchaserID
+    ├── Flat_Id = 147462  ═══════════════════► AssetId (sab property tables)
+    ├── ApplicationNo = 105751
+    ├── PPPId = Family ID | MemberID = Member ID
+    ├── SectorId = 686 ──► sectors ──► "Ward 6"
+    ├── CityId = 3252  ──► cities  ──► "ROHTAK MC"
+    └── DistrictId = 291 ──► districts ──► "ROHTAK"
+
+property_auction_detail (AssetId = 147462)
+    ├── FlatCost, ReceivedAmount, BalanceAmount
+    └── DistrictId, CityId, SectorId (same IDs → same naam tables)
+
+property_registration (AssetId = 147462)
+    └── AssetName = RW27.28.26PII_E-1578, Size, Unit
+
+installment_due / ledger / cash_receipt_details
+    └── AssetId ya asset_number = 147462</div>
+
+<h2>8. ID Search Cheat Sheet</h2>
+<table>
+    <tr><th>Agar ye ID ho</th><th>Kis table mein search</th><th>Column name</th></tr>
+    <tr><td>9812489207 (mobile)</td><td>users</td><td>mobile</td></tr>
+    <tr><td>9812489207 (mobile)</td><td>property_private_purchasers</td><td>MobileNo</td></tr>
+    <tr><td>164926</td><td>property_private_purchasers</td><td>PrivatePurchaserId</td></tr>
+    <tr><td>164926</td><td>property_auction_detail</td><td>PurchaserID</td></tr>
+    <tr><td>147462</td><td>property_private_purchasers</td><td>Flat_Id</td></tr>
+    <tr><td>147462</td><td>property_registration</td><td>AssetId</td></tr>
+    <tr><td>147462</td><td>property_auction_detail</td><td>AssetId</td></tr>
+    <tr><td>147462</td><td>installment_due</td><td>AssetId</td></tr>
+    <tr><td>147462</td><td>ledger</td><td>AssetId</td></tr>
+    <tr><td>147462</td><td>cash_receipt_details</td><td>asset_number</td></tr>
+    <tr><td>291</td><td>districts</td><td>DistrictId</td></tr>
+    <tr><td>3252</td><td>cities</td><td>CityId</td></tr>
+    <tr><td>686</td><td>sectors</td><td>SectorId</td></tr>
+    <tr><td>3205</td><td>em_offices</td><td>BranchId</td></tr>
+</table>
+
+<h2>9. Dashboard par kya kahan se aata hai</h2>
+<table>
+    <tr><th>Screen field</th><th>Source table</th><th>Column</th></tr>
+    <tr><td>Name</td><td>property_private_purchasers / users</td><td>PrivatePurchaserName</td></tr>
+    <tr><td>Father Name</td><td>property_private_purchasers</td><td>PurchaserFatherName</td></tr>
+    <tr><td>Family ID</td><td>property_private_purchasers</td><td>PPPId</td></tr>
+    <tr><td>Member ID</td><td>property_private_purchasers</td><td>MemberID</td></tr>
+    <tr><td>Application ID</td><td>property_private_purchasers</td><td>ApplicationNo + year</td></tr>
+    <tr><td>Allotted Asset</td><td>property_registration</td><td>AssetName</td></tr>
+    <tr><td>Total Amount</td><td>property_auction_detail</td><td>FlatCost</td></tr>
+    <tr><td>Total Paid</td><td>property_auction_detail + installment_due + ledger</td><td>ReceivedAmount + EMIs</td></tr>
+    <tr><td>Purchase Date</td><td>installment_due</td><td>OfferOfPossessionDate</td></tr>
+    <tr><td>District</td><td>districts</td><td>DistrictName (via DistrictId)</td></tr>
+    <tr><td>City</td><td>cities</td><td>CityName (via CityId)</td></tr>
+    <tr><td>Ward / Sector</td><td>sectors</td><td>SectorName (via SectorId)</td></tr>
+</table>
+
+<p style="margin-top:20px; font-size:9px; color:#94a3b8; text-align:center;">
+    Generated for personal reference | Housing For All MMSAY Project | Database: abc
+</p>
+
+</body>
+</html>

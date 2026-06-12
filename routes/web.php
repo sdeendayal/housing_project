@@ -62,6 +62,9 @@ Route::middleware(['role:citizen'])->group(function () {
     Route::get('/mmsay-payment-status', [CitizenAuthController::class, 'paymentStatus'])
         ->name('citizen.payment-status');
 
+    Route::get('/mmsay/citizen/property-details', [CitizenAuthController::class, 'propertyDetails'])
+        ->name('citizen.property-details');
+
     Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
         ->name('citizen.logout');
 });

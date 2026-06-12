@@ -35,6 +35,10 @@
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'payments') style="font-variation-settings:'FILL' 1" @endif>payments</span></span>
             Payments
         </a>
+        <a class="nav-v2 {{ $activeNav === 'property-details' ? 'active' : '' }}" href="{{ route('citizen.property-details') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'property-details') style="font-variation-settings:'FILL' 1" @endif>home_work</span></span>
+            Property Details
+        </a>
 
         <div class="pp-nav-group mb-1">
             <button type="button"
@@ -75,16 +79,8 @@
             </div>
         </div>
 
-        <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 px-2 mb-1.5 mt-3">Support</p>
+        <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 px-2 mb-1.5 mt-3">Account</p>
 
-        <a class="nav-v2 {{ $activeNav === 'status' ? 'active' : '' }}" href="#">
-            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]">track_changes</span></span>
-            App Status
-        </a>
-        <a class="nav-v2 {{ $activeNav === 'grievances' ? 'active' : '' }}" href="#">
-            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]">support_agent</span></span>
-            Grievances
-        </a>
         <a class="nav-v2 {{ $activeNav === 'profile' ? 'active' : '' }}" href="{{ route('citizen.profile') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'profile') style="font-variation-settings:'FILL' 1" @endif>account_circle</span></span>
             Profile

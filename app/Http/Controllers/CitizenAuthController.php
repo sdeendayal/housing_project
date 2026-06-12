@@ -186,6 +186,72 @@ class CitizenAuthController extends Controller
         ]);
     }
 
+    // Property details page — allotted flat / location / cost
+    public function propertyDetails(): View
+    {
+        $user = Auth::user();
+        $purchaser = $this->findPurchaserForUser($user);
+
+        $auction = null;
+        $flatCost = 0.0;
+
+        if ($purchaser) {
+            $auction = DB::table('property_auction_detail as pad')
+                ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+                ->where('pad.PurchaserID', $purchaser->PrivatePurchaserId)
+                ->where('pad.IsDeleted', 0)
+                ->where('pad.IsActive', 1)
+                ->select('pad.*', 'pr.AssetName')
+                ->orderByDesc('pad.CreatedDate')
+                ->first();
+
+            if ($auction) {
+                $flatCost = (float) $auction->FlatCost;
+            }
+        }
+
+        $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
+        $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
+
+        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentSummary = $this->resolvePaymentSummary(
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0),
+            (float) ($auction?->BalanceAmount ?? 0),
+            $paymentDetails
+        );
+        $outstanding = $paymentSummary['outstanding'];
+
+        $isAllotted = $auction !== null;
+        $isFullyPaid = $isAllotted && $outstanding <= 0 && $flatCost > 0;
+        $flatStatus = $isAllotted
+            ? ($isFullyPaid ? 'Registered' : 'Allotted')
+            : ($purchaser ? 'Application Submitted' : '—');
+
+        $applicationNo = $purchaser?->ApplicationNo;
+        $applicationId = $applicationNo
+            ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
+            : ($purchaser?->PPPId ?? '—');
+
+        $applicationSections = $this->buildApplicationDetailSections(
+            $user,
+            $purchaser,
+            $auction,
+            $applicationId,
+            $flatStatus,
+            $purchaseDate,
+            $submittedAt,
+            $flatCost
+        );
+
+        return view('mmsayCitizenPropertyDetails', [
+            'applicationId' => $applicationId,
+            'flatStatus' => $flatStatus,
+            'propertyDetails' => $applicationSections['propertyDetails'],
+            'hasProperty' => $auction !== null,
+        ]);
+    }
+
     // Citizen profile — logged-in user data from DB
     public function profile(): View
     {
@@ -304,20 +370,23 @@ class CitizenAuthController extends Controller
             ->first();
 
         $location = $property ?? $purchaserLocation;
-        $assetSize = $property
-            ? trim($property->AssetSize.' '.($property->Unit ?? ''))
-            : null;
+        $sectorName = $location->SectorName ?? null;
+        $areaType = $this->resolveAreaType($sectorName);
 
         $propertyDetails = [
+            ['label' => 'Flat / Unit Status', 'value' => $this->detailValue($flatStatus)],
             ['label' => 'Allotted Asset', 'value' => $this->detailValue($property->AssetName ?? $auction->AssetName ?? null)],
             ['label' => 'Asset ID', 'value' => $this->detailValue($auction->AssetId ?? null)],
             ['label' => 'Flat / Plot ID', 'value' => $this->detailValue($purchaser->Flat_Id)],
-            ['label' => 'Property Size', 'value' => $this->detailValue($assetSize)],
+            ['label' => 'Property Size', 'value' => $this->detailValue($property->AssetSize ?? null)],
+            ['label' => 'Unit', 'value' => $this->detailValue($property->Unit ?? null)],
             ['label' => 'EM Office', 'value' => $this->detailValue($location->BranchName ?? null)],
             ['label' => 'District', 'value' => $this->detailValue($location->DistrictName ?? $purchaser->DistrictName ?? null)],
             ['label' => 'City', 'value' => $this->detailValue($location->CityName ?? null)],
-            ['label' => 'Sector / Ward', 'value' => $this->detailValue($location->SectorName ?? null)],
+            ['label' => 'Area Type', 'value' => $this->detailValue($areaType)],
+            ['label' => $areaType === '—' ? 'Ward / Sector / Area' : $areaType, 'value' => $this->detailValue($sectorName)],
             ['label' => 'Property Auction ID', 'value' => $this->detailValue($auction->PropertyAuctionId ?? null)],
+            ['label' => 'Purchase Date', 'value' => $purchaseDate?->format('d M Y') ?? '—'],
             ['label' => 'Total Property Cost', 'value' => $flatCost > 0 ? $this->formatIndianCurrency($flatCost) : '—'],
             ['label' => 'Amount Received', 'value' => $auction && (float) $auction->ReceivedAmount > 0
                 ? $this->formatIndianCurrency((float) $auction->ReceivedAmount)
@@ -359,6 +428,23 @@ class CitizenAuthController extends Controller
         }
 
         return trim((string) $value) !== '' ? trim((string) $value) : '—';
+    }
+
+    private function resolveAreaType(?string $sectorName): string
+    {
+        if (! $sectorName || trim($sectorName) === '') {
+            return '—';
+        }
+
+        if (preg_match('/^Ward\s/i', $sectorName)) {
+            return 'Ward';
+        }
+
+        if (preg_match('/^sector\s/i', $sectorName)) {
+            return 'Sector';
+        }
+
+        return 'Locality';
     }
 
     private function resolvePurchaseDate(?object $auction, ?object $purchaser): ?Carbon
