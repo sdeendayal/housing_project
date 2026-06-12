@@ -107,7 +107,7 @@ class PpOfficerController extends Controller
     {
         $officer = Auth::user();
         $application = $this->findOfficerApplication($officer, $application);
-        $application->load(['documents', 'statusLogs', 'user', 'officerAction.officer']);
+        $application->load(['documents', 'statusLogs', 'user', 'propertyRegistration', 'officerActions.officer']);
 
         return view('physical-possession.officer.applications.show', compact('application', 'officer'));
     }
@@ -215,10 +215,6 @@ class PpOfficerController extends Controller
                     throw new \RuntimeException('Only pending applications can be updated.');
                 }
 
-                if (OfficerApplicationAction::where('application_id', $locked->id)->exists()) {
-                    throw new \RuntimeException('An officer action has already been recorded for this application.');
-                }
-
                 $oldStatus = $locked->status;
 
                 $locked->update([
@@ -232,6 +228,10 @@ class PpOfficerController extends Controller
 
                 OfficerApplicationAction::create([
                     'application_id' => $locked->id,
+                    'asset_id' => $locked->asset_id,
+                    'private_purchaser_id' => $locked->private_purchaser_id,
+                    'user_id' => $locked->user_id,
+                    'secure_id' => $locked->secure_id,
                     'officer_id' => $officer->id,
                     'action' => $newStatus,
                     'remarks' => $remarks,
@@ -246,6 +246,7 @@ class PpOfficerController extends Controller
 
                 ApplicationStatusLog::create([
                     'application_id' => $locked->id,
+                    'asset_id' => $locked->asset_id,
                     'old_status' => $oldStatus,
                     'new_status' => $newStatus,
                     'remarks' => $remarks,
@@ -256,10 +257,6 @@ class PpOfficerController extends Controller
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Illuminate\Database\QueryException $e) {
-            if ($e->getCode() === '23000') {
-                return back()->with('error', 'An officer action has already been recorded for this application.');
-            }
-
             throw $e;
         }
 

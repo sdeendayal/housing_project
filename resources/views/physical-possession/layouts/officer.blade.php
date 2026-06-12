@@ -87,9 +87,15 @@
                     <div class="pp-page-sub text-truncate">{{ $officer->name }}</div>
                 </div>
             </div>
-            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="ppToggleTheme()">
+            <div class="d-flex align-items-center gap-2 shrink-0">
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="ppToggleTheme()" title="Toggle theme">
                 <i class="bi bi-moon-stars"></i>
             </button>
+            <a href="{{ route('pp.officer.logout') }}" class="btn btn-sm btn-outline-danger py-0 px-2 d-flex align-items-center gap-1" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="d-none d-sm-inline">Logout</span>
+            </a>
+            </div>
         </div>
 
         @yield('content')

@@ -38,11 +38,10 @@ class CitizenAuthController extends Controller
             if ($auction) {
                 $flatCost = (float) $auction->FlatCost;
                 $assetName = $auction->AssetName;
-                $purchaseDate = $auction->CreatedDate
-                    ? Carbon::parse($auction->CreatedDate)
-                    : null;
             }
         }
+
+        $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
 
         $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
         $paymentSummary = $this->resolvePaymentSummary(
@@ -51,10 +50,6 @@ class CitizenAuthController extends Controller
             (float) ($auction?->BalanceAmount ?? 0),
             $paymentDetails
         );
-
-        
-
-        // dd($paymentSummary);
 
         $totalPaid = $paymentSummary['totalPaid'];
         $outstanding = $paymentSummary['outstanding'];
@@ -92,10 +87,24 @@ class CitizenAuthController extends Controller
         $ppHasApplication = $ppStats['total'] > 0;
         $latestPpApplication = $ppHasApplication ? $ppRecentApplications->first() : null;
 
+        $applicationSections = $this->buildApplicationDetailSections(
+            $user,
+            $purchaser,
+            $auction,
+            $applicationId,
+            $flatStatus,
+            $purchaseDate,
+            $submittedAt,
+            $flatCost
+        );
+
         return view('mmsayCitizenDashboard', [
             'displayName' => $displayName,
             'applicationId' => $applicationId,
             'purchaseDate' => $purchaseDate?->format('d M Y') ?? '—',
+            'basicDetails' => $applicationSections['basicDetails'],
+            'propertyDetails' => $applicationSections['propertyDetails'],
+            'totalAmountFormatted' => $this->formatIndianCurrency($flatCost),
             'totalPaidFormatted' => $this->formatIndianCurrency($totalPaid),
             'outstandingFormatted' => $this->formatIndianCurrency($outstanding),
             'paymentProgress' => $paymentProgress,
@@ -139,11 +148,10 @@ class CitizenAuthController extends Controller
             if ($auction) {
                 $flatCost = (float) $auction->FlatCost;
                 $assetName = $auction->AssetName;
-                $purchaseDate = $auction->CreatedDate
-                    ? Carbon::parse($auction->CreatedDate)
-                    : null;
             }
         }
+
+        $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
 
         $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
         $paymentSummary = $this->resolvePaymentSummary(
@@ -167,6 +175,7 @@ class CitizenAuthController extends Controller
             'applicationId' => $applicationId,
             'assetName' => $assetName,
             'purchaseDate' => $purchaseDate?->format('d M Y') ?? '—',
+            'totalAmountFormatted' => $this->formatIndianCurrency($flatCost),
             'totalPaidFormatted' => $this->formatIndianCurrency($totalPaid),
             'outstandingFormatted' => $this->formatIndianCurrency($outstanding),
             'paymentProgress' => $paymentProgress,
@@ -245,6 +254,140 @@ class CitizenAuthController extends Controller
             ->select('ppp.*', 'd.DistrictName')
             ->orderBy('ppp.PrivatePurchaserId')
             ->first();
+    }
+
+    /** @return array{basicDetails: array<int, array{label: string, value: string, full?: bool}>, propertyDetails: array<int, array{label: string, value: string, full?: bool}>} */
+    private function buildApplicationDetailSections(
+        User $user,
+        ?object $purchaser,
+        ?object $auction,
+        string $applicationId,
+        string $flatStatus,
+        ?Carbon $purchaseDate,
+        ?Carbon $submittedAt,
+        float $flatCost
+    ): array {
+        if (! $purchaser) {
+            return ['basicDetails' => [], 'propertyDetails' => []];
+        }
+
+        $displayName = $user->name ?: ($purchaser->PrivatePurchaserName ?? 'Citizen');
+        $mobile = $user->mobile ?? ($purchaser->MobileNo ? (string) $purchaser->MobileNo : null);
+
+        $basicDetails = [
+            ['label' => 'Name', 'value' => $this->detailValue($displayName)],
+            ['label' => "Father's Name", 'value' => $this->detailValue($purchaser->PurchaserFatherName)],
+            ['label' => 'Family ID', 'value' => $this->detailValue($purchaser->PPPId)],
+            ['label' => 'Member ID', 'value' => $this->detailValue($purchaser->MemberID)],
+            ['label' => 'Mobile', 'value' => $this->detailValue($mobile)],
+            ['label' => 'Application ID', 'value' => $this->detailValue($applicationId)],
+            ['label' => 'Application No.', 'value' => $this->detailValue($purchaser->ApplicationNo)],
+            ['label' => 'Category', 'value' => $this->detailValue($purchaser->CasteCategoryName)],
+            ['label' => 'Marital Status', 'value' => $this->detailValue($purchaser->MaritalStatus)],
+            ['label' => 'Application Date', 'value' => $submittedAt?->format('d M Y') ?? '—'],
+            ['label' => 'Flat / Unit Status', 'value' => $this->detailValue($flatStatus)],
+            ['label' => 'Purchase Date', 'value' => $purchaseDate?->format('d M Y') ?? '—'],
+            ['label' => 'Residential Address', 'value' => $this->detailValue($purchaser->Address), 'full' => true],
+        ];
+
+        $property = $auction?->AssetId
+            ? $this->findPropertyRegistration((int) $auction->AssetId)
+            : null;
+
+        $purchaserLocation = DB::table('property_private_purchasers as ppp')
+            ->leftJoin('em_offices as eo', 'ppp.BranchId', '=', 'eo.BranchId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'ppp.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'ppp.SectorId', '=', 's.SectorId')
+            ->where('ppp.PrivatePurchaserId', $purchaser->PrivatePurchaserId)
+            ->select('eo.BranchName', 'd.DistrictName', 'c.CityName', 's.SectorName')
+            ->first();
+
+        $location = $property ?? $purchaserLocation;
+        $assetSize = $property
+            ? trim($property->AssetSize.' '.($property->Unit ?? ''))
+            : null;
+
+        $propertyDetails = [
+            ['label' => 'Allotted Asset', 'value' => $this->detailValue($property->AssetName ?? $auction->AssetName ?? null)],
+            ['label' => 'Asset ID', 'value' => $this->detailValue($auction->AssetId ?? null)],
+            ['label' => 'Flat / Plot ID', 'value' => $this->detailValue($purchaser->Flat_Id)],
+            ['label' => 'Property Size', 'value' => $this->detailValue($assetSize)],
+            ['label' => 'EM Office', 'value' => $this->detailValue($location->BranchName ?? null)],
+            ['label' => 'District', 'value' => $this->detailValue($location->DistrictName ?? $purchaser->DistrictName ?? null)],
+            ['label' => 'City', 'value' => $this->detailValue($location->CityName ?? null)],
+            ['label' => 'Sector / Ward', 'value' => $this->detailValue($location->SectorName ?? null)],
+            ['label' => 'Property Auction ID', 'value' => $this->detailValue($auction->PropertyAuctionId ?? null)],
+            ['label' => 'Total Property Cost', 'value' => $flatCost > 0 ? $this->formatIndianCurrency($flatCost) : '—'],
+            ['label' => 'Amount Received', 'value' => $auction && (float) $auction->ReceivedAmount > 0
+                ? $this->formatIndianCurrency((float) $auction->ReceivedAmount)
+                : '—'],
+            ['label' => 'Balance Amount', 'value' => $auction
+                ? $this->formatIndianCurrency((float) $auction->BalanceAmount)
+                : '—'],
+        ];
+
+        return [
+            'basicDetails' => $basicDetails,
+            'propertyDetails' => $propertyDetails,
+        ];
+    }
+
+    private function findPropertyRegistration(int $assetId): ?object
+    {
+        return DB::table('property_registration as pr')
+            ->leftJoin('em_offices as eo', 'pr.BranchId', '=', 'eo.BranchId')
+            ->leftJoin('districts as d', 'pr.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'pr.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'pr.SectorId', '=', 's.SectorId')
+            ->where('pr.AssetId', $assetId)
+            ->where('pr.IsDeleted', 0)
+            ->select(
+                'pr.*',
+                'eo.BranchName',
+                'd.DistrictName',
+                'c.CityName',
+                's.SectorName'
+            )
+            ->first();
+    }
+
+    private function detailValue(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '—';
+        }
+
+        return trim((string) $value) !== '' ? trim((string) $value) : '—';
+    }
+
+    private function resolvePurchaseDate(?object $auction, ?object $purchaser): ?Carbon
+    {
+        if ($auction?->CreatedDate) {
+            return Carbon::parse($auction->CreatedDate);
+        }
+
+        $assetId = $auction?->AssetId ?? null;
+
+        if ($assetId) {
+            $offerDate = DB::table('installment_due')
+                ->where('AssetId', $assetId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->whereNotNull('OfferOfPossessionDate')
+                ->orderBy('InstallmentNumber')
+                ->value('OfferOfPossessionDate');
+
+            if ($offerDate) {
+                return Carbon::parse($offerDate);
+            }
+        }
+
+        if ($purchaser?->CreateDate) {
+            return Carbon::parse($purchaser->CreateDate);
+        }
+
+        return null;
     }
 
     private function maskIdentifier(?string $value): string

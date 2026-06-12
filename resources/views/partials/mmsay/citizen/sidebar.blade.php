@@ -47,7 +47,7 @@
                 </span>
                 <span class="flex items-center gap-1 min-w-0 flex-1 text-left">
                     <span class="truncate">Physical Possession</span>
-                    <span class="shrink-0 text-[7px] font-extrabold uppercase px-1 py-0.5 rounded bg-amber-100 text-amber-700">New</span>
+                    <span class="pp-scheme-new-badge-sm shrink-0">🔥 NEW</span>
                 </span>
                 <span id="ppNavChevron" class="material-symbols-outlined text-[18px] text-slate-400 transition-transform duration-200 shrink-0 {{ $ppSubmenuOpen ? 'rotate-180' : '' }}">expand_more</span>
             </button>
@@ -58,7 +58,7 @@
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-apply') style="font-variation-settings:'FILL' 1" @endif>edit_document</span></span>
                     Apply Online
                 </a>
-                <a class="nav-v2 {{ $activeNav === 'pp-download' ? 'active' : '' }} pl-7" href="{{ route('pp.user.download-form') }}">
+                <a class="nav-v2 {{ $activeNav === 'pp-download' ? 'active' : '' }} pl-7" href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener">
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-download') style="font-variation-settings:'FILL' 1" @endif>download</span></span>
                     Download Possession Form
                 </a>

@@ -259,4 +259,57 @@
         .donut { width: 68px; height: 68px; }
         .donut-inner { width: 48px; height: 48px; }
     }
+
+    .pp-scheme-new-badge-sm {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4px 10px;
+        font-size: 8px;
+        font-weight: 900;
+        border-radius: 50px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        line-height: 1;
+        white-space: nowrap;
+        border: 2px solid #fff;
+        z-index: 2;
+        animation: ppNewBadgeBlinkClear 0.85s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    .pp-scheme-new-badge-sm::before {
+        content: '';
+        position: absolute;
+        inset: -5px;
+        border-radius: 999px;
+        border: 2px solid rgba(254, 240, 138, 0.9);
+        opacity: 0;
+        z-index: -1;
+        animation: ppNewBadgeRingClear 0.85s ease-out infinite;
+    }
+
+    @keyframes ppNewBadgeBlinkClear {
+        0%, 100% {
+            background: #fef08a;
+            color: #b91c1c;
+            border-color: #fff;
+            box-shadow: 0 0 0 2px #fff, 0 0 14px rgba(254, 240, 138, 1), 0 0 28px rgba(250, 204, 21, 0.85);
+            transform: scale(1.18);
+            opacity: 1;
+        }
+        50% {
+            background: #dc2626;
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.55);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.25), 0 0 10px rgba(185, 28, 28, 0.45);
+            transform: scale(1);
+            opacity: 0.55;
+        }
+    }
+
+    @keyframes ppNewBadgeRingClear {
+        0% { opacity: 1; transform: scale(0.9); }
+        100% { opacity: 0; transform: scale(1.6); }
+    }
 </style>

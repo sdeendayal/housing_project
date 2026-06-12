@@ -190,12 +190,7 @@
                     $isImage = str_starts_with($doc->mime_type ?? '', 'image/');
                     $isPdf = ($doc->mime_type ?? '') === 'application/pdf'
                         || str_ends_with(strtolower($doc->original_name ?? ''), '.pdf');
-                    $docIcon = match($doc->document_type) {
-                        'filled_form' => 'edit_document',
-                        'registration_certificate' => 'verified',
-                        'provisional_possession_letter' => 'mark_email_read',
-                        default => 'description',
-                    };
+                    $docIcon = $doc->iconName();
                 @endphp
                 <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden hover:border-indigo-200 hover:shadow-sm transition">
                     <a href="{{ $docViewUrl }}" target="_blank" rel="noopener"

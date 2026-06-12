@@ -8,9 +8,9 @@
     const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
 
     const fields = [
-        { inputId: 'input_filled_form', zoneId: 'zone_filled_form', label: 'Signed Possession Certificate Request Form' },
-        { inputId: 'input_registration_certificate', zoneId: 'zone_registration_certificate', label: 'Registration Certificate' },
-        { inputId: 'input_provisional_possession_letter', zoneId: 'zone_provisional_possession_letter', label: 'Provisional Possession Letter' },
+@foreach(\App\Models\PhysicalPossessionDocument::applyFormFields() as $field => $meta)
+        { inputId: 'input_{{ $field }}', zoneId: 'zone_{{ $field }}', label: @json($meta['label']), required: {{ $meta['required'] ? 'true' : 'false' }} },
+@endforeach
     ];
 
     function getExtension(name) {
@@ -37,10 +37,12 @@
         document.getElementById(field.zoneId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    /** Returns first error message for one field, or null if valid */
-    function validateFileFirst(input, label) {
+    function validateFileFirst(input, label, required) {
         if (!input || !input.files || !input.files.length) {
-            return label + ' is required.';
+            if (required) {
+                return label + ' is required.';
+            }
+            return null;
         }
 
         const file = input.files[0];
@@ -65,12 +67,11 @@
         return null;
     }
 
-    /** Check fields one by one — stop at first error */
     function validateFormFirst() {
         for (let i = 0; i < fields.length; i++) {
             const field = fields[i];
             const input = document.getElementById(field.inputId);
-            const error = validateFileFirst(input, field.label);
+            const error = validateFileFirst(input, field.label, field.required);
 
             if (error) {
                 return { error: error, field: field };

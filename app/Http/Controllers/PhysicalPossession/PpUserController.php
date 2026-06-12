@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\PhysicalPossession;
 
 use App\Http\Controllers\Controller;
+use App\Services\PhysicalPossessionAssetService;
 use App\Models\ApplicationStatusLog;
 use App\Models\PhysicalPossessionApplication;
 use App\Models\PhysicalPossessionDocument;
@@ -15,6 +16,10 @@ use Illuminate\Support\Facades\Storage;
 
 class PpUserController extends Controller
 {
+    public function __construct(
+        private PhysicalPossessionAssetService $assetService
+    ) {}
+
     // User dashboard
     public function dashboard()
     {
@@ -52,7 +57,22 @@ class PpUserController extends Controller
         return view('physical-possession.user.apply', compact('user', 'profile'));
     }
 
-    // Pre-filled PDF download
+    // Pre-filled form — view in browser first
+    public function viewPrefilledForm()
+    {
+        $user = Auth::user();
+
+        if ($this->findUserApplication($user)) {
+            return redirect()->route('pp.user.applications')
+                ->with('error', 'Form is not available after application submission.');
+        }
+
+        $profile = $this->getUserProfile($user);
+
+        return view('physical-possession.user.view-prefilled-form', compact('user', 'profile'));
+    }
+
+    // Pre-filled PDF download (after view)
     public function downloadPrefilledForm()
     {
         $user = Auth::user();
@@ -73,29 +93,22 @@ class PpUserController extends Controller
     // Application submit karna
     public function submitApplication(Request $request)
     {
-        $documentFileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+        $requiredFileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+        $optionalFileRule = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
 
-        $request->validate([
-            'filled_form' => $documentFileRule,
-            'registration_certificate' => $documentFileRule,
-            'provisional_possession_letter' => $documentFileRule,
-        ], [
-            'filled_form.required' => 'Signed Possession Certificate Request Form is required.',
-            'registration_certificate.required' => 'Registration Certificate is required.',
-            'provisional_possession_letter.required' => 'Provisional Possession Letter is required.',
-            'filled_form.mimes' => 'Signed form must be PDF, JPG, JPEG, or PNG.',
-            'registration_certificate.mimes' => 'Registration Certificate must be PDF, JPG, JPEG, or PNG.',
-            'provisional_possession_letter.mimes' => 'Provisional Possession Letter must be PDF, JPG, JPEG, or PNG.',
-            'filled_form.mimetypes' => 'Signed form must be PDF, JPG, JPEG, or PNG.',
-            'registration_certificate.mimetypes' => 'Registration Certificate must be PDF, JPG, JPEG, or PNG.',
-            'provisional_possession_letter.mimetypes' => 'Provisional Possession Letter must be PDF, JPG, JPEG, or PNG.',
-            'filled_form.max' => 'Signed form must be less than 10 MB.',
-            'registration_certificate.max' => 'Registration Certificate must be less than 10 MB.',
-            'provisional_possession_letter.max' => 'Provisional Possession Letter must be less than 10 MB.',
-            'filled_form.file' => 'Signed form must be a valid uploaded file.',
-            'registration_certificate.file' => 'Registration Certificate must be a valid uploaded file.',
-            'provisional_possession_letter.file' => 'Provisional Possession Letter must be a valid uploaded file.',
-        ]);
+        $rules = [];
+        $messages = [];
+
+        foreach (PhysicalPossessionDocument::applyFormFields() as $field => $meta) {
+            $rules[$field] = $meta['required'] ? $requiredFileRule : $optionalFileRule;
+            $messages["{$field}.required"] = $meta['label'].' is required.';
+            $messages["{$field}.mimes"] = $meta['label'].' must be PDF, JPG, JPEG, or PNG.';
+            $messages["{$field}.mimetypes"] = $meta['label'].' must be PDF, JPG, JPEG, or PNG.';
+            $messages["{$field}.max"] = $meta['label'].' must be less than 10 MB.';
+            $messages["{$field}.file"] = $meta['label'].' must be a valid uploaded file.';
+        }
+
+        $request->validate($rules, $messages);
 
         $user = Auth::user();
 
@@ -116,9 +129,12 @@ class PpUserController extends Controller
 
         try {
             // Application save
+            $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
+
             $application = PhysicalPossessionApplication::create([
                 'user_id' => $user->id,
                 'private_purchaser_id' => $profile['private_purchaser_id'],
+                'asset_id' => $assetId,
                 'ppp_id' => $profile['ppp_id'],
                 'member_id' => $profile['member_id'],
                 'slip_id' => $slipId,
@@ -135,17 +151,18 @@ class PpUserController extends Controller
             ]);
 
             // Documents upload aur save
-            $documentTypes = [
-                'filled_form' => $request->file('filled_form'),
-                'registration_certificate' => $request->file('registration_certificate'),
-                'provisional_possession_letter' => $request->file('provisional_possession_letter'),
-            ];
+            foreach (PhysicalPossessionDocument::applyFormFields() as $type => $meta) {
+                $file = $request->file($type);
 
-            foreach ($documentTypes as $type => $file) {
+                if (! $file) {
+                    continue;
+                }
+
                 $path = $this->storeApplicationDocument($application, $profile, $type, $file);
 
                 PhysicalPossessionDocument::create([
                     'application_id' => $application->id,
+                    'asset_id' => $assetId,
                     'document_type' => $type,
                     'file_path' => $path,
                     'original_name' => $file->getClientOriginalName(),
@@ -157,6 +174,7 @@ class PpUserController extends Controller
             // Status log
             ApplicationStatusLog::create([
                 'application_id' => $application->id,
+                'asset_id' => $assetId,
                 'old_status' => null,
                 'new_status' => 'pending',
                 'remarks' => 'Application submitted',
@@ -371,6 +389,7 @@ class PpUserController extends Controller
             'registration_details' => $registrationDetails,
             'application_no' => $purchaser?->ApplicationNo ?? null,
             'private_purchaser_id' => $purchaser?->PrivatePurchaserId ?? null,
+            'asset_id' => $purchaser?->AssetId ? (int) $purchaser->AssetId : null,
             'ppp_id' => $purchaser?->PPPId ?? null,
             'member_id' => $purchaser?->MemberID ?? null,
             'category' => $purchaser?->CasteCategoryName ?? '—',

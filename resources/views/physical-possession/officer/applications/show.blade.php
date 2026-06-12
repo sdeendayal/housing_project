@@ -16,6 +16,8 @@
                     <div><div class="label">Father</div>{{ $application->father_name ?? '—' }}</div>
                     <div><div class="label">Mobile</div>{{ $application->mobile }}</div>
                     <div><div class="label">District</div>{{ $application->district_name ?? '—' }}</div>
+                    <div><div class="label">Asset ID</div>{{ $application->asset_id ?? '—' }}</div>
+                    <div><div class="label">Property</div>{{ $application->propertyRegistration?->AssetName ?? '—' }}</div>
                     <div class="col-span-2"><div class="label">Address</div>{{ $application->address ?? '—' }}</div>
                     <div class="col-span-2"><div class="label">Registration</div>{{ $application->registration_details ?? '—' }}</div>
                     <div><div class="label">Submitted</div>{{ $application->created_at->format('d M Y') }}</div>
@@ -42,7 +44,7 @@
     </div>
 
     <div class="col-lg-4">
-        @if($application->status === 'pending' && ! $application->officerAction)
+        @if($application->status === 'pending')
         <div class="pp-panel mb-2">
             <div class="pp-panel-head">Officer Decision</div>
             <div class="pp-panel-body">
@@ -90,31 +92,32 @@
         </div>
         @else
         <div class="pp-panel mb-2">
-            <div class="pp-panel-head">Officer Action Record</div>
+            <div class="pp-panel-head">Officer Action History</div>
             <div class="pp-panel-body small">
-                @if($application->officerAction)
-                    <p class="mb-1"><strong>Action:</strong>
-                        <span class="badge bg-{{ $application->officerAction->action === 'approved' ? 'success' : 'danger' }}">
-                            {{ ucfirst($application->officerAction->action) }}
-                        </span>
-                    </p>
-                    <p class="mb-1"><strong>Application No:</strong> {{ $application->officerAction->application_number }}</p>
-                    <p class="mb-1"><strong>Officer:</strong> {{ $application->officerAction->officer?->name ?? '—' }}</p>
-                    <p class="mb-1"><strong>Remarks:</strong> {{ $application->officerAction->remarks }}</p>
-                    @if($application->officerAction->action === 'approved')
-                        @if($application->officerAction->citizen_visit_date)
-                        <p class="mb-1"><strong>Meeting Schedule:</strong> {{ $application->officerAction->citizen_visit_date->format('d M Y, h:i A') }}</p>
+                @forelse($application->officerActions as $action)
+                    <div class="{{ ! $loop->last ? 'border-bottom pb-2 mb-2' : '' }}">
+                        <p class="mb-1"><strong>Action #{{ $loop->iteration }}:</strong>
+                            <span class="badge bg-{{ $action->action === 'approved' ? 'success' : 'danger' }}">
+                                {{ ucfirst($action->action) }}
+                            </span>
+                        </p>
+                        <p class="mb-1"><strong>Asset ID:</strong> {{ $action->asset_id ?? '—' }}</p>
+                        <p class="mb-1"><strong>Application No:</strong> {{ $action->application_number }}</p>
+                        <p class="mb-1"><strong>Officer:</strong> {{ $action->officer?->name ?? '—' }}</p>
+                        <p class="mb-1"><strong>Remarks:</strong> {{ $action->remarks }}</p>
+                        @if($action->action === 'approved')
+                            @if($action->citizen_visit_date)
+                            <p class="mb-1"><strong>Meeting Schedule:</strong> {{ $action->citizen_visit_date->format('d M Y, h:i A') }}</p>
+                            @endif
+                            @if($action->visit_instructions)
+                            <p class="mb-1"><strong>Visit Instructions:</strong> {{ $action->visit_instructions }}</p>
+                            @endif
                         @endif
-                        @if($application->officerAction->visit_instructions)
-                        <p class="mb-1"><strong>Visit Instructions:</strong> {{ $application->officerAction->visit_instructions }}</p>
-                        @endif
-                    @endif
-                    <p class="mb-0"><strong>Action Date:</strong> {{ $application->officerAction->created_at->format('d M Y') }}</p>
-                @else
-                    <p class="mb-1"><strong>Status:</strong> {{ ucfirst($application->status) }}</p>
-                    @if($application->remarks)<p class="mb-1"><strong>Remarks:</strong> {{ $application->remarks }}</p>@endif
-                    @if($application->approved_at)<p class="mb-0"><strong>Date:</strong> {{ $application->approved_at->format('d M Y') }}</p>@endif
-                @endif
+                        <p class="mb-0"><strong>Action Date:</strong> {{ $action->created_at->format('d M Y, h:i A') }}</p>
+                    </div>
+                @empty
+                    <p class="mb-0 text-muted">No officer action recorded yet.</p>
+                @endforelse
             </div>
         </div>
         @endif
@@ -172,7 +175,7 @@
 @endpush
 
 @push('scripts')
-@if($application->status === 'pending' && ! $application->officerAction)
+@if($application->status === 'pending')
 <script>
 (function () {
     const form = document.getElementById('ppDecideForm');

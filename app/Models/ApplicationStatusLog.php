@@ -9,6 +9,7 @@ class ApplicationStatusLog extends Model
 {
     protected $fillable = [
         'application_id',
+        'asset_id',
         'old_status',
         'new_status',
         'remarks',

@@ -9,6 +9,10 @@ class OfficerApplicationAction extends Model
 {
     protected $fillable = [
         'application_id',
+        'asset_id',
+        'private_purchaser_id',
+        'user_id',
+        'secure_id',
         'officer_id',
         'action',
         'remarks',
@@ -36,5 +40,15 @@ class OfficerApplicationAction extends Model
     public function officer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'officer_id');
+    }
+
+    public function applicant(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function propertyRegistration(): BelongsTo
+    {
+        return $this->belongsTo(PropertyRegistration::class, 'asset_id', 'AssetId');
     }
 }

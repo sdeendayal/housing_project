@@ -17,10 +17,14 @@
             <h2 class="text-[11px] font-extrabold text-slate-800">Payment Overview</h2>
         </div>
         <div class="p-3">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-3">
                 <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
                     <p class="text-[9px] text-slate-400 uppercase font-bold mb-0.5">Purchase Date</p>
                     <p class="text-[12px] font-bold text-slate-800">{{ $purchaseDate }}</p>
+                </div>
+                <div class="rounded-lg border border-slate-200 bg-white p-2.5">
+                    <p class="text-[9px] text-slate-600 uppercase font-bold mb-0.5">Total Amount</p>
+                    <p class="text-[12px] font-extrabold text-slate-800">{{ $totalAmountFormatted }}</p>
                 </div>
                 <div class="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5">
                     <p class="text-[9px] text-emerald-700/80 uppercase font-bold mb-0.5">Total Paid</p>

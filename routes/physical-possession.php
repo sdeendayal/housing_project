@@ -40,6 +40,7 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/dashboard', fn () => redirect()->route('citizen.dashboard'))->name('user.dashboard');
         Route::get('/apply', [PpUserController::class, 'applyForm'])->name('user.apply');
         Route::post('/apply', [PpUserController::class, 'submitApplication'])->name('user.apply.submit');
+        Route::get('/view-form', [PpUserController::class, 'viewPrefilledForm'])->name('user.view-form');
         Route::get('/download-form', [PpUserController::class, 'downloadPrefilledForm'])->name('user.download-form');
         Route::get('/my-applications', [PpUserController::class, 'myApplications'])->name('user.applications');
         Route::get('/application/{application}', [PpUserController::class, 'showApplication'])->name('user.application.show')->where('application', '[a-f0-9]{32}');

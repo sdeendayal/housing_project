@@ -21,6 +21,7 @@ class PhysicalPossessionApplication extends Model
     protected $fillable = [
         'user_id',
         'private_purchaser_id',
+        'asset_id',
         'ppp_id',
         'member_id',
         'slip_id',
@@ -74,9 +75,24 @@ class PhysicalPossessionApplication extends Model
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function propertyRegistration(): BelongsTo
+    {
+        return $this->belongsTo(PropertyRegistration::class, 'asset_id', 'AssetId');
+    }
+
+    public function officerActions(): HasMany
+    {
+        return $this->hasMany(OfficerApplicationAction::class, 'application_id')->latest();
+    }
+
+    public function latestOfficerAction(): HasOne
+    {
+        return $this->hasOne(OfficerApplicationAction::class, 'application_id')->latestOfMany();
+    }
+
     public function officerAction(): HasOne
     {
-        return $this->hasOne(OfficerApplicationAction::class, 'application_id');
+        return $this->latestOfficerAction();
     }
 
     public function statusBadgeClass(): string

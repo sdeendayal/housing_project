@@ -77,7 +77,7 @@
             <div class="relative group">
                 <button
                     class="flex items-center gap-2 px-3 py-2 text-sm font-bold rounded-md transition-colors text-white bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-sm">
-                    <span class="pp-scheme-new-badge-sm text-[10px] px-2 py-0.5 mr-0">NEW</span>
+                    <span class="pp-scheme-new-badge-sm mr-0">🔥 NEW</span>
                     <span class="material-symbols-outlined text-[18px]">home_work</span>
                     Physical Possession
                     <span class="material-symbols-outlined text-[18px] transition-transform group-hover:rotate-180">expand_more</span>
@@ -102,10 +102,10 @@
             </div>
 
             <a href="/help"
-                class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide
+                class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide border border-slate-200
                 {{ request()->is('help')
-                    ? 'bg-yellow-500 text-civic-blue'
-                    : 'bg-civic-highlight text-civic-blue hover:bg-yellow-500' }}">
+                    ? 'bg-white text-civic-blue ring-2 ring-civic-blue/20'
+                    : 'bg-white text-civic-blue hover:bg-slate-50' }}">
                 <span class="material-symbols-outlined text-[18px]">
                     help
                 </span>

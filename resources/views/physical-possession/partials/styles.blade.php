@@ -40,6 +40,7 @@ body.pp-body-auth {
 /* Officer sidebar — white theme */
 .pp-sidebar {
     width: 232px;
+    height: 100vh;
     min-height: 100vh;
     background: #ffffff;
     position: fixed;
@@ -51,6 +52,8 @@ body.pp-body-auth {
     border-right: 1px solid #e2e8f0;
     box-shadow: 2px 0 12px rgba(15, 23, 42, 0.04);
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 
 [data-bs-theme="dark"] .pp-sidebar {
@@ -152,6 +155,8 @@ body.pp-body-auth {
 .pp-sidebar-nav {
     padding: 0.5rem 0.55rem;
     overflow-y: auto;
+    flex: 1 1 auto;
+    min-height: 0;
 }
 
 .pp-sidebar-section {
@@ -246,6 +251,8 @@ body.pp-body-auth {
     padding: 0.65rem 0.55rem 0.75rem;
     border-top: 1px solid #e2e8f0;
     background: #f8fafc;
+    flex-shrink: 0;
+    margin-top: auto;
 }
 
 [data-bs-theme="dark"] .pp-sidebar-foot {

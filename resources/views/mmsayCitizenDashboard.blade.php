@@ -10,40 +10,27 @@
         <p class="text-[12px] font-bold text-slate-800">{{ $flatStatus }}</p>
     </div>
 
-    {{-- Applicant details --}}
+    {{-- Application details --}}
     <div class="citizen-card">
         <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-[11px] font-extrabold text-slate-800">Applicant Details</h2>
+            <h2 class="text-[11px] font-extrabold text-slate-800">Application Details</h2>
         </div>
-        <div class="p-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Name</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $displayName }}</p>
+        <div class="p-3 space-y-3">
+            <div>
+                <h3 class="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider mb-2">Basic Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    @include('partials.mmsay.citizen.detail-grid', ['items' => $basicDetails])
                 </div>
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application ID</p>
-                    <p class="text-[12px] font-bold text-slate-800 break-all">{{ $applicationId }}</p>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Category</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $category }}</p>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Flat / Unit Status</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $flatStatus }}</p>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Purchase Date</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaseDate }}</p>
-                </div>
-                @if ($assetName)
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50 sm:col-span-2 lg:col-span-1">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Allotted Asset</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $assetName }}</p>
-                </div>
-                @endif
             </div>
+
+            @if (count($propertyDetails) > 0)
+            <div class="pt-1 border-t border-slate-100">
+                <h3 class="text-[10px] font-extrabold text-indigo-700 uppercase tracking-wider mb-2 mt-2">Property Details</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    @include('partials.mmsay.citizen.detail-grid', ['items' => $propertyDetails])
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -53,7 +40,16 @@
             <h2 class="text-[11px] font-extrabold text-slate-800">Payment Summary</h2>
         </div>
         <div class="p-3">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
+                    <div class="flex items-center gap-1.5 mb-1">
+                        <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[14px]">account_balance_wallet</span>
+                        </span>
+                        <p class="text-[9px] font-bold uppercase text-slate-600">Total Amount</p>
+                    </div>
+                    <p class="text-[13px] font-extrabold text-slate-800">{{ $totalAmountFormatted }}</p>
+                </div>
                 <div class="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center">
@@ -145,9 +141,9 @@
                     <span class="material-symbols-outlined text-[14px]">edit_document</span>
                     Apply for Physical Possession
                 </a>
-                <a href="{{ route('pp.user.download-form') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
-                    <span class="material-symbols-outlined text-[16px]">download</span>
-                    Download Possession Form
+                <a href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
+                    <span class="material-symbols-outlined text-[16px]">visibility</span>
+                    View Possession Form
                 </a>
                 @else
                 <a href="{{ route('pp.user.application.show', $latestPpApplication) }}" class="btn-v2-primary btn-v2-sm no-underline">
