@@ -15,6 +15,7 @@ class User extends Authenticatable
         'name',
         'email',
         'mobile',
+        'private_purchaser_id',
         'password',
         'role',
         'district_id',

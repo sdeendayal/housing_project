@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Role;
 use App\Models\RoleGroup;
 use App\Models\User;
+use App\Support\IndianMobileNumber;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -43,7 +44,7 @@ class CitizenUserSeeder extends Seeder
         $passwordHash = Hash::make(Str::random(32));
 
         foreach ($purchasers as $purchaser) {
-            $mobile = $this->normalizeMobile($purchaser->MobileNo);
+            $mobile = IndianMobileNumber::normalize($purchaser->MobileNo);
 
             if (! $mobile || isset($seenMobiles[$mobile]) || isset($existingMobiles[$mobile])) {
                 $skipped++;
@@ -75,20 +76,6 @@ class CitizenUserSeeder extends Seeder
         }
 
         $this->command->info("Citizen users created: {$created}, skipped: {$skipped}");
-    }
-
-    private function normalizeMobile($mobile): ?string
-    {
-        $digits = preg_replace('/\D/', '', (string) $mobile);
-
-        if (strlen($digits) === 12 && str_starts_with($digits, '91')) {
-            $digits = substr($digits, 2);
-        }
-
-        if (strlen($digits) !== 10 || ! preg_match('/^[6-9]/', $digits)) {
-            return null;
-        }
-
-        return $digits;
+        $this->command->warn('For large datasets, use: php artisan citizens:sync-users');
     }
 }

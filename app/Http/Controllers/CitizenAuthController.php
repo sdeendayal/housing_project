@@ -297,6 +297,14 @@ class CitizenAuthController extends Controller
 
     private function findPurchaserForUser(User $user): ?object
     {
+        if ($user->private_purchaser_id) {
+            return DB::table('property_private_purchasers as ppp')
+                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+                ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
+                ->select('ppp.*', 'd.DistrictName')
+                ->first();
+        }
+
         $mobile = $user->mobile;
 
         if (! $mobile) {

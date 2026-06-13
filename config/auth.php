@@ -122,4 +122,16 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Citizen Default Password
+    |--------------------------------------------------------------------------
+    |
+    | Used when syncing citizens from property_private_purchasers into users.
+    | Citizens authenticate via OTP; leave unset to store a random hash.
+    |
+    */
+
+    'citizen_default_password' => env('CITIZEN_DEFAULT_PASSWORD'),
+
 ];
