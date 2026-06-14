@@ -2,7 +2,7 @@
     $activeNav = $activeNav ?? '';
     $sidebarName = $displayName ?? ($fullName ?? (auth()->user()?->name ?? 'Citizen'));
     $sidebarAppId = $applicationId ?? ($applicationNo ?? '—');
-    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show', 'pp-download'], true);
+    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show'], true);
     $ppHasApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->exists();
     $latestPpApplication = $ppHasApplication
         ? \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->latest()->first()
@@ -61,10 +61,6 @@
                 <a class="nav-v2 {{ $activeNav === 'pp-apply' ? 'active' : '' }} pl-7" href="{{ route('pp.user.apply') }}">
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-apply') style="font-variation-settings:'FILL' 1" @endif>edit_document</span></span>
                     Apply Online
-                </a>
-                <a class="nav-v2 {{ $activeNav === 'pp-download' ? 'active' : '' }} pl-7" href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener">
-                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-download') style="font-variation-settings:'FILL' 1" @endif>download</span></span>
-                    Download Possession Form
                 </a>
                 @else
                 <a class="nav-v2 {{ $activeNav === 'pp-application-show' ? 'active' : '' }} pl-7" href="{{ route('pp.user.application.show', $latestPpApplication) }}">
