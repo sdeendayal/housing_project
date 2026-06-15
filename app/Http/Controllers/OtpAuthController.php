@@ -6,6 +6,7 @@ use App\Http\Requests\SendOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use App\Models\Otp;
 use App\Models\User;
+use App\Services\OtpVerificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -15,9 +16,9 @@ use Illuminate\View\View;
 
 class OtpAuthController extends Controller
 {
-    private const OTP_EXPIRY_MINUTES = 10;
-    private const OTP_RESEND_COOLDOWN_SECONDS = 60;
-    private const OTP_MAX_ATTEMPTS = 5;
+    public function __construct(
+        private OtpVerificationService $otpService
+    ) {}
 
     public function showLogin(string $context): View|RedirectResponse
     {
@@ -64,50 +65,23 @@ class OtpAuthController extends Controller
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
 
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp) {
-            $elapsedSeconds = (int) $latestOtp->created_at->diffInSeconds(now());
-
-            if ($elapsedSeconds < self::OTP_RESEND_COOLDOWN_SECONDS) {
-                $waitSeconds = max(1, (int) ceil(self::OTP_RESEND_COOLDOWN_SECONDS - $elapsedSeconds));
-
-                return back()->withInput()->with('error', "Please wait {$waitSeconds} seconds before requesting a new OTP.");
-            }
-        }
+        $purpose = $config['otp_purpose'];
 
         try {
-            DB::transaction(function () use ($mobile, $config) {
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info("{$config['log_label']} OTP generated", ['mobile' => $mobile]);
-
-                if (app()->environment('local')) {
-                    Log::info("{$config['log_label']} local OTP for testing", ['mobile' => $mobile, 'otp' => $otpCode]);
-                }
-            });
+            $result = $this->otpService->send(
+                $mobile,
+                $purpose,
+                $user->id,
+                $config['log_label']
+            );
         } catch (\Exception $e) {
             Log::error("{$config['log_label']} OTP generation failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
 
             return back()->withInput()->with('error', 'Unable to send OTP. Please try again.');
+        }
+
+        if (! $result['success']) {
+            return back()->withInput()->with('error', $result['message']);
         }
 
         session([
@@ -168,42 +142,20 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
-        $otpRecord = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
+        $purpose = $config['otp_purpose'];
+        $result = $this->otpService->verify($mobile, $purpose, $request->otp);
 
-        if (! $otpRecord) {
-            return back()->with('error', 'No active OTP found. Please request a new OTP.');
-        }
-
-        if ($otpRecord->isExpired()) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'OTP has expired. Please request a new OTP.');
-        }
-
-        if ($otpRecord->attempts >= self::OTP_MAX_ATTEMPTS) {
-            $otpRecord->update(['verified_at' => now()]);
-
-            return back()->with('error', 'Too many failed attempts. Please request a new OTP.');
-        }
-
-        if ($request->otp !== $otpRecord->otp) {
-            $otpRecord->increment('attempts');
-
+        if (! $result['success']) {
             Log::warning("{$config['log_label']} OTP verification failed", [
                 'mobile' => $mobile,
-                'attempts' => $otpRecord->attempts,
+                'purpose' => $purpose,
             ]);
 
-            return back()->with('error', 'Invalid OTP. Please try again.');
+            return back()->with('error', $result['message']);
         }
 
         try {
-            DB::transaction(function () use ($mobile, $user, $request, $config) {
-                Otp::where('mobile_number', $mobile)->delete();
-
+            DB::transaction(function () use ($mobile, $user, $request, $config, $purpose) {
                 Auth::login($user);
                 $request->session()->regenerate();
 
@@ -213,7 +165,11 @@ class OtpAuthController extends Controller
                 ]);
             });
 
-            Log::info("{$config['log_label']} logged in via OTP", ['user_id' => $user->id, 'mobile' => $mobile]);
+            Log::info("{$config['log_label']} logged in via OTP", [
+                'user_id' => $user->id,
+                'mobile' => $mobile,
+                'purpose' => $purpose,
+            ]);
         } catch (\Exception $e) {
             Log::error("{$config['log_label']} login failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
 
@@ -254,48 +210,21 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
-        $latestOtp = Otp::where('mobile_number', $mobile)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($latestOtp) {
-            $elapsedSeconds = (int) $latestOtp->created_at->diffInSeconds(now());
-
-            if ($elapsedSeconds < self::OTP_RESEND_COOLDOWN_SECONDS) {
-                $waitSeconds = max(1, (int) ceil(self::OTP_RESEND_COOLDOWN_SECONDS - $elapsedSeconds));
-
-                return back()->with('warning', "Please wait {$waitSeconds} seconds before resending OTP.");
-            }
-        }
+        $purpose = $config['otp_purpose'];
 
         try {
-            DB::transaction(function () use ($mobile, $config) {
-                Otp::where('mobile_number', $mobile)
-                    ->whereNull('verified_at')
-                    ->where('expires_at', '>', now())
-                    ->update(['verified_at' => now()]);
-
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-                Otp::create([
-                    'mobile_number' => $mobile,
-                    'otp' => $otpCode,
-                    'expires_at' => now()->addMinutes(self::OTP_EXPIRY_MINUTES),
-                    'verified_at' => null,
-                    'attempts' => 0,
-                ]);
-
-                Log::info("{$config['log_label']} OTP resent", ['mobile' => $mobile]);
-
-                if (app()->environment('local')) {
-                    Log::info("{$config['log_label']} local OTP for testing", ['mobile' => $mobile, 'otp' => $otpCode]);
-                }
-            });
+            $result = $this->otpService->resend(
+                $mobile,
+                $purpose,
+                $user->id,
+                $config['log_label']
+            );
         } catch (\Exception $e) {
             return back()->with('error', 'Unable to resend OTP. Please try again.');
+        }
+
+        if (! $result['success']) {
+            return back()->with('warning', $result['message']);
         }
 
         return back()->with('success', 'A new OTP has been sent to your mobile number.');

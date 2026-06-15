@@ -139,7 +139,7 @@
                 @unless($ppHasApplication)
                 <a href="{{ route('pp.user.apply') }}" class="btn-v2-primary btn-v2-sm no-underline">
                     <span class="material-symbols-outlined text-[14px]">edit_document</span>
-                    Apply for Physical Possession
+                    {{ !empty($ppHasDraftApplication) ? 'Continue Application' : 'Apply for Physical Possession' }}
                 </a>
                 <a href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
                     <span class="material-symbols-outlined text-[16px]">visibility</span>

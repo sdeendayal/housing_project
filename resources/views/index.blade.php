@@ -1143,7 +1143,7 @@
                     <a href="https://hsvphry.org.in/" target="_blank">
                         <img alt="HSVP"
                             class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
-                            src="hsvp-logo.jpg" />
+                            src="Haryana_emblem.png" />
                     </a>
 
                     <a href="#" target="_blank">

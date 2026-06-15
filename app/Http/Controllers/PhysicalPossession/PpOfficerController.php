@@ -309,7 +309,8 @@ class PpOfficerController extends Controller
     // Sirf apne district ki applications - yahi main filtering hai
     private function districtApplicationsQuery(User $officer)
     {
-        $query = PhysicalPossessionApplication::query();
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', '!=', 'draft');
 
         if ($officer->district_id) {
             $query->where('district_id', $officer->district_id);

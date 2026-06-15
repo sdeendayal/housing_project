@@ -7,12 +7,17 @@
 <div class="citizen-card">
     <div class="px-3 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
         <h2 class="text-[11px] font-extrabold text-slate-800">All Applications</h2>
-        @unless($ppHasApplication)
+        @if(!empty($hasDraftApplication))
+        <a href="{{ route('pp.user.apply') }}" class="btn-v2-primary btn-v2-sm no-underline">
+            <span class="material-symbols-outlined text-[14px]">edit_document</span>
+            Continue Application
+        </a>
+        @elseif(!$ppHasApplication)
         <a href="{{ route('pp.user.apply') }}" class="btn-v2-primary btn-v2-sm no-underline">
             <span class="material-symbols-outlined text-[14px]">add</span>
             New Application
         </a>
-        @endunless
+        @endif
     </div>
     <div class="p-0">
         @if($applications->count())

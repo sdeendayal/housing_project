@@ -73,18 +73,20 @@ class CitizenAuthController extends Controller
         $category = $purchaser?->CasteCategoryName ?? '—';
 
         $ppStats = [
-            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->count(),
+            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', '!=', 'draft')->count(),
             'pending' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'pending')->count(),
             'approved' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'approved')->count(),
             'rejected' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'rejected')->count(),
         ];
 
         $ppRecentApplications = PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
             ->latest()
             ->take(3)
             ->get();
 
         $ppHasApplication = $ppStats['total'] > 0;
+        $ppHasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
         $latestPpApplication = $ppHasApplication ? $ppRecentApplications->first() : null;
 
         $applicationSections = $this->buildApplicationDetailSections(
@@ -115,6 +117,7 @@ class CitizenAuthController extends Controller
             'ppStats' => $ppStats,
             'ppRecentApplications' => $ppRecentApplications,
             'ppHasApplication' => $ppHasApplication,
+            'ppHasDraftApplication' => $ppHasDraftApplication,
             'latestPpApplication' => $latestPpApplication,
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],

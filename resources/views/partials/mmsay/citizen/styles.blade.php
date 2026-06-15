@@ -404,6 +404,340 @@
 
     .pp-cert-action-download:hover { color: #fff; background: #047857; }
 
+    /* Pre-filled possession certificate preview on apply page */
+    .pp-cert-preview-wrap {
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        background: #f8fafc;
+        overflow: hidden;
+    }
+
+    .pp-cert-preview-head {
+        padding: 8px 12px;
+        background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .pp-cert-preview-paper {
+        max-height: 380px;
+        overflow-y: auto;
+        background: #fff;
+        margin: 10px 12px 0;
+        padding: 1.25rem 1.5rem;
+        border-radius: 8px;
+        border: 1px solid #f1f5f9;
+        box-shadow: 0 1px 8px rgba(15, 23, 42, 0.04);
+        font-size: 12px;
+        line-height: 1.6;
+        color: #111;
+    }
+
+    .pp-cert-preview-paper::-webkit-scrollbar { width: 5px; }
+    .pp-cert-preview-paper::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .pp-cert-action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 10px 12px 12px;
+        padding: 10px 12px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+    }
+
+    .pp-cert-action-bar--done {
+        justify-content: center;
+    }
+
+    .pp-cert-action-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+    }
+
+    .pp-cert-action-hint-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+        color: #4f46e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .pp-cert-action-hint-icon .material-symbols-outlined { font-size: 17px; }
+
+    .pp-cert-action-hint-title {
+        font-size: 10px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .pp-cert-action-hint-sub {
+        font-size: 9px;
+        color: #64748b;
+        margin: 1px 0 0;
+        line-height: 1.3;
+    }
+
+    .pp-cert-verify-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 7px 16px;
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        white-space: nowrap;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(79, 70, 229, 0.28);
+        transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    }
+
+    .pp-cert-verify-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+    }
+
+    .pp-cert-verify-btn:active { transform: translateY(0); }
+
+    .pp-cert-verify-btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .pp-cert-verify-btn .material-symbols-outlined { font-size: 15px; }
+
+    .pp-cert-verified-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        border: 1px solid #a7f3d0;
+        flex-shrink: 0;
+    }
+
+    .pp-cert-verified-pill .material-symbols-outlined {
+        font-size: 16px;
+        color: #059669;
+    }
+
+    .pp-cert-verified-pill-text {
+        font-size: 9px;
+        font-weight: 800;
+        color: #047857;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    .pp-cert-verified-pill-sub {
+        font-size: 8px;
+        color: #059669;
+        margin: 0;
+        line-height: 1.2;
+    }
+
+    @media (max-width: 480px) {
+        .pp-cert-action-bar {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+
+        .pp-cert-action-hint {
+            justify-content: center;
+        }
+
+        .pp-cert-verify-btn,
+        .pp-cert-verified-pill {
+            width: 100%;
+        }
+    }
+
+    .pp-form-line {
+        border-bottom: 1px solid #111;
+        display: inline-block;
+        min-width: 40px;
+        padding: 0 3px 1px;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .pp-form-body { text-align: justify; margin: 1rem 0 1.25rem; }
+
+    .pp-form-thanks { text-align: center; margin: 1rem 0; }
+
+    .pp-form-signature { text-align: right; margin-top: 0.5rem; }
+
+    .pp-form-sign-name {
+        margin-top: 2rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-top: 1px solid #111;
+        display: inline-block;
+        min-width: 160px;
+        padding-top: 4px;
+    }
+
+    .pp-form-meta {
+        margin-top: 1.5rem;
+        font-size: 9px;
+        color: #64748b;
+        border-top: 1px dashed #cbd5e1;
+        padding-top: 0.5rem;
+    }
+
+    /* Allotment letter — original HTML template style */
+    .pp-allotment-letter-wrap { padding: 4px; }
+    .pp-allotment-container {
+        border: 5px solid orange;
+        padding: 14px 16px;
+        background: #fff;
+        border-radius: 2px;
+    }
+    .pp-allotment-container + .pp-allotment-container {
+        margin-top: 20px;
+        padding-top: 18px;
+    }
+    .pp-allotment-logo-img { display: block; margin: 0 auto 8px; }
+    .pp-allotment-dept-title {
+        font-size: 15px;
+        font-weight: 800;
+        color: #111;
+        margin: 0 0 6px;
+        text-align: center;
+    }
+    .pp-allotment-green-badge {
+        display: inline-block;
+        background: #198754;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        padding: 4px 14px;
+        border-radius: 4px;
+        margin: 4px 0;
+        text-align: center;
+    }
+    .pp-allotment-scheme-title {
+        font-size: 14px;
+        font-weight: 800;
+        color: #d97706;
+        margin: 6px 0;
+        text-align: center;
+    }
+    .pp-allotment-intro-text {
+        font-size: 10px;
+        color: #333;
+        text-align: center;
+        margin: 0 0 10px;
+        line-height: 1.5;
+    }
+    .pp-allotment-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 8px;
+        font-size: 10px;
+    }
+    .pp-allotment-data-table th,
+    .pp-allotment-data-table td {
+        border: 1px solid #dee2e6;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+    }
+    .pp-allotment-data-table th {
+        color: rgb(0, 112, 192);
+        font-weight: 700;
+        width: 42%;
+        background: #f8f9fa;
+    }
+    .pp-allotment-data-table tr:nth-child(even) td { background: #f8f9fa; }
+    .pp-allotment-qr-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 12px;
+        padding-top: 8px;
+    }
+    .pp-allotment-qr-box {
+        border: 1px solid #dee2e6;
+        padding: 4px;
+        background: #fff;
+        flex-shrink: 0;
+    }
+    .pp-allotment-qr-label {
+        font-size: 10px;
+        color: #333;
+        margin: 0;
+        line-height: 1.4;
+    }
+    .pp-allotment-sign-note {
+        font-size: 9px;
+        text-align: right;
+        margin: 10px 0 0;
+        color: #333;
+    }
+    .pp-allotment-terms-star { color: #dc3545; }
+    .pp-allotment-terms-heading {
+        font-size: 13px;
+        font-weight: 800;
+        text-align: center;
+        margin: 0 0 10px;
+        color: #111;
+    }
+    .pp-allotment-numbered-list {
+        counter-reset: allot-counter;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .pp-allotment-numbered-list li {
+        position: relative;
+        padding-left: 1.6em;
+        margin-bottom: 7px;
+        font-size: 9px;
+        line-height: 1.45;
+        color: #222;
+    }
+    .pp-allotment-numbered-list li::before {
+        counter-increment: allot-counter;
+        content: counter(allot-counter) ". ";
+        position: absolute;
+        left: 0;
+        top: 0;
+        font-weight: 800;
+    }
+
+    .pp-allotment-preview-paper {
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin: 10px 12px 0;
+        max-height: none;
+        overflow-y: visible;
+    }
+
     .pp-upload-here-label {
         font-size: 11px;
         font-weight: 800;

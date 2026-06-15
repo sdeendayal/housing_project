@@ -227,7 +227,13 @@
                             <p class="text-[9px] text-slate-400 m-0 truncate">{{ $doc->original_name }}</p>
                         </div>
                     </a>
-                    <div class="mt-auto border-t border-slate-100 p-2">
+                    <div class="mt-auto border-t border-slate-100 p-2 space-y-1.5">
+                        @if($doc->is_verified)
+                        <div class="flex items-center justify-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 py-1 text-[9px] font-bold text-emerald-700">
+                            <span class="material-symbols-outlined text-[13px]">verified</span>
+                            Verified{{ $doc->verified_at ? ' · '.$doc->verified_at->format('d M Y, h:i A') : '' }}
+                        </div>
+                        @endif
                         <a href="{{ $docViewUrl }}" target="_blank" rel="noopener"
                            class="flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 py-1.5 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
                             <span class="material-symbols-outlined text-[14px]">visibility</span>

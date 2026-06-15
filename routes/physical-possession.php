@@ -12,6 +12,11 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
 
     Route::get('/', [PpLandingController::class, 'index'])->name('landing');
 
+    // Public allotment letter QR verification (no login)
+    Route::get('/allotment/verify/{applicationNumber}', [PpUserController::class, 'publicVerifyAllotment'])
+        ->name('allotment.verify')
+        ->where('applicationNumber', '[0-9]+');
+
     // Legacy PP login URLs → existing citizen login
     Route::redirect('/login', '/mmsay-citizen-login')->name('user.login');
     Route::redirect('/officer/login', '/physical-possession/department/login')->name('officer.login');
@@ -40,6 +45,8 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/dashboard', fn () => redirect()->route('citizen.dashboard'))->name('user.dashboard');
         Route::get('/apply', [PpUserController::class, 'applyForm'])->name('user.apply');
         Route::post('/apply', [PpUserController::class, 'submitApplication'])->name('user.apply.submit');
+        Route::post('/verify-certificate', [PpUserController::class, 'verifyCertificate'])->name('user.certificate.verify');
+        Route::post('/verify-allotment-letter', [PpUserController::class, 'verifyAllotmentLetter'])->name('user.allotment.verify');
         Route::get('/view-form', [PpUserController::class, 'viewPrefilledForm'])->name('user.view-form');
         Route::get('/download-form', [PpUserController::class, 'downloadPrefilledForm'])->name('user.download-form');
         Route::get('/my-applications', [PpUserController::class, 'myApplications'])->name('user.applications');

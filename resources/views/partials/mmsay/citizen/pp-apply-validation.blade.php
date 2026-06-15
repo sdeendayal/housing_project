@@ -7,11 +7,23 @@
     const ALLOWED_EXT = ['pdf', 'jpg', 'jpeg', 'png'];
     const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
 
-    const fields = [
+    const uploadFields = [
 @foreach(\App\Models\PhysicalPossessionDocument::applyFormFields() as $field => $meta)
-        { inputId: 'input_{{ $field }}', zoneId: 'zone_{{ $field }}', label: @json($meta['label']), required: {{ $meta['required'] ? 'true' : 'false' }} },
+@if(!in_array($field, [\App\Models\PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE, \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER], true))
+        { inputId: 'input_{{ $field }}', zoneId: 'zone_{{ $field }}', label: @json($meta['label']), required: true },
+@endif
 @endforeach
     ];
+
+    const manualAllotmentInput = document.getElementById('input_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}');
+    if (manualAllotmentInput && manualAllotmentInput.getAttribute('data-required') === '1') {
+        uploadFields.push({
+            inputId: 'input_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}',
+            zoneId: 'zone_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}',
+            label: 'Allotment Letter',
+            required: true
+        });
+    }
 
     function getExtension(name) {
         const parts = (name || '').split('.');
@@ -26,13 +38,20 @@
     }
 
     function clearFieldHighlight() {
-        fields.forEach(function (field) {
+        uploadFields.forEach(function (field) {
             document.getElementById(field.zoneId)?.classList.remove('pp-upload-error');
         });
+        document.getElementById('possessionCertSection')?.classList.remove('ring-2', 'ring-red-300');
+        document.getElementById('allotmentLetterSection')?.classList.remove('ring-2', 'ring-red-300');
     }
 
     function highlightField(field) {
         clearFieldHighlight();
+        if (field.zoneId === 'possessionCertSection' || field.zoneId === 'allotmentLetterSection') {
+            document.getElementById(field.zoneId)?.classList.add('ring-2', 'ring-red-300');
+            document.getElementById(field.zoneId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
         document.getElementById(field.zoneId)?.classList.add('pp-upload-error');
         document.getElementById(field.zoneId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
@@ -67,9 +86,46 @@
         return null;
     }
 
+    function isAllotmentComplete() {
+        const allotmentFlag = document.getElementById('allotmentLetterVerified');
+        if (allotmentFlag && allotmentFlag.value === '1') {
+            return true;
+        }
+
+        const allotmentInput = document.getElementById('input_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}');
+        if (allotmentInput && allotmentInput.getAttribute('data-required') === '1') {
+            return allotmentInput.files && allotmentInput.files.length > 0;
+        }
+
+        return false;
+    }
+
     function validateFormFirst() {
-        for (let i = 0; i < fields.length; i++) {
-            const field = fields[i];
+        const possessionFlag = document.getElementById('possessionCertificateVerified');
+        if (!possessionFlag || possessionFlag.value !== '1') {
+            return {
+                error: 'Please verify your Possession Certificate (Document 1) before submitting.',
+                field: { zoneId: 'possessionCertSection' }
+            };
+        }
+
+        if (!isAllotmentComplete()) {
+            const allotmentInput = document.getElementById('input_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}');
+            if (allotmentInput && allotmentInput.getAttribute('data-required') === '1') {
+                const fileError = validateFileFirst(allotmentInput, 'Allotment Letter', true);
+                if (fileError) {
+                    return { error: fileError, field: { zoneId: 'zone_{{ \App\Models\PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER }}' } };
+                }
+            }
+
+            return {
+                error: 'Please verify your Allotment Letter (Document 2) before submitting.',
+                field: { zoneId: 'allotmentLetterSection' }
+            };
+        }
+
+        for (let i = 0; i < uploadFields.length; i++) {
+            const field = uploadFields[i];
             const input = document.getElementById(field.inputId);
             const error = validateFileFirst(input, field.label, field.required);
 
@@ -91,7 +147,7 @@
             highlightField(result.field);
             Swal.fire({
                 icon: 'error',
-                title: 'Validation Required',
+                title: 'All 5 Documents Required',
                 text: result.error,
                 confirmButtonText: 'OK',
                 confirmButtonColor: '#dc2626',
@@ -101,7 +157,7 @@
 
         citizenSwalConfirm({
             title: 'Submit Application?',
-            text: 'Please confirm all uploaded documents are correct. You cannot edit after submission.',
+            text: 'All 5 documents are complete. Please confirm they are correct. You cannot edit after submission.',
             confirmButtonText: 'Yes, Submit',
         }).then(function (confirmResult) {
             if (confirmResult.isConfirmed) {

@@ -33,20 +33,23 @@ class PhysicalPossessionDocument extends Model
         'provisional_possession_letter' => 'Provisional Possession Letter',
     ];
 
-    /** @var list<string> */
+    /** @var list<string> All documents required before final submit */
     public const REQUIRED_TYPES = [
         self::TYPE_POSSESSION_CERTIFICATE,
         self::TYPE_ALLOTMENT_LETTER,
         self::TYPE_IDENTITY_PROOF,
-    ];
-
-    /** @var list<string> */
-    public const OPTIONAL_TYPES = [
         self::TYPE_PAYMENT_STATUS,
         self::TYPE_OTHER_SUPPORTING,
     ];
 
+    /** @var list<string> */
+    public const OPTIONAL_TYPES = [];
+
     protected $fillable = [
+        'user_id',
+        'private_purchaser_id',
+        'property_auction_id',
+        'mmsay_application_no',
         'application_id',
         'asset_id',
         'document_type',
@@ -54,6 +57,13 @@ class PhysicalPossessionDocument extends Model
         'original_name',
         'file_size',
         'mime_type',
+        'is_verified',
+        'verified_at',
+    ];
+
+    protected $casts = [
+        'is_verified' => 'boolean',
+        'verified_at' => 'datetime',
     ];
 
     public function application(): BelongsTo

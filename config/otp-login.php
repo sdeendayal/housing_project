@@ -7,6 +7,7 @@ return [
     'contexts' => [
         'citizen' => [
             'role_group' => 'citizen',
+            'otp_purpose' => 'login',
             'login_view' => 'mmsay.citizenLogin',
             'verify_view' => 'mmsay.citizenOtpVerify',
             'login_route' => 'citizen.login',
@@ -18,6 +19,7 @@ return [
         ],
         'department' => [
             'role_group' => 'department',
+            'otp_purpose' => 'department_login',
             'login_view' => 'physical-possession.auth.department-login',
             'verify_view' => 'physical-possession.auth.department-otp-verify',
             'login_route' => 'pp.department.login',

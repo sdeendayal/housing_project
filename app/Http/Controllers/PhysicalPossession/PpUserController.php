@@ -4,11 +4,15 @@ namespace App\Http\Controllers\PhysicalPossession;
 
 use App\Http\Controllers\Controller;
 use App\Services\PhysicalPossessionAssetService;
+use App\Services\OtpVerificationService;
 use App\Models\ApplicationStatusLog;
+use App\Models\AllotmentTable2;
+use App\Models\Otp;
 use App\Models\PhysicalPossessionApplication;
 use App\Models\PhysicalPossessionDocument;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +21,8 @@ use Illuminate\Support\Facades\Storage;
 class PpUserController extends Controller
 {
     public function __construct(
-        private PhysicalPossessionAssetService $assetService
+        private PhysicalPossessionAssetService $assetService,
+        private OtpVerificationService $otpService
     ) {}
 
     // User dashboard
@@ -27,12 +32,13 @@ class PpUserController extends Controller
         $profile = $this->getUserProfile($user);
 
         $applications = PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
             ->latest()
             ->take(5)
             ->get();
 
         $stats = [
-            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->count(),
+            'total' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', '!=', 'draft')->count(),
             'pending' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'pending')->count(),
             'approved' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'approved')->count(),
             'rejected' => PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'rejected')->count(),
@@ -46,7 +52,7 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        $existing = $this->findUserApplication($user);
+        $existing = $this->findSubmittedApplication($user);
         if ($existing) {
             return redirect()->route('pp.user.application.show', $existing)
                 ->with('warning', 'You have already submitted an application. You cannot apply again.');
@@ -54,7 +60,271 @@ class PpUserController extends Controller
 
         $profile = $this->getUserProfile($user);
 
-        return view('physical-possession.user.apply', compact('user', 'profile'));
+        // Backfill: link orphan verified documents to a draft application
+        if (PhysicalPossessionDocument::where('user_id', $user->id)->whereNull('application_id')->where('is_verified', true)->exists()) {
+            $this->getOrCreateDraftApplication($user, $profile);
+        }
+
+        $draftApplication = $this->findDraftApplication($user);
+
+        // Check if possession certificate is already verified for this user
+        $verifiedPossessionCert = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE, $draftApplication);
+
+        $verifiedAllotmentLetter = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER, $draftApplication);
+
+        $allotmentLetter = $this->getAllotmentLetterData($user);
+
+        return view('physical-possession.user.apply', compact(
+            'user',
+            'profile',
+            'verifiedPossessionCert',
+            'verifiedAllotmentLetter',
+            'allotmentLetter'
+        ));
+    }
+
+    /**
+     * Certificate verification — single method for OTP send + OTP verify + file save.
+     * Step 1: request without "otp" → generate and send OTP.
+     * Step 2: request with "otp" → verify OTP, upload file, mark certificate verified.
+     */
+    public function verifyCertificate(Request $request): JsonResponse
+    {
+        // Get logged-in user and mobile number
+        $user = Auth::user();
+        $mobile = $user->mobile;
+
+        if (empty($mobile)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mobile number not found on your profile.',
+            ], 422);
+        }
+
+        $certField = PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE;
+        $purpose = Otp::PURPOSE_POSSESSION_CERTIFICATE;
+
+        $otpResponse = $this->handleDocumentOtpStep($request, $user, $purpose);
+
+        if ($otpResponse) {
+            return $otpResponse;
+        }
+
+        // OTP is correct — auto-generate pre-filled possession certificate PDF and store it
+        $profile = $this->getUserProfile($user);
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', compact('user', 'profile'))
+            ->setPaper('a4');
+
+        $memberFolder = $this->sanitizeStorageSegment(
+            $profile['member_id'] ?? $profile['ppp_id'] ?? 'purchaser_'.$profile['private_purchaser_id']
+        );
+
+        $basePath = $memberFolder.'/verified_certificates/'.$user->id;
+        $storedName = $certField.'_'.now()->format('YmdHis').'.pdf';
+        $filePath = $basePath.'/'.$storedName;
+
+        Storage::disk('public')->put($filePath, $pdf->output());
+
+        $originalName = 'Possession-Certificate-'.$user->mobile.'.pdf';
+        $fileSize = Storage::disk('public')->size($filePath);
+        $mimeType = 'application/pdf';
+
+        $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
+
+        // Create draft application so application_id is saved on the document
+        $draftApplication = $this->getOrCreateDraftApplication($user, $profile);
+
+        $existingCert = PhysicalPossessionDocument::where('user_id', $user->id)
+            ->where('application_id', $draftApplication->id)
+            ->where('document_type', $certField)
+            ->first();
+
+        if ($existingCert) {
+            // Delete old file from storage
+            if ($existingCert->file_path && Storage::disk('public')->exists($existingCert->file_path)) {
+                Storage::disk('public')->delete($existingCert->file_path);
+            }
+
+            // Update existing certificate record
+            $existingCert->update(array_merge([
+                'asset_id' => $assetId,
+                'application_id' => $draftApplication->id,
+                'file_path' => $filePath,
+                'original_name' => $originalName,
+                'file_size' => $fileSize,
+                'mime_type' => $mimeType,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ], $this->buildDocumentReferenceData($profile)));
+
+            $certificate = $existingCert;
+        } else {
+            // Create new verified certificate record (no application yet)
+            $certificate = PhysicalPossessionDocument::create(array_merge([
+                'user_id' => $user->id,
+                'application_id' => $draftApplication->id,
+                'asset_id' => $assetId,
+                'document_type' => $certField,
+                'file_path' => $filePath,
+                'original_name' => $originalName,
+                'file_size' => $fileSize,
+                'mime_type' => $mimeType,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ], $this->buildDocumentReferenceData($profile)));
+        }
+
+        return response()->json([
+            'success' => true,
+            'step' => 'verified',
+            'message' => 'Possession Certificate verified successfully!',
+            'verified_at' => $certificate->verified_at->format('d M Y, h:i A'),
+            'file_name' => $certificate->original_name,
+        ]);
+    }
+
+    /**
+     * Allotment letter verification — OTP send + verify + auto-save PDF from allotment_table2.
+     */
+    public function verifyAllotmentLetter(Request $request): JsonResponse
+    {
+        $user = Auth::user();
+        $mobile = $user->mobile;
+
+        if (empty($mobile)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mobile number not found on your profile.',
+            ], 422);
+        }
+
+        $letterData = $this->getAllotmentLetterData($user);
+
+        if (! $letterData) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Allotment letter data not found for your application.',
+            ], 422);
+        }
+
+        $docField = PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER;
+        $purpose = Otp::PURPOSE_ALLOTMENT_LETTER;
+
+        $otpResponse = $this->handleDocumentOtpStep($request, $user, $purpose);
+
+        if ($otpResponse) {
+            return $otpResponse;
+        }
+
+        $profile = $this->getUserProfile($user);
+        $verifyUrl = route('pp.allotment.verify', $letterData['application_number']);
+        $letter = $letterData;
+        $letter['verify_url'] = $verifyUrl;
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.allotment-letter', compact('letter', 'verifyUrl'))
+            ->setPaper('a4')
+            ->setOption('enable_remote', true)
+            ->setOption('default_font', 'noto sans devanagari');
+
+        $memberFolder = $this->sanitizeStorageSegment(
+            $profile['member_id'] ?? $profile['ppp_id'] ?? 'purchaser_'.$profile['private_purchaser_id']
+        );
+
+        $basePath = $memberFolder.'/verified_certificates/'.$user->id;
+        $storedName = $docField.'_'.now()->format('YmdHis').'.pdf';
+        $filePath = $basePath.'/'.$storedName;
+
+        Storage::disk('public')->put($filePath, $pdf->output());
+
+        $originalName = 'Allotment-Letter-'.$letterData['application_number'].'.pdf';
+        $fileSize = Storage::disk('public')->size($filePath);
+        $mimeType = 'application/pdf';
+        $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
+
+        $draftApplication = $this->getOrCreateDraftApplication($user, $profile);
+
+        $existingDoc = PhysicalPossessionDocument::where('user_id', $user->id)
+            ->where('application_id', $draftApplication->id)
+            ->where('document_type', $docField)
+            ->first();
+
+        if ($existingDoc) {
+            if ($existingDoc->file_path && Storage::disk('public')->exists($existingDoc->file_path)) {
+                Storage::disk('public')->delete($existingDoc->file_path);
+            }
+
+            $existingDoc->update(array_merge([
+                'asset_id' => $assetId,
+                'application_id' => $draftApplication->id,
+                'file_path' => $filePath,
+                'original_name' => $originalName,
+                'file_size' => $fileSize,
+                'mime_type' => $mimeType,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ], $this->buildDocumentReferenceData($profile)));
+
+            $document = $existingDoc;
+        } else {
+            $document = PhysicalPossessionDocument::create(array_merge([
+                'user_id' => $user->id,
+                'application_id' => $draftApplication->id,
+                'asset_id' => $assetId,
+                'document_type' => $docField,
+                'file_path' => $filePath,
+                'original_name' => $originalName,
+                'file_size' => $fileSize,
+                'mime_type' => $mimeType,
+                'is_verified' => true,
+                'verified_at' => now(),
+            ], $this->buildDocumentReferenceData($profile)));
+        }
+
+        return response()->json([
+            'success' => true,
+            'step' => 'verified',
+            'message' => 'Allotment Letter verified and saved successfully!',
+            'verified_at' => $document->verified_at->format('d M Y, h:i A'),
+            'file_name' => $document->original_name,
+        ]);
+    }
+
+    // Public QR verification page for allotment letter
+    public function publicVerifyAllotment(int $applicationNumber)
+    {
+        $allotment = AllotmentTable2::where('application_number', $applicationNumber)->first();
+
+        if (! $allotment) {
+            abort(404, 'Allotment record not found.');
+        }
+
+        $letter = [
+            'application_number' => $allotment->application_number,
+            'family_id' => null,
+            'beneficiary_name' => $allotment->name,
+            'father_name' => $allotment->fathers_or_husband_name,
+            'plot' => $allotment->plot,
+            'sector' => $allotment->Sector,
+            'town_name' => $allotment->town,
+            'district_name' => $allotment->district,
+        ];
+
+        $purchaser = DB::table('property_private_purchasers')
+            ->where('ApplicationNo', $applicationNumber)
+            ->where('IsActive', 1)
+            ->where('IsDeleted', 0)
+            ->first();
+
+        if ($purchaser) {
+            $letter['family_id'] = $purchaser->PPPId;
+            $district = DB::table('districts')->where('DistrictId', $purchaser->DistrictId)->value('DistrictName');
+            $city = DB::table('cities')->where('CityId', $purchaser->CityId)->value('CityName');
+            $letter['district_name'] = $district ?: $letter['district_name'];
+            $letter['town_name'] = $city ?: $letter['town_name'];
+        }
+
+        return view('physical-possession.user.allotment-verify', compact('letter'));
     }
 
     // Pre-filled form — view in browser first
@@ -62,7 +332,7 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        if ($this->findUserApplication($user)) {
+        if ($this->findSubmittedApplication($user)) {
             return redirect()->route('pp.user.applications')
                 ->with('error', 'Form is not available after application submission.');
         }
@@ -77,7 +347,7 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        if ($this->findUserApplication($user)) {
+        if ($this->findSubmittedApplication($user)) {
             return redirect()->route('pp.user.applications')
                 ->with('error', 'Form download is not available after application submission.');
         }
@@ -93,6 +363,13 @@ class PpUserController extends Controller
     // Application submit karna
     public function submitApplication(Request $request)
     {
+        $user = Auth::user();
+        $draftApplication = $this->findDraftApplication($user);
+
+        $verifiedPossessionCert = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE, $draftApplication);
+
+        $verifiedAllotmentLetter = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER, $draftApplication);
+
         $requiredFileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
         $optionalFileRule = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
 
@@ -100,6 +377,18 @@ class PpUserController extends Controller
         $messages = [];
 
         foreach (PhysicalPossessionDocument::applyFormFields() as $field => $meta) {
+            if ($field === PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE && $verifiedPossessionCert) {
+                $rules[$field] = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+
+                continue;
+            }
+
+            if ($field === PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER && $verifiedAllotmentLetter) {
+                $rules[$field] = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+
+                continue;
+            }
+
             $rules[$field] = $meta['required'] ? $requiredFileRule : $optionalFileRule;
             $messages["{$field}.required"] = $meta['label'].' is required.';
             $messages["{$field}.mimes"] = $meta['label'].' must be PDF, JPG, JPEG, or PNG.';
@@ -110,10 +399,20 @@ class PpUserController extends Controller
 
         $request->validate($rules, $messages);
 
-        $user = Auth::user();
-
-        if ($this->findUserApplication($user)) {
+        if ($this->findSubmittedApplication($user)) {
             return back()->with('error', 'You have already submitted an application.');
+        }
+
+        $missingDocuments = $this->missingSubmitDocuments(
+            $request,
+            $verifiedPossessionCert,
+            $verifiedAllotmentLetter
+        );
+
+        if (! empty($missingDocuments)) {
+            return back()
+                ->withInput()
+                ->with('error', 'Please complete all 5 documents before submitting: '.implode(', ', $missingDocuments).'.');
         }
 
         $profile = $this->getUserProfile($user);
@@ -128,30 +427,62 @@ class PpUserController extends Controller
         DB::beginTransaction();
 
         try {
-            // Application save
             $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
 
-            $application = PhysicalPossessionApplication::create([
-                'user_id' => $user->id,
-                'private_purchaser_id' => $profile['private_purchaser_id'],
-                'asset_id' => $assetId,
-                'ppp_id' => $profile['ppp_id'],
-                'member_id' => $profile['member_id'],
-                'slip_id' => $slipId,
-                'application_number' => $applicationNumber,
-                'district_id' => $profile['district_id'],
-                'district_name' => $profile['district'],
-                'mobile' => $user->mobile,
-                'applicant_name' => $profile['name'],
-                'father_name' => $profile['father_name'],
-                'address' => $profile['address'],
-                'registration_details' => $profile['registration_details'],
-                'status' => 'pending',
-                'created_by' => $user->id,
-            ]);
+            if ($draftApplication) {
+                // Finalize existing draft application
+                $draftApplication->update(array_merge([
+                    'slip_id' => $slipId,
+                    'application_number' => $applicationNumber,
+                    'mobile' => $user->mobile,
+                    'applicant_name' => $profile['name'],
+                    'father_name' => $profile['father_name'],
+                    'address' => $profile['address'],
+                    'registration_details' => $profile['registration_details'],
+                    'status' => 'pending',
+                ], $this->buildApplicationReferenceData($profile)));
+
+                $application = $draftApplication->fresh();
+            } else {
+                // Create new application (no OTP-verified draft existed)
+                $application = PhysicalPossessionApplication::create(array_merge([
+                    'user_id' => $user->id,
+                    'slip_id' => $slipId,
+                    'application_number' => $applicationNumber,
+                    'mobile' => $user->mobile,
+                    'applicant_name' => $profile['name'],
+                    'father_name' => $profile['father_name'],
+                    'address' => $profile['address'],
+                    'registration_details' => $profile['registration_details'],
+                    'status' => 'pending',
+                    'created_by' => $user->id,
+                ], $this->buildApplicationReferenceData($profile)));
+            }
 
             // Documents upload aur save
             foreach (PhysicalPossessionDocument::applyFormFields() as $type => $meta) {
+                if ($type === PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE && $verifiedPossessionCert) {
+                    $newPath = $this->copyVerifiedCertToApplication($verifiedPossessionCert, $application, $profile, $type);
+
+                    $verifiedPossessionCert->update([
+                        'application_id' => $application->id,
+                        'file_path' => $newPath,
+                    ]);
+
+                    continue;
+                }
+
+                if ($type === PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER && $verifiedAllotmentLetter) {
+                    $newPath = $this->copyVerifiedCertToApplication($verifiedAllotmentLetter, $application, $profile, $type);
+
+                    $verifiedAllotmentLetter->update([
+                        'application_id' => $application->id,
+                        'file_path' => $newPath,
+                    ]);
+
+                    continue;
+                }
+
                 $file = $request->file($type);
 
                 if (! $file) {
@@ -160,7 +491,8 @@ class PpUserController extends Controller
 
                 $path = $this->storeApplicationDocument($application, $profile, $type, $file);
 
-                PhysicalPossessionDocument::create([
+                PhysicalPossessionDocument::create(array_merge([
+                    'user_id' => $user->id,
                     'application_id' => $application->id,
                     'asset_id' => $assetId,
                     'document_type' => $type,
@@ -168,7 +500,7 @@ class PpUserController extends Controller
                     'original_name' => $file->getClientOriginalName(),
                     'file_size' => $file->getSize(),
                     'mime_type' => $file->getMimeType(),
-                ]);
+                ], $this->buildDocumentReferenceData($profile)));
             }
 
             // Status log
@@ -227,12 +559,14 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
         $applications = PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
             ->latest()
             ->get();
 
         $ppHasApplication = $applications->isNotEmpty();
+        $hasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
 
-        return view('physical-possession.user.applications', compact('applications', 'ppHasApplication'));
+        return view('physical-possession.user.applications', compact('applications', 'ppHasApplication', 'hasDraftApplication'));
     }
 
     // Visit performa PDF
@@ -268,6 +602,13 @@ class PpUserController extends Controller
     public function showApplication(PhysicalPossessionApplication $application)
     {
         $this->ensureUserOwnsApplication($application);
+
+        // Draft application — send user back to the apply form to continue
+        if ($application->status === 'draft') {
+            return redirect()->route('pp.user.apply')
+                ->with('info', 'Please complete and submit your application.');
+        }
+
         $application->load(['documents', 'statusLogs', 'officerAction.officer']);
 
         return view('physical-possession.user.show-application', compact('application'));
@@ -303,42 +644,7 @@ class PpUserController extends Controller
     // User ka profile data database se laana
     private function getUserProfile(User $user): array
     {
-        $mobile = $user->mobile;
-        $purchaser = null;
-
-        if ($mobile) {
-            $purchaser = DB::table('property_private_purchasers as ppp')
-                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-                ->leftJoin('cities as c', 'ppp.CityId', '=', 'c.CityId')
-                ->leftJoin('sectors as s', 'ppp.SectorId', '=', 's.SectorId')
-                ->leftJoin('property_auction_detail as pad', function ($join) {
-                    $join->on('pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
-                        ->where('pad.IsDeleted', 0)
-                        ->where('pad.IsActive', 1);
-                })
-                ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
-                ->where('ppp.IsActive', 1)
-                ->where('ppp.IsDeleted', 0)
-                ->where(function ($query) use ($mobile) {
-                    $query->where('ppp.MobileNo', $mobile)
-                        ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
-                })
-                ->select(
-                    'ppp.*',
-                    'd.DistrictName',
-                    'd.DistrictId',
-                    'c.CityName',
-                    's.SectorName',
-                    'pad.FlatCost',
-                    'pad.ReceivedAmount',
-                    'pad.BalanceAmount',
-                    'pad.AssetId',
-                    'pr.AssetName',
-                    'ppp.ApplicationNo'
-                )
-                ->orderBy('ppp.PrivatePurchaserId')
-                ->first();
-        }
+        $purchaser = $this->findPurchaserForUser($user);
 
         $name = $user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Applicant');
         $fatherName = $purchaser?->PurchaserFatherName ?? '—';
@@ -376,7 +682,8 @@ class PpUserController extends Controller
         }
 
         $sectorName = $purchaser?->SectorName ?? '—';
-        $urbanEstate = strtoupper(trim($purchaser?->CityName ?? $purchaser?->DistrictName ?? '—'));
+        $cityName = $purchaser?->CityName ?? '—';
+        $urbanEstate = strtoupper(trim($cityName !== '—' ? $cityName : ($district !== '—' ? $district : '—')));
         $officeLocation = $urbanEstate !== '—' ? $urbanEstate : strtoupper(trim($district));
 
         return [
@@ -385,11 +692,24 @@ class PpUserController extends Controller
             'mobile' => $user->mobile ?? '—',
             'district' => $district,
             'district_id' => $districtId,
+            'city_id' => $purchaser?->CityId ?? null,
+            'city_name' => $cityName,
+            'sector_id' => $purchaser?->SectorId ?? null,
+            'sector_name' => $sectorName,
+            'branch_id' => $purchaser?->BranchId ?? null,
+            'flat_id' => $purchaser?->Flat_Id ?? null,
             'address' => $address,
             'registration_details' => $registrationDetails,
             'application_no' => $purchaser?->ApplicationNo ?? null,
             'private_purchaser_id' => $purchaser?->PrivatePurchaserId ?? null,
+            'property_auction_id' => $purchaser?->PropertyAuctionId ?? null,
             'asset_id' => $purchaser?->AssetId ? (int) $purchaser->AssetId : null,
+            'asset_name' => $purchaser?->AssetName ?? '—',
+            'asset_size' => $purchaser?->AssetSize ?? null,
+            'asset_unit' => $purchaser?->Unit ?? null,
+            'flat_cost' => $purchaser?->FlatCost ?? null,
+            'received_amount' => $purchaser?->ReceivedAmount ?? null,
+            'balance_amount' => $purchaser?->BalanceAmount ?? null,
             'ppp_id' => $purchaser?->PPPId ?? null,
             'member_id' => $purchaser?->MemberID ?? null,
             'category' => $purchaser?->CasteCategoryName ?? '—',
@@ -397,13 +717,254 @@ class PpUserController extends Controller
             'sector' => $sectorName,
             'urban_estate' => $urbanEstate,
             'office_location' => $officeLocation,
-            'asset_name' => $purchaser?->AssetName ?? '—',
         ];
+    }
+
+    private function findPurchaserForUser(User $user): ?object
+    {
+        $select = [
+            'ppp.*',
+            'd.DistrictName',
+            'd.DistrictId',
+            'c.CityName',
+            's.SectorName',
+            'pad.PropertyAuctionId',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'pad.AssetId',
+            'pr.AssetName',
+            'pr.AssetSize',
+            'pr.Unit',
+            'ppp.ApplicationNo',
+        ];
+
+        if ($user->private_purchaser_id) {
+            return $this->purchaserBaseQuery()
+                ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
+                ->select($select)
+                ->orderByDesc('pad.PropertyAuctionId')
+                ->first();
+        }
+
+        $mobile = $user->mobile;
+
+        if (! $mobile) {
+            return null;
+        }
+
+        return $this->purchaserBaseQuery()
+            ->where(function ($query) use ($mobile) {
+                $query->where('ppp.MobileNo', $mobile)
+                    ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
+            })
+            ->select($select)
+            ->orderByDesc('pad.PropertyAuctionId')
+            ->first();
+    }
+
+    private function purchaserBaseQuery()
+    {
+        return DB::table('property_private_purchasers as ppp')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'ppp.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'ppp.SectorId', '=', 's.SectorId')
+            ->leftJoin('property_auction_detail as pad', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+                    ->where('pad.IsDeleted', 0)
+                    ->where('pad.IsActive', 1);
+            })
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->where('ppp.IsActive', 1)
+            ->where('ppp.IsDeleted', 0);
+    }
+
+    private function buildApplicationReferenceData(array $profile): array
+    {
+        return [
+            'private_purchaser_id' => $profile['private_purchaser_id'],
+            'asset_id' => $profile['asset_id'],
+            'property_auction_id' => $profile['property_auction_id'],
+            'mmsay_application_no' => $profile['application_no'],
+            'ppp_id' => $profile['ppp_id'],
+            'member_id' => $profile['member_id'],
+            'district_id' => $profile['district_id'],
+            'district_name' => $profile['district'],
+            'branch_id' => $profile['branch_id'],
+            'city_id' => $profile['city_id'],
+            'city_name' => $profile['city_name'],
+            'sector_id' => $profile['sector_id'],
+            'sector_name' => $profile['sector_name'],
+            'flat_id' => $profile['flat_id'],
+            'asset_name' => $profile['asset_name'] !== '—' ? $profile['asset_name'] : null,
+            'asset_size' => $profile['asset_size'],
+            'asset_unit' => $profile['asset_unit'],
+            'flat_cost' => $profile['flat_cost'],
+            'received_amount' => $profile['received_amount'],
+            'balance_amount' => $profile['balance_amount'],
+        ];
+    }
+
+    private function buildDocumentReferenceData(array $profile): array
+    {
+        return [
+            'private_purchaser_id' => $profile['private_purchaser_id'],
+            'property_auction_id' => $profile['property_auction_id'],
+            'mmsay_application_no' => $profile['application_no'],
+            'asset_id' => $profile['asset_id'],
+        ];
+    }
+
+    /**
+     * @return list<string> Human-readable labels for documents still missing at submit time.
+     */
+    private function missingSubmitDocuments(
+        Request $request,
+        ?PhysicalPossessionDocument $verifiedPossessionCert,
+        ?PhysicalPossessionDocument $verifiedAllotmentLetter
+    ): array {
+        $missing = [];
+
+        foreach (PhysicalPossessionDocument::applyFormFields() as $type => $meta) {
+            if (! $meta['required']) {
+                continue;
+            }
+
+            if ($type === PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE) {
+                if (! $verifiedPossessionCert) {
+                    $missing[] = $meta['label'];
+                }
+
+                continue;
+            }
+
+            if ($type === PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER) {
+                if (! $verifiedAllotmentLetter && ! $request->hasFile($type)) {
+                    $missing[] = $meta['label'];
+                }
+
+                continue;
+            }
+
+            if (! $request->hasFile($type)) {
+                $missing[] = $meta['label'];
+            }
+        }
+
+        return $missing;
+    }
+
+    private function handleDocumentOtpStep(Request $request, User $user, string $purpose): ?JsonResponse
+    {
+        $mobile = $user->mobile;
+
+        if (empty($mobile)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mobile number not found on your profile.',
+            ], 422);
+        }
+
+        if (! $request->filled('otp')) {
+            $result = $request->boolean('resend')
+                ? $this->otpService->resend($mobile, $purpose, $user->id, 'PP Document')
+                : $this->otpService->send($mobile, $purpose, $user->id, 'PP Document');
+
+            return response()->json($result, $result['success'] ? 200 : 422);
+        }
+
+        $request->validate([
+            'otp' => 'required|digits:6',
+        ], [
+            'otp.required' => 'Please enter the OTP.',
+            'otp.digits' => 'OTP must be exactly 6 digits.',
+        ]);
+
+        $result = $this->otpService->verify($mobile, $purpose, $request->otp);
+
+        if (! $result['success']) {
+            return response()->json($result, 422);
+        }
+
+        return null;
+    }
+
+    private function findSubmittedApplication(User $user): ?PhysicalPossessionApplication
+    {
+        return PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', '!=', 'draft')
+            ->latest()
+            ->first();
+    }
+
+    private function findDraftApplication(User $user): ?PhysicalPossessionApplication
+    {
+        return PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', 'draft')
+            ->latest()
+            ->first();
+    }
+
+    private function getOrCreateDraftApplication(User $user, array $profile): PhysicalPossessionApplication
+    {
+        $draft = $this->findDraftApplication($user);
+
+        if ($draft) {
+            $draft->update($this->buildApplicationReferenceData($profile));
+            $this->linkOrphanVerifiedDocuments($user, $draft);
+
+            return $draft->fresh();
+        }
+
+        $suffix = 'U'.$user->id.'-'.now()->format('YmdHis');
+
+        $draft = PhysicalPossessionApplication::create(array_merge([
+            'user_id' => $user->id,
+            'slip_id' => 'SLIP-DRAFT-'.$suffix,
+            'application_number' => 'DRAFT-'.$suffix,
+            'mobile' => $user->mobile,
+            'applicant_name' => $profile['name'],
+            'father_name' => $profile['father_name'],
+            'address' => $profile['address'],
+            'registration_details' => $profile['registration_details'],
+            'status' => 'draft',
+            'created_by' => $user->id,
+        ], $this->buildApplicationReferenceData($profile)));
+
+        $this->linkOrphanVerifiedDocuments($user, $draft);
+
+        return $draft;
+    }
+
+    private function linkOrphanVerifiedDocuments(User $user, PhysicalPossessionApplication $application): void
+    {
+        PhysicalPossessionDocument::where('user_id', $user->id)
+            ->whereNull('application_id')
+            ->where('is_verified', true)
+            ->update(['application_id' => $application->id]);
+    }
+
+    private function findVerifiedDocument(
+        User $user,
+        string $documentType,
+        ?PhysicalPossessionApplication $draftApplication
+    ): ?PhysicalPossessionDocument {
+        $query = PhysicalPossessionDocument::where('user_id', $user->id)
+            ->where('document_type', $documentType)
+            ->where('is_verified', true);
+
+        if ($draftApplication) {
+            $query->where('application_id', $draftApplication->id);
+        } else {
+            $query->whereNull('application_id');
+        }
+
+        return $query->first();
     }
 
     private function findUserApplication(User $user): ?PhysicalPossessionApplication
     {
-        return PhysicalPossessionApplication::where('user_id', $user->id)->latest()->first();
+        return $this->findSubmittedApplication($user);
     }
 
     private function ensureUserOwnsApplication(PhysicalPossessionApplication $application): void
@@ -429,6 +990,27 @@ class PpUserController extends Controller
         return $file->storeAs($basePath, $storedName, 'public');
     }
 
+    // Copy already-verified certificate file into the application folder
+    private function copyVerifiedCertToApplication(
+        PhysicalPossessionDocument $verifiedCert,
+        PhysicalPossessionApplication $application,
+        array $profile,
+        string $type
+    ): string {
+        $memberFolder = $this->sanitizeStorageSegment(
+            $profile['member_id'] ?? $profile['ppp_id'] ?? 'purchaser_'.$profile['private_purchaser_id']
+        );
+
+        $basePath = $memberFolder.'/physical_possession_applications/'.$application->secure_id;
+        $extension = pathinfo($verifiedCert->file_path, PATHINFO_EXTENSION);
+        $storedName = $type.'_'.substr($application->secure_id, 0, 8).'.'.$extension;
+        $newPath = $basePath.'/'.$storedName;
+
+        Storage::disk('public')->copy($verifiedCert->file_path, $newPath);
+
+        return $newPath;
+    }
+
     private function sanitizeStorageSegment(?string $value): string
     {
         $clean = preg_replace('/[^A-Za-z0-9_-]/', '_', trim((string) $value));
@@ -446,5 +1028,84 @@ class PpUserController extends Controller
         } while (PhysicalPossessionApplication::where('application_number', $applicationNumber)->exists());
 
         return $applicationNumber;
+    }
+
+    // Allotment letter data from allotment_table2 + user profile
+    private function getAllotmentLetterData(User $user): ?array
+    {
+        $profile = $this->getUserProfile($user);
+
+        if (empty($profile['application_no'])) {
+            return null;
+        }
+
+        $allotment = AllotmentTable2::where('application_number', $profile['application_no'])->first();
+
+        if (! $allotment) {
+            return null;
+        }
+
+        $districtName = $this->resolveAllotmentDistrictName($allotment, $profile);
+        $townName = $this->resolveAllotmentTownName($allotment, $profile);
+
+        return [
+            'application_number' => $allotment->application_number,
+            'family_id' => $profile['ppp_id'],
+            // Name from purchaser profile (old template: $data->ppt['fullNameLL'])
+            'beneficiary_name' => $profile['name'] ?: $allotment->name,
+            'father_name' => $profile['father_name'] !== '—' ? $profile['father_name'] : $allotment->fathers_or_husband_name,
+            // Plot details from allotment_table2 (old template: $alot->plot, $alot->Sector)
+            'plot' => $allotment->plot,
+            'sector' => $allotment->Sector,
+            // Town/District (old template: PptMembers btNameLL / districtNameLL)
+            'town_name' => $townName,
+            'district_name' => $districtName,
+        ];
+    }
+
+    // Town name — profile city first, then cities table lookup by district/town code
+    private function resolveAllotmentTownName(AllotmentTable2 $allotment, array $profile): string
+    {
+        if ($profile['urban_estate'] !== '—' && ! empty($profile['urban_estate'])) {
+            return $profile['urban_estate'];
+        }
+
+        $townCode = trim((string) $allotment->town);
+        $districtCode = trim((string) $allotment->district);
+
+        if ($townCode !== '' && $districtCode !== '') {
+            $city = DB::table('cities')
+                ->where('DistrictId', (int) $profile['district_id'])
+                ->where('CityId', 'like', '%'.$townCode)
+                ->value('CityName');
+
+            if ($city) {
+                return $city;
+            }
+        }
+
+        return $townCode;
+    }
+
+    // District name — profile district first
+    private function resolveAllotmentDistrictName(AllotmentTable2 $allotment, array $profile): string
+    {
+        if ($profile['district'] !== '—' && ! empty($profile['district'])) {
+            return $profile['district'];
+        }
+
+        $districtCode = trim((string) $allotment->district);
+
+        if ($districtCode !== '' && ! empty($profile['district_id'])) {
+            $district = DB::table('districts')
+                ->where('DistrictId', $profile['district_id'])
+                ->value('DistrictName');
+
+            if ($district) {
+                return $district;
+            }
+        }
+
+        return $districtCode;
     }
 }
