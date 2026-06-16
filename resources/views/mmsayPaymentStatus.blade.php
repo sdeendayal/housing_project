@@ -7,9 +7,6 @@
     <div class="border border-slate-100 rounded-lg p-2.5 bg-white mb-2">
         <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application</p>
         <p class="text-[12px] font-bold text-slate-800 break-all">{{ $applicationId }}</p>
-        @if ($assetName)
-        <p class="text-[10px] text-slate-500 m-0 mt-0.5">Asset: {{ $assetName }}</p>
-        @endif
     </div>
 
     <div class="citizen-card">

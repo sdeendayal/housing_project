@@ -69,6 +69,9 @@ Route::middleware(['role:citizen'])->group(function () {
     Route::get('/mmsay-allotment-letter', [PpUserController::class, 'viewAllotmentLetter'])
         ->name('citizen.allotment-letter');
 
+    Route::get('/mmsay-allotment-letter/download', [PpUserController::class, 'downloadAllotmentLetter'])
+        ->name('citizen.allotment-letter.download');
+
     Route::get('/mmsay-possession-certificate', [PpUserController::class, 'viewPossessionCertificate'])
         ->name('citizen.possession-certificate');
 

@@ -87,5 +87,68 @@
     @include('partials.mmsay.citizen-swal')
     @stack('scripts')
     @include('partials.mmsay.citizen-toast')
+
+    <div id="citizenDownloadLoader" class="citizen-download-loader hidden" aria-live="polite" aria-busy="true">
+        <div class="citizen-download-loader__card">
+            <div class="citizen-download-loader__spinner"></div>
+            <p class="citizen-download-loader__text" data-download-loader-text>Preparing download…</p>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const overlay = document.getElementById('citizenDownloadLoader');
+            if (!overlay) return;
+
+            const textEl = overlay.querySelector('[data-download-loader-text]');
+            let hideTimer = null;
+
+            function showLoader(message) {
+                clearTimeout(hideTimer);
+                if (textEl) textEl.textContent = message || 'Downloading PDF…';
+                overlay.classList.remove('hidden');
+                overlay.classList.add('is-active');
+                overlay.setAttribute('aria-busy', 'true');
+            }
+
+            function hideLoader() {
+                overlay.classList.remove('is-active');
+                overlay.setAttribute('aria-busy', 'false');
+                hideTimer = setTimeout(function () {
+                    overlay.classList.add('hidden');
+                }, 200);
+            }
+
+            function isDownloadLink(anchor) {
+                if (!anchor || !anchor.href || anchor.href.startsWith('javascript:')) return false;
+                if (anchor.dataset.noDownloadLoader !== undefined) return false;
+                if (anchor.target === '_blank') return false;
+                if (anchor.classList.contains('citizen-download-link')) return true;
+                const href = anchor.getAttribute('href') || '';
+                return href.includes('/download') || href.includes('download-form') || anchor.hasAttribute('download');
+            }
+
+            // Show loader before click; browser handles the actual PDF download natively.
+            function armLoader(link) {
+                showLoader(link.dataset.downloadLoaderText || 'Downloading PDF…');
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(hideLoader, 5000);
+            }
+
+            document.addEventListener('pointerdown', function (event) {
+                if (event.pointerType === 'mouse' && event.button !== 0) return;
+                const link = event.target.closest('a');
+                if (!link || !isDownloadLink(link)) return;
+                armLoader(link);
+            });
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Enter' && event.key !== ' ') return;
+                const link = event.target.closest('a');
+                if (!link || !isDownloadLink(link)) return;
+                armLoader(link);
+            });
+        })();
+    </script>
 </body>
 </html>

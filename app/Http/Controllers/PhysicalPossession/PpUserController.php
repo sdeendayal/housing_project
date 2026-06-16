@@ -400,6 +400,29 @@ class PpUserController extends Controller
         ]);
     }
 
+    // Allotment letter PDF download
+    public function downloadAllotmentLetter()
+    {
+        $user = Auth::user();
+        $letterData = $this->getAllotmentLetterData($user);
+
+        if (! $letterData) {
+            return redirect()->route('citizen.allotment-letter')
+                ->with('error', 'Allotment letter data not found for your account.');
+        }
+
+        $verifyUrl = route('pp.allotment.verify', $letterData['application_number']);
+        $letter = $letterData;
+        $letter['verify_url'] = $verifyUrl;
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.allotment-letter', compact('letter', 'verifyUrl'))
+            ->setPaper('a4')
+            ->setOption('enable_remote', true)
+            ->setOption('default_font', 'noto sans devanagari');
+
+        return $pdf->download('Allotment-Letter-'.$letterData['application_number'].'.pdf');
+    }
+
     // Possession certificate form — citizen sidebar page
     public function viewPossessionCertificate()
     {

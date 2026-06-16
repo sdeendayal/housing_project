@@ -56,7 +56,7 @@
 
             @if (count($propertyDetails) > 0)
             <div class="pt-1 border-t border-slate-100">
-                <h3 class="text-[13px] font-extrabold text-indigo-700 uppercase tracking-wider mb-2 mt-2">Property Details</h3>
+                <h3 class="text-[13px] font-extrabold text-indigo-700 uppercase tracking-wider mb-2 mt-2">Allotted Property Details</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                     @include('partials.mmsay.citizen.detail-grid', ['items' => $propertyDetails])
                 </div>

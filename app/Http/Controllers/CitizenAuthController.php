@@ -661,11 +661,14 @@ class CitizenAuthController extends Controller
             return '—';
         }
 
-        if (stripos($value, 'E') !== false) {
-            return number_format((float) $value, 0, '.', '');
+        $clean = trim($value);
+
+        // Only expand Excel-style scientific notation (e.g. 1.23E+11), not text like "RC-EMI-1"
+        if (preg_match('/^\d+(\.\d+)?[eE][+\-]?\d+$/', $clean)) {
+            return number_format((float) $clean, 0, '.', '');
         }
 
-        return $value;
+        return $clean;
     }
 
 }

@@ -43,7 +43,7 @@
         {{-- 3. Property Details --}}
         <a class="nav-v2 {{ $activeNav === 'property-details' ? 'active' : '' }}" href="{{ route('citizen.property-details') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'property-details') style="font-variation-settings:'FILL' 1" @endif>home_work</span></span>
-            Property Details
+            Allotted Property Details
         </a>
 
         {{-- 4. Allotment Letter --}}

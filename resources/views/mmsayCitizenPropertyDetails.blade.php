@@ -1,5 +1,5 @@
 @extends('layouts.mmsayCitizen', [
-    'pageTitle' => 'Property Details',
+    'pageTitle' => 'Allotted Property Details',
     'activeNav' => 'property-details',
 ])
 
@@ -13,7 +13,7 @@
     @if ($hasProperty && count($propertyDetails) > 0)
     <div class="citizen-card">
         <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-[11px] font-extrabold text-slate-800">Property Details</h2>
+            <h2 class="text-[11px] font-extrabold text-slate-800">Allotted Property Details</h2>
         </div>
         <div class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
