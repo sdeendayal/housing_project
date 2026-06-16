@@ -47,18 +47,13 @@
                     <p class="text-[12px] font-bold text-slate-800">{{ $district }}</p>
                 </div>
                 <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Annual Income</p>
-                    <p class="text-[12px] font-bold text-emerald-700">{{ $annualIncome }}</p>
-                </div>
-                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
                     <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application No.</p>
                     <p class="text-[12px] font-bold text-slate-800">{{ $applicationNo }}</p>
                 </div>
-            </div>
-
-            <div class="mt-2 border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Residential Address</p>
-                <p class="text-[12px] font-medium text-slate-800 leading-relaxed">{{ $address }}</p>
+                <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Residential Address</p>
+                    <p class="text-[12px] font-medium text-slate-800 leading-relaxed">{{ $address }}</p>
+                </div>
             </div>
         </div>
     </div>

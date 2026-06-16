@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenAuthController;
 use App\Http\Controllers\OtpAuthController;
+use App\Http\Controllers\PhysicalPossession\PpUserController;
 use App\Http\Controllers\PropertyManagementController;
 
 Route::get('/', function () {
@@ -64,6 +65,12 @@ Route::middleware(['role:citizen'])->group(function () {
 
     Route::get('/mmsay/citizen/property-details', [CitizenAuthController::class, 'propertyDetails'])
         ->name('citizen.property-details');
+
+    Route::get('/mmsay-allotment-letter', [PpUserController::class, 'viewAllotmentLetter'])
+        ->name('citizen.allotment-letter');
+
+    Route::get('/mmsay-possession-certificate', [PpUserController::class, 'viewPossessionCertificate'])
+        ->name('citizen.possession-certificate');
 
     Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
         ->name('citizen.logout');

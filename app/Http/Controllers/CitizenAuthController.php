@@ -285,7 +285,6 @@ class CitizenAuthController extends Controller
         $aadhaarMasked = $this->maskIdentifier($purchaser?->MemberID ?? $purchaser?->PPPId);
         $category = $purchaser?->CasteCategoryName ?? '—';
         $district = $purchaser?->DistrictName ?? '—';
-        $annualIncome = '—';
         $address = $purchaser?->Address ? strtoupper(trim($purchaser->Address)) : '—';
 
         $isActive = $purchaser
@@ -304,7 +303,6 @@ class CitizenAuthController extends Controller
             'aadhaarMasked' => $aadhaarMasked,
             'category' => $category,
             'district' => strtoupper($district),
-            'annualIncome' => $annualIncome,
             'address' => $address,
         ]);
     }

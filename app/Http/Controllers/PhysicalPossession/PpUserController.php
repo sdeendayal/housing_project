@@ -381,6 +381,42 @@ class PpUserController extends Controller
         return view('physical-possession.user.allotment-verify', compact('letter'));
     }
 
+    // Allotment letter — citizen sidebar page
+    public function viewAllotmentLetter()
+    {
+        $user = Auth::user();
+        $profile = $this->getUserProfile($user);
+        $letter = $this->getAllotmentLetterData($user);
+        $verifyUrl = $letter ? route('pp.allotment.verify', $letter['application_number']) : null;
+        $applicationId = $profile['application_no']
+            ? 'HR-MMSAY-'.$profile['application_no']
+            : '—';
+
+        return view('mmsayCitizenAllotmentLetter', [
+            'displayName' => $profile['name'],
+            'applicationId' => $applicationId,
+            'letter' => $letter,
+            'verifyUrl' => $verifyUrl,
+        ]);
+    }
+
+    // Possession certificate form — citizen sidebar page
+    public function viewPossessionCertificate()
+    {
+        $user = Auth::user();
+        $profile = $this->getUserProfile($user);
+        $applicationId = $profile['application_no']
+            ? 'HR-MMSAY-'.$profile['application_no']
+            : '—';
+
+        return view('mmsayCitizenPossessionCertificate', [
+            'displayName' => $profile['name'],
+            'applicationId' => $applicationId,
+            'user' => $user,
+            'profile' => $profile,
+        ]);
+    }
+
     // Pre-filled form — view in browser first
     public function viewPrefilledForm()
     {

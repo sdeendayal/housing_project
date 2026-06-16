@@ -2,7 +2,7 @@
     $activeNav = $activeNav ?? '';
     $sidebarName = $displayName ?? ($fullName ?? (auth()->user()?->name ?? 'Citizen'));
     $sidebarAppId = $applicationId ?? ($applicationNo ?? '—');
-    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show'], true);
+    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show', 'physical-possession'], true);
     $ppHasApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', '!=', 'draft')->exists();
     $ppHasDraftApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', 'draft')->exists();
     $latestPpApplication = $ppHasApplication
@@ -28,27 +28,51 @@
     <div class="flex-1 overflow-y-auto px-2 py-3">
         <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 px-2 mb-1.5">Menu</p>
 
+        {{-- 1. Dashboard --}}
         <a class="nav-v2 {{ $activeNav === 'dashboard' ? 'active' : '' }}" href="{{ route('citizen.dashboard') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'dashboard') style="font-variation-settings:'FILL' 1" @endif>dashboard</span></span>
             Dashboard
         </a>
-        <a class="nav-v2 {{ $activeNav === 'payments' ? 'active' : '' }}" href="{{ route('citizen.payment-status') }}">
-            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'payments') style="font-variation-settings:'FILL' 1" @endif>payments</span></span>
-            Payments
+
+        {{-- 2. Profile --}}
+        <a class="nav-v2 {{ $activeNav === 'profile' ? 'active' : '' }}" href="{{ route('citizen.profile') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'profile') style="font-variation-settings:'FILL' 1" @endif>account_circle</span></span>
+            Profile
         </a>
+
+        {{-- 3. Property Details --}}
         <a class="nav-v2 {{ $activeNav === 'property-details' ? 'active' : '' }}" href="{{ route('citizen.property-details') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'property-details') style="font-variation-settings:'FILL' 1" @endif>home_work</span></span>
             Property Details
         </a>
 
-        <div class="pp-nav-group mb-1">
+        {{-- 4. Allotment Letter --}}
+        <a class="nav-v2 {{ $activeNav === 'allotment-letter' ? 'active' : '' }}" href="{{ route('citizen.allotment-letter') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'allotment-letter') style="font-variation-settings:'FILL' 1" @endif>mail</span></span>
+            Allotment Letter
+        </a>
+
+        {{-- 5. Payment --}}
+        <a class="nav-v2 {{ $activeNav === 'payments' ? 'active' : '' }}" href="{{ route('citizen.payment-status') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'payments') style="font-variation-settings:'FILL' 1" @endif>payments</span></span>
+            Payment
+        </a>
+
+        {{-- 6. Possession Certificate --}}
+        <a class="nav-v2 {{ $activeNav === 'possession-certificate' ? 'active' : '' }}" href="{{ route('citizen.possession-certificate') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'possession-certificate') style="font-variation-settings:'FILL' 1" @endif>description</span></span>
+            Possession Certificate
+        </a>
+
+        {{-- 7. Physical Possession --}}
+        <div class="pp-nav-group mb-1 mt-1">
             <button type="button"
                     id="ppNavToggle"
                     class="nav-v2 w-full border-0 cursor-pointer {{ $ppSubmenuOpen ? 'pp-nav-group-open' : '' }}"
                     aria-expanded="{{ $ppSubmenuOpen ? 'true' : 'false' }}"
                     aria-controls="ppNavSubmenu">
                 <span class="nav-v2-icon">
-                    <span class="material-symbols-outlined text-[15px]">home_work</span>
+                    <span class="material-symbols-outlined text-[15px]">real_estate_agent</span>
                 </span>
                 <span class="flex items-center gap-1 min-w-0 flex-1 text-left">
                     <span class="truncate">Physical Possession</span>
@@ -75,13 +99,6 @@
                 </a>
             </div>
         </div>
-
-        <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 px-2 mb-1.5 mt-3">Account</p>
-
-        <a class="nav-v2 {{ $activeNav === 'profile' ? 'active' : '' }}" href="{{ route('citizen.profile') }}">
-            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'profile') style="font-variation-settings:'FILL' 1" @endif>account_circle</span></span>
-            Profile
-        </a>
     </div>
 
     <div class="p-2.5 border-t border-slate-100">
