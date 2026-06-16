@@ -4,6 +4,37 @@
 ])
 
 @section('content')
+    {{-- Payment status banner (top of dashboard) --}}
+    <div class="citizen-payment-banner {{ $isFullyPaid ? 'citizen-payment-banner--success' : 'citizen-payment-banner--warning' }}">
+        <div class="citizen-payment-banner__icon">
+            <span class="material-symbols-outlined">{{ $isFullyPaid ? 'check_circle' : 'info' }}</span>
+        </div>
+        <div class="citizen-payment-banner__body">
+            @if ($isFullyPaid)
+                <p class="citizen-payment-banner__title">Full Payment Completed</p>
+                <p class="citizen-payment-banner__message">
+                    Your payment has been completed successfully. You are eligible for the Physical Possession process.
+                </p>
+            @else
+                <p class="citizen-payment-banner__title">Payment Pending</p>
+                <p class="citizen-payment-banner__message">
+                    Your full payment has not been completed yet. Please complete your payment to become eligible for the Physical Possession process.
+                </p>
+            @endif
+            <div class="citizen-payment-banner__stats">
+                <span><strong>Total Due:</strong> {{ $totalAmountFormatted }}</span>
+                <span><strong>Paid:</strong> {{ $totalPaidFormatted }}</span>
+                <span><strong>Remaining:</strong> {{ $outstandingFormatted }}</span>
+            </div>
+        </div>
+        @unless ($isFullyPaid)
+        <a href="{{ route('citizen.payment-status') }}" class="citizen-payment-banner__action">
+            Complete Payment
+            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </a>
+        @endunless
+    </div>
+
     {{-- Summary --}}
     <div class="border border-slate-100 rounded-lg p-2.5 bg-white">
         <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application Status</p>
@@ -109,6 +140,7 @@
         </div>
     </div>
 
+    @if ($isFullyPaid)
     {{-- Physical Possession scheme --}}
     <div class="citizen-card" id="physical-possession">
         <div class="px-3 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
@@ -187,6 +219,7 @@
             @endif
         </div>
     </div>
+    @endif
 
     {{-- Quick links --}}
     <div class="citizen-card">
@@ -207,7 +240,7 @@
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                 My Application
             </a>
-            @else
+            @elseif ($isFullyPaid)
             <a href="{{ route('pp.user.apply') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
                 <span class="material-symbols-outlined text-[16px]">edit_document</span>
                 Physical Possession

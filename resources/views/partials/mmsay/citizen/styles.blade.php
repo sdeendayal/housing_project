@@ -818,4 +818,108 @@
         0% { opacity: 1; transform: scale(0.9); }
         100% { opacity: 0; transform: scale(1.6); }
     }
+
+    .citizen-payment-banner {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        background: #fff;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        margin-bottom: 2px;
+    }
+
+    .citizen-payment-banner--success {
+        border: 1px solid #6ee7b7;
+        border-left: 4px solid #10b981;
+        background: linear-gradient(135deg, #ecfdf5 0%, #fff 55%);
+    }
+
+    .citizen-payment-banner--warning {
+        border: 1px solid #fcd34d;
+        border-left: 4px solid #f59e0b;
+        background: linear-gradient(135deg, #fffbeb 0%, #fff 55%);
+    }
+
+    .citizen-payment-banner__icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .citizen-payment-banner--success .citizen-payment-banner__icon {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .citizen-payment-banner--warning .citizen-payment-banner__icon {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .citizen-payment-banner__body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .citizen-payment-banner__title {
+        font-size: 12px;
+        font-weight: 800;
+        color: #1e293b;
+        margin: 0 0 4px;
+    }
+
+    .citizen-payment-banner__message {
+        font-size: 11px;
+        font-weight: 500;
+        color: #475569;
+        line-height: 1.5;
+        margin: 0 0 8px;
+    }
+
+    .citizen-payment-banner__stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 16px;
+        font-size: 10px;
+        color: #64748b;
+    }
+
+    .citizen-payment-banner__stats strong {
+        color: #334155;
+        font-weight: 700;
+    }
+
+    .citizen-payment-banner__action {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 14px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        text-decoration: none;
+        background: linear-gradient(135deg, #6366f1, #4f46e5);
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+        align-self: center;
+        white-space: nowrap;
+    }
+
+    .citizen-payment-banner__action:hover {
+        color: #fff;
+        opacity: 0.95;
+    }
+
+    .nav-v2--locked {
+        opacity: 0.55;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
 </style>

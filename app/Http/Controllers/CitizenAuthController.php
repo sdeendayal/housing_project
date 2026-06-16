@@ -55,11 +55,15 @@ class CitizenAuthController extends Controller
         $outstanding = $paymentSummary['outstanding'];
         $paymentProgress = $paymentSummary['paymentProgress'];
 
+        // Clear names for dashboard payment banner
+        $totalDue = $flatCost;
+        $remainingBalance = $outstanding;
+
         $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
 
         $isAllotted = $auction !== null;
-        $isFullyPaid = $isAllotted && $outstanding <= 0 && $flatCost > 0;
-        $hasOutstanding = $isAllotted && $outstanding > 0;
+        $isFullyPaid = $isAllotted && $remainingBalance <= 0 && $totalDue > 0;
+        $hasOutstanding = $isAllotted && $remainingBalance > 0;
 
         $applicationNo = $purchaser?->ApplicationNo;
         $applicationId = $applicationNo
@@ -106,6 +110,10 @@ class CitizenAuthController extends Controller
             'purchaseDate' => $purchaseDate?->format('d M Y') ?? '—',
             'basicDetails' => $applicationSections['basicDetails'],
             'propertyDetails' => $applicationSections['propertyDetails'],
+            'totalDue' => $totalDue,
+            'totalPaid' => $totalPaid,
+            'remainingBalance' => $remainingBalance,
+            'isFullyPaid' => $isFullyPaid,
             'totalAmountFormatted' => $this->formatIndianCurrency($flatCost),
             'totalPaidFormatted' => $this->formatIndianCurrency($totalPaid),
             'outstandingFormatted' => $this->formatIndianCurrency($outstanding),
@@ -168,6 +176,7 @@ class CitizenAuthController extends Controller
         $paymentProgress = $paymentSummary['paymentProgress'];
 
         $hasOutstanding = $auction !== null && $outstanding > 0;
+        $isFullyPaid = $auction !== null && $outstanding <= 0 && $flatCost > 0;
         $applicationNo = $purchaser?->ApplicationNo;
         $applicationId = $applicationNo
             ? 'HR-MMSAY-'.($purchaseDate?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
@@ -183,6 +192,7 @@ class CitizenAuthController extends Controller
             'outstandingFormatted' => $this->formatIndianCurrency($outstanding),
             'paymentProgress' => $paymentProgress,
             'hasOutstanding' => $hasOutstanding,
+            'isFullyPaid' => $isFullyPaid,
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],
@@ -252,6 +262,7 @@ class CitizenAuthController extends Controller
             'flatStatus' => $flatStatus,
             'propertyDetails' => $applicationSections['propertyDetails'],
             'hasProperty' => $auction !== null,
+            'isFullyPaid' => $isFullyPaid,
         ]);
     }
 

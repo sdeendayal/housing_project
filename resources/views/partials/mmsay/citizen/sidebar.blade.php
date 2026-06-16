@@ -8,6 +8,49 @@
     $latestPpApplication = $ppHasApplication
         ? \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', '!=', 'draft')->latest()->first()
         : null;
+
+    // Payment status for sidebar (use value from controller when available)
+    if (! isset($isFullyPaid) && auth()->check()) {
+        $isFullyPaid = false;
+        $authUser = auth()->user();
+        $purchaserId = $authUser->private_purchaser_id;
+        if (! $purchaserId && $authUser->mobile) {
+            $mobileVariants = array_unique([$authUser->mobile, '91'.$authUser->mobile, (int) $authUser->mobile]);
+            $purchaserId = \Illuminate\Support\Facades\DB::table('property_private_purchasers')
+                ->where('IsActive', 1)->where('IsDeleted', 0)
+                ->whereIn('MobileNo', $mobileVariants)
+                ->value('PrivatePurchaserId');
+        }
+        if ($purchaserId) {
+            $sidebarAuction = \Illuminate\Support\Facades\DB::table('property_auction_detail')
+                ->where('PurchaserID', $purchaserId)->where('IsDeleted', 0)->where('IsActive', 1)
+                ->orderByDesc('CreatedDate')->first();
+            if ($sidebarAuction) {
+                $sidebarFlatCost = (float) $sidebarAuction->FlatCost;
+                $sidebarReceived = (float) $sidebarAuction->ReceivedAmount;
+                $sidebarBalance = (float) $sidebarAuction->BalanceAmount;
+                $sidebarInstallments = \Illuminate\Support\Facades\DB::table('installment_due')
+                    ->where('AssetId', $sidebarAuction->AssetId)->where('IsDeleted', 0)->where('IsActive', 1)->get();
+                if ($sidebarInstallments->isEmpty()) {
+                    $sidebarRemaining = $sidebarBalance;
+                } else {
+                    $sidebarLedger = \Illuminate\Support\Facades\DB::table('ledger')
+                        ->where('AssetId', $sidebarAuction->AssetId)->where('Is_Deleted', 0)->where('Is_Active', 1)
+                        ->get()->keyBy('InstallmentNumber');
+                    $sidebarEmiPaid = 0.0;
+                    foreach ($sidebarInstallments as $sidebarRow) {
+                        $sidebarLedgerRow = $sidebarLedger->get($sidebarRow->InstallmentNumber);
+                        if ($sidebarLedgerRow && (int) $sidebarLedgerRow->RemainingBalance === 0 && (int) $sidebarLedgerRow->Payable_amount === 0) {
+                            $sidebarEmiPaid += (float) $sidebarRow->EMIAmount;
+                        }
+                    }
+                    $sidebarRemaining = $sidebarFlatCost > 0 ? max(0.0, $sidebarFlatCost - ($sidebarReceived + $sidebarEmiPaid)) : 0.0;
+                }
+                $isFullyPaid = $sidebarFlatCost > 0 && $sidebarRemaining <= 0;
+            }
+        }
+    }
+    $isFullyPaid = $isFullyPaid ?? false;
 @endphp
 
 <nav id="sidebar"
@@ -41,6 +84,7 @@
             Property Details
         </a>
 
+        @if ($isFullyPaid)
         <div class="pp-nav-group mb-1">
             <button type="button"
                     id="ppNavToggle"
@@ -75,6 +119,7 @@
                 </a>
             </div>
         </div>
+        @endif
 
         <p class="text-[8px] font-bold uppercase tracking-widest text-slate-400 px-2 mb-1.5 mt-3">Account</p>
 

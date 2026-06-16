@@ -52,6 +52,60 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
+        // Full payment must be completed before applying (same tables as citizen dashboard)
+        $isFullyPaid = false;
+        $purchaserId = $user->private_purchaser_id;
+        if (! $purchaserId && $user->mobile) {
+            $mobileVariants = array_unique([$user->mobile, '91'.$user->mobile, (int) $user->mobile]);
+            $purchaserId = DB::table('property_private_purchasers')
+                ->where('IsActive', 1)
+                ->where('IsDeleted', 0)
+                ->whereIn('MobileNo', $mobileVariants)
+                ->value('PrivatePurchaserId');
+        }
+        if ($purchaserId) {
+            $auction = DB::table('property_auction_detail')
+                ->where('PurchaserID', $purchaserId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->orderByDesc('CreatedDate')
+                ->first();
+            if ($auction) {
+                $flatCost = (float) $auction->FlatCost;
+                $receivedAmount = (float) $auction->ReceivedAmount;
+                $balanceAmount = (float) $auction->BalanceAmount;
+                $installmentRows = DB::table('installment_due')
+                    ->where('AssetId', $auction->AssetId)
+                    ->where('IsDeleted', 0)
+                    ->where('IsActive', 1)
+                    ->get();
+                if ($installmentRows->isEmpty()) {
+                    $remainingBalance = $balanceAmount;
+                } else {
+                    $ledgerByNumber = DB::table('ledger')
+                        ->where('AssetId', $auction->AssetId)
+                        ->where('Is_Deleted', 0)
+                        ->where('Is_Active', 1)
+                        ->get()
+                        ->keyBy('InstallmentNumber');
+                    $emiPaid = 0.0;
+                    foreach ($installmentRows as $row) {
+                        $ledger = $ledgerByNumber->get($row->InstallmentNumber);
+                        if ($ledger && (int) $ledger->RemainingBalance === 0 && (int) $ledger->Payable_amount === 0) {
+                            $emiPaid += (float) $row->EMIAmount;
+                        }
+                    }
+                    $totalPaid = $receivedAmount + $emiPaid;
+                    $remainingBalance = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
+                }
+                $isFullyPaid = $flatCost > 0 && $remainingBalance <= 0;
+            }
+        }
+        if (! $isFullyPaid) {
+            return redirect()->route('citizen.dashboard')
+                ->with('warning', 'Complete your full payment to unlock Physical Possession eligibility.');
+        }
+
         $existing = $this->findSubmittedApplication($user);
         if ($existing) {
             return redirect()->route('pp.user.application.show', $existing)
@@ -80,7 +134,7 @@ class PpUserController extends Controller
             'verifiedPossessionCert',
             'verifiedAllotmentLetter',
             'allotmentLetter'
-        ));
+        ) + ['isFullyPaid' => true]);
     }
 
     /**
