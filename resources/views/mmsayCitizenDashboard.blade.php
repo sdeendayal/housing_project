@@ -140,7 +140,6 @@
         </div>
     </div>
 
-    @if ($isFullyPaid)
     {{-- Physical Possession scheme --}}
     <div class="citizen-card" id="physical-possession">
         <div class="px-3 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2">
@@ -219,7 +218,6 @@
             @endif
         </div>
     </div>
-    @endif
 
     {{-- Quick links --}}
     <div class="citizen-card">
@@ -240,7 +238,7 @@
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                 My Application
             </a>
-            @elseif ($isFullyPaid)
+            @else
             <a href="{{ route('pp.user.apply') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
                 <span class="material-symbols-outlined text-[16px]">edit_document</span>
                 Physical Possession

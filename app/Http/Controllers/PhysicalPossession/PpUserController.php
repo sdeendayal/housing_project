@@ -103,7 +103,7 @@ class PpUserController extends Controller
         }
         if (! $isFullyPaid) {
             return redirect()->route('citizen.dashboard')
-                ->with('warning', 'Complete your full payment to unlock Physical Possession eligibility.');
+                ->with('warning', 'Your full payment has not been completed yet. Please complete your payment to become eligible for the Physical Possession process.');
         }
 
         $existing = $this->findSubmittedApplication($user);
