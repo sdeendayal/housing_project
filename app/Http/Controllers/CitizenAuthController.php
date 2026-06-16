@@ -282,7 +282,8 @@ class CitizenAuthController extends Controller
             ? strtoupper(trim($purchaser->PurchaserFatherName))
             : '—';
         $mobile = $user->mobile ?? ($purchaser?->MobileNo ? (string) $purchaser->MobileNo : '—');
-        $aadhaarMasked = $this->maskIdentifier($purchaser?->MemberID ?? $purchaser?->PPPId);
+        $idLabel = $purchaser?->MemberID ? 'Member ID' : 'Family ID';
+        $idValue = $this->detailValue($purchaser?->MemberID ?? $purchaser?->PPPId);
         $category = $purchaser?->CasteCategoryName ?? '—';
         $district = $purchaser?->DistrictName ?? '—';
         $address = $purchaser?->Address ? strtoupper(trim($purchaser->Address)) : '—';
@@ -300,7 +301,8 @@ class CitizenAuthController extends Controller
             'accountStatus' => $isActive ? 'Active' : 'Inactive',
             'fatherName' => $fatherName,
             'mobile' => $mobile,
-            'aadhaarMasked' => $aadhaarMasked,
+            'idLabel' => $idLabel,
+            'idValue' => $idValue,
             'category' => $category,
             'district' => strtoupper($district),
             'address' => $address,
@@ -494,18 +496,6 @@ class CitizenAuthController extends Controller
         }
 
         return null;
-    }
-
-    private function maskIdentifier(?string $value): string
-    {
-        if (! $value || trim($value) === '') {
-            return '—';
-        }
-
-        $clean = preg_replace('/\s+/', '', $value);
-        $lastFour = strlen($clean) >= 4 ? substr($clean, -4) : $clean;
-
-        return 'XXXX-XXXX-'.$lastFour;
     }
 
     private function formatIndianCurrency(float $amount): string

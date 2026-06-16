@@ -35,8 +35,8 @@
                     <p class="text-[12px] font-bold text-slate-800">{{ $mobile }}</p>
                 </div>
                 <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Aadhaar</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $aadhaarMasked }}</p>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">{{ $idLabel }}</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $idValue }}</p>
                 </div>
                 <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
                     <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Category</p>
