@@ -80,6 +80,7 @@
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Date</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Amount</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500 hidden sm:table-cell">Mode</th>
+                        <th class="px-2 py-1.5 text-center font-bold text-slate-500">Download</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
@@ -89,6 +90,14 @@
                         <td class="px-2 py-1.5 text-slate-700 whitespace-nowrap">{{ $receipt->date_formatted }}</td>
                         <td class="px-2 py-1.5 font-semibold text-emerald-700 whitespace-nowrap">{{ $receipt->amount_formatted }}</td>
                         <td class="px-2 py-1.5 text-slate-600 hidden sm:table-cell">{{ $receipt->mode }}</td>
+                        <td class="px-2 py-1.5 text-center whitespace-nowrap">
+                            <a href="{{ route('citizen.cash-receipt.download', $receipt->id) }}"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-indigo-200 bg-indigo-50 text-[9px] font-bold text-indigo-700 no-underline hover:bg-indigo-100"
+                                title="Download cash receipt">
+                                <span class="material-symbols-outlined text-[12px]">download</span>
+                                PDF
+                            </a>
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>

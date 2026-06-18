@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Models\PhysicalPossessionApplication;
 use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -309,6 +311,48 @@ class CitizenAuthController extends Controller
         ]);
     }
 
+    public function downloadCashReceipt(int $receiptId): Response
+    {
+        $user = Auth::user();
+        $receipt = $this->findCashReceiptForUser($user, $receiptId);
+
+        if (! $receipt) {
+            abort(404);
+        }
+
+        $purchaser = $this->findPurchaserForUser($user);
+        $receiptNumber = $this->formatReceiptNumber($receipt->receipt_number);
+
+        $receiptData = [
+            'receipt_number' => $receiptNumber,
+            'amount' => $this->formatIndianCurrency((float) $receipt->total_paid_amount),
+            'amount_numeric' => number_format((float) $receipt->total_paid_amount, 2),
+            'payment_date' => $receipt->created_date
+                ? Carbon::parse($receipt->created_date)->format('d M Y')
+                : '—',
+            'purchaser_name' => strtoupper(trim($user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'))),
+            'father_name' => $purchaser?->PurchaserFatherName
+                ? strtoupper(trim($purchaser->PurchaserFatherName))
+                : '—',
+            'application_no' => $purchaser?->ApplicationNo ? (string) $purchaser->ApplicationNo : '—',
+            'mobile' => $user->mobile ?? ($purchaser?->MobileNo ? (string) $purchaser->MobileNo : '—'),
+            'asset_number' => (string) $receipt->asset_number,
+            'asset_name' => $receipt->asset_name ?? '—',
+            'em_office' => $receipt->em_office ?? '—',
+            'district' => $receipt->district_name ?? '—',
+            'city' => $receipt->city_name ?? '—',
+            'sector' => $receipt->sector_name ?? '—',
+            'mode' => 'Cash Receipt',
+        ];
+
+        $pdf = Pdf::loadView('mmsay.citizen.pdf.cash-receipt', ['receipt' => $receiptData])
+            ->setPaper('a4');
+
+        $safeNumber = preg_replace('/[^\w\-]/', '_', $receiptNumber) ?: 'receipt';
+
+        return $pdf->download('Cash-Receipt-'.$safeNumber.'.pdf');
+    }
+
     private function findPurchaserForUser(User $user): ?object
     {
         if ($user->private_purchaser_id) {
@@ -341,6 +385,46 @@ class CitizenAuthController extends Controller
             })
             ->select('ppp.*', 'd.DistrictName')
             ->orderBy('ppp.PrivatePurchaserId')
+            ->first();
+    }
+
+    private function findCashReceiptForUser(User $user, int $receiptId): ?object
+    {
+        $purchaser = $this->findPurchaserForUser($user);
+
+        if (! $purchaser) {
+            return null;
+        }
+
+        $auction = DB::table('property_auction_detail')
+            ->where('PurchaserID', $purchaser->PrivatePurchaserId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->orderByDesc('CreatedDate')
+            ->first();
+
+        if (! $auction) {
+            return null;
+        }
+
+        return DB::table('cash_receipt_details as cr')
+            ->leftJoin('em_offices as eo', 'cr.BranchId', '=', 'eo.BranchId')
+            ->leftJoin('districts as d', 'cr.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'cr.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'cr.SectorId', '=', 's.SectorId')
+            ->leftJoin('property_registration as pr', 'cr.asset_number', '=', 'pr.AssetId')
+            ->where('cr.id', $receiptId)
+            ->where('cr.asset_number', $auction->AssetId)
+            ->where('cr.IsDeleted', 0)
+            ->where('cr.IsActive', 1)
+            ->select(
+                'cr.*',
+                'eo.BranchName as em_office',
+                'd.DistrictName as district_name',
+                'c.CityName as city_name',
+                's.SectorName as sector_name',
+                'pr.AssetName as asset_name'
+            )
             ->first();
     }
 
@@ -631,6 +715,7 @@ class CitizenAuthController extends Controller
                 $date = $row->created_date ? Carbon::parse($row->created_date) : null;
 
                 return (object) [
+                    'id' => (int) $row->id,
                     'receipt_number' => $this->formatReceiptNumber($row->receipt_number),
                     'date_formatted' => $date?->format('d M Y') ?? '—',
                     'amount_formatted' => $this->formatIndianCurrency((float) $row->total_paid_amount),

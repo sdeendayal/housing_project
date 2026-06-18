@@ -8,7 +8,7 @@
         <div class="px-3 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between gap-2 flex-wrap">
             <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Allotment Letter</h2>
             @if (!empty($letter))
-            <a href="{{ route('citizen.allotment-letter.download') }}" class="citizen-download-link inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-indigo-200 bg-indigo-50 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100" data-download-loader-text="Downloading allotment letter…">
+            <a href="{{ route('citizen.allotment-letter.download') }}" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-indigo-200 bg-indigo-50 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
                 <span class="material-symbols-outlined text-[14px]">download</span>
                 Download PDF
             </a>

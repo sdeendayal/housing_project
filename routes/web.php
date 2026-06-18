@@ -53,7 +53,7 @@ Route::middleware('')->group(function () {
 });
 
 // Citizen protected routes
-Route::middleware(['role:citizen'])->group(function () {
+Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay/citizen/dashboard', [CitizenAuthController::class, 'dashboard'])
         ->name('citizen.dashboard');
 
@@ -62,6 +62,10 @@ Route::middleware(['role:citizen'])->group(function () {
 
     Route::get('/mmsay-payment-status', [CitizenAuthController::class, 'paymentStatus'])
         ->name('citizen.payment-status');
+
+    Route::get('/mmsay/citizen/cash-receipt/{receipt}/download', [CitizenAuthController::class, 'downloadCashReceipt'])
+        ->where('receipt', '[0-9]+')
+        ->name('citizen.cash-receipt.download');
 
     Route::get('/mmsay/citizen/property-details', [CitizenAuthController::class, 'propertyDetails'])
         ->name('citizen.property-details');
