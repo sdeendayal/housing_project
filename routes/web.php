@@ -5,10 +5,11 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenAuthController;
 use App\Http\Controllers\OtpAuthController;
 use App\Http\Controllers\PropertyManagementController;
+use App\Http\Controllers\CmsController;
+use App\Http\Controllers\WebsiteController;
 
-Route::get('/', function () {
-    return view('home.index');
-})->name('home');
+
+Route::get('/', [WebsiteController::class, 'index']);
 
 Route::get('/help', function () {
     return view('home.help');
@@ -82,17 +83,11 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'role:department'])->group(function () {
-<<<<<<< HEAD
 
     Route::get(
         '/mmsay-department-dashboard',
         [PropertyManagementController::class, 'dashboard']
     )->name('mmsay.dashboard');
-=======
-    Route::get('/mmsay-department-dashboard', function () {
-        return view('mmsay.departmentDashboard');
-    })->name('department.dashboard');
->>>>>>> 9b9cf2ea7e18654b6f7b4bfbc1448f7c788a5f5d
 
     Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
 
@@ -107,7 +102,38 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/mmsay-department-allotted-properties', function () {
         return view('mmsay.deptartmentPropertyAllotment');
-    });
+    });   
+
+    Route::get('/mmsay-department-draw', [PropertyManagementController::class, 'mmsayDepartmentDraw']);
+
+    Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
+
+    // CMS Routes
+
+    Route::get('/mmsay-department-add-banner', [CmsController::class, 'addBanner']);
+
+    Route::post('/department-banners-store', [CmsController::class, 'saveBanner'])
+        ->name('department-banners-store');
+
+    Route::get('/banner-delete/{id}', [CmsController::class, 'deleteBanner'])
+        ->name('banner-delete');
+
+    Route::get('/banner-deactivate/{id}', [CmsController::class, 'deactivateBanner'])
+        ->name('banner-deactivate');
+
+    Route::get('/banner-activate/{id}', [CmsController::class, 'activateBanner'])
+        ->name('banner-activate');
+
+    Route::get('/mmsay-department-add-news', [CmsController::class, 'addNews']);
+
+    Route::post('/department-news-store', [CmsController::class, 'saveNews'])->name('department-news-store');
+
+    Route::put('news-update/{id}',[CmsController::class, 'updateNews'])->name('news-update');
+
+    Route::get('/mmsay-department-add-district-officer', [CmsController::class, 'departmentAddDistrictOfficer'])
+    ->name('mmsay-department-add-district-officer');
+
+    Route::post('/officers/store', [CmsController::class, 'storeOfficer'])->name('officers.store');
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

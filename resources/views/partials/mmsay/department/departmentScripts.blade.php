@@ -1,20 +1,75 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
-setTimeout(() => {
+document.addEventListener('DOMContentLoaded', function () {
 
-    let toast = document.getElementById('successToast');
+    const imageInput = document.getElementById('bannerImage');
+    const previewImage = document.getElementById('previewImage');
+    const placeholder = document.getElementById('previewPlaceholder');
 
-    if(toast){
-        toast.style.transition = "0.4s";
-        toast.style.opacity = "0";
+    imageInput.addEventListener('change', function (e) {
 
-        setTimeout(()=>{
-            toast.remove();
-        },400);
-    }
+        const file = e.target.files[0];
 
-},3000);
+        if (!file) {
+            previewImage.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = function (event) {
+
+            previewImage.src = event.target.result;
+            previewImage.classList.remove('hidden');
+
+            placeholder.classList.add('hidden');
+        };
+
+        reader.readAsDataURL(file);
+    });
+
+});
+</script>
+<script>
+    // Simple micro-interaction for toggle
+    const toggle = document.querySelector('input[type="checkbox"]');
+    toggle.addEventListener('change', function() {
+        const parent = this.closest('div');
+        if (this.checked) {
+            console.log('Banner will be set as active immediately');
+        }
+    });
+
+    // Handle form focus visual polish
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            input.parentElement.classList.add('scale-[1.005]');
+            input.parentElement.style.transition = 'transform 0.2s ease';
+        });
+        input.addEventListener('blur', () => {
+            input.parentElement.classList.remove('scale-[1.005]');
+        });
+    });
+</script>
+<script>
+    setTimeout(() => {
+
+        let toast = document.getElementById('successToast');
+
+        if (toast) {
+            toast.style.transition = "0.4s";
+            toast.style.opacity = "0";
+
+            setTimeout(() => {
+                toast.remove();
+            }, 400);
+        }
+
+    }, 3000);
 </script>
 
 {{-- <script>

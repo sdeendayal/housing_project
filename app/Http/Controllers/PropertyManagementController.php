@@ -29,11 +29,38 @@ class PropertyManagementController extends Controller
             ->where('IsActive', 1)
             ->sum('total_paid_amount');
 
-        $pendingInstallments = DB::table('installment_due')
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1)
-            ->where('DueAmount', '>', 0)
-            ->count();
+        // ❌ OLD pendingInstallments REMOVED
+
+        // 🚀 NEW EMI LOGIC (FINAL)
+        $emiData = DB::select("
+        SELECT 
+    SUM(i.total_emi) AS total_emi,
+    SUM(IFNULL(l.paid_emi, 0)) AS paid_emi,
+    SUM(i.total_emi - IFNULL(l.paid_emi, 0)) AS pending_emi
+
+FROM 
+(
+    SELECT 
+        i.AssetId,
+        COUNT(*) AS total_emi
+    FROM installment_due i
+    INNER JOIN property_private_purchasers p
+        ON p.Flat_Id = i.AssetId
+    GROUP BY i.AssetId
+) i
+
+LEFT JOIN 
+(
+    SELECT 
+        AssetId,
+        COUNT(DISTINCT InstallmentNumber) AS paid_emi
+    FROM ledger
+    GROUP BY AssetId
+) l 
+ON l.AssetId = i.AssetId;
+    ");
+
+        $emiData = $emiData[0];
 
         $totalPurchasers = DB::table('property_private_purchasers')
             ->where('IsDeleted', 0)
@@ -96,7 +123,7 @@ class PropertyManagementController extends Controller
             'totalApplications',
             'allottedUnits',
             'totalRevenue',
-            'pendingInstallments',
+            'emiData',
             'totalPurchasers'
         ));
     }
@@ -259,5 +286,56 @@ class PropertyManagementController extends Controller
             ->where('c.CityName', $name)
             ->pluck('s.SectorName');
     }
+
+
+    public function mmsayDepartmentDraw()
+    {
+        $districts = DB::table('property_registration as pr')
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'pr.DistrictId')
+            ->select(
+                'd.DistrictId',
+                'd.DistrictName',
+                DB::raw('COUNT(pr.AssetId) as total_assets')
+            )
+            ->groupBy('d.DistrictId', 'd.DistrictName')
+            ->orderBy('total_assets', 'DESC')
+            ->get();
+
+        // 👉 Grand Total calculate
+        $grandTotal = $districts->sum('total_assets');
+
+        return view('mmsay.departmentDraw', compact('districts', 'grandTotal'));
+    }
+
+    public function districtDetails($id)
+    {
+        $query = DB::table('property_registration as pr')
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'pr.DistrictId')
+            ->where('pr.DistrictId', $id)
+            ->select(
+                'pr.AssetId',
+                'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit',
+                'd.DistrictName'
+            );
+
+        // total records
+        $totalRecords = $query->count();
+
+        // pagination (20 per page)
+        $data = $query->paginate(10);
+
+        $districtName = DB::table('districts')
+            ->where('DistrictId', $id)
+            ->value('DistrictName');
+
+        return view('mmsay.departmentDrawDetails', compact(
+            'data',
+            'districtName',
+            'totalRecords'
+        ));
+    }
+
 
 }

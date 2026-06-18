@@ -388,14 +388,17 @@
                         <a href="{{ route('pp.landing') }}"
                             class="relative bg-surface-container-lowest border-2 border-red-300 rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-red-50 transition-all duration-300 overflow-hidden">
                             <span class="pp-scheme-new-badge-sm absolute top-1 right-1 text-[8px] px-1.5 py-0.5">NEW</span>
-                            <span class="absolute bottom-0 left-0 w-full h-1 bg-red-200 group-hover:bg-red-600 transition-all duration-300"></span>
-                            <span class="material-symbols-outlined text-red-600 text-4xl group-hover:scale-110 transition-transform duration-300"
+                            <span
+                                class="absolute bottom-0 left-0 w-full h-1 bg-red-200 group-hover:bg-red-600 transition-all duration-300"></span>
+                            <span
+                                class="material-symbols-outlined text-red-600 text-4xl group-hover:scale-110 transition-transform duration-300"
                                 style="font-variation-settings: 'FILL' 0;">home_work</span>
                             <div>
                                 <div class="text-xs font-bold text-red-700 leading-tight">Physical Possession</div>
                             </div>
                         </a>
-                        <div class="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+                        <div
+                            class="absolute left-0 top-full mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
                             <a href="{{ route('citizen.login') }}"
                                 class="flex items-center gap-2 px-4 py-3 hover:bg-amber-50 text-sm font-medium text-gray-700 transition-all">
                                 <span class="material-symbols-outlined text-[18px]">person</span>
@@ -421,26 +424,13 @@
                         <div id="slider" class="flex gap-4 transition-transform duration-700 ease-in-out">
 
                             <!-- Slide 1 -->
-                            <div class="min-w-[calc(100%-16px)] flex justify-center">
-                                <img src="banner.jpeg"
-                                    class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                    alt="Banner 1">
-                            </div>
-
-                            <!-- Slide 2 -->
-                            {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
-                            <img src="banner8.jpg"
-                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                alt="Banner 2">
-                        </div> --}}
-
-                            <!-- Slide 3 -->
-                            {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
-                            <img src="banner2.jpg"
-                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                alt="Banner 3">
-                        </div> --}}
-
+                            @foreach ($banners as $banner)
+                                <div class="min-w-full flex justify-center">
+                                    <img src="{{ asset('uploads/banner/' . $banner->image) }}"
+                                        class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                        alt="{{ $banner->title }}">
+                                </div>
+                            @endforeach
                         </div>
 
                         <!-- Left Button -->
@@ -505,9 +495,11 @@
                                 <p class="text-xs text-on-surface font-medium">
                                     <span class="pp-scheme-new-badge-sm text-[8px] px-1 py-0.5 mr-1">NEW</span>
                                     Physical Possession Application Portal live —
-                                    <a href="{{ route('citizen.login') }}" class="text-sky-600 font-bold hover:underline">User Login</a>
+                                    <a href="{{ route('citizen.login') }}"
+                                        class="text-sky-600 font-bold hover:underline">User Login</a>
                                     |
-                                    <a href="{{ route('pp.department.login') }}" class="text-sky-600 font-bold hover:underline">Officer Login</a>
+                                    <a href="{{ route('pp.department.login') }}"
+                                        class="text-sky-600 font-bold hover:underline">Officer Login</a>
                                 </p>
                             </div>
                         </div>
