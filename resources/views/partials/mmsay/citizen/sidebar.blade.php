@@ -64,7 +64,13 @@
             Possession Certificate
         </a>
 
-        {{-- 7. Physical Possession --}}
+        {{-- 7. Grievances --}}
+        <a class="nav-v2 {{ $activeNav === 'grievances' ? 'active' : '' }}" href="{{ route('citizen.grievances.index') }}">
+            <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'grievances') style="font-variation-settings:'FILL' 1" @endif>support_agent</span></span>
+            Grievances
+        </a>
+
+        {{-- 8. Physical Possession --}}
         <div class="pp-nav-group mb-1 mt-1">
             <button type="button"
                     id="ppNavToggle"

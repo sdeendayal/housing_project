@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenAuthController;
+use App\Http\Controllers\GrievanceController;
 use App\Http\Controllers\OtpAuthController;
 use App\Http\Controllers\PhysicalPossession\PpUserController;
 use App\Http\Controllers\PropertyManagementController;
@@ -78,6 +79,19 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
 
     Route::get('/mmsay-possession-certificate', [PpUserController::class, 'viewPossessionCertificate'])
         ->name('citizen.possession-certificate');
+
+    Route::get('/mmsay/citizen/grievances', [GrievanceController::class, 'index'])
+        ->name('citizen.grievances.index');
+
+    Route::get('/mmsay/citizen/grievances/create', [GrievanceController::class, 'create'])
+        ->name('citizen.grievances.create');
+
+    Route::post('/mmsay/citizen/grievances', [GrievanceController::class, 'store'])
+        ->name('citizen.grievances.store');
+
+    Route::get('/mmsay/citizen/grievances/{grievance}', [GrievanceController::class, 'show'])
+        ->name('citizen.grievances.show')
+        ->where('grievance', '[a-f0-9]{32}');
 
     Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
         ->name('citizen.logout');
