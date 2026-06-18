@@ -40,7 +40,7 @@
     @endif
 
     @if (session('warning'))
-        citizenSwal({ icon: 'warning', title: 'Please Wait', text: @json(session('warning')) });
+        citizenSwal({ icon: 'warning', title: @json(session('warning_title', 'Notice')), text: @json(session('warning')) });
     @endif
 
     @if (session('error'))

@@ -52,52 +52,35 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        // Full payment must be completed before applying (same tables as citizen dashboard)
-        $isFullyPaid = false;
+        // PP apply: ledger se sirf installment jama — kam se kam 26664 (pehle ki jama count nahi)
+        $installmentPaid = 0;
         $purchaserId = $user->private_purchaser_id;
         if (! $purchaserId && $user->mobile) {
-            $mobileVariants = array_unique([$user->mobile, '91'.$user->mobile, (int) $user->mobile]);
             $purchaserId = DB::table('property_private_purchasers')
                 ->where('IsActive', 1)
                 ->where('IsDeleted', 0)
-                ->whereIn('MobileNo', $mobileVariants)
+                ->whereIn('MobileNo', [$user->mobile, '91'.$user->mobile])
                 ->value('PrivatePurchaserId');
         }
         if ($purchaserId) {
-            $auction = DB::table('property_auction_detail')
+            $assetId = DB::table('property_auction_detail')
                 ->where('PurchaserID', $purchaserId)
                 ->where('IsDeleted', 0)
                 ->where('IsActive', 1)
                 ->orderByDesc('CreatedDate')
-                ->first();
-            if ($auction) {
-                $flatCost = (float) $auction->FlatCost;
-                $receivedAmount = (float) $auction->ReceivedAmount;
-                $balanceAmount = (float) $auction->BalanceAmount;
-                $installmentRows = DB::table('installment_due')
-                    ->where('AssetId', $auction->AssetId)
-                    ->where('IsDeleted', 0)
-                    ->where('IsActive', 1)
-                    ->get();
-                if ($installmentRows->isEmpty()) {
-                    $remainingBalance = $balanceAmount;
-                } else {
-                    $ledgerByNumber = DB::table('ledger')
-                        ->where('AssetId', $auction->AssetId)
-                        ->where('Is_Deleted', 0)
-                        ->where('Is_Active', 1)
-                        ->get()
-                        ->keyBy('InstallmentNumber');
-                    $installmentPayments = (float) $ledgerByNumber->sum(fn ($ledger) => (float) $ledger->Payment);
-                    $totalPaid = $receivedAmount + $installmentPayments;
-                    $remainingBalance = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
-                }
-                $isFullyPaid = $flatCost > 0 && $remainingBalance <= 0;
+                ->value('AssetId');
+            if ($assetId) {
+                $installmentPaid = (float) DB::table('ledger')
+                    ->where('AssetId', $assetId)
+                    ->where('Is_Deleted', 0)
+                    ->where('Is_Active', 1)
+                    ->sum('Payment');
             }
         }
-        if (! $isFullyPaid) {
+        if ($installmentPaid < 26664) {
             return redirect()->route('citizen.dashboard')
-                ->with('warning', 'Your full payment has not been completed yet. Please complete your payment to become eligible for the Physical Possession process.');
+                ->with('warning_title', 'Not Eligible')
+                ->with('warning', 'To apply for Physical Possession, you must have paid at least ₹26,664 in installments (initial deposit is not counted). Your installment payments: ₹'.number_format($installmentPaid).'.');
         }
 
         $existing = $this->findSubmittedApplication($user);
@@ -134,7 +117,7 @@ class PpUserController extends Controller
             'verifiedPossessionCert',
             'verifiedAllotmentLetter',
             'allotmentLetter'
-        ) + ['isFullyPaid' => true]);
+        ));
     }
 
     /**
@@ -487,6 +470,37 @@ class PpUserController extends Controller
     public function submitApplication(Request $request)
     {
         $user = Auth::user();
+
+        $installmentPaid = 0;
+        $purchaserId = $user->private_purchaser_id;
+        if (! $purchaserId && $user->mobile) {
+            $purchaserId = DB::table('property_private_purchasers')
+                ->where('IsActive', 1)
+                ->where('IsDeleted', 0)
+                ->whereIn('MobileNo', [$user->mobile, '91'.$user->mobile])
+                ->value('PrivatePurchaserId');
+        }
+        if ($purchaserId) {
+            $assetId = DB::table('property_auction_detail')
+                ->where('PurchaserID', $purchaserId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->orderByDesc('CreatedDate')
+                ->value('AssetId');
+            if ($assetId) {
+                $installmentPaid = (float) DB::table('ledger')
+                    ->where('AssetId', $assetId)
+                    ->where('Is_Deleted', 0)
+                    ->where('Is_Active', 1)
+                    ->sum('Payment');
+            }
+        }
+        if ($installmentPaid < 26664) {
+            return redirect()->route('citizen.dashboard')
+                ->with('warning_title', 'Not Eligible')
+                ->with('warning', 'To apply for Physical Possession, you must have paid at least ₹26,664 in installments (initial deposit is not counted). Your installment payments: ₹'.number_format($installmentPaid).'.');
+        }
+
         $draftApplication = $this->findDraftApplication($user);
 
         $verifiedPossessionCert = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE, $draftApplication);

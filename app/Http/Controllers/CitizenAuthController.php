@@ -99,6 +99,10 @@ class CitizenAuthController extends Controller
         $ppHasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
         $latestPpApplication = $ppHasApplication ? $ppRecentApplications->first() : null;
 
+        $ppMinInstallmentRequired = 26664;
+        $ppInstallmentPaid = (float) ($paymentDetails['installmentPaidTotal'] ?? 0);
+        $isPpEligible = $ppInstallmentPaid >= $ppMinInstallmentRequired;
+
         $applicationSections = $this->buildApplicationDetailSections(
             $user,
             $purchaser,
@@ -133,6 +137,11 @@ class CitizenAuthController extends Controller
             'ppHasApplication' => $ppHasApplication,
             'ppHasDraftApplication' => $ppHasDraftApplication,
             'latestPpApplication' => $latestPpApplication,
+            'isPpEligible' => $isPpEligible,
+            'ppInstallmentPaid' => $ppInstallmentPaid,
+            'ppMinInstallmentRequired' => $ppMinInstallmentRequired,
+            'ppInstallmentPaidFormatted' => $this->formatIndianCurrency($ppInstallmentPaid),
+            'ppMinInstallmentRequiredFormatted' => $this->formatIndianCurrency($ppMinInstallmentRequired),
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],

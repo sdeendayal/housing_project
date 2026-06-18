@@ -13,12 +13,12 @@
             @if ($isFullyPaid)
                 <p class="citizen-payment-banner__title">Full Payment Completed</p>
                 <p class="citizen-payment-banner__message">
-                    Your payment has been completed successfully. You are eligible for the Physical Possession process.
+                    Your payment has been completed successfully.
                 </p>
             @else
                 <p class="citizen-payment-banner__title">Payment Pending</p>
                 <p class="citizen-payment-banner__message">
-                    Your full payment has not been completed yet. Please complete your payment to become eligible for the Physical Possession process.
+                    Your full payment has not been completed yet. Please complete your remaining balance.
                 </p>
             @endif
             <div class="citizen-payment-banner__stats">
@@ -168,6 +168,7 @@
 
             <div class="flex flex-wrap gap-2 mb-3">
                 @unless($ppHasApplication)
+                @if($isPpEligible)
                 <a href="{{ route('pp.user.apply') }}" class="btn-v2-primary btn-v2-sm no-underline">
                     <span class="material-symbols-outlined text-[14px]">edit_document</span>
                     {{ !empty($ppHasDraftApplication) ? 'Continue Application' : 'Apply for Physical Possession' }}
@@ -176,6 +177,15 @@
                     <span class="material-symbols-outlined text-[16px]">visibility</span>
                     View Possession Form
                 </a>
+                @else
+                <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                    <p class="text-[10px] font-bold text-amber-900 m-0 mb-0.5">Physical Possession — Not eligible yet</p>
+                    <p class="text-[10px] text-amber-800 m-0 leading-relaxed">
+                        You must have paid at least <strong>{{ $ppMinInstallmentRequiredFormatted }}</strong> in installments (initial deposit is not counted).
+                        Your installment payments: <strong>{{ $ppInstallmentPaidFormatted }}</strong>.
+                    </p>
+                </div>
+                @endif
                 @else
                 <a href="{{ route('pp.user.application.show', $latestPpApplication) }}" class="btn-v2-primary btn-v2-sm no-underline">
                     <span class="material-symbols-outlined text-[14px]">visibility</span>
@@ -238,7 +248,7 @@
                 <span class="material-symbols-outlined text-[16px]">visibility</span>
                 My Application
             </a>
-            @else
+            @elseif($isPpEligible)
             <a href="{{ route('pp.user.apply') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
                 <span class="material-symbols-outlined text-[16px]">edit_document</span>
                 Physical Possession
