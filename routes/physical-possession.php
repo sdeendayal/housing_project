@@ -51,6 +51,8 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/download-form', [PpUserController::class, 'downloadPrefilledForm'])->name('user.download-form');
         Route::get('/my-applications', [PpUserController::class, 'myApplications'])->name('user.applications');
         Route::get('/application/{application}', [PpUserController::class, 'showApplication'])->name('user.application.show')->where('application', '[a-f0-9]{32}');
+        Route::get('/application/{application}/correct', [PpUserController::class, 'correctDocuments'])->name('user.application.correct')->where('application', '[a-f0-9]{32}');
+        Route::post('/application/{application}/resubmit', [PpUserController::class, 'resubmitApplication'])->name('user.application.resubmit')->where('application', '[a-f0-9]{32}');
         Route::get('/application/{application}/document/{document}/view', [PpUserController::class, 'viewDocument'])->name('user.document.view')->where('application', '[a-f0-9]{32}');
         Route::get('/success/{application}', [PpUserController::class, 'success'])->name('user.success')->where('application', '[a-f0-9]{32}');
         Route::get('/slip/{application}/download', [PpUserController::class, 'downloadSlip'])->name('user.slip.download')->where('application', '[a-f0-9]{32}');

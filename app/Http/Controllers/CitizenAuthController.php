@@ -45,7 +45,11 @@ class CitizenAuthController extends Controller
 
         $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
 
-        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentDetails = $this->getPaymentDetails(
+            $auction?->AssetId ?? null,
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0)
+        );
         $paymentSummary = $this->resolvePaymentSummary(
             $flatCost,
             (float) ($auction?->ReceivedAmount ?? 0),
@@ -166,7 +170,11 @@ class CitizenAuthController extends Controller
 
         $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
 
-        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentDetails = $this->getPaymentDetails(
+            $auction?->AssetId ?? null,
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0)
+        );
         $paymentSummary = $this->resolvePaymentSummary(
             $flatCost,
             (float) ($auction?->ReceivedAmount ?? 0),
@@ -228,7 +236,11 @@ class CitizenAuthController extends Controller
         $purchaseDate = $this->resolvePurchaseDate($auction, $purchaser);
         $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
 
-        $paymentDetails = $this->getPaymentDetails($auction?->AssetId ?? null);
+        $paymentDetails = $this->getPaymentDetails(
+            $auction?->AssetId ?? null,
+            $flatCost,
+            (float) ($auction?->ReceivedAmount ?? 0)
+        );
         $paymentSummary = $this->resolvePaymentSummary(
             $flatCost,
             (float) ($auction?->ReceivedAmount ?? 0),
@@ -613,8 +625,8 @@ class CitizenAuthController extends Controller
             $totalPaid = $fallbackPaid;
             $outstanding = $fallbackOutstanding;
         } else {
-            $emiPaid = (float) $installments->where('status', 'paid')->sum('emi_amount');
-            $totalPaid = $fallbackPaid + $emiPaid;
+            $installmentPayments = (float) ($paymentDetails['installmentPaidTotal'] ?? 0);
+            $totalPaid = $fallbackPaid + $installmentPayments;
             $outstanding = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
         }
 
@@ -631,14 +643,46 @@ class CitizenAuthController extends Controller
         ];
     }
 
+    /** Bacha hua balance: FlatCost minus initial deposit minus actual ledger payments. */
+    private function remainingFlatBalance(float $flatCost, float $receivedAmount, $ledgerRows): float
+    {
+        if ($flatCost <= 0) {
+            return 0.0;
+        }
+
+        $installmentPayments = (float) collect($ledgerRows)->sum(fn ($row) => (float) $row->Payment);
+
+        return max(0.0, round($flatCost - $receivedAmount - $installmentPayments, 2));
+    }
+
+    /** 36vi kist = poora bacha hua amount; kam jama nahi — closing balance to reach FlatCost. */
+    private function emiAmountForInstallment(
+        $row,
+        $ledger,
+        float $remainingBalance,
+        int $lastInstallmentNumber,
+        bool $isPaid
+    ): float {
+        if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
+            if ($isPaid && $ledger) {
+                return (float) $ledger->Payment;
+            }
+
+            return $remainingBalance;
+        }
+
+        return (float) $row->EMIAmount;
+    }
+
     /** @return array{installments: Collection, receipts: Collection, installmentStats: array{total: int, paid: int, overdue: int, upcoming: int}} */
-    private function getPaymentDetails(?int $assetId): array
+    private function getPaymentDetails(?int $assetId, float $flatCost = 0.0, float $receivedAmount = 0.0): array
     {
         if (! $assetId) {
             return [
                 'installments' => collect(),
                 'receipts' => collect(),
                 'installmentStats' => ['total' => 0, 'paid' => 0, 'overdue' => 0, 'upcoming' => 0],
+                'installmentPaidTotal' => 0.0,
             ];
         }
 
@@ -649,15 +693,18 @@ class CitizenAuthController extends Controller
             ->get()
             ->keyBy('InstallmentNumber');
 
-        // dd($ledgerByNumber);
-
-        $installments = DB::table('installment_due')
+        $installmentRows = DB::table('installment_due')
             ->where('AssetId', $assetId)
             ->where('IsDeleted', 0)
             ->where('IsActive', 1)
             ->orderBy('InstallmentNumber')
-            ->get()
-            ->map(function ($row) use ($ledgerByNumber) {
+            ->get();
+
+        $lastInstallmentNumber = (int) $installmentRows->max('InstallmentNumber');
+        $installmentPaidTotal = (float) $ledgerByNumber->sum(fn ($row) => (float) $row->Payment);
+        $remainingBalance = $this->remainingFlatBalance($flatCost, $receivedAmount, $ledgerByNumber);
+
+        $installments = $installmentRows->map(function ($row) use ($ledgerByNumber, $remainingBalance, $lastInstallmentNumber) {
                 $ledger = $ledgerByNumber->get($row->InstallmentNumber);
                 $dueDate = Carbon::parse($row->DueDate);
                 $today = Carbon::today();
@@ -674,7 +721,16 @@ class CitizenAuthController extends Controller
                     ? Carbon::parse($row->LastSettledDate)
                     : null;
 
-                $emiAmount = (float) $row->EMIAmount;
+                $emiAmount = $this->emiAmountForInstallment(
+                    $row,
+                    $ledger,
+                    $remainingBalance,
+                    $lastInstallmentNumber,
+                    $status === 'paid'
+                );
+                $totalDue = (int) $row->InstallmentNumber === $lastInstallmentNumber
+                    ? $emiAmount
+                    : (float) $row->DueAmount;
 
                 return (object) [
                     'installment_number' => (int) $row->InstallmentNumber,
@@ -684,8 +740,8 @@ class CitizenAuthController extends Controller
                     'principal' => (float) $row->PrincipleAmount,
                     'interest' => (float) $row->InterestAmount,
                     'gst' => (float) $row->GSTAmount,
-                    'total_due' => (float) $row->DueAmount,
-                    'total_due_formatted' => $this->formatIndianCurrency((float) $row->DueAmount),
+                    'total_due' => $totalDue,
+                    'total_due_formatted' => $this->formatIndianCurrency($totalDue),
                     'balance_after' => (float) $row->RunningClosingBalance,
                     'balance_after_formatted' => $this->formatIndianCurrency((float) $row->RunningClosingBalance),
                     'paid_on_formatted' => $paidOn?->format('d M Y') ?? '—',
@@ -727,6 +783,7 @@ class CitizenAuthController extends Controller
             'installments' => $installments,
             'receipts' => $receipts,
             'installmentStats' => $installmentStats,
+            'installmentPaidTotal' => $installmentPaidTotal,
         ];
     }
 

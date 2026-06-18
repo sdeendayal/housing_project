@@ -45,6 +45,12 @@ class PhysicalPossessionDocument extends Model
     /** @var list<string> */
     public const OPTIONAL_TYPES = [];
 
+    public const REVIEW_PENDING = 'pending';
+
+    public const REVIEW_ACCEPTED = 'accepted';
+
+    public const REVIEW_RETURNED = 'returned';
+
     protected $fillable = [
         'user_id',
         'private_purchaser_id',
@@ -59,11 +65,16 @@ class PhysicalPossessionDocument extends Model
         'mime_type',
         'is_verified',
         'verified_at',
+        'review_status',
+        'officer_remarks',
+        'returned_at',
+        'returned_by',
     ];
 
     protected $casts = [
         'is_verified' => 'boolean',
         'verified_at' => 'datetime',
+        'returned_at' => 'datetime',
     ];
 
     public function application(): BelongsTo

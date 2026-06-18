@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CitizenAuthController;
 use App\Http\Controllers\GrievanceController;
 use App\Http\Controllers\OtpAuthController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PhysicalPossession\PpUserController;
 use App\Http\Controllers\PropertyManagementController;
 
@@ -63,6 +64,18 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
 
     Route::get('/mmsay-payment-status', [CitizenAuthController::class, 'paymentStatus'])
         ->name('citizen.payment-status');
+
+    Route::get('/mmsay/citizen/payment', fn () => redirect()->route('citizen.payment-status'))
+        ->name('citizen.payment');
+
+    Route::get('/mmsay/citizen/payment/pay', [PaymentController::class, 'payForm'])
+        ->name('citizen.payment.pay');
+
+    Route::post('/mmsay/citizen/payment/pay', [PaymentController::class, 'paySubmit'])
+        ->name('citizen.payment.pay.submit');
+
+    Route::get('/mmsay/citizen/payment/result', [PaymentController::class, 'result'])
+        ->name('citizen.payment.result');
 
     Route::get('/mmsay/citizen/cash-receipt/{receipt}/download', [CitizenAuthController::class, 'downloadCashReceipt'])
         ->where('receipt', '[0-9]+')

@@ -88,14 +88,8 @@ class PpUserController extends Controller
                         ->where('Is_Active', 1)
                         ->get()
                         ->keyBy('InstallmentNumber');
-                    $emiPaid = 0.0;
-                    foreach ($installmentRows as $row) {
-                        $ledger = $ledgerByNumber->get($row->InstallmentNumber);
-                        if ($ledger && (int) $ledger->RemainingBalance === 0 && (int) $ledger->Payable_amount === 0) {
-                            $emiPaid += (float) $row->EMIAmount;
-                        }
-                    }
-                    $totalPaid = $receivedAmount + $emiPaid;
+                    $installmentPayments = (float) $ledgerByNumber->sum(fn ($ledger) => (float) $ledger->Payment);
+                    $totalPaid = $receivedAmount + $installmentPayments;
                     $remainingBalance = $flatCost > 0 ? max(0.0, $flatCost - $totalPaid) : 0.0;
                 }
                 $isFullyPaid = $flatCost > 0 && $remainingBalance <= 0;
@@ -110,6 +104,12 @@ class PpUserController extends Controller
         if ($existing) {
             return redirect()->route('pp.user.application.show', $existing)
                 ->with('warning', 'You have already submitted an application. You cannot apply again.');
+        }
+
+        $returned = $this->findReturnedApplication($user);
+        if ($returned) {
+            return redirect()->route('pp.user.application.correct', $returned)
+                ->with('info', 'Please correct the returned documents and resubmit.');
         }
 
         $profile = $this->getUserProfile($user);
@@ -187,10 +187,10 @@ class PpUserController extends Controller
         $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
 
         // Create draft application so application_id is saved on the document
-        $draftApplication = $this->getOrCreateDraftApplication($user, $profile);
+        $targetApplication = $this->resolveVerificationApplication($user, $profile);
 
         $existingCert = PhysicalPossessionDocument::where('user_id', $user->id)
-            ->where('application_id', $draftApplication->id)
+            ->where('application_id', $targetApplication->id)
             ->where('document_type', $certField)
             ->first();
 
@@ -203,13 +203,17 @@ class PpUserController extends Controller
             // Update existing certificate record
             $existingCert->update(array_merge([
                 'asset_id' => $assetId,
-                'application_id' => $draftApplication->id,
+                'application_id' => $targetApplication->id,
                 'file_path' => $filePath,
                 'original_name' => $originalName,
                 'file_size' => $fileSize,
                 'mime_type' => $mimeType,
                 'is_verified' => true,
                 'verified_at' => now(),
+                'review_status' => PhysicalPossessionDocument::REVIEW_PENDING,
+                'officer_remarks' => null,
+                'returned_at' => null,
+                'returned_by' => null,
             ], $this->buildDocumentReferenceData($profile)));
 
             $certificate = $existingCert;
@@ -217,7 +221,7 @@ class PpUserController extends Controller
             // Create new verified certificate record (no application yet)
             $certificate = PhysicalPossessionDocument::create(array_merge([
                 'user_id' => $user->id,
-                'application_id' => $draftApplication->id,
+                'application_id' => $targetApplication->id,
                 'asset_id' => $assetId,
                 'document_type' => $certField,
                 'file_path' => $filePath,
@@ -226,6 +230,7 @@ class PpUserController extends Controller
                 'mime_type' => $mimeType,
                 'is_verified' => true,
                 'verified_at' => now(),
+                'review_status' => PhysicalPossessionDocument::REVIEW_PENDING,
             ], $this->buildDocumentReferenceData($profile)));
         }
 
@@ -296,10 +301,10 @@ class PpUserController extends Controller
         $mimeType = 'application/pdf';
         $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
 
-        $draftApplication = $this->getOrCreateDraftApplication($user, $profile);
+        $targetApplication = $this->resolveVerificationApplication($user, $profile);
 
         $existingDoc = PhysicalPossessionDocument::where('user_id', $user->id)
-            ->where('application_id', $draftApplication->id)
+            ->where('application_id', $targetApplication->id)
             ->where('document_type', $docField)
             ->first();
 
@@ -310,20 +315,24 @@ class PpUserController extends Controller
 
             $existingDoc->update(array_merge([
                 'asset_id' => $assetId,
-                'application_id' => $draftApplication->id,
+                'application_id' => $targetApplication->id,
                 'file_path' => $filePath,
                 'original_name' => $originalName,
                 'file_size' => $fileSize,
                 'mime_type' => $mimeType,
                 'is_verified' => true,
                 'verified_at' => now(),
+                'review_status' => PhysicalPossessionDocument::REVIEW_PENDING,
+                'officer_remarks' => null,
+                'returned_at' => null,
+                'returned_by' => null,
             ], $this->buildDocumentReferenceData($profile)));
 
             $document = $existingDoc;
         } else {
             $document = PhysicalPossessionDocument::create(array_merge([
                 'user_id' => $user->id,
-                'application_id' => $draftApplication->id,
+                'application_id' => $targetApplication->id,
                 'asset_id' => $assetId,
                 'document_type' => $docField,
                 'file_path' => $filePath,
@@ -332,6 +341,7 @@ class PpUserController extends Controller
                 'mime_type' => $mimeType,
                 'is_verified' => true,
                 'verified_at' => now(),
+                'review_status' => PhysicalPossessionDocument::REVIEW_PENDING,
             ], $this->buildDocumentReferenceData($profile)));
         }
 
@@ -716,7 +726,6 @@ class PpUserController extends Controller
     {
         $this->ensureUserOwnsApplication($application);
 
-        // Draft application — send user back to the apply form to continue
         if ($application->status === 'draft') {
             return redirect()->route('pp.user.apply')
                 ->with('info', 'Please complete and submit your application.');
@@ -725,6 +734,145 @@ class PpUserController extends Controller
         $application->load(['documents', 'statusLogs', 'officerAction.officer']);
 
         return view('physical-possession.user.show-application', compact('application'));
+    }
+
+    // Returned application — citizen re-uploads flagged documents
+    public function correctDocuments(PhysicalPossessionApplication $application)
+    {
+        $this->ensureUserOwnsApplication($application);
+
+        if ($application->status !== 'returned') {
+            return redirect()->route('pp.user.application.show', $application);
+        }
+
+        $user = Auth::user();
+        $profile = $this->getUserProfile($user);
+        $returnedDocuments = $application->documents()
+            ->where('review_status', PhysicalPossessionDocument::REVIEW_RETURNED)
+            ->get();
+
+        if ($returnedDocuments->isEmpty()) {
+            return redirect()->route('pp.user.application.show', $application)
+                ->with('error', 'No documents are marked for correction.');
+        }
+
+        $allotmentLetter = $this->getAllotmentLetterData($user);
+        $needsPossessionCert = $returnedDocuments->contains('document_type', PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE);
+        $needsAllotmentLetter = $returnedDocuments->contains('document_type', PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER);
+
+        return view('physical-possession.user.correct-documents', compact(
+            'application',
+            'user',
+            'profile',
+            'returnedDocuments',
+            'allotmentLetter',
+            'needsPossessionCert',
+            'needsAllotmentLetter'
+        ));
+    }
+
+    // Citizen resubmits after correcting returned documents
+    public function resubmitApplication(Request $request, PhysicalPossessionApplication $application)
+    {
+        $this->ensureUserOwnsApplication($application);
+
+        if ($application->status !== 'returned') {
+            return redirect()->route('pp.user.application.show', $application);
+        }
+
+        $user = Auth::user();
+        $profile = $this->getUserProfile($user);
+        $returnedDocuments = $application->documents()
+            ->where('review_status', PhysicalPossessionDocument::REVIEW_RETURNED)
+            ->get();
+
+        if ($returnedDocuments->isEmpty()) {
+            return back()->with('error', 'No documents require correction.');
+        }
+
+        $fileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+        $rules = [];
+        $messages = [];
+
+        foreach ($returnedDocuments as $doc) {
+            $type = $doc->document_type;
+
+            if (in_array($type, [
+                PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE,
+                PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER,
+            ], true)) {
+                continue;
+            }
+
+            $rules[$type] = $fileRule;
+            $messages["{$type}.required"] = $doc->typeLabel().' is required.';
+            $messages["{$type}.mimes"] = $doc->typeLabel().' must be PDF, JPG, JPEG, or PNG.';
+        }
+
+        if (! empty($rules)) {
+            $request->validate($rules, $messages);
+        }
+
+        foreach ($returnedDocuments as $doc) {
+            $type = $doc->document_type;
+
+            if (in_array($type, [
+                PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE,
+                PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER,
+            ], true)) {
+                if ($doc->fresh()->review_status === PhysicalPossessionDocument::REVIEW_RETURNED) {
+                    return back()->with('error', 'Please re-verify '.$doc->typeLabel().' before resubmitting.');
+                }
+
+                continue;
+            }
+
+            $file = $request->file($type);
+            if (! $file) {
+                return back()->with('error', 'Please upload '.$doc->typeLabel().'.');
+            }
+
+            $this->replaceApplicationDocument($application, $profile, $doc, $file);
+        }
+
+        $stillReturned = $application->documents()
+            ->where('review_status', PhysicalPossessionDocument::REVIEW_RETURNED)
+            ->count();
+
+        if ($stillReturned > 0) {
+            return back()->with('error', 'Please correct all returned documents before resubmitting.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldStatus = $application->status;
+
+            $application->update([
+                'status' => 'pending',
+                'remarks' => null,
+            ]);
+
+            ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $oldStatus,
+                'new_status' => 'pending',
+                'remarks' => 'Application resubmitted after document correction',
+                'changed_by_type' => 'user',
+                'changed_by_id' => $user->id,
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('pp.user.application.show', $application)
+                ->with('success', 'Application resubmitted successfully. It is pending officer review again.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            report($e);
+
+            return back()->with('error', 'Unable to resubmit application. Please try again.');
+        }
     }
 
     // View uploaded document in browser
@@ -1005,9 +1153,53 @@ class PpUserController extends Controller
     private function findSubmittedApplication(User $user): ?PhysicalPossessionApplication
     {
         return PhysicalPossessionApplication::where('user_id', $user->id)
-            ->where('status', '!=', 'draft')
+            ->whereNotIn('status', ['draft', 'returned'])
             ->latest()
             ->first();
+    }
+
+    private function findReturnedApplication(User $user): ?PhysicalPossessionApplication
+    {
+        return PhysicalPossessionApplication::where('user_id', $user->id)
+            ->where('status', 'returned')
+            ->latest()
+            ->first();
+    }
+
+    private function resolveVerificationApplication(User $user, array $profile): PhysicalPossessionApplication
+    {
+        $returned = $this->findReturnedApplication($user);
+        if ($returned) {
+            return $returned;
+        }
+
+        return $this->getOrCreateDraftApplication($user, $profile);
+    }
+
+    private function replaceApplicationDocument(
+        PhysicalPossessionApplication $application,
+        array $profile,
+        PhysicalPossessionDocument $existingDoc,
+        $file
+    ): void {
+        if ($existingDoc->file_path && Storage::disk('public')->exists($existingDoc->file_path)) {
+            Storage::disk('public')->delete($existingDoc->file_path);
+        }
+
+        $path = $this->storeApplicationDocument($application, $profile, $existingDoc->document_type, $file);
+
+        $existingDoc->update([
+            'file_path' => $path,
+            'original_name' => $file->getClientOriginalName(),
+            'file_size' => $file->getSize(),
+            'mime_type' => $file->getMimeType(),
+            'review_status' => PhysicalPossessionDocument::REVIEW_PENDING,
+            'officer_remarks' => null,
+            'returned_at' => null,
+            'returned_by' => null,
+            'is_verified' => false,
+            'verified_at' => null,
+        ]);
     }
 
     private function findDraftApplication(User $user): ?PhysicalPossessionApplication

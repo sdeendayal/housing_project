@@ -8,6 +8,7 @@ use App\Models\OfficerApplicationAction;
 use App\Models\PhysicalPossessionApplication;
 use App\Models\PhysicalPossessionDocument;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -129,21 +130,43 @@ class PpOfficerController extends Controller
         return Storage::disk('public')->download($document->file_path, $document->original_name);
     }
 
-    // Approve ya reject — single form (radio + remarks)
+    // Approve, reject, or send back documents for correction
     public function decide(Request $request, PhysicalPossessionApplication $application)
     {
         $request->validate([
-            'decision' => 'required|in:approved,rejected',
+            'decision' => 'required|in:approved,rejected,sent_back',
             'remarks' => 'required|string|max:1000',
             'citizen_visit_date' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
             'visit_instructions' => 'nullable|string|max:500',
+            'returned_documents' => 'required_if:decision,sent_back|array|min:1',
+            'returned_documents.*' => 'integer',
+            'document_remarks' => 'nullable|array',
+            'document_remarks.*' => 'nullable|string|max:500',
         ], [
-            'decision.required' => 'Please select Approve or Reject.',
+            'decision.required' => 'Please select Approve, Reject, or Send Back.',
             'decision.in' => 'Invalid decision selected.',
             'remarks.required' => 'Remarks are required.',
             'citizen_visit_date.required_if' => 'Meeting schedule (date & time) is required for approval.',
             'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
+            'returned_documents.required_if' => 'Select at least one document to send back.',
+            'returned_documents.min' => 'Select at least one document to send back.',
         ]);
+
+        if ($request->decision === 'approved') {
+            $scheduleError = $this->citizenVisitScheduleError($request->citizen_visit_date, Auth::user());
+            if ($scheduleError) {
+                return back()->withErrors(['citizen_visit_date' => $scheduleError])->withInput();
+            }
+        }
+
+        if ($request->decision === 'sent_back') {
+            return $this->sendBackDocuments(
+                $application,
+                $request->remarks,
+                $request->input('returned_documents', []),
+                $request->input('document_remarks', [])
+            );
+        }
 
         return $this->updateStatus(
             $application,
@@ -166,6 +189,11 @@ class PpOfficerController extends Controller
             'citizen_visit_date.required' => 'Meeting schedule (date & time) is required.',
             'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
         ]);
+
+        $scheduleError = $this->citizenVisitScheduleError($request->citizen_visit_date, Auth::user());
+        if ($scheduleError) {
+            return back()->withErrors(['citizen_visit_date' => $scheduleError])->withInput();
+        }
 
         return $this->updateStatus(
             $application,
@@ -215,6 +243,18 @@ class PpOfficerController extends Controller
                     throw new \RuntimeException('Only pending applications can be updated.');
                 }
 
+                if ($newStatus === 'approved' && $citizenVisitDate) {
+                    $scheduleError = $this->citizenVisitScheduleError(
+                        $citizenVisitDate,
+                        $officer,
+                        $locked->id,
+                        true
+                    );
+                    if ($scheduleError) {
+                        throw new \RuntimeException($scheduleError);
+                    }
+                }
+
                 $oldStatus = $locked->status;
 
                 $locked->update([
@@ -225,6 +265,11 @@ class PpOfficerController extends Controller
                     'citizen_visit_date' => $citizenVisitDate,
                     'visit_instructions' => $visitInstructions,
                 ]);
+
+                if ($newStatus === 'approved') {
+                    PhysicalPossessionDocument::where('application_id', $locked->id)
+                        ->update(['review_status' => PhysicalPossessionDocument::REVIEW_ACCEPTED]);
+                }
 
                 OfficerApplicationAction::create([
                     'application_id' => $locked->id,
@@ -265,6 +310,97 @@ class PpOfficerController extends Controller
             : 'Application has been rejected.';
 
         return back()->with('success', $message);
+    }
+
+    // Officer sends back selected documents — citizen must re-upload and resubmit
+    private function sendBackDocuments(
+        PhysicalPossessionApplication $application,
+        string $remarks,
+        array $returnedDocumentIds,
+        array $documentRemarks
+    ) {
+        $officer = Auth::user();
+        $application = $this->findOfficerApplication($officer, $application);
+
+        $returnedDocumentIds = array_map('intval', $returnedDocumentIds);
+        $validDocuments = PhysicalPossessionDocument::where('application_id', $application->id)
+            ->whereIn('id', $returnedDocumentIds)
+            ->get();
+
+        if ($validDocuments->count() !== count($returnedDocumentIds)) {
+            return back()->withErrors(['returned_documents' => 'Invalid document selection.'])->withInput();
+        }
+
+        try {
+            DB::transaction(function () use ($officer, $application, $remarks, $validDocuments, $documentRemarks) {
+                $locked = PhysicalPossessionApplication::query()
+                    ->where('id', $application->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($locked->status !== 'pending') {
+                    throw new \RuntimeException('Only pending applications can be sent back for correction.');
+                }
+
+                $oldStatus = $locked->status;
+                $returnedIds = $validDocuments->pluck('id')->all();
+
+                PhysicalPossessionDocument::where('application_id', $locked->id)
+                    ->whereIn('id', $returnedIds)
+                    ->get()
+                    ->each(function (PhysicalPossessionDocument $doc) use ($officer, $documentRemarks) {
+                        $doc->update([
+                            'review_status' => PhysicalPossessionDocument::REVIEW_RETURNED,
+                            'officer_remarks' => trim((string) ($documentRemarks[$doc->id] ?? '')) ?: null,
+                            'returned_at' => now(),
+                            'returned_by' => $officer->id,
+                        ]);
+                    });
+
+                PhysicalPossessionDocument::where('application_id', $locked->id)
+                    ->whereNotIn('id', $returnedIds)
+                    ->update(['review_status' => PhysicalPossessionDocument::REVIEW_ACCEPTED]);
+
+                $locked->update([
+                    'status' => 'returned',
+                    'remarks' => $remarks,
+                    'approved_by' => null,
+                    'approved_at' => null,
+                    'citizen_visit_date' => null,
+                    'visit_instructions' => null,
+                ]);
+
+                OfficerApplicationAction::create([
+                    'application_id' => $locked->id,
+                    'asset_id' => $locked->asset_id,
+                    'private_purchaser_id' => $locked->private_purchaser_id,
+                    'user_id' => $locked->user_id,
+                    'secure_id' => $locked->secure_id,
+                    'officer_id' => $officer->id,
+                    'action' => 'sent_back',
+                    'remarks' => $remarks,
+                    'previous_status' => $oldStatus,
+                    'new_status' => 'returned',
+                    'application_number' => $locked->application_number,
+                    'district_id' => $locked->district_id,
+                    'district_name' => $locked->district_name,
+                ]);
+
+                ApplicationStatusLog::create([
+                    'application_id' => $locked->id,
+                    'asset_id' => $locked->asset_id,
+                    'old_status' => $oldStatus,
+                    'new_status' => 'returned',
+                    'remarks' => $remarks,
+                    'changed_by_type' => 'officer',
+                    'changed_by_id' => $officer->id,
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        }
+
+        return back()->with('success', 'Application sent back to citizen for document correction.');
     }
 
     // Users list - jo users ne apply kiya apne district me
@@ -326,5 +462,54 @@ class PpOfficerController extends Controller
         return $this->districtApplicationsQuery($officer)
             ->where('secure_id', $application->secure_id)
             ->firstOrFail();
+    }
+
+    /** Meeting only 09:00 AM–05:00 PM; max 10 approved visits per district per 1-hour slot. */
+    private function citizenVisitScheduleError(
+        string $citizenVisitDate,
+        User $officer,
+        ?int $excludeApplicationId = null,
+        bool $forUpdate = false
+    ): ?string {
+        $visitAt = Carbon::parse($citizenVisitDate);
+        $minutesOfDay = ($visitAt->hour * 60) + $visitAt->minute;
+
+        if ($minutesOfDay < (9 * 60) || $minutesOfDay > (17 * 60)) {
+            return 'Meeting time must be between 09:00 AM and 05:00 PM.';
+        }
+
+        $slotStart = $visitAt->copy()->startOfHour();
+        $slotEnd = $slotStart->copy()->addHour();
+
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', 'approved')
+            ->whereNotNull('citizen_visit_date')
+            ->where('citizen_visit_date', '>=', $slotStart)
+            ->where('citizen_visit_date', '<', $slotEnd);
+
+        if ($excludeApplicationId) {
+            $query->where('id', '!=', $excludeApplicationId);
+        }
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%'.$officer->district_name.'%');
+        }
+
+        if ($forUpdate) {
+            $query->lockForUpdate();
+        }
+
+        if ($query->count() >= 10) {
+            return sprintf(
+                'This time slot (%s – %s on %s) is full in your district. Maximum 10 citizens per hour per district.',
+                $slotStart->format('h:i A'),
+                $slotEnd->format('h:i A'),
+                $slotStart->format('d M Y')
+            );
+        }
+
+        return null;
     }
 }

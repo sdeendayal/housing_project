@@ -117,8 +117,19 @@ class PhysicalPossessionApplication extends Model
         return match ($this->status) {
             'approved' => 'success',
             'rejected' => 'danger',
+            'returned' => 'info',
             default => 'warning',
         };
+    }
+
+    public function isReturned(): bool
+    {
+        return $this->status === 'returned';
+    }
+
+    public function returnedDocuments()
+    {
+        return $this->documents()->where('review_status', PhysicalPossessionDocument::REVIEW_RETURNED);
     }
 
     public function getRouteKeyName(): string

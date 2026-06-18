@@ -2,10 +2,13 @@
     $activeNav = $activeNav ?? '';
     $sidebarName = $displayName ?? ($fullName ?? (auth()->user()?->name ?? 'Citizen'));
     $sidebarAppId = $applicationId ?? ($applicationNo ?? '—');
-    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show', 'physical-possession'], true);
-    $ppHasApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', '!=', 'draft')->exists();
+    $ppSubmenuOpen = in_array($activeNav, ['pp-apply', 'pp-applications', 'pp-application-show', 'pp-correct', 'physical-possession'], true);
+    $ppHasApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->whereNotIn('status', ['draft', 'returned'])->exists();
     $ppHasDraftApplication = auth()->check() && \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', 'draft')->exists();
-    $latestPpApplication = $ppHasApplication
+    $ppReturnedApplication = auth()->check()
+        ? \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', 'returned')->latest()->first()
+        : null;
+    $latestPpApplication = auth()->check()
         ? \App\Models\PhysicalPossessionApplication::where('user_id', auth()->id())->where('status', '!=', 'draft')->latest()->first()
         : null;
 @endphp
@@ -93,12 +96,19 @@
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-apply') style="font-variation-settings:'FILL' 1" @endif>edit_document</span></span>
                     {{ $ppHasDraftApplication ? 'Continue Application' : 'Apply Online' }}
                 </a>
-                @else
+                @endunless
+                @if($ppReturnedApplication)
+                <a class="nav-v2 {{ $activeNav === 'pp-correct' ? 'active' : '' }} pl-7" href="{{ route('pp.user.application.correct', $ppReturnedApplication) }}">
+                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-correct') style="font-variation-settings:'FILL' 1" @endif>upload_file</span></span>
+                    Correct Documents
+                </a>
+                @endif
+                @if($latestPpApplication)
                 <a class="nav-v2 {{ $activeNav === 'pp-application-show' ? 'active' : '' }} pl-7" href="{{ route('pp.user.application.show', $latestPpApplication) }}">
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-application-show') style="font-variation-settings:'FILL' 1" @endif>visibility</span></span>
                     View My Application
                 </a>
-                @endunless
+                @endif
                 <a class="nav-v2 {{ $activeNav === 'pp-applications' ? 'active' : '' }} pl-7" href="{{ route('pp.user.applications') }}">
                     <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-applications') style="font-variation-settings:'FILL' 1" @endif>folder_open</span></span>
                     My Applications

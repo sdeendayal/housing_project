@@ -8,16 +8,19 @@
     $statusClass = match($application->status) {
         'approved' => 'bg-emerald-100 text-emerald-700 border-emerald-200',
         'rejected' => 'bg-red-100 text-red-700 border-red-200',
+        'returned' => 'bg-blue-100 text-blue-700 border-blue-200',
         default => 'bg-amber-100 text-amber-700 border-amber-200',
     };
     $statusIcon = match($application->status) {
         'approved' => 'check_circle',
         'rejected' => 'cancel',
+        'returned' => 'edit_document',
         default => 'hourglass_top',
     };
     $timelineDotClass = fn (string $status) => match($status) {
         'approved' => 'bg-emerald-500 ring-4 ring-emerald-100',
         'rejected' => 'bg-red-500 ring-4 ring-red-100',
+        'returned' => 'bg-blue-500 ring-4 ring-blue-100',
         default => 'bg-amber-500 ring-4 ring-amber-100',
     };
 @endphp
@@ -112,13 +115,34 @@
                         <div class="flex flex-wrap gap-2 mt-2.5">
                             <a href="{{ route('pp.user.visit-performa.download', $application) }}"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold no-underline hover:bg-blue-700">
-                                <span class="material-symbols-outlined text-[14px]">download</span> Download Performa
+                                <span class="material-symbols-outlined text-[14px]">download</span> Download Visiting Slip
                             </a>
                             <a href="{{ route('pp.user.visit-performa.print', $application) }}" target="_blank"
                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-blue-200 bg-white text-[10px] font-bold text-blue-700 no-underline hover:bg-blue-50">
-                                <span class="material-symbols-outlined text-[14px]">print</span> Print Performa
+                                <span class="material-symbols-outlined text-[14px]">print</span> Print Visiting Slip
                             </a>
                         </div>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            @if($application->status === 'returned')
+            <div class="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50/60 p-3 mt-3">
+                <div class="flex items-start gap-2.5">
+                    <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[20px]">edit_document</span>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[11px] font-extrabold text-slate-800 m-0 mb-1">Action Required — Correct Documents</h3>
+                        <p class="text-[10px] text-slate-600 m-0 leading-relaxed">Officer ne kuch documents wapas bheje hain. Sahi documents upload karke dubara submit karein.</p>
+                        @if($application->remarks)
+                        <p class="text-[10px] font-bold text-blue-800 m-0 mt-1">{{ $application->remarks }}</p>
+                        @endif
+                        <a href="{{ route('pp.user.application.correct', $application) }}"
+                           class="inline-flex items-center gap-1 mt-2.5 px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold no-underline hover:bg-blue-700">
+                            <span class="material-symbols-outlined text-[14px]">upload_file</span> Correct & Resubmit
+                        </a>
                     </div>
                 </div>
             </div>
@@ -228,7 +252,15 @@
                         </div>
                     </a>
                     <div class="mt-auto border-t border-slate-100 p-2 space-y-1.5">
-                        @if($doc->is_verified)
+                        @if($doc->review_status === 'returned')
+                        <div class="flex items-center justify-center gap-1 rounded-lg bg-red-50 border border-red-200 py-1 text-[9px] font-bold text-red-700">
+                            <span class="material-symbols-outlined text-[13px]">error</span>
+                            Returned — re-upload required
+                        </div>
+                        @if($doc->officer_remarks)
+                        <p class="text-[9px] text-red-600 m-0 text-center">{{ $doc->officer_remarks }}</p>
+                        @endif
+                        @elseif($doc->is_verified)
                         <div class="flex items-center justify-center gap-1 rounded-lg bg-emerald-50 border border-emerald-200 py-1 text-[9px] font-bold text-emerald-700">
                             <span class="material-symbols-outlined text-[13px]">verified</span>
                             Verified{{ $doc->verified_at ? ' · '.$doc->verified_at->format('d M Y, h:i A') : '' }}

@@ -26,18 +26,42 @@
         </div>
 
         <div class="pp-panel">
-            <div class="pp-panel-head">Documents</div>
+            <div class="pp-panel-head">Documents @if($application->status === 'pending')<small class="text-muted fw-normal">— select for send back</small>@endif</div>
             <div class="pp-panel-body p-0">
                 @foreach($application->documents as $doc)
-                <div class="d-flex justify-content-between align-items-center px-2 py-2 border-bottom small">
-                    <div class="min-w-0 me-2">
-                        <strong class="d-block">{{ $doc->typeLabel() }}</strong>
+                <div class="d-flex justify-content-between align-items-start px-2 py-2 border-bottom small gap-2">
+                    <div class="min-w-0 me-2 flex-grow-1 d-flex gap-2">
+                        @if($application->status === 'pending')
+                        <div class="pp-sendback-check shrink-0" data-sendback-only style="display:none">
+                            <input class="form-check-input returned-doc-checkbox mt-1" type="checkbox"
+                                   name="returned_documents[]" value="{{ $doc->id }}" form="ppDecideForm"
+                                   id="return_doc_{{ $doc->id }}" {{ in_array($doc->id, old('returned_documents', [])) ? 'checked' : '' }}>
+                        </div>
+                        @endif
+                        <div class="min-w-0">
+                        <strong class="d-block" @if($application->status === 'pending') id="return_doc_label_{{ $doc->id }}" @endif>{{ $doc->typeLabel() }}</strong>
                         <span class="text-muted text-truncate d-block">{{ $doc->original_name }}</span>
+                        @if($doc->review_status === 'returned')
+                        <span class="badge bg-warning text-dark mt-1">Returned for correction</span>
+                        @elseif($doc->review_status === 'accepted')
+                        <span class="badge bg-success mt-1">Accepted</span>
+                        @endif
+                        @if($doc->officer_remarks)
+                        <span class="text-danger d-block mt-1"><em>Remark: {{ $doc->officer_remarks }}</em></span>
+                        @endif
+                        </div>
                     </div>
                     <a href="{{ route('pp.officer.document.download', [$application, $doc]) }}" class="btn btn-outline-primary pp-btn-sm-compact shrink-0">
                         <i class="bi bi-download"></i>
                     </a>
                 </div>
+                @if($application->status === 'pending')
+                <div class="px-2 pb-2 border-bottom pp-sendback-remark" data-sendback-only>
+                    <input type="text" name="document_remarks[{{ $doc->id }}]" form="ppDecideForm"
+                           class="form-control form-control-sm" placeholder="Optional remark for this document"
+                           value="{{ old('document_remarks.'.$doc->id) }}">
+                </div>
+                @endif
                 @endforeach
             </div>
         </div>
@@ -52,20 +76,27 @@
                     @csrf
 
                     <label class="form-label small fw-semibold mb-2">Select Action <span class="text-danger">*</span></label>
-                    <div class="d-flex gap-2 mb-3">
-                        <label class="pp-decision-option flex-fill">
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <label class="pp-decision-option">
                             <input type="radio" name="decision" value="approved" class="d-none pp-decision-radio" {{ old('decision', 'approved') === 'approved' ? 'checked' : '' }}>
                             <span class="pp-decision-card approve">
                                 <i class="bi bi-check-circle"></i> Approve
                             </span>
                         </label>
-                        <label class="pp-decision-option flex-fill">
+                        <label class="pp-decision-option">
+                            <input type="radio" name="decision" value="sent_back" class="d-none pp-decision-radio" {{ old('decision') === 'sent_back' ? 'checked' : '' }}>
+                            <span class="pp-decision-card sendback">
+                                <i class="bi bi-arrow-return-left"></i> Send Back
+                            </span>
+                        </label>
+                        <label class="pp-decision-option">
                             <input type="radio" name="decision" value="rejected" class="d-none pp-decision-radio" {{ old('decision') === 'rejected' ? 'checked' : '' }}>
                             <span class="pp-decision-card reject">
                                 <i class="bi bi-x-circle"></i> Reject
                             </span>
                         </label>
                     </div>
+                    @error('returned_documents')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
                     @error('decision')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
 
                     <label class="form-label small fw-semibold mb-1">Remarks <span class="text-danger">*</span></label>
@@ -79,7 +110,7 @@
                                value="{{ old('citizen_visit_date') }}"
                                min="{{ now()->format('Y-m-d\TH:i') }}">
                         @error('citizen_visit_date')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
-                        <p class="text-muted small mb-2">Citizen will be asked to visit the office at this date and time.</p>
+                        <p class="text-muted small mb-2">Citizen will visit your office at this date and time. Allowed: <strong>09:00 AM – 05:00 PM</strong>. In <strong>your district</strong>, max <strong>10 citizens per 1-hour slot</strong> (other districts have their own separate limit).</p>
 
                         <label class="form-label small fw-semibold mb-1">Visit Instructions <span class="text-muted fw-normal">(optional)</span></label>
                         <textarea name="visit_instructions" class="form-control form-control-sm mb-2 @error('visit_instructions') is-invalid @enderror" rows="2" placeholder="e.g. Municipal Office, Rohtak — bring original ID and documents">{{ old('visit_instructions') }}</textarea>
@@ -97,8 +128,8 @@
                 @forelse($application->officerActions as $action)
                     <div class="{{ ! $loop->last ? 'border-bottom pb-2 mb-2' : '' }}">
                         <p class="mb-1"><strong>Action #{{ $loop->iteration }}:</strong>
-                            <span class="badge bg-{{ $action->action === 'approved' ? 'success' : 'danger' }}">
-                                {{ ucfirst($action->action) }}
+                            <span class="badge bg-{{ match($action->action) { 'approved' => 'success', 'rejected' => 'danger', 'sent_back' => 'warning', default => 'secondary' } }}">
+                                {{ $action->action === 'sent_back' ? 'Sent Back' : ucfirst($action->action) }}
                             </span>
                         </p>
                         <p class="mb-1"><strong>Asset ID:</strong> {{ $action->asset_id ?? '—' }}</p>
@@ -159,6 +190,7 @@
 }
 .pp-decision-card.approve { color: #059669; }
 .pp-decision-card.reject { color: #dc2626; }
+.pp-decision-card.sendback { color: #d97706; }
 .pp-decision-radio:checked + .pp-decision-card.approve {
     background: #ecfdf5;
     border-color: #059669;
@@ -171,6 +203,14 @@
     color: #b91c1c;
     box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
 }
+.pp-decision-radio:checked + .pp-decision-card.sendback {
+    background: #fffbeb;
+    border-color: #d97706;
+    color: #b45309;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.12);
+}
+.pp-sendback-remark { display: none; }
+.pp-sendback-check .form-check-input { margin-top: 0.2rem; }
 </style>
 @endpush
 
@@ -184,10 +224,15 @@
     const visitDateInput = form?.querySelector('[name="citizen_visit_date"]');
     const radios = form?.querySelectorAll('.pp-decision-radio');
 
+    const sendBackRemarks = form?.querySelectorAll('.pp-sendback-remark');
+    const sendBackChecks = document.querySelectorAll('[data-sendback-only]');
+
     function updateSubmitBtn() {
         const selected = form?.querySelector('.pp-decision-radio:checked');
         if (!submitBtn || !selected) return;
         const isApprove = selected.value === 'approved';
+        const isSendBack = selected.value === 'sent_back';
+        const isReject = selected.value === 'rejected';
         if (visitFields) {
             visitFields.style.display = isApprove ? '' : 'none';
         }
@@ -197,13 +242,43 @@
                 visitDateInput.value = '';
             }
         }
+        sendBackRemarks?.forEach(function (el) {
+            el.style.display = isSendBack ? '' : 'none';
+        });
+        sendBackChecks?.forEach(function (el) {
+            el.style.display = isSendBack ? '' : 'none';
+            if (!isSendBack) {
+                el.querySelectorAll('input[type="checkbox"]').forEach(function (cb) { cb.checked = false; });
+            }
+        });
         if (isApprove) {
             submitBtn.className = 'btn btn-success w-100 pp-btn-sm-compact';
             submitBtn.textContent = 'Submit — Approve';
+        } else if (isSendBack) {
+            submitBtn.className = 'btn btn-warning w-100 pp-btn-sm-compact text-dark';
+            submitBtn.textContent = 'Submit — Send Back';
         } else {
             submitBtn.className = 'btn btn-danger w-100 pp-btn-sm-compact';
             submitBtn.textContent = 'Submit — Reject';
         }
+    }
+
+    function visitScheduleClientError(value) {
+        if (!value) {
+            return 'Please select the meeting date and time for approval.';
+        }
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) {
+            return 'Please enter a valid meeting date and time.';
+        }
+        const totalMinutes = (d.getHours() * 60) + d.getMinutes();
+        if (totalMinutes < (9 * 60) || totalMinutes > (17 * 60)) {
+            return 'Meeting time must be between 09:00 AM and 05:00 PM.';
+        }
+        if (d < new Date()) {
+            return 'Meeting schedule cannot be in the past.';
+        }
+        return '';
     }
 
     radios?.forEach(function (radio) {
@@ -228,7 +303,7 @@
         const visitDate = form.querySelector('[name="citizen_visit_date"]')?.value?.trim();
 
         if (!selected) {
-            ppSwal({ icon: 'warning', title: 'Action Required', text: 'Please select Approve or Reject.' });
+            ppSwal({ icon: 'warning', title: 'Action Required', text: 'Please select Approve, Send Back, or Reject.' });
             return;
         }
         if (!remarks) {
@@ -236,18 +311,33 @@
             return;
         }
         const isApprove = selected.value === 'approved';
-        if (isApprove && !visitDate) {
-            ppSwal({ icon: 'warning', title: 'Schedule Required', text: 'Please select the meeting date and time for approval.' });
-            return;
+        const isSendBack = selected.value === 'sent_back';
+        if (isApprove) {
+            const scheduleError = visitScheduleClientError(visitDate);
+            if (scheduleError) {
+                ppSwal({ icon: 'warning', title: 'Invalid Schedule', text: scheduleError });
+                return;
+            }
         }
+        if (isSendBack) {
+            const checked = document.querySelectorAll('.returned-doc-checkbox:checked');
+            if (!checked.length) {
+                ppSwal({ icon: 'warning', title: 'Documents Required', text: 'Select at least one document to send back.' });
+                return;
+            }
+        }
+        const confirmTitle = isApprove ? 'Approve Application?' : (isSendBack ? 'Send Back for Correction?' : 'Reject Application?');
+        const confirmText = isSendBack
+            ? 'Citizen will re-upload selected documents and resubmit for your review.'
+            : 'Please confirm your decision. This cannot be undone.';
         Swal.fire({
             icon: 'question',
-            title: isApprove ? 'Approve Application?' : 'Reject Application?',
-            text: 'Please confirm your decision. This cannot be undone.',
+            title: confirmTitle,
+            text: confirmText,
             showCancelButton: true,
-            confirmButtonText: isApprove ? 'Yes, Approve' : 'Yes, Reject',
+            confirmButtonText: isApprove ? 'Yes, Approve' : (isSendBack ? 'Yes, Send Back' : 'Yes, Reject'),
             cancelButtonText: 'Cancel',
-            confirmButtonColor: isApprove ? '#059669' : '#dc2626',
+            confirmButtonColor: isApprove ? '#059669' : (isSendBack ? '#d97706' : '#dc2626'),
             cancelButtonColor: '#64748b',
         }).then(function (result) {
             if (result.isConfirmed) {
