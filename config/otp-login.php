@@ -4,8 +4,14 @@ return [
     'session_context_key' => 'otp_login_context',
     'session_mobile_key' => 'otp_login_mobile',
 
-    'sms_template_id' => '1007056441918679505',
-    'sms_message' => 'Dear User, {otp} is OTP for Login, Cash Award Management System. Sports Department, Haryana',
+    'sms_template_id' => env('OTP_SMS_TEMPLATE_ID', '1407178178069128769'),
+    'sms_message' => 'Your OTP for logging into the Department of Housing For All is {#numeric#}. This OTP is valid for 10 minutes and should not be shared with anyone. - Department of Housing For All, Haryana.',
+
+    'sms_username' => env('OTP_SMS_USERNAME', 'haryanait-sport'),
+    'sms_password' => env('OTP_SMS_PASSWORD', 'sports@1234'),
+    'sms_sender_id' => env('OTP_SMS_SENDER_ID', 'GOVHRY'),
+    'sms_secure_key' => env('OTP_SMS_SECURE_KEY', 'dca7fc77-9e28-4765-bbaa-07bd43197b2e'),
+    'sms_gateway_url' => env('OTP_SMS_GATEWAY_URL', 'https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT'),
 
     'contexts' => [
         'citizen' => [

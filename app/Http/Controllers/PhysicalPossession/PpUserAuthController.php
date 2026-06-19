@@ -5,6 +5,8 @@ namespace App\Http\Controllers\PhysicalPossession;
 use App\Http\Controllers\Controller;
 use App\Models\Otp;
 use App\Models\User;
+use App\Services\LoginOtpSmsService;
+use App\Services\OtpVerificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +17,10 @@ class PpUserAuthController extends Controller
     private const OTP_EXPIRY_MINUTES = 10;
     private const OTP_RESEND_COOLDOWN_SECONDS = 60;
     private const OTP_MAX_ATTEMPTS = 5;
+
+    public function __construct(
+        private LoginOtpSmsService $loginOtpSmsService
+    ) {}
 
     // Step 1: Mobile + Captcha page
     public function showLogin()
@@ -64,17 +70,16 @@ class PpUserAuthController extends Controller
             return back()->withInput()->with('error', "Please wait {$waitSeconds} seconds before requesting a new OTP.");
         }
 
+        $otpCode = null;
+
         try {
-            DB::transaction(function () use ($mobile) {
+            DB::transaction(function () use ($mobile, &$otpCode) {
                 Otp::where('mobile_number', $mobile)
                     ->whereNull('verified_at')
                     ->where('expires_at', '>', now())
                     ->update(['verified_at' => now()]);
 
-                // Local = 111111, production = random 6 digit
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $otpCode = OtpVerificationService::generateLoginOtpCode();
 
                 Otp::create([
                     'mobile_number' => $mobile,
@@ -86,7 +91,7 @@ class PpUserAuthController extends Controller
 
                 Log::info('PP OTP generated', ['mobile' => $mobile]);
 
-                if (app()->environment('local')) {
+                if (OtpVerificationService::usesFixedTestOtp($mobile, Otp::PURPOSE_CITIZEN_LOGIN)) {
                     Log::info('PP local OTP for testing', ['mobile' => $mobile, 'otp' => $otpCode]);
                 }
             });
@@ -94,6 +99,10 @@ class PpUserAuthController extends Controller
             Log::error('PP OTP generation failed', ['mobile' => $mobile, 'error' => $e->getMessage()]);
 
             return back()->withInput()->with('error', 'Unable to send OTP. Please try again.');
+        }
+
+        if ($otpCode) {
+            $this->loginOtpSmsService->send($mobile, $otpCode, 'PP User');
         }
 
         session(['pp_login_mobile' => $mobile]);
@@ -208,16 +217,16 @@ class PpUserAuthController extends Controller
             return back()->with('warning', "Please wait {$waitSeconds} seconds before resending OTP.");
         }
 
+        $otpCode = null;
+
         try {
-            DB::transaction(function () use ($mobile) {
+            DB::transaction(function () use ($mobile, &$otpCode) {
                 Otp::where('mobile_number', $mobile)
                     ->whereNull('verified_at')
                     ->where('expires_at', '>', now())
                     ->update(['verified_at' => now()]);
 
-                $otpCode = app()->environment('local')
-                    ? '111111'
-                    : str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+                $otpCode = OtpVerificationService::generateLoginOtpCode();
 
                 Otp::create([
                     'mobile_number' => $mobile,
@@ -229,6 +238,10 @@ class PpUserAuthController extends Controller
             });
         } catch (\Exception $e) {
             return back()->with('error', 'Unable to resend OTP. Please try again.');
+        }
+
+        if ($otpCode) {
+            $this->loginOtpSmsService->send($mobile, $otpCode, 'PP User');
         }
 
         return back()->with('success', 'A new OTP has been sent to your mobile number.');

@@ -13,6 +13,15 @@ class OtpVerificationService
 
     public const MAX_ATTEMPTS = 5;
 
+    private const LOGIN_PURPOSES = [
+        Otp::PURPOSE_CITIZEN_LOGIN,
+        Otp::PURPOSE_DEPARTMENT_LOGIN,
+    ];
+
+    public function __construct(
+        private LoginOtpSmsService $loginOtpSmsService
+    ) {}
+
     /**
      * @return array{success: bool, step?: string, message: string, resend_after?: int}
      */
@@ -54,7 +63,9 @@ class OtpVerificationService
             }
         }
 
-        // SMS Gateway API will be integrated here later
+        if (in_array($purpose, self::LOGIN_PURPOSES, true)) {
+            $this->loginOtpSmsService->send($mobile, $otpCode, $logLabel);
+        }
 
         return [
             'success' => true,
@@ -155,19 +166,20 @@ class OtpVerificationService
 
     public static function usesFixedTestOtp(string $mobile, string $purpose): bool
     {
-        if ($purpose === Otp::PURPOSE_DEPARTMENT_LOGIN) {
-            return false;
-        }
-
         return app()->environment('local');
     }
 
-    private function generateOtpCode(string $mobile, string $purpose): string
+    public static function generateLoginOtpCode(): string
     {
-        if (self::usesFixedTestOtp($mobile, $purpose)) {
+        if (app()->environment('local')) {
             return '111111';
         }
 
         return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
+    private function generateOtpCode(string $mobile, string $purpose): string
+    {
+        return self::generateLoginOtpCode();
     }
 }

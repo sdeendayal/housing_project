@@ -8,6 +8,12 @@
 @endsection
 
 @section('loginForm')
+@if($usesFixedOtp ?? false)
+<div class="alert alert-info py-1 px-2 small mb-2">
+    Local environment: use OTP <strong>111111</strong>
+</div>
+@endif
+
 <form method="POST" action="{{ route('pp.department.login.verify') }}" id="ppDepartmentVerifyOtpForm" data-pp-loading>
     @csrf
     <div class="field">

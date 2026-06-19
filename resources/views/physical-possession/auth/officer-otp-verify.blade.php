@@ -8,7 +8,7 @@
 @endsection
 
 @section('loginForm')
-@if(app()->environment('local'))
+@if(\App\Services\OtpVerificationService::usesFixedTestOtp('', ''))
 <div class="alert alert-info py-1 px-2 small mb-2">
     Local environment: use OTP <strong>111111</strong>
 </div>

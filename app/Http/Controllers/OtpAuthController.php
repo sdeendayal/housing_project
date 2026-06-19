@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SendOtpRequest;
 use App\Http\Requests\VerifyOtpRequest;
-use App\Models\Otp;
 use App\Models\User;
 use App\Services\OtpVerificationService;
 use Illuminate\Http\RedirectResponse;
@@ -82,16 +81,6 @@ class OtpAuthController extends Controller
 
         if (! $result['success']) {
             return back()->withInput()->with('error', $result['message']);
-        }
-
-        $otpRecord = Otp::where('mobile_number', $mobile)
-            ->where('purpose', $purpose)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($otpRecord) {
-            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config);
         }
 
         session([
@@ -240,88 +229,7 @@ class OtpAuthController extends Controller
             return back()->with('warning', $result['message']);
         }
 
-        $otpRecord = Otp::where('mobile_number', $mobile)
-            ->where('purpose', $purpose)
-            ->whereNull('verified_at')
-            ->latest()
-            ->first();
-
-        if ($otpRecord) {
-            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config);
-        }
-
         return back()->with('success', 'A new OTP has been sent to your mobile number.');
-    }
-
-    private function sendLoginOtpSms(string $mobile, string $otpCode, array $config): void
-    {
-        $templateId = config('otp-login.sms_template_id');
-        $message = str_replace('{otp}', $otpCode, config('otp-login.sms_message'));
-
-        try {
-            $response = $this->sendSMS($mobile, $message, $templateId);
-            Log::info("{$config['log_label']} OTP SMS sent", ['mobile' => $mobile, 'response' => $response]);
-        } catch (\Throwable $e) {
-            Log::error("{$config['log_label']} OTP SMS failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
-        }
-    }
-
-    private function sendSMS(string $mobile, string $message, string $temp_id): mixed
-    {
-        $username = 'haryanait-sport';
-        $password = 'sports@1234';
-        $senderid = 'GOVHRY';
-        $dept_key = 'dca7fc77-9e28-4765-bbaa-07bd43197b2e';
-        $encryp_password = sha1(trim($password));
-
-        return $this->sendSingleSMS($username, $encryp_password, $senderid, $message, $mobile, $dept_key, $temp_id);
-    }
-
-    private function sendSingleSMS(
-        string $username,
-        string $encryp_password,
-        string $senderid,
-        string $message,
-        string $mobileno,
-        string $deptSecureKey,
-        string $temp_id
-    ): mixed {
-        $key = hash('sha512', trim($username).trim($senderid).trim($message).trim($deptSecureKey));
-
-        $data = [
-            'username' => trim($username),
-            'password' => trim($encryp_password),
-            'senderid' => trim($senderid),
-            'content' => trim($message),
-            'smsservicetype' => 'otpmsg',
-            'mobileno' => trim($mobileno),
-            'key' => trim($key),
-            'templateid' => trim($temp_id),
-        ];
-
-        return $this->postToUrl('https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT', $data);
-    }
-
-    private function postToUrl(string $url, array $data): mixed
-    {
-        $fields = '';
-
-        foreach ($data as $key => $value) {
-            $fields .= $key.'='.$value.'&';
-        }
-
-        rtrim($fields, '&');
-        $post = curl_init();
-        curl_setopt($post, CURLOPT_SSLVERSION, 6);
-        curl_setopt($post, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($post, CURLOPT_URL, $url);
-        curl_setopt($post, CURLOPT_POST, count($data));
-        curl_setopt($post, CURLOPT_POSTFIELDS, $fields);
-        curl_setopt($post, CURLOPT_RETURNTRANSFER, 1);
-        $result = curl_exec($post);
-        curl_close($post);
-
-        return $result;
     }
 
     public function logout(Request $request): RedirectResponse
