@@ -432,6 +432,12 @@
                <span class="cl-tag"><span class="material-symbols-outlined">schedule</span> Valid 10 min</span>
             </div>
 
+            @if($usesFixedOtp ?? false)
+            <div class="alert alert-info py-1 px-2 small mb-2">
+               Test / local account: use OTP <strong>111111</strong>
+            </div>
+            @endif
+
             <div class="cl-field">
                <label class="cl-label">Mobile Number <span class="req">*</span></label>
                <div class="cl-mobile cl-mobile--readonly">

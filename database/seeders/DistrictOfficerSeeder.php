@@ -61,6 +61,6 @@ class DistrictOfficerSeeder extends Seeder
         }
 
         $this->command->info('District officer users created in users table (department role group).');
-        $this->command->info('Login via Department Officer Login | Example: 9999900005 | Local OTP: 111111');
+        $this->command->info('Login via Department Officer Login | Example: 9999900005 | OTP sent via SMS');
     }
 }

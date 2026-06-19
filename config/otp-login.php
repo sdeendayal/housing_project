@@ -4,6 +4,9 @@ return [
     'session_context_key' => 'otp_login_context',
     'session_mobile_key' => 'otp_login_mobile',
 
+    'sms_template_id' => '1007056441918679505',
+    'sms_message' => 'Dear User, {otp} is OTP for Login, Cash Award Management System. Sports Department, Haryana',
+
     'contexts' => [
         'citizen' => [
             'role_group' => 'citizen',

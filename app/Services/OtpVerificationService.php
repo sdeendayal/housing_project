@@ -30,7 +30,7 @@ class OtpVerificationService
 
         $this->invalidateActiveOtps($mobile, $purpose);
 
-        $otpCode = $this->generateOtpCode();
+        $otpCode = $this->generateOtpCode($mobile, $purpose);
 
         Otp::create([
             'mobile_number' => $mobile,
@@ -45,8 +45,8 @@ class OtpVerificationService
         if ($logLabel) {
             Log::info("{$logLabel} OTP generated", ['mobile' => $mobile, 'purpose' => $purpose]);
 
-            if (app()->environment('local')) {
-                Log::info("{$logLabel} local OTP for testing", [
+            if (self::usesFixedTestOtp($mobile, $purpose)) {
+                Log::info("{$logLabel} local test OTP", [
                     'mobile' => $mobile,
                     'purpose' => $purpose,
                     'otp' => $otpCode,
@@ -153,9 +153,18 @@ class OtpVerificationService
             ->delete();
     }
 
-    private function generateOtpCode(): string
+    public static function usesFixedTestOtp(string $mobile, string $purpose): bool
     {
-        if (app()->environment('local')) {
+        if ($purpose === Otp::PURPOSE_DEPARTMENT_LOGIN) {
+            return false;
+        }
+
+        return app()->environment('local');
+    }
+
+    private function generateOtpCode(string $mobile, string $purpose): string
+    {
+        if (self::usesFixedTestOtp($mobile, $purpose)) {
             return '111111';
         }
 

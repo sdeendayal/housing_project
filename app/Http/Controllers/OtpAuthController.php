@@ -91,7 +91,7 @@ class OtpAuthController extends Controller
             ->first();
 
         if ($otpRecord) {
-            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config['log_label']);
+            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config);
         }
 
         session([
@@ -119,7 +119,10 @@ class OtpAuthController extends Controller
                 ->with('error', 'Please enter your mobile number first.');
         }
 
-        return view($config['verify_view'], compact('mobile'));
+        return view($config['verify_view'], [
+            'mobile' => $mobile,
+            'usesFixedOtp' => OtpVerificationService::usesFixedTestOtp($mobile, $config['otp_purpose']),
+        ]);
     }
 
     public function verifyOtp(VerifyOtpRequest $request, string $context): RedirectResponse
@@ -244,26 +247,22 @@ class OtpAuthController extends Controller
             ->first();
 
         if ($otpRecord) {
-            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config['log_label']);
+            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config);
         }
 
         return back()->with('success', 'A new OTP has been sent to your mobile number.');
     }
 
-    private function sendLoginOtpSms(string $mobile, string $otpCode, string $logLabel): void
+    private function sendLoginOtpSms(string $mobile, string $otpCode, array $config): void
     {
-        if (app()->environment('local')) {
-            return;
-        }
-
-        $tem_id = '1007056441918679505';
-        $message = 'Dear User, '.$otpCode.' is OTP for Login, Cash Award Management System. Sports Department, Haryana';
+        $templateId = config('otp-login.sms_template_id');
+        $message = str_replace('{otp}', $otpCode, config('otp-login.sms_message'));
 
         try {
-            $response = $this->sendSMS($mobile, $message, $tem_id);
-            Log::info("{$logLabel} OTP SMS sent", ['mobile' => $mobile, 'response' => $response]);
+            $response = $this->sendSMS($mobile, $message, $templateId);
+            Log::info("{$config['log_label']} OTP SMS sent", ['mobile' => $mobile, 'response' => $response]);
         } catch (\Throwable $e) {
-            Log::error("{$logLabel} OTP SMS failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
+            Log::error("{$config['log_label']} OTP SMS failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
         }
     }
 
