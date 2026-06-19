@@ -100,13 +100,18 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/mmsay-department-cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
 
-    Route::get('/mmsay-department-allotted-properties', function () {
-        return view('mmsay.deptartmentPropertyAllotment');
-    });   
+    Route::get('/mmsay-department-allotted-properties', [PropertyManagementController::class, 'mmsayDepartmentAllottedProperties']);
 
     Route::get('/mmsay-department-draw', [PropertyManagementController::class, 'mmsayDepartmentDraw']);
 
     Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
+
+    Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
+        ->name('mmsay.department.emi.payments');
+    
+    Route::get('/mmsay-emi-status/{assetId}', [PropertyManagementController::class, 'emiStatus'])
+    ->name('mmsay.emi.status');  
+
 
     // CMS Routes
 
@@ -128,12 +133,24 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::post('/department-news-store', [CmsController::class, 'saveNews'])->name('department-news-store');
 
-    Route::put('news-update/{id}',[CmsController::class, 'updateNews'])->name('news-update');
+    Route::put('news-update/{id}', [CmsController::class, 'updateNews'])->name('news-update');
 
     Route::get('/mmsay-department-add-district-officer', [CmsController::class, 'departmentAddDistrictOfficer'])
-    ->name('mmsay-department-add-district-officer');
+        ->name('mmsay-department-add-district-officer');
 
     Route::post('/officers/store', [CmsController::class, 'storeOfficer'])->name('officers.store');
+
+    Route::get('/mmsay-officers-list', [CmsController::class, 'listOfficers'])->name('mmsay.officers.list');
+
+    Route::post('/mmsay-officer-update', [CmsController::class, 'updateOfficer'])
+        ->name('mmsay.officer.update');
+
+    Route::post('/mmsay-transfer-officer', [CmsController::class, 'transferOfficer'])->name('mmsay.officer.transfer');
+
+    Route::post('/mmsay-officer-delete', [CmsController::class, 'deleteOfficer'])
+        ->name('mmsay.officer.delete');
+
+
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

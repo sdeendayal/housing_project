@@ -4,25 +4,44 @@
     <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
         <div class="max-w-container-max mx-auto space-y-md">
             <!-- Breadcrumbs -->
-            <nav aria-label="Breadcrumb" class="flex mb-4">
-                <ol class="inline-flex items-center space-x-1 md:space-x-3">
-                    <li class="inline-flex items-center">
-                        <a class="inline-flex items-center text-sm font-medium text-on-surface-variant hover:text-primary"
-                            href="{{ route('mmsay.dashboard') }}">
-                            <span class="material-symbols-outlined text-sm mr-2" data-icon="home">home</span>
-                            Dashboard
-                        </a>
-                    </li>
+            <div class="flex items-center justify-between mb-4">
 
-                    <li aria-current="page">
-                        <div class="flex items-center">
-                            <span class="material-symbols-outlined text-on-surface-variant"
-                                data-icon="chevron_right">chevron_right</span>
-                            <span class="ml-1 text-sm font-medium text-primary md:ml-2">Add District Officer</span>
-                        </div>
-                    </li>
-                </ol>
-            </nav>
+                <!-- Breadcrumb -->
+                <nav aria-label="Breadcrumb" class="flex">
+                    <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                        <li class="inline-flex items-center">
+                            <a class="inline-flex items-center text-sm font-medium text-on-surface-variant hover:text-primary"
+                                href="{{ route('mmsay.dashboard') }}">
+                                <span class="material-symbols-outlined text-sm mr-2">home</span>
+                                Dashboard
+                            </a>
+                        </li>
+
+                        <li aria-current="page">
+                            <div class="flex items-center">
+                                <span class="material-symbols-outlined text-on-surface-variant">
+                                    chevron_right
+                                </span>
+                                <span class="ml-1 text-sm font-medium text-primary md:ml-2">
+                                    Add District Officer
+                                </span>
+                            </div>
+                        </li>
+                    </ol>
+                </nav>
+
+                <!-- View List Button -->
+                <a href="{{ route('mmsay.officers.list') }}"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg shadow hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200">
+
+                    <span class="material-symbols-outlined text-sm">
+                        visibility
+                    </span>
+
+                    View Officers
+                </a>
+
+            </div>
 
             <!-- Form Container -->
             <div class="glass-card rounded-xl overflow-hidden border border-outline-variant bg-surface-container-lowest">
@@ -30,17 +49,7 @@
                     <h3 class="text-on-primary-container font-label-md font-bold uppercase tracking-wider">Officer Details
                         &amp; Regional Assignment</h3>
                 </div>
-                @if (session('success'))
-                    <div class="bg-green-100 text-green-700 p-3 rounded">
-                        {{ session('success') }}
-                    </div>
-                @endif
 
-                @if (session('error'))
-                    <div class="bg-red-100 text-red-700 p-3 rounded">
-                        {{ session('error') }}
-                    </div>
-                @endif
                 <form method="POST" action="{{ route('officers.store') }}" class="p-8 space-y-6">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -103,8 +112,8 @@
                                     data-icon="mail">mail</span>
                                 <input
                                     class="w-full pl-10 pr-4 py-3 border border-outline-variant rounded-lg font-body-md custom-input-focus transition-all bg-surface-container-low/50"
-                                    name="email" value="{{ old('email') }}" required
-                                    placeholder="officer@haryana.gov.in" type="email" />
+                                    name="email" value="{{ old('email') }}" required placeholder="officer@haryana.gov.in"
+                                    type="email" />
                                 @error('email')
                                     <p class="text-xs text-red-500">{{ $message }}</p>
                                 @enderror
@@ -208,5 +217,56 @@
             <p class="text-sm text-on-surface-variant">Profile sync in progress.</p>
         </div>
     </div>
+    <!-- Success Notification -->
+    <div id="successToast"
+        class="fixed top-5 right-5 bg-green-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform -translate-y-24 opacity-0 transition-all duration-500 z-[9999]">
 
+        <span class="material-symbols-outlined">check_circle</span>
+
+        <div>
+            <p class="font-semibold">Success</p>
+            <p class="text-sm">{{ session('success') }}</p>
+        </div>
+    </div>
+
+    <!-- Error Notification -->
+    <div id="errorToast"
+        class="fixed top-5 right-5 bg-red-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 transform -translate-y-24 opacity-0 transition-all duration-500 z-[9999]">
+
+        <span class="material-symbols-outlined">error</span>
+
+        <div>
+            <p class="font-semibold">Error</p>
+            <p class="text-sm">{{ session('error') }}</p>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            @if (session('success'))
+                const successToast = document.getElementById('successToast');
+
+                successToast.classList.remove('-translate-y-24', 'opacity-0');
+                successToast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    successToast.classList.remove('translate-y-0', 'opacity-100');
+                    successToast.classList.add('-translate-y-24', 'opacity-0');
+                }, 4000);
+            @endif
+
+            @if (session('error'))
+                const errorToast = document.getElementById('errorToast');
+
+                errorToast.classList.remove('-translate-y-24', 'opacity-0');
+                errorToast.classList.add('translate-y-0', 'opacity-100');
+
+                setTimeout(() => {
+                    errorToast.classList.remove('translate-y-0', 'opacity-100');
+                    errorToast.classList.add('-translate-y-24', 'opacity-0');
+                }, 4000);
+            @endif
+
+        });
+    </script>
 @endsection

@@ -87,7 +87,8 @@
                     </a>
 
                     <!-- EMI Payments -->
-                    <a href="#" class="flex flex-col items-center text-center group cursor-pointer">
+                    <a href="{{ url('/mmsay-department-emi-payments') }}"
+                        class="flex flex-col items-center text-center group cursor-pointer">
                         <div
                             class="w-14 h-14 bg-slate-800 text-yellow-400 rounded-full flex items-center justify-center border-2 border-yellow-500/30 transition-all duration-300 group-hover:scale-105 z-10">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +204,7 @@
                 </a>
 
                 <!-- EMI -->
-                <a href="{{ url('mmsay-department-installments') }}"
+                <a href="{{ url('/mmsay-department-emi-payments') }}"
                     class="block bg-white rounded-2xl border border-amber-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
 
                     <!-- Icon -->
@@ -213,7 +214,7 @@
                                 payments
                             </span>
                         </div>
-                    </div>                  
+                    </div>
 
                     <!-- TOTAL EMI (Main Highlight) -->
                     <div class="mt-2">

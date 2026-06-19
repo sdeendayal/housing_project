@@ -6,6 +6,7 @@ use App\Models\CmsNews;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class CmsController extends Controller
 {
@@ -23,32 +24,247 @@ class CmsController extends Controller
 
     public function storeOfficer(Request $request)
     {
-        // ✅ Validation
         $request->validate([
             'officer_name' => 'required|string|max:200',
             'district_id' => 'required|integer',
-            'email' => 'required|email|unique:officers,email',
+            'email' => 'required|email|unique:users,email',
+            'mobile' => 'required|digits:10|unique:users,mobile',
+        ]);
+
+        // Check if District Officer already exists
+        $districtOfficerExists = DB::table('users')
+            ->where('district_id', $request->district_id)
+            ->where('role', 'district_officer')
+            ->exists();
+
+        if ($districtOfficerExists) {
+
+            $district = DB::table('districts')
+                ->where('DistrictID', $request->district_id)
+                ->first();
+
+            return redirect()->back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'District Officer already exists for ' . ($district->DistrictName ?? 'selected district') . '.'
+                );
+        }
+
+        DB::beginTransaction();
+
+        try {
+
+            // Insert User
+            $userId = DB::table('users')->insertGetId([
+                'name' => $request->officer_name,
+                'email' => $request->email,
+                'mobile' => $request->mobile,
+                'district_id' => $request->district_id,
+                'password' => Hash::make('123456'),
+                'role' => 'district_officer',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Insert Role Mapping
+            DB::table('role_types')->insert([
+                'user_id' => $userId,
+                'role_id' => 2,
+                'role_group_id' => 2,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->back()
+                ->with('success', 'District Officer Added Successfully.');
+
+        } catch (\Exception $e) {
+
+            DB::rollback();
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', $e->getMessage());
+        }
+    }
+
+    public function listOfficers()
+    {
+        $officers = DB::table('users')
+            ->leftJoin('districts', 'users.district_id', '=', 'districts.DistrictID')
+            ->select('users.*', 'districts.DistrictName')
+            ->where('users.role', 'district_officer')
+            ->where('users.Is_Deleted', '0')
+            ->where('users.Is_Active', '1')
+            ->orderBy('users.id', 'desc')
+            ->get();
+
+        $districts = DB::table('districts')
+            ->where('Is_Active', 1)
+            ->get();
+
+        return view('mmsay.officersList', compact(
+            'officers',
+            'districts'
+        ));
+    }
+
+    public function updateOfficer(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'name' => 'required|string|max:200',
+            'email' => 'required|email',
             'mobile' => 'required|digits:10',
         ]);
 
         try {
 
-            // ✅ Insert Officer
-            DB::table('officers')->insert([
-                'OfficerName' => $request->officer_name,
-                'DistrictId' => $request->district_id,
-                'Email' => $request->email,
-                'Mobile' => $request->mobile,
-                'IsActive' => 1,
-                'IsDeleted' => 0,
-                'CreatedDate' => now(),
-            ]);
+            // Email duplicate check
+            $emailExists = DB::table('users')
+                ->where('email', $request->email)
+                ->where('id', '!=', $request->user_id)
+                ->exists();
 
-            return redirect()->back()->with('success', 'Officer Added Successfully');
+            if ($emailExists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Email already exists.'
+                ]);
+            }
+
+            // Mobile duplicate check
+            $mobileExists = DB::table('users')
+                ->where('mobile', $request->mobile)
+                ->where('id', '!=', $request->user_id)
+                ->exists();
+
+            if ($mobileExists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Mobile number already exists.'
+                ]);
+            }
+
+            DB::table('users')
+                ->where('id', $request->user_id)
+                ->update([
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'mobile' => $request->mobile,
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Officer updated successfully.'
+            ]);
 
         } catch (\Exception $e) {
 
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function transferOfficer(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required',
+            'district_id' => 'required'
+        ]);
+
+        try {
+
+            $alreadyExists = DB::table('users')
+                ->where('district_id', $request->district_id)
+                ->where('role', 'district_officer')
+                ->where('id', '!=', $request->user_id)
+                ->exists();
+
+            if ($alreadyExists) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Officer already exists in selected district.'
+                ]);
+            }
+
+            DB::table('users')
+                ->where('id', $request->user_id)
+                ->update([
+                    'district_id' => $request->district_id,
+                    'updated_at' => now()
+                ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Officer transferred successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteOfficer(Request $request)
+    {
+        try {
+
+            DB::beginTransaction();
+
+            $user = DB::table('users')
+                ->where('id', $request->user_id)
+                ->first();
+
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Officer not found.'
+                ]);
+            }
+
+            // Users Table Soft Delete
+            DB::table('users')
+                ->where('id', $request->user_id)
+                ->update([
+                    'Is_Deleted' => '1',
+                    'Is_Active' => '0',
+                    'updated_at' => now()
+                ]);
+
+            // Role Mapping Table Soft Delete
+            DB::table('role_types')
+                ->where('user_id', $request->user_id)
+                ->update([
+                    'Is_Deleted' => '1',
+                    'Is_Active' => '0',
+                    'updated_at' => now()
+                ]);
+
+            DB::commit();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'District Officer deleted successfully.'
+            ]);
+
+        } catch (\Exception $e) {
+
+            DB::rollBack();
+
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
         }
     }
 

@@ -1,9 +1,8 @@
 @extends('layouts.mmsayDepartmentAuth')
 @section('title', 'MMSAY Department Property Registration')
 @section('content')
-    <main class="ml-64 min-h-screen flex flex-col">
-
-        <div class="pt-20 px-4 pb-4 space-y-4 flex-1">
+    <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
+        <div class="max-w-container-max mx-auto space-y-md">
 
             <!-- Header Section -->
             <div class="flex items-center justify-between flex-wrap gap-3">
@@ -41,20 +40,13 @@
                         </h2>
                     </div>
                     <form method="GET" class="flex flex-wrap items-center justify-end gap-3 mb-4">
-
-                        <!-- EM OFFICE -->
-                        <select name="em_office" id="emOffice"
-                            class="h-11 min-w-[220px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                            <option value="">EM Office</option>
-                            @foreach ($emOffices as $em)
-                                <option value="{{ $em->BranchName }}">{{ $em->BranchName }}</option>
-                            @endforeach
-                        </select>
-
-                        <!-- DISTRICT -->
+                            <!-- DISTRICT -->
                         <select name="district" id="district"
                             class="h-11 min-w-[150px] rounded-lg border border-gray-300 bg-white px-4 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">District</option>
+                            @foreach ($districts as $district)
+                                <option value="{{ $district->DistrictName }}">{{ $district->DistrictName }}</option>
+                            @endforeach
                         </select>
 
                         <!-- CITY -->
@@ -95,7 +87,7 @@
                                 class="bg-surface-container-low text-[10px] uppercase tracking-wide text-on-surface-variant font-semibold border-b border-outline-variant">
 
                                 <th class="px-3 py-2 text-center">Actions</th>
-                                <th class="px-3 py-2">EM Office</th>
+                                
                                 <th class="px-3 py-2">District Office</th>
                                 <th class="px-3 py-2">City Office</th>
                                 <th class="px-3 py-2">Sector Name</th>
@@ -146,12 +138,7 @@
                                             </span>
 
                                         </div>
-                                    </td>
-
-                                    <!-- EM OFFICE -->
-                                    <td class="px-3 py-2 font-medium">
-                                        {{ $item->em_office ?? '-' }}
-                                    </td>
+                                    </td>                                   
 
                                     <!-- DISTRICT -->
                                     <td class="px-3 py-2">
@@ -265,20 +252,7 @@
                         <h3 class="text-secondary font-bold uppercase tracking-wider text-[12px]">Location Details</h3>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div class="space-y-1.5">
-                            <label class="font-label-md text-label-md text-on-surface-variant block">Estate Manager Office
-                                <span class="text-error">*</span></label>
-                            <select id="formEmOffice" name="BranchId"
-                                class="w-full border-outline-variant rounded-lg bg-white text-sm focus:ring-secondary">
-                                <option value="">Select EM Office</option>
-
-                                @foreach ($emOffices as $em)
-                                    <option value="{{ $em->BranchName }}">
-                                        {{ $em->BranchName }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
+                        
                         <div class="space-y-1.5">
                             <label class="font-label-md text-label-md text-on-surface-variant block">District Office <span
                                     class="text-error">*</span></label>

@@ -130,22 +130,18 @@ ON l.AssetId = i.AssetId;
     public function index(Request $request)
     {
         $query = DB::table('property_registration as pr')
-            ->leftJoin('em_offices as e', 'pr.BranchId', '=', 'e.BranchId')
             ->leftJoin('districts as d', 'pr.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('cities as c', 'pr.CityId', '=', 'c.CityId')
             ->leftJoin('sectors as s', 'pr.SectorId', '=', 's.SectorId')
             ->select(
                 'pr.*',
-                'e.BranchName as em_office',
                 'd.DistrictName as district',
                 'c.CityName as city',
                 's.SectorName as sector'
             )
             ->where('pr.IsDeleted', 0);
 
-        if ($request->em_office) {
-            $query->where('e.BranchName', $request->em_office);
-        }
+
 
         if ($request->district) {
             $query->where('d.DistrictName', $request->district);
@@ -167,7 +163,9 @@ ON l.AssetId = i.AssetId;
 
         return view('mmsay.departmentPropertyRegistration', [
             'properties' => $properties,
-            'emOffices' => EmOffice::all()
+            'districts' => DB::table('districts')
+                ->orderBy('DistrictName')
+                ->get()
         ]);
     }
 
@@ -337,5 +335,206 @@ ON l.AssetId = i.AssetId;
         ));
     }
 
+    public function mmsayDepartmentAllottedProperties()
+    {
+        $properties = DB::table('property_auction_detail as pad')
+
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+
+            ->leftJoin(
+                'property_private_purchasers as ppp',
+                'pad.PurchaserID',
+                '=',
+                'ppp.PrivatePurchaserId'
+            )
+
+            ->leftJoin('districts as d', 'pad.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'pad.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'pad.SectorId', '=', 's.SectorId')
+
+            ->select(
+                'pad.*',
+
+                'pr.AssetName',
+                'pr.AssetSize',
+
+                'd.DistrictName as district',
+                'c.CityName as city',
+                's.SectorName as sector',
+
+                'ppp.PrivatePurchaserName',
+                'ppp.MobileNo',
+                'ppp.ApplicationNo',
+                'ppp.PPPId'
+            )
+
+            ->where('pad.IsDeleted', 0)
+            ->where('pad.IsActive', 1)
+
+            ->orderByDesc('pad.PropertyAuctionId')
+
+            ->paginate(20);
+
+        return view(
+            'mmsay.deptartmentPropertyAllotment',
+            compact('properties')
+        );
+    }
+
+    public function departmentEmiPayments()
+    {
+        $properties = DB::table('property_auction_detail as pad')
+
+            ->join(
+                'property_registration as pr',
+                'pad.AssetId',
+                '=',
+                'pr.AssetId'
+            )
+
+            ->join(
+                'property_private_purchasers as ppp',
+                'pad.PurchaserID',
+                '=',
+                'ppp.PrivatePurchaserId'
+            )
+
+            ->leftJoin(
+                'districts as d',
+                'pad.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+
+            ->leftJoin(
+                'cities as c',
+                'pad.CityId',
+                '=',
+                'c.CityId'
+            )
+
+            ->leftJoin(
+                'sectors as s',
+                'pad.SectorId',
+                '=',
+                's.SectorId'
+            )
+
+            ->select(
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pad.BalanceAmount',
+
+                'pr.AssetName',
+                'pr.AssetSize',
+
+                'ppp.PrivatePurchaserName',
+                'ppp.MobileNo',
+                'ppp.ApplicationNo',
+
+                'd.DistrictName as district',
+                'c.CityName as city',
+                's.SectorName as sector'
+            )
+
+            ->where('pad.IsDeleted', 0)
+            ->where('pad.IsActive', 1)
+
+            ->orderBy('pad.PropertyAuctionId', 'desc')
+
+            ->paginate(20)
+
+            ->withQueryString();
+
+        return view(
+            'mmsay.departmentEmiPayments',
+            compact('properties')
+        );
+    }
+
+    public function emiStatus($assetId)
+    {
+        $property = DB::table('property_auction_detail as pad')
+            ->leftJoin('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->where('pad.AssetId', $assetId)
+            ->first();
+
+        if (!$property) {
+            abort(404, 'Property not found');
+        }
+
+        $flatCost = $property->FlatCost ?? 0;
+        $ReceivedAmount = $property->ReceivedAmount ?? 0;
+        $BalanceAmount = $property->BalanceAmount ?? 0;
+
+        // Total received till now
+        $totalReceived = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->sum('total_paid_amount');
+
+        // EMI schedule
+        $installments = DB::table('installment_due')
+            ->where('AssetId', $assetId)
+            ->orderBy('InstallmentNumber')
+            ->get();
+
+        $remaining = $totalReceived;
+        $today = date('Y-m-d');
+
+        $ledger = [];
+
+        foreach ($installments as $emi) {
+
+            $dueAmount = $emi->DueAmount;
+            $paid = 0;
+
+            // Only consume payment for current + past EMIs
+            if ($remaining > 0) {
+                $paid = min($remaining, $dueAmount);
+                $remaining -= $paid;
+            }
+
+            $balance = $dueAmount - $paid;
+
+            // 📌 STATUS LOGIC (IMPORTANT FIX)
+            if ($emi->DueDate > $today) {
+                $status = 'Upcoming';
+            } else {
+                if ($paid == 0) {
+                    $status = 'Unpaid';
+                } elseif ($paid < $dueAmount) {
+                    $status = 'Partial';
+                } else {
+                    $status = 'Paid';
+                }
+            }
+
+            $ledger[] = [
+                'no' => $emi->InstallmentNumber,
+                'due' => $emi->DueDate,
+                'emi' => $dueAmount,
+                'paid' => $paid,
+                'balance' => $balance,
+                'status' => $status
+            ];
+        }
+
+        // Summary
+        $emiReceived = collect($ledger)->sum('paid');
+        $emiPending = collect($ledger)->sum('balance');
+
+        return view('mmsay.emiStatus', compact(
+            'property',
+            'ReceivedAmount',
+            'BalanceAmount',
+            'flatCost',
+            'totalReceived',
+            'ledger',
+            'emiReceived',
+            'emiPending'
+        ));
+    }
 
 }

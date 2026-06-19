@@ -13,6 +13,8 @@ class RoleType extends Model
     protected $fillable = [
         'user_id',
         'role_id',
+        'Is_Active',
+        'Is_Deleted',
         'role_group_id',
     ];
 

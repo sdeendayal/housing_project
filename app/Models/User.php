@@ -17,6 +17,8 @@ class User extends Authenticatable
         'mobile',
         'password',
         'role',
+        'Is_Active',
+        'Is_Deleted',
         'district_id',
         'district_name',
     ];
