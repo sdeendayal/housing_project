@@ -45,6 +45,8 @@ class PhysicalPossessionDocument extends Model
     /** @var list<string> */
     public const OPTIONAL_TYPES = [];
 
+    public const MAX_UPLOAD_KB = 500;
+
     public const REVIEW_PENDING = 'pending';
 
     public const REVIEW_ACCEPTED = 'accepted';

@@ -1,7 +1,7 @@
 <script>
 const PP_ALLOWED_EXT = ['pdf', 'jpg', 'jpeg', 'png'];
 const PP_ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
-const PP_MAX_FILE_BYTES = 10 * 1024 * 1024;
+const PP_MAX_FILE_BYTES = 500 * 1024;
 
 function ppSwalFileError(message) {
     Swal.fire({
@@ -45,7 +45,7 @@ function ppValidateSingleFile(input) {
     }
 
     if (file.size > PP_MAX_FILE_BYTES) {
-        ppSwalFileError('Maximum file size is 10 MB.');
+        ppSwalFileError('Maximum file size is 500 KB.');
         input.value = '';
         return false;
     }

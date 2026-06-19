@@ -84,7 +84,7 @@
                             @else
                             <div class="pp-upload-zone" id="zone_{{ $allotmentField }}">
                                 <span class="material-symbols-outlined text-indigo-500 text-[22px]">cloud_upload</span>
-                                <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload allotment letter (PDF/JPG/PNG)</p>
+                                <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload allotment letter (PDF/JPG/PNG, max 500 KB)</p>
                             </div>
                             <input type="file" name="{{ $allotmentField }}" id="input_{{ $allotmentField }}" class="hidden"
                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">
@@ -94,7 +94,7 @@
                         @else
                         <div class="pp-upload-zone" id="zone_{{ $doc->document_type }}">
                             <span class="material-symbols-outlined text-indigo-500 text-[22px]">cloud_upload</span>
-                            <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload corrected file (PDF/JPG/PNG)</p>
+                            <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload corrected file (PDF/JPG/PNG, max 500 KB)</p>
                         </div>
                         <input type="file" name="{{ $doc->document_type }}" id="input_{{ $doc->document_type }}" class="hidden"
                                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png">

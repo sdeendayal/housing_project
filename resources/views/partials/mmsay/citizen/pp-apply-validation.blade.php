@@ -3,7 +3,7 @@
     const form = document.getElementById('ppApplyForm');
     if (!form) return;
 
-    const MAX_BYTES = 10 * 1024 * 1024;
+    const MAX_BYTES = typeof PP_MAX_FILE_BYTES !== 'undefined' ? PP_MAX_FILE_BYTES : (500 * 1024);
     const ALLOWED_EXT = ['pdf', 'jpg', 'jpeg', 'png'];
     const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png'];
 
@@ -80,7 +80,7 @@
         }
 
         if (file.size > MAX_BYTES) {
-            return label + ': file size is ' + formatSize(file.size) + '. Maximum allowed is 10 MB.';
+            return label + ': file size is ' + formatSize(file.size) + '. Maximum allowed is 500 KB.';
         }
 
         return null;

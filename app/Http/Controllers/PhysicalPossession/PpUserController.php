@@ -507,21 +507,22 @@ class PpUserController extends Controller
 
         $verifiedAllotmentLetter = $this->findVerifiedDocument($user, PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER, $draftApplication);
 
-        $requiredFileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
-        $optionalFileRule = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+        $maxKb = PhysicalPossessionDocument::MAX_UPLOAD_KB;
+        $requiredFileRule = "required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:{$maxKb}";
+        $optionalFileRule = "nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:{$maxKb}";
 
         $rules = [];
         $messages = [];
 
         foreach (PhysicalPossessionDocument::applyFormFields() as $field => $meta) {
             if ($field === PhysicalPossessionDocument::TYPE_POSSESSION_CERTIFICATE && $verifiedPossessionCert) {
-                $rules[$field] = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+                $rules[$field] = "nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:{$maxKb}";
 
                 continue;
             }
 
             if ($field === PhysicalPossessionDocument::TYPE_ALLOTMENT_LETTER && $verifiedAllotmentLetter) {
-                $rules[$field] = 'nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+                $rules[$field] = "nullable|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:{$maxKb}";
 
                 continue;
             }
@@ -530,7 +531,7 @@ class PpUserController extends Controller
             $messages["{$field}.required"] = $meta['label'].' is required.';
             $messages["{$field}.mimes"] = $meta['label'].' must be PDF, JPG, JPEG, or PNG.';
             $messages["{$field}.mimetypes"] = $meta['label'].' must be PDF, JPG, JPEG, or PNG.';
-            $messages["{$field}.max"] = $meta['label'].' must be less than 10 MB.';
+            $messages["{$field}.max"] = $meta['label'].' must be less than 500 KB.';
             $messages["{$field}.file"] = $meta['label'].' must be a valid uploaded file.';
         }
 
@@ -804,7 +805,8 @@ class PpUserController extends Controller
             return back()->with('error', 'No documents require correction.');
         }
 
-        $fileRule = 'required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:10240';
+        $maxKb = PhysicalPossessionDocument::MAX_UPLOAD_KB;
+        $fileRule = "required|file|mimes:pdf,jpg,jpeg,png|mimetypes:application/pdf,image/jpeg,image/png|max:{$maxKb}";
         $rules = [];
         $messages = [];
 
@@ -821,6 +823,8 @@ class PpUserController extends Controller
             $rules[$type] = $fileRule;
             $messages["{$type}.required"] = $doc->typeLabel().' is required.';
             $messages["{$type}.mimes"] = $doc->typeLabel().' must be PDF, JPG, JPEG, or PNG.';
+            $messages["{$type}.mimetypes"] = $doc->typeLabel().' must be PDF, JPG, JPEG, or PNG.';
+            $messages["{$type}.max"] = $doc->typeLabel().' must be less than 500 KB.';
         }
 
         if (! empty($rules)) {
