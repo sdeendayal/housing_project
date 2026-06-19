@@ -84,6 +84,16 @@ class OtpAuthController extends Controller
             return back()->withInput()->with('error', $result['message']);
         }
 
+        $otpRecord = Otp::where('mobile_number', $mobile)
+            ->where('purpose', $purpose)
+            ->whereNull('verified_at')
+            ->latest()
+            ->first();
+
+        if ($otpRecord) {
+            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config['log_label']);
+        }
+
         session([
             config('otp-login.session_context_key') => $context,
             config('otp-login.session_mobile_key') => $mobile,
@@ -227,7 +237,92 @@ class OtpAuthController extends Controller
             return back()->with('warning', $result['message']);
         }
 
+        $otpRecord = Otp::where('mobile_number', $mobile)
+            ->where('purpose', $purpose)
+            ->whereNull('verified_at')
+            ->latest()
+            ->first();
+
+        if ($otpRecord) {
+            $this->sendLoginOtpSms($mobile, $otpRecord->otp, $config['log_label']);
+        }
+
         return back()->with('success', 'A new OTP has been sent to your mobile number.');
+    }
+
+    private function sendLoginOtpSms(string $mobile, string $otpCode, string $logLabel): void
+    {
+        if (app()->environment('local')) {
+            return;
+        }
+
+        $tem_id = '1007056441918679505';
+        $message = 'Dear User, '.$otpCode.' is OTP for Login, Cash Award Management System. Sports Department, Haryana';
+
+        try {
+            $response = $this->sendSMS($mobile, $message, $tem_id);
+            Log::info("{$logLabel} OTP SMS sent", ['mobile' => $mobile, 'response' => $response]);
+        } catch (\Throwable $e) {
+            Log::error("{$logLabel} OTP SMS failed", ['mobile' => $mobile, 'error' => $e->getMessage()]);
+        }
+    }
+
+    private function sendSMS(string $mobile, string $message, string $temp_id): mixed
+    {
+        $username = 'haryanait-sport';
+        $password = 'sports@1234';
+        $senderid = 'GOVHRY';
+        $dept_key = 'dca7fc77-9e28-4765-bbaa-07bd43197b2e';
+        $encryp_password = sha1(trim($password));
+
+        return $this->sendSingleSMS($username, $encryp_password, $senderid, $message, $mobile, $dept_key, $temp_id);
+    }
+
+    private function sendSingleSMS(
+        string $username,
+        string $encryp_password,
+        string $senderid,
+        string $message,
+        string $mobileno,
+        string $deptSecureKey,
+        string $temp_id
+    ): mixed {
+        $key = hash('sha512', trim($username).trim($senderid).trim($message).trim($deptSecureKey));
+
+        $data = [
+            'username' => trim($username),
+            'password' => trim($encryp_password),
+            'senderid' => trim($senderid),
+            'content' => trim($message),
+            'smsservicetype' => 'otpmsg',
+            'mobileno' => trim($mobileno),
+            'key' => trim($key),
+            'templateid' => trim($temp_id),
+        ];
+
+        return $this->postToUrl('https://msdgweb.mgov.gov.in/esms/sendsmsrequestDLT', $data);
+    }
+
+    private function postToUrl(string $url, array $data): mixed
+    {
+        $fields = '';
+
+        foreach ($data as $key => $value) {
+            $fields .= $key.'='.$value.'&';
+        }
+
+        rtrim($fields, '&');
+        $post = curl_init();
+        curl_setopt($post, CURLOPT_SSLVERSION, 6);
+        curl_setopt($post, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($post, CURLOPT_URL, $url);
+        curl_setopt($post, CURLOPT_POST, count($data));
+        curl_setopt($post, CURLOPT_POSTFIELDS, $fields);
+        curl_setopt($post, CURLOPT_RETURNTRANSFER, 1);
+        $result = curl_exec($post);
+        curl_close($post);
+
+        return $result;
     }
 
     public function logout(Request $request): RedirectResponse
