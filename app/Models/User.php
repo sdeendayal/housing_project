@@ -9,7 +9,7 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    use Notifiable, SoftDeletes;
+    use Notifiable;
 
     protected $fillable = [
         'name',
@@ -18,6 +18,8 @@ class User extends Authenticatable
         'private_purchaser_id',
         'password',
         'role',
+        'Is_Active',
+        'Is_Deleted',
         'district_id',
         'district_name',
     ];

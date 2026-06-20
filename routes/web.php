@@ -8,10 +8,11 @@ use App\Http\Controllers\OtpAuthController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PhysicalPossession\PpUserController;
 use App\Http\Controllers\PropertyManagementController;
+use App\Http\Controllers\CmsController;
+use App\Http\Controllers\WebsiteController;
 
-Route::get('/', function () {
-    return view('home.index');
-})->name('home');
+
+Route::get('/', [WebsiteController::class, 'index']);
 
 Route::get('/help', function () {
     return view('home.help');
@@ -118,10 +119,6 @@ Route::post('/refresh-captcha', function () {
     return response()->json(['captcha' => $captcha]);
 });
 
-Route::get('/mmsay-department-allotted-properties', function () {
-    return view('mmsay.deptartmentPropertyAllotment');
-});
-
 // ─── Department Login (unchanged — email/password) ──────────────────────────
 
 Route::middleware('guest')->group(function () {
@@ -130,9 +127,11 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'role:department'])->group(function () {
-    Route::get('/mmsay-department-dashboard', function () {
-        return view('mmsay.departmentDashboard');
-    })->name('department.dashboard');
+
+    Route::get(
+        '/mmsay-department-dashboard',
+        [PropertyManagementController::class, 'dashboard']
+    )->name('mmsay.dashboard');
 
     Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
 
@@ -144,6 +143,58 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         ->name('properties.export');
 
     Route::get('/mmsay-department-cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
+
+    Route::get('/mmsay-department-allotted-properties', [PropertyManagementController::class, 'mmsayDepartmentAllottedProperties']);
+
+    Route::get('/mmsay-department-draw', [PropertyManagementController::class, 'mmsayDepartmentDraw']);
+
+    Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
+
+    Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
+        ->name('mmsay.department.emi.payments');
+    
+    Route::get('/mmsay-emi-status/{assetId}', [PropertyManagementController::class, 'emiStatus'])
+    ->name('mmsay.emi.status');  
+
+
+    // CMS Routes
+
+    Route::get('/mmsay-department-add-banner', [CmsController::class, 'addBanner']);
+
+    Route::post('/department-banners-store', [CmsController::class, 'saveBanner'])
+        ->name('department-banners-store');
+
+    Route::get('/banner-delete/{id}', [CmsController::class, 'deleteBanner'])
+        ->name('banner-delete');
+
+    Route::get('/banner-deactivate/{id}', [CmsController::class, 'deactivateBanner'])
+        ->name('banner-deactivate');
+
+    Route::get('/banner-activate/{id}', [CmsController::class, 'activateBanner'])
+        ->name('banner-activate');
+
+    Route::get('/mmsay-department-add-news', [CmsController::class, 'addNews']);
+
+    Route::post('/department-news-store', [CmsController::class, 'saveNews'])->name('department-news-store');
+
+    Route::put('news-update/{id}', [CmsController::class, 'updateNews'])->name('news-update');
+
+    Route::get('/mmsay-department-add-district-officer', [CmsController::class, 'departmentAddDistrictOfficer'])
+        ->name('mmsay-department-add-district-officer');
+
+    Route::post('/officers/store', [CmsController::class, 'storeOfficer'])->name('officers.store');
+
+    Route::get('/mmsay-officers-list', [CmsController::class, 'listOfficers'])->name('mmsay.officers.list');
+
+    Route::post('/mmsay-officer-update', [CmsController::class, 'updateOfficer'])
+        ->name('mmsay.officer.update');
+
+    Route::post('/mmsay-transfer-officer', [CmsController::class, 'transferOfficer'])->name('mmsay.officer.transfer');
+
+    Route::post('/mmsay-officer-delete', [CmsController::class, 'deleteOfficer'])
+        ->name('mmsay.officer.delete');
+
+
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');

@@ -4,59 +4,139 @@
     <main class="ml-64 min-h-screen flex flex-col">
         <div class="pt-20 px-4 pb-4 space-y-4 flex-1">
             <!-- Header Section -->
-            <div class="flex items-center justify-between flex-wrap gap-3">
-                <div>
-                    <h2 class="text-xl font-semibold text-primary tracking-tight">
-                        Cash Receipt
-                    </h2>
-                </div>
-            </div>
+
 
             <!-- Table Container -->
-            <div class="glass-card rounded-lg shadow-sm border border-outline-variant overflow-hidden">
+            <div class="rounded-2xl bg-white shadow-lg border border-gray-100 overflow-hidden">
 
                 <!-- Table Header -->
-                <div
-                    class="px-4 py-3 border-b border-outline-variant flex items-center justify-between flex-wrap gap-2 bg-surface-container-lowest">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold text-white">
+                                Cash Receipt Management
+                            </h2>
+                            <p class="text-blue-100 text-sm mt-1">
+                                View and manage all cash receipt transactions
+                            </p>
+                        </div>
 
-                    <div class="mb-4 flex items-center justify-between border-b pb-3">
-                        <h2 class="text-xl font-semibold text-gray-800">
-                            Cash Receipt Details
-                        </h2>
+                        <div class="bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2">
+                            <span class="text-white text-sm font-medium">
+                                Total Records:
+                                {{ $receipts->total() }}
+                            </span>
+                        </div>
                     </div>
+                </div>
+                <div class="p-6 bg-gray-50 border-b">
+                    <form method="GET" action="{{ url('/cash-receipt') }}">
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    EM Office
+                                </label>
+
+                                <select id="cashEmOffice" name="em_office"
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
+
+                                    <option value="">All Offices</option>
+
+                                    @foreach ($emOffices as $office)
+                                        <option value="{{ $office->BranchName }}"
+                                            {{ request('em_office') == $office->BranchName ? 'selected' : '' }}>
+                                            {{ $office->BranchName }}
+                                        </option>
+                                    @endforeach
+
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    District
+                                </label>
+
+                                <select id="cashDistrict" name="district" data-selected="{{ request('district') }}"
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    <option value="">All Districts</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    City
+                                </label>
+
+                                <select id="cashCity" name="city" data-selected="{{ request('city') }}"
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    <option value="">All Cities</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Sector
+                                </label>
+
+                                <select id="cashSector" name="sector" data-selected="{{ request('sector') }}"
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    <option value="">All Sectors</option>
+                                </select>
+                            </div>
+
+                            <div class="flex items-end">
+                                <button type="submit"
+                                    class="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow-md">
+
+                                    Search
+                                </button>
+                            </div>
+
+                            <div class="flex items-end">
+                                <a href="{{ url('/cash-receipt') }}"
+                                    class="w-full h-11 rounded-xl bg-gray-600 text-white font-semibold flex items-center justify-center hover:bg-gray-700 transition shadow-md">
+
+                                    Reset
+                                </a>
+                            </div>
+
+                        </div>
+                    </form>
                 </div>
 
 
 
                 <!-- Table -->
                 <div class="overflow-x-auto">
+
                     <table class="w-full text-left border-collapse min-w-[1400px] text-sm">
 
                         <thead>
-                            <tr
-                                class="bg-surface-container-low text-[10px] uppercase tracking-wide text-on-surface-variant font-semibold border-b border-outline-variant">
+                            <tr class="bg-gray-900 text-white text-xs uppercase tracking-wider">
 
-                                <th class="px-3 py-2">Id</th>
-                                <th class="px-3 py-2">Estate Manager Office</th>
-                                <th class="px-3 py-2">District Office</th>
-                                <th class="px-3 py-2">City Office</th>
-                                <th class="px-3 py-2">Sector</th>
-                                <th class="px-3 py-2">Asset Number</th>
-                                <th class="px-3 py-2">Payment Date</th>
-                                <th class="px-3 py-2">Payment Type</th>
-                                <th class="px-3 py-2">Impact On</th>
-                                <th class="px-3 py-2">Receipt Number</th>
-                                <th class="px-3 py-2 text-right">GST Amount</th>
-                                <th class="px-3 py-2 text-right">Total Paid Amount</th>
-                                <th class="px-3 py-2 text-center">Actions</th>
+                                <th class="px-4 py-4">ID</th>
+                                <th class="px-4 py-4">EM Office</th>
+                                <th class="px-4 py-4">District</th>
+                                <th class="px-4 py-4">City</th>
+                                <th class="px-4 py-4">Sector</th>
+                                <th class="px-4 py-4">Asset No.</th>
+                                <th class="px-4 py-4">Payment Date</th>
+                                <th class="px-4 py-4">Payment Type</th>
+                                <th class="px-4 py-4">Impact On</th>
+                                <th class="px-4 py-4">Receipt No.</th>
+                                <th class="px-4 py-4 text-right">GST</th>
+                                <th class="px-4 py-4 text-right">Amount</th>
+                                <th class="px-4 py-4 text-center">Action</th>
 
                             </tr>
                         </thead>
 
                         <tbody>
                             @forelse($receipts as $receipt)
-                                <tr class="border-b border-outline-variant hover:bg-gray-50">
+                                <tr class="border-b border-gray-100 hover:bg-blue-50 transition duration-200">
 
                                     <td class="px-3 py-2">{{ $receipt->id }}</td>
 
@@ -85,7 +165,10 @@
                                     </td>
 
                                     <td class="px-3 py-2">
-                                        Cash
+                                        <span
+                                            class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                                            Bank
+                                        </span>
                                     </td>
 
                                     <td class="px-3 py-2">
@@ -101,11 +184,14 @@
                                     </td>
 
                                     <td class="px-3 py-2 text-right">
-                                        ₹ {{ number_format($receipt->total_paid_amount, 2) }}
+                                        <span class="font-bold text-green-600">
+                                            ₹ {{ number_format($receipt->total_paid_amount, 2) }}
+                                        </span>
                                     </td>
 
                                     <td class="px-3 py-2 text-center">
-                                        <a href="#" class="text-blue-600 hover:underline">
+                                        <a href="#"
+                                            class="inline-flex items-center px-4 py-2 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 transition">
                                             View
                                         </a>
                                     </td>
@@ -122,7 +208,7 @@
 
                     </table>
                 </div>
-                <div class="mt-4">
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
                     {{ $receipts->links() }}
                 </div>
 

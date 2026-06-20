@@ -395,26 +395,13 @@
                         <div id="slider" class="flex gap-4 transition-transform duration-700 ease-in-out">
 
                             <!-- Slide 1 -->
-                            <div class="min-w-[calc(100%-16px)] flex justify-center">
-                                <img src="banner.jpeg"
-                                    class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                    alt="Banner 1">
-                            </div>
-
-                            <!-- Slide 2 -->
-                            {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
-                            <img src="banner8.jpg"
-                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                alt="Banner 2">
-                        </div> --}}
-
-                            <!-- Slide 3 -->
-                            {{-- <div class="min-w-[calc(100%-16px)] flex justify-center">
-                            <img src="banner2.jpg"
-                                class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                alt="Banner 3">
-                        </div> --}}
-
+                            @foreach ($banners as $banner)
+                                <div class="min-w-full flex justify-center">
+                                    <img src="{{ asset('uploads/banner/' . $banner->image) }}"
+                                        class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                        alt="{{ $banner->title }}">
+                                </div>
+                            @endforeach
                         </div>
 
                         <!-- Left Button -->
@@ -479,9 +466,11 @@
                                 <p class="text-xs text-on-surface font-medium">
                                     <span class="pp-scheme-new-badge-sm text-[8px] px-1 py-0.5 mr-1">NEW</span>
                                     Physical Possession Application Portal live —
-                                    <a href="{{ route('citizen.login') }}" class="text-sky-600 font-bold hover:underline">User Login</a>
+                                    <a href="{{ route('citizen.login') }}"
+                                        class="text-sky-600 font-bold hover:underline">User Login</a>
                                     |
-                                    <a href="{{ route('pp.department.login') }}" class="text-sky-600 font-bold hover:underline">Officer Login</a>
+                                    <a href="{{ route('pp.department.login') }}"
+                                        class="text-sky-600 font-bold hover:underline">Officer Login</a>
                                 </p>
                             </div>
                         </div>

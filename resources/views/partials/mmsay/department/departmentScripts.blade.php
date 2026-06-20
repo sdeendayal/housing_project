@@ -1,82 +1,358 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
-$(document).ready(function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // EM Office -> District
-    $('#formEmOffice').on('change', function () {
+    const imageInput = document.getElementById('bannerImage');
+    const previewImage = document.getElementById('previewImage');
+    const placeholder = document.getElementById('previewPlaceholder');
 
-        let name = $(this).val();
+    imageInput.addEventListener('change', function (e) {
 
-        $('#formDistrict').html('<option value="">Select District</option>');
-        $('#formCity').html('<option value="">Select City</option>');
-        $('#formSector').html('<option value="">Select Sector</option>');
+        const file = e.target.files[0];
 
-        if (!name) return;
+        if (!file) {
+            previewImage.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+            return;
+        }
 
-        $.get('/get-districts/' + encodeURIComponent(name), function (res) {
+        const reader = new FileReader();
 
-            res.forEach(function (d) {
+        reader.onload = function (event) {
 
-                $('#formDistrict').append(
-                    `<option value="${d}">${d}</option>`
-                );
+            previewImage.src = event.target.result;
+            previewImage.classList.remove('hidden');
 
-            });
+            placeholder.classList.add('hidden');
+        };
 
-        });
-
-    });
-
-
-    // District -> City
-    $('#formDistrict').on('change', function () {
-
-        let name = $(this).val();
-
-        $('#formCity').html('<option value="">Select City</option>');
-        $('#formSector').html('<option value="">Select Sector</option>');
-
-        if (!name) return;
-
-        $.get('/get-cities/' + encodeURIComponent(name), function (res) {
-
-            res.forEach(function (c) {
-
-                $('#formCity').append(
-                    `<option value="${c}">${c}</option>`
-                );
-
-            });
-
-        });
-
-    });
-
-
-    // City -> Sector
-    $('#formCity').on('change', function () {
-
-        let name = $(this).val();
-
-        $('#formSector').html('<option value="">Select Sector</option>');
-
-        if (!name) return;
-
-        $.get('/get-sectors/' + encodeURIComponent(name), function (res) {
-
-            res.forEach(function (s) {
-
-                $('#formSector').append(
-                    `<option value="${s}">${s}</option>`
-                );
-
-            });
-
-        });
-
+        reader.readAsDataURL(file);
     });
 
 });
+</script>
+<script>
+    // Simple micro-interaction for toggle
+    const toggle = document.querySelector('input[type="checkbox"]');
+    toggle.addEventListener('change', function() {
+        const parent = this.closest('div');
+        if (this.checked) {
+            console.log('Banner will be set as active immediately');
+        }
+    });
+
+    // Handle form focus visual polish
+    const inputs = document.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('focus', () => {
+            input.parentElement.classList.add('scale-[1.005]');
+            input.parentElement.style.transition = 'transform 0.2s ease';
+        });
+        input.addEventListener('blur', () => {
+            input.parentElement.classList.remove('scale-[1.005]');
+        });
+    });
+</script>
+<script>
+    setTimeout(() => {
+
+        let toast = document.getElementById('successToast');
+
+        if (toast) {
+            toast.style.transition = "0.4s";
+            toast.style.opacity = "0";
+
+            setTimeout(() => {
+                toast.remove();
+            }, 400);
+        }
+
+    }, 3000);
+</script>
+
+{{-- <script>
+document.addEventListener('DOMContentLoaded', function() {
+
+    const monthlyLabels = @json($monthlyLabels);
+    const monthlyCounts = @json($monthlyCounts);
+
+    const weeklyLabels = @json($weeklyLabels);
+    const weeklyCounts = @json($weeklyCounts);
+
+    const monthlyBtn = document.getElementById('monthlyBtn');
+    const weeklyBtn = document.getElementById('weeklyBtn');
+
+    const ctx = document.getElementById('registrationChart');
+
+    const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: monthlyLabels,
+            datasets: [{
+                label: 'Registrations',
+                data: monthlyCounts,
+                backgroundColor: '#2563eb',
+                borderRadius: 10,
+                maxBarThickness: 40
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#f1f5f9'
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+
+    monthlyBtn.addEventListener('click', function() {
+
+        chart.data.labels = monthlyLabels;
+        chart.data.datasets[0].data = monthlyCounts;
+        chart.update();
+
+        monthlyBtn.classList.add('bg-blue-600','text-white');
+        weeklyBtn.classList.remove('bg-blue-600','text-white');
+    });
+
+    weeklyBtn.addEventListener('click', function() {
+
+        chart.data.labels = weeklyLabels;
+        chart.data.datasets[0].data = weeklyCounts;
+        chart.update();
+
+        weeklyBtn.classList.add('bg-blue-600','text-white');
+        monthlyBtn.classList.remove('bg-blue-600','text-white');
+    });
+
+});
+</script> --}}
+<script>
+    $(document).ready(function() {
+
+        let selectedDistrict = $('#cashDistrict').data('selected');
+        let selectedCity = $('#cashCity').data('selected');
+        let selectedSector = $('#cashSector').data('selected');
+
+        // EM Office -> District
+        function loadDistricts(callback = null) {
+
+            let name = $('#cashEmOffice').val();
+
+            $('#cashDistrict').html('<option value="">District</option>');
+            $('#cashCity').html('<option value="">City</option>');
+            $('#cashSector').html('<option value="">Sector</option>');
+
+            if (!name) return;
+
+            $.get('/cash-receipt-districts/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(item) {
+
+                    $('#cashDistrict').append(
+                        `<option value="${item}">${item}</option>`
+                    );
+
+                });
+
+                if (selectedDistrict) {
+                    $('#cashDistrict').val(selectedDistrict);
+                }
+
+                if (callback) callback();
+            });
+        }
+
+        // District -> City
+        function loadCities(callback = null) {
+
+            let name = $('#cashDistrict').val();
+
+            $('#cashCity').html('<option value="">City</option>');
+            $('#cashSector').html('<option value="">Sector</option>');
+
+            if (!name) return;
+
+            $.get('/cash-receipt-cities/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(item) {
+
+                    $('#cashCity').append(
+                        `<option value="${item}">${item}</option>`
+                    );
+
+                });
+
+                if (selectedCity) {
+                    $('#cashCity').val(selectedCity);
+                }
+
+                if (callback) callback();
+            });
+        }
+
+        // City -> Sector
+        function loadSectors() {
+
+            let name = $('#cashCity').val();
+
+            $('#cashSector').html('<option value="">Sector</option>');
+
+            if (!name) return;
+
+            $.get('/cash-receipt-sectors/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(item) {
+
+                    $('#cashSector').append(
+                        `<option value="${item}">${item}</option>`
+                    );
+
+                });
+
+                if (selectedSector) {
+                    $('#cashSector').val(selectedSector);
+                }
+            });
+        }
+
+        // Change Events
+        $('#cashEmOffice').on('change', function() {
+
+            selectedDistrict = '';
+            selectedCity = '';
+            selectedSector = '';
+
+            loadDistricts();
+        });
+
+        $('#cashDistrict').on('change', function() {
+
+            selectedCity = '';
+            selectedSector = '';
+
+            loadCities();
+        });
+
+        $('#cashCity').on('change', function() {
+
+            selectedSector = '';
+
+            loadSectors();
+        });
+
+        // PAGE RELOAD/PAGINATION/FILTER KE BAAD
+        if ($('#cashEmOffice').val()) {
+            loadDistricts(function() {
+                if ($('#cashDistrict').val()) {
+                    loadCities(function() {
+                        if ($('#cashCity').val()) {
+                            loadSectors();
+                        }
+                    });
+                }
+            });
+        }
+
+    });
+</script>
+<script>
+    $(document).ready(function() {
+
+        // EM Office -> District
+        $('#formEmOffice').on('change', function() {
+
+            let name = $(this).val();
+
+            $('#formDistrict').html('<option value="">Select District</option>');
+            $('#formCity').html('<option value="">Select City</option>');
+            $('#formSector').html('<option value="">Select Sector</option>');
+
+            if (!name) return;
+
+            $.get('/get-districts/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(d) {
+
+                    $('#formDistrict').append(
+                        `<option value="${d}">${d}</option>`
+                    );
+
+                });
+
+            });
+
+        });
+
+
+        // District -> City
+        $('#formDistrict').on('change', function() {
+
+            let name = $(this).val();
+
+            $('#formCity').html('<option value="">Select City</option>');
+            $('#formSector').html('<option value="">Select Sector</option>');
+
+            if (!name) return;
+
+            $.get('/get-cities/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(c) {
+
+                    $('#formCity').append(
+                        `<option value="${c}">${c}</option>`
+                    );
+
+                });
+
+            });
+
+        });
+
+
+        // City -> Sector
+        $('#formCity').on('change', function() {
+
+            let name = $(this).val();
+
+            $('#formSector').html('<option value="">Select Sector</option>');
+
+            if (!name) return;
+
+            $.get('/get-sectors/' + encodeURIComponent(name), function(res) {
+
+                res.forEach(function(s) {
+
+                    $('#formSector').append(
+                        `<option value="${s}">${s}</option>`
+                    );
+
+                });
+
+            });
+
+        });
+
+    });
 </script>
 <script>
     $('#emOffice').on('change', function() {
@@ -97,38 +373,38 @@ $(document).ready(function () {
         });
     });
 
-    $('#district').on('change', function () {
-    let name = $(this).val();
+    $('#district').on('change', function() {
+        let name = $(this).val();
 
-    $('#city').html('<option value="">Select</option>');
-    $('#sector').html('<option value="">Select</option>');
+        $('#city').html('<option value="">Select</option>');
+        $('#sector').html('<option value="">Select</option>');
 
-    if (!name) return;
+        if (!name) return;
 
-    $.get('/get-cities/' + name, function (res) {
+        $.get('/get-cities/' + name, function(res) {
 
-        res.forEach(c => {
-            $('#city').append(`<option value="${c}">${c}</option>`);
+            res.forEach(c => {
+                $('#city').append(`<option value="${c}">${c}</option>`);
+            });
+
         });
-
     });
-});
 
-    $('#city').on('change', function () {
-    let name = $(this).val();
+    $('#city').on('change', function() {
+        let name = $(this).val();
 
-    $('#sector').html('<option value="">Select</option>');
+        $('#sector').html('<option value="">Select</option>');
 
-    if (!name) return;
+        if (!name) return;
 
-    $.get('/get-sectors/' + name, function (res) {
+        $.get('/get-sectors/' + name, function(res) {
 
-        res.forEach(s => {
-            $('#sector').append(`<option value="${s}">${s}</option>`);
+            res.forEach(s => {
+                $('#sector').append(`<option value="${s}">${s}</option>`);
+            });
+
         });
-
     });
-});
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {

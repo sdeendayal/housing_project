@@ -19,6 +19,8 @@ return new class extends Migration {
 
             // ✅ FIXED ROLE COLUMN
             $table->string('role')->default('user');
+            $table->string('Is_Active')->default(1);
+            $table->string('Is_Deleted')->default(0);
 
             $table->rememberToken();
             $table->timestamps();

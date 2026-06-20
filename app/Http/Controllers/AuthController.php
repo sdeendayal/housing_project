@@ -52,7 +52,9 @@ class AuthController extends Controller
             
             // ROLE CHECK (optional)
             if ($user->role == 'department') {
-                return redirect('/mmsay-department-dashboard');
+
+                return redirect('/mmsay-department-dashboard')
+                    ->with('success', 'Login Successful');
             }
 
             return redirect('/dashboard');

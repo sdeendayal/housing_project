@@ -11,6 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->unique()->constrained()->cascadeOnDelete();
             $table->foreignId('role_group_id')->constrained()->cascadeOnDelete();
+            $table->enum('Is_Active', ['0', '1'])->default('1');
+            $table->enum('Is_Deleted', ['0', '1'])->default('0');
             $table->timestamps();
             $table->softDeletes();
         });

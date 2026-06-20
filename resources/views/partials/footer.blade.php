@@ -71,13 +71,33 @@
                 </div>
 
             </div>
-
             <!-- Image -->
             <img src="emblem-black.png" alt="Haryana Logo"
                 class="h-14 w-14 object-contain opacity-95 hover:scale-105 transition-transform duration-300">
 
         </div>
-
     </div>
 
 </footer>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const form = document.getElementById('loginForm');
+
+            if (form) {
+
+                form.addEventListener('submit', function() {
+
+                    document.getElementById('btnText').style.display = 'none';
+                    document.getElementById('btnLoader').style.display = 'inline-block';
+
+                    document.getElementById('loginBtn').disabled = true;
+
+                    document.getElementById('pageLoader').style.display = 'flex';
+                });
+
+            }
+
+        });
+    </script>

@@ -1,512 +1,206 @@
 @extends('layouts.mmsayDepartmentAuth')
 @section('title', 'MMSAY Department Property Registration')
 @section('content')
-    <main class="ml-64 p-gutter pt-8">
-        <div class="pt-20 px-0 pb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+    <style>
+        .pagination-wrapper nav {
+            display: flex;
+            justify-content: center;
+        }
 
-            <div>
-                <h3 class="text-xl font-medium text-primary mb-0.5">
-                    Property Auction
-                </h3>
-                <p class="text-xs text-gray-500 font-normal">
-                    Manage and monitor land auction details across national districts.
-                </p>
+        .pagination-wrapper svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .pagination-wrapper span,
+        .pagination-wrapper a {
+            font-size: 14px;
+        }
+    </style>
+    <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
+        <div class="max-w-container-max mx-auto space-y-md">
+            <div class="px-0 pb-1 flex flezx-col lg:flex-row lg:items-center lg:justify-between">
+
+                <div>
+                    <h3 class="text-xl font-medium text-primary mb-0.5">
+                        Property Auction
+                    </h3>
+                    <p class="text-xs text-gray-500 font-normal">
+                        Manage and monitor land auction details across national districts.
+                    </p>
+                </div>
+
+                <button
+                    class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-normal shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
+                    onclick="openModal()">
+
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                    <span>Allotted New Property</span>
+                </button>
+
             </div>
+            <!-- Table Filters & Search -->
+            {{-- <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm">
 
-            <button
-                class="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-md text-sm font-normal shadow-sm hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all"
-                onclick="openModal()">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
 
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                <span>Allotted New Property</span>
-            </button>
+                    <h4 class="text-base font-medium text-primary">
+                        Land Auction Details
+                    </h4>
 
-        </div>
-        <!-- Table Filters & Search -->
-        <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
 
-            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                        <div class="relative hidden" id="filterInputContainer">
+                            <input
+                                class="bg-white border border-gray-300 rounded-md px-3 py-2 w-60 text-sm focus:ring-1 focus:ring-primary focus:border-primary"
+                                id="tableSearch" onkeyup="filterTable()" placeholder="Search record..." type="text" />
+                        </div>
 
-                <h4 class="text-base font-medium text-primary">
-                    Land Auction Details
-                </h4>
+                        <div class="flex items-center gap-2">
 
-                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <button
+                                class="flex items-center gap-1.5 border border-primary text-primary px-3 py-2 rounded-md text-sm font-normal hover:bg-primary/5 transition-all"
+                                onclick="toggleFilter()">
 
-                    <div class="relative hidden" id="filterInputContainer">
-                        <input
-                            class="bg-white border border-gray-300 rounded-md px-3 py-2 w-60 text-sm focus:ring-1 focus:ring-primary focus:border-primary"
-                            id="tableSearch" onkeyup="filterTable()" placeholder="Search record..." type="text" />
-                    </div>
+                                <span class="material-symbols-outlined text-[18px]">
+                                    filter_alt
+                                </span>
+                                Filter
+                            </button>
 
-                    <div class="flex items-center gap-2">
+                            <button
+                                class="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-md text-sm font-normal shadow-sm hover:shadow-md transition-all"
+                                onclick="downloadExcel()">
 
-                        <button
-                            class="flex items-center gap-1.5 border border-primary text-primary px-3 py-2 rounded-md text-sm font-normal hover:bg-primary/5 transition-all"
-                            onclick="toggleFilter()">
+                                <span class="material-symbols-outlined text-[18px]">
+                                    download
+                                </span>
+                                Download Excel
+                            </button>
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                filter_alt
-                            </span>
-                            Filter
-                        </button>
-
-                        <button
-                            class="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-md text-sm font-normal shadow-sm hover:shadow-md transition-all"
-                            onclick="downloadExcel()">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                download
-                            </span>
-                            Download Excel
-                        </button>
-
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <!-- High Density Data Table -->
-        <div class="glass-card rounded-xl overflow-hidden overflow-x-auto shadow-sm">
-            <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-                <table class="w-full min-w-[1200px] text-sm text-left" id="auctionTable">
+            </div> --}}
+            <!-- High Density Data Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
-                    <!-- Table Header -->
-                    <thead class="bg-gray-50 border-b border-gray-200">
-                        <tr class="text-[11px] font-medium uppercase tracking-wide text-gray-600">
-                            <th class="px-3 py-3 whitespace-nowrap">Actions</th>
-                            <th class="px-3 py-3 whitespace-nowrap">EM Office</th>
-                            <th class="px-3 py-3 whitespace-nowrap">District</th>
-                            <th class="px-3 py-3 whitespace-nowrap">City</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Sector</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Asset #</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Type</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Auction Date</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Allotment</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Possession</th>
-                            <th class="px-3 py-3 whitespace-nowrap">ROI %</th>
-                            <th class="px-3 py-3 whitespace-nowrap">Reserve Price</th>
-                            <th class="px-3 py-3 text-right whitespace-nowrap">
-                                Sales Amount
-                            </th>
-                        </tr>
-                    </thead>
+                <!-- Table -->
+                <div class="overflow-x-auto">
 
-                    <!-- Table Body -->
-                    <tbody class="divide-y divide-gray-100 text-[13px] text-gray-700 bg-white">
+                    <table class="w-full min-w-[1000px]">
 
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
+                        <thead class="bg-slate-50">
+                            <tr class="text-[11px] uppercase tracking-wider text-slate-500">
 
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
+                                <th class="px-4 py-4 text-left font-semibold">
+                                    District
+                                </th>
+
+                                <th class="px-4 py-4 text-left font-semibold">
+                                    Asset Name
+                                </th>
+
+                                <th class="px-4 py-4 text-left font-semibold">
+                                    Purchaser
+                                </th>
+
+                                <th class="px-4 py-4 text-left font-semibold">
+                                    Mobile
+                                </th>
+
+                                <th class="px-4 py-4 font-semibold">
+                                    Balance
+                                </th>
+
+                                <th class="px-4 py-4  font-semibold">
+                                    Action
+                                </th>
+
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+
+                            @foreach ($properties as $property)
+                                <tr class="hover:bg-slate-50 transition">
+
+                                    <td class="px-4 py-4 font-medium text-slate-700">
+                                        {{ $property->district }}
+                                    </td>
+
+                                    <td class="px-4 py-4 font-medium text-slate-800">
+                                        {{ Str::limit($property->AssetName, 30) }}
+                                    </td>
+
+                                    <td class="px-4 py-4">
+                                        {{ $property->PrivatePurchaserName }}
+                                    </td>
+
+                                    <td class="px-4 py-4">
+                                        {{ $property->MobileNo }}
+                                    </td>
+
+                                    <td class="px-4 py-4 text-right">
                                         <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
+                                            class="inline-flex px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
+                                            ₹{{ number_format($property->BalanceAmount, 2) }}
                                         </span>
-                                    </button>
+                                    </td>
 
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
+                                    <td class="px-4 py-4 text-center">
 
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
+                                        <button
+                                            onclick="openPropertyModal(
+                '{{ $property->district }}',
+                '{{ $property->city }}',
+                '{{ $property->sector }}',
+                '{{ $property->AssetId }}',
+                '{{ $property->AssetName }}',
+                '{{ $property->AssetSize }}',
+                '{{ $property->PrivatePurchaserName }}',
+                '{{ $property->MobileNo }}',
+                '{{ $property->ApplicationNo }}',
+                '{{ $property->FlatCost }}',
+                '{{ $property->ReceivedAmount }}',
+                '{{ $property->BalanceAmount }}'
+            )"
+                                            class="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
 
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                visibility
+                                            </span>
 
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
+                                            View
 
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
+                                        </button>
 
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
+                                    </td>
 
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
+                                </tr>
+                            @endforeach
 
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
+                        </tbody>
 
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
+                    </table>
 
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
 
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
-
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
-
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
-
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
-
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 1 -->
-                        <tr class="hover:bg-gray-50 transition duration-200">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center gap-1.5">
-
-                                    <button class="p-1.5 rounded-md hover:bg-gray-100 transition"
-                                        onclick="toggleExpand('row1-expand', this)">
-                                        <span
-                                            class="material-symbols-outlined text-[18px] text-gray-500 transition-transform">
-                                            keyboard_arrow_down
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-blue-50 text-blue-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            edit
-                                        </span>
-                                    </button>
-
-                                    <button class="p-1.5 rounded-md hover:bg-green-50 text-green-600 transition">
-                                        <span class="material-symbols-outlined text-[18px]">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </div>
-                            </td>
-
-                            <td class="px-3 py-3 font-medium">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">Panchkula</td>
-                            <td class="px-3 py-3">19</td>
-                            <td class="px-3 py-3 font-semibold">317</td>
-                            <td class="px-3 py-3">Residential</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">07-01-1987</td>
-                            <td class="px-3 py-3">28-01-1987</td>
-                            <td class="px-3 py-3">-</td>
-                            <td class="px-3 py-3 font-medium">₹28,375</td>
-                            <td class="px-3 py-3 text-right font-semibold text-primary">
-                                ₹35,900
-                            </td>
-                        </tr>
-
-                        <!-- Expand Row -->
-                        <tr class="hidden bg-gray-50" id="row1-expand">
-                            <td colspan="13" class="px-10 py-4">
-                                <div class="flex items-center gap-2 text-sm text-gray-600">
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        person
-                                    </span>
-                                    test user
-                                </div>
-                            </td>
-                        </tr>
-
-                        
-
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- Pagination -->
-        <div class="flex justify-between items-center mt-6">
-            <span class="text-body-sm text-on-surface-variant">Showing 1 to 3 of 10,192 entries</span>
-            <div class="flex items-center gap-2">
-                <button class="p-2 border border-outline-variant rounded hover:bg-surface-container-high transition-colors">
-                    <span class="material-symbols-outlined text-lg" data-icon="chevron_left">chevron_left</span>
-                </button>
-                <div class="flex items-center gap-1">
-                    <button class="px-3 py-1 bg-primary text-on-primary rounded font-bold">1</button>
-                    <button
-                        class="px-3 py-1 hover:bg-surface-container-high rounded transition-colors text-body-sm">2</button>
-                    <button
-                        class="px-3 py-1 hover:bg-surface-container-high rounded transition-colors text-body-sm">3</button>
-                    <span class="px-2">...</span>
-                    <button
-                        class="px-3 py-1 hover:bg-surface-container-high rounded transition-colors text-body-sm">340</button>
                 </div>
-                <button class="p-2 border border-outline-variant rounded hover:bg-surface-container-high transition-colors">
-                    <span class="material-symbols-outlined text-lg" data-icon="chevron_right">chevron_right</span>
-                </button>
+                <div class="mt-6">
+                    <div
+                        class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl shadow-sm px-6 py-4">
+                        <div class="text-sm text-slate-600">
+                        </div>
+
+                        <div class="pagination-wrapper">
+                            {{ $properties->links() }}
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
-        </div>
+
     </main>
     <!-- Modal Overlay -->
     <div class="fixed inset-0 bg-primary/40 backdrop-blur-sm z-[100] hidden items-center justify-center p-gutter transition-opacity duration-300 opacity-0"
@@ -702,4 +396,148 @@
         </div>
     </div>
 
+    <div id="propertyModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl mx-4">
+
+            <div class="flex items-center justify-between p-6 border-b">
+
+                <h3 class="text-xl font-bold text-slate-800">
+                    Property Details
+                </h3>
+
+                <button onclick="closePropertyModal()">
+                    <span class="material-symbols-outlined">
+                        close
+                    </span>
+                </button>
+
+            </div>
+
+            <div class="p-6">
+
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-5">
+
+                    <div>
+                        <p class="text-xs text-slate-500">District</p>
+                        <p id="mDistrict" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">City</p>
+                        <p id="mCity" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Sector</p>
+                        <p id="mSector" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Asset ID</p>
+                        <p id="mAssetId" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Asset Name</p>
+                        <p id="mAssetName" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Asset Size</p>
+                        <p id="mAssetSize" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Purchaser</p>
+                        <p id="mPurchaser" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Mobile</p>
+                        <p id="mMobile" class="font-semibold"></p>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-slate-500">Application No</p>
+                        <p id="mApplication" class="font-semibold"></p>
+                    </div>
+
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mt-8">
+
+                    <div class="bg-blue-50 rounded-xl p-4 text-center">
+                        <p class="text-sm text-slate-500">Flat Cost</p>
+                        <h4 id="mFlatCost" class="font-bold text-blue-600"></h4>
+                    </div>
+
+                    <div class="bg-green-50 rounded-xl p-4 text-center">
+                        <p class="text-sm text-slate-500">Received</p>
+                        <h4 id="mReceived" class="font-bold text-green-600"></h4>
+                    </div>
+
+                    <div class="bg-red-50 rounded-xl p-4 text-center">
+                        <p class="text-sm text-slate-500">Balance</p>
+                        <h4 id="mBalance" class="font-bold text-red-600"></h4>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    <script>
+        function openPropertyModal(
+            district,
+            city,
+            sector,
+            assetId,
+            assetName,
+            assetSize,
+            purchaser,
+            mobile,
+            application,
+            flatCost,
+            received,
+            balance
+        ) {
+
+            document.getElementById('mDistrict').innerText = district;
+            document.getElementById('mCity').innerText = city;
+            document.getElementById('mSector').innerText = sector;
+            document.getElementById('mAssetId').innerText = assetId;
+            document.getElementById('mAssetName').innerText = assetName;
+            document.getElementById('mAssetSize').innerText = assetSize;
+            document.getElementById('mPurchaser').innerText = purchaser;
+            document.getElementById('mMobile').innerText = mobile;
+            document.getElementById('mApplication').innerText = application;
+
+            document.getElementById('mFlatCost').innerText =
+                '₹ ' + Number(flatCost).toLocaleString();
+
+            document.getElementById('mReceived').innerText =
+                '₹ ' + Number(received).toLocaleString();
+
+            document.getElementById('mBalance').innerText =
+                '₹ ' + Number(balance).toLocaleString();
+
+            document.getElementById('propertyModal')
+                .classList.remove('hidden');
+
+            document.getElementById('propertyModal')
+                .classList.add('flex');
+        }
+
+        function closePropertyModal() {
+
+            document.getElementById('propertyModal')
+                .classList.remove('flex');
+
+            document.getElementById('propertyModal')
+                .classList.add('hidden');
+        }
+    </script>
 @endsection

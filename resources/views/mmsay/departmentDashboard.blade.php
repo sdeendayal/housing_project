@@ -1,327 +1,277 @@
 @extends('layouts.mmsayDepartmentAuth')
 @section('title', 'MMSAY Department Dashboard')
 @section('content')
-    <main class="ml-64 pt-20 p-md min-h-screen">
+
+    @if (session('success'))
+        <div id="successToast" class="success-toast">
+            <span class="material-symbols-outlined me-2">
+                check_circle
+            </span>
+
+            {{ session('success') }}
+        </div>
+    @endif
+    <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
         <div class="max-w-container-max mx-auto space-y-md">
-            <!-- Dashboard Header Section -->
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-xl font-semibold text-primary">
-                        Dashboard
-                    </h3>
 
-                    <p class="text-sm text-on-surface-variant">
-                        Real-time overview of housing portal operations
-                    </p>
-                </div>
-                <div class="flex items-center gap-3">
-                    <div
-                        class="bg-white border border-outline-variant rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm cursor-pointer hover:bg-surface-container transition-colors text-sm">
+            <div
+                class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900
+            rounded-3xl p-8 border border-slate-700 shadow-2xl shadow-black/30">
 
-                        <span class="font-medium text-gray-600">
-                            Branch:
-                        </span>
+                <div class="relative grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
 
-                        <span class="font-medium text-primary">
-                            All Branch
-                        </span>
+                    <!-- Property Registration -->
+                    <a href="{{ url('mmsay-department-property-registration') }}"
+                        class="flex flex-col items-center text-center group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-full flex items-center justify-center border-4 border-green-300 shadow-lg shadow-green-500/30 z-10 transition-all duration-300 group-hover:scale-110">
+                            <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-green-400">
+                            Registration
+                        </h4>
+                    </a>
 
-                        <span class="material-symbols-outlined text-[18px]">
-                            expand_more
-                        </span>
-                    </div>
+                    <a href="{{ url('/mmsay-department-draw') }}" class="flex flex-col items-center text-center group">
 
-                    <!-- Generate Report Button -->
-                    <button
-                        class="bg-primary text-on-primary px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 hover:shadow-md transition-all">
+                        <div
+                            class="w-14 h-14 bg-slate-800 text-cyan-400 rounded-full flex items-center justify-center border-2 border-cyan-500/30 shadow-md hover:shadow-cyan-500/20 transition-all duration-300 group-hover:scale-105 z-10">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
 
-                        <span class="material-symbols-outlined text-[18px]">
-                            add
-                        </span>
+                        <h4 class="mt-3 text-sm font-semibold text-white">Lucky Draw</h4>
 
-                        Generate Report
-                    </button>
+                    </a>
+
+
+
+                    <!-- Property Allotment -->
+                    <a href="{{ url('mmsay-department-allotted-properties') }}"
+                        class="flex flex-col items-center text-center group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-slate-800 text-orange-400 rounded-full flex items-center justify-center border-2 border-orange-500/30 transition-all duration-300 group-hover:scale-105 z-10">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                            </svg>
+                        </div>
+                        <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-orange-400">
+                            Property Allotment
+                        </h4>
+                        <p class="text-xs text-slate-400">Plot / Flat Assigned</p>
+                    </a>
+
+                    <!-- Provisional Letter -->
+                    <a href="#" class="flex flex-col items-center text-center group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-slate-800 text-blue-400 rounded-full flex items-center justify-center border-2 border-blue-500/30 transition-all duration-300 group-hover:scale-105 z-10">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                </path>
+                            </svg>
+                        </div>
+                        <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-blue-400">
+                            Provisional Letter
+                        </h4>
+                        <p class="text-xs text-slate-400">Issued After Draw</p>
+                    </a>
+
+                    <!-- EMI Payments -->
+                    <a href="{{ url('/mmsay-department-emi-payments') }}"
+                        class="flex flex-col items-center text-center group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-slate-800 text-yellow-400 rounded-full flex items-center justify-center border-2 border-yellow-500/30 transition-all duration-300 group-hover:scale-105 z-10">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+                                </path>
+                            </svg>
+                        </div>
+                        <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-yellow-400">
+                            EMI Payments
+                        </h4>
+                        <p class="text-xs text-slate-400">Monthly Installments</p>
+                    </a>
+
+                    <!-- Physical Letter -->
+                    <a href="#" class="flex flex-col items-center text-center group cursor-pointer">
+                        <div
+                            class="w-14 h-14 bg-slate-800 text-pink-400 rounded-full flex items-center justify-center border-2 border-pink-500/30 transition-all duration-300 group-hover:scale-105 z-10">
+                            <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                </path>
+                            </svg>
+                        </div>
+                        <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-pink-400">
+                            Physical Letter
+                        </h4>
+                        <p class="text-xs text-slate-400">After All EMIs Cleared</p>
+                    </a>
+
                 </div>
             </div>
+
             <!-- Bento Grid - Summary Metrics -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                <!-- Card 1 -->
-                <div
-                    class="bg-blue-50 border border-blue-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
 
-                    <div class="flex items-center justify-between">
 
-                        <div class="w-9 h-9 bg-primary rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                description
+
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+
+                <!-- Registration -->
+                <a href="{{ url('mmsay-department-property-registration') }}"
+                    class="block bg-white rounded-2xl border border-indigo-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
+
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-indigo-500">
+                                person_add
                             </span>
                         </div>
-
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
-                            </span>
-                            +12%
-                        </span>
                     </div>
 
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Total Applications
-                        </p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Registration
+                    </p>
 
-                        <h4 class="text-xl font-semibold text-primary">
-                            12,845
-                        </h4>
-                    </div>
-                </div>
+                    <h3 class="text-3xl font-bold text-slate-800 mt-2">
+                        2,89,893
+                    </h3>
+                </a>
 
-                <!-- Card 2 -->
-                <div
-                    class="bg-yellow-50 border border-yellow-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
+                <!-- Draw -->
+                <a href="{{ url('mmsay-department-draw') }}"
+                    class="block bg-white rounded-2xl border border-emerald-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
 
-                    <div class="flex items-center justify-between">
-
-                        <div class="w-9 h-9 bg-yellow-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                pending_actions
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-emerald-500">
+                                casino
                             </span>
                         </div>
-
-                        <span class="text-red-500 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_down
-                            </span>
-                            -4%
-                        </span>
                     </div>
 
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Pending Verifications
-                        </p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Draw
+                    </p>
 
-                        <h4 class="text-xl font-semibold text-primary">
-                            2,412
-                        </h4>
-                    </div>
-                </div>
+                    <h3 class="text-3xl font-bold text-emerald-600 mt-2">
+                        {{ number_format($allottedUnits) }}
+                    </h3>
 
-                <!-- Card 3 -->
-                <div
-                    class="bg-green-50 border border-green-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
+                    <p class="text-xs text-slate-400 mt-1">
+                        Lucky Draw Process
+                    </p>
+                </a>
 
-                    <div class="flex items-center justify-between">
+                <!-- Allotted -->
+                <a href="{{ url('mmsay-department-allotted-properties') }}"
+                    class="block bg-white rounded-2xl border border-orange-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
 
-                        <div class="w-9 h-9 bg-green-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
-                                holiday_village
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-orange-500">
+                                apartment
                             </span>
                         </div>
+                    </div>
 
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        Allotted
+                    </p>
+
+                    <h3 class="text-3xl font-bold text-orange-600 mt-2">
+                        {{ number_format($allottedUnits) }}
+                    </h3>
+
+                    <p class="text-xs text-slate-400 mt-1">
+                        Plot / Flat Assigned
+                    </p>
+                </a>
+
+                <!-- EMI -->
+                <a href="{{ url('/mmsay-department-emi-payments') }}"
+                    class="block bg-white rounded-2xl border border-amber-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
+
+                    <!-- Icon -->
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-amber-500">
+                                payments
                             </span>
-                            +8%
-                        </span>
+                        </div>
                     </div>
 
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Allotted Units
+                    <!-- TOTAL EMI (Main Highlight) -->
+                    <div class="mt-2">
+                        <p class="text-xs text-slate-500">Total EMI</p>
+                        <p class="text-2xl font-bold text-amber-600">
+                            {{ $emiData->total_emi }}
                         </p>
-
-                        <h4 class="text-xl font-semibold text-primary">
-                            8,102
-                        </h4>
                     </div>
-                </div>
 
-                <!-- Card 4 -->
-                <div
-                    class="bg-purple-50 border border-purple-100 p-4 rounded-xl flex flex-col gap-2 shadow-sm transition-all duration-300 hover:scale-[1.03] hover:shadow-md active:scale-[0.98] cursor-pointer">
+                    <!-- Paid + Pending (Side by Side) -->
+                    <div class="mt-3 flex justify-between gap-4">
 
-                    <div class="flex items-center justify-between">
+                        <div class="flex-1 bg-green-50 rounded-lg p-2 text-center">
+                            <p class="text-[10px] text-slate-500">Paid</p>
+                            <p class="text-sm font-bold text-green-600">
+                                {{ $emiData->paid_emi }}
+                            </p>
+                        </div>
 
-                        <div class="w-9 h-9 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-                            <span class="material-symbols-outlined text-[20px]">
+                        <div class="flex-1 bg-red-50 rounded-lg p-2 text-center">
+                            <p class="text-[10px] text-slate-500">Pending</p>
+                            <p class="text-sm font-bold text-red-500">
+                                {{ $emiData->pending_emi }}
+                            </p>
+                        </div>
+
+                    </div>
+
+                </a>
+
+                <!-- Revenue -->
+                <a href="{{ url('mmsay-department-revenue') }}"
+                    class="block bg-white rounded-2xl border border-violet-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
+
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 rounded-xl bg-violet-50 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-violet-500">
                                 account_balance_wallet
                             </span>
                         </div>
-
-                        <span class="text-green-600 text-xs font-medium flex items-center gap-1">
-                            <span class="material-symbols-outlined text-[14px]">
-                                trending_up
-                            </span>
-                            +15%
-                        </span>
                     </div>
 
-                    <div>
-                        <p class="text-[11px] uppercase tracking-wide text-gray-500">
-                            Total Revenue
-                        </p>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        physical possession letter
+                    </p>
 
-                        <h4 class="text-xl font-semibold text-primary">
-                            ₹4.2M
-                        </h4>
-                    </div>
-                </div>
+                    <h3 class="text-3xl font-bold text-violet-600 mt-2">
+
+                    </h3>
+
+                    <p class="text-xs text-emerald-500 mt-1">
+                        Collections Stable
+                    </p>
+                </a>
 
             </div>
-            <!-- Asymmetric Layout: Chart and Recent Activity -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
 
-                <!-- Analytics Section -->
-                <div class="lg:col-span-2 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-
-                    <div class="flex items-center justify-between mb-4">
-                        <h5 class="text-sm font-semibold text-primary">
-                            Registration Trends
-                        </h5>
-
-                        <div class="flex gap-2">
-                            <button
-                                class="px-3 py-1 text-xs rounded-md bg-surface-container-high text-on-surface border border-outline-variant">
-                                Monthly
-                            </button>
-
-                            <button
-                                class="px-3 py-1 text-xs rounded-md text-on-surface-variant hover:bg-surface-container border border-outline-variant transition">
-                                Weekly
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Chart -->
-                    <div class="h-[220px] w-full flex items-end justify-between gap-2 pb-2">
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:45%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:60%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:35%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:75%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:90%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:55%;"></div>
-                        <div class="flex-1 bg-secondary-container/20 rounded-t-md hover:bg-secondary-container transition"
-                            style="height:85%;"></div>
-                    </div>
-
-                    <!-- Month Labels -->
-                    <div class="flex justify-between text-[11px] text-gray-500 mt-2">
-                        <span>Jan</span>
-                        <span>Feb</span>
-                        <span>Mar</span>
-                        <span>Apr</span>
-                        <span>May</span>
-                        <span>Jun</span>
-                        <span>Jul</span>
-                    </div>
-                </div>
-
-                <!-- Right Side -->
-                <div class="space-y-4">
-
-                    <!-- Quick Actions -->
-                    <div
-                        class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-[1.02]">
-                        <h5 class="text-sm font-semibold text-primary mb-3">
-                            Quick Actions
-                        </h5>
-
-                        <div class="grid grid-cols-2 gap-3">
-
-                            <button
-                                class="flex flex-col items-center justify-center py-4 rounded-xl bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm">
-                                <span class="material-symbols-outlined text-[22px] mb-1 text-blue-600">
-                                    add_home
-                                </span>
-                                <span class="text-xs font-medium text-gray-700">
-                                    New Unit
-                                </span>
-                            </button>
-
-                            <button
-                                class="flex flex-col items-center justify-center py-4 rounded-xl bg-green-50 border border-green-100 hover:bg-green-100 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm">
-                                <span class="material-symbols-outlined text-[22px] mb-1 text-green-600">
-                                    person_add
-                                </span>
-                                <span class="text-xs font-medium text-gray-700">
-                                    New Applicant
-                                </span>
-                            </button>
-
-                            <button
-                                class="flex flex-col items-center justify-center py-4 rounded-xl bg-orange-50 border border-orange-100 hover:bg-orange-100 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm">
-                                <span class="material-symbols-outlined text-[22px] mb-1 text-orange-600">
-                                    receipt
-                                </span>
-                                <span class="text-xs font-medium text-gray-700">
-                                    Receipt
-                                </span>
-                            </button>
-
-                            <button
-                                class="flex flex-col items-center justify-center py-4 rounded-xl bg-purple-50 border border-purple-100 hover:bg-purple-100 hover:scale-105 active:scale-95 transition-all duration-300 shadow-sm">
-                                <span class="material-symbols-outlined text-[22px] mb-1 text-purple-600">
-                                    print
-                                </span>
-                                <span class="text-xs font-medium text-gray-700">
-                                    Report
-                                </span>
-                            </button>
-
-                        </div>
-                    </div>
-
-                    <!-- System Alerts -->
-                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-
-                        <h5 class="text-sm font-semibold text-primary mb-3">
-                            System Alerts
-                        </h5>
-
-                        <div class="space-y-3">
-
-                            <div class="flex gap-3">
-                                <div class="w-1 rounded-full bg-red-500"></div>
-
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-800">
-                                        Verification Overdue
-                                    </p>
-
-                                    <p class="text-[11px] text-gray-500">
-                                        14 applications pending for &gt; 7 days
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex gap-3">
-                                <div class="w-1 rounded-full bg-green-500"></div>
-
-                                <div>
-                                    <p class="text-xs font-semibold text-gray-800">
-                                        Payment Success
-                                    </p>
-
-                                    <p class="text-[11px] text-gray-500">
-                                        Batch payment successful for Zone 4
-                                    </p>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </div>
             <!-- Recent Activity Table Section -->
             <div class="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
 
