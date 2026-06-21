@@ -123,7 +123,7 @@
                                 <p class="text-[11px] text-amber-700 font-bold m-0 mb-2">Allotment data not found in system. Please upload manually.</p>
                                 <div class="pp-upload-zone" id="zone_{{ $allotmentField }}">
                                     <span class="material-symbols-outlined text-indigo-500 text-[22px]">cloud_upload</span>
-                                    <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload allotment letter (PDF/JPG/PNG, max 500 KB)</p>
+                                    <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Upload allotment letter (PDF/JPG/PNG, max file size 500 KB)</p>
                                 </div>
                                 <input type="file" name="{{ $allotmentField }}" id="input_{{ $allotmentField }}" class="hidden"
                                        accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" data-required="1">
@@ -145,7 +145,7 @@
                             <div class="pp-upload-zone flex-1" id="zone_{{ $field }}">
                                 <span class="material-symbols-outlined text-indigo-500 text-[22px]">cloud_upload</span>
                                 <p class="text-[10px] font-semibold text-slate-600 m-0 mt-1">Drag & drop or click to select</p>
-                                <p class="text-[9px] text-slate-400 m-0">PDF, JPG, JPEG, PNG · Max 500 KB</p>
+                                <p class="text-[9px] text-slate-400 m-0">PDF, JPG, JPEG, PNG · Max file size 500 KB</p>
                             </div>
                             <input type="file" name="{{ $field }}" id="input_{{ $field }}" class="hidden"
                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
