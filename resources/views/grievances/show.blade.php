@@ -24,6 +24,10 @@
 
         <div class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div class="border border-indigo-100 rounded-lg p-2.5 bg-indigo-50 sm:col-span-2">
+                    <p class="text-[9px] text-indigo-500 uppercase tracking-wider font-bold mb-0.5">Ticket No.</p>
+                    <p class="text-[13px] font-extrabold text-indigo-700">{{ $grievance->ticket_number ?? '—' }}</p>
+                </div>
                 <div class="border border-slate-100 rounded-lg p-2.5 bg-slate-50">
                     <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application ID</p>
                     <p class="text-[12px] font-bold text-slate-800 break-all">{{ $grievance->application_id }}</p>

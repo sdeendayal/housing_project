@@ -42,7 +42,7 @@
                         <strong class="d-block" @if($application->status === 'pending') id="return_doc_label_{{ $doc->id }}" @endif>{{ $doc->typeLabel() }}</strong>
                         <span class="text-muted text-truncate d-block">{{ $doc->original_name }}</span>
                         @if($doc->review_status === 'returned')
-                        <span class="badge bg-warning text-dark mt-1">Returned for correction</span>
+                        <span class="badge bg-warning text-dark mt-1">Returned to applicant</span>
                         @elseif($doc->review_status === 'accepted')
                         <span class="badge bg-success mt-1">Accepted</span>
                         @endif
@@ -104,13 +104,52 @@
                     @error('remarks')<div class="invalid-feedback">{{ $message }}</div>@enderror
 
                     <div id="ppVisitFields">
+                        @php
+                            $visitMin = now()->seconds(0);
+                            $roundedMinute = (int) (ceil($visitMin->minute / 5) * 5);
+                            if ($roundedMinute >= 60) {
+                                $visitMin = $visitMin->copy()->addHour()->minute(0);
+                            } else {
+                                $visitMin = $visitMin->minute($roundedMinute);
+                            }
+
+                            $visitOldValue = old('citizen_visit_date');
+                            $visitOldDate = '';
+                            $visitOldTime = '';
+                            if ($visitOldValue) {
+                                try {
+                                    $visitOldParsed = \Carbon\Carbon::parse($visitOldValue)->seconds(0);
+                                    $snappedMinute = (int) (floor($visitOldParsed->minute / 5) * 5);
+                                    $visitOldParsed->minute($snappedMinute);
+                                    $visitOldDate = $visitOldParsed->format('Y-m-d');
+                                    $visitOldTime = $visitOldParsed->format('H:i');
+                                } catch (\Throwable $e) {
+                                    $visitOldDate = '';
+                                    $visitOldTime = '';
+                                }
+                            }
+                        @endphp
                         <label class="form-label small fw-semibold mb-1">Meeting Schedule (Date & Time) <span class="text-danger">*</span></label>
-                        <input type="datetime-local" name="citizen_visit_date"
-                               class="form-control form-control-sm mb-2 @error('citizen_visit_date') is-invalid @enderror"
-                               value="{{ old('citizen_visit_date') }}"
-                               min="{{ now()->format('Y-m-d\TH:i') }}">
+                        <input type="hidden" name="citizen_visit_date" id="ppCitizenVisitDate"
+                               value="{{ $visitOldDate && $visitOldTime ? $visitOldDate.'T'.$visitOldTime : '' }}">
+                        <div class="row g-2 mb-2">
+                            <div class="col-7">
+                                <input type="text" id="ppVisitDateOnly"
+                                       class="form-control form-control-sm pp-visit-picker @error('citizen_visit_date') is-invalid @enderror"
+                                       value="{{ $visitOldDate }}"
+                                       placeholder="Select date"
+                                       autocomplete="off"
+                                       readonly>
+                            </div>
+                            <div class="col-5">
+                                <select id="ppVisitTimeSlot"
+                                        class="form-select form-select-sm @error('citizen_visit_date') is-invalid @enderror">
+                                    <option value="">Time</option>
+                                </select>
+                            </div>
+                        </div>
                         @error('citizen_visit_date')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
-                        <p class="text-muted small mb-2">Citizen will visit your office at this date and time. Allowed: <strong>09:00 AM – 05:00 PM</strong>. In <strong>your district</strong>, max <strong>10 citizens per 1-hour slot</strong> (other districts have their own separate limit).</p>
+                        <p class="text-muted small mb-2">Citizen will visit your office at this date and time. Time slots are in <strong>5-minute intervals</strong> (e.g. 10:05, 10:10). Allowed: <strong>09:00 AM – 05:00 PM</strong>. In <strong>your district</strong>, max <strong>10 citizens per 1-hour slot</strong> (other districts have their own separate limit).</p>
 
                         <label class="form-label small fw-semibold mb-1">Visit Instructions <span class="text-muted fw-normal">(optional)</span></label>
                         <textarea name="visit_instructions" class="form-control form-control-sm mb-2 @error('visit_instructions') is-invalid @enderror" rows="2" placeholder="e.g. Municipal Office, Rohtak — bring original ID and documents">{{ old('visit_instructions') }}</textarea>
@@ -211,21 +250,141 @@
 }
 .pp-sendback-remark { display: none; }
 .pp-sendback-check .form-check-input { margin-top: 0.2rem; }
+.pp-visit-picker.form-control[readonly] { background-color: #fff; cursor: pointer; }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 @endpush
 
 @push('scripts')
 @if($application->status === 'pending')
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
 (function () {
     const form = document.getElementById('ppDecideForm');
     const submitBtn = document.getElementById('ppDecideSubmitBtn');
     const visitFields = document.getElementById('ppVisitFields');
-    const visitDateInput = form?.querySelector('[name="citizen_visit_date"]');
+    const visitDateInput = document.getElementById('ppCitizenVisitDate');
+    const visitDateOnlyInput = document.getElementById('ppVisitDateOnly');
+    const visitTimeSlotSelect = document.getElementById('ppVisitTimeSlot');
+    const visitMinValue = @json($visitMin->format('Y-m-d'));
+    const visitOldTime = @json($visitOldTime);
     const radios = form?.querySelectorAll('.pp-decision-radio');
+    let visitDatePicker = null;
 
     const sendBackRemarks = form?.querySelectorAll('.pp-sendback-remark');
     const sendBackChecks = document.querySelectorAll('[data-sendback-only]');
+
+    function pad(n) {
+        return String(n).padStart(2, '0');
+    }
+
+    function roundedMinTimeForToday() {
+        const now = new Date();
+        let minutes = Math.ceil(now.getMinutes() / 5) * 5;
+        let hours = now.getHours();
+        if (minutes >= 60) {
+            hours += 1;
+            minutes = 0;
+        }
+        return pad(hours) + ':' + pad(minutes);
+    }
+
+    function isSameDay(a, b) {
+        return a.getFullYear() === b.getFullYear()
+            && a.getMonth() === b.getMonth()
+            && a.getDate() === b.getDate();
+    }
+
+    const visitTimeSlots = (function () {
+        const slots = [];
+        for (let hour = 9; hour <= 17; hour++) {
+            for (let minute = 0; minute < 60; minute += 5) {
+                if (hour === 17 && minute > 0) {
+                    break;
+                }
+                slots.push(pad(hour) + ':' + pad(minute));
+            }
+        }
+        return slots;
+    })();
+
+    function formatTimeLabel(value) {
+        const parts = value.split(':');
+        const hour24 = parseInt(parts[0], 10);
+        const minute = parts[1];
+        const period = hour24 >= 12 ? 'PM' : 'AM';
+        const hour12 = hour24 % 12 || 12;
+        return hour12 + ':' + minute + ' ' + period;
+    }
+
+    function syncHiddenVisitDate() {
+        if (!visitDateInput || !visitDateOnlyInput || !visitTimeSlotSelect) {
+            return;
+        }
+        const date = visitDateOnlyInput.value;
+        const time = visitTimeSlotSelect.value;
+        visitDateInput.value = (date && time) ? (date + 'T' + time) : '';
+    }
+
+    function minTimeForDate(dateStr) {
+        if (!dateStr) {
+            return '09:00';
+        }
+        const selected = new Date(dateStr + 'T00:00:00');
+        if (Number.isNaN(selected.getTime()) || !isSameDay(selected, new Date())) {
+            return '09:00';
+        }
+        return roundedMinTimeForToday();
+    }
+
+    function populateVisitTimeSlots(selectedDate, preferredTime) {
+        if (!visitTimeSlotSelect) {
+            return;
+        }
+        const minTime = minTimeForDate(selectedDate);
+        const previous = preferredTime || visitTimeSlotSelect.value;
+        visitTimeSlotSelect.innerHTML = '<option value="">Time</option>';
+
+        visitTimeSlots.forEach(function (slot) {
+            if (selectedDate && slot < minTime) {
+                return;
+            }
+            const option = document.createElement('option');
+            option.value = slot;
+            option.textContent = formatTimeLabel(slot);
+            visitTimeSlotSelect.appendChild(option);
+        });
+
+        if (previous && Array.from(visitTimeSlotSelect.options).some(function (opt) { return opt.value === previous; })) {
+            visitTimeSlotSelect.value = previous;
+        } else {
+            visitTimeSlotSelect.value = '';
+        }
+
+        syncHiddenVisitDate();
+    }
+
+    if (visitDateOnlyInput && typeof flatpickr !== 'undefined') {
+        visitDatePicker = flatpickr(visitDateOnlyInput, {
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'd M Y',
+            altInputClass: 'form-control form-control-sm pp-visit-picker',
+            minDate: visitMinValue,
+            defaultDate: visitDateOnlyInput.value || null,
+            disableMobile: true,
+            allowInput: false,
+            onChange: function (selectedDates) {
+                const dateStr = selectedDates[0]
+                    ? selectedDates[0].getFullYear() + '-' + pad(selectedDates[0].getMonth() + 1) + '-' + pad(selectedDates[0].getDate())
+                    : '';
+                populateVisitTimeSlots(dateStr, '');
+            },
+        });
+    }
+
+    populateVisitTimeSlots(visitDateOnlyInput?.value || '', visitOldTime);
+    visitTimeSlotSelect?.addEventListener('change', syncHiddenVisitDate);
 
     function updateSubmitBtn() {
         const selected = form?.querySelector('.pp-decision-radio:checked');
@@ -238,8 +397,10 @@
         }
         if (visitDateInput) {
             visitDateInput.required = isApprove;
+            visitTimeSlotSelect.required = isApprove;
             if (!isApprove) {
-                visitDateInput.value = '';
+                visitDatePicker?.clear();
+                populateVisitTimeSlots('', '');
             }
         }
         sendBackRemarks?.forEach(function (el) {
@@ -267,9 +428,15 @@
         if (!value) {
             return 'Please select the meeting date and time for approval.';
         }
+        if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
+            return 'Please select a valid meeting date and time.';
+        }
         const d = new Date(value);
         if (Number.isNaN(d.getTime())) {
             return 'Please enter a valid meeting date and time.';
+        }
+        if (d.getSeconds() !== 0 || (d.getMinutes() % 5) !== 0) {
+            return 'Meeting time must be in 5-minute intervals (e.g. 10:05, 10:10).';
         }
         const totalMinutes = (d.getHours() * 60) + d.getMinutes();
         if (totalMinutes < (9 * 60) || totalMinutes > (17 * 60)) {

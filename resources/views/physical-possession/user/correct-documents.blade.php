@@ -19,7 +19,7 @@
                 <div>
                     <h2 class="text-[12px] font-extrabold text-amber-900 m-0 mb-1">Documents Sent Back for Correction</h2>
                     <p class="text-[10px] text-amber-800 m-0 leading-relaxed">
-                        Officer ne kuch documents wapas bheje hain. Neeche diye remarks dekh kar sahi documents dubara upload karein aur resubmit karein.
+                        The officer has returned some documents. Please review the remarks below, upload the corrected documents, and resubmit your application.
                     </p>
                     @if($application->remarks)
                     <p class="text-[10px] font-bold text-amber-900 m-0 mt-2">Officer remarks: {{ $application->remarks }}</p>

@@ -19,6 +19,25 @@
         }
         .visit-box h3 { margin: 0 0 6px; color: #1e40af; font-size: 14px; }
         .visit-date { font-size: 20px; font-weight: bold; color: #0f172a; margin: 6px 0; }
+        .visit-time { font-size: 16px; font-weight: bold; color: #1e40af; margin: 4px 0; }
+        .visit-instructions {
+            margin: 12px 0 0;
+            padding-top: 10px;
+            border-top: 1px solid #93c5fd;
+            font-size: 15px;
+            font-weight: bold;
+            color: #0f172a;
+            line-height: 1.6;
+            text-align: center;
+        }
+        .visit-instructions-label {
+            display: block;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
         .note { margin-top: 18px; font-size: 10px; color: #475569; line-height: 1.5; }
         .status-approved { color: #059669; font-weight: bold; }
         .status-rejected { color: #dc2626; font-weight: bold; }
@@ -50,11 +69,17 @@
     <div class="visit-box">
         <h3>Scheduled Visit — Please Report On</h3>
         <div class="visit-date">{{ $application->citizen_visit_date->format('d M Y') }}</div>
-        <div style="font-size:16px;font-weight:bold;color:#1e40af;margin:4px 0;">{{ $application->citizen_visit_date->format('h:i A') }}</div>
+        <div class="visit-time">{{ $application->citizen_visit_date->format('h:i A') }}</div>
         @if($application->visit_instructions)
-        <p style="margin:8px 0 0; font-size:11px;"><strong>Instructions:</strong> {{ $application->visit_instructions }}</p>
+        <p class="visit-instructions">
+            <span class="visit-instructions-label">Instructions</span>
+            {{ $application->visit_instructions }}
+        </p>
         @else
-        <p style="margin:8px 0 0; font-size:11px;">Please visit the Municipal Office / concerned department on the above date with your original documents and a copy of this performa.</p>
+        <p class="visit-instructions">
+            <span class="visit-instructions-label">Instructions</span>
+            Please visit the Municipal Office / concerned department on the above date with your original documents and a copy of this performa.
+        </p>
         @endif
     </div>
 

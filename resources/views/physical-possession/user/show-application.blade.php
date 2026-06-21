@@ -135,7 +135,7 @@
                     </span>
                     <div class="flex-1 min-w-0">
                         <h3 class="text-[11px] font-extrabold text-slate-800 m-0 mb-1">Action Required — Correct Documents</h3>
-                        <p class="text-[10px] text-slate-600 m-0 leading-relaxed">Officer ne kuch documents wapas bheje hain. Sahi documents upload karke dubara submit karein.</p>
+                        <p class="text-[10px] text-slate-600 m-0 leading-relaxed">The officer has returned some documents. Please upload the corrected documents and resubmit your application.</p>
                         @if($application->remarks)
                         <p class="text-[10px] font-bold text-blue-800 m-0 mt-1">{{ $application->remarks }}</p>
                         @endif

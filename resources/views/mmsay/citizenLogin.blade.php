@@ -402,7 +402,7 @@
                <span class="material-symbols-outlined">apartment</span>
             </div>
             <div>
-               <p class="cl-brand__title">Haryana Housing</p>
+               <p class="cl-brand__title">Housing For All</p>
                <p class="cl-brand__sub">Citizen Portal</p>
             </div>
          </div>

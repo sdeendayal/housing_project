@@ -64,7 +64,7 @@
         {{-- 6. Possession Certificate --}}
         <a class="nav-v2 {{ $activeNav === 'possession-certificate' ? 'active' : '' }}" href="{{ route('citizen.possession-certificate') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'possession-certificate') style="font-variation-settings:'FILL' 1" @endif>description</span></span>
-            Possession Certificate
+            Possession Certificate Request Form
         </a>
 
         {{-- 7. Grievances --}}

@@ -474,6 +474,10 @@ class PpOfficerController extends Controller
         $visitAt = Carbon::parse($citizenVisitDate);
         $minutesOfDay = ($visitAt->hour * 60) + $visitAt->minute;
 
+        if ($visitAt->second !== 0 || ($visitAt->minute % 5) !== 0) {
+            return 'Meeting time must be in 5-minute intervals (e.g. 10:05, 10:10).';
+        }
+
         if ($minutesOfDay < (9 * 60) || $minutesOfDay > (17 * 60)) {
             return 'Meeting time must be between 09:00 AM and 05:00 PM.';
         }

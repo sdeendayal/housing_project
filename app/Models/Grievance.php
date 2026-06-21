@@ -14,6 +14,7 @@ class Grievance extends Model
 
     protected $fillable = [
         'secure_id',
+        'ticket_number',
         'application_id',
         'applicant_name',
         'mobile_number',
@@ -31,6 +32,10 @@ class Grievance extends Model
         static::creating(function (self $grievance) {
             if (empty($grievance->secure_id)) {
                 $grievance->secure_id = self::generateSecureId();
+            }
+
+            if (empty($grievance->ticket_number)) {
+                $grievance->ticket_number = self::generateTicketNumber();
             }
 
             if (empty($grievance->grievance_status)) {
@@ -51,5 +56,17 @@ class Grievance extends Model
         } while (self::where('secure_id', $secureId)->exists());
 
         return $secureId;
+    }
+
+    public static function generateTicketNumber(): string
+    {
+        $year = now()->format('Y');
+
+        do {
+            $randomSuffix = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $ticketNumber = 'GRV-'.$year.'-'.$randomSuffix;
+        } while (self::where('ticket_number', $ticketNumber)->exists());
+
+        return $ticketNumber;
     }
 }

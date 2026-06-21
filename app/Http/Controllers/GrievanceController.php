@@ -180,7 +180,7 @@ class GrievanceController extends Controller
 
         return redirect()
             ->route('citizen.grievances.show', $grievance)
-            ->with('success', 'Your grievance has been submitted successfully.');
+            ->with('success', 'Your grievance has been submitted successfully. Ticket No: '.$grievance->ticket_number);
     }
 
     public function show(Grievance $grievance): View

@@ -29,7 +29,7 @@
         </div>
         @unless ($isFullyPaid)
         <a href="{{ route('citizen.payment-status') }}" class="citizen-payment-banner__action">
-            Complete Payment
+            Pay EMI
             <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
         </a>
         @endunless
@@ -147,23 +147,42 @@
             <span class="tag tag-gold !text-amber-700 !bg-amber-50 !border-amber-200">New Scheme</span>
         </div>
         <div class="p-3">
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2 text-center">
-                    <p class="text-[9px] text-slate-400 uppercase font-bold mb-0.5">Total</p>
-                    <p class="text-[14px] font-extrabold text-indigo-600">{{ $ppStats['total'] }}</p>
+            @php
+                $ppStatusLabel = 'Not Applied';
+                $ppStatusClass = 'text-slate-700';
+                $ppStatusBadgeClass = 'bg-slate-100 text-slate-700';
+
+                if (!empty($ppHasDraftApplication)) {
+                    $ppStatusLabel = 'Draft — In Progress';
+                } elseif ($latestPpApplication) {
+                    $ppStatusLabel = match ($latestPpApplication->status) {
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                        'returned' => 'Returned',
+                        default => ucfirst($latestPpApplication->status),
+                    };
+                    [$ppStatusClass, $ppStatusBadgeClass] = match ($latestPpApplication->status) {
+                        'approved' => ['text-emerald-700', 'bg-emerald-100 text-emerald-700'],
+                        'rejected' => ['text-red-600', 'bg-red-100 text-red-700'],
+                        'returned' => ['text-blue-700', 'bg-blue-100 text-blue-700'],
+                        default => ['text-amber-700', 'bg-amber-100 text-amber-700'],
+                    };
+                } elseif (!$isPpEligible) {
+                    $ppStatusLabel = 'Not Eligible';
+                    $ppStatusClass = 'text-amber-700';
+                    $ppStatusBadgeClass = 'bg-amber-100 text-amber-700';
+                }
+            @endphp
+            <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 mb-3 flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application Status</p>
+                    <p class="text-[12px] font-bold {{ $ppStatusClass }} m-0">{{ $ppStatusLabel }}</p>
+                    @if ($latestPpApplication)
+                    <p class="text-[10px] text-slate-400 m-0 mt-0.5">{{ $latestPpApplication->application_number }} · {{ $latestPpApplication->created_at->format('d M Y') }}</p>
+                    @endif
                 </div>
-                <div class="rounded-lg border border-amber-100 bg-amber-50/60 p-2 text-center">
-                    <p class="text-[9px] text-amber-700/80 uppercase font-bold mb-0.5">Pending</p>
-                    <p class="text-[14px] font-extrabold text-amber-700">{{ $ppStats['pending'] }}</p>
-                </div>
-                <div class="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2 text-center">
-                    <p class="text-[9px] text-emerald-700/80 uppercase font-bold mb-0.5">Approved</p>
-                    <p class="text-[14px] font-extrabold text-emerald-700">{{ $ppStats['approved'] }}</p>
-                </div>
-                <div class="rounded-lg border border-red-100 bg-red-50/60 p-2 text-center">
-                    <p class="text-[9px] text-red-700/80 uppercase font-bold mb-0.5">Rejected</p>
-                    <p class="text-[14px] font-extrabold text-red-600">{{ $ppStats['rejected'] }}</p>
-                </div>
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase shrink-0 {{ $ppStatusBadgeClass }}">{{ $ppStatusLabel }}</span>
             </div>
 
             <div class="flex flex-wrap gap-2 mb-3">
@@ -198,32 +217,7 @@
                 </a>
             </div>
 
-            @if ($ppRecentApplications->count())
-            <div class="rounded-lg border border-slate-100 overflow-hidden">
-                <div class="px-2.5 py-1.5 bg-slate-50 border-b border-slate-100">
-                    <p class="text-[9px] font-bold uppercase text-slate-500 m-0">Recent Applications</p>
-                </div>
-                @foreach ($ppRecentApplications as $ppApp)
-                <div class="flex items-center justify-between gap-2 px-2.5 py-2 border-b border-slate-100 last:border-b-0 text-[11px]">
-                    <div class="min-w-0">
-                        <p class="font-bold text-slate-800 truncate m-0">{{ $ppApp->application_number }}</p>
-                        <p class="text-[10px] text-slate-400 m-0">{{ $ppApp->created_at->format('d M Y') }}</p>
-                    </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        @php
-                            $ppStatusClass = match($ppApp->status) {
-                                'approved' => 'bg-emerald-100 text-emerald-700',
-                                'rejected' => 'bg-red-100 text-red-700',
-                                default => 'bg-amber-100 text-amber-700',
-                            };
-                        @endphp
-                        <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase {{ $ppStatusClass }}">{{ $ppApp->status }}</span>
-                        <a href="{{ route('pp.user.application.show', $ppApp) }}" class="text-indigo-600 font-bold no-underline hover:underline">View</a>
-                    </div>
-                </div>
-                @endforeach
-            </div>
-            @else
+            @if (!$ppHasApplication && empty($ppHasDraftApplication))
             <p class="text-[10px] text-slate-500 m-0">Download the possession certificate request form, sign it, then apply and upload documents.</p>
             @endif
         </div>

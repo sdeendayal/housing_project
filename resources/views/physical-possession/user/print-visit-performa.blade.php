@@ -16,6 +16,24 @@
             margin: 20px 0;
         }
         .visit-date { font-size: 1.75rem; font-weight: 800; color: #1e40af; }
+        .visit-instructions {
+            margin-top: 1rem;
+            padding-top: 0.85rem;
+            border-top: 1px solid #93c5fd;
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.6;
+        }
+        .visit-instructions-label {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-bottom: 0.35rem;
+        }
         @media print { .no-print { display: none; } }
     </style>
 </head>
@@ -47,9 +65,15 @@
             <div class="visit-date">{{ $application->citizen_visit_date->format('d M Y') }}</div>
             <div class="text-primary fw-bold">{{ $application->citizen_visit_date->format('h:i A') }}</div>
             @if($application->visit_instructions)
-            <p class="mb-0 mt-2 small"><strong>Instructions:</strong> {{ $application->visit_instructions }}</p>
+            <p class="visit-instructions mb-0">
+                <span class="visit-instructions-label">Instructions</span>
+                {{ $application->visit_instructions }}
+            </p>
             @else
-            <p class="mb-0 mt-2 small text-muted">Please visit the Municipal Office with original documents and a copy of this performa.</p>
+            <p class="visit-instructions mb-0">
+                <span class="visit-instructions-label">Instructions</span>
+                Please visit the Municipal Office with original documents and a copy of this performa.
+            </p>
             @endif
         </div>
 

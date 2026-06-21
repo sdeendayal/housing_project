@@ -24,6 +24,7 @@
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-1.5 font-bold text-slate-500">S.No.</th>
+                                <th class="px-2 py-1.5 font-bold text-slate-500">Ticket No.</th>
                                 <th class="px-2 py-1.5 font-bold text-slate-500">Application ID</th>
                                 <th class="px-2 py-1.5 font-bold text-slate-500">Name</th>
                                 <th class="px-2 py-1.5 font-bold text-slate-500">Mobile</th>
@@ -43,6 +44,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/80">
                                     <td class="px-2 py-1.5 text-slate-700">{{ $index + 1 }}</td>
+                                    <td class="px-2 py-1.5 text-indigo-700 font-bold whitespace-nowrap">{{ $grievance->ticket_number ?? '—' }}</td>
                                     <td class="px-2 py-1.5 text-slate-700 break-all">{{ $grievance->application_id }}</td>
                                     <td class="px-2 py-1.5 text-slate-800 font-semibold">{{ $grievance->applicant_name }}</td>
                                     <td class="px-2 py-1.5 text-slate-700 whitespace-nowrap">{{ $grievance->mobile_number }}</td>
