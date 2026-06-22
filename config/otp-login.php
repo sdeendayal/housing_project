@@ -7,6 +7,27 @@ return [
     'sms_template_id' => env('OTP_SMS_TEMPLATE_ID', '1407178178069128769'),
     'sms_message' => 'Your OTP for logging into the Department of Housing For All is {#numeric#}. This OTP is valid for 10 minutes and should not be shared with anyone. - Department of Housing For All, Haryana.',
 
+    'document_otp_sms' => [
+        'verify_possession_certificate' => [
+            'template_id' => env('POSSESSION_CERT_OTP_SMS_TEMPLATE_ID', '1407178185566184448'),
+            'message' => 'Your OTP for verifying your Possession Certificate is {#numeric#}. This OTP is valid for 10 minutes and should not be shared with anyone. - Department of Housing For All, Haryana.',
+        ],
+        'verify_allotment_letter' => [
+            'template_id' => env('ALLOTMENT_LETTER_OTP_SMS_TEMPLATE_ID', '1407178185571263503'),
+            'message' => 'Your OTP for verifying your Allotment Letter is {#numeric#}. This OTP is valid for 10 minutes and should not be shared with anyone. - Department of Housing For All, Haryana.',
+        ],
+    ],
+
+    'pp_application_status_sms' => [
+        'template_id' => env('PP_APPLICATION_STATUS_SMS_TEMPLATE_ID', '1407178185581796954'),
+        'message' => 'Your Physical Possession application has been {#alphanumeric#}. - Department of Housing For All, Haryana.',
+        'status_labels' => [
+            'approved' => 'Approved',
+            'rejected' => 'Rejected',
+            'sent_back' => 'Sent Back for Correction',
+        ],
+    ],
+
     'sms_username' => env('OTP_SMS_USERNAME', 'haryanait-sport'),
     'sms_password' => env('OTP_SMS_PASSWORD', 'sports@1234'),
     'sms_sender_id' => env('OTP_SMS_SENDER_ID', 'GOVHRY'),

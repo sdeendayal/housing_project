@@ -6,21 +6,64 @@ use Illuminate\Support\Facades\Log;
 
 class LoginOtpSmsService
 {
-    public function send(string $mobile, string $otpCode, ?string $logLabel = null): void
+    public static function shouldSendSms(): bool
     {
-        $templateId = config('otp-login.sms_template_id');
-        $message = $this->buildMessage($otpCode);
+        return app()->environment('production');
+    }
+
+    public function send(
+        string $mobile,
+        string $otpCode,
+        ?string $logLabel = null,
+        ?string $message = null,
+        ?string $templateId = null
+    ): void {
+        $templateId = $templateId ?: config('otp-login.sms_template_id');
+        $message = $message ?: $this->buildMessage($otpCode);
+
+        $this->dispatchSms($mobile, $message, $templateId, $logLabel, 'otpmsg', 'OTP SMS');
+    }
+
+    public function sendAlphanumericMessage(
+        string $mobile,
+        string $value,
+        string $messageTemplate,
+        string $templateId,
+        ?string $logLabel = null,
+        string $serviceType = 'singlemsg'
+    ): void {
+        $message = str_replace('{#alphanumeric#}', $value, $messageTemplate);
+
+        $this->dispatchSms($mobile, $message, $templateId, $logLabel, $serviceType, 'Notification SMS');
+    }
+
+    private function dispatchSms(
+        string $mobile,
+        string $message,
+        string $templateId,
+        ?string $logLabel,
+        string $serviceType,
+        string $logType
+    ): void {
+        if (! self::shouldSendSms()) {
+            Log::info($logLabel ? "{$logLabel} {$logType} skipped (non-production)" : "{$logType} skipped (non-production)", [
+                'mobile' => $mobile,
+                'template_id' => $templateId,
+            ]);
+
+            return;
+        }
 
         try {
-            $response = $this->sendSMS($mobile, $message, $templateId);
+            $response = $this->sendSMS($mobile, $message, $templateId, $serviceType);
 
-            Log::info($logLabel ? "{$logLabel} OTP SMS sent" : 'OTP SMS sent', [
+            Log::info($logLabel ? "{$logLabel} {$logType} sent" : "{$logType} sent", [
                 'mobile' => $mobile,
                 'template_id' => $templateId,
                 'response' => $response,
             ]);
         } catch (\Throwable $e) {
-            Log::error($logLabel ? "{$logLabel} OTP SMS failed" : 'OTP SMS failed', [
+            Log::error($logLabel ? "{$logLabel} {$logType} failed" : "{$logType} failed", [
                 'mobile' => $mobile,
                 'template_id' => $templateId,
                 'error' => $e->getMessage(),
@@ -28,16 +71,18 @@ class LoginOtpSmsService
         }
     }
 
-    public function buildMessage(string $otpCode): string
+    public function buildMessage(string $otpCode, ?string $template = null): string
     {
+        $template ??= config('otp-login.sms_message');
+
         return str_replace(
             ['{#numeric#}', '{otp}'],
             [$otpCode, $otpCode],
-            config('otp-login.sms_message')
+            $template
         );
     }
 
-    private function sendSMS(string $mobile, string $message, string $temp_id): mixed
+    private function sendSMS(string $mobile, string $message, string $temp_id, string $serviceType = 'otpmsg'): mixed
     {
         $username = config('otp-login.sms_username');
         $password = config('otp-login.sms_password');
@@ -45,7 +90,7 @@ class LoginOtpSmsService
         $dept_key = config('otp-login.sms_secure_key');
         $encryp_password = sha1(trim($password));
 
-        return $this->sendSingleSMS($username, $encryp_password, $senderid, $message, $mobile, $dept_key, $temp_id);
+        return $this->sendSingleSMS($username, $encryp_password, $senderid, $message, $mobile, $dept_key, $temp_id, $serviceType);
     }
 
     private function sendSingleSMS(
@@ -55,7 +100,8 @@ class LoginOtpSmsService
         string $message,
         string $mobileno,
         string $deptSecureKey,
-        string $temp_id
+        string $temp_id,
+        string $serviceType = 'otpmsg'
     ): mixed {
         $key = hash('sha512', trim($username).trim($senderid).trim($message).trim($deptSecureKey));
 
@@ -64,7 +110,7 @@ class LoginOtpSmsService
             'password' => trim($encryp_password),
             'senderid' => trim($senderid),
             'content' => trim($message),
-            'smsservicetype' => 'otpmsg',
+            'smsservicetype' => $serviceType,
             'mobileno' => trim($mobileno),
             'key' => trim($key),
             'templateid' => trim($temp_id),

@@ -18,6 +18,11 @@ class OtpVerificationService
         Otp::PURPOSE_DEPARTMENT_LOGIN,
     ];
 
+    private const DOCUMENT_OTP_PURPOSES = [
+        Otp::PURPOSE_POSSESSION_CERTIFICATE,
+        Otp::PURPOSE_ALLOTMENT_LETTER,
+    ];
+
     public function __construct(
         private LoginOtpSmsService $loginOtpSmsService
     ) {}
@@ -65,6 +70,8 @@ class OtpVerificationService
 
         if (in_array($purpose, self::LOGIN_PURPOSES, true)) {
             $this->loginOtpSmsService->send($mobile, $otpCode, $logLabel);
+        } elseif (in_array($purpose, self::DOCUMENT_OTP_PURPOSES, true)) {
+            $this->sendDocumentOtpSms($mobile, $otpCode, $purpose, $logLabel);
         }
 
         return [
@@ -171,7 +178,7 @@ class OtpVerificationService
 
     public static function generateLoginOtpCode(): string
     {
-        if (app()->environment('local')) {
+        if (self::usesFixedTestOtp('', '')) {
             return '111111';
         }
 
@@ -181,5 +188,23 @@ class OtpVerificationService
     private function generateOtpCode(string $mobile, string $purpose): string
     {
         return self::generateLoginOtpCode();
+    }
+
+    private function sendDocumentOtpSms(string $mobile, string $otpCode, string $purpose, ?string $logLabel): void
+    {
+        $config = config("otp-login.document_otp_sms.{$purpose}");
+
+        if (! is_array($config) || empty($config['template_id']) || empty($config['message'])) {
+            Log::warning('Document OTP SMS config missing; falling back to login template', [
+                'purpose' => $purpose,
+                'mobile' => $mobile,
+            ]);
+            $this->loginOtpSmsService->send($mobile, $otpCode, $logLabel);
+
+            return;
+        }
+
+        $message = $this->loginOtpSmsService->buildMessage($otpCode, $config['message']);
+        $this->loginOtpSmsService->send($mobile, $otpCode, $logLabel, $message, $config['template_id']);
     }
 }

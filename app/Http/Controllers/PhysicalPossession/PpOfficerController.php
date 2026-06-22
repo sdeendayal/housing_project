@@ -8,6 +8,7 @@ use App\Models\OfficerApplicationAction;
 use App\Models\PhysicalPossessionApplication;
 use App\Models\PhysicalPossessionDocument;
 use App\Models\User;
+use App\Services\PpApplicationStatusSmsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,10 @@ use Illuminate\Support\Facades\Storage;
 
 class PpOfficerController extends Controller
 {
+    public function __construct(
+        private PpApplicationStatusSmsService $statusSmsService
+    ) {}
+
     // Officer dashboard with stats
     public function dashboard()
     {
@@ -305,6 +310,8 @@ class PpOfficerController extends Controller
             throw $e;
         }
 
+        $this->statusSmsService->notifyCitizen($application->fresh(), $newStatus);
+
         $message = $newStatus === 'approved'
             ? 'Application has been approved successfully.'
             : 'Application has been rejected.';
@@ -399,6 +406,8 @@ class PpOfficerController extends Controller
         } catch (\RuntimeException $e) {
             return back()->with('error', $e->getMessage())->withInput();
         }
+
+        $this->statusSmsService->notifyCitizen($application->fresh(), 'sent_back');
 
         return back()->with('success', 'Application sent back to citizen for document correction.');
     }
