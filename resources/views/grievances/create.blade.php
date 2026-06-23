@@ -36,17 +36,20 @@
                                 <label for="grievance_subject" class="block text-[11px] font-extrabold text-slate-800">
                                     Subject <span class="text-red-500">*</span>
                                 </label>
-                                <p class="text-[9px] text-slate-400 m-0">Short title of your issue</p>
+                                <p class="text-[9px] text-slate-400 m-0">Select the type of your issue</p>
                             </div>
                         </div>
-                        <input type="text"
-                               name="grievance_subject"
-                               id="grievance_subject"
-                               value="{{ old('grievance_subject') }}"
-                               placeholder="e.g. Payment receipt not updated"
-                               class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[12px] font-medium text-slate-800 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none @error('grievance_subject') border-red-400 @enderror"
-                               required
-                               maxlength="255">
+                        <select name="grievance_subject"
+                                id="grievance_subject"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-[12px] font-medium text-slate-800 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 outline-none @error('grievance_subject') border-red-400 @enderror"
+                                required>
+                            <option value="" disabled {{ old('grievance_subject') ? '' : 'selected' }}>Select subject</option>
+                            @foreach ($subjectOptions as $subject)
+                                <option value="{{ $subject }}" {{ old('grievance_subject') === $subject ? 'selected' : '' }}>
+                                    {{ $subject }}
+                                </option>
+                            @endforeach
+                        </select>
                         @error('grievance_subject')
                             <p class="text-[10px] text-red-600 mt-2">{{ $message }}</p>
                         @enderror

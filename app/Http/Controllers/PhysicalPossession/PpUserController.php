@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Storage;
 
 class PpUserController extends Controller
 {
+    private const PP_MIN_TOTAL_PAID = 40000;
+
     public function __construct(
         private PhysicalPossessionAssetService $assetService,
         private OtpVerificationService $otpService
@@ -52,35 +54,8 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        // PP apply: ledger se sirf installment jama — kam se kam 26664 (pehle ki jama count nahi)
-        $installmentPaid = 0;
-        $purchaserId = $user->private_purchaser_id;
-        if (! $purchaserId && $user->mobile) {
-            $purchaserId = DB::table('property_private_purchasers')
-                ->where('IsActive', 1)
-                ->where('IsDeleted', 0)
-                ->whereIn('MobileNo', [$user->mobile, '91'.$user->mobile])
-                ->value('PrivatePurchaserId');
-        }
-        if ($purchaserId) {
-            $assetId = DB::table('property_auction_detail')
-                ->where('PurchaserID', $purchaserId)
-                ->where('IsDeleted', 0)
-                ->where('IsActive', 1)
-                ->orderByDesc('CreatedDate')
-                ->value('AssetId');
-            if ($assetId) {
-                $installmentPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-            }
-        }
-        if ($installmentPaid < 26664) {
-            return redirect()->route('citizen.dashboard')
-                ->with('warning_title', 'Not Eligible')
-                ->with('warning', 'To apply for Physical Possession, you must have paid at least ₹26,664 in installments (initial deposit is not counted). Your installment payments: ₹'.number_format($installmentPaid).'.');
+        if ($ineligible = $this->ppPaymentEligibilityRedirect($user)) {
+            return $ineligible;
         }
 
         $existing = $this->findSubmittedApplication($user);
@@ -471,34 +446,8 @@ class PpUserController extends Controller
     {
         $user = Auth::user();
 
-        $installmentPaid = 0;
-        $purchaserId = $user->private_purchaser_id;
-        if (! $purchaserId && $user->mobile) {
-            $purchaserId = DB::table('property_private_purchasers')
-                ->where('IsActive', 1)
-                ->where('IsDeleted', 0)
-                ->whereIn('MobileNo', [$user->mobile, '91'.$user->mobile])
-                ->value('PrivatePurchaserId');
-        }
-        if ($purchaserId) {
-            $assetId = DB::table('property_auction_detail')
-                ->where('PurchaserID', $purchaserId)
-                ->where('IsDeleted', 0)
-                ->where('IsActive', 1)
-                ->orderByDesc('CreatedDate')
-                ->value('AssetId');
-            if ($assetId) {
-                $installmentPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-            }
-        }
-        if ($installmentPaid < 26664) {
-            return redirect()->route('citizen.dashboard')
-                ->with('warning_title', 'Not Eligible')
-                ->with('warning', 'To apply for Physical Possession, you must have paid at least ₹26,664 in installments (initial deposit is not counted). Your installment payments: ₹'.number_format($installmentPaid).'.');
+        if ($ineligible = $this->ppPaymentEligibilityRedirect($user)) {
+            return $ineligible;
         }
 
         $draftApplication = $this->findDraftApplication($user);
@@ -997,6 +946,48 @@ class PpUserController extends Controller
             'urban_estate' => $urbanEstate,
             'office_location' => $officeLocation,
         ];
+    }
+
+    /** @return array{initial_deposit: float, installment_paid: float, total_paid: float} */
+    private function resolvePpTotalAmountPaid(User $user): array
+    {
+        $purchaser = $this->findPurchaserForUser($user);
+        $initialDeposit = (float) ($purchaser?->ReceivedAmount ?? 0);
+        $installmentPaid = 0.0;
+
+        if ($purchaser?->AssetId) {
+            $installmentPaid = (float) DB::table('ledger')
+                ->where('AssetId', $purchaser->AssetId)
+                ->where('Is_Deleted', 0)
+                ->where('Is_Active', 1)
+                ->sum('Payment');
+        }
+
+        return [
+            'initial_deposit' => $initialDeposit,
+            'installment_paid' => $installmentPaid,
+            'total_paid' => $initialDeposit + $installmentPaid,
+        ];
+    }
+
+    private function ppPaymentEligibilityRedirect(User $user): ?\Illuminate\Http\RedirectResponse
+    {
+        $payments = $this->resolvePpTotalAmountPaid($user);
+
+        if ($payments['total_paid'] >= self::PP_MIN_TOTAL_PAID) {
+            return null;
+        }
+
+        return redirect()->route('citizen.dashboard')
+            ->with('warning_title', 'Not Eligible')
+            ->with(
+                'warning',
+                'To apply for Physical Possession, your total payments (initial registration deposit + installments) must be at least ₹'
+                .number_format(self::PP_MIN_TOTAL_PAID)
+                .'. Your total paid: ₹'.number_format($payments['total_paid'])
+                .' (registration deposit: ₹'.number_format($payments['initial_deposit'])
+                .', installments: ₹'.number_format($payments['installment_paid']).').'
+            );
     }
 
     private function findPurchaserForUser(User $user): ?object

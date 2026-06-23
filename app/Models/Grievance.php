@@ -12,6 +12,22 @@ class Grievance extends Model
 
     public const STATUS_RESOLVED = 'Resolved';
 
+    public const SUBJECT_EMI_PAYMENT = 'EMI Payment related';
+
+    public const SUBJECT_POSSESSION_APPLICATION = 'Possession Application';
+
+    public const SUBJECT_OTP = 'OTP related';
+
+    public const SUBJECT_OTHERS = 'OTHERS';
+
+    /** @var list<string> */
+    public const SUBJECT_OPTIONS = [
+        self::SUBJECT_EMI_PAYMENT,
+        self::SUBJECT_POSSESSION_APPLICATION,
+        self::SUBJECT_OTP,
+        self::SUBJECT_OTHERS,
+    ];
+
     protected $fillable = [
         'secure_id',
         'ticket_number',

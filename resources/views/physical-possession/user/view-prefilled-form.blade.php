@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Possession Certificate Form — Preview</title>
+    <title>Possession Application Request Form — Preview</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
@@ -95,7 +95,7 @@
 </head>
 <body>
     <div class="toolbar">
-        <h1>Possession Certificate Form — Preview</h1>
+        <h1>Possession Application Request Form — Preview</h1>
         <div class="toolbar-actions">
             <button type="button" class="btn btn-outline" onclick="window.close()">Close</button>
             <button type="button" class="btn btn-outline" onclick="window.print()">Print</button>

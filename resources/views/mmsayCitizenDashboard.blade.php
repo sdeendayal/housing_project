@@ -194,14 +194,14 @@
                 </a>
                 <a href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
                     <span class="material-symbols-outlined text-[16px]">visibility</span>
-                    View Possession Form
+                    View Application Request Form
                 </a>
                 @else
                 <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
                     <p class="text-[10px] font-bold text-amber-900 m-0 mb-0.5">Physical Possession — Not eligible yet</p>
                     <p class="text-[10px] text-amber-800 m-0 leading-relaxed">
-                        You must have paid at least <strong>{{ $ppMinInstallmentRequiredFormatted }}</strong> in installments (initial deposit is not counted).
-                        Your installment payments: <strong>{{ $ppInstallmentPaidFormatted }}</strong>.
+                        Your total payments (initial registration deposit + installments) must be at least <strong>{{ $ppMinTotalPaidRequiredFormatted }}</strong>.
+                        Your total paid so far: <strong>{{ $ppTotalPaidFormatted }}</strong>.
                     </p>
                 </div>
                 @endif
@@ -218,7 +218,7 @@
             </div>
 
             @if (!$ppHasApplication && empty($ppHasDraftApplication))
-            <p class="text-[10px] text-slate-500 m-0">Download the possession certificate request form, sign it, then apply and upload documents.</p>
+            <p class="text-[10px] text-slate-500 m-0">Download the possession application request form, sign it, then apply and upload documents.</p>
             @endif
         </div>
     </div>

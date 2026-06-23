@@ -28,7 +28,7 @@ class PhysicalPossessionDocument extends Model
 
     /** @var array<string, string> Legacy types for older applications */
     public const LEGACY_TYPES = [
-        'filled_form' => 'Signed Possession Certificate Request Form',
+        'filled_form' => 'Signed Possession Application Request Form',
         'registration_certificate' => 'Registration Certificate',
         'provisional_possession_letter' => 'Provisional Possession Letter',
     ];

@@ -90,9 +90,8 @@ class CitizenAuthController extends Controller
         $ppHasApplication = $latestPpApplication !== null;
         $ppHasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
 
-        $ppMinInstallmentRequired = 26664;
-        $ppInstallmentPaid = (float) ($paymentDetails['installmentPaidTotal'] ?? 0);
-        $isPpEligible = $ppInstallmentPaid >= $ppMinInstallmentRequired;
+        $ppMinTotalPaidRequired = 40000;
+        $isPpEligible = $totalPaid >= $ppMinTotalPaidRequired;
 
         $applicationSections = $this->buildApplicationDetailSections(
             $user,
@@ -127,10 +126,10 @@ class CitizenAuthController extends Controller
             'ppHasDraftApplication' => $ppHasDraftApplication,
             'latestPpApplication' => $latestPpApplication,
             'isPpEligible' => $isPpEligible,
-            'ppInstallmentPaid' => $ppInstallmentPaid,
-            'ppMinInstallmentRequired' => $ppMinInstallmentRequired,
-            'ppInstallmentPaidFormatted' => $this->formatIndianCurrency($ppInstallmentPaid),
-            'ppMinInstallmentRequiredFormatted' => $this->formatIndianCurrency($ppMinInstallmentRequired),
+            'ppTotalPaid' => $totalPaid,
+            'ppMinTotalPaidRequired' => $ppMinTotalPaidRequired,
+            'ppTotalPaidFormatted' => $this->formatIndianCurrency($totalPaid),
+            'ppMinTotalPaidRequiredFormatted' => $this->formatIndianCurrency($ppMinTotalPaidRequired),
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],

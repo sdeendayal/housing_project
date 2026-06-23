@@ -68,13 +68,22 @@
 
     {{-- Payment receipts --}}
     @if ($paymentReceipts->isNotEmpty())
+    @php
+        $receiptsScrollable = $paymentReceipts->count() > 5;
+    @endphp
     <div class="mt-3 rounded-lg border border-slate-100 overflow-hidden">
         <div class="px-2.5 py-1.5 bg-slate-50 border-b border-slate-100">
             <p class="text-[9px] font-bold uppercase text-slate-500 m-0">Payment History (Receipts)</p>
         </div>
-        <div class="overflow-x-auto">
+        <div @class([
+            'overflow-x-auto',
+            'max-h-[11.25rem] overflow-y-auto' => $receiptsScrollable,
+        ])>
             <table class="w-full text-[10px]">
-                <thead class="bg-white border-b border-slate-100">
+                <thead @class([
+                    'bg-white border-b border-slate-100',
+                    'sticky top-0 z-10' => $receiptsScrollable,
+                ])>
                     <tr>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Receipt No.</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Date</th>

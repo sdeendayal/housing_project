@@ -8,6 +8,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class GrievanceController extends Controller
@@ -104,16 +105,18 @@ class GrievanceController extends Controller
         return view('grievances.create', [
             'displayName' => $displayName,
             'applicationId' => $applicationId,
+            'subjectOptions' => Grievance::SUBJECT_OPTIONS,
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'grievance_subject' => 'required|string|max:255',
+            'grievance_subject' => ['required', 'string', Rule::in(Grievance::SUBJECT_OPTIONS)],
             'grievance_description' => 'required|string|max:2000',
         ], [
-            'grievance_subject.required' => 'Please enter grievance subject.',
+            'grievance_subject.required' => 'Please select a grievance subject.',
+            'grievance_subject.in' => 'Please select a valid grievance subject.',
             'grievance_description.required' => 'Please enter grievance description.',
         ]);
 
