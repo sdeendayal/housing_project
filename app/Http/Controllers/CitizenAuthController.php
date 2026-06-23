@@ -635,7 +635,8 @@ class CitizenAuthController extends Controller
     private function allocateInstallmentsFromPayments(
         Collection $installmentRows,
         Collection $receiptRows,
-        Collection $ledgerByNumber
+        Collection $ledgerByNumber,
+        float $lastInstallmentTargetEmi = 0.0
     ): array {
         $chunks = [];
 
@@ -676,7 +677,7 @@ class CitizenAuthController extends Controller
 
         foreach ($installmentRows as $row) {
             $installmentNumber = (int) $row->InstallmentNumber;
-            $dueAmount = $this->installmentAllocationAmount($row, $lastInstallmentNumber);
+            $dueAmount = $this->installmentAllocationAmount($row, $lastInstallmentNumber, $lastInstallmentTargetEmi);
             $allocated = 0.0;
             $paidOn = null;
             $firstPaymentOn = null;
@@ -720,10 +721,10 @@ class CitizenAuthController extends Controller
         return $allocations;
     }
 
-    private function installmentAllocationAmount(object $row, int $lastInstallmentNumber): float
+    private function installmentAllocationAmount(object $row, int $lastInstallmentNumber, float $lastInstallmentTargetEmi = 0.0): float
     {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            return (float) $row->DueAmount;
+            return $lastInstallmentTargetEmi > 0 ? $lastInstallmentTargetEmi : (float) $row->DueAmount;
         }
 
         $emiAmount = (float) $row->EMIAmount;
@@ -809,11 +810,15 @@ class CitizenAuthController extends Controller
         $ledger,
         float $remainingBalance,
         int $lastInstallmentNumber,
-        bool $isPaid
+        bool $isPaid,
+        float $lastInstallmentTargetEmi = 0.0
     ): float {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            if ($isPaid && $ledger) {
-                return (float) $ledger->Payment;
+            if ($isPaid) {
+                if ($ledger) {
+                    return (float) $ledger->Payment;
+                }
+                return $lastInstallmentTargetEmi;
             }
 
             return $remainingBalance;
@@ -849,12 +854,22 @@ class CitizenAuthController extends Controller
             ->get();
 
         $lastInstallmentNumber = (int) $installmentRows->max('InstallmentNumber');
+
+        $lastInstallmentTargetEmi = 0.0;
+        if ($installmentRows->isNotEmpty()) {
+            $firstInstallmentsEmiSum = $installmentRows->reject(function ($row) use ($lastInstallmentNumber) {
+                return (int) $row->InstallmentNumber === $lastInstallmentNumber;
+            })->sum('EMIAmount');
+            $lastInstallmentTargetEmi = max(0.0, $flatCost - $receivedAmount - $firstInstallmentsEmiSum);
+        }
+
         $paymentPool = $this->resolveInstallmentPaymentPool($assetId, $ledgerByNumber);
         $installmentPaidTotal = $paymentPool['pool'];
         $allocations = $this->allocateInstallmentsFromPayments(
             $installmentRows,
             $paymentPool['receiptRows'],
-            $ledgerByNumber
+            $ledgerByNumber,
+            $lastInstallmentTargetEmi
         );
         $remainingBalance = $this->remainingFlatBalance($flatCost, $receivedAmount, $ledgerByNumber);
 
@@ -862,13 +877,16 @@ class CitizenAuthController extends Controller
             $ledgerByNumber,
             $remainingBalance,
             $lastInstallmentNumber,
-            $allocations
+            $allocations,
+            $lastInstallmentTargetEmi
         ) {
                 $ledger = $ledgerByNumber->get($row->InstallmentNumber);
                 $dueDate = Carbon::parse($row->DueDate);
                 $today = Carbon::today();
                 $installmentNumber = (int) $row->InstallmentNumber;
-                $dueAmount = (float) $row->DueAmount;
+                $dueAmount = $installmentNumber === $lastInstallmentNumber && $lastInstallmentTargetEmi > 0
+                    ? $lastInstallmentTargetEmi
+                    : (float) $row->DueAmount;
                 $scheduleEmiAmount = (float) $row->EMIAmount;
                 $allocation = $allocations[$installmentNumber] ?? [
                     'allocated' => 0.0,
@@ -881,7 +899,7 @@ class CitizenAuthController extends Controller
                 $status = $this->resolveInstallmentStatus(
                     $allocated,
                     $dueAmount,
-                    $scheduleEmiAmount,
+                    $installmentNumber === $lastInstallmentNumber && $lastInstallmentTargetEmi > 0 ? $lastInstallmentTargetEmi : $scheduleEmiAmount,
                     $installmentNumber === $lastInstallmentNumber,
                     $dueDate,
                     $today
@@ -902,7 +920,8 @@ class CitizenAuthController extends Controller
                     $ledger,
                     $remainingBalance,
                     $lastInstallmentNumber,
-                    $status === 'paid'
+                    $status === 'paid',
+                    $lastInstallmentTargetEmi
                 );
                 $totalDue = (int) $row->InstallmentNumber === $lastInstallmentNumber
                     ? $emiAmount
