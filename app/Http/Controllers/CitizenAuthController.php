@@ -672,10 +672,11 @@ class CitizenAuthController extends Controller
 
         $chunkIndex = 0;
         $allocations = [];
+        $lastInstallmentNumber = (int) $installmentRows->max('InstallmentNumber');
 
         foreach ($installmentRows as $row) {
             $installmentNumber = (int) $row->InstallmentNumber;
-            $dueAmount = (float) $row->DueAmount;
+            $dueAmount = $this->installmentAllocationAmount($row, $lastInstallmentNumber);
             $allocated = 0.0;
             $paidOn = null;
             $firstPaymentOn = null;
@@ -719,13 +720,34 @@ class CitizenAuthController extends Controller
         return $allocations;
     }
 
+    private function installmentAllocationAmount(object $row, int $lastInstallmentNumber): float
+    {
+        if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
+            return (float) $row->DueAmount;
+        }
+
+        $emiAmount = (float) $row->EMIAmount;
+
+        return $emiAmount > 0 ? $emiAmount : (float) $row->DueAmount;
+    }
+
     private function resolveInstallmentStatus(
         float $allocated,
         float $dueAmount,
+        float $emiAmount,
+        bool $isLastInstallment,
         Carbon $dueDate,
         Carbon $today
     ): string {
-        if ($dueAmount > 0 && $allocated >= ($dueAmount - 0.01)) {
+        $target = $isLastInstallment
+            ? $dueAmount
+            : ($emiAmount > 0 ? $emiAmount : $dueAmount);
+
+        if ($isLastInstallment && $emiAmount > 0 && $allocated >= ($emiAmount - 0.01)) {
+            return 'paid';
+        }
+
+        if ($target > 0 && $allocated >= ($target - 0.01)) {
             return 'paid';
         }
 
@@ -847,6 +869,7 @@ class CitizenAuthController extends Controller
                 $today = Carbon::today();
                 $installmentNumber = (int) $row->InstallmentNumber;
                 $dueAmount = (float) $row->DueAmount;
+                $scheduleEmiAmount = (float) $row->EMIAmount;
                 $allocation = $allocations[$installmentNumber] ?? [
                     'allocated' => 0.0,
                     'paid_on' => null,
@@ -855,7 +878,14 @@ class CitizenAuthController extends Controller
                 ];
                 $allocated = (float) $allocation['allocated'];
 
-                $status = $this->resolveInstallmentStatus($allocated, $dueAmount, $dueDate, $today);
+                $status = $this->resolveInstallmentStatus(
+                    $allocated,
+                    $dueAmount,
+                    $scheduleEmiAmount,
+                    $installmentNumber === $lastInstallmentNumber,
+                    $dueDate,
+                    $today
+                );
 
                 $paidOn = match ($status) {
                     'paid' => $allocation['paid_on'] ?? $allocation['first_payment_on'] ?? $allocation['last_payment_on'],
