@@ -131,6 +131,7 @@
             <table class="w-full text-[10px] text-left min-w-[600px]">
                 <thead class="bg-slate-50 border-b border-slate-100">
                     <tr>
+                        <th class="px-2 py-1.5 font-bold text-slate-500">#</th>
                         <th class="px-2 py-1.5 font-bold text-slate-500">Transaction ID</th>
                         <th class="px-2 py-1.5 font-bold text-slate-500">Date</th>
                         <th class="px-2 py-1.5 font-bold text-slate-500">Amount</th>
@@ -147,6 +148,7 @@
                             };
                         @endphp
                         <tr class="hover:bg-slate-50/80">
+                            <td class="px-2 py-1.5 font-bold text-slate-800">{{ $loop->iteration }}</td>
                             <td class="px-2 py-1.5 font-bold text-indigo-700">{{ $row['transaction_id'] }}</td>
                             <td class="px-2 py-1.5 text-slate-700">{{ $row['date'] }}</td>
                             <td class="px-2 py-1.5 font-semibold text-emerald-700">{{ $row['amount'] }}</td>
