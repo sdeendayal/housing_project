@@ -66,7 +66,7 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay-payment-status', [CitizenAuthController::class, 'paymentStatus'])
         ->name('citizen.payment-status');
 
-    Route::get('/mmsay/citizen/payment', fn () => redirect()->route('citizen.payment-status'))
+    Route::get('/mmsay/citizen/payment', fn() => redirect()->route('citizen.payment-status'))
         ->name('citizen.payment');
 
     Route::get('/mmsay/citizen/payment/pay', [PaymentController::class, 'payForm'])
@@ -152,9 +152,46 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
         ->name('mmsay.department.emi.payments');
-    
+
     Route::get('/mmsay-emi-status/{assetId}', [PropertyManagementController::class, 'emiStatus'])
-    ->name('mmsay.emi.status');  
+        ->name('mmsay.emi.status');
+
+    Route::get('/mmsay-department-physical-letter', [PropertyManagementController::class, 'departmentPhysicalLetter'])->name('mmsay.department.physical.letter');
+
+    Route::get(
+        '/allotment-letter/{id}',
+        [PropertyManagementController::class, 'downloadAllotmentLetter']
+    )->name('allotment.letter');
+
+    Route::get(
+        '/allotment-letter-pdf/{id}',
+        [PropertyManagementController::class, 'exportAllotmentLetterPdf']
+    )->name('allotment.letter.pdf');
+
+    Route::get(
+        'mmsay-department-property-emi-calculation',
+        [PropertyManagementController::class, 'departmentPropertyEmiCalculation']
+    );
+
+    Route::get(
+        '/emi-get-cities',
+        [PropertyManagementController::class, 'emiGetCities']
+    );
+
+    Route::get(
+        '/emi-get-sectors',
+        [PropertyManagementController::class, 'emiGetSectors']
+    );
+
+    Route::get(
+        '/emi-get-assets',
+        [PropertyManagementController::class, 'emiGetAssets']
+    );
+
+    Route::get(
+        '/emi-get-asset-details',
+        [PropertyManagementController::class, 'emiGetAssetDetails']
+    );
 
 
     // CMS Routes

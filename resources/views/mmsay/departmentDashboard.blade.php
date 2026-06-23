@@ -66,7 +66,7 @@
                         <h4 class="mt-3 text-sm font-semibold text-white group-hover:text-orange-400">
                             Property Allotment
                         </h4>
-                        <p class="text-xs text-slate-400">Plot / Flat Assigned</p>
+                        <p class="text-xs text-slate-400">Plot / Flat Allotted</p>
                     </a>
 
                     <!-- Provisional Letter -->
@@ -105,7 +105,8 @@
                     </a>
 
                     <!-- Physical Letter -->
-                    <a href="#" class="flex flex-col items-center text-center group cursor-pointer">
+                    <a href="{{ url('mmsay-department-physical-letter') }}"
+                        class="flex flex-col items-center text-center group cursor-pointer">
                         <div
                             class="w-14 h-14 bg-slate-800 text-pink-400 rounded-full flex items-center justify-center border-2 border-pink-500/30 transition-all duration-300 group-hover:scale-105 z-10">
                             <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +247,7 @@
                 </a>
 
                 <!-- Revenue -->
-                <a href="{{ url('mmsay-department-revenue') }}"
+                <a href="{{ url('mmsay-department-physical-letter') }}"
                     class="block bg-white rounded-2xl border border-violet-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
 
                     <div class="flex items-center justify-between mb-4">
@@ -281,12 +282,12 @@
                         Latest Applications
                     </h5>
 
-                    <button class="text-xs text-primary flex items-center gap-1 hover:underline font-medium">
+                    <a href="{{ url('mmsay-department-physical-letter') }}" class="text-xs text-primary flex items-center gap-1 hover:underline font-medium">
                         View All
                         <span class="material-symbols-outlined text-[16px]">
                             chevron_right
                         </span>
-                    </button>
+                    </a>
                 </div>
 
                 <!-- Table -->
@@ -321,154 +322,68 @@
 
                         <tbody class="divide-y divide-gray-200">
 
-                            <!-- Row 1 -->
-                            <tr class="hover:bg-gray-50 transition">
+                            @forelse($latestPhysicalApplications as $app)
+                                <tr class="hover:bg-gray-50 transition">
 
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
+                                    <td class="px-4 py-3">
+                                        <div class="flex items-center gap-3">
 
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-xs font-semibold">
-                                            AS
+                                            <div
+                                                class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-xs font-semibold">
+                                                {{ strtoupper(substr($app->applicant_name, 0, 1)) }}
+                                            </div>
+
+                                            <div>
+                                                <p class="text-sm font-medium text-gray-800">
+                                                    {{ $app->applicant_name }}
+                                                </p>
+
+                                                <p class="text-xs text-gray-500">
+                                                    {{ $app->mobile }}
+                                                </p>
+                                            </div>
+
                                         </div>
+                                    </td>
 
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-800">
-                                                Amit Sharma
-                                            </p>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        {{ $app->asset_name }}
+                                    </td>
 
-                                            <p class="text-xs text-gray-500">
-                                                amit.s@example.gov
-                                            </p>
-                                        </div>
+                                    <td class="px-4 py-3 text-sm text-gray-700">
+                                        {{ $app->application_number }}
+                                    </td>
 
-                                    </div>
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    Residential - Type A
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    #HSG-2023-0045
-                                </td>
-
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="px-2 py-1 rounded-full text-[10px] font-medium bg-yellow-100 text-yellow-700">
-                                        Pending
-                                    </span>
-                                </td>
-
-                                <td class="px-4 py-3 text-right">
-                                    <button
-                                        class="w-8 h-8 rounded-md hover:bg-gray-100 transition inline-flex items-center justify-center">
-                                        <span class="material-symbols-outlined text-[18px] text-primary">
-                                            visibility
+                                    <td class="px-4 py-3">
+                                        <span
+                                            class="px-2 py-1 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
+                                            Submitted
                                         </span>
-                                    </button>
-                                </td>
+                                    </td>
 
-                            </tr>
+                                    <td class="px-4 py-3 text-right">
 
-                            <!-- Row 2 -->
-                            <tr class="hover:bg-gray-50 transition">
+                                        <a href="#"
+                                            class="w-8 h-8 rounded-md hover:bg-gray-100 transition inline-flex items-center justify-center">
 
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
+                                            <span class="material-symbols-outlined text-[18px] text-primary">
+                                                visibility
+                                            </span>
 
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-tertiary-fixed flex items-center justify-center text-xs font-semibold">
-                                            PK
-                                        </div>
+                                        </a>
 
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-800">
-                                                Priya Kumari
-                                            </p>
+                                    </td>
 
-                                            <p class="text-xs text-gray-500">
-                                                priya.k@example.gov
-                                            </p>
-                                        </div>
+                                </tr>
 
-                                    </div>
-                                </td>
+                            @empty
 
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    Commercial - Plaza 2
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    #HSG-2023-0042
-                                </td>
-
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="px-2 py-1 rounded-full text-[10px] font-medium bg-green-100 text-green-700">
-                                        Approved
-                                    </span>
-                                </td>
-
-                                <td class="px-4 py-3 text-right">
-                                    <button
-                                        class="w-8 h-8 rounded-md hover:bg-gray-100 transition inline-flex items-center justify-center">
-                                        <span class="material-symbols-outlined text-[18px] text-primary">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </td>
-
-                            </tr>
-
-                            <!-- Row 3 -->
-                            <tr class="hover:bg-gray-50 transition">
-
-                                <td class="px-4 py-3">
-                                    <div class="flex items-center gap-3">
-
-                                        <div
-                                            class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold">
-                                            RK
-                                        </div>
-
-                                        <div>
-                                            <p class="text-sm font-medium text-gray-800">
-                                                Rajesh Kumar
-                                            </p>
-
-                                            <p class="text-xs text-gray-500">
-                                                rajesh.k@example.gov
-                                            </p>
-                                        </div>
-
-                                    </div>
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    Residential - Type B
-                                </td>
-
-                                <td class="px-4 py-3 text-sm text-gray-700">
-                                    #HSG-2023-0041
-                                </td>
-
-                                <td class="px-4 py-3">
-                                    <span class="px-2 py-1 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700">
-                                        Archived
-                                    </span>
-                                </td>
-
-                                <td class="px-4 py-3 text-right">
-                                    <button
-                                        class="w-8 h-8 rounded-md hover:bg-gray-100 transition inline-flex items-center justify-center">
-                                        <span class="material-symbols-outlined text-[18px] text-primary">
-                                            visibility
-                                        </span>
-                                    </button>
-                                </td>
-
-                            </tr>
+                                <tr>
+                                    <td colspan="5" class="text-center py-6 text-gray-500">
+                                        No Physical Possession Applications Found
+                                    </td>
+                                </tr>
+                            @endforelse
 
                         </tbody>
 

@@ -1,8 +1,8 @@
 @extends('layouts.mmsayDepartmentAuth')
 @section('title', 'MMSAY Department Property Registration')
 @section('content')
-    <main class="ml-64 min-h-screen flex flex-col">
-        <div class="pt-20 px-4 pb-4 space-y-4 flex-1">
+    <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
+        <div class="max-w-container-max mx-auto space-y-md">
             <!-- Header Section -->
 
 
@@ -30,17 +30,18 @@
                     </div>
                 </div>
                 <div class="p-6 bg-gray-50 border-b">
-                    <form method="GET" action="{{ url('/cash-receipt') }}">
+                    <form method="GET" action="{{ url('/mmsay-department-cash-receipt') }}">
 
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
 
+                            <!-- EM Office -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     EM Office
                                 </label>
 
                                 <select id="cashEmOffice" name="em_office"
-                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition">
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4">
 
                                     <option value="">All Offices</option>
 
@@ -50,55 +51,54 @@
                                             {{ $office->BranchName }}
                                         </option>
                                     @endforeach
-
                                 </select>
                             </div>
 
+                            <!-- District -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     District
                                 </label>
 
                                 <select id="cashDistrict" name="district" data-selected="{{ request('district') }}"
-                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4">
                                     <option value="">All Districts</option>
                                 </select>
                             </div>
 
+                            <!-- City -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     City
                                 </label>
 
                                 <select id="cashCity" name="city" data-selected="{{ request('city') }}"
-                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4">
                                     <option value="">All Cities</option>
                                 </select>
                             </div>
 
+                            <!-- Sector -->
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                                     Sector
                                 </label>
 
                                 <select id="cashSector" name="sector" data-selected="{{ request('sector') }}"
-                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                                    class="w-full h-11 rounded-xl border border-gray-300 bg-white px-4">
                                     <option value="">All Sectors</option>
                                 </select>
                             </div>
 
                             <div class="flex items-end">
-                                <button type="submit"
-                                    class="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 transition shadow-md">
-
+                                <button type="submit" class="w-full h-11 rounded-xl bg-blue-600 text-white font-semibold">
                                     Search
                                 </button>
                             </div>
 
                             <div class="flex items-end">
-                                <a href="{{ url('/cash-receipt') }}"
-                                    class="w-full h-11 rounded-xl bg-gray-600 text-white font-semibold flex items-center justify-center hover:bg-gray-700 transition shadow-md">
-
+                                <a href="{{ url('/mmsay-department-cash-receipt') }}"
+                                    class="w-full h-11 rounded-xl bg-gray-600 text-white font-semibold flex items-center justify-center">
                                     Reset
                                 </a>
                             </div>

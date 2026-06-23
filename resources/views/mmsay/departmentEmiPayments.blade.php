@@ -39,7 +39,7 @@
                                     <th class="px-5 py-3 text-left font-semibold">District</th>
                                     <th class="px-5 py-3 text-left font-semibold">Purchaser</th>
                                     <th class="px-5 py-3 text-left font-semibold">Mobile</th>
-                                    <th class="px-5 py-3 text-right font-semibold">Flat Cost</th>
+                                    <th class="px-5 py-3 text-right font-semibold">Plot Cost</th>
                                     <th class="px-5 py-3 text-right font-semibold">Received</th>
                                     <th class="px-5 py-3 text-right font-semibold">Balance</th>
                                     <th class="px-5 py-3 text-center font-semibold">Action</th>

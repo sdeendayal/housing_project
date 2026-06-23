@@ -24,7 +24,7 @@
             <div class="grid grid-cols-3 gap-6">
 
                 <div>
-                    <p class="text-gray-500">Total Flat Cost</p>
+                    <p class="text-gray-500">Total Plot Cost</p>
                     <h2 class="text-xl font-bold">₹ {{ number_format($flatCost) }}</h2>
                 </div>
 
@@ -46,7 +46,7 @@
 
         </div>
 
-        <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow mt-6">
+        {{-- <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow mt-6">
 
             <h2 class="text-lg font-semibold">EMI Recovery Summary</h2>
 
@@ -64,7 +64,7 @@
 
             </div>
 
-        </div>
+        </div> --}}
 
         <div class="bg-white p-6 rounded-2xl shadow border mt-6">
 
@@ -74,8 +74,13 @@
 
                 <div><b>Asset ID:</b> {{ $property->AssetId }}</div>
                 <div><b>Asset Name:</b> {{ $property->AssetName ?? '-' }}</div>
-                <div><b>Flat Cost:</b> ₹ {{ number_format($property->FlatCost) }}</div>
-                <div><b>Location:</b> {{ $property->city ?? '-' }}</div>
+                <div><b>Plot Cost:</b> ₹ {{ number_format($property->FlatCost) }}</div>
+                <div>
+                    <b>Location:</b>
+                    {{ $property->sector ?? '-' }},
+                    {{ $property->city ?? '-' }},
+                    {{ $property->district ?? '-' }}
+                </div>
 
             </div>
 
@@ -90,7 +95,7 @@
                 <div><b>Name:</b> {{ $property->PrivatePurchaserName ?? '-' }}</div>
                 <div><b>Mobile:</b> {{ $property->MobileNo ?? '-' }}</div>
                 <div><b>Application No:</b> {{ $property->ApplicationNo ?? '-' }}</div>
-                <div><b>Member ID:</b> {{ $property->MemberID ?? '-' }}</div>
+                {{-- <div><b>Member ID:</b> {{ $property->MemberID ?? '-' }}</div> --}}
 
             </div>
 
@@ -143,7 +148,7 @@
                 </tbody>
 
             </table>
-        </div>  
+        </div>
     </main>
 
 @endsection

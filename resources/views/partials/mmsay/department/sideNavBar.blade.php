@@ -59,10 +59,18 @@
             <span>Allotted Properties</span>
         </a>
 
-        <a href="{{ url('mmsay-department-cash-receipt') }}"
+        {{-- <a href="{{ url('mmsay-department-cash-receipt') }}"
             class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-cash-receipt') }}">
             <span class="material-symbols-outlined text-[18px]">receipt_long</span>
             <span>Cash Receipt</span>
+        </a> --}}
+
+        <a href="{{ url('mmsay-department-property-emi-calculation') }}"
+            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-cash-receipt') }}">
+
+            <span class="material-symbols-outlined text-[18px]">calculate</span>
+
+            <span>Property EMI Calculation</span>
         </a>
 
         <a href="{{ url('mmsay-department-add-district-officer') }}"
@@ -77,7 +85,7 @@
         <div x-data="{ cmsOpen: {{ cmsActive() ? 'true' : 'false' }} }">
 
             <button @click="cmsOpen = !cmsOpen"
-    class="w-full flex items-center justify-between px-2 py-2 rounded-md text-[13px] transition-all
+                class="w-full flex items-center justify-between px-2 py-2 rounded-md text-[13px] transition-all
     {{ cmsActive()
         ? 'bg-secondary-container text-on-secondary-container font-semibold'
         : 'text-on-surface-variant hover:bg-surface-container-high' }}">
@@ -107,7 +115,7 @@
                 </a>
 
                 <!-- Notice Management -->
-                <div x-data="{ noticeOpen: {{ request()->is('upload-notice*') || request()->is('manage-notice*') ? 'true' : 'false' }} }">
+                {{-- <div x-data="{ noticeOpen: {{ request()->is('upload-notice*') || request()->is('manage-notice*') ? 'true' : 'false' }} }">
 
                     <button @click="noticeOpen = !noticeOpen"
                         class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-[13px]
@@ -136,10 +144,10 @@
                         </a>
 
                     </div>
-                </div>
+                </div> --}}
 
                 <!-- Tender Management -->
-                <div x-data="{ tenderOpen: {{ request()->is('upload-tender*') || request()->is('manage-tender*') ? 'true' : 'false' }} }">
+                {{-- <div x-data="{ tenderOpen: {{ request()->is('upload-tender*') || request()->is('manage-tender*') ? 'true' : 'false' }} }">
 
                     <button @click="tenderOpen = !tenderOpen"
                         class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-[13px]
@@ -168,7 +176,7 @@
                         </a>
 
                     </div>
-                </div>
+                </div> --}}
 
             </div>
         </div>
