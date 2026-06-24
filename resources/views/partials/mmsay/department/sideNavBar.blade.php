@@ -66,7 +66,7 @@
         </a> --}}
 
         <a href="{{ url('mmsay-department-property-emi-calculation') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-cash-receipt') }}">
+            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-property-emi-calculation') }}">
 
             <span class="material-symbols-outlined text-[18px]">calculate</span>
 

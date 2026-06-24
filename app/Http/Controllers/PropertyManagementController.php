@@ -123,6 +123,7 @@ ON l.AssetId = i.AssetId;
                 'ppa.application_number',
                 'ppa.asset_name',
                 'ppa.mobile',
+                'ppa.asset_id',
                 'ppa.created_at'
             )
             ->latest('ppa.id')
@@ -904,6 +905,231 @@ ON l.AssetId = i.AssetId;
             ->first();
 
         return response()->json($property);
+    }
+
+    public function view($assetId)
+    {
+        $details = DB::table('property_auction_detail as pad')
+            ->join(
+                'property_private_purchasers as ppp',
+                'pad.PurchaserID',
+                '=',
+                'ppp.PrivatePurchaserId'
+            )
+            ->join(
+                'property_registration as pr',
+                'pad.AssetId',
+                '=',
+                'pr.AssetId'
+            )
+            ->leftJoin('em_offices as eo', 'pad.BranchId', '=', 'eo.BranchId')
+            ->leftJoin('districts as d', 'pad.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'pad.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'pad.SectorId', '=', 's.SectorId')
+            ->where('pad.AssetId', $assetId)
+            ->select(
+                'pad.*',
+
+                'ppp.PrivatePurchaserName',
+                'ppp.PurchaserFatherName',
+                'ppp.MobileNo',
+                'ppp.ApplicationNo',
+                'ppp.PPPId',
+                'ppp.MemberID',
+                'ppp.CasteCategoryName',
+                'ppp.MaritalStatus',
+                'ppp.Address',
+                'ppp.CreateDate',
+
+                'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit',
+
+                'eo.BranchName',
+                'd.DistrictName',
+                'c.CityName',
+                's.SectorName'
+            )
+            ->first();
+
+        if (!$details) {
+            abort(404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payment Summary
+        |--------------------------------------------------------------------------
+        */
+
+        $totalAmount = $details->FlatCost;
+
+        // Registration amount
+        $registrationPaid = $details->ReceivedAmount ?? 0;
+
+        // EMI / Receipt payments
+        $receiptPaid = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->where('IsDeleted', 0)
+            ->sum('total_paid_amount');
+
+        // Total paid
+        $totalPaid = $registrationPaid + $receiptPaid;
+
+        // Outstanding
+        $outstanding = max(0, $totalAmount - $totalPaid);
+
+        // Completion %
+        $completionPercent = $totalAmount > 0
+            ? round(($totalPaid / $totalAmount) * 100, 2)
+            : 0;
+
+        /*
+|--------------------------------------------------------------------------
+| Installments
+|--------------------------------------------------------------------------
+*/
+
+        $receiptList = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->where('IsDeleted', 0)
+            ->orderBy('created_date')
+            ->get();
+
+        $installments = DB::table('installment_due')
+            ->where('AssetId', $assetId)
+            ->orderBy('InstallmentNumber')
+            ->get();
+
+        /*
+ |--------------------------------------------------------------------------
+ | Installment Statistics (FIFO Logic)
+ |--------------------------------------------------------------------------
+ */
+
+        $today = now()->toDateString();
+
+        $totalInstallments = $installments->count();
+
+        $paidInstallments = 0;
+        $overdueInstallments = 0;
+        $upcomingInstallments = 0;
+
+        /*
+        |--------------------------------------------------------------------------
+        | EMI payment ko FIFO basis par adjust karo
+        |--------------------------------------------------------------------------
+        |
+        | Example:
+        | EMI = 2222.22
+        | Paid = 44440
+        | => 20 EMI Paid
+        |
+        */
+
+        $receiptIndex = 0;
+        $receiptCount = $receiptList->count();
+
+        foreach ($installments as $emi) {
+
+            if ($receiptIndex < $receiptCount) {
+
+                $receipt = $receiptList[$receiptIndex];
+
+                $emi->status = 'Paid';
+                $emi->PaidOn = $receipt->created_date;
+                $emi->receipt_number = $receipt->receipt_number;
+
+                $paidInstallments++;
+                $receiptIndex++;
+
+            } else {
+
+                $emi->PaidOn = '-';
+                $emi->receipt_number = '-';
+
+                if ($emi->DueDate <= $today) {
+
+                    $emi->status = 'Overdue';
+                    $overdueInstallments++;
+
+                } else {
+
+                    $emi->status = 'Upcoming';
+                    $upcomingInstallments++;
+                }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Safety Recalculation
+        |--------------------------------------------------------------------------
+        */
+
+        $paidInstallments = $installments
+            ->where('status', 'Paid')
+            ->count();
+
+        $overdueInstallments = $installments
+            ->where('status', 'Overdue')
+            ->count();
+
+        $upcomingInstallments = $installments
+            ->where('status', 'Upcoming')
+            ->count()
+            + $installments->where('status', 'Partially Paid')->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Receipt History
+        |--------------------------------------------------------------------------
+        */
+
+        $receipts = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->where('IsDeleted', 0)
+            ->select(
+                'id',
+                'receipt_number',
+                'total_paid_amount',
+                'created_date'
+            )
+            ->orderBy('created_date', 'desc')
+            ->get();
+
+        // Registration Payment Entry
+        if ($registrationPaid > 0) {
+
+            $receipts->prepend((object) [
+                'id' => 0,
+                'receipt_number' => 'REGISTRATION',
+                'total_paid_amount' => $registrationPaid,
+                'created_date' => $details->CreateDate,
+            ]);
+        }
+
+        $property = $details;
+        $remainingAmount = $outstanding;
+
+        return view(
+            'mmsay.physicalPossessionView',
+            compact(
+                'details',
+                'property',
+                'totalAmount',
+                'totalPaid',
+                'outstanding',
+                'remainingAmount',
+                'completionPercent',
+                'installments',
+                'receipts',
+                'totalInstallments',
+                'paidInstallments',
+                'overdueInstallments',
+                'upcomingInstallments'
+            )
+        );
     }
 
 

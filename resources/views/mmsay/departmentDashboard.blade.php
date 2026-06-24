@@ -47,7 +47,7 @@
                             </svg>
                         </div>
 
-                        <h4 class="mt-3 text-sm font-semibold text-white">Lucky Draw</h4>
+                        <h4 class="mt-3 text-sm font-semibold text-white">Draw</h4>
 
                     </a>
 
@@ -175,7 +175,7 @@
                     </h3>
 
                     <p class="text-xs text-slate-400 mt-1">
-                        Lucky Draw Process
+                        Draw Process
                     </p>
                 </a>
 
@@ -282,7 +282,8 @@
                         Latest Applications
                     </h5>
 
-                    <a href="{{ url('mmsay-department-physical-letter') }}" class="text-xs text-primary flex items-center gap-1 hover:underline font-medium">
+                    <a href="{{ url('mmsay-department-physical-letter') }}"
+                        class="text-xs text-primary flex items-center gap-1 hover:underline font-medium">
                         View All
                         <span class="material-symbols-outlined text-[16px]">
                             chevron_right
@@ -363,13 +364,11 @@
 
                                     <td class="px-4 py-3 text-right">
 
-                                        <a href="#"
+                                        <a href="{{ route('physical-possession.view', $app->asset_id) }}"
                                             class="w-8 h-8 rounded-md hover:bg-gray-100 transition inline-flex items-center justify-center">
-
                                             <span class="material-symbols-outlined text-[18px] text-primary">
                                                 visibility
                                             </span>
-
                                         </a>
 
                                     </td>

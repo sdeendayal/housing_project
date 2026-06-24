@@ -45,6 +45,7 @@
                         $statusClass = match($inst->status) {
                             'paid' => 'bg-emerald-100 text-emerald-700',
                             'overdue' => 'bg-red-100 text-red-700',
+                            'partial' => 'bg-amber-100 text-amber-700',
                             default => 'bg-indigo-100 text-indigo-700',
                         };
                     @endphp
@@ -85,6 +86,7 @@
                     'sticky top-0 z-10' => $receiptsScrollable,
                 ])>
                     <tr>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">#</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Receipt No.</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Date</th>
                         <th class="px-2 py-1.5 text-left font-bold text-slate-500">Amount</th>
@@ -95,6 +97,7 @@
                 <tbody class="divide-y divide-slate-50">
                     @foreach ($paymentReceipts as $receipt)
                     <tr class="hover:bg-slate-50/80">
+                        <td class="px-2 py-1.5 font-bold text-slate-800">{{ $loop->iteration }}</td>
                         <td class="px-2 py-1.5 font-bold text-indigo-700 break-all">{{ $receipt->receipt_number }}</td>
                         <td class="px-2 py-1.5 text-slate-700 whitespace-nowrap">{{ $receipt->date_formatted }}</td>
                         <td class="px-2 py-1.5 font-semibold text-emerald-700 whitespace-nowrap">{{ $receipt->amount_formatted }}</td>

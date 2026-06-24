@@ -872,7 +872,7 @@ class PpUserController extends Controller
     // User ka profile data database se laana
     private function getUserProfile(User $user): array
     {
-        $purchaser = $this->findPurchaserForUser($user);
+        $purchaser = $this->findPurchaserForUserWithProperty($user);
 
         $name = $user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Applicant');
         $fatherName = $purchaser?->PurchaserFatherName ?? '—';
@@ -952,15 +952,40 @@ class PpUserController extends Controller
     private function resolvePpTotalAmountPaid(User $user): array
     {
         $purchaser = $this->findPurchaserForUser($user);
-        $initialDeposit = (float) ($purchaser?->ReceivedAmount ?? 0);
+
+        if (! $purchaser) {
+            return [
+                'initial_deposit' => 0.0,
+                'installment_paid' => 0.0,
+                'total_paid' => 0.0,
+            ];
+        }
+
+        $auction = DB::table('property_auction_detail')
+            ->where('PurchaserID', $purchaser->PrivatePurchaserId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->orderByDesc('CreatedDate')
+            ->first();
+
+        $initialDeposit = (float) ($auction?->ReceivedAmount ?? 0);
+        $assetId = $auction?->AssetId ? (int) $auction->AssetId : null;
         $installmentPaid = 0.0;
 
-        if ($purchaser?->AssetId) {
-            $installmentPaid = (float) DB::table('ledger')
-                ->where('AssetId', $purchaser->AssetId)
+        if ($assetId) {
+            $ledgerPaid = (float) DB::table('ledger')
+                ->where('AssetId', $assetId)
                 ->where('Is_Deleted', 0)
                 ->where('Is_Active', 1)
                 ->sum('Payment');
+
+            $cashReceiptPaid = (float) DB::table('cash_receipt_details')
+                ->where('asset_number', $assetId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->sum('total_paid_amount');
+
+            $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
         }
 
         return [
@@ -992,6 +1017,41 @@ class PpUserController extends Controller
 
     private function findPurchaserForUser(User $user): ?object
     {
+        if ($user->private_purchaser_id) {
+            return DB::table('property_private_purchasers as ppp')
+                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+                ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
+                ->where('ppp.IsDeleted', 0)
+                ->select('ppp.*', 'd.DistrictName', 'd.DistrictId')
+                ->first();
+        }
+
+        $mobile = $user->mobile;
+
+        if (! $mobile) {
+            return null;
+        }
+
+        $variants = array_unique([
+            $mobile,
+            '91'.$mobile,
+            (int) $mobile,
+        ]);
+
+        return DB::table('property_private_purchasers as ppp')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->where('ppp.IsDeleted', 0)
+            ->where(function ($query) use ($variants, $mobile) {
+                $query->whereIn('ppp.MobileNo', $variants)
+                    ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
+            })
+            ->select('ppp.*', 'd.DistrictName', 'd.DistrictId')
+            ->orderByDesc('ppp.PrivatePurchaserId')
+            ->first();
+    }
+
+    private function findPurchaserForUserWithProperty(User $user): ?object
+    {
         $select = [
             'ppp.*',
             'd.DistrictName',
@@ -1010,7 +1070,7 @@ class PpUserController extends Controller
         ];
 
         if ($user->private_purchaser_id) {
-            return $this->purchaserBaseQuery()
+            return $this->purchaserBaseQuery(false)
                 ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
                 ->select($select)
                 ->orderByDesc('pad.PropertyAuctionId')
@@ -1023,9 +1083,15 @@ class PpUserController extends Controller
             return null;
         }
 
+        $variants = array_unique([
+            $mobile,
+            '91'.$mobile,
+            (int) $mobile,
+        ]);
+
         return $this->purchaserBaseQuery()
-            ->where(function ($query) use ($mobile) {
-                $query->where('ppp.MobileNo', $mobile)
+            ->where(function ($query) use ($variants, $mobile) {
+                $query->whereIn('ppp.MobileNo', $variants)
                     ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
             })
             ->select($select)
@@ -1033,9 +1099,9 @@ class PpUserController extends Controller
             ->first();
     }
 
-    private function purchaserBaseQuery()
+    private function purchaserBaseQuery(bool $activeOnly = true)
     {
-        return DB::table('property_private_purchasers as ppp')
+        $query = DB::table('property_private_purchasers as ppp')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('cities as c', 'ppp.CityId', '=', 'c.CityId')
             ->leftJoin('sectors as s', 'ppp.SectorId', '=', 's.SectorId')
@@ -1045,8 +1111,13 @@ class PpUserController extends Controller
                     ->where('pad.IsActive', 1);
             })
             ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
-            ->where('ppp.IsActive', 1)
             ->where('ppp.IsDeleted', 0);
+
+        if ($activeOnly) {
+            $query->where('ppp.IsActive', 1);
+        }
+
+        return $query;
     }
 
     private function buildApplicationReferenceData(array $profile): array

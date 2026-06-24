@@ -607,6 +607,158 @@ class CitizenAuthController extends Controller
         return '₹ '.($rest ? $rest.',' : '').$lastThree;
     }
 
+    /** @return array{pool: float, receiptRows: Collection<int, object>} */
+    private function resolveInstallmentPaymentPool(int $assetId, Collection $ledgerByNumber): array
+    {
+        $receiptRows = DB::table('cash_receipt_details')
+            ->where('asset_number', $assetId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->orderBy('created_date')
+            ->get(['total_paid_amount', 'created_date']);
+
+        $receiptTotal = (float) $receiptRows->sum(fn ($row) => (float) $row->total_paid_amount);
+        $ledgerTotal = (float) $ledgerByNumber->sum(fn ($row) => (float) $row->Payment);
+        $pool = $receiptTotal > 0 ? $receiptTotal : $ledgerTotal;
+
+        return [
+            'pool' => $pool,
+            'receiptRows' => $receiptRows,
+        ];
+    }
+
+    /**
+     * Map receipts (or ledger fallback) onto installments in order.
+     *
+     * @return array<int, array{allocated: float, paid_on: ?Carbon, first_payment_on: ?Carbon, last_payment_on: ?Carbon}>
+     */
+    private function allocateInstallmentsFromPayments(
+        Collection $installmentRows,
+        Collection $receiptRows,
+        Collection $ledgerByNumber,
+        float $lastInstallmentTargetEmi = 0.0
+    ): array {
+        $chunks = [];
+
+        if ($receiptRows->isNotEmpty()) {
+            foreach ($receiptRows as $receipt) {
+                $amount = (float) $receipt->total_paid_amount;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $chunks[] = [
+                    'remaining' => $amount,
+                    'date' => $receipt->created_date ? Carbon::parse($receipt->created_date) : null,
+                ];
+            }
+        } else {
+            foreach ($ledgerByNumber->sortKeys() as $ledger) {
+                $amount = (float) $ledger->Payment;
+                if ($amount <= 0) {
+                    continue;
+                }
+
+                $date = null;
+                if ($ledger->CreateDate) {
+                    $date = Carbon::parse($ledger->CreateDate);
+                }
+
+                $chunks[] = [
+                    'remaining' => $amount,
+                    'date' => $date,
+                ];
+            }
+        }
+
+        $chunkIndex = 0;
+        $allocations = [];
+        $lastInstallmentNumber = (int) $installmentRows->max('InstallmentNumber');
+
+        foreach ($installmentRows as $row) {
+            $installmentNumber = (int) $row->InstallmentNumber;
+            $dueAmount = $this->installmentAllocationAmount($row, $lastInstallmentNumber, $lastInstallmentTargetEmi);
+            $allocated = 0.0;
+            $paidOn = null;
+            $firstPaymentOn = null;
+            $lastPaymentOn = null;
+
+            while ($allocated < ($dueAmount - 0.01) && $chunkIndex < count($chunks)) {
+                $need = $dueAmount - $allocated;
+                $take = min($chunks[$chunkIndex]['remaining'], $need);
+
+                if ($take > 0) {
+                    $allocated += $take;
+                    $chunks[$chunkIndex]['remaining'] -= $take;
+
+                    if ($chunks[$chunkIndex]['date']) {
+                        if ($firstPaymentOn === null) {
+                            $firstPaymentOn = $chunks[$chunkIndex]['date'];
+                        }
+                        $lastPaymentOn = $chunks[$chunkIndex]['date'];
+                    }
+
+                    if ($allocated >= ($dueAmount - 0.01) && $chunks[$chunkIndex]['date']) {
+                        $paidOn = $firstPaymentOn ?? $chunks[$chunkIndex]['date'];
+                    }
+                }
+
+                if ($chunks[$chunkIndex]['remaining'] <= 0.01) {
+                    $chunkIndex++;
+                } elseif ($take <= 0) {
+                    break;
+                }
+            }
+
+            $allocations[$installmentNumber] = [
+                'allocated' => $allocated,
+                'paid_on' => $paidOn,
+                'first_payment_on' => $firstPaymentOn,
+                'last_payment_on' => $lastPaymentOn,
+            ];
+        }
+
+        return $allocations;
+    }
+
+    private function installmentAllocationAmount(object $row, int $lastInstallmentNumber, float $lastInstallmentTargetEmi = 0.0): float
+    {
+        if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
+            return $lastInstallmentTargetEmi > 0 ? $lastInstallmentTargetEmi : (float) $row->DueAmount;
+        }
+
+        $emiAmount = (float) $row->EMIAmount;
+
+        return $emiAmount > 0 ? $emiAmount : (float) $row->DueAmount;
+    }
+
+    private function resolveInstallmentStatus(
+        float $allocated,
+        float $dueAmount,
+        float $emiAmount,
+        bool $isLastInstallment,
+        Carbon $dueDate,
+        Carbon $today
+    ): string {
+        $target = $isLastInstallment
+            ? $dueAmount
+            : ($emiAmount > 0 ? $emiAmount : $dueAmount);
+
+        if ($isLastInstallment && $emiAmount > 0 && $allocated >= ($emiAmount - 0.01)) {
+            return 'paid';
+        }
+
+        if ($target > 0 && $allocated >= ($target - 0.01)) {
+            return 'paid';
+        }
+
+        if ($dueDate->lt($today)) {
+            return $allocated > 0 ? 'partial' : 'overdue';
+        }
+
+        return 'upcoming';
+    }
+
     /** @return array{totalPaid: float, outstanding: float, paymentProgress: int} */
     private function resolvePaymentSummary(
         float $flatCost,
@@ -658,11 +810,15 @@ class CitizenAuthController extends Controller
         $ledger,
         float $remainingBalance,
         int $lastInstallmentNumber,
-        bool $isPaid
+        bool $isPaid,
+        float $lastInstallmentTargetEmi = 0.0
     ): float {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            if ($isPaid && $ledger) {
-                return (float) $ledger->Payment;
+            if ($isPaid) {
+                if ($ledger) {
+                    return (float) $ledger->Payment;
+                }
+                return $lastInstallmentTargetEmi;
             }
 
             return $remainingBalance;
@@ -698,32 +854,74 @@ class CitizenAuthController extends Controller
             ->get();
 
         $lastInstallmentNumber = (int) $installmentRows->max('InstallmentNumber');
-        $installmentPaidTotal = (float) $ledgerByNumber->sum(fn ($row) => (float) $row->Payment);
+
+        $lastInstallmentTargetEmi = 0.0;
+        if ($installmentRows->isNotEmpty()) {
+            $firstInstallmentsEmiSum = $installmentRows->reject(function ($row) use ($lastInstallmentNumber) {
+                return (int) $row->InstallmentNumber === $lastInstallmentNumber;
+            })->sum('EMIAmount');
+            $lastInstallmentTargetEmi = max(0.0, $flatCost - $receivedAmount - $firstInstallmentsEmiSum);
+        }
+
+        $paymentPool = $this->resolveInstallmentPaymentPool($assetId, $ledgerByNumber);
+        $installmentPaidTotal = $paymentPool['pool'];
+        $allocations = $this->allocateInstallmentsFromPayments(
+            $installmentRows,
+            $paymentPool['receiptRows'],
+            $ledgerByNumber,
+            $lastInstallmentTargetEmi
+        );
         $remainingBalance = $this->remainingFlatBalance($flatCost, $receivedAmount, $ledgerByNumber);
 
-        $installments = $installmentRows->map(function ($row) use ($ledgerByNumber, $remainingBalance, $lastInstallmentNumber) {
+        $installments = $installmentRows->map(function ($row) use (
+            $ledgerByNumber,
+            $remainingBalance,
+            $lastInstallmentNumber,
+            $allocations,
+            $lastInstallmentTargetEmi
+        ) {
                 $ledger = $ledgerByNumber->get($row->InstallmentNumber);
                 $dueDate = Carbon::parse($row->DueDate);
                 $today = Carbon::today();
+                $installmentNumber = (int) $row->InstallmentNumber;
+                $dueAmount = $installmentNumber === $lastInstallmentNumber && $lastInstallmentTargetEmi > 0
+                    ? $lastInstallmentTargetEmi
+                    : (float) $row->DueAmount;
+                $scheduleEmiAmount = (float) $row->EMIAmount;
+                $allocation = $allocations[$installmentNumber] ?? [
+                    'allocated' => 0.0,
+                    'paid_on' => null,
+                    'first_payment_on' => null,
+                    'last_payment_on' => null,
+                ];
+                $allocated = (float) $allocation['allocated'];
 
-                if ($ledger && (int) $ledger->RemainingBalance === 0 && (int) $ledger->Payable_amount === 0) {
-                    $status = 'paid';
-                } elseif ($dueDate->lt($today)) {
-                    $status = 'overdue';
-                } else {
-                    $status = 'upcoming';
+                $status = $this->resolveInstallmentStatus(
+                    $allocated,
+                    $dueAmount,
+                    $installmentNumber === $lastInstallmentNumber && $lastInstallmentTargetEmi > 0 ? $lastInstallmentTargetEmi : $scheduleEmiAmount,
+                    $installmentNumber === $lastInstallmentNumber,
+                    $dueDate,
+                    $today
+                );
+
+                $paidOn = match ($status) {
+                    'paid' => $allocation['paid_on'] ?? $allocation['first_payment_on'] ?? $allocation['last_payment_on'],
+                    'partial' => $allocation['first_payment_on'] ?? $allocation['last_payment_on'],
+                    default => null,
+                };
+
+                if ($status === 'paid' && ! $paidOn && $row->LastSettledDate) {
+                    $paidOn = Carbon::parse($row->LastSettledDate);
                 }
-
-                $paidOn = ($status === 'paid' && $row->LastSettledDate)
-                    ? Carbon::parse($row->LastSettledDate)
-                    : null;
 
                 $emiAmount = $this->emiAmountForInstallment(
                     $row,
                     $ledger,
                     $remainingBalance,
                     $lastInstallmentNumber,
-                    $status === 'paid'
+                    $status === 'paid',
+                    $lastInstallmentTargetEmi
                 );
                 $totalDue = (int) $row->InstallmentNumber === $lastInstallmentNumber
                     ? $emiAmount
@@ -746,6 +944,7 @@ class CitizenAuthController extends Controller
                     'status_label' => match ($status) {
                         'paid' => 'Paid',
                         'overdue' => 'Overdue',
+                        'partial' => 'Partial',
                         default => 'Upcoming',
                     },
                 ];
@@ -754,7 +953,7 @@ class CitizenAuthController extends Controller
         $installmentStats = [
             'total' => $installments->count(),
             'paid' => $installments->where('status', 'paid')->count(),
-            'overdue' => $installments->where('status', 'overdue')->count(),
+            'overdue' => $installments->whereIn('status', ['overdue', 'partial'])->count(),
             'upcoming' => $installments->where('status', 'upcoming')->count(),
         ];
 

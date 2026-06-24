@@ -193,6 +193,12 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'emiGetAssetDetails']
     );
 
+    Route::get(
+        '/physical-possession/view/{assetId}',
+        [PropertyManagementController::class, 'view']
+    )
+        ->name('physical-possession.view');
+
 
     // CMS Routes
 
