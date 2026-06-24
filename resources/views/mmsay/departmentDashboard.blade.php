@@ -205,47 +205,45 @@
                 </a>
 
                 <!-- EMI -->
-                <a href="{{ url('/mmsay-department-emi-payments') }}"
-                    class="block bg-white rounded-2xl border border-amber-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">
+                <div class="bg-white rounded-2xl border border-amber-100 p-5 shadow-sm">
 
                     <!-- Icon -->
                     <div class="flex items-center justify-between mb-3">
                         <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+                            
                             <span class="material-symbols-outlined text-amber-500">
                                 payments
                             </span>
                         </div>
                     </div>
+                    <p class="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                        EMI
+                    </p>
 
-                    <!-- TOTAL EMI (Main Highlight) -->
-                    <div class="mt-2">
-                        <p class="text-xs text-slate-500">Total EMI</p>
-                        <p class="text-2xl font-bold text-amber-600">
-                            {{ $emiData->total_emi }}
-                        </p>
-                    </div>
-
-                    <!-- Paid + Pending (Side by Side) -->
+                    <!-- Paid + Pending -->
                     <div class="mt-3 flex justify-between gap-4">
 
-                        <div class="flex-1 bg-green-50 rounded-lg p-2 text-center">
-                            <p class="text-[10px] text-slate-500">Paid</p>
-                            <p class="text-sm font-bold text-green-600">
-                                {{ $emiData->paid_emi }}
-                            </p>
-                        </div>
+                        <a href="{{ url('full-paid-properties') }}" class="flex-1">
+                            <div class="bg-green-50 rounded-lg p-2 text-center hover:bg-green-100 transition">
+                                <p class="text-[10px] text-slate-500">Full Paid</p>
+                                <p class="text-sm font-bold text-green-600">
+                                    {{ number_format($paymentStats->total_paid_properties) }}
+                                </p>
+                            </div>
+                        </a>
 
-                        <div class="flex-1 bg-red-50 rounded-lg p-2 text-center">
-                            <p class="text-[10px] text-slate-500">Pending</p>
-                            <p class="text-sm font-bold text-red-500">
-                                {{ $emiData->pending_emi }}
-                            </p>
-                        </div>
+                        <a href="{{ url('pending-properties') }}" class="flex-1">
+                            <div class="bg-red-50 rounded-lg p-2 text-center hover:bg-red-100 transition">
+                                <p class="text-[10px] text-slate-500">Pending</p>
+                                <p class="text-sm font-bold text-red-500">
+                                    {{ number_format($paymentStats->pending_properties) }}
+                                </p>
+                            </div>
+                        </a>
 
                     </div>
 
-                </a>
-
+                </div>
                 <!-- Revenue -->
                 <a href="{{ url('mmsay-department-physical-letter') }}"
                     class="block bg-white rounded-2xl border border-violet-100 p-5 shadow-sm hover:shadow-lg transition-all duration-300">

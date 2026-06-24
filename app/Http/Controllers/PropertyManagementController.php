@@ -129,6 +129,47 @@ ON l.AssetId = i.AssetId;
             ->latest('ppa.id')
             ->limit(5)
             ->get();
+        $paymentStats = DB::select("
+    SELECT
+        COUNT(*) AS total_records,
+
+        SUM(
+            CASE
+                WHEN (
+                    COALESCE(pad.ReceivedAmount,0)
+                    + COALESCE(cr.total_paid,0)
+                ) >= pad.FlatCost
+                THEN 1 ELSE 0
+            END
+        ) AS total_paid_properties,
+
+        SUM(
+            CASE
+                WHEN (
+                    COALESCE(pad.ReceivedAmount,0)
+                    + COALESCE(cr.total_paid,0)
+                ) < pad.FlatCost
+                THEN 1 ELSE 0
+            END
+        ) AS pending_properties
+
+    FROM property_auction_detail pad
+
+    LEFT JOIN (
+        SELECT
+            asset_number,
+            SUM(total_paid_amount) AS total_paid
+        FROM cash_receipt_details
+        WHERE IsDeleted = 0
+        GROUP BY asset_number
+    ) cr
+    ON cr.asset_number = pad.AssetId
+
+    WHERE pad.IsDeleted = 0
+    AND pad.IsActive = 1
+");
+
+        $paymentStats = $paymentStats[0];
 
         return view('mmsay.departmentDashboard', compact(
             'monthlyLabels',
@@ -140,9 +181,123 @@ ON l.AssetId = i.AssetId;
             'totalRevenue',
             'emiData',
             'totalPurchasers',
+            'paymentStats',
             'latestPhysicalApplications'
         ));
     }
+
+    public function fullPaidProperties()
+    {
+        $properties = DB::select("
+        SELECT
+            pad.AssetId,
+            ppp.ApplicationNo,
+            ppp.PrivatePurchaserName,
+            ppp.MobileNo,
+            pr.AssetName,
+            pad.FlatCost,
+            (
+                COALESCE(pad.ReceivedAmount,0) +
+                COALESCE(SUM(cr.total_paid_amount),0)
+            ) AS total_paid
+        FROM property_auction_detail pad
+
+        INNER JOIN property_private_purchasers ppp
+            ON pad.PurchaserID = ppp.PrivatePurchaserId
+
+        INNER JOIN property_registration pr
+            ON pad.AssetId = pr.AssetId
+
+        LEFT JOIN cash_receipt_details cr
+            ON cr.asset_number = pad.AssetId
+            AND cr.IsDeleted = 0
+
+        WHERE pad.IsDeleted = 0
+          AND pad.IsActive = 1
+
+        GROUP BY
+            pad.AssetId,
+            ppp.ApplicationNo,
+            ppp.PrivatePurchaserName,
+            ppp.MobileNo,
+            pr.AssetName,
+            pad.FlatCost,
+            pad.ReceivedAmount
+
+        HAVING total_paid >= pad.FlatCost
+
+        ORDER BY pad.AssetId DESC
+    ");
+
+        return view('mmsay.fullPaidProperties', compact('properties'));
+    }
+
+    public function pendingProperties()
+    {
+        $properties = DB::table('property_auction_detail as pad')
+
+            ->join(
+                'property_private_purchasers as ppp',
+                'pad.PurchaserID',
+                '=',
+                'ppp.PrivatePurchaserId'
+            )
+
+            ->join(
+                'property_registration as pr',
+                'pad.AssetId',
+                '=',
+                'pr.AssetId'
+            )
+
+            ->leftJoin('cash_receipt_details as cr', function ($join) {
+                $join->on('cr.asset_number', '=', 'pad.AssetId')
+                    ->where('cr.IsDeleted', 0);
+            })
+
+            ->select(
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+
+                'ppp.ApplicationNo',
+                'ppp.PrivatePurchaserName',
+                'ppp.MobileNo',
+
+                'pr.AssetName'
+            )
+
+            ->selectRaw("
+            (
+                COALESCE(pad.ReceivedAmount,0)
+                + COALESCE(SUM(cr.total_paid_amount),0)
+            ) as total_paid
+        ")
+
+            ->groupBy(
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'ppp.ApplicationNo',
+                'ppp.PrivatePurchaserName',
+                'ppp.MobileNo',
+                'pr.AssetName'
+            )
+
+            ->havingRaw("
+            (
+                COALESCE(pad.ReceivedAmount,0)
+                + COALESCE(SUM(cr.total_paid_amount),0)
+            ) < pad.FlatCost
+        ")
+
+            ->orderByDesc('pad.AssetId')
+
+            ->paginate(50);
+
+        return view('mmsay.pendingProperties', compact('properties'));
+    }
+
     public function index(Request $request)
     {
         $query = DB::table('property_registration as pr')
