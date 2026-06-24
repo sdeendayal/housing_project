@@ -199,6 +199,17 @@ Route::middleware(['auth', 'role:department'])->group(function () {
     )
         ->name('physical-possession.view');
 
+    Route::get(
+        'full-paid-properties',
+        [PropertyManagementController::class, 'fullPaidProperties']
+    )->name('full-paid-properties');
+
+    Route::get(
+        'pending-properties',
+        [PropertyManagementController::class, 'pendingProperties']
+    )->name('pending-properties');
+
+
 
     // CMS Routes
 
