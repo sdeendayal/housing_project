@@ -23,10 +23,10 @@
 
                 <div>
                     <h3 class="text-xl font-medium text-primary mb-0.5">
-                        Property Auction
+                        Property Allotee Details
                     </h3>
                     <p class="text-xs text-gray-500 font-normal">
-                        Manage and monitor land auction details across national districts.
+                        Monitor of allotee details.
                     </p>
                 </div>
 
@@ -150,8 +150,11 @@
 
                                     <td class="px-4 py-4 text-center">
 
-                                        <button
-                                            onclick="openPropertyModal(
+                                        <div class="flex items-center justify-center gap-2">
+
+                                            <!-- View Button -->
+                                            <button
+                                                onclick="openPropertyModal(
                 '{{ $property->district }}',
                 '{{ $property->city }}',
                 '{{ $property->sector }}',
@@ -165,15 +168,31 @@
                 '{{ $property->ReceivedAmount }}',
                 '{{ $property->BalanceAmount }}'
             )"
-                                            class="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
+                                                class="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
 
-                                            <span class="material-symbols-outlined text-[18px]">
-                                                visibility
-                                            </span>
+                                                <span class="material-symbols-outlined text-[18px]">
+                                                    visibility
+                                                </span>
 
-                                            View
+                                                View
 
-                                        </button>
+                                            </button>
+
+                                            <!-- Allotment Letter Button -->
+                                            @if ($property->BalanceAmount < 100000)
+                                                <a href="{{ route('allotment.letter', $property->PropertyAuctionId) }}"
+                                                    class="inline-flex items-center gap-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100"
+                                                    target="_blank">
+
+                                                    <span class="material-symbols-outlined text-[18px]">
+                                                        description
+                                                    </span>
+
+                                                    Allotment Letter
+                                                </a>
+                                            @endif
+
+                                        </div>
 
                                     </td>
 
@@ -336,7 +355,7 @@
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                             <div class="col-span-1 md:col-span-2 space-y-1">
-                                <label class="font-label-sm text-on-surface-variant">Flat Cost (In RS.)*</label>
+                                <label class="font-label-sm text-on-surface-variant">Plot Cost (In RS.)*</label>
                                 <input
                                     class="w-full border border-outline-variant rounded-lg p-4 bg-white focus:ring-primary font-bold text-lg text-primary"
                                     placeholder="0.00" type="number" />
@@ -468,7 +487,7 @@
                 <div class="grid grid-cols-3 gap-4 mt-8">
 
                     <div class="bg-blue-50 rounded-xl p-4 text-center">
-                        <p class="text-sm text-slate-500">Flat Cost</p>
+                        <p class="text-sm text-slate-500">Plot Cost</p>
                         <h4 id="mFlatCost" class="font-bold text-blue-600"></h4>
                     </div>
 

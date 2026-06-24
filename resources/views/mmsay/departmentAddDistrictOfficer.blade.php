@@ -138,40 +138,7 @@
                         </div>
                     </div>
                     <!-- Additional Details section with high density UI -->
-                    <div class="pt-6 border-t border-outline-variant">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div
-                                class="p-4 bg-surface-container-low rounded-lg border border-outline-variant flex items-start gap-3">
-                                <span class="material-symbols-outlined text-secondary" data-icon="info"
-                                    style="font-variation-settings: 'FILL' 1;">info</span>
-                                <div>
-                                    <h4 class="font-label-md font-bold text-primary">System Role</h4>
-                                    <p class="text-xs text-on-surface-variant mt-1">Defaults to 'District Moderator' with
-                                        standard regional access.</p>
-                                </div>
-                            </div>
-                            <div
-                                class="p-4 bg-surface-container-low rounded-lg border border-outline-variant flex items-start gap-3">
-                                <span class="material-symbols-outlined text-secondary" data-icon="verified_user"
-                                    style="font-variation-settings: 'FILL' 1;">verified_user</span>
-                                <div>
-                                    <h4 class="font-label-md font-bold text-primary">Authentication</h4>
-                                    <p class="text-xs text-on-surface-variant mt-1">2FA will be automatically enabled for
-                                        official gov email logins.</p>
-                                </div>
-                            </div>
-                            <div
-                                class="p-4 bg-surface-container-low rounded-lg border border-outline-variant flex items-start gap-3">
-                                <span class="material-symbols-outlined text-secondary" data-icon="history"
-                                    style="font-variation-settings: 'FILL' 1;">history</span>
-                                <div>
-                                    <h4 class="font-label-md font-bold text-primary">Action Logs</h4>
-                                    <p class="text-xs text-on-surface-variant mt-1">All administrative activities are
-                                        recorded for audit compliance.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
                     <!-- Footer Actions -->
                     <div class="flex items-center justify-end gap-4 pt-8 mt-4 border-t border-outline-variant">
                         <button
@@ -189,19 +156,7 @@
                 </form>
             </div>
             <!-- Contextual Help Card -->
-            <div class="mt-8 flex gap-6 items-start">
-                <div
-                    class="flex-1 p-6 bg-secondary-container/20 rounded-xl border border-secondary-container/30 flex items-start gap-4">
-                    <span class="material-symbols-outlined text-secondary text-3xl"
-                        data-icon="assignment_ind">assignment_ind</span>
-                    <div>
-                        <h4 class="font-headline-sm text-primary mb-1">Administrative Onboarding</h4>
-                        <p class="text-on-surface-variant body-sm">Upon saving, the officer will receive an automated
-                            activation link at their provided email address. They will have 48 hours to complete their
-                            secure profile setup and attend the virtual portal orientation.</p>
-                    </div>
-                </div>
-            </div>
+            
         </div>
     </main>
     <!-- Success Notification (Hidden by default) -->

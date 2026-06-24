@@ -2,7 +2,7 @@
     <div class="whitespace-nowrap animate-[marquee_25s_linear_infinite] text-sm font-medium flex items-center">
         <span class="pp-scheme-new-badge-sm inline-flex items-center mr-3 shrink-0">🔥 NEW</span>
         <strong class="text-yellow-200 mr-2">Physical Possession Scheme:</strong>
-        Online apply karein ab ghar baith kar —
+        Eligible beneficiaries can now submit applications online for physical possession of allotted plots.
         <a href="{{ route('citizen.login') }}" class="underline font-bold text-yellow-300 mx-1 hover:text-white">User Login</a>
         |
         <a href="{{ route('pp.department.login') }}" class="underline font-bold text-yellow-300 mx-1 hover:text-white">Officer Login</a>
