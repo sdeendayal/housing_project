@@ -1,5 +1,13 @@
 @php
-    $verifyUrl = $verifyUrl ?? url('/physical-possession/allotment/verify/'.$letter['application_number']);
+    $host = request()->getHost();
+    if ($host === '127.0.0.1' || $host === 'localhost') {
+        $localIp = gethostbyname(gethostname());
+        $port = request()->getPort();
+        $portSuffix = $port ? ':' . $port : '';
+        $verifyUrl = 'http://' . $localIp . $portSuffix . '/physical-possession/allotment/verify/' . $letter['application_number'];
+    } else {
+        $verifyUrl = request()->getSchemeAndHttpHost() . '/physical-possession/allotment/verify/' . $letter['application_number'];
+    }
     $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='.urlencode($verifyUrl);
 @endphp
 

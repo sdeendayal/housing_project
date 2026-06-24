@@ -1,3 +1,15 @@
+@php
+    $host = request()->getHost();
+    if ($host === '127.0.0.1' || $host === 'localhost') {
+        $localIp = gethostbyname(gethostname());
+        $port = request()->getPort();
+        $portSuffix = $port ? ':' . $port : '';
+        $verifyUrl = 'http://' . $localIp . $portSuffix . '/physical-possession/allotment/verify/' . $letter['application_number'];
+    } else {
+        $verifyUrl = request()->getSchemeAndHttpHost() . '/physical-possession/allotment/verify/' . $letter['application_number'];
+    }
+    $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='.urlencode($verifyUrl);
+@endphp
 <!DOCTYPE html>
 <html lang="hi">
 <head>
@@ -89,7 +101,7 @@
         <table class="qr-section">
             <tr>
                 <td style="width: 115px;">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data={{ urlencode($verifyUrl) }}" class="qr-img" alt="QR" />
+                    <img src="{{ $qrImageUrl }}" class="qr-img" alt="QR" />
                 </td>
                 <td>कृपया QR कोड स्कैन करें और विवरण सत्यापित करें</td>
             </tr>
