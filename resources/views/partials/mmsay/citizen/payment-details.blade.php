@@ -14,7 +14,7 @@
             <p class="text-[14px] font-extrabold text-red-600">{{ $installmentStats['overdue'] }}</p>
         </div>
         <div class="rounded-lg border border-indigo-100 bg-indigo-50/60 p-2 text-center">
-            <p class="text-[9px] text-indigo-700/80 uppercase font-bold mb-0.5">Upcoming</p>
+            <p class="text-[9px] text-indigo-700/80 uppercase font-bold mb-0.5">Balance</p>
             <p class="text-[14px] font-extrabold text-indigo-700">{{ $installmentStats['upcoming'] }}</p>
         </div>
     </div>
