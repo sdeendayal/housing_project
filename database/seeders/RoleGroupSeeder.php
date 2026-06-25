@@ -18,7 +18,7 @@ class RoleGroupSeeder extends Seeder
             [
                 'name' => 'Department',
                 'slug' => 'department',
-                'description' => 'Department officers and staff who login via department mobile OTP.',
+                'description' => 'Department/District officers and staff who login for Physical Possession.',
             ],
         ];
 
@@ -28,14 +28,5 @@ class RoleGroupSeeder extends Seeder
                 $group
             );
         }
-
-        // Keep legacy slug compatible during transition
-        RoleGroup::updateOrCreate(
-            ['slug' => 'departmental'],
-            [
-                'name' => 'Department',
-                'description' => 'Legacy departmental slug — use department group.',
-            ]
-        );
     }
 }
