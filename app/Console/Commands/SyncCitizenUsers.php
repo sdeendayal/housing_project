@@ -210,6 +210,7 @@ class SyncCitizenUsers extends Command
                     ->update([
                         'private_purchaser_id' => $purchaserId,
                         'name' => $name,
+                        'scheme' => 'MMSAY',
                         'updated_at' => $now,
                     ]);
 
@@ -226,6 +227,7 @@ class SyncCitizenUsers extends Command
                 'private_purchaser_id' => $purchaserId,
                 'password' => $passwordHash,
                 'role' => 'citizen',
+                'scheme' => 'MMSAY',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

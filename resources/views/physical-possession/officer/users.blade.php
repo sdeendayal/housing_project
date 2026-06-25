@@ -9,13 +9,14 @@
         @if($users->count())
             <div class="table-responsive">
                 <table class="table table-hover pp-table mb-0" id="usersTable">
-                    <thead><tr><th class="text-center" style="width:50px">S.No</th><th>Name</th><th>Mobile</th></tr></thead>
+                    <thead><tr><th class="text-center" style="width:50px">S.No</th><th>Name</th><th>Mobile</th><th>Scheme</th></tr></thead>
                     <tbody>
                         @foreach($users as $user)
                         <tr>
                             <td class="text-center text-muted"></td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->mobile ?? '—' }}</td>
+                            <td><span class="badge bg-secondary">{{ $user->scheme ?? '—' }}</span></td>
                         </tr>
                         @endforeach
                     </tbody>

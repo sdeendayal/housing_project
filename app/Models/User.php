@@ -18,6 +18,7 @@ class User extends Authenticatable
         'private_purchaser_id',
         'password',
         'role',
+        'scheme',
         'Is_Active',
         'Is_Deleted',
         'district_id',
