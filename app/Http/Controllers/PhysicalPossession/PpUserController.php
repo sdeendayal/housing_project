@@ -700,6 +700,102 @@ class PpUserController extends Controller
         return view('physical-possession.user.show-application', compact('application'));
     }
 
+    // Citizen selects a visit slot from the three offered by the officer
+    public function selectVisitSlot(Request $request, PhysicalPossessionApplication $application)
+    {
+        $this->ensureUserOwnsApplication($application);
+
+        if ($application->status !== 'approved') {
+            return back()->with('error', 'Only approved applications can have meeting schedules selected.');
+        }
+
+        if ($application->citizen_visit_date) {
+            return back()->with('error', 'You have already confirmed a visit schedule.');
+        }
+
+        $request->validate([
+            'selected_slot' => 'required|date',
+        ], [
+            'selected_slot.required' => 'Please select one of the offered time slots.',
+            'selected_slot.date' => 'Invalid slot date selected.',
+        ]);
+
+        $selectedSlot = \Carbon\Carbon::parse($request->selected_slot);
+
+        // Verify the selected slot matches one of the three offered slots
+        $offeredSlots = [
+            $application->visit_slot_1 ? $application->visit_slot_1->toDateTimeString() : null,
+            $application->visit_slot_2 ? $application->visit_slot_2->toDateTimeString() : null,
+            $application->visit_slot_3 ? $application->visit_slot_3->toDateTimeString() : null,
+        ];
+
+        if (! in_array($selectedSlot->toDateTimeString(), $offeredSlots, true)) {
+            return back()->with('error', 'The selected slot is not one of the offered options.');
+        }
+
+        // Verify slot is still valid and has capacity (max 10 approved visits per district per 1-hour slot)
+        if ($selectedSlot->isPast()) {
+            return back()->with('error', 'The selected slot is in the past. Please select another slot.');
+        }
+
+        $slotStart = $selectedSlot->copy()->startOfHour();
+        $slotEnd = $slotStart->copy()->addHour();
+
+        try {
+            DB::transaction(function () use ($application, $selectedSlot, $slotStart, $slotEnd) {
+                $locked = PhysicalPossessionApplication::query()
+                    ->where('id', $application->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if ($locked->citizen_visit_date) {
+                    throw new \RuntimeException('You have already confirmed a visit schedule.');
+                }
+
+                $query = PhysicalPossessionApplication::query()
+                    ->where('status', 'approved')
+                    ->whereNotNull('citizen_visit_date')
+                    ->where('citizen_visit_date', '>=', $slotStart)
+                    ->where('citizen_visit_date', '<', $slotEnd)
+                    ->lockForUpdate();
+
+                if ($locked->district_id) {
+                    $query->where('district_id', $locked->district_id);
+                } elseif ($locked->district_name) {
+                    $query->where('district_name', 'like', '%'.$locked->district_name.'%');
+                }
+
+                if ($query->count() >= 10) {
+                    throw new \RuntimeException(sprintf(
+                        'This time slot (%s – %s on %s) has just become full. Please select a different slot.',
+                        $slotStart->format('h:i A'),
+                        $slotEnd->format('h:i A'),
+                        $slotStart->format('d M Y')
+                    ));
+                }
+
+                $locked->update([
+                    'citizen_visit_date' => $selectedSlot,
+                ]);
+
+                ApplicationStatusLog::create([
+                    'application_id' => $locked->id,
+                    'asset_id' => $locked->asset_id,
+                    'old_status' => 'approved',
+                    'new_status' => 'approved',
+                    'remarks' => 'Citizen confirmed visit schedule: ' . $selectedSlot->format('d M Y, h:i A'),
+                    'changed_by_type' => 'user',
+                    'changed_by_id' => Auth::id(),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->route('pp.user.application.show', $application)
+            ->with('success', 'Your visit schedule has been confirmed successfully!');
+    }
+
     // Returned application — citizen re-uploads flagged documents
     public function correctDocuments(PhysicalPossessionApplication $application)
     {

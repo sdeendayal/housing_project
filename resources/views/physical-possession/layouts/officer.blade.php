@@ -46,6 +46,10 @@
                 <span class="pp-sidebar-link-icon"><i class="bi bi-folder2-open"></i></span>
                 <span class="pp-sidebar-link-label">All Applications</span>
             </a>
+            <a href="{{ route('pp.officer.applications.pending') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications.pending') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon warning"><i class="bi bi-hourglass-split"></i></span>
+                <span class="pp-sidebar-link-label">Pending</span>
+            </a>
             <a href="{{ route('pp.officer.applications.approved') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications.approved') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon success"><i class="bi bi-check-circle"></i></span>
                 <span class="pp-sidebar-link-label">Approved</span>

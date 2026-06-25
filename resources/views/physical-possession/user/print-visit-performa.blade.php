@@ -63,7 +63,7 @@
         <div class="visit-highlight">
             <p class="mb-1 fw-bold text-primary">You are requested to visit on</p>
             <div class="visit-date">{{ $application->citizen_visit_date->format('d M Y') }}</div>
-            <div class="text-primary fw-bold">{{ $application->citizen_visit_date->format('h:i A') }}</div>
+            <div class="text-primary fw-bold">{{ $application->citizen_visit_date->format('h:i a') }} to {{ $application->citizen_visit_date->copy()->addHour()->format('h:i a') }}</div>
             @if($application->visit_instructions)
             <p class="visit-instructions mb-0">
                 <span class="visit-instructions-label">Instructions</span>

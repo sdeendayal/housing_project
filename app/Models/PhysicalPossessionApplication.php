@@ -52,6 +52,9 @@ class PhysicalPossessionApplication extends Model
         'approved_by',
         'approved_at',
         'citizen_visit_date',
+        'visit_slot_1',
+        'visit_slot_2',
+        'visit_slot_3',
         'visit_instructions',
         'created_by',
     ];
@@ -61,6 +64,9 @@ class PhysicalPossessionApplication extends Model
         return [
             'approved_at' => 'datetime',
             'citizen_visit_date' => 'datetime',
+            'visit_slot_1' => 'datetime',
+            'visit_slot_2' => 'datetime',
+            'visit_slot_3' => 'datetime',
             'flat_cost' => 'decimal:2',
             'received_amount' => 'decimal:2',
             'balance_amount' => 'decimal:2',

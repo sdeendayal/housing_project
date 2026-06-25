@@ -58,7 +58,7 @@
         if ($('#officerAppsTable').length) {
             $('#officerAppsTable').DataTable({
                 order: [[5, 'desc']],
-                pageLength: 15,
+                pageLength: 20,
                 dom: 'ftip',
                 columnDefs: [{ orderable: false, searchable: false, targets: 0 }],
                 drawCallback: function() {

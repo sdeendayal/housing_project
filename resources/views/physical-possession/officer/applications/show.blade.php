@@ -105,51 +105,58 @@
 
                     <div id="ppVisitFields">
                         @php
-                            $visitMin = now()->seconds(0);
-                            $roundedMinute = (int) (ceil($visitMin->minute / 5) * 5);
-                            if ($roundedMinute >= 60) {
-                                $visitMin = $visitMin->copy()->addHour()->minute(0);
-                            } else {
-                                $visitMin = $visitMin->minute($roundedMinute);
-                            }
+                            $visitMin = now()->seconds(0)->minute(0);
 
-                            $visitOldValue = old('citizen_visit_date');
-                            $visitOldDate = '';
-                            $visitOldTime = '';
-                            if ($visitOldValue) {
-                                try {
-                                    $visitOldParsed = \Carbon\Carbon::parse($visitOldValue)->seconds(0);
-                                    $snappedMinute = (int) (floor($visitOldParsed->minute / 5) * 5);
-                                    $visitOldParsed->minute($snappedMinute);
-                                    $visitOldDate = $visitOldParsed->format('Y-m-d');
-                                    $visitOldTime = $visitOldParsed->format('H:i');
-                                } catch (\Throwable $e) {
-                                    $visitOldDate = '';
-                                    $visitOldTime = '';
+                            // Old values for slots
+                            $slotOldData = [];
+                            foreach ([1, 2, 3] as $i) {
+                                $visitOldValue = old("visit_slot_$i");
+                                $visitOldDate = '';
+                                $visitOldTime = '';
+                                if ($visitOldValue) {
+                                    try {
+                                        $visitOldParsed = \Carbon\Carbon::parse($visitOldValue)->seconds(0)->minute(0);
+                                        $visitOldDate = $visitOldParsed->format('Y-m-d');
+                                        $visitOldTime = $visitOldParsed->format('H:i');
+                                    } catch (\Throwable $e) {
+                                        $visitOldDate = '';
+                                        $visitOldTime = '';
+                                    }
                                 }
+                                $slotOldData[$i] = ['date' => $visitOldDate, 'time' => $visitOldTime];
                             }
                         @endphp
-                        <label class="form-label small fw-semibold mb-1">Meeting Schedule (Date & Time) <span class="text-danger">*</span></label>
-                        <input type="hidden" name="citizen_visit_date" id="ppCitizenVisitDate"
-                               value="{{ $visitOldDate && $visitOldTime ? $visitOldDate.'T'.$visitOldTime : '' }}">
-                        <div class="row g-2 mb-2">
-                            <div class="col-7">
-                                <input type="text" id="ppVisitDateOnly"
-                                       class="form-control form-control-sm pp-visit-picker @error('citizen_visit_date') is-invalid @enderror"
-                                       value="{{ $visitOldDate }}"
-                                       placeholder="Select date"
-                                       autocomplete="off"
-                                       readonly>
-                            </div>
-                            <div class="col-5">
-                                <select id="ppVisitTimeSlot"
-                                        class="form-select form-select-sm @error('citizen_visit_date') is-invalid @enderror">
-                                    <option value="">Time</option>
-                                </select>
-                            </div>
+
+                        <div class="alert alert-info py-2 px-3 mb-3 small">
+                            <i class="bi bi-info-circle-fill"></i> Please propose <strong>3 different visit slots</strong>. The citizen will choose one.
                         </div>
-                        @error('citizen_visit_date')<div class="text-danger small mb-2">{{ $message }}</div>@enderror
-                        <p class="text-muted small mb-2">Citizen will visit your office at this date and time. Time slots are in <strong>5-minute intervals</strong> (e.g. 10:05, 10:10). Allowed: <strong>09:00 AM – 05:00 PM</strong>. In <strong>your district</strong>, max <strong>10 citizens per 1-hour slot</strong> (other districts have their own separate limit).</p>
+
+                        @foreach([1, 2, 3] as $i)
+                        <div class="mb-3 border-bottom pb-2">
+                            <label class="form-label small fw-semibold mb-1">Proposed Slot {{ $i }} <span class="text-danger">*</span></label>
+                            <input type="hidden" name="visit_slot_{{ $i }}" id="ppCitizenVisitDate_{{ $i }}"
+                                   value="{{ $slotOldData[$i]['date'] && $slotOldData[$i]['time'] ? $slotOldData[$i]['date'].'T'.$slotOldData[$i]['time'] : '' }}">
+                            <div class="row g-2">
+                                <div class="col-7">
+                                    <input type="text" id="ppVisitDateOnly_{{ $i }}"
+                                           class="form-control form-control-sm pp-visit-picker-slot @error('visit_slot_'.$i) is-invalid @enderror"
+                                           value="{{ $slotOldData[$i]['date'] }}"
+                                           placeholder="Select date"
+                                           autocomplete="off"
+                                           readonly>
+                                </div>
+                                <div class="col-5">
+                                    <select id="ppVisitTimeSlot_{{ $i }}"
+                                            class="form-select form-select-sm pp-visit-time-select @error('visit_slot_'.$i) is-invalid @enderror">
+                                        <option value="">Time</option>
+                                    </select>
+                                </div>
+                            </div>
+                            @error('visit_slot_'.$i)<div class="text-danger small mt-1">{{ $message }}</div>@enderror
+                        </div>
+                        @endforeach
+
+                        <p class="text-muted small mb-2">Slots must be <strong>hourly</strong> (e.g. 09:00, 10:00). Allowed: <strong>09:00 AM – 05:00 PM</strong>. Max <strong>10 citizens per slot</strong> per district.</p>
 
                         <label class="form-label small fw-semibold mb-1">Visit Instructions <span class="text-muted fw-normal">(optional)</span></label>
                         <textarea name="visit_instructions" class="form-control form-control-sm mb-2 @error('visit_instructions') is-invalid @enderror" rows="2" placeholder="e.g. Municipal Office, Rohtak — bring original ID and documents">{{ old('visit_instructions') }}</textarea>
@@ -176,8 +183,18 @@
                         <p class="mb-1"><strong>Officer:</strong> {{ $action->officer?->name ?? '—' }}</p>
                         <p class="mb-1"><strong>Remarks:</strong> {{ $action->remarks }}</p>
                         @if($action->action === 'approved')
-                            @if($action->citizen_visit_date)
-                            <p class="mb-1"><strong>Meeting Schedule:</strong> {{ $action->citizen_visit_date->format('d M Y, h:i A') }}</p>
+                            @if($action->visit_slot_1)
+                            <p class="mb-1"><strong>Offered Slots:</strong></p>
+                            <ul class="mb-1 ps-3">
+                                <li>{{ $action->visit_slot_1->format('d M Y, h:i a') }} to {{ $action->visit_slot_1->copy()->addHour()->format('h:i a') }}</li>
+                                <li>{{ $action->visit_slot_2 ? $action->visit_slot_2->format('d M Y, h:i a') . ' to ' . $action->visit_slot_2->copy()->addHour()->format('h:i a') : '—' }}</li>
+                                <li>{{ $action->visit_slot_3 ? $action->visit_slot_3->format('d M Y, h:i a') . ' to ' . $action->visit_slot_3->copy()->addHour()->format('h:i a') : '—' }}</li>
+                            </ul>
+                            @endif
+                            @if($application->citizen_visit_date)
+                            <p class="mb-1"><strong>Confirmed Schedule:</strong> <span class="text-success fw-bold">{{ $application->citizen_visit_date->format('d M Y, h:i a') }} to {{ $application->citizen_visit_date->copy()->addHour()->format('h:i a') }}</span></p>
+                            @else
+                            <p class="mb-1"><strong>Confirmed Schedule:</strong> <span class="text-warning">Awaiting citizen slot selection</span></p>
                             @endif
                             @if($action->visit_instructions)
                             <p class="mb-1"><strong>Visit Instructions:</strong> {{ $action->visit_instructions }}</p>
@@ -263,13 +280,10 @@
     const form = document.getElementById('ppDecideForm');
     const submitBtn = document.getElementById('ppDecideSubmitBtn');
     const visitFields = document.getElementById('ppVisitFields');
-    const visitDateInput = document.getElementById('ppCitizenVisitDate');
-    const visitDateOnlyInput = document.getElementById('ppVisitDateOnly');
-    const visitTimeSlotSelect = document.getElementById('ppVisitTimeSlot');
     const visitMinValue = @json($visitMin->format('Y-m-d'));
-    const visitOldTime = @json($visitOldTime);
+    const slotOldData = @json($slotOldData);
     const radios = form?.querySelectorAll('.pp-decision-radio');
-    let visitDatePicker = null;
+    const pickers = {};
 
     const sendBackRemarks = form?.querySelectorAll('.pp-sendback-remark');
     const sendBackChecks = document.querySelectorAll('[data-sendback-only]');
@@ -280,13 +294,9 @@
 
     function roundedMinTimeForToday() {
         const now = new Date();
-        let minutes = Math.ceil(now.getMinutes() / 5) * 5;
-        let hours = now.getHours();
-        if (minutes >= 60) {
-            hours += 1;
-            minutes = 0;
-        }
-        return pad(hours) + ':' + pad(minutes);
+        let hours = now.getHours() + 1;
+        if (hours < 9) hours = 9;
+        return pad(hours) + ':00';
     }
 
     function isSameDay(a, b) {
@@ -295,35 +305,32 @@
             && a.getDate() === b.getDate();
     }
 
-    const visitTimeSlots = (function () {
-        const slots = [];
-        for (let hour = 9; hour <= 17; hour++) {
-            for (let minute = 0; minute < 60; minute += 5) {
-                if (hour === 17 && minute > 0) {
-                    break;
-                }
-                slots.push(pad(hour) + ':' + pad(minute));
-            }
-        }
-        return slots;
-    })();
+    const visitTimeSlots = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'];
 
     function formatTimeLabel(value) {
         const parts = value.split(':');
         const hour24 = parseInt(parts[0], 10);
-        const minute = parts[1];
-        const period = hour24 >= 12 ? 'PM' : 'AM';
-        const hour12 = hour24 % 12 || 12;
-        return hour12 + ':' + minute + ' ' + period;
+        const nextHour24 = hour24 + 1;
+        
+        const startPeriod = hour24 >= 12 ? 'pm' : 'am';
+        const startHour12 = hour24 % 12 || 12;
+        const startStr = pad(startHour12) + ':00 ' + startPeriod;
+        
+        const endPeriod = nextHour24 >= 12 ? 'pm' : 'am';
+        const endHour12 = nextHour24 % 12 || 12;
+        const endStr = pad(endHour12) + ':00 ' + endPeriod;
+        
+        return startStr + ' to ' + endStr;
     }
 
-    function syncHiddenVisitDate() {
-        if (!visitDateInput || !visitDateOnlyInput || !visitTimeSlotSelect) {
-            return;
-        }
-        const date = visitDateOnlyInput.value;
-        const time = visitTimeSlotSelect.value;
-        visitDateInput.value = (date && time) ? (date + 'T' + time) : '';
+    function syncHiddenVisitDate(index) {
+        const hiddenInput = document.getElementById('ppCitizenVisitDate_' + index);
+        const dateInput = document.getElementById('ppVisitDateOnly_' + index);
+        const timeSelect = document.getElementById('ppVisitTimeSlot_' + index);
+        if (!hiddenInput || !dateInput || !timeSelect) return;
+        const date = dateInput.value;
+        const time = timeSelect.value;
+        hiddenInput.value = (date && time) ? (date + 'T' + time) : '';
     }
 
     function minTimeForDate(dateStr) {
@@ -337,13 +344,52 @@
         return roundedMinTimeForToday();
     }
 
-    function populateVisitTimeSlots(selectedDate, preferredTime) {
-        if (!visitTimeSlotSelect) {
+    const capacityCache = {};
+
+    function loadCapacityAndPopulate(index, selectedDate, preferredTime) {
+        const timeSelect = document.getElementById('ppVisitTimeSlot_' + index);
+        if (!timeSelect) return;
+        
+        if (!selectedDate) {
+            populateVisitTimeSlots(index, '', preferredTime, {});
             return;
         }
+
+        if (capacityCache[selectedDate]) {
+            populateVisitTimeSlots(index, selectedDate, preferredTime, capacityCache[selectedDate]);
+            return;
+        }
+
+        timeSelect.innerHTML = '<option value="">Loading...</option>';
+        timeSelect.disabled = true;
+
+        fetch('{{ route("pp.officer.slots.capacity") }}?date=' + encodeURIComponent(selectedDate))
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    capacityCache[selectedDate] = data.bookings || {};
+                    populateVisitTimeSlots(index, selectedDate, preferredTime, capacityCache[selectedDate]);
+                } else {
+                    populateVisitTimeSlots(index, selectedDate, preferredTime, {});
+                }
+            })
+            .catch(function (err) {
+                console.error(err);
+                populateVisitTimeSlots(index, selectedDate, preferredTime, {});
+            })
+            .finally(function () {
+                timeSelect.disabled = false;
+            });
+    }
+
+    function populateVisitTimeSlots(index, selectedDate, preferredTime, bookings) {
+        const timeSelect = document.getElementById('ppVisitTimeSlot_' + index);
+        if (!timeSelect) return;
         const minTime = minTimeForDate(selectedDate);
-        const previous = preferredTime || visitTimeSlotSelect.value;
-        visitTimeSlotSelect.innerHTML = '<option value="">Time</option>';
+        const previous = preferredTime || timeSelect.value;
+        timeSelect.innerHTML = '<option value="">Time</option>';
+
+        bookings = bookings || {};
 
         visitTimeSlots.forEach(function (slot) {
             if (selectedDate && slot < minTime) {
@@ -351,40 +397,61 @@
             }
             const option = document.createElement('option');
             option.value = slot;
-            option.textContent = formatTimeLabel(slot);
-            visitTimeSlotSelect.appendChild(option);
+            
+            const hour = parseInt(slot.split(':')[0], 10);
+            const count = bookings[hour] || 0;
+            
+            let label = formatTimeLabel(slot);
+            if (count > 0) {
+                label += ' (' + count + '/10 booked)';
+            }
+            option.textContent = label;
+
+            if (count >= 10) {
+                option.disabled = true;
+                option.textContent += ' [Full - Disabled]';
+            }
+
+            timeSelect.appendChild(option);
         });
 
-        if (previous && Array.from(visitTimeSlotSelect.options).some(function (opt) { return opt.value === previous; })) {
-            visitTimeSlotSelect.value = previous;
+        if (previous && Array.from(timeSelect.options).some(function (opt) { return opt.value === previous; })) {
+            timeSelect.value = previous;
         } else {
-            visitTimeSlotSelect.value = '';
+            timeSelect.value = '';
         }
 
-        syncHiddenVisitDate();
+        syncHiddenVisitDate(index);
     }
 
-    if (visitDateOnlyInput && typeof flatpickr !== 'undefined') {
-        visitDatePicker = flatpickr(visitDateOnlyInput, {
-            dateFormat: 'Y-m-d',
-            altInput: true,
-            altFormat: 'd M Y',
-            altInputClass: 'form-control form-control-sm pp-visit-picker',
-            minDate: visitMinValue,
-            defaultDate: visitDateOnlyInput.value || null,
-            disableMobile: true,
-            allowInput: false,
-            onChange: function (selectedDates) {
-                const dateStr = selectedDates[0]
-                    ? selectedDates[0].getFullYear() + '-' + pad(selectedDates[0].getMonth() + 1) + '-' + pad(selectedDates[0].getDate())
-                    : '';
-                populateVisitTimeSlots(dateStr, '');
-            },
+    [1, 2, 3].forEach(function (i) {
+        const dateInput = document.getElementById('ppVisitDateOnly_' + i);
+        const timeSelect = document.getElementById('ppVisitTimeSlot_' + i);
+
+        if (dateInput && typeof flatpickr !== 'undefined') {
+            pickers[i] = flatpickr(dateInput, {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd M Y',
+                altInputClass: 'form-control form-control-sm pp-visit-picker-slot',
+                minDate: visitMinValue,
+                defaultDate: dateInput.value || null,
+                disableMobile: true,
+                allowInput: false,
+                onChange: function (selectedDates) {
+                    const dateStr = selectedDates[0]
+                        ? selectedDates[0].getFullYear() + '-' + pad(selectedDates[0].getMonth() + 1) + '-' + pad(selectedDates[0].getDate())
+                        : '';
+                    loadCapacityAndPopulate(i, dateStr, '');
+                },
+            });
+        }
+
+        loadCapacityAndPopulate(i, dateInput?.value || '', slotOldData[i]?.time || '');
+        timeSelect?.addEventListener('change', function () {
+            syncHiddenVisitDate(i);
         });
-    }
-
-    populateVisitTimeSlots(visitDateOnlyInput?.value || '', visitOldTime);
-    visitTimeSlotSelect?.addEventListener('change', syncHiddenVisitDate);
+    });
 
     function updateSubmitBtn() {
         const selected = form?.querySelector('.pp-decision-radio:checked');
@@ -395,14 +462,20 @@
         if (visitFields) {
             visitFields.style.display = isApprove ? '' : 'none';
         }
-        if (visitDateInput) {
-            visitDateInput.required = isApprove;
-            visitTimeSlotSelect.required = isApprove;
-            if (!isApprove) {
-                visitDatePicker?.clear();
-                populateVisitTimeSlots('', '');
+        [1, 2, 3].forEach(function (i) {
+            const hiddenInput = document.getElementById('ppCitizenVisitDate_' + i);
+            const timeSelect = document.getElementById('ppVisitTimeSlot_' + i);
+            if (hiddenInput) {
+                hiddenInput.required = isApprove;
             }
-        }
+            if (timeSelect) {
+                timeSelect.required = isApprove;
+            }
+            if (!isApprove) {
+                pickers[i]?.clear();
+                populateVisitTimeSlots(i, '', '');
+            }
+        });
         sendBackRemarks?.forEach(function (el) {
             el.style.display = isSendBack ? '' : 'none';
         });
@@ -426,7 +499,7 @@
 
     function visitScheduleClientError(value) {
         if (!value) {
-            return 'Please select the meeting date and time for approval.';
+            return 'Please select date and time for all 3 meeting slots.';
         }
         if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(value)) {
             return 'Please select a valid meeting date and time.';
@@ -435,11 +508,11 @@
         if (Number.isNaN(d.getTime())) {
             return 'Please enter a valid meeting date and time.';
         }
-        if (d.getSeconds() !== 0 || (d.getMinutes() % 5) !== 0) {
-            return 'Meeting time must be in 5-minute intervals (e.g. 10:05, 10:10).';
+        if (d.getSeconds() !== 0 || d.getMinutes() !== 0) {
+            return 'Meeting time must be on the hour (e.g. 09:00, 10:00).';
         }
         const totalMinutes = (d.getHours() * 60) + d.getMinutes();
-        if (totalMinutes < (9 * 60) || totalMinutes > (17 * 60)) {
+        if (totalMinutes < (9 * 60) || totalMinutes > (16 * 60)) {
             return 'Meeting time must be between 09:00 AM and 05:00 PM.';
         }
         if (d < new Date()) {
@@ -467,7 +540,6 @@
 
         const selected = form.querySelector('.pp-decision-radio:checked');
         const remarks = form.querySelector('[name="remarks"]')?.value?.trim();
-        const visitDate = form.querySelector('[name="citizen_visit_date"]')?.value?.trim();
 
         if (!selected) {
             ppSwal({ icon: 'warning', title: 'Action Required', text: 'Please select Approve, Send Back, or Reject.' });
@@ -480,9 +552,23 @@
         const isApprove = selected.value === 'approved';
         const isSendBack = selected.value === 'sent_back';
         if (isApprove) {
-            const scheduleError = visitScheduleClientError(visitDate);
-            if (scheduleError) {
-                ppSwal({ icon: 'warning', title: 'Invalid Schedule', text: scheduleError });
+            const slots = [];
+            let err = '';
+            for (let i = 1; i <= 3; i++) {
+                const val = document.getElementById('ppCitizenVisitDate_' + i)?.value?.trim();
+                const scheduleError = visitScheduleClientError(val);
+                if (scheduleError) {
+                    err = 'Slot ' + i + ': ' + scheduleError;
+                    break;
+                }
+                slots.push(val);
+            }
+            if (err) {
+                ppSwal({ icon: 'warning', title: 'Invalid Schedule', text: err });
+                return;
+            }
+            if (new Set(slots).size !== 3) {
+                ppSwal({ icon: 'warning', title: 'Duplicate Slots', text: 'All three proposed slots must be unique.' });
                 return;
             }
         }

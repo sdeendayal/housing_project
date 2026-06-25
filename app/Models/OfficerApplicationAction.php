@@ -22,6 +22,9 @@ class OfficerApplicationAction extends Model
         'district_id',
         'district_name',
         'citizen_visit_date',
+        'visit_slot_1',
+        'visit_slot_2',
+        'visit_slot_3',
         'visit_instructions',
     ];
 
@@ -29,6 +32,9 @@ class OfficerApplicationAction extends Model
     {
         return [
             'citizen_visit_date' => 'datetime',
+            'visit_slot_1' => 'datetime',
+            'visit_slot_2' => 'datetime',
+            'visit_slot_3' => 'datetime',
         ];
     }
 

@@ -9,13 +9,13 @@
         @if($users->count())
             <div class="table-responsive">
                 <table class="table table-hover pp-table mb-0" id="usersTable">
-                    <thead><tr><th>Name</th><th>Mobile</th><th>Email</th></tr></thead>
+                    <thead><tr><th class="text-center" style="width:50px">S.No</th><th>Name</th><th>Mobile</th></tr></thead>
                     <tbody>
                         @foreach($users as $user)
                         <tr>
+                            <td class="text-center text-muted"></td>
                             <td>{{ $user->name }}</td>
                             <td>{{ $user->mobile ?? '—' }}</td>
-                            <td>{{ $user->email ?? '—' }}</td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -31,7 +31,21 @@
 @push('scripts')
 <script>
     $(document).ready(function() {
-        if ($('#usersTable').length) $('#usersTable').DataTable({ pageLength: 15, dom: 'ftip' });
+        if ($('#usersTable').length) {
+            $('#usersTable').DataTable({
+                pageLength: 20,
+                dom: 'ftip',
+                columnDefs: [
+                    { orderable: false, searchable: false, targets: 0 }
+                ],
+                drawCallback: function() {
+                    var api = this.api();
+                    api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                        cell.innerHTML = i + 1 + api.page() * api.page.len();
+                    });
+                }
+            });
+        }
     });
 </script>
 @endpush

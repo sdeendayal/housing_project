@@ -240,6 +240,7 @@ body.pp-body-auth {
 
 .pp-sidebar-link-icon.success { color: #059669; background: #ecfdf5; }
 .pp-sidebar-link-icon.danger { color: #dc2626; background: #fef2f2; }
+.pp-sidebar-link-icon.warning { color: #d97706; background: #fffbeb; }
 
 .pp-sidebar-link-label {
     white-space: nowrap;

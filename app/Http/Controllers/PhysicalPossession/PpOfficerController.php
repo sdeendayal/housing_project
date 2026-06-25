@@ -65,6 +65,39 @@ class PpOfficerController extends Controller
         ));
     }
 
+    // Get count of approved bookings for the officer's district on a selected date
+    public function getSlotCapacity(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date_format:Y-m-d',
+        ]);
+
+        $date = $request->input('date');
+        $officer = Auth::user();
+
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', 'approved')
+            ->whereNotNull('citizen_visit_date')
+            ->whereDate('citizen_visit_date', $date);
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%'.$officer->district_name.'%');
+        }
+
+        $bookings = $query->selectRaw('HOUR(citizen_visit_date) as hour, COUNT(*) as count')
+            ->groupByRaw('HOUR(citizen_visit_date)')
+            ->get()
+            ->pluck('count', 'hour')
+            ->toArray();
+
+        return response()->json([
+            'success' => true,
+            'bookings' => $bookings,
+        ]);
+    }
+
     // Saari applications - sirf apne district ki
     public function applications(Request $request)
     {
@@ -80,6 +113,12 @@ class PpOfficerController extends Controller
         $applications = $query->latest()->get();
 
         return view('physical-possession.officer.applications.index', compact('applications', 'status'));
+    }
+
+    // Pending applications
+    public function pendingApplications()
+    {
+        return $this->applicationsByStatus('pending');
     }
 
     // Approved applications
@@ -141,7 +180,9 @@ class PpOfficerController extends Controller
         $request->validate([
             'decision' => 'required|in:approved,rejected,sent_back',
             'remarks' => 'required|string|max:1000',
-            'citizen_visit_date' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
+            'visit_slot_1' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
+            'visit_slot_2' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
+            'visit_slot_3' => 'required_if:decision,approved|nullable|date|after_or_equal:now',
             'visit_instructions' => 'nullable|string|max:500',
             'returned_documents' => 'required_if:decision,sent_back|array|min:1',
             'returned_documents.*' => 'integer',
@@ -151,16 +192,32 @@ class PpOfficerController extends Controller
             'decision.required' => 'Please select Approve, Reject, or Send Back.',
             'decision.in' => 'Invalid decision selected.',
             'remarks.required' => 'Remarks are required.',
-            'citizen_visit_date.required_if' => 'Meeting schedule (date & time) is required for approval.',
-            'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
+            'visit_slot_1.required_if' => 'Meeting slot 1 is required for approval.',
+            'visit_slot_1.after_or_equal' => 'Meeting slot 1 cannot be in the past.',
+            'visit_slot_2.required_if' => 'Meeting slot 2 is required for approval.',
+            'visit_slot_2.after_or_equal' => 'Meeting slot 2 cannot be in the past.',
+            'visit_slot_3.required_if' => 'Meeting slot 3 is required for approval.',
+            'visit_slot_3.after_or_equal' => 'Meeting slot 3 cannot be in the past.',
             'returned_documents.required_if' => 'Select at least one document to send back.',
             'returned_documents.min' => 'Select at least one document to send back.',
         ]);
 
         if ($request->decision === 'approved') {
-            $scheduleError = $this->citizenVisitScheduleError($request->citizen_visit_date, Auth::user());
-            if ($scheduleError) {
-                return back()->withErrors(['citizen_visit_date' => $scheduleError])->withInput();
+            $slots = [
+                Carbon::parse($request->visit_slot_1)->toDateTimeString(),
+                Carbon::parse($request->visit_slot_2)->toDateTimeString(),
+                Carbon::parse($request->visit_slot_3)->toDateTimeString(),
+            ];
+
+            if (count(array_unique($slots)) !== 3) {
+                return back()->withErrors(['visit_slot_1' => 'All three meeting slots must be distinct dates/times.'])->withInput();
+            }
+
+            foreach (['visit_slot_1', 'visit_slot_2', 'visit_slot_3'] as $slotField) {
+                $scheduleError = $this->citizenVisitScheduleError($request->$slotField, Auth::user());
+                if ($scheduleError) {
+                    return back()->withErrors([$slotField => $scheduleError])->withInput();
+                }
             }
         }
 
@@ -177,7 +234,9 @@ class PpOfficerController extends Controller
             $application,
             $request->decision,
             $request->remarks,
-            $request->decision === 'approved' ? $request->citizen_visit_date : null,
+            $request->decision === 'approved' ? $request->visit_slot_1 : null,
+            $request->decision === 'approved' ? $request->visit_slot_2 : null,
+            $request->decision === 'approved' ? $request->visit_slot_3 : null,
             $request->decision === 'approved' ? $request->visit_instructions : null
         );
     }
@@ -187,24 +246,44 @@ class PpOfficerController extends Controller
     {
         $request->validate([
             'remarks' => 'required|string|max:1000',
-            'citizen_visit_date' => 'required|date|after_or_equal:now',
+            'visit_slot_1' => 'required|date|after_or_equal:now',
+            'visit_slot_2' => 'required|date|after_or_equal:now',
+            'visit_slot_3' => 'required|date|after_or_equal:now',
             'visit_instructions' => 'nullable|string|max:500',
         ], [
             'remarks.required' => 'Remarks are required.',
-            'citizen_visit_date.required' => 'Meeting schedule (date & time) is required.',
-            'citizen_visit_date.after_or_equal' => 'Meeting schedule cannot be in the past.',
+            'visit_slot_1.required' => 'Meeting slot 1 is required.',
+            'visit_slot_1.after_or_equal' => 'Meeting slot 1 cannot be in the past.',
+            'visit_slot_2.required' => 'Meeting slot 2 is required.',
+            'visit_slot_2.after_or_equal' => 'Meeting slot 2 cannot be in the past.',
+            'visit_slot_3.required' => 'Meeting slot 3 is required.',
+            'visit_slot_3.after_or_equal' => 'Meeting slot 3 cannot be in the past.',
         ]);
 
-        $scheduleError = $this->citizenVisitScheduleError($request->citizen_visit_date, Auth::user());
-        if ($scheduleError) {
-            return back()->withErrors(['citizen_visit_date' => $scheduleError])->withInput();
+        $slots = [
+            Carbon::parse($request->visit_slot_1)->toDateTimeString(),
+            Carbon::parse($request->visit_slot_2)->toDateTimeString(),
+            Carbon::parse($request->visit_slot_3)->toDateTimeString(),
+        ];
+
+        if (count(array_unique($slots)) !== 3) {
+            return back()->withErrors(['visit_slot_1' => 'All three meeting slots must be distinct dates/times.'])->withInput();
+        }
+
+        foreach (['visit_slot_1', 'visit_slot_2', 'visit_slot_3'] as $slotField) {
+            $scheduleError = $this->citizenVisitScheduleError($request->$slotField, Auth::user());
+            if ($scheduleError) {
+                return back()->withErrors([$slotField => $scheduleError])->withInput();
+            }
         }
 
         return $this->updateStatus(
             $application,
             'approved',
             $request->remarks,
-            $request->citizen_visit_date,
+            $request->visit_slot_1,
+            $request->visit_slot_2,
+            $request->visit_slot_3,
             $request->visit_instructions
         );
     }
@@ -226,19 +305,23 @@ class PpOfficerController extends Controller
         PhysicalPossessionApplication $application,
         string $newStatus,
         ?string $remarks,
-        ?string $citizenVisitDate = null,
+        ?string $visitSlot1 = null,
+        ?string $visitSlot2 = null,
+        ?string $visitSlot3 = null,
         ?string $visitInstructions = null
     ) {
         $officer = Auth::user();
         $this->findOfficerApplication($officer, $application);
 
         if ($newStatus !== 'approved') {
-            $citizenVisitDate = null;
+            $visitSlot1 = null;
+            $visitSlot2 = null;
+            $visitSlot3 = null;
             $visitInstructions = null;
         }
 
         try {
-            DB::transaction(function () use ($officer, $application, $newStatus, $remarks, $citizenVisitDate, $visitInstructions) {
+            DB::transaction(function () use ($officer, $application, $newStatus, $remarks, $visitSlot1, $visitSlot2, $visitSlot3, $visitInstructions) {
                 $locked = PhysicalPossessionApplication::query()
                     ->where('id', $application->id)
                     ->lockForUpdate()
@@ -248,15 +331,19 @@ class PpOfficerController extends Controller
                     throw new \RuntimeException('Only pending applications can be updated.');
                 }
 
-                if ($newStatus === 'approved' && $citizenVisitDate) {
-                    $scheduleError = $this->citizenVisitScheduleError(
-                        $citizenVisitDate,
-                        $officer,
-                        $locked->id,
-                        true
-                    );
-                    if ($scheduleError) {
-                        throw new \RuntimeException($scheduleError);
+                if ($newStatus === 'approved') {
+                    foreach ([$visitSlot1, $visitSlot2, $visitSlot3] as $slot) {
+                        if ($slot) {
+                            $scheduleError = $this->citizenVisitScheduleError(
+                                $slot,
+                                $officer,
+                                $locked->id,
+                                true
+                            );
+                            if ($scheduleError) {
+                                throw new \RuntimeException($scheduleError);
+                            }
+                        }
                     }
                 }
 
@@ -267,7 +354,10 @@ class PpOfficerController extends Controller
                     'remarks' => $remarks,
                     'approved_by' => $officer->id,
                     'approved_at' => now(),
-                    'citizen_visit_date' => $citizenVisitDate,
+                    'citizen_visit_date' => null,
+                    'visit_slot_1' => $visitSlot1,
+                    'visit_slot_2' => $visitSlot2,
+                    'visit_slot_3' => $visitSlot3,
                     'visit_instructions' => $visitInstructions,
                 ]);
 
@@ -290,7 +380,10 @@ class PpOfficerController extends Controller
                     'application_number' => $locked->application_number,
                     'district_id' => $locked->district_id,
                     'district_name' => $locked->district_name,
-                    'citizen_visit_date' => $citizenVisitDate,
+                    'citizen_visit_date' => null,
+                    'visit_slot_1' => $visitSlot1,
+                    'visit_slot_2' => $visitSlot2,
+                    'visit_slot_3' => $visitSlot3,
                     'visit_instructions' => $visitInstructions,
                 ]);
 
@@ -473,7 +566,7 @@ class PpOfficerController extends Controller
             ->firstOrFail();
     }
 
-    /** Meeting only 09:00 AM–05:00 PM; max 10 approved visits per district per 1-hour slot. */
+    /** Meeting only hourly slots 09:00 AM–05:00 PM; max 10 approved visits per district per 1-hour slot. */
     private function citizenVisitScheduleError(
         string $citizenVisitDate,
         User $officer,
@@ -481,13 +574,12 @@ class PpOfficerController extends Controller
         bool $forUpdate = false
     ): ?string {
         $visitAt = Carbon::parse($citizenVisitDate);
-        $minutesOfDay = ($visitAt->hour * 60) + $visitAt->minute;
 
-        if ($visitAt->second !== 0 || ($visitAt->minute % 5) !== 0) {
-            return 'Meeting time must be in 5-minute intervals (e.g. 10:05, 10:10).';
+        if ($visitAt->second !== 0 || $visitAt->minute !== 0) {
+            return 'Meeting time must be on the hour (e.g. 09:00, 10:00).';
         }
 
-        if ($minutesOfDay < (9 * 60) || $minutesOfDay > (17 * 60)) {
+        if ($visitAt->hour < 9 || $visitAt->hour > 16) {
             return 'Meeting time must be between 09:00 AM and 05:00 PM.';
         }
 

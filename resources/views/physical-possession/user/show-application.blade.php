@@ -97,6 +97,67 @@
             </div>
             @endif
 
+            @if($application->status === 'approved' && !$application->citizen_visit_date)
+            <div class="rounded-xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50/60 p-4 mt-3">
+                <div class="flex items-start gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                        <span class="material-symbols-outlined text-[22px]">pending_actions</span>
+                    </span>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-[12px] font-extrabold text-slate-800 m-0 mb-1">Select Meeting Time Slot</h3>
+                        <p class="text-[11px] text-slate-600 m-0 leading-relaxed mb-3">Your application is approved. Please select one of the following 3 options to schedule your visit to the office and download your visiting slip.</p>
+                        
+                        <form method="POST" action="{{ route('pp.user.application.select-slot', $application) }}" id="ppSelectSlotForm">
+                            @csrf
+                            
+                            <div class="space-y-2 mb-3">
+                                @if($application->visit_slot_1)
+                                <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-amber-50/40 cursor-pointer transition">
+                                    <input type="radio" name="selected_slot" value="{{ $application->visit_slot_1->toDateTimeString() }}" class="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500" required>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-bold text-slate-700 m-0">{{ $application->visit_slot_1->format('d M Y') }}</p>
+                                        <p class="text-[10px] text-slate-500 m-0">{{ $application->visit_slot_1->format('h:i a') }} to {{ $application->visit_slot_1->copy()->addHour()->format('h:i a') }}</p>
+                                    </div>
+                                </label>
+                                @endif
+
+                                @if($application->visit_slot_2)
+                                <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-amber-50/40 cursor-pointer transition">
+                                    <input type="radio" name="selected_slot" value="{{ $application->visit_slot_2->toDateTimeString() }}" class="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-bold text-slate-700 m-0">{{ $application->visit_slot_2->format('d M Y') }}</p>
+                                        <p class="text-[10px] text-slate-500 m-0">{{ $application->visit_slot_2->format('h:i a') }} to {{ $application->visit_slot_2->copy()->addHour()->format('h:i a') }}</p>
+                                    </div>
+                                </label>
+                                @endif
+
+                                @if($application->visit_slot_3)
+                                <label class="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-amber-50/40 cursor-pointer transition">
+                                    <input type="radio" name="selected_slot" value="{{ $application->visit_slot_3->toDateTimeString() }}" class="w-4 h-4 text-indigo-600 border-slate-300 focus:ring-indigo-500">
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-bold text-slate-700 m-0">{{ $application->visit_slot_3->format('d M Y') }}</p>
+                                        <p class="text-[10px] text-slate-500 m-0">{{ $application->visit_slot_3->format('h:i a') }} to {{ $application->visit_slot_3->copy()->addHour()->format('h:i a') }}</p>
+                                    </div>
+                                </label>
+                                @endif
+                            </div>
+
+                            @if($application->visit_instructions)
+                            <div class="bg-slate-50 border border-slate-100 rounded-lg p-2 mb-3">
+                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-0.5">Instructions from Officer</p>
+                                <p class="text-[10px] text-slate-600 m-0 leading-relaxed">{{ $application->visit_instructions }}</p>
+                            </div>
+                            @endif
+
+                            <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 text-white text-[11px] font-bold no-underline hover:bg-indigo-700 shadow-sm border-0 cursor-pointer">
+                                <span class="material-symbols-outlined text-[15px]">check</span> Confirm Appointment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endif
+
             @if($application->status === 'approved' && $application->citizen_visit_date)
             <div class="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50/60 p-3 mt-3">
                 <div class="flex items-start gap-2.5">
@@ -106,7 +167,7 @@
                     <div class="flex-1 min-w-0">
                         <h3 class="text-[11px] font-extrabold text-slate-800 m-0 mb-1">Meeting Schedule</h3>
                         <p class="text-[13px] font-extrabold text-blue-700 m-0">{{ $application->citizen_visit_date->format('d M Y') }}</p>
-                        <p class="text-[12px] font-bold text-blue-600 m-0 mt-0.5">{{ $application->citizen_visit_date->format('h:i A') }}</p>
+                        <p class="text-[12px] font-bold text-blue-600 m-0 mt-0.5">{{ $application->citizen_visit_date->format('h:i a') }} to {{ $application->citizen_visit_date->copy()->addHour()->format('h:i a') }}</p>
                         @if($application->visit_instructions)
                         <p class="text-[10px] text-slate-600 m-0 mt-1 leading-relaxed">{{ $application->visit_instructions }}</p>
                         @else

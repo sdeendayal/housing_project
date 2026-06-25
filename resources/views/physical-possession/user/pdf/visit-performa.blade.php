@@ -69,7 +69,7 @@
     <div class="visit-box">
         <h3>Scheduled Visit — Please Report On</h3>
         <div class="visit-date">{{ $application->citizen_visit_date->format('d M Y') }}</div>
-        <div class="visit-time">{{ $application->citizen_visit_date->format('h:i A') }}</div>
+        <div class="visit-time">{{ $application->citizen_visit_date->format('h:i a') }} to {{ $application->citizen_visit_date->copy()->addHour()->format('h:i a') }}</div>
         @if($application->visit_instructions)
         <p class="visit-instructions">
             <span class="visit-instructions-label">Instructions</span>

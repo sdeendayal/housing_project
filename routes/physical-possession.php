@@ -51,6 +51,7 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/download-form', [PpUserController::class, 'downloadPrefilledForm'])->name('user.download-form');
         Route::get('/my-applications', [PpUserController::class, 'myApplications'])->name('user.applications');
         Route::get('/application/{application}', [PpUserController::class, 'showApplication'])->name('user.application.show')->where('application', '[a-f0-9]{32}');
+        Route::post('/application/{application}/select-slot', [PpUserController::class, 'selectVisitSlot'])->name('user.application.select-slot')->where('application', '[a-f0-9]{32}');
         Route::get('/application/{application}/correct', [PpUserController::class, 'correctDocuments'])->name('user.application.correct')->where('application', '[a-f0-9]{32}');
         Route::post('/application/{application}/resubmit', [PpUserController::class, 'resubmitApplication'])->name('user.application.resubmit')->where('application', '[a-f0-9]{32}');
         Route::get('/application/{application}/document/{document}/view', [PpUserController::class, 'viewDocument'])->name('user.document.view')->where('application', '[a-f0-9]{32}');
@@ -66,7 +67,9 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
     // Department officer PP panel (district_officer role)
     Route::middleware(['auth', 'role:district_officer'])->prefix('officer')->name('officer.')->group(function () {
         Route::get('/dashboard', [PpOfficerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/slots/capacity', [PpOfficerController::class, 'getSlotCapacity'])->name('slots.capacity');
         Route::get('/applications', [PpOfficerController::class, 'applications'])->name('applications');
+        Route::get('/applications/pending', [PpOfficerController::class, 'pendingApplications'])->name('applications.pending');
         Route::get('/applications/approved', [PpOfficerController::class, 'approvedApplications'])->name('applications.approved');
         Route::get('/applications/rejected', [PpOfficerController::class, 'rejectedApplications'])->name('applications.rejected');
         Route::get('/application/{application}', [PpOfficerController::class, 'showApplication'])->name('application.show')->where('application', '[a-f0-9]{32}');
