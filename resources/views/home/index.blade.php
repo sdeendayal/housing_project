@@ -395,13 +395,19 @@
                         <div id="slider" class="flex gap-4 transition-transform duration-700 ease-in-out">
 
                             <!-- Slide 1 -->
-                            @foreach ($banners as $banner)
+                            @forelse ($banners as $banner)
                                 <div class="min-w-full flex justify-center">
-                                    <img src="{{ asset('uploads/banner/' . $banner->image) }}"
+                                    <img src="{{ !empty($banner->image) ? asset('uploads/banner/' . $banner->image) : asset('banner.jpeg') }}"
                                         class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
-                                        alt="{{ $banner->title }}">
+                                        alt="{{ $banner->title ?? 'Banner' }}">
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="min-w-full flex justify-center">
+                                    <img src="{{ asset('banner.jpeg') }}"
+                                        class="w-full rounded-xl object-cover transition-transform duration-500 hover:scale-[1.01]"
+                                        alt="Default Banner">
+                                </div>
+                            @endforelse
                         </div>
 
                         <!-- Left Button -->
