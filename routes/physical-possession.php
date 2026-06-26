@@ -4,6 +4,7 @@ use App\Http\Controllers\OtpAuthController;
 use App\Http\Controllers\PhysicalPossession\PpLandingController;
 use App\Http\Controllers\PhysicalPossession\PpOfficerController;
 use App\Http\Controllers\PhysicalPossession\PpUserController;
+use App\Http\Controllers\PhysicalPossession\PhysicalPossessionWorkflowController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Physical Possession Module ─────────────────────────────────────────────
@@ -43,7 +44,12 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
     // Citizen PP features (uses existing citizen session from /mmsay-citizen-login)
     Route::middleware(['auth', 'role:citizen'])->group(function () {
         Route::get('/dashboard', fn () => redirect()->route('citizen.dashboard'))->name('user.dashboard');
-        Route::get('/apply', [PpUserController::class, 'applyForm'])->name('user.apply');
+        
+        // Disable original apply routes by redirecting or showing a message
+        Route::get('/apply', function() {
+            return redirect()->route('citizen.dashboard')->with('error', 'Direct citizen applications are disabled. Physical Possession must be initiated by the District Officer only.');
+        })->name('user.apply');
+        
         Route::post('/apply', [PpUserController::class, 'submitApplication'])->name('user.apply.submit');
         Route::post('/verify-certificate', [PpUserController::class, 'verifyCertificate'])->name('user.certificate.verify');
         Route::post('/verify-allotment-letter', [PpUserController::class, 'verifyAllotmentLetter'])->name('user.allotment.verify');
@@ -62,23 +68,28 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/visit-performa/{application}/print', [PpUserController::class, 'printVisitPerforma'])->name('user.visit-performa.print')->where('application', '[a-f0-9]{32}');
         Route::get('/profile', fn () => redirect()->route('citizen.profile'))->name('user.profile');
         Route::get('/logout', fn () => redirect()->route('citizen.logout'))->name('user.logout');
+
+        // New citizen submit routes
+        Route::get('/submit-possession', [PhysicalPossessionWorkflowController::class, 'citizenSubmitForm'])->name('citizen.submit');
+        Route::post('/submit-possession', [PhysicalPossessionWorkflowController::class, 'citizenSubmit'])->name('citizen.submit.post');
     });
 
     // Department officer PP panel (district_officer role)
     Route::middleware(['auth', 'role:district_officer'])->prefix('officer')->name('officer.')->group(function () {
         Route::get('/dashboard', [PpOfficerController::class, 'dashboard'])->name('dashboard');
         Route::get('/slots/capacity', [PpOfficerController::class, 'getSlotCapacity'])->name('slots.capacity');
-        Route::get('/applications', [PpOfficerController::class, 'applications'])->name('applications');
-        Route::get('/applications/pending', [PpOfficerController::class, 'pendingApplications'])->name('applications.pending');
-        Route::get('/applications/approved', [PpOfficerController::class, 'approvedApplications'])->name('applications.approved');
-        Route::get('/applications/rejected', [PpOfficerController::class, 'rejectedApplications'])->name('applications.rejected');
-        Route::get('/application/{application}', [PpOfficerController::class, 'showApplication'])->name('application.show')->where('application', '[a-f0-9]{32}');
-        Route::post('/application/{application}/decide', [PpOfficerController::class, 'decide'])->name('application.decide')->where('application', '[a-f0-9]{32}');
-        Route::post('/application/{application}/approve', [PpOfficerController::class, 'approve'])->name('application.approve')->where('application', '[a-f0-9]{32}');
-        Route::post('/application/{application}/reject', [PpOfficerController::class, 'reject'])->name('application.reject')->where('application', '[a-f0-9]{32}');
-        Route::get('/application/{application}/document/{document}', [PpOfficerController::class, 'downloadDocument'])->name('document.download')->where('application', '[a-f0-9]{32}');
         Route::get('/users', [PpOfficerController::class, 'users'])->name('users');
         Route::get('/reports', [PpOfficerController::class, 'reports'])->name('reports');
         Route::get('/logout', [OtpAuthController::class, 'logout'])->name('logout');
+
+        // New workflow officer routes
+        Route::get('/eligibility-list', [PhysicalPossessionWorkflowController::class, 'officerEligibilityList'])->name('eligibility-list');
+        Route::get('/schedule/capacity/check', [PhysicalPossessionWorkflowController::class, 'getSlotCapacityCheck'])->name('schedule.capacity-check');
+        Route::get('/schedule/{application}', [PhysicalPossessionWorkflowController::class, 'officerScheduleForm'])->name('schedule-form');
+        Route::post('/schedule/{application}', [PhysicalPossessionWorkflowController::class, 'officerScheduleSave'])->name('schedule-save');
+        Route::get('/possession-applications', [PhysicalPossessionWorkflowController::class, 'officerApplications'])->name('possession-applications');
+        Route::get('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifyForm'])->name('verify-form')->where('application', '[a-f0-9]{32}');
+        Route::post('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifySave'])->name('verify-save')->where('application', '[a-f0-9]{32}');
+        Route::get('/download-certificate/{application}', [PhysicalPossessionWorkflowController::class, 'officerDownloadCertificate'])->name('download-certificate')->where('application', '[a-f0-9]{32}');
     });
 });

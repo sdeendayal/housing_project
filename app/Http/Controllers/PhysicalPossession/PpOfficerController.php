@@ -27,13 +27,47 @@ class PpOfficerController extends Controller
         $officer = Auth::user();
         $query = $this->districtApplicationsQuery($officer);
 
+        // Fetch eligibleCount first because we use it in stats
+        // Calculate count of eligible applicants who are not yet scheduled/initiated
+        $eligibleQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->whereNull('ppa.id');
+
+        if ($officer->district_id) {
+            $eligibleQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $eligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        $eligibleCount = DB::table(DB::raw("({$eligibleQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId'
+        ])->selectRaw('
+            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
+                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
+                0
+            ) as total_paid
+        ')->having('total_paid', '>=', 40000)->toSql()}) as sub"))
+            ->mergeBindings($eligibleQuery)
+            ->count();
+
         $stats = [
-            'total' => (clone $query)->count(),
-            'pending' => (clone $query)->where('status', 'pending')->count(),
-            'approved' => (clone $query)->where('status', 'approved')->count(),
-            'rejected' => (clone $query)->where('status', 'rejected')->count(),
-            'today' => (clone $query)->whereDate('created_at', today())->count(),
+            'awaiting_schedule' => $eligibleCount,
+            'scheduled' => (clone $query)->where('physical_possession_status', 'Visit Scheduled')->count(),
+            'submitted' => (clone $query)->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted'])->count(),
+            'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
+            'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
+
+        // eligibleCount calculated above for stats
 
         // Chart ke liye last 7 days data
         $chartLabels = [];
@@ -47,8 +81,9 @@ class PpOfficerController extends Controller
         $recentApplications = (clone $query)->latest()->take(6)->get();
         $pendingApplications = (clone $query)->where('status', 'pending')->latest()->take(4)->get();
         $userCount = (clone $query)->distinct()->count('user_id');
-        $approvalRate = $stats['total'] > 0
-            ? (int) round(($stats['approved'] / $stats['total']) * 100)
+        $decided = $stats['verified'] + $stats['rejected'];
+        $approvalRate = $decided > 0
+            ? (int) round(($stats['verified'] / $decided) * 100)
             : 0;
         $weekTotal = array_sum($chartData);
 
@@ -62,6 +97,7 @@ class PpOfficerController extends Controller
             'userCount',
             'approvalRate',
             'weekTotal',
+            'eligibleCount'
         ));
     }
 

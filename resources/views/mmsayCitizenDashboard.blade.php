@@ -148,78 +148,110 @@
         </div>
         <div class="p-3">
             @php
-                $ppStatusLabel = 'Not Applied';
-                $ppStatusClass = 'text-slate-700';
-                $ppStatusBadgeClass = 'bg-slate-100 text-slate-700';
+                $ppStatus = $latestPpApplication ? $latestPpApplication->physical_possession_status : null;
+                
+                $statusBadgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
+                $statusMessage = 'Physical Possession process is initiated by the District Officer only. Please contact the District Office for more information.';
+                
+                if ($ppStatus) {
+                    $statusBadgeClass = match ($ppStatus) {
+                        'Eligible for Physical Possession' => 'bg-info bg-opacity-10 text-info border-info border-opacity-20',
+                        'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border-warning border-opacity-20',
+                        'Slot Selected' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                        'Physical Possession Submitted' => 'bg-primary bg-opacity-10 text-primary border-primary border-opacity-20',
+                        'Verified' => 'bg-success bg-opacity-10 text-success border-success border-opacity-20',
+                        'Rejected' => 'bg-danger bg-opacity-10 text-danger border-danger border-opacity-20',
+                        default => 'bg-slate-100 text-slate-700 border-slate-200'
+                    };
 
-                if (!empty($ppHasDraftApplication)) {
-                    $ppStatusLabel = 'Draft — In Progress';
-                } elseif ($latestPpApplication) {
-                    $ppStatusLabel = match ($latestPpApplication->status) {
-                        'pending' => 'Pending',
-                        'approved' => 'Approved',
-                        'rejected' => 'Rejected',
-                        'returned' => 'Returned',
-                        default => ucfirst($latestPpApplication->status),
+                    $statusMessage = match ($ppStatus) {
+                        'Eligible for Physical Possession' => 'You have been marked as Eligible for Physical Possession by the District Officer. The meeting/visit schedule will be assigned shortly.',
+                        'Visit Scheduled' => 'A physical possession visit has been scheduled for your property. Please select your preferred time slot.',
+                        'Slot Selected' => 'You have selected your visit slot. The District Officer will visit your plot to capture GPS coordinates, photos, and get the possession certificate signed.',
+                        'Physical Possession Submitted' => 'The physical possession details have been uploaded. Your submission is currently undergoing verification by the District Officer.',
+                        'Verified' => 'Congratulations! Your physical possession has been verified and approved by the District Officer.',
+                        'Rejected' => 'Your physical possession submission has been rejected. Remarks: ' . ($latestPpApplication->remarks ?? 'No remarks provided.') . ' Please correct and re-submit.',
+                        default => 'Current physical possession status: ' . $ppStatus
                     };
-                    [$ppStatusClass, $ppStatusBadgeClass] = match ($latestPpApplication->status) {
-                        'approved' => ['text-emerald-700', 'bg-emerald-100 text-emerald-700'],
-                        'rejected' => ['text-red-600', 'bg-red-100 text-red-700'],
-                        'returned' => ['text-blue-700', 'bg-blue-100 text-blue-700'],
-                        default => ['text-amber-700', 'bg-amber-100 text-amber-700'],
-                    };
-                } elseif (!$isPpEligible) {
-                    $ppStatusLabel = 'Not Eligible';
-                    $ppStatusClass = 'text-amber-700';
-                    $ppStatusBadgeClass = 'bg-amber-100 text-amber-700';
                 }
             @endphp
-            <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 mb-3 flex items-center justify-between gap-3">
-                <div>
-                    <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application Status</p>
-                    <p class="text-[12px] font-bold {{ $ppStatusClass }} m-0">{{ $ppStatusLabel }}</p>
-                    @if ($latestPpApplication)
-                    <p class="text-[10px] text-slate-400 m-0 mt-0.5">{{ $latestPpApplication->application_number }} · {{ $latestPpApplication->created_at->format('d M Y') }}</p>
+
+            <div class="rounded-lg border p-3 mb-3 bg-white">
+                <div class="d-flex align-items-center justify-content-between gap-3 mb-2">
+                    <div>
+                        <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Physical Possession Status</p>
+                        <p class="text-[12px] font-bold text-slate-800 m-0">{{ $ppStatus ?? 'Not Initiated' }}</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border {{ $statusBadgeClass }}">
+                        {{ $ppStatus ?? 'Not Initiated' }}
+                    </span>
+                </div>
+                
+                <p class="text-[10px] text-slate-600 m-0 leading-relaxed mb-3">
+                    {{ $statusMessage }}
+                </p>
+
+                @if($latestPpApplication)
+                    <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100 text-[10px] mb-3">
+                        <div class="d-flex justify-content-between mb-1.5 pb-1 border-b border-slate-100">
+                            <span class="text-slate-400 font-semibold">Application Number:</span>
+                            <strong class="text-slate-700">{{ $latestPpApplication->application_number }}</strong>
+                        </div>
+                        
+                        @if(in_array($latestPpApplication->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted', 'Verified', 'Rejected']))
+                            <div class="d-flex justify-content-between mb-1.5 pb-1 border-b border-slate-100">
+                                <span class="text-slate-400 font-semibold">Selected Visit Slot:</span>
+                                <strong class="text-emerald-700">
+                                    @if(strtotime($latestPpApplication->meeting_slot))
+                                        {{ \Carbon\Carbon::parse($latestPpApplication->meeting_slot)->format('d M Y - h:i A') }}
+                                    @else
+                                        {{ $latestPpApplication->meeting_slot }}
+                                    @endif
+                                </strong>
+                            </div>
+                        @else
+                            <!-- Show Offered Slots -->
+                            <div class="mb-1.5 pb-1 border-b border-slate-100">
+                                <span class="text-slate-400 font-semibold block mb-1">Offered Slots:</span>
+                                <div class="pl-2 border-l border-slate-200 text-slate-700 leading-normal">
+                                    @if($latestPpApplication->visit_slot_1)
+                                        <div>• Slot 1: <strong>{{ $latestPpApplication->visit_slot_1->format('d M Y, h:i A') }}</strong></div>
+                                    @endif
+                                    @if($latestPpApplication->visit_slot_2)
+                                        <div>• Slot 2: <strong>{{ $latestPpApplication->visit_slot_2->format('d M Y, h:i A') }}</strong></div>
+                                    @endif
+                                    @if($latestPpApplication->visit_slot_3)
+                                        <div>• Slot 3: <strong>{{ $latestPpApplication->visit_slot_3->format('d M Y, h:i A') }}</strong></div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
+
+                        @if($latestPpApplication->visit_instructions)
+                            <div class="mt-1">
+                                <span class="text-slate-400 font-semibold block mb-0.5">Instructions:</span>
+                                <p class="text-slate-600 font-medium m-0 leading-relaxed bg-indigo-50/50 p-1.5 rounded border border-indigo-100/50 whitespace-pre-line">{{ $latestPpApplication->visit_instructions }}</p>
+                            </div>
+                        @endif
+                    </div>
+                @endif
+
+                <div class="flex flex-wrap gap-2">
+                    @if($ppStatus === 'Visit Scheduled' || $ppStatus === 'Rejected')
+                        <a href="{{ route('pp.citizen.submit') }}" class="btn-v2-primary btn-v2-sm no-underline">
+                            <span class="material-symbols-outlined text-[14px]">calendar_month</span>
+                            {{ $ppStatus === 'Rejected' ? 'Re-select Visit Slot' : 'Select Visit Slot' }}
+                        </a>
+                    @endif
+                    
+                    @if($latestPpApplication && $latestPpApplication->possession_certificate)
+                        <a href="{{ asset('storage/' . $latestPpApplication->possession_certificate) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[10px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
+                            <span class="material-symbols-outlined text-[16px]">visibility</span>
+                            View Uploaded Certificate
+                        </a>
                     @endif
                 </div>
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase shrink-0 {{ $ppStatusBadgeClass }}">{{ $ppStatusLabel }}</span>
             </div>
-
-            <div class="flex flex-wrap gap-2 mb-3">
-                @unless($ppHasApplication)
-                @if($isPpEligible)
-                <a href="{{ route('pp.user.apply') }}" class="btn-v2-primary btn-v2-sm no-underline">
-                    <span class="material-symbols-outlined text-[14px]">edit_document</span>
-                    {{ !empty($ppHasDraftApplication) ? 'Continue Application' : 'Apply for Physical Possession' }}
-                </a>
-                <a href="{{ route('pp.user.view-form') }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[11px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
-                    <span class="material-symbols-outlined text-[16px]">visibility</span>
-                    View Application Request Form
-                </a>
-                @else
-                <div class="w-full rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
-                    <p class="text-[10px] font-bold text-amber-900 m-0 mb-0.5">Physical Possession — Not eligible yet</p>
-                    <p class="text-[10px] text-amber-800 m-0 leading-relaxed">
-                        Your total payments (initial registration deposit + installments) must be at least <strong>{{ $ppMinTotalPaidRequiredFormatted }}</strong>.
-                        Your total paid so far: <strong>{{ $ppTotalPaidFormatted }}</strong>.
-                    </p>
-                </div>
-                @endif
-                @else
-                <a href="{{ route('pp.user.application.show', $latestPpApplication) }}" class="btn-v2-primary btn-v2-sm no-underline">
-                    <span class="material-symbols-outlined text-[14px]">visibility</span>
-                    View My Application
-                </a>
-                @endunless
-                <a href="{{ route('pp.user.applications') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700 no-underline hover:bg-slate-100">
-                    <span class="material-symbols-outlined text-[16px]">folder_open</span>
-                    My Applications
-                </a>
-            </div>
-
-            @if (!$ppHasApplication && empty($ppHasDraftApplication))
-            <p class="text-[10px] text-slate-500 m-0">Download the possession application request form, sign it, then apply and upload documents.</p>
-            @endif
         </div>
     </div>
 
@@ -237,15 +269,10 @@
                 <span class="material-symbols-outlined text-[16px]">payments</span>
                 Payment Status
             </a>
-            @if ($ppHasApplication)
-            <a href="{{ route('pp.user.application.show', $latestPpApplication) }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
-                <span class="material-symbols-outlined text-[16px]">visibility</span>
-                My Application
-            </a>
-            @elseif($isPpEligible)
-            <a href="{{ route('pp.user.apply') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
-                <span class="material-symbols-outlined text-[16px]">edit_document</span>
-                Physical Possession
+            @if ($latestPpApplication && in_array($latestPpApplication->physical_possession_status, ['Visit Scheduled', 'Rejected']))
+            <a href="{{ route('pp.citizen.submit') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
+                <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                Select Visit Slot
             </a>
             @endif
         </div>

@@ -74,6 +74,7 @@
         </a>
 
         {{-- 8. Physical Possession --}}
+        @if($latestPpApplication)
         <div class="pp-nav-group mb-1 mt-1">
             <button type="button"
                     id="ppNavToggle"
@@ -91,22 +92,10 @@
             </button>
 
             <div id="ppNavSubmenu" class="pp-nav-submenu {{ $ppSubmenuOpen ? '' : 'hidden' }}">
-                @unless($ppHasApplication)
-                <a class="nav-v2 {{ $activeNav === 'pp-apply' ? 'active' : '' }} pl-7" href="{{ route('pp.user.apply') }}">
-                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-apply') style="font-variation-settings:'FILL' 1" @endif>edit_document</span></span>
-                    {{ $ppHasDraftApplication ? 'Continue Application' : 'Apply Online' }}
-                </a>
-                @endunless
-                @if($ppReturnedApplication)
-                <a class="nav-v2 {{ $activeNav === 'pp-correct' ? 'active' : '' }} pl-7" href="{{ route('pp.user.application.correct', $ppReturnedApplication) }}">
-                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-correct') style="font-variation-settings:'FILL' 1" @endif>upload_file</span></span>
-                    Correct Documents
-                </a>
-                @endif
-                @if($latestPpApplication)
-                <a class="nav-v2 {{ $activeNav === 'pp-application-show' ? 'active' : '' }} pl-7" href="{{ route('pp.user.application.show', $latestPpApplication) }}">
-                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'pp-application-show') style="font-variation-settings:'FILL' 1" @endif>visibility</span></span>
-                    View My Application
+                @if(in_array($latestPpApplication->physical_possession_status, ['Visit Scheduled', 'Rejected']))
+                <a class="nav-v2 {{ request()->routeIs('pp.citizen.submit') ? 'active' : '' }} pl-7" href="{{ route('pp.citizen.submit') }}">
+                    <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if(request()->routeIs('pp.citizen.submit')) style="font-variation-settings:'FILL' 1" @endif>cloud_upload</span></span>
+                    Complete Possession
                 </a>
                 @endif
                 <a class="nav-v2 {{ $activeNav === 'pp-applications' ? 'active' : '' }} pl-7" href="{{ route('pp.user.applications') }}">
@@ -115,6 +104,7 @@
                 </a>
             </div>
         </div>
+        @endif
     </div>
 
     <div class="p-2.5 border-t border-slate-100">

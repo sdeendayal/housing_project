@@ -3,8 +3,8 @@
 @section('page-title', 'Dashboard')
 
 @php
-    $decided = $stats['approved'] + $stats['rejected'];
-    $approvalRate = $decided > 0 ? round(($stats['approved'] / $decided) * 100) : 0;
+    $decided = $stats['verified'] + $stats['rejected'];
+    $approvalRate = $decided > 0 ? round(($stats['verified'] / $decided) * 100) : 0;
     $weekTotal = array_sum($chartData);
 @endphp
 
@@ -44,18 +44,19 @@
 
 .pp-dash-stats {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 0.4rem;
     margin-bottom: 0.625rem;
 }
-@media (max-width: 767px) {
+@media (max-width: 575px) {
+    .pp-dash-stats { grid-template-columns: 1fr; }
+}
+@media (min-width: 576px) and (max-width: 767px) {
     .pp-dash-stats { grid-template-columns: repeat(2, 1fr); }
     .pp-dash-stats .pp-dash-stat:last-child { grid-column: span 2; }
 }
-@media (min-width: 768px) and (max-width: 991px) {
+@media (min-width: 768px) and (max-width: 1199px) {
     .pp-dash-stats { grid-template-columns: repeat(3, 1fr); }
-    .pp-dash-stats .pp-dash-stat:nth-child(4),
-    .pp-dash-stats .pp-dash-stat:nth-child(5) { grid-column: span 1; }
 }
 
 .pp-dash-stat {
@@ -144,7 +145,7 @@
     gap: 0.5rem;
     align-items: start;
 }
-@media (max-width: 991px) {
+@media (max-width: 1199px) {
     .pp-dash-grid { grid-template-columns: 1fr; }
 }
 
@@ -319,52 +320,58 @@
     <span class="pp-dash-date"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('d M Y') }}</span>
 </div>
 
-<div class="pp-dash-stats">
-    <a href="{{ route('pp.officer.applications') }}" class="pp-dash-stat">
-        <div class="pp-dash-stat-icon blue"><i class="bi bi-folder2-open"></i></div>
-        <div class="min-w-0">
-            <div class="pp-dash-stat-label">Total</div>
-            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['total'] }}">0</div>
+@if($eligibleCount > 0)
+<div class="alert alert-primary d-flex align-items-center justify-content-between p-3 border-0 shadow-sm rounded-3 mb-3 bg-primary bg-opacity-10 text-primary-emphasis border border-primary border-opacity-20">
+    <div class="d-flex align-items-center gap-3">
+        <div class="bg-primary text-white p-2.5 rounded-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+            <i class="bi bi-person-check fs-4"></i>
         </div>
-    </a>
-    <a href="{{ route('pp.officer.applications', ['status' => 'pending']) }}" class="pp-dash-stat">
-        <div class="pp-dash-stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
-        <div class="min-w-0">
-            <div class="pp-dash-stat-label">Pending</div>
-            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['pending'] }}">0</div>
-        </div>
-    </a>
-    <a href="{{ route('pp.officer.applications.approved') }}" class="pp-dash-stat">
-        <div class="pp-dash-stat-icon green"><i class="bi bi-check-circle"></i></div>
-        <div class="min-w-0">
-            <div class="pp-dash-stat-label">Approved</div>
-            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['approved'] }}">0</div>
-        </div>
-    </a>
-    <a href="{{ route('pp.officer.applications.rejected') }}" class="pp-dash-stat">
-        <div class="pp-dash-stat-icon red"><i class="bi bi-x-circle"></i></div>
-        <div class="min-w-0">
-            <div class="pp-dash-stat-label">Rejected</div>
-            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['rejected'] }}">0</div>
-        </div>
-    </a>
-    <div class="pp-dash-stat" style="cursor:default">
-        <div class="pp-dash-stat-icon purple"><i class="bi bi-lightning-charge"></i></div>
-        <div class="min-w-0">
-            <div class="pp-dash-stat-label">Today</div>
-            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['today'] }}">0</div>
+        <div>
+            <h6 class="fw-bold mb-1 text-dark">Eligible Applicants Awaiting Schedule</h6>
+            <p class="text-muted small mb-0">There are <strong>{{ $eligibleCount }}</strong> property purchasers in your district who have completed ₹40,000 payment and are eligible for physical possession.</p>
         </div>
     </div>
+    <a href="{{ route('pp.officer.eligibility-list') }}" class="btn btn-primary rounded-pill px-4 btn-sm fs-8 fw-bold">View Eligibility List</a>
+</div>
+@endif
+
+<div class="pp-dash-stats">
+    <a href="{{ route('pp.officer.eligibility-list') }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon blue"><i class="bi bi-person-check"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">Awaiting Schedule</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['awaiting_schedule'] }}">0</div>
+        </div>
+    </a>
+    <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon purple"><i class="bi bi-calendar-event"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">Visits Scheduled</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['scheduled'] }}">0</div>
+        </div>
+    </a>
+    <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">Pending Verify</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['submitted'] }}">0</div>
+        </div>
+    </a>
+    <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon green"><i class="bi bi-check-circle"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">Verified</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['verified'] }}">0</div>
+        </div>
+    </a>
 </div>
 
 <div class="pp-dash-actions">
-    @if($stats['pending'] > 0)
-        <a href="{{ route('pp.officer.applications', ['status' => 'pending']) }}" class="pp-dash-action warn">
-            <i class="bi bi-exclamation-circle"></i> Review {{ $stats['pending'] }} Pending
+    @if($stats['submitted'] > 0)
+        <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-dash-action warn">
+            <i class="bi bi-exclamation-circle"></i> Review {{ $stats['submitted'] }} Submission{{ $stats['submitted'] !== 1 ? 's' : '' }}
         </a>
     @endif
-    <a href="{{ route('pp.officer.applications') }}" class="pp-dash-action"><i class="bi bi-list-ul"></i> All Applications</a>
-    <a href="{{ route('pp.officer.users') }}" class="pp-dash-action"><i class="bi bi-people"></i> Users</a>
     <a href="{{ route('pp.officer.reports') }}" class="pp-dash-action"><i class="bi bi-bar-chart-line"></i> Reports</a>
 </div>
 
@@ -383,58 +390,26 @@
         <div class="pp-dash-panel">
             <div class="pp-dash-panel-head">Status Breakdown</div>
             <div class="pp-dash-breakdown">
-                @php $maxStat = max($stats['total'], 1); @endphp
+                @php $maxStat = max($stats['scheduled'] + $stats['submitted'] + $stats['verified'], 1); @endphp
                 <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Pending</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill orange" style="width:{{ round(($stats['pending'] / $maxStat) * 100) }}%"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['pending'] }}</span>
+                    <span class="pp-dash-bar-label">Scheduled</span>
+                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill purple" style="width:{{ round(($stats['scheduled'] / $maxStat) * 100) }}%; background: linear-gradient(90deg, #c084fc, #9333ea);"></div></div>
+                    <span class="pp-dash-bar-num">{{ $stats['scheduled'] }}</span>
                 </div>
                 <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Approved</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill green" style="width:{{ round(($stats['approved'] / $maxStat) * 100) }}%"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['approved'] }}</span>
+                    <span class="pp-dash-bar-label">Submitted</span>
+                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill orange" style="width:{{ round(($stats['submitted'] / $maxStat) * 100) }}%"></div></div>
+                    <span class="pp-dash-bar-num">{{ $stats['submitted'] }}</span>
                 </div>
                 <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Rejected</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill red" style="width:{{ round(($stats['rejected'] / $maxStat) * 100) }}%"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['rejected'] }}</span>
-                </div>
-            </div>
-            <div class="pp-dash-rate">
-                <div class="pp-dash-ring"><div class="pp-dash-ring-inner">{{ $approvalRate }}%</div></div>
-                <div class="pp-dash-rate-text">
-                    <strong>Approval Rate</strong>
-                    <small>{{ $stats['approved'] }} of {{ $decided }} decided</small>
+                    <span class="pp-dash-bar-label">Verified</span>
+                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill green" style="width:{{ round(($stats['verified'] / $maxStat) * 100) }}%"></div></div>
+                    <span class="pp-dash-bar-num">{{ $stats['verified'] }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="pp-dash-panel">
-            <div class="pp-dash-panel-head">
-                Recent
-                <a href="{{ route('pp.officer.applications') }}" class="text-decoration-none" style="font-size:0.65rem;color:#1e40af">View all</a>
-            </div>
-            @forelse($recentApplications as $app)
-                <a href="{{ route('pp.officer.application.show', $app) }}" class="pp-dash-list-item">
-                    <div class="pp-dash-list-top">
-                        <span class="pp-dash-list-id">{{ $app->application_number }}</span>
-                        <span class="pp-dash-badge {{ $app->status }}">{{ ucfirst($app->status) }}</span>
-                    </div>
-                    <div class="pp-dash-list-name">{{ $app->applicant_name }}</div>
-                    <div class="pp-dash-list-meta">
-                        @if($app->mobile)
-                            <span><i class="bi bi-phone"></i> {{ $app->mobile }}</span>
-                        @endif
-                        <span><i class="bi bi-clock"></i> {{ $app->created_at->format('d M Y') }}</span>
-                    </div>
-                </a>
-            @empty
-                <div class="pp-dash-empty">
-                    <i class="bi bi-inbox"></i>
-                    No applications yet.
-                </div>
-            @endforelse
-        </div>
+
     </div>
 </div>
 @endsection

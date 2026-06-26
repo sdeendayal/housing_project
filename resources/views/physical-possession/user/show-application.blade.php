@@ -17,11 +17,13 @@
         'returned' => 'edit_document',
         default => 'hourglass_top',
     };
-    $timelineDotClass = fn (string $status) => match($status) {
-        'approved' => 'bg-emerald-500 ring-4 ring-emerald-100',
+    $timelineDotClass = fn (string $status) => match(strtolower($status)) {
+        'approved', 'verified' => 'bg-emerald-500 ring-4 ring-emerald-100',
         'rejected' => 'bg-red-500 ring-4 ring-red-100',
         'returned' => 'bg-blue-500 ring-4 ring-blue-100',
-        default => 'bg-amber-500 ring-4 ring-amber-100',
+        'slot selected' => 'bg-indigo-500 ring-4 ring-indigo-100',
+        'visit scheduled' => 'bg-amber-500 ring-4 ring-amber-100',
+        default => 'bg-slate-500 ring-4 ring-slate-100',
     };
 @endphp
 
@@ -158,7 +160,7 @@
             </div>
             @endif
 
-            @if($application->status === 'approved' && $application->citizen_visit_date)
+            @if($application->citizen_visit_date)
             <div class="rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50/60 p-3 mt-3">
                 <div class="flex items-start gap-2.5">
                     <span class="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">

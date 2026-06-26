@@ -57,6 +57,16 @@ class PhysicalPossessionApplication extends Model
         'visit_slot_3',
         'visit_instructions',
         'created_by',
+        'physical_possession_status',
+        'possession_date',
+        'meeting_slot',
+        'plot_image',
+        'latitude',
+        'longitude',
+        'image_capture_datetime',
+        'possession_certificate',
+        'verified_by',
+        'verified_at',
     ];
 
     protected function casts(): array
@@ -70,6 +80,9 @@ class PhysicalPossessionApplication extends Model
             'flat_cost' => 'decimal:2',
             'received_amount' => 'decimal:2',
             'balance_amount' => 'decimal:2',
+            'possession_date' => 'date',
+            'image_capture_datetime' => 'datetime',
+            'verified_at' => 'datetime',
         ];
     }
 
@@ -96,6 +109,11 @@ class PhysicalPossessionApplication extends Model
     public function approvedByUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function verifiedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'verified_by');
     }
 
     public function propertyRegistration(): BelongsTo

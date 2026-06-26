@@ -44,7 +44,7 @@
     <div class="pp-main">
         <div class="pp-page-head pp-no-print">
             <div class="d-flex align-items-center gap-2 min-w-0">
-                <button class="btn btn-sm btn-outline-primary d-lg-none py-0 px-2" onclick="ppToggleSidebar()">
+                <button class="btn btn-sm btn-outline-primary d-xl-none py-0 px-2" onclick="ppToggleSidebar()">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="min-w-0">

@@ -158,6 +158,16 @@ body.pp-body-auth {
     flex: 1 1 auto;
     min-height: 0;
 }
+.pp-sidebar-nav::-webkit-scrollbar {
+    width: 4px;
+}
+.pp-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 4px;
+}
+.pp-sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.55);
+}
 
 .pp-sidebar-section {
     padding: 0.55rem 0.5rem 0.25rem;
@@ -241,6 +251,14 @@ body.pp-body-auth {
 .pp-sidebar-link-icon.success { color: #059669; background: #ecfdf5; }
 .pp-sidebar-link-icon.danger { color: #dc2626; background: #fef2f2; }
 .pp-sidebar-link-icon.warning { color: #d97706; background: #fffbeb; }
+.pp-sidebar-link-icon.purple { color: #6d28d9; background: #ede9fe; }
+.pp-sidebar-link-icon.orange { color: #ea580c; background: #ffedd5; }
+.pp-sidebar-link-icon.green { color: #059669; background: #d1fae5; }
+
+[data-bs-theme="dark"] .pp-sidebar-link-icon.purple { color: #a78bfa; background: rgba(109, 40, 217, 0.2); }
+[data-bs-theme="dark"] .pp-sidebar-link-icon.orange { color: #fb923c; background: rgba(234, 88, 12, 0.2); }
+[data-bs-theme="dark"] .pp-sidebar-link-icon.green { color: #34d399; background: rgba(5, 150, 105, 0.2); }
+
 
 .pp-sidebar-link-label {
     white-space: nowrap;
@@ -391,7 +409,7 @@ body.pp-body-auth {
 
 .pp-sidebar-overlay.show { display: block; }
 
-@media (max-width: 991px) {
+@media (max-width: 1199px) {
     .pp-sidebar {
         transform: translateX(-100%);
         box-shadow: 8px 0 32px rgba(0, 0, 0, 0.35);

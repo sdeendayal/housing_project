@@ -19,7 +19,7 @@
 
     <nav class="pp-sidebar d-flex flex-column" id="ppSidebar">
         <div class="pp-sidebar-brand">
-            <button type="button" class="pp-sidebar-close d-lg-none" onclick="ppToggleSidebar()" aria-label="Close menu">
+            <button type="button" class="pp-sidebar-close d-xl-none" onclick="ppToggleSidebar()" aria-label="Close menu">
                 <i class="bi bi-x-lg"></i>
             </button>
             <div class="pp-sidebar-logo">
@@ -42,21 +42,24 @@
             </a>
 
             <div class="pp-sidebar-section">Applications</div>
-            <a href="{{ route('pp.officer.applications') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications', 'pp.officer.application.show') ? 'active' : '' }}">
-                <span class="pp-sidebar-link-icon"><i class="bi bi-folder2-open"></i></span>
-                <span class="pp-sidebar-link-label">All Applications</span>
+            <a href="{{ route('pp.officer.eligibility-list') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.eligibility-list') || request()->routeIs('pp.officer.schedule-form') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon text-primary"><i class="bi bi-person-check-fill"></i></span>
+                <span class="pp-sidebar-link-label">Eligibility List</span>
             </a>
-            <a href="{{ route('pp.officer.applications.pending') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications.pending') ? 'active' : '' }}">
-                <span class="pp-sidebar-link-icon warning"><i class="bi bi-hourglass-split"></i></span>
-                <span class="pp-sidebar-link-label">Pending</span>
+
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Visit Scheduled') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon purple"><i class="bi bi-calendar-event"></i></span>
+                <span class="pp-sidebar-link-label">Visits Scheduled</span>
             </a>
-            <a href="{{ route('pp.officer.applications.approved') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications.approved') ? 'active' : '' }}">
-                <span class="pp-sidebar-link-icon success"><i class="bi bi-check-circle"></i></span>
-                <span class="pp-sidebar-link-label">Approved</span>
+
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Physical Possession Submitted') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon orange"><i class="bi bi-hourglass-split"></i></span>
+                <span class="pp-sidebar-link-label">Pending Verify</span>
             </a>
-            <a href="{{ route('pp.officer.applications.rejected') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.applications.rejected') ? 'active' : '' }}">
-                <span class="pp-sidebar-link-icon danger"><i class="bi bi-x-circle"></i></span>
-                <span class="pp-sidebar-link-label">Rejected</span>
+
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Verified') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon green"><i class="bi bi-check-circle"></i></span>
+                <span class="pp-sidebar-link-label">Verified</span>
             </a>
 
             <div class="pp-sidebar-section">Manage</div>
@@ -83,7 +86,7 @@
     <div class="pp-main">
         <div class="pp-page-head pp-no-print">
             <div class="d-flex align-items-center gap-2 min-w-0">
-                <button type="button" class="pp-menu-btn d-lg-none" onclick="ppToggleSidebar()" aria-label="Open menu">
+                <button type="button" class="pp-menu-btn d-xl-none" onclick="ppToggleSidebar()" aria-label="Open menu">
                     <i class="bi bi-list"></i>
                 </button>
                 <div class="min-w-0">

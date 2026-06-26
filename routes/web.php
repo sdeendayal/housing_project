@@ -252,3 +252,5 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
