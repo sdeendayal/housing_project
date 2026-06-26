@@ -331,7 +331,6 @@
             <p class="text-muted small mb-0">There are <strong>{{ $eligibleCount }}</strong> property purchasers in your district who have completed ₹40,000 payment and are eligible for physical possession.</p>
         </div>
     </div>
-    <a href="{{ route('pp.officer.eligibility-list') }}" class="btn btn-primary rounded-pill px-4 btn-sm fs-8 fw-bold">View Eligibility List</a>
 </div>
 @endif
 
@@ -372,98 +371,6 @@
             <i class="bi bi-exclamation-circle"></i> Review {{ $stats['submitted'] }} Submission{{ $stats['submitted'] !== 1 ? 's' : '' }}
         </a>
     @endif
-    <a href="{{ route('pp.officer.reports') }}" class="pp-dash-action"><i class="bi bi-bar-chart-line"></i> Reports</a>
 </div>
 
-<div class="pp-dash-grid">
-    <div class="pp-dash-panel">
-        <div class="pp-dash-panel-head">
-            Last 7 Days
-            <span>{{ $weekTotal }} application{{ $weekTotal !== 1 ? 's' : '' }}</span>
-        </div>
-        <div class="pp-dash-panel-body">
-            <div class="pp-dash-chart"><canvas id="ppChart"></canvas></div>
-        </div>
-    </div>
-
-    <div class="pp-dash-side-stack">
-        <div class="pp-dash-panel">
-            <div class="pp-dash-panel-head">Status Breakdown</div>
-            <div class="pp-dash-breakdown">
-                @php $maxStat = max($stats['scheduled'] + $stats['submitted'] + $stats['verified'], 1); @endphp
-                <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Scheduled</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill purple" style="width:{{ round(($stats['scheduled'] / $maxStat) * 100) }}%; background: linear-gradient(90deg, #c084fc, #9333ea);"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['scheduled'] }}</span>
-                </div>
-                <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Submitted</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill orange" style="width:{{ round(($stats['submitted'] / $maxStat) * 100) }}%"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['submitted'] }}</span>
-                </div>
-                <div class="pp-dash-bar-row">
-                    <span class="pp-dash-bar-label">Verified</span>
-                    <div class="pp-dash-bar-track"><div class="pp-dash-bar-fill green" style="width:{{ round(($stats['verified'] / $maxStat) * 100) }}%"></div></div>
-                    <span class="pp-dash-bar-num">{{ $stats['verified'] }}</span>
-                </div>
-            </div>
-        </div>
-
-
-    </div>
-</div>
 @endsection
-
-@push('scripts')
-<script>
-    const ppChartCtx = document.getElementById('ppChart');
-    if (ppChartCtx) {
-        const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
-        new Chart(ppChartCtx, {
-            type: 'bar',
-            data: {
-                labels: @json($chartLabels),
-                datasets: [{
-                    label: 'Applications',
-                    data: @json($chartData),
-                    backgroundColor: 'rgba(59, 130, 246, 0.75)',
-                    hoverBackgroundColor: 'rgba(37, 99, 235, 0.9)',
-                    borderRadius: 6,
-                    borderSkipped: false,
-                    maxBarThickness: 28,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: isDark ? '#1e293b' : '#fff',
-                        titleColor: isDark ? '#f1f5f9' : '#1e293b',
-                        bodyColor: isDark ? '#cbd5e1' : '#475569',
-                        borderColor: '#e2e8f0',
-                        borderWidth: 1,
-                        padding: 8,
-                        titleFont: { size: 11 },
-                        bodyFont: { size: 11 },
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 }, color: isDark ? '#94a3b8' : '#64748b' },
-                        grid: { color: isDark ? 'rgba(255,255,255,0.06)' : '#f1f5f9' },
-                        border: { display: false }
-                    },
-                    x: {
-                        ticks: { font: { size: 9 }, color: isDark ? '#94a3b8' : '#64748b' },
-                        grid: { display: false },
-                        border: { display: false }
-                    }
-                }
-            }
-        });
-    }
-</script>
-@endpush

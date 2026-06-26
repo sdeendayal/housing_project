@@ -101,6 +101,10 @@
                                         <a href="{{ route('pp.officer.verify-form', $app->secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded-pill shadow-sm">
                                             <i class="bi bi-shield-check me-1"></i>Perform Visit
                                         </a>
+                                    @elseif($app->physical_possession_status === 'Eligible for Physical Possession')
+                                        <a href="{{ route('pp.officer.schedule-form', $app->secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded-pill shadow-sm">
+                                            <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
+                                        </a>
                                     @else
                                         <a href="{{ route('pp.officer.verify-form', $app->secure_id) }}" class="btn btn-outline-secondary btn-action text-nowrap rounded-pill">
                                             <i class="bi bi-eye me-1"></i>View Details

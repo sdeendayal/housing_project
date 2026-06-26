@@ -5,22 +5,42 @@
 @section('content')
 <div class="row g-2">
     <div class="col-lg-8">
+        <!-- Personal Details -->
         <div class="pp-panel mb-2">
             <div class="pp-panel-head">
-                <span>{{ $application->application_number }} <small class="text-muted fw-normal">{{ $application->slip_id }}</small></span>
+                <span><i class="bi bi-person me-1"></i> Personal Details ({{ $application->application_number }})</span>
                 <span class="badge bg-{{ $application->statusBadgeClass() }}">{{ ucfirst($application->status) }}</span>
             </div>
             <div class="pp-panel-body">
                 <div class="pp-detail-grid">
-                    <div><div class="label">Applicant</div>{{ $application->applicant_name }}</div>
-                    <div><div class="label">Father</div>{{ $application->father_name ?? '—' }}</div>
-                    <div><div class="label">Mobile</div>{{ $application->mobile }}</div>
-                    <div><div class="label">District</div>{{ $application->district_name ?? '—' }}</div>
-                    <div><div class="label">Asset ID</div>{{ $application->asset_id ?? '—' }}</div>
-                    <div><div class="label">Property</div>{{ $application->propertyRegistration?->AssetName ?? '—' }}</div>
-                    <div class="col-span-2"><div class="label">Address</div>{{ $application->address ?? '—' }}</div>
-                    <div class="col-span-2"><div class="label">Registration</div>{{ $application->registration_details ?? '—' }}</div>
-                    <div><div class="label">Submitted</div>{{ $application->created_at->format('d M Y') }}</div>
+                    <div><div class="label">Full Name</div>{{ $purchaser?->PrivatePurchaserName ?? $application->applicant_name }}</div>
+                    <div><div class="label">Father's Name</div>{{ $purchaser?->PurchaserFatherName ?? $application->father_name ?? '—' }}</div>
+                    <div><div class="label">Mobile Number</div>{{ $purchaser?->MobileNo ?? $application->mobile }}</div>
+                    <div><div class="label">PPP ID</div>{{ $purchaser?->PPPId ?? '—' }}</div>
+                    <div><div class="label">Member ID</div>{{ $purchaser?->MemberID ?? '—' }}</div>
+                    <div><div class="label">Allotment ID / App No.</div>{{ $purchaser?->purchaser_app_no ?? '—' }}</div>
+                    <div><div class="label">Caste Category</div>{{ $purchaser?->purchaser_category ?? '—' }}</div>
+                    <div><div class="label">Marital Status</div>{{ $purchaser?->purchaser_marital_status ?? '—' }}</div>
+                    <div><div class="label">Registration Date</div>{{ $purchaser?->purchaser_reg_date ? \Carbon\Carbon::parse($purchaser->purchaser_reg_date)->format('d M Y') : '—' }}</div>
+                    <div class="col-span-2"><div class="label">Correspondence Address</div>{{ $purchaser?->Address ?? $application->address ?? '—' }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Property Details -->
+        <div class="pp-panel mb-2">
+            <div class="pp-panel-head">
+                <span><i class="bi bi-building me-1"></i> Property & Allotment Details</span>
+            </div>
+            <div class="pp-panel-body">
+                <div class="pp-detail-grid">
+                    <div><div class="label">Asset Name / ID</div>{{ $purchaser?->AssetName ?? '—' }}</div>
+                    <div><div class="label">Asset Size</div>{{ $purchaser?->AssetSize ?? '—' }} {{ $purchaser?->Unit ?? '' }}</div>
+                    <div><div class="label">Sector / Area</div>{{ $purchaser?->SectorName ?? '—' }}</div>
+                    <div><div class="label">District</div>{{ $purchaser?->DistrictName ?? $application->district_name ?? '—' }}</div>
+                    <div><div class="label">Property Cost</div>₹ {{ number_format($purchaser?->FlatCost ?? $application->flat_cost ?? 0, 2) }}</div>
+                    <div><div class="label">Total Amount Received</div><strong class="text-success">₹ {{ number_format($totalReceived ?? $application->received_amount ?? 0, 2) }}</strong></div>
+                    <div><div class="label">Balance Outstanding</div><strong class="text-danger">₹ {{ number_format($balanceAmount ?? $application->balance_amount ?? 0, 2) }}</strong></div>
                 </div>
             </div>
         </div>

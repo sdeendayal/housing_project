@@ -88,15 +88,16 @@
                                     @if($p->physical_possession_status)
                                         @php
                                             $badgeClass = match ($p->physical_possession_status) {
-                                                'Eligible for Physical Possession' => 'bg-info text-info',
-                                                'Visit Scheduled' => 'bg-warning text-warning-emphasis',
-                                                'Physical Possession Submitted' => 'bg-primary text-white',
-                                                'Verified' => 'bg-success text-white',
-                                                'Rejected' => 'bg-danger text-white',
-                                                default => 'bg-secondary text-white'
+                                                'Eligible for Physical Possession' => 'bg-info bg-opacity-10 text-info border border-info border-opacity-20',
+                                                'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
+                                                'Slot Selected' => 'bg-primary text-white border border-primary',
+                                                'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                                'Verified' => 'bg-success text-white border border-success shadow-sm',
+                                                'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
+                                                default => 'bg-secondary text-white border border-secondary'
                                             };
                                         @endphp
-                                        <span class="badge {{ str_contains($badgeClass, 'text-') ? $badgeClass . ' bg-opacity-10 border border-opacity-20 border-' . explode(' ', $badgeClass)[1] : $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
+                                        <span class="badge {{ $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
                                             {{ $p->physical_possession_status }}
                                         </span>
                                     @else
@@ -153,24 +154,24 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
     }
     .pp-eligibility-table th {
-        font-size: 0.72rem !important;
+        font-size: 0.68rem !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        padding: 10px 12px !important;
+        letter-spacing: 0.3px !important;
+        padding: 8px 8px !important;
         border-bottom: 2px solid #e2e8f0 !important;
     }
     .pp-eligibility-table td {
-        font-size: 0.78rem !important;
-        padding: 10px 12px !important;
+        font-size: 0.72rem !important;
+        padding: 8px 8px !important;
         vertical-align: middle !important;
     }
     .pp-eligibility-table tr:hover {
         background-color: rgba(30, 64, 175, 0.02) !important;
     }
     .btn-schedule {
-        font-size: 0.7rem !important;
-        padding: 5px 12px !important;
+        font-size: 0.68rem !important;
+        padding: 4px 10px !important;
         font-weight: 600 !important;
         letter-spacing: 0.2px;
         transition: all 0.2s ease;

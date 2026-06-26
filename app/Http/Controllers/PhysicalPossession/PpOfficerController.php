@@ -38,7 +38,10 @@ class PpOfficerController extends Controller
             })
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0)
-            ->whereNull('ppa.id');
+            ->where(function ($q) {
+                $q->whereNull('ppa.id')
+                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+            });
 
         if ($officer->district_id) {
             $eligibleQuery->where('ppp.DistrictId', $officer->district_id);
@@ -190,7 +193,63 @@ class PpOfficerController extends Controller
         $application = $this->findOfficerApplication($officer, $application);
         $application->load(['documents', 'statusLogs', 'user', 'propertyRegistration', 'officerActions.officer']);
 
-        return view('physical-possession.officer.applications.show', compact('application', 'officer'));
+        $purchaser = DB::table('property_private_purchasers as ppp')
+            ->join('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->leftJoin('cities as c', 'pr.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'pr.SectorId', '=', 's.SectorId')
+            ->where('ppp.PrivatePurchaserId', $application->private_purchaser_id)
+            ->where('pad.AssetId', $application->asset_id)
+            ->select([
+                'ppp.PrivatePurchaserName',
+                'ppp.PurchaserFatherName',
+                'ppp.MobileNo',
+                'ppp.Address',
+                'ppp.PPPId',
+                'ppp.MemberID',
+                'ppp.ApplicationNo as purchaser_app_no',
+                'ppp.CasteCategoryName as purchaser_category',
+                'ppp.MaritalStatus as purchaser_marital_status',
+                'ppp.CreateDate as purchaser_reg_date',
+                'pr.AssetId',
+                'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit',
+                'c.CityName',
+                's.SectorName',
+                'd.DistrictName',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pad.BalanceAmount',
+            ])
+            ->first();
+
+        $initialDeposit = 0.0;
+        $installmentPaid = 0.0;
+        if ($purchaser) {
+            $initialDeposit = (float) ($purchaser->ReceivedAmount ?? 0);
+            $assetId = $purchaser->AssetId;
+            if ($assetId) {
+                $ledgerPaid = (float) DB::table('ledger')
+                    ->where('AssetId', $assetId)
+                    ->where('Is_Deleted', 0)
+                    ->where('Is_Active', 1)
+                    ->sum('Payment');
+
+                $cashReceiptPaid = (float) DB::table('cash_receipt_details')
+                    ->where('asset_number', $assetId)
+                    ->where('IsDeleted', 0)
+                    ->where('IsActive', 1)
+                    ->sum('total_paid_amount');
+
+                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+            }
+        }
+        $totalReceived = $initialDeposit + $installmentPaid;
+        $balanceAmount = $purchaser ? (float) ($purchaser->FlatCost ?? 0) - $totalReceived : 0.0;
+
+        return view('physical-possession.officer.applications.show', compact('application', 'officer', 'purchaser', 'totalReceived', 'balanceAmount'));
     }
 
     // Document download

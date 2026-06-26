@@ -47,6 +47,11 @@
                 <span class="pp-sidebar-link-label">Eligibility List</span>
             </a>
 
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Eligible for Physical Possession']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Eligible for Physical Possession') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon danger"><i class="bi bi-calendar-x"></i></span>
+                <span class="pp-sidebar-link-label">Pending Schedule</span>
+            </a>
+
             <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Visit Scheduled') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon purple"><i class="bi bi-calendar-event"></i></span>
                 <span class="pp-sidebar-link-label">Visits Scheduled</span>

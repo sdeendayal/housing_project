@@ -224,42 +224,202 @@
         </div>
     </div>
 
+    @if($application->possession_certificate || $application->plot_image || $application->latitude || $application->verified_at)
     <div class="citizen-card">
-        <div class="px-3 py-2 border-b border-slate-100 bg-slate-50">
-            <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Applicant Details</h2>
+        <div class="px-3 py-2.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+            <h2 class="text-[11px] font-extrabold text-slate-800 m-0 flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px] text-indigo-600">task_alt</span>
+                On-Site Verification Details (District Officer Actions)
+            </h2>
+            @if($application->verified_at)
+            <span class="text-[9px] font-semibold text-slate-400">Verified on {{ \Carbon\Carbon::parse($application->verified_at)->format('d M Y, h:i A') }}</span>
+            @endif
         </div>
         <div class="p-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-                    <p class="pp-detail-label">Applicant</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->applicant_name }}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                <!-- Location Details -->
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-indigo-500">pin_drop</span>
+                        Captured GPS Location
+                    </p>
+                    <div class="text-[11px] font-semibold text-slate-700">
+                        @if($application->latitude && $application->longitude)
+                        <div class="flex flex-wrap gap-x-3 gap-y-1">
+                            <div><span class="text-slate-400">Latitude:</span> <strong class="font-mono text-slate-800">{{ $application->latitude }}</strong></div>
+                            <div><span class="text-slate-400">Longitude:</span> <strong class="font-mono text-slate-800">{{ $application->longitude }}</strong></div>
+                        </div>
+                        <a href="https://maps.google.com/?q={{ $application->latitude }},{{ $application->longitude }}" target="_blank" class="inline-flex items-center gap-1 mt-1.5 text-[9px] font-bold text-indigo-600 no-underline hover:text-indigo-800">
+                            <span class="material-symbols-outlined text-[12px]">open_in_new</span> View on Google Maps
+                        </a>
+                        @else
+                        <span class="text-slate-400">—</span>
+                        @endif
+                    </div>
                 </div>
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-                    <p class="pp-detail-label">Father</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->father_name ?? '—' }}</p>
+
+                <!-- Verification Info -->
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-indigo-500">shield_person</span>
+                        Verified By
+                    </p>
+                    <div class="text-[11px] font-semibold text-slate-700">
+                        @if($application->verified_by)
+                            @php
+                                $verifier = \App\Models\User::find($application->verified_by);
+                            @endphp
+                            <strong>{{ $verifier?->name ?? 'District Officer' }}</strong>
+                            <div class="text-[9px] text-slate-400 mt-0.5">District: {{ $application->district_name }}</div>
+                        @else
+                            <strong>District Officer</strong>
+                            <div class="text-[9px] text-slate-400 mt-0.5">District: {{ $application->district_name }}</div>
+                        @endif
+                    </div>
                 </div>
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-                    <p class="pp-detail-label">Mobile</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->mobile }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
-                    <p class="pp-detail-label">District</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->district_name ?? '—' }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:col-span-2">
-                    <p class="pp-detail-label">Address</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->address ?? '—' }}</p>
-                </div>
-                <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5 sm:col-span-2">
-                    <p class="pp-detail-label">Registration</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->registration_details ?? '—' }}</p>
-                </div>
+
                 @if($application->remarks)
-                <div class="rounded-lg border border-amber-100 bg-amber-50 p-2.5 sm:col-span-2">
-                    <p class="pp-detail-label">Officer Remarks</p>
-                    <p class="text-[12px] font-bold text-slate-800">{{ $application->remarks }}</p>
+                <div class="rounded-lg border border-slate-100 bg-slate-50/80 p-2.5 md:col-span-2">
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px] text-indigo-500">comment</span>
+                        Verification Remarks / Comments
+                    </p>
+                    <p class="text-[11px] font-medium text-slate-700 m-0 leading-relaxed">{{ $application->remarks }}</p>
                 </div>
                 @endif
+            </div>
+
+            <!-- Uploaded outcomes -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Plot Photo -->
+                @if($application->plot_image)
+                <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    <div class="p-2.5 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-indigo-500">photo_camera</span>
+                        <span class="text-[10px] font-bold text-slate-800">On-Site Plot Photo</span>
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col items-center justify-center bg-slate-100/50">
+                        <div class="w-full max-w-[200px] aspect-video rounded-lg overflow-hidden border shadow-sm bg-white mb-2.5">
+                            <img src="{{ asset('storage/' . $application->plot_image) }}" alt="On-Site Plot Photo" class="w-full h-full object-cover">
+                        </div>
+                        <a href="{{ asset('storage/' . $application->plot_image) }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
+                            <span class="material-symbols-outlined text-[14px]">open_in_new</span> Open Image
+                        </a>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Signed Possession Application -->
+                @if($application->possession_certificate)
+                <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    <div class="p-2.5 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-indigo-500">description</span>
+                        <span class="text-[10px] font-bold text-slate-800">Signed Application Form</span>
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col items-center justify-center bg-slate-100/50">
+                        <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-700 m-0 mb-3 text-center">Physical Possession Application (Citizen Signed)</p>
+                        <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-[10px] font-bold text-red-700 no-underline hover:bg-red-100">
+                            <span class="material-symbols-outlined text-[14px]">download</span> Download PDF
+                        </a>
+                    </div>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Personal Details -->
+    <div class="citizen-card">
+        <div class="px-3 py-2.5 border-b border-slate-100 bg-slate-50 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-indigo-600">person</span>
+            <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Personal Details</h2>
+        </div>
+        <div class="p-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Full Name</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->PrivatePurchaserName ?? $application->applicant_name }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Father's Name</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->PurchaserFatherName ?? $application->father_name ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Mobile Number</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->MobileNo ?? $application->mobile }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">PPP ID</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->PPPId ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Member ID</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->MemberID ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Allotment ID / Application No.</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->purchaser_app_no ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Caste Category</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->purchaser_category ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Marital Status</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->purchaser_marital_status ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Registration Date</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->purchaser_reg_date ? \Carbon\Carbon::parse($purchaser->purchaser_reg_date)->format('d M Y') : '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 sm:col-span-2 md:col-span-3">
+                    <p class="pp-detail-label">Correspondence Address</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->Address ?? $application->address ?? '—' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Property Details -->
+    <div class="citizen-card">
+        <div class="px-3 py-2.5 border-b border-slate-100 bg-slate-50 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px] text-indigo-600">apartment</span>
+            <h2 class="text-[11px] font-extrabold text-slate-800 m-0">Property & Allotment Details</h2>
+        </div>
+        <div class="p-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Asset Name / ID</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->AssetName ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Asset Size</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->AssetSize ?? '—' }} {{ $purchaser?->Unit ?? '' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Sector / Area</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->SectorName ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">District</p>
+                    <p class="text-[12px] font-bold text-slate-800">{{ $purchaser?->DistrictName ?? $application->district_name ?? '—' }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Property Cost</p>
+                    <p class="text-[12px] font-bold text-slate-800">₹ {{ number_format($purchaser?->FlatCost ?? $application->flat_cost ?? 0, 2) }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Total Amount Received</p>
+                    <p class="text-[12px] font-bold text-success">₹ {{ number_format($totalReceived ?? $application->received_amount ?? 0, 2) }}</p>
+                </div>
+                <div class="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5">
+                    <p class="pp-detail-label">Balance Outstanding</p>
+                    <p class="text-[12px] font-bold text-danger">₹ {{ number_format($balanceAmount ?? $application->balance_amount ?? 0, 2) }}</p>
+                </div>
             </div>
         </div>
     </div>
