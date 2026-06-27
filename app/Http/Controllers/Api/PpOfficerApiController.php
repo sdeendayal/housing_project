@@ -30,8 +30,7 @@ class PpOfficerApiController extends Controller
         // 3. Officer ke district ki applications ka query builder nikaalein
         $query = $this->districtApplicationsQuery($officer);
 
-        // 4. Eligible candidates count karein (jinhone >= 40,000 pay kiya hai aur schedule hona baki hai)
-        $eligibleQuery = DB::table('property_auction_detail as pad')
+        $tempEligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('physical_possession_applications as ppa', function ($join) {
@@ -46,12 +45,12 @@ class PpOfficerApiController extends Controller
             });
 
         if ($officer->district_id) {
-            $eligibleQuery->where('ppp.DistrictId', $officer->district_id);
+            $tempEligibleQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
-            $eligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+            $tempEligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
-        $eligibleCount = DB::table(DB::raw("({$eligibleQuery->select([
+        $tempEligibleQuery->select([
             'pad.PropertyAuctionId',
             'pad.AssetId'
         ])->selectRaw('
@@ -60,8 +59,11 @@ class PpOfficerApiController extends Controller
                 (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
-        ')->having('total_paid', '>=', 40000)->toSql()}) as sub"))
-            ->mergeBindings($eligibleQuery)
+        ');
+
+        $eligibleCount = DB::table(DB::raw("({$tempEligibleQuery->toSql()}) as temp"))
+            ->mergeBindings($tempEligibleQuery)
+            ->where('temp.total_paid', '>=', 40000)
             ->count();
 
         // 5. Har ek status (Scheduled, Verified, Rejected) ke counts nikaalein
