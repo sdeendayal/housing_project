@@ -23,7 +23,17 @@ class PropertyRegistrationSeeder extends Seeder
             throw new \Exception('CSV file not found: '.$csvFile);
         }
 
-        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $validDistrictIds = [];
+        $validCityIds = [];
+        $validSectorIds = [];
+        if ($isSqlite) {
+            $validDistrictIds = DB::table('districts')->pluck('DistrictId')->all();
+            $validCityIds = DB::table('cities')->pluck('CityId')->all();
+            $validSectorIds = DB::table('sectors')->pluck('SectorId')->all();
+        }
+
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile, $isSqlite, $validDistrictIds, $validCityIds, $validSectorIds) {
             $file = fopen($csvFile, 'r');
             stream_filter_append($file, 'convert.iconv.ISO-8859-1/UTF-8');
             fgetcsv($file);
@@ -36,15 +46,25 @@ class PropertyRegistrationSeeder extends Seeder
                     continue;
                 }
 
+                $districtId = (int) ($row[5] ?? 0);
+                $cityId = (int) ($row[6] ?? 0);
+                $sectorId = (int) ($row[7] ?? 0);
+
+                if ($isSqlite) {
+                    if (!in_array($districtId, $validDistrictIds) || !in_array($cityId, $validCityIds) || !in_array($sectorId, $validSectorIds)) {
+                        continue;
+                    }
+                }
+
                 $buffer[] = [
                     'AssetId' => (int) ($row[0] ?? 0),
                     'AssetName' => $this->cleanText($row[1] ?? ''),
                     'AssetSize' => (int) ($row[2] ?? 0),
                     'Unit' => $this->cleanText($row[3] ?? null),
                     'BranchId' => (int) ($row[4] ?? 0),
-                    'DistrictId' => (int) ($row[5] ?? 0),
-                    'CityId' => (int) ($row[6] ?? 0),
-                    'SectorId' => (int) ($row[7] ?? 0),
+                    'DistrictId' => $districtId,
+                    'CityId' => $cityId,
+                    'SectorId' => $sectorId,
                     'IsActive' => (int) ($row[8] ?? 1),
                     'IsDeleted' => (int) ($row[9] ?? 0),
                     'CreatedDate' => ! empty($row[10])

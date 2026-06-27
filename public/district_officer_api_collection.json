@@ -1,0 +1,668 @@
+{
+	"info": {
+		"_postman_id": "b3f68a2d-ec35-46d5-a332-6cf7d8e6db3b",
+		"name": "District Officer Physical Possession API Collection",
+		"description": "This is the complete Postman collection for HFA Housing Project's District Officer Physical Possession module REST APIs. Import this directly into Postman to test stateless endpoints.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "1. Refresh Captcha",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/refresh-captcha",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"refresh-captcha"
+							]
+						},
+						"description": "Generates a stateless captcha code and key to be used on mobile applications."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Send OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9999900005\",\n  \"captcha\": \"3766\",\n  \"captcha_key\": \"d8c89dbf-1934-436c-9c98-1e428cf1204d\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/possession/department/login/send-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"department",
+								"login",
+								"send-otp"
+							]
+						},
+						"description": "Validates the captcha and dispatches the OTP to the registered mobile number."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Verify OTP (Login)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9999900005\",\n  \"otp\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/possession/department/login/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"department",
+								"login",
+								"verify"
+							]
+						},
+						"description": "Verifies the OTP code and issues a Bearer Sanctum Token to access secured endpoints."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Resend OTP",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"mobile\": \"9999900005\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/possession/department/login/resend-otp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"department",
+								"login",
+								"resend-otp"
+							]
+						},
+						"description": "Resends the OTP if the cooldown timer has expired."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard & Stats",
+			"item": [
+				{
+					"name": "Dashboard Metrics",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"dashboard"
+							]
+						},
+						"description": "Returns counts for scheduled/pending/submitted/verified status, 7 days activity chart and recent items."
+					},
+					"response": []
+				},
+				{
+					"name": "District Users",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"users"
+							]
+						},
+						"description": "Returns list of citizen users in this district."
+					},
+					"response": []
+				},
+				{
+					"name": "Monthly Reports",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/reports",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"reports"
+							]
+						},
+						"description": "Returns statistics grouped by month (total, approved, rejected) for charts."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Scheduling",
+			"item": [
+				{
+					"name": "1. Eligible Candidates",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/eligibility-list?search=&page=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"eligibility-list"
+							],
+							"query": [
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Returns a paginated list of all properties eligible for scheduling."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Capacity Check by Date",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/schedule/capacity/check?date=2026-06-30",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"schedule",
+								"capacity",
+								"check"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-06-30"
+								}
+							]
+						},
+						"description": "Checks hourly visit slots count (9:00 AM to 4:00 PM) for the selected date."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Get Scheduling Form Info",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/schedule/{{secure_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"schedule",
+								"{{secure_id}}"
+							]
+						},
+						"description": "Fetches pre-requisite financial and property details for scheduling."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Save Slots (Initiate)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"slot_date_1\": \"2026-06-30\",\n  \"slot_time_1\": \"10:00:00\",\n  \"slot_date_2\": \"2026-07-01\",\n  \"slot_time_2\": \"11:00:00\",\n  \"slot_date_3\": \"2026-07-02\",\n  \"slot_time_3\": \"14:00:00\",\n  \"visit_instructions\": \"Please bring your identity card and payment receipts.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/possession/officer/schedule/{{secure_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"schedule",
+								"{{secure_id}}"
+							]
+						},
+						"description": "Saves three prospective slot options and triggers status to Visit Scheduled."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Verification & Certificate",
+			"item": [
+				{
+					"name": "1. Active Applications List",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/possession-applications?status=Slot Selected&search=&page=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"possession-applications"
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "Slot Selected"
+								},
+								{
+									"key": "search",
+									"value": ""
+								},
+								{
+									"key": "page",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Fetches candidates where visit slot has been confirmed by the citizen."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Get Verification Details",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/verify/{{secure_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"verify",
+								"{{secure_id}}"
+							]
+						},
+						"description": "Fetches candidate's full profile details before completing site check."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Submit Site Verification (Final)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "status",
+									"value": "Verified",
+									"type": "text"
+								},
+								{
+									"key": "remarks",
+									"value": "Plot physical boundaries checked on site. Validated successfully.",
+									"type": "text"
+								},
+								{
+									"key": "latitude",
+									"value": "29.897453",
+									"type": "text"
+								},
+								{
+									"key": "longitude",
+									"value": "76.786523",
+									"type": "text"
+								},
+								{
+									"key": "plot_image",
+									"description": "Plot site capture photo (jpeg/png)",
+									"type": "file",
+									"src": ""
+								},
+								{
+									"key": "possession_certificate",
+									"description": "Signed document request scan (pdf)",
+									"type": "file",
+									"src": ""
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/possession/officer/verify/{{secure_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"verify",
+								"{{secure_id}}"
+							]
+						},
+						"description": "Submits final coordinates, upload photos, files and marks application status as Verified or Rejected."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Download Certificate Request PDF (Base64)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/possession/officer/download-certificate/{{secure_id}}?base64=1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"possession",
+								"officer",
+								"download-certificate",
+								"{{secure_id}}"
+							],
+							"query": [
+								{
+									"key": "base64",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Generates PDF. Set base64=1 to get a base64 encoded string to preview directly inside the mobile app."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

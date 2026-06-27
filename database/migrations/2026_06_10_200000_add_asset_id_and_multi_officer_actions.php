@@ -142,14 +142,13 @@ return new class extends Migration
 
     private function dropUniqueIfExists(string $table, string $indexName): void
     {
-        $exists = DB::selectOne("
-            SELECT 1
-            FROM information_schema.statistics
-            WHERE table_schema = DATABASE()
-              AND table_name = ?
-              AND index_name = ?
-            LIMIT 1
-        ", [$table, $indexName]);
+        $exists = false;
+        foreach (Schema::getIndexes($table) as $index) {
+            if (($index['name'] ?? '') === $indexName) {
+                $exists = true;
+                break;
+            }
+        }
 
         if ($exists) {
             Schema::table($table, function (Blueprint $blueprint) use ($indexName) {
@@ -160,14 +159,12 @@ return new class extends Migration
 
     private function foreignKeyExists(string $table, string $constraintName): bool
     {
-        return (bool) DB::selectOne("
-            SELECT 1
-            FROM information_schema.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = ?
-              AND CONSTRAINT_NAME = ?
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-            LIMIT 1
-        ", [$table, $constraintName]);
+        foreach (Schema::getForeignKeys($table) as $foreignKey) {
+            if (($foreignKey['name'] ?? '') === $constraintName) {
+                return true;
+            }
+        }
+
+        return false;
     }
 };

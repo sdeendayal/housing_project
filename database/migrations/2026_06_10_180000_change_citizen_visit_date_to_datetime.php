@@ -12,8 +12,10 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATETIME NULL');
-        DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATETIME NULL');
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATETIME NULL');
+            DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATETIME NULL');
+        }
     }
 
     public function down(): void
@@ -22,7 +24,9 @@ return new class extends Migration
             return;
         }
 
-        DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATE NULL');
-        DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATE NULL');
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATE NULL');
+            DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATE NULL');
+        }
     }
 };

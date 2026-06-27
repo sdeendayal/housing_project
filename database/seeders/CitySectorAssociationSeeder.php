@@ -21,7 +21,15 @@ class CitySectorAssociationSeeder extends Seeder
             throw new \Exception('CSV file not found: '.$csvFile);
         }
 
-        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $validCityIds = [];
+        $validSectorIds = [];
+        if ($isSqlite) {
+            $validCityIds = DB::table('cities')->pluck('CityId')->all();
+            $validSectorIds = DB::table('sectors')->pluck('SectorId')->all();
+        }
+
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile, $isSqlite, $validCityIds, $validSectorIds) {
             $file = fopen($csvFile, 'r');
             fgetcsv($file);
 
@@ -33,11 +41,20 @@ class CitySectorAssociationSeeder extends Seeder
                     continue;
                 }
 
+                $cityId = isset($row[2]) ? (int) $row[2] : null;
+                $sectorId = isset($row[3]) ? (int) $row[3] : null;
+
+                if ($isSqlite) {
+                    if (!in_array($cityId, $validCityIds) || !in_array($sectorId, $validSectorIds)) {
+                        continue;
+                    }
+                }
+
                 $buffer[] = [
                     'AssociationId' => isset($row[0]) && $row[0] !== '' ? (int) $row[0] : null,
                     'BranchId' => isset($row[1]) ? (int) $row[1] : null,
-                    'CityId' => isset($row[2]) ? (int) $row[2] : null,
-                    'SectorId' => isset($row[3]) ? (int) $row[3] : null,
+                    'CityId' => $cityId,
+                    'SectorId' => $sectorId,
                     'Is_Active' => isset($row[4]) ? (int) $row[4] : 1,
                     'Is_Deleted' => isset($row[5]) ? (int) $row[5] : 0,
                     'CreatedDate' => ! empty($row[6])

@@ -20,7 +20,13 @@ class LedgerSeeder extends Seeder
 
         $csvFile = $this->csvPath('Ledger.csv');
 
-        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $validAssetIds = [];
+        if ($isSqlite) {
+            $validAssetIds = DB::table('property_registration')->pluck('AssetId')->all();
+        }
+
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile, $isSqlite, $validAssetIds) {
         DB::table('ledger')->truncate();
 
         $file = fopen($csvFile, 'r');
@@ -32,6 +38,11 @@ class LedgerSeeder extends Seeder
 
         while (($row = fgetcsv($file, 0, ',')) !== false) {
             if (empty(array_filter($row))) {
+                continue;
+            }
+
+            $assetId = (int) ($row[32] ?? 0);
+            if ($isSqlite && !in_array($assetId, $validAssetIds)) {
                 continue;
             }
 
@@ -68,7 +79,7 @@ class LedgerSeeder extends Seeder
                 'CreateDate' => $this->parseDateTime($row[29] ?? null),
                 'AuthorizedBy' => $this->nullableInt($row[30] ?? null),
                 'AuthorizedDate' => $this->parseDateTime($row[31] ?? null),
-                'AssetId' => (int) ($row[32] ?? 0),
+                'AssetId' => $assetId,
                 'PaneltyOnAmount' => $this->nullableFloat($row[33] ?? null),
                 'InstallmentPhase' => $this->nullableFloat($row[34] ?? null),
                 'PrincipalBalance' => $this->nullableFloat($row[35] ?? null),

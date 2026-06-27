@@ -13,6 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Route::middleware('web')
                 ->group(base_path('routes/physical-possession.php'));
+            Route::middleware('api')
+                ->prefix('api')
+                ->group(base_path('routes/api-possession.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -25,5 +28,12 @@ return Application::configure(basePath: dirname(__DIR__))
 
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The requested application secure ID was not found or does not exist.'
+                ], 404);
+            }
+        });
     })->create();

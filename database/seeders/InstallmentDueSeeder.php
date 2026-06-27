@@ -20,7 +20,15 @@ class InstallmentDueSeeder extends Seeder
 
         $csvFile = $this->csvPath('Installment_Due.csv');
 
-        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
+        $isSqlite = DB::connection()->getDriverName() === 'sqlite';
+        $validAuctionIds = [];
+        $validAssetIds = [];
+        if ($isSqlite) {
+            $validAuctionIds = DB::table('property_auction_detail')->pluck('PropertyAuctionId')->all();
+            $validAssetIds = DB::table('property_registration')->pluck('AssetId')->all();
+        }
+
+        $imported = $this->withoutForeignKeyChecks(function () use ($csvFile, $isSqlite, $validAuctionIds, $validAssetIds) {
         DB::table('installment_due')->truncate();
 
         $file = fopen($csvFile, 'r');
@@ -35,10 +43,19 @@ class InstallmentDueSeeder extends Seeder
                 continue;
             }
 
+            $auctionId = (int) ($row[1] ?? 0);
+            $assetId = (int) ($row[2] ?? 0);
+
+            if ($isSqlite) {
+                if (!in_array($auctionId, $validAuctionIds) || !in_array($assetId, $validAssetIds)) {
+                    continue;
+                }
+            }
+
             $buffer[] = [
                 'DueInstallmentId' => (int) ($row[0] ?? 0),
-                'PropertyAuctionId' => (int) ($row[1] ?? 0),
-                'AssetId' => (int) ($row[2] ?? 0),
+                'PropertyAuctionId' => $auctionId,
+                'AssetId' => $assetId,
                 'OfferOfPossessionDate' => $this->parseDate($row[3] ?? null),
                 'InstallmentNumber' => (int) ($row[4] ?? 0),
                 'DueDate' => $this->parseDate($row[5] ?? null),

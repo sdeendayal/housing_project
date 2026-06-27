@@ -24,10 +24,16 @@ class RoleMiddleware
 
         // Legacy department email/password routes
         if (! Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
             return redirect()->route('login');
         }
 
         if (Auth::user()->role !== $role && ! Auth::user()->hasRole($role)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
+            }
             Auth::logout();
 
             return redirect()->route('login')->with('error', 'Unauthorized access');
@@ -39,12 +45,18 @@ class RoleMiddleware
     private function guardRoleGroup(Request $request, Closure $next, string $groupSlug, string $loginUrl)
     {
         if (! Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
             return redirect()->guest($loginUrl);
         }
 
         $user = Auth::user();
 
         if (! $user->belongsToRoleGroup($groupSlug)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
+            }
             Auth::logout();
 
             return redirect($loginUrl)->with('error', 'Unauthorized access.');
@@ -56,12 +68,18 @@ class RoleMiddleware
     private function guardRoleSlug(Request $request, Closure $next, string $roleSlug, string $loginUrl)
     {
         if (! Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
             return redirect()->guest($loginUrl);
         }
 
         $user = Auth::user();
 
         if (! $user->hasRole($roleSlug)) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
+            }
             Auth::logout();
 
             return redirect($loginUrl)->with('error', 'Unauthorized access.');

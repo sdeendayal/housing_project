@@ -18,7 +18,9 @@ return new class extends Migration
                 $table->string('member_id', 50)->nullable()->after('ppp_id');
             });
         } else {
-            DB::statement('ALTER TABLE physical_possession_applications MODIFY private_purchaser_id INT NULL');
+            if (DB::connection()->getDriverName() === 'mysql') {
+                DB::statement('ALTER TABLE physical_possession_applications MODIFY private_purchaser_id INT NULL');
+            }
         }
 
         PhysicalPossessionApplication::query()
@@ -30,22 +32,24 @@ return new class extends Migration
                 ]);
             });
 
-        $foreignKeys = collect(DB::select("
-            SELECT CONSTRAINT_NAME
-            FROM information_schema.TABLE_CONSTRAINTS
-            WHERE TABLE_SCHEMA = DATABASE()
-              AND TABLE_NAME = 'physical_possession_applications'
-              AND CONSTRAINT_TYPE = 'FOREIGN KEY'
-              AND CONSTRAINT_NAME = 'physical_possession_applications_private_purchaser_id_foreign'
-        "));
+        if (DB::connection()->getDriverName() === 'mysql') {
+            $foreignKeys = collect(DB::select("
+                SELECT CONSTRAINT_NAME
+                FROM information_schema.TABLE_CONSTRAINTS
+                WHERE TABLE_SCHEMA = DATABASE()
+                  AND TABLE_NAME = 'physical_possession_applications'
+                  AND CONSTRAINT_TYPE = 'FOREIGN KEY'
+                  AND CONSTRAINT_NAME = 'physical_possession_applications_private_purchaser_id_foreign'
+            "));
 
-        if ($foreignKeys->isEmpty()) {
-            Schema::table('physical_possession_applications', function (Blueprint $table) {
-                $table->foreign('private_purchaser_id')
-                    ->references('PrivatePurchaserId')
-                    ->on('property_private_purchasers')
-                    ->nullOnDelete();
-            });
+            if ($foreignKeys->isEmpty()) {
+                Schema::table('physical_possession_applications', function (Blueprint $table) {
+                    $table->foreign('private_purchaser_id')
+                        ->references('PrivatePurchaserId')
+                        ->on('property_private_purchasers')
+                        ->nullOnDelete();
+                });
+            }
         }
     }
 

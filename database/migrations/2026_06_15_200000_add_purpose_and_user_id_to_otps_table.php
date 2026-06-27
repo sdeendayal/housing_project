@@ -29,17 +29,15 @@ return new class extends Migration
         });
     }
 
-    private function indexExists(string $table, string $index): bool
+    private function indexExists(string $table, string $indexName): bool
     {
-        $connection = Schema::getConnection();
-        $database = $connection->getDatabaseName();
+        foreach (Schema::getIndexes($table) as $index) {
+            if (($index['name'] ?? '') === $indexName) {
+                return true;
+            }
+        }
 
-        $result = $connection->select(
-            'SELECT COUNT(*) AS aggregate FROM information_schema.statistics WHERE table_schema = ? AND table_name = ? AND index_name = ?',
-            [$database, $table, $index]
-        );
-
-        return (int) ($result[0]->aggregate ?? 0) > 0;
+        return false;
     }
 
     public function down(): void
