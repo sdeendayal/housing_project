@@ -7,6 +7,7 @@
 <script>
     document.addEventListener(...)
 </script>
+
 @extends('layouts.auth')
 @section('title', 'MMSAY Login')
 @section('content')
@@ -29,25 +30,27 @@
     </style>
 
     <div class="body-div vh-100 overflow-hidden d-flex align-items-center">
-        <div class="main-wrapper container-fluid h-100 d-flex align-items-center justify-content-center">
-            <div class="premium-login-card w-100">
-                <div class="row g-0">   
+        <div class="main-wrapper container-fluid h-100 d-flex align-items-center justify-content-center" style="margin-top: -80px;">
+            <div class="premium-login-card w-100" style="width: 70% !important;">
+                <div class="row g-0">
                     <!-- LEFT SECTION -->
                     <div class="col-lg-5">
                         <div class="left-panel h-100 d-flex flex-column justify-content-center">
                             <div>
                                 <!-- LOGO -->
                                 <div class="d-flex align-items-start gap-4">
-                                    <div class="logo-box">
+                                    <div class="logo-box" style="    margin-top: -40px;
+    width: 50px;
+    height: 50px;">
                                         <span class="material-symbols-outlined">
                                             apartment
                                         </span>
                                     </div>
-                                    <div>
-                                        <div class="portal-heading">
+                                    <div style="margin-top: -35px;">
+                                        <div class="portal-heading" style="font-size: 15px;">
                                             Haryana Housing
                                         </div>
-                                        <div class="portal-subtitle">
+                                        <div class="portal-subtitle" style="font-size: 13px;">
                                             Department Portal
                                         </div>
                                     </div>
@@ -59,11 +62,11 @@
                                 </div>
                                 <!-- IMAGE -->
                                 <!-- <div class="housing-image">
-                                                                                                            <img
-                                                                                                                src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
-                                                                                                                alt="Housing">
-                                                                                                            
-                                                                                                            </div> -->
+                                                                                                                <img
+                                                                                                                    src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1200&auto=format&fit=crop"
+                                                                                                                    alt="Housing">
+                                                                                                                
+                                                                                                                </div> -->
                             </div>
                             <!-- FEATURES -->
                             <div>
@@ -116,10 +119,10 @@
                                     </span>
                                 </div>
                                 <div>
-                                    <div class="login-title">
+                                    <div class="login-title" style="font-size: 18px;">
                                         Department Login
                                     </div>
-                                    <div class="login-subtitle">
+                                    <div class="login-subtitle" style="font-size: 15px;">
                                         Official secure login portal
                                     </div>
                                 </div>

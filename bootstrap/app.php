@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api-possession.php'));
+
+            Route::middleware('web')
+                ->group(base_path('routes/mmgayAuth.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -24,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'guest' => \Illuminate\Auth\Middleware\RedirectIfAuthenticated::class,
             'district.officer' => \App\Http\Middleware\DistrictOfficerMiddleware::class,
+            'mmgay' => \App\Http\Middleware\MMGAYMiddleware::class,
         ]);
 
     })
