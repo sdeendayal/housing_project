@@ -105,23 +105,27 @@
                                     @endif
                                 </td>
                                 <td class="text-end pe-3">
-                                    @if($p->physical_possession_status === 'Eligible for Physical Possession')
-                                        <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-primary btn-schedule text-nowrap rounded-pill shadow-sm">
-                                            <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
-                                        </a>
-                                    @elseif($p->physical_possession_status === 'Visit Scheduled')
-                                        <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
-                                            <i class="bi bi-pencil-square me-1"></i>Update Schedule
-                                        </a>
-                                    @elseif($p->physical_possession_status === 'Slot Selected')
-                                        <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-schedule text-nowrap rounded-pill text-white shadow-sm">
-                                            <i class="bi bi-shield-check me-1"></i>Perform Visit
-                                        </a>
-                                    @else
-                                        <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
-                                            <i class="bi bi-eye me-1"></i>View Details
-                                        </a>
-                                    @endif
+                                     @if(!$p->application_secure_id)
+                                         <button class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill" disabled>
+                                             <i class="bi bi-slash-circle me-1"></i>Not Initiated
+                                         </button>
+                                     @elseif($p->physical_possession_status === 'Eligible for Physical Possession')
+                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-primary btn-schedule text-nowrap rounded-pill shadow-sm">
+                                             <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
+                                         </a>
+                                     @elseif($p->physical_possession_status === 'Visit Scheduled')
+                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
+                                             <i class="bi bi-pencil-square me-1"></i>Update Schedule
+                                         </a>
+                                     @elseif($p->physical_possession_status === 'Slot Selected')
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-schedule text-nowrap rounded-pill text-white shadow-sm">
+                                             <i class="bi bi-shield-check me-1"></i>Perform Visit
+                                         </a>
+                                     @else
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
+                                             <i class="bi bi-eye me-1"></i>View Details
+                                         </a>
+                                     @endif
                                 </td>
                             </tr>
                         @empty
