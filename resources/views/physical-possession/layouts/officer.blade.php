@@ -13,7 +13,12 @@
     @stack('styles')
 </head>
 <body class="pp-body">
-    @php $officer = Auth::user(); @endphp
+    @php 
+        $officer = Auth::user(); 
+        $routeApp = request()->route('application') ?? ($application ?? null);
+        $appStatus = ($routeApp && $routeApp instanceof \App\Models\PhysicalPossessionApplication) ? $routeApp->physical_possession_status : null;
+        $isVerifyForm = request()->routeIs('pp.officer.verify-form');
+    @endphp
 
     <div class="pp-sidebar-overlay" id="ppSidebarOverlay" onclick="ppToggleSidebar()"></div>
 
@@ -47,22 +52,22 @@
                 <span class="pp-sidebar-link-label">Eligibility List</span>
             </a>
 
-            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Eligible for Physical Possession']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Eligible for Physical Possession') ? 'active' : '' }}">
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Eligible for Physical Possession']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Eligible for Physical Possession') || ($isVerifyForm && $appStatus === 'Eligible for Physical Possession') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon danger"><i class="bi bi-calendar-x"></i></span>
                 <span class="pp-sidebar-link-label">Pending Schedule</span>
             </a>
 
-            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Visit Scheduled') ? 'active' : '' }}">
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Visit Scheduled') || ($isVerifyForm && $appStatus === 'Visit Scheduled') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon purple"><i class="bi bi-calendar-event"></i></span>
                 <span class="pp-sidebar-link-label">Visits Scheduled</span>
             </a>
 
-            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Physical Possession Submitted') ? 'active' : '' }}">
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Physical Possession Submitted') || ($isVerifyForm && in_array($appStatus, ['Slot Selected', 'Physical Possession Submitted'])) ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon orange"><i class="bi bi-hourglass-split"></i></span>
                 <span class="pp-sidebar-link-label">Pending Verify</span>
             </a>
 
-            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Verified') ? 'active' : '' }}">
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Verified') || ($isVerifyForm && in_array($appStatus, ['Verified', 'Rejected'])) ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon green"><i class="bi bi-check-circle"></i></span>
                 <span class="pp-sidebar-link-label">Verified</span>
             </a>

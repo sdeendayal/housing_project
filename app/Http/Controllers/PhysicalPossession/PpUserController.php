@@ -662,7 +662,10 @@ class PpUserController extends Controller
         $this->ensureUserOwnsApplication($application);
         $application->load('officerAction.officer');
 
-        if ($application->status !== 'approved' || ! $application->citizen_visit_date) {
+        $isLegacyApproved = ($application->status === 'approved' && $application->citizen_visit_date);
+        $isNewWorkflowScheduled = ($application->physical_possession_status !== null && $application->citizen_visit_date);
+
+        if (! $isLegacyApproved && ! $isNewWorkflowScheduled) {
             return back()->with('error', 'Visit performa is not available yet.');
         }
 
@@ -678,7 +681,10 @@ class PpUserController extends Controller
         $this->ensureUserOwnsApplication($application);
         $application->load('officerAction.officer');
 
-        if ($application->status !== 'approved' || ! $application->citizen_visit_date) {
+        $isLegacyApproved = ($application->status === 'approved' && $application->citizen_visit_date);
+        $isNewWorkflowScheduled = ($application->physical_possession_status !== null && $application->citizen_visit_date);
+
+        if (! $isLegacyApproved && ! $isNewWorkflowScheduled) {
             return back()->with('error', 'Visit performa is not available yet.');
         }
 

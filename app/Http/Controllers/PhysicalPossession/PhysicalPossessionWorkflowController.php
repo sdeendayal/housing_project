@@ -154,49 +154,76 @@ class PhysicalPossessionWorkflowController extends Controller
         }
 
         $officer = Auth::user();
-        $purchaserId = $application->private_purchaser_id;
 
-        $purchaser = DB::table('property_private_purchasers as ppp')
-            ->join('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
-            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
-            ->where('ppp.PrivatePurchaserId', $purchaserId)
-            ->where('pad.IsActive', 1)
-            ->where('pad.IsDeleted', 0)
+        // Fetch comprehensive property and allotment details
+        $property = DB::table('property_registration as pr')
+            ->leftJoin('cities as c', 'pr.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'pr.SectorId', '=', 's.SectorId')
+            ->leftJoin('districts as d', 'pr.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_auction_detail as pad', 'pr.AssetId', '=', 'pad.AssetId')
+            ->leftJoin('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->where('pr.AssetId', $application->asset_id)
             ->select([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
+                'pr.AssetId',
+                'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit',
+                'c.CityName',
+                's.SectorName',
+                'd.DistrictName',
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
                 'pad.BalanceAmount',
                 'ppp.PrivatePurchaserName',
                 'ppp.PurchaserFatherName',
                 'ppp.MobileNo',
-                'ppp.ApplicationNo',
-                'ppp.PPPId',
-                'ppp.MemberID',
                 'ppp.Address',
-                'ppp.DistrictId',
-                'd.DistrictName',
-                'pr.AssetName',
-                'pr.AssetSize',
-                'pr.Unit',
+                'ppp.ApplicationNo as purchaser_app_no',
+                'ppp.PPPId as purchaser_ppp_id',
+                'ppp.MemberID as purchaser_member_id',
+                'ppp.CasteCategoryName as purchaser_category',
+                'ppp.MaritalStatus as purchaser_marital_status',
+                'ppp.CreateDate as purchaser_reg_date',
             ])
-            ->selectRaw("
-                COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                    (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                    (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
-                    0
-                ) as total_paid
-            ")
             ->first();
 
-        if (!$purchaser) {
-            return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
+        if (!$property) {
+            return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant and property details not found.');
         }
 
-        return view('physical-possession.workflow.officer-schedule', compact('purchaser', 'application', 'officer'));
+        $initialDeposit = 0.0;
+        $installmentPaid = 0.0;
+        if ($property) {
+            $initialDeposit = (float) ($property->ReceivedAmount ?? 0);
+            $assetId = $property->AssetId;
+            if ($assetId) {
+                $ledgerPaid = (float) DB::table('ledger')
+                    ->where('AssetId', $assetId)
+                    ->where('Is_Deleted', 0)
+                    ->where('Is_Active', 1)
+                    ->sum('Payment');
+
+                $cashReceiptPaid = (float) DB::table('cash_receipt_details')
+                    ->where('asset_number', $assetId)
+                    ->where('IsDeleted', 0)
+                    ->where('IsActive', 1)
+                    ->sum('total_paid_amount');
+
+                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+            }
+        }
+        $totalReceived = $initialDeposit + $installmentPaid;
+        $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
+
+        return view('physical-possession.workflow.officer-schedule', compact(
+            'property',
+            'application',
+            'officer',
+            'initialDeposit',
+            'installmentPaid',
+            'totalReceived',
+            'balanceAmount'
+        ));
     }
 
     /**

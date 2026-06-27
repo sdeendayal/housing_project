@@ -62,8 +62,12 @@
                 {{ ucfirst($application->status) }}
             </td>
         </tr>
-        <tr><th>Officer</th><td>{{ $application->officerAction?->officer?->name ?? '—' }}</td></tr>
-        <tr><th>Officer Remarks</th><td>{{ $application->remarks ?? '—' }}</td></tr>
+        @if($application->officerAction?->officer?->name)
+        <tr><th>Officer</th><td>{{ $application->officerAction->officer->name }}</td></tr>
+        @endif
+        @if($application->remarks)
+        <tr><th>Officer Remarks</th><td>{{ $application->remarks }}</td></tr>
+        @endif
     </table>
 
     <div class="visit-box">

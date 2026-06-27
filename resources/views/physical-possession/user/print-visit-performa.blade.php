@@ -56,8 +56,12 @@
             <tr><th>Mobile</th><td>{{ $application->mobile }}</td></tr>
             <tr><th>District</th><td>{{ $application->district_name ?? '—' }}</td></tr>
             <tr><th>Status</th><td><strong>{{ ucfirst($application->status) }}</strong></td></tr>
-            <tr><th>Officer</th><td>{{ $application->officerAction?->officer?->name ?? '—' }}</td></tr>
-            <tr><th>Officer Remarks</th><td>{{ $application->remarks ?? '—' }}</td></tr>
+            @if($application->officerAction?->officer?->name)
+            <tr><th>Officer</th><td>{{ $application->officerAction->officer->name }}</td></tr>
+            @endif
+            @if($application->remarks)
+            <tr><th>Officer Remarks</th><td>{{ $application->remarks }}</td></tr>
+            @endif
         </table>
 
         <div class="visit-highlight">

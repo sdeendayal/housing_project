@@ -13,61 +13,131 @@
         <!-- Applicant & Property Details Card -->
         <div class="col-lg-6">
             <div class="card border-0 shadow-sm rounded-4 h-100">
-                <div class="card-header bg-white border-0 pt-4 px-4">
-                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Applicant Details</h5>
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-1">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi-file-earmark-text text-primary me-2"></i>Application & Property Details</h5>
                 </div>
-                <div class="card-body px-4 pb-4">
-                    <div class="row g-3">
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Application No.</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->ApplicationNo ?? '—' }}</div>
+                <div class="card-body px-4 pb-4 pt-1">
+                    <!-- Section 1: Applicant Info -->
+                    <div class="mb-3">
+                        <div class="fw-bold text-primary mb-2" style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="bi bi-person me-1"></i>Applicant Information
                         </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">PPP ID</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->PPPId ?? '—' }}</div>
+                        <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Application Number</label>
+                                <div class="fw-bold text-slate-800">{{ $application->application_number }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Workflow Status</label>
+                                <div>
+                                    @php
+                                        $badgeClass = match ($application->physical_possession_status) {
+                                            'Eligible for Physical Possession' => 'bg-info text-info bg-opacity-10 border border-info border-opacity-20',
+                                            'Visit Scheduled' => 'bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20',
+                                            'Slot Selected' => 'bg-primary text-white border border-primary',
+                                            'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Verified' => 'bg-success text-white border border-success',
+                                            'Rejected' => 'bg-danger text-white border border-danger',
+                                            default => 'bg-secondary text-white border border-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.65rem; white-space: normal; line-height: 1.25;">
+                                        {{ $application->physical_possession_status }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Applicant Name</label>
+                                <div class="fw-semibold text-slate-800">{{ $application->applicant_name }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Father's Name</label>
+                                <div class="fw-semibold text-slate-700">{{ $application->father_name ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Mobile Number</label>
+                                <div class="fw-semibold text-slate-800">{{ $application->mobile }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Caste Category</label>
+                                <div class="fw-semibold text-slate-800">{{ $property?->purchaser_category ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Marital Status</label>
+                                <div class="fw-semibold text-slate-700">{{ $property?->purchaser_marital_status ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">PPP (Family ID)</label>
+                                <div class="fw-semibold text-slate-800 font-monospace">{{ $property?->purchaser_ppp_id ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Member ID</label>
+                                <div class="fw-semibold text-slate-800 font-monospace">{{ $property?->purchaser_member_id ?? '—' }}</div>
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Applicant Name</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->PrivatePurchaserName }}</div>
+                    </div>
+
+                    <hr class="my-2 border-slate-100">
+
+                    <!-- Section 2: Property Info -->
+                    <div class="mb-3">
+                        <div class="fw-bold text-primary mb-2" style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="bi bi-house-door me-1"></i>Property & Allotment Details
                         </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Father's Name</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->PurchaserFatherName ?? '—' }}</div>
+                        <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Name/Code</label>
+                                <div class="fw-bold text-slate-800">{{ $property?->AssetName ?? $application->asset_name ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Size</label>
+                                <div class="fw-semibold text-slate-800">{{ $property?->AssetSize ?? $application->asset_size }} {{ $property?->Unit ?? $application->asset_unit }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Allotment No</label>
+                                <div class="fw-semibold text-slate-800">{{ $property?->purchaser_app_no ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Allotment Date</label>
+                                <div class="fw-semibold text-slate-800">
+                                    {{ $property?->purchaser_reg_date ? \Carbon\Carbon::parse($property->purchaser_reg_date)->format('d M Y') : '—' }}
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Sector / Ward</label>
+                                <div class="fw-semibold text-slate-700">{{ $property?->SectorName ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">City / Town</label>
+                                <div class="fw-semibold text-slate-700">{{ $property?->CityName ?? '—' }}</div>
+                            </div>
+                            <div class="col-6 col-sm-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">District</label>
+                                <div class="fw-semibold text-slate-700">{{ $property?->DistrictName ?? $application->district_name ?? '—' }}</div>
+                            </div>
                         </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Mobile Number</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->MobileNo }}</div>
+                    </div>
+
+                    <hr class="my-2 border-slate-100">
+
+                    <!-- Section 3: Financial Details -->
+                    <div class="mb-3">
+                        <div class="fw-bold text-primary mb-2" style="font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <i class="bi bi-currency-rupee me-1"></i>Financial Details
                         </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">District</label>
-                            <div class="fw-bold text-slate-800">{{ $purchaser->DistrictName }}</div>
-                        </div>
-                        <div class="col-12">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Address</label>
-                            <div class="text-slate-700 bg-light p-2 rounded-3 text-break small">{{ $purchaser->Address ?? '—' }}</div>
-                        </div>
-                        
-                        <div class="col-12"><hr class="my-2 border-slate-100"></div>
-                        
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Allotted Property</label>
-                            <div class="fw-semibold text-slate-800">{{ $purchaser->AssetName }}</div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Property Size</label>
-                            <div class="fw-semibold text-slate-800">{{ $purchaser->AssetSize }} {{ $purchaser->Unit }}</div>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Total Cost</label>
-                            <div class="fw-bold text-slate-800">₹ {{ number_format($purchaser->FlatCost, 2) }}</div>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Total Paid</label>
-                            <div class="fw-bold text-success">₹ {{ number_format($purchaser->total_paid, 2) }}</div>
-                        </div>
-                        <div class="col-sm-4">
-                            <label class="text-muted small uppercase tracking-wider mb-1">Balance</label>
-                            <div class="fw-bold text-danger">₹ {{ number_format(max(0, $purchaser->FlatCost - $purchaser->total_paid), 2) }}</div>
+                        <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
+                            <div class="col-4">
+                                <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Cost</label>
+                                <div class="fw-bold text-slate-800">₹{{ number_format($property?->FlatCost ?? $application->flat_cost ?? 0, 2) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <label class="text-success mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Received Amount</label>
+                                <div class="fw-bold text-success" title="Initial Deposit: ₹{{ number_format($initialDeposit ?? 0, 2) }} + Installments: ₹{{ number_format($installmentPaid ?? 0, 2) }}">₹{{ number_format($totalReceived ?? 0, 2) }}</div>
+                            </div>
+                            <div class="col-4">
+                                <label class="text-danger mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Balance Amount</label>
+                                <div class="fw-bold text-danger">₹{{ number_format($balanceAmount ?? 0, 2) }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>

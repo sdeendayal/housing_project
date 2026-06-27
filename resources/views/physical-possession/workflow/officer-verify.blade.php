@@ -62,7 +62,7 @@
                                                     default => 'bg-secondary text-white border border-secondary'
                                                 };
                                             @endphp
-                                            <span class="badge {{ $badgeClass }} px-1.5 py-0.5 rounded-2" style="font-size: 0.65rem;">
+                                            <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.65rem; white-space: normal; line-height: 1.25;">
                                                 {{ $application->physical_possession_status }}
                                             </span>
                                         </div>
@@ -79,30 +79,22 @@
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Mobile Number</label>
                                         <div class="fw-semibold">{{ $application->mobile }}</div>
                                     </div>
-                                    @if(isset($property->purchaser_category))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Caste Category</label>
-                                        <div class="fw-semibold">{{ $property->purchaser_category }}</div>
+                                        <div class="fw-semibold">{{ $property?->purchaser_category ?? '—' }}</div>
                                     </div>
-                                    @endif
-                                    @if(isset($property->purchaser_marital_status))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Marital Status</label>
-                                        <div class="fw-semibold text-slate-700">{{ $property->purchaser_marital_status }}</div>
+                                        <div class="fw-semibold text-slate-700">{{ $property?->purchaser_marital_status ?? '—' }}</div>
                                     </div>
-                                    @endif
-                                    @if(isset($property->purchaser_ppp_id))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">PPP (Family ID)</label>
-                                        <div class="fw-semibold font-monospace">{{ $property->purchaser_ppp_id }}</div>
+                                        <div class="fw-semibold font-monospace">{{ $property?->purchaser_ppp_id ?? '—' }}</div>
                                     </div>
-                                    @endif
-                                    @if(isset($property->purchaser_member_id))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Member ID</label>
-                                        <div class="fw-semibold font-monospace">{{ $property->purchaser_member_id }}</div>
+                                        <div class="fw-semibold font-monospace">{{ $property?->purchaser_member_id ?? '—' }}</div>
                                     </div>
-                                    @endif
                                 </div>
                             </div>
 
@@ -122,20 +114,16 @@
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Size</label>
                                         <div class="fw-semibold">{{ $property->AssetSize ?? $application->asset_size }} {{ $property->Unit ?? $application->asset_unit }}</div>
                                     </div>
-                                    @if(isset($property->purchaser_app_no))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Allotment No</label>
-                                        <div class="fw-semibold">{{ $property->purchaser_app_no }}</div>
+                                        <div class="fw-semibold">{{ $property?->purchaser_app_no ?? '—' }}</div>
                                     </div>
-                                    @endif
-                                    @if(isset($property->purchaser_reg_date))
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Allotment Date</label>
                                         <div class="fw-semibold">
-                                            {{ \Carbon\Carbon::parse($property->purchaser_reg_date)->format('d M Y') }}
+                                            {{ $property?->purchaser_reg_date ? \Carbon\Carbon::parse($property->purchaser_reg_date)->format('d M Y') : '—' }}
                                         </div>
                                     </div>
-                                    @endif
                                     <div class="col-6 col-sm-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Sector / Ward</label>
                                         <div class="fw-semibold text-slate-700">{{ $property->SectorName ?? '—' }}</div>
@@ -448,7 +436,7 @@
                                                 default => 'bg-secondary text-white border border-secondary'
                                             };
                                         @endphp
-                                        <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2" style="font-size: 0.72rem;">
+                                        <span class="badge {{ $badgeClass }} px-2.5 py-1.2 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.72rem; white-space: normal; line-height: 1.25;">
                                             {{ $application->physical_possession_status }}
                                         </span>
                                     </div>
@@ -465,30 +453,22 @@
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Mobile Number</label>
                                     <div class="fw-semibold">{{ $application->mobile }}</div>
                                 </div>
-                                @if(isset($property->purchaser_category))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Caste Category</label>
-                                    <div class="fw-semibold">{{ $property->purchaser_category }}</div>
+                                    <div class="fw-semibold">{{ $property?->purchaser_category ?? '—' }}</div>
                                 </div>
-                                @endif
-                                @if(isset($property->purchaser_marital_status))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Marital Status</label>
-                                    <div class="fw-semibold text-slate-700">{{ $property->purchaser_marital_status }}</div>
+                                    <div class="fw-semibold text-slate-700">{{ $property?->purchaser_marital_status ?? '—' }}</div>
                                 </div>
-                                @endif
-                                @if(isset($property->purchaser_ppp_id))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">PPP (Family ID)</label>
-                                    <div class="fw-semibold font-monospace">{{ $property->purchaser_ppp_id }}</div>
+                                    <div class="fw-semibold font-monospace">{{ $property?->purchaser_ppp_id ?? '—' }}</div>
                                 </div>
-                                @endif
-                                @if(isset($property->purchaser_member_id))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Member ID</label>
-                                    <div class="fw-semibold font-monospace">{{ $property->purchaser_member_id }}</div>
+                                    <div class="fw-semibold font-monospace">{{ $property?->purchaser_member_id ?? '—' }}</div>
                                 </div>
-                                @endif
                             </div>
                         </div>
 
@@ -508,20 +488,16 @@
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Property Size</label>
                                     <div class="fw-semibold">{{ $property->AssetSize ?? $application->asset_size }} {{ $property->Unit ?? $application->asset_unit }}</div>
                                 </div>
-                                @if(isset($property->purchaser_app_no))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Allotment No</label>
-                                    <div class="fw-semibold">{{ $property->purchaser_app_no }}</div>
+                                    <div class="fw-semibold">{{ $property?->purchaser_app_no ?? '—' }}</div>
                                 </div>
-                                @endif
-                                @if(isset($property->purchaser_reg_date))
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Allotment Date</label>
                                     <div class="fw-semibold">
-                                        {{ \Carbon\Carbon::parse($property->purchaser_reg_date)->format('d M Y') }}
+                                        {{ $property?->purchaser_reg_date ? \Carbon\Carbon::parse($property->purchaser_reg_date)->format('d M Y') : '—' }}
                                     </div>
                                 </div>
-                                @endif
                                 <div class="col-6 col-sm-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Sector / Ward</label>
                                     <div class="fw-semibold text-slate-700">{{ $property->SectorName ?? '—' }}</div>
