@@ -72,11 +72,7 @@
                 <span class="pp-sidebar-link-label">Verified</span>
             </a>
 
-            <div class="pp-sidebar-section">Manage</div>
-            <a href="{{ route('pp.officer.reports') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.reports') ? 'active' : '' }}">
-                <span class="pp-sidebar-link-icon"><i class="bi bi-bar-chart-line"></i></span>
-                <span class="pp-sidebar-link-label">Reports</span>
-            </a>
+
         </div>
 
         <div class="pp-sidebar-foot">

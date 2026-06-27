@@ -22,7 +22,7 @@ class PpOfficerController extends Controller
     ) {}
 
     // Officer dashboard with stats
-    public function dashboard()
+    public function dashboard(Request $request)
     {
         $officer = Auth::user();
         $query = $this->districtApplicationsQuery($officer);
@@ -70,8 +70,6 @@ class PpOfficerController extends Controller
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
 
-        // eligibleCount calculated above for stats
-
         // Chart ke liye last 7 days data
         $chartLabels = [];
         $chartData = [];
@@ -90,6 +88,68 @@ class PpOfficerController extends Controller
             : 0;
         $weekTotal = array_sum($chartData);
 
+        // Fetch paginated eligible purchasers list for dashboard display (25 per page)
+        $purchasersQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0);
+
+        if ($officer->district_id) {
+            $purchasersQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $purchasersQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        $purchasersQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.DistrictId',
+            'd.DistrictName',
+            'pr.AssetName',
+            'pr.AssetSize',
+            'pr.Unit',
+            'ppa.id as application_id',
+            'ppa.secure_id as application_secure_id',
+            'ppa.physical_possession_status',
+        ])
+        ->selectRaw("
+            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
+                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
+                0
+            ) as total_paid
+        ")
+        ->having('total_paid', '>=', 40000);
+
+        $search = $request->input('search');
+        if ($search) {
+            $purchasersQuery->where(function($q) use ($search) {
+                $q->where('ppp.PrivatePurchaserName', 'like', "%{$search}%")
+                  ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('ppp.PPPId', 'like', "%{$search}%")
+                  ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%");
+            });
+        }
+
+        $purchasers = $purchasersQuery->paginate(25)->withQueryString();
+
         return view('physical-possession.officer.dashboard', compact(
             'officer',
             'stats',
@@ -100,7 +160,9 @@ class PpOfficerController extends Controller
             'userCount',
             'approvalRate',
             'weekTotal',
-            'eligibleCount'
+            'eligibleCount',
+            'purchasers',
+            'search'
         ));
     }
 

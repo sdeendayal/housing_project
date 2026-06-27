@@ -42,7 +42,7 @@
                     <thead class="table-light text-uppercase text-muted">
                         <tr>
                             <th class="ps-3" style="width: 60px;">S.No.</th>
-                            <th>Application No. / ID</th>
+                            <th>Application No.</th>
                             <th>Applicant Details</th>
                             <th>Property Details</th>
                             <th>Total Paid</th>
@@ -67,7 +67,7 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-slate-700">{{ $p->AssetName }}</div>
-                                    <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }} | Sector: {{ $p->DistrictName }}</small>
+                                    <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-success">₹ {{ number_format($p->total_paid, 2) }}</div>

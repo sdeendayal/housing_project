@@ -86,7 +86,7 @@ class PhysicalPossessionWorkflowController extends Controller
             });
         }
 
-        $purchasers = $query->paginate(10)->withQueryString();
+        $purchasers = $query->paginate(25)->withQueryString();
 
         return view('physical-possession.workflow.officer-eligibility', compact('purchasers', 'search', 'officer'));
     }
@@ -496,7 +496,7 @@ class PhysicalPossessionWorkflowController extends Controller
             });
         }
 
-        $applications = $query->latest()->paginate(10)->withQueryString();
+        $applications = $query->latest()->paginate(25)->withQueryString();
 
         return view('physical-possession.workflow.officer-applications', compact('applications', 'search', 'officer'));
     }

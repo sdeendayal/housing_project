@@ -86,16 +86,16 @@
                                 <td>
                                     @php
                                         $badgeClass = match ($app->physical_possession_status) {
-                                            'Eligible for Physical Possession' => 'bg-info text-info',
-                                            'Visit Scheduled' => 'bg-warning text-warning-emphasis',
-                                            'Slot Selected' => 'bg-primary text-white',
-                                            'Physical Possession Submitted' => 'bg-primary text-white',
-                                            'Verified' => 'bg-success text-white',
-                                            'Rejected' => 'bg-danger text-white',
-                                            default => 'bg-secondary text-white'
+                                            'Eligible for Physical Possession' => 'bg-info text-info bg-opacity-10 border border-info border-opacity-20',
+                                            'Visit Scheduled' => 'bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20',
+                                            'Slot Selected' => 'bg-primary text-white border border-primary',
+                                            'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Verified' => 'bg-success text-white border border-success',
+                                            'Rejected' => 'bg-danger text-white border border-danger',
+                                            default => 'bg-secondary text-white border border-secondary'
                                         };
                                     @endphp
-                                    <span class="badge {{ str_contains($badgeClass, 'text-') ? $badgeClass . ' bg-opacity-10 border border-opacity-20 border-' . explode(' ', $badgeClass)[1] : $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
+                                    <span class="badge {{ $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
                                         {{ $app->physical_possession_status }}
                                     </span>
                                 </td>

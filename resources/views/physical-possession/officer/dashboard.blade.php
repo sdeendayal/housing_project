@@ -308,6 +308,39 @@
     font-size: 0.75rem;
 }
 .pp-dash-empty i { font-size: 1.25rem; display: block; margin-bottom: 0.25rem; opacity: 0.45; }
+.premium-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+}
+.pp-eligibility-table th {
+    font-size: 0.68rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.3px !important;
+    padding: 8px 8px !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+}
+.pp-eligibility-table td {
+    font-size: 0.72rem !important;
+    padding: 8px 8px !important;
+    vertical-align: middle !important;
+}
+.pp-eligibility-table tr:hover {
+    background-color: rgba(30, 64, 175, 0.02) !important;
+}
+.btn-schedule {
+    font-size: 0.68rem !important;
+    padding: 4px 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+}
+.btn-schedule:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(30, 64, 175, 0.15);
+}
 </style>
 @endpush
 
@@ -319,20 +352,6 @@
     </div>
     <span class="pp-dash-date"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('d M Y') }}</span>
 </div>
-
-@if($eligibleCount > 0)
-<div class="alert alert-primary d-flex align-items-center justify-content-between p-3 border-0 shadow-sm rounded-3 mb-3 bg-primary bg-opacity-10 text-primary-emphasis border border-primary border-opacity-20">
-    <div class="d-flex align-items-center gap-3">
-        <div class="bg-primary text-white p-2.5 rounded-3 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-            <i class="bi bi-person-check fs-4"></i>
-        </div>
-        <div>
-            <h6 class="fw-bold mb-1 text-dark">Eligible Applicants Awaiting Schedule</h6>
-            <p class="text-muted small mb-0">There are <strong>{{ $eligibleCount }}</strong> property purchasers in your district who have completed ₹40,000 payment and are eligible for physical possession.</p>
-        </div>
-    </div>
-</div>
-@endif
 
 <div class="pp-dash-stats">
     <a href="{{ route('pp.officer.eligibility-list') }}" class="pp-dash-stat">
@@ -371,6 +390,132 @@
             <i class="bi bi-exclamation-circle"></i> Review {{ $stats['submitted'] }} Submission{{ $stats['submitted'] !== 1 ? 's' : '' }}
         </a>
     @endif
+</div>
+
+<div class="card premium-card border-0 shadow-sm mt-3">
+    <div class="card-body p-3">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
+            <div>
+                <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-person-check text-primary me-2"></i>Eligible Applicants Awaiting Schedule</h6>
+                <p class="text-muted mb-0" style="font-size: 0.7rem;">Applicants with paid amount >= ₹40,000. Action required to propose slot dates.</p>
+            </div>
+            <form action="{{ route('pp.officer.dashboard') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
+                <div class="input-group input-group-sm" style="max-width: 250px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="search" class="form-control border-start-0 ps-0" style="font-size: 0.72rem;" placeholder="Search name, mobile..." value="{{ $search ?? '' }}">
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm px-3 rounded-pill fw-bold" style="font-size: 0.7rem;">Search</button>
+                @if($search)
+                    <a href="{{ route('pp.officer.dashboard') }}" class="btn btn-outline-secondary btn-sm px-2 rounded-pill" style="font-size: 0.7rem;">Reset</a>
+                @endif
+            </form>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 pp-eligibility-table">
+                <thead class="table-light text-uppercase text-muted">
+                    <tr>
+                        <th class="ps-3" style="width: 50px;">S.No.</th>
+                        <th>Application No.</th>
+                        <th>Applicant</th>
+                        <th>Property</th>
+                        <th>Total Paid</th>
+                        <th>Payment Status</th>
+                        <th>Possession Status</th>
+                        <th class="text-end pe-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($purchasers as $p)
+                        <tr>
+                            <td class="ps-3 fw-semibold text-muted">
+                                {{ ($purchasers->currentPage() - 1) * $purchasers->perPage() + $loop->iteration }}
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark mb-0.5">{{ $p->ApplicationNo ?? '—' }}</div>
+                                <small class="text-muted text-uppercase tracking-wider font-monospace fs-9">PPP ID: {{ $p->PPPId ?? '—' }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ $p->PrivatePurchaserName }}</div>
+                                <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $p->MobileNo }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-slate-700">{{ $p->AssetName }}</div>
+                                <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-success">₹ {{ number_format($p->total_paid, 2) }}</div>
+                                <small class="text-muted">Cost: ₹ {{ number_format($p->FlatCost, 2) }}</small>
+                            </td>
+                            <td>
+                                @if($p->total_paid >= $p->FlatCost && $p->FlatCost > 0)
+                                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2 py-1 rounded-pill" style="font-size: 0.65rem;">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Fully Paid
+                                    </span>
+                                @else
+                                    <span class="badge bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20 px-2 py-1 rounded-pill" style="font-size: 0.65rem;">
+                                        <i class="bi bi-cash-stack me-1"></i>Partially Paid
+                                    </span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->physical_possession_status)
+                                    @php
+                                        $badgeClass = match ($p->physical_possession_status) {
+                                            'Eligible for Physical Possession' => 'bg-info bg-opacity-10 text-info border border-info border-opacity-20',
+                                            'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
+                                            'Slot Selected' => 'bg-primary text-white border border-primary',
+                                            'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Verified' => 'bg-success text-white border border-success shadow-sm',
+                                            'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
+                                            default => 'bg-secondary text-white border border-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }} px-2 py-1 rounded-3" style="font-size: 0.65rem;">
+                                        {{ $p->physical_possession_status }}
+                                    </span>
+                                @else
+                                    <span class="text-muted small italic">Not Initiated</span>
+                                @endif
+                            </td>
+                            <td class="text-end pe-3">
+                                @if($p->physical_possession_status === 'Eligible for Physical Possession')
+                                    <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-primary btn-schedule text-nowrap rounded-pill shadow-sm">
+                                        <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
+                                    </a>
+                                @elseif($p->physical_possession_status === 'Visit Scheduled')
+                                    <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
+                                        <i class="bi bi-pencil-square me-1"></i>Update Schedule
+                                    </a>
+                                @elseif($p->physical_possession_status === 'Slot Selected')
+                                    <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-schedule text-nowrap rounded-pill text-white shadow-sm">
+                                        <i class="bi bi-shield-check me-1"></i>Perform Visit
+                                    </a>
+                                @else
+                                    <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">
+                                        <i class="bi bi-eye me-1"></i>View Details
+                                    </a>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted" style="font-size: 0.72rem;">
+                                <i class="bi bi-people fs-2 mb-2 d-block text-slate-300"></i>
+                                No eligible applicants awaiting schedule found.
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        @if($purchasers->hasPages())
+            <div class="d-flex justify-content-center mt-3">
+                {{ $purchasers->links() }}
+            </div>
+        @endif
+    </div>
 </div>
 
 @endsection
