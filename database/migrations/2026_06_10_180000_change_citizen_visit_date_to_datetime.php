@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -12,10 +13,13 @@ return new class extends Migration
             return;
         }
 
-        if (DB::connection()->getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATETIME NULL');
-            DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATETIME NULL');
-        }
+        Schema::table('physical_possession_applications', function (Blueprint $table) {
+            $table->dateTime('citizen_visit_date')->nullable()->change();
+        });
+
+        Schema::table('officer_application_actions', function (Blueprint $table) {
+            $table->dateTime('citizen_visit_date')->nullable()->change();
+        });
     }
 
     public function down(): void
@@ -24,9 +28,12 @@ return new class extends Migration
             return;
         }
 
-        if (DB::connection()->getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE physical_possession_applications MODIFY citizen_visit_date DATE NULL');
-            DB::statement('ALTER TABLE officer_application_actions MODIFY citizen_visit_date DATE NULL');
-        }
+        Schema::table('physical_possession_applications', function (Blueprint $table) {
+            $table->date('citizen_visit_date')->nullable()->change();
+        });
+
+        Schema::table('officer_application_actions', function (Blueprint $table) {
+            $table->date('citizen_visit_date')->nullable()->change();
+        });
     }
 };

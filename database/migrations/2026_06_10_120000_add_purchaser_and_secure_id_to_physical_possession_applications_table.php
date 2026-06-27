@@ -18,9 +18,9 @@ return new class extends Migration
                 $table->string('member_id', 50)->nullable()->after('ppp_id');
             });
         } else {
-            if (DB::connection()->getDriverName() === 'mysql') {
-                DB::statement('ALTER TABLE physical_possession_applications MODIFY private_purchaser_id INT NULL');
-            }
+            Schema::table('physical_possession_applications', function (Blueprint $table) {
+                $table->integer('private_purchaser_id')->nullable()->change();
+            });
         }
 
         PhysicalPossessionApplication::query()

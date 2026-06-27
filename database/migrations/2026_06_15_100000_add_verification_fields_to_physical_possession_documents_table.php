@@ -13,9 +13,9 @@ return new class extends Migration
             $table->dropForeign(['application_id']);
         });
 
-        if (DB::connection()->getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE physical_possession_documents MODIFY application_id BIGINT UNSIGNED NULL');
-        }
+        Schema::table('physical_possession_documents', function (Blueprint $table) {
+            $table->unsignedBigInteger('application_id')->nullable()->change();
+        });
 
         Schema::table('physical_possession_documents', function (Blueprint $table) {
             $table->foreign('application_id')
@@ -42,9 +42,9 @@ return new class extends Migration
             $table->dropForeign(['application_id']);
         });
 
-        if (DB::connection()->getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE physical_possession_documents MODIFY application_id BIGINT UNSIGNED NOT NULL');
-        }
+        Schema::table('physical_possession_documents', function (Blueprint $table) {
+            $table->unsignedBigInteger('application_id')->nullable(false)->change();
+        });
 
         Schema::table('physical_possession_documents', function (Blueprint $table) {
             $table->foreign('application_id')

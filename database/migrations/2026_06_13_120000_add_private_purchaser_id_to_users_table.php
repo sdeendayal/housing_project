@@ -20,9 +20,9 @@ return new class extends Migration
                 $table->integer('private_purchaser_id')->nullable()->after('id');
             });
         } else {
-            if (DB::connection()->getDriverName() === 'mysql') {
-                DB::statement('ALTER TABLE users MODIFY private_purchaser_id INT NULL');
-            }
+            Schema::table('users', function (Blueprint $table) {
+                $table->integer('private_purchaser_id')->nullable()->change();
+            });
         }
 
         if (! $this->indexExists('users', 'users_private_purchaser_id_unique')) {

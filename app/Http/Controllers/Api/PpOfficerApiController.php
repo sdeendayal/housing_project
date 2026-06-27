@@ -16,15 +16,21 @@ use Illuminate\Support\Facades\Storage;
 class PpOfficerApiController extends Controller
 {
     /**
-     * Officer dashboard stats and recent lists.
+     * [Dashboard API]
+     * District Officer ka dashboard data return karta hai.
      */
     public function dashboard(Request $request)
     {
+        // 1. Current logged-in officer fetch karein
         $officer = Auth::user();
+        
+        // 2. Auto-initialize: Eligible candidates ke liye automatically entry create karein
         $this->ensureDistrictApplications($officer);
+        
+        // 3. Officer ke district ki applications ka query builder nikaalein
         $query = $this->districtApplicationsQuery($officer);
 
-        // Calculate count of eligible applicants who are not yet scheduled/initiated
+        // 4. Eligible candidates count karein (jinhone >= 40,000 pay kiya hai aur schedule hona baki hai)
         $eligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
@@ -58,6 +64,7 @@ class PpOfficerApiController extends Controller
             ->mergeBindings($eligibleQuery)
             ->count();
 
+        // 5. Har ek status (Scheduled, Verified, Rejected) ke counts nikaalein
         $stats = [
             'awaiting_schedule' => $eligibleCount,
             'scheduled' => (clone $query)->where('physical_possession_status', 'Visit Scheduled')->count(),
@@ -66,7 +73,7 @@ class PpOfficerApiController extends Controller
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
 
-        // Chart data last 7 days
+        // 6. Last 7 Days ka graph labels aur data taiyaar karein
         $chartLabels = [];
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
@@ -75,15 +82,19 @@ class PpOfficerApiController extends Controller
             $chartData[] = (clone $query)->whereDate('created_at', $date)->count();
         }
 
+        // 7. Dashboard par recent aur pending items ki list dikhane ke liye fetch karein
         $recentApplications = (clone $query)->latest()->take(6)->get();
         $pendingApplications = (clone $query)->where('status', 'pending')->latest()->take(4)->get();
         $userCount = (clone $query)->distinct()->count('user_id');
+        
+        // 8. Total verified vs rejected ka percentage calculate karein
         $decided = $stats['verified'] + $stats['rejected'];
         $approvalRate = $decided > 0
             ? (int) round(($stats['verified'] / $decided) * 100)
             : 0;
         $weekTotal = array_sum($chartData);
 
+        // 9. Final success JSON response return karein
         return response()->json([
             'success' => true,
             'officer' => [
@@ -106,31 +117,21 @@ class PpOfficerApiController extends Controller
     }
 
     /**
-     * Get count of approved bookings for the officer's district on a selected date.
+     * [Slots Capacity API]
+     * Selected date par total verified slot bookings return karti hai.
      */
     public function getSlotCapacity(Request $request)
     {
-        $request->validate([
-            'date' => 'required|date_format:Y-m-d',
-        ]);
-
-        $date = $request->input('date');
         $officer = Auth::user();
+        $query = $this->districtApplicationsQuery($officer);
 
-        $query = PhysicalPossessionApplication::query()
-            ->where('status', 'approved')
-            ->whereNotNull('citizen_visit_date')
-            ->whereDate('citizen_visit_date', $date);
+        // Inputs query parameters
+        $date = $request->input('date', now()->toDateString());
 
-        if ($officer->district_id) {
-            $query->where('district_id', $officer->district_id);
-        } elseif ($officer->district_name) {
-            $query->where('district_name', 'like', '%'.$officer->district_name.'%');
-        }
-
-        $bookings = $query->selectRaw('HOUR(citizen_visit_date) as hour, COUNT(*) as count')
-            ->groupByRaw('HOUR(citizen_visit_date)')
-            ->get()
+        // Slots booking counts grouping
+        $bookings = (clone $query)->whereDate('citizen_visit_date', $date)
+            ->selectRaw('HOUR(citizen_visit_date) as hour, COUNT(*) as count')
+            ->groupBy('hour')
             ->pluck('count', 'hour')
             ->toArray();
 
@@ -141,16 +142,16 @@ class PpOfficerApiController extends Controller
     }
 
     /**
-     * Users list - Citizens who have applied within the officer's district.
+     * [Users List API]
+     * District ke citizens ki list return karti hai.
      */
-    public function users()
+    public function users(Request $request)
     {
         $officer = Auth::user();
+        $query = $this->districtApplicationsQuery($officer);
 
-        $userIds = $this->districtApplicationsQuery($officer)
-            ->pluck('user_id')
-            ->unique();
-
+        // Extract unique users linked with application forms
+        $userIds = (clone $query)->distinct()->pluck('user_id');
         $users = User::whereIn('id', $userIds)->get(['id', 'name', 'mobile', 'email', 'created_at']);
 
         return response()->json([
@@ -160,14 +161,16 @@ class PpOfficerApiController extends Controller
     }
 
     /**
-     * Reports page data.
+     * [Reports API]
+     * Monthly status statistics return karti hai chart render karne ke liye.
      */
-    public function reports()
+    public function reports(Request $request)
     {
         $officer = Auth::user();
         $query = $this->districtApplicationsQuery($officer);
 
         $monthlyStats = [];
+        // Past 6 months loop to fetch stats dynamically
         for ($i = 5; $i >= 0; $i--) {
             $month = now()->subMonths($i);
             $monthlyStats[] = [
@@ -190,14 +193,17 @@ class PpOfficerApiController extends Controller
     }
 
     /**
-     * Display a list of eligible applicants who have paid >= 40,000.
+     * [Eligibility List API]
+     * Paginated candidates show karta hai jinhone paid >= 40,000 kiya hai aur initiation pending hai.
      */
     public function eligibilityList(Request $request)
     {
+        // 1. Current officer fetch karein aur missing applications generate karein
         $officer = Auth::user();
         $this->ensureDistrictApplications($officer);
 
-        $query = DB::table('property_auction_detail as pad')
+        // 2. Candidate mapping query generate karein
+        $tempQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
@@ -208,14 +214,25 @@ class PpOfficerApiController extends Controller
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0);
 
-        // Filter by officer district
+        // 3. Search and District filters apply karein
         if ($officer->district_id) {
-            $query->where('ppp.DistrictId', $officer->district_id);
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
-            $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
-        $query->select([
+        $search = $request->input('search');
+        if ($search) {
+            $tempQuery->where(function($q) use ($search) {
+                $q->where('ppp.PrivatePurchaserName', 'like', "%{$search}%")
+                  ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('ppp.PPPId', 'like', "%{$search}%")
+                  ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%");
+            });
+        }
+
+        // 4. Financial paid summation fields select karein
+        $tempQuery->select([
             'pad.PropertyAuctionId',
             'pad.AssetId',
             'pad.PurchaserID',
@@ -244,22 +261,16 @@ class PpOfficerApiController extends Controller
                 (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
-        ")
-        ->having('total_paid', '>=', 40000);
+        ");
 
-        // Search filter
-        $search = $request->input('search');
-        if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('ppp.PrivatePurchaserName', 'like', "%{$search}%")
-                  ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
-                  ->orWhere('ppp.PPPId', 'like', "%{$search}%")
-                  ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%");
-            });
-        }
+        // 5. Wrap query in a subquery structure (SQLite compatibility logic)
+        $purchasers = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 40000)
+            ->paginate(25)
+            ->withQueryString();
 
-        $purchasers = $query->paginate(25)->withQueryString();
-
+        // 6. JSON output load karein
         return response()->json([
             'success' => true,
             'purchasers' => $purchasers,
@@ -868,7 +879,7 @@ class PpOfficerApiController extends Controller
      */
     private function ensureDistrictApplications($officer)
     {
-        $query = DB::table('property_auction_detail as pad')
+        $tempQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('physical_possession_applications as ppa', function ($join) {
@@ -880,12 +891,12 @@ class PpOfficerApiController extends Controller
             ->whereNull('ppa.id');
 
         if ($officer->district_id) {
-            $query->where('ppp.DistrictId', $officer->district_id);
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
-            $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
-        $query->select([
+        $tempQuery->select([
             'pad.PropertyAuctionId',
             'pad.AssetId',
             'pad.PurchaserID',
@@ -908,10 +919,12 @@ class PpOfficerApiController extends Controller
                 (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
-        ")
-        ->having('total_paid', '>=', 40000);
+        ");
 
-        $missing = $query->get();
+        $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 40000)
+            ->get();
 
         foreach ($missing as $p) {
             $user = User::where('private_purchaser_id', $p->PurchaserID)
