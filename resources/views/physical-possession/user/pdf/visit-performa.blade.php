@@ -51,7 +51,7 @@
     </div>
 
     <table>
-        <tr><th>Application Number</th><td><strong>{{ $application->application_number }}</strong></td></tr>
+        <tr><th>Physical Possession Application No.</th><td><strong>{{ $application->application_number }}</strong></td></tr>
         <tr><th>Slip ID</th><td>{{ $application->slip_id }}</td></tr>
         <tr><th>Applicant Name</th><td>{{ $application->applicant_name }}</td></tr>
         <tr><th>Father Name</th><td>{{ $application->father_name ?? '—' }}</td></tr>

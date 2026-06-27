@@ -50,7 +50,7 @@
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-[10px]">
                     <div class="bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">
-                        <span class="text-slate-400 block mb-0.5 font-bold uppercase tracking-wider text-[8.5px]">Application No</span>
+                        <span class="text-slate-400 block mb-0.5 font-bold uppercase tracking-wider text-[8.5px]">Physical Possession Application No.</span>
                         <strong class="text-slate-800 text-[10.5px] font-extrabold">{{ $application->application_number }}</strong>
                     </div>
                     <div class="bg-white p-2.5 rounded-xl border border-slate-200/60 shadow-sm">

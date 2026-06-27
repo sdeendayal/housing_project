@@ -45,7 +45,7 @@
                                 </div>
                                 <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
                                     <div class="col-6 col-sm-4">
-                                        <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Application No</label>
+                                        <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Physical Possession Application No.</label>
                                         <div class="fw-bold text-slate-800">{{ $application->application_number }}</div>
                                     </div>
                                     <div class="col-6 col-sm-4">
@@ -419,7 +419,7 @@
                             </div>
                             <div class="row g-3 text-slate-800" style="font-size: 0.85rem;">
                                 <div class="col-6 col-sm-4">
-                                    <label class="text-muted small uppercase tracking-wider mb-1 block">Application Number</label>
+                                    <label class="text-muted small uppercase tracking-wider mb-1 block">Physical Possession Application No.</label>
                                     <div class="fw-bold text-slate-800">{{ $application->application_number }}</div>
                                 </div>
                                 <div class="col-6 col-sm-4">

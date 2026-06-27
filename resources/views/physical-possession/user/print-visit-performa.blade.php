@@ -50,7 +50,7 @@
         </div>
 
         <table class="table table-bordered">
-            <tr><th width="35%">Application Number</th><td><strong>{{ $application->application_number }}</strong></td></tr>
+            <tr><th width="35%">Physical Possession Application No.</th><td><strong>{{ $application->application_number }}</strong></td></tr>
             <tr><th>Slip ID</th><td>{{ $application->slip_id }}</td></tr>
             <tr><th>Applicant Name</th><td>{{ $application->applicant_name }}</td></tr>
             <tr><th>Mobile</th><td>{{ $application->mobile }}</td></tr>

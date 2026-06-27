@@ -36,7 +36,7 @@
                     <thead class="table-light text-uppercase text-muted">
                         <tr>
                             <th class="ps-3" style="width: 60px;">S.No.</th>
-                            <th>Application No.</th>
+                            <th>Physical Possession Application No.</th>
                             <th>Applicant</th>
                             <th>District</th>
                             <th>Meeting Date & Slot</th>
@@ -72,9 +72,12 @@
                                         </div>
                                     @elseif($app->physical_possession_status === 'Visit Scheduled')
                                         <div class="fw-semibold text-dark">
-                                            {{ $app->visit_slot_1 ? $app->visit_slot_1->format('d M Y') : '—' }}
-                                            <div class="small text-muted"><i class="bi bi-clock me-1"></i>{{ $app->visit_slot_1 ? $app->visit_slot_1->format('h:i A') : '—' }}</div>
-                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 fs-9 mt-1 py-0.5 px-1.5">3 Options Offered</span>
+                                            <span class="text-muted small d-block">Pending citizen choice</span>
+                                            <button type="button" class="btn btn-outline-primary btn-sm py-0.5 px-2 mt-1 rounded-pill d-inline-flex align-items-center gap-1.5 hover:-translate-y-px transition-transform cursor-pointer" 
+                                                    style="font-size: 0.68rem; font-weight: 600;"
+                                                    onclick="showSlotsModal('{{ $app->application_number }}', '{{ $app->visit_slot_1 ? $app->visit_slot_1->format('d M Y - h:i A') : '—' }}', '{{ $app->visit_slot_2 ? $app->visit_slot_2->format('d M Y - h:i A') : '—' }}', '{{ $app->visit_slot_3 ? $app->visit_slot_3->format('d M Y - h:i A') : '—' }}')">
+                                                <i class="bi bi-calendar3"></i> 3 Slots Offered
+                                            </button>
                                         </div>
                                     @else
                                         <span class="text-muted small">Not Scheduled</span>
@@ -191,5 +194,77 @@
         background-color: #f1f5f9 !important;
     }
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    function parseSlot(slotStr) {
+        if (!slotStr || slotStr === '—') return null;
+        try {
+            const parts = slotStr.split(' - ');
+            const dateParts = parts[0].trim().split(' ');
+            return {
+                day: dateParts[0],
+                month: dateParts[1],
+                year: dateParts[2],
+                time: parts[1].trim()
+            };
+        } catch(e) {
+            return null;
+        }
+    }
+
+    function makeSlotHtml(slotData, optionNum, themeColor) {
+        if (!slotData) return '';
+        const borderStyle = `border: 1px solid #eef2f6; background: #fafbfe;`;
+        const blockHeaderColor = `background: ${themeColor}; color: #fff;`;
+        
+        return `
+            <div class="d-flex align-items-center gap-3 p-2.5 rounded-3 mb-2" style="${borderStyle}">
+                <!-- Calendar Block -->
+                <div class="bg-white rounded-3 overflow-hidden text-center shadow-sm" style="width: 52px; height: 56px; border: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <div style="${blockHeaderColor} font-size: 8px; font-weight: 800; padding: 2px 0; text-transform: uppercase; letter-spacing: 0.5px;">Slot ${optionNum}</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #1e293b; line-height: 1.1; padding-top: 3px;">${slotData.day}</div>
+                    <div style="font-size: 9px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-top: -1px;">${slotData.month}</div>
+                </div>
+                <!-- Time & Day Details -->
+                <div class="text-start flex-grow-1">
+                    <span class="badge bg-light text-secondary px-2 py-0.5 rounded-pill fw-bold uppercase tracking-wider mb-1" style="font-size: 0.58rem; letter-spacing: 0.3px;">Proposed Time</span>
+                    <h6 class="fw-extrabold text-slate-800 m-0" style="font-size: 0.88rem; line-height: 1.2;">${slotData.time}</h6>
+                    <p class="text-slate-400 m-0 mt-0.5" style="font-size: 0.65rem; font-weight: 500;">Year: ${slotData.year}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function showSlotsModal(appNo, slot1, slot2, slot3) {
+        const s1 = parseSlot(slot1);
+        const s2 = parseSlot(slot2);
+        const s3 = parseSlot(slot3);
+
+        let slotsHtml = '';
+        if (s1) slotsHtml += makeSlotHtml(s1, 1, '#4f46e5');
+        if (s2) slotsHtml += makeSlotHtml(s2, 2, '#7c3aed');
+        if (s3) slotsHtml += makeSlotHtml(s3, 3, '#2563eb');
+
+        Swal.fire({
+            title: '<div class="text-indigo-950 fw-bold fs-5 mb-1"><i class="bi bi-calendar3 me-2 text-indigo-600"></i>Offered Visit Slots</div><div class="text-muted fw-normal" style="font-size: 0.72rem; letter-spacing: 0.2px;">Physical Possession Application No: ' + appNo + '</div>',
+            html: `
+                <div class="text-center mt-2 px-1">
+                    <p class="text-muted mb-3" style="font-size: 0.78rem; font-weight: 500; line-height: 1.4;">The District Officer has proposed the following three visit slots for on-site physical verification:</p>
+                    <div class="d-flex flex-column">
+                        ${slotsHtml}
+                    </div>
+                </div>
+            `,
+            showConfirmButton: true,
+            confirmButtonText: 'Dismiss',
+            confirmButtonColor: '#4f46e5',
+            customClass: {
+                popup: 'rounded-4 border-0 p-3 shadow-lg'
+            }
+        });
+    }
+</script>
 @endpush
 @endsection
