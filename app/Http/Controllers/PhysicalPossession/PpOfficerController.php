@@ -70,6 +70,7 @@ class PpOfficerController extends Controller
             'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
+        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['verified'] + $stats['rejected'];
 
         // Chart ke liye last 7 days data
         $chartLabels = [];

@@ -44,7 +44,7 @@
 
 .pp-dash-stats {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0.4rem;
     margin-bottom: 0.625rem;
 }
@@ -55,8 +55,11 @@
     .pp-dash-stats { grid-template-columns: repeat(2, 1fr); }
     .pp-dash-stats .pp-dash-stat:last-child { grid-column: span 2; }
 }
-@media (min-width: 768px) and (max-width: 1199px) {
+@media (min-width: 768px) and (max-width: 991px) {
     .pp-dash-stats { grid-template-columns: repeat(3, 1fr); }
+}
+@media (min-width: 992px) and (max-width: 1199px) {
+    .pp-dash-stats { grid-template-columns: repeat(5, 1fr); }
 }
 
 .pp-dash-stat {
@@ -96,6 +99,7 @@
 .pp-dash-stat-icon.green { background: #d1fae5; color: #047857; }
 .pp-dash-stat-icon.red { background: #fee2e2; color: #b91c1c; }
 .pp-dash-stat-icon.purple { background: #ede9fe; color: #6d28d9; }
+.pp-dash-stat-icon.indigo { background: #e0e7ff; color: #4338ca; }
 .pp-dash-stat-label {
     font-size: 0.65rem;
     color: var(--pp-text-muted);
@@ -354,6 +358,13 @@
 </div>
 
 <div class="pp-dash-stats">
+    <a href="{{ route('pp.officer.possession-applications') }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon indigo"><i class="bi bi-collection"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">Total Applications</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['total'] }}">0</div>
+        </div>
+    </a>
     <a href="{{ route('pp.officer.eligibility-list') }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon blue"><i class="bi bi-person-check"></i></div>
         <div class="min-w-0">
