@@ -25,10 +25,101 @@ class PpOfficerApiController extends Controller
         $officer = Auth::user();
         
         // 2. Auto-initialize: Eligible candidates ke liye automatically entry create karein
-        $this->ensureDistrictApplications($officer);
+        $tempQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->whereNull('ppa.id');
+
+        if ($officer->district_id) {
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        $tempQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.DistrictId',
+            'd.DistrictName',
+        ])
+        ->selectRaw("
+            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
+                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
+                0
+            ) as total_paid
+        ");
+
+        $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 40000)
+            ->get();
+
+        foreach ($missing as $p) {
+            $user = User::where('private_purchaser_id', $p->PurchaserID)
+                ->orWhere('mobile', $p->MobileNo)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $p->PrivatePurchaserName,
+                    'mobile' => $p->MobileNo,
+                    'role' => 'citizen',
+                    'private_purchaser_id' => $p->PurchaserID,
+                ]);
+            } else {
+                if (empty($user->private_purchaser_id)) {
+                    $user->private_purchaser_id = $p->PurchaserID;
+                    $user->save();
+                }
+            }
+
+            PhysicalPossessionApplication::create([
+                'user_id' => $user->id,
+                'private_purchaser_id' => $p->PurchaserID,
+                'asset_id' => $p->AssetId,
+                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                'slip_id' => 'SLIP-' . uniqid(),
+                'district_id' => $p->DistrictId,
+                'district_name' => $p->DistrictName,
+                'mobile' => $p->MobileNo,
+                'applicant_name' => $p->PrivatePurchaserName,
+                'father_name' => $p->PurchaserFatherName ?? '',
+                'address' => $p->Address ?? '',
+                'flat_cost' => $p->FlatCost,
+                'received_amount' => $p->ReceivedAmount,
+                'balance_amount' => $p->BalanceAmount,
+                'physical_possession_status' => 'Eligible for Physical Possession',
+                'status' => 'pending',
+            ]);
+        }
         
         // 3. Officer ke district ki applications ka query builder nikaalein
-        $query = $this->districtApplicationsQuery($officer);
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', '!=', 'draft');
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+        }
 
         $tempEligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
@@ -126,7 +217,15 @@ class PpOfficerApiController extends Controller
     public function getSlotCapacity(Request $request)
     {
         $officer = Auth::user();
-        $query = $this->districtApplicationsQuery($officer);
+        
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', '!=', 'draft');
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+        }
 
         // Inputs query parameters
         $date = $request->input('date', now()->toDateString());
@@ -151,7 +250,15 @@ class PpOfficerApiController extends Controller
     public function users(Request $request)
     {
         $officer = Auth::user();
-        $query = $this->districtApplicationsQuery($officer);
+
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', '!=', 'draft');
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+        }
 
         // Extract unique users linked with application forms
         $userIds = (clone $query)->distinct()->pluck('user_id');
@@ -170,7 +277,15 @@ class PpOfficerApiController extends Controller
     public function reports(Request $request)
     {
         $officer = Auth::user();
-        $query = $this->districtApplicationsQuery($officer);
+
+        $query = PhysicalPossessionApplication::query()
+            ->where('status', '!=', 'draft');
+
+        if ($officer->district_id) {
+            $query->where('district_id', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+        }
 
         $monthlyStats = [];
         // Past 6 months loop to fetch stats dynamically
@@ -203,7 +318,92 @@ class PpOfficerApiController extends Controller
     {
         // 1. Current officer fetch karein aur missing applications generate karein
         $officer = Auth::user();
-        $this->ensureDistrictApplications($officer);
+        
+        $tempQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->whereNull('ppa.id');
+
+        if ($officer->district_id) {
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        $tempQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.DistrictId',
+            'd.DistrictName',
+        ])
+        ->selectRaw("
+            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
+                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
+                0
+            ) as total_paid
+        ");
+
+        $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 40000)
+            ->get();
+
+        foreach ($missing as $p) {
+            $user = User::where('private_purchaser_id', $p->PurchaserID)
+                ->orWhere('mobile', $p->MobileNo)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $p->PrivatePurchaserName,
+                    'mobile' => $p->MobileNo,
+                    'role' => 'citizen',
+                    'private_purchaser_id' => $p->PurchaserID,
+                ]);
+            } else {
+                if (empty($user->private_purchaser_id)) {
+                    $user->private_purchaser_id = $p->PurchaserID;
+                    $user->save();
+                }
+            }
+
+            PhysicalPossessionApplication::create([
+                'user_id' => $user->id,
+                'private_purchaser_id' => $p->PurchaserID,
+                'asset_id' => $p->AssetId,
+                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                'slip_id' => 'SLIP-' . uniqid(),
+                'district_id' => $p->DistrictId,
+                'district_name' => $p->DistrictName,
+                'mobile' => $p->MobileNo,
+                'applicant_name' => $p->PrivatePurchaserName,
+                'father_name' => $p->PurchaserFatherName ?? '',
+                'address' => $p->Address ?? '',
+                'flat_cost' => $p->FlatCost,
+                'received_amount' => $p->ReceivedAmount,
+                'balance_amount' => $p->BalanceAmount,
+                'physical_possession_status' => 'Eligible for Physical Possession',
+                'status' => 'pending',
+            ]);
+        }
 
         // 2. Candidate mapping query generate karein
         $tempQuery = DB::table('property_auction_detail as pad')
@@ -599,7 +799,92 @@ class PpOfficerApiController extends Controller
     public function applications(Request $request)
     {
         $officer = Auth::user();
-        $this->ensureDistrictApplications($officer);
+        
+        $tempQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->whereNull('ppa.id');
+
+        if ($officer->district_id) {
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        $tempQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.DistrictId',
+            'd.DistrictName',
+        ])
+        ->selectRaw("
+            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
+                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
+                0
+            ) as total_paid
+        ");
+
+        $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 40000)
+            ->get();
+
+        foreach ($missing as $p) {
+            $user = User::where('private_purchaser_id', $p->PurchaserID)
+                ->orWhere('mobile', $p->MobileNo)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $p->PrivatePurchaserName,
+                    'mobile' => $p->MobileNo,
+                    'role' => 'citizen',
+                    'private_purchaser_id' => $p->PurchaserID,
+                ]);
+            } else {
+                if (empty($user->private_purchaser_id)) {
+                    $user->private_purchaser_id = $p->PurchaserID;
+                    $user->save();
+                }
+            }
+
+            PhysicalPossessionApplication::create([
+                'user_id' => $user->id,
+                'private_purchaser_id' => $p->PurchaserID,
+                'asset_id' => $p->AssetId,
+                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                'slip_id' => 'SLIP-' . uniqid(),
+                'district_id' => $p->DistrictId,
+                'district_name' => $p->DistrictName,
+                'mobile' => $p->MobileNo,
+                'applicant_name' => $p->PrivatePurchaserName,
+                'father_name' => $p->PurchaserFatherName ?? '',
+                'address' => $p->Address ?? '',
+                'flat_cost' => $p->FlatCost,
+                'received_amount' => $p->ReceivedAmount,
+                'balance_amount' => $p->BalanceAmount,
+                'physical_possession_status' => 'Eligible for Physical Possession',
+                'status' => 'pending',
+            ]);
+        }
 
         $query = PhysicalPossessionApplication::query()
             ->whereNotNull('physical_possession_status');
@@ -858,114 +1143,5 @@ class PpOfficerApiController extends Controller
         }
 
         return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
-    }
-
-    /**
-     * Sirf apne district ki applications query helper.
-     */
-    private function districtApplicationsQuery(User $officer)
-    {
-        $query = PhysicalPossessionApplication::query()
-            ->where('status', '!=', 'draft');
-
-        if ($officer->district_id) {
-            $query->where('district_id', $officer->district_id);
-        } elseif ($officer->district_name) {
-            $query->where('district_name', 'like', '%'.$officer->district_name.'%');
-        }
-
-        return $query;
-    }
-
-    /**
-     * Ensure all eligible district purchasers have physical possession application rows.
-     */
-    private function ensureDistrictApplications($officer)
-    {
-        $tempQuery = DB::table('property_auction_detail as pad')
-            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
-            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('physical_possession_applications as ppa', function ($join) {
-                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
-                     ->on('pad.AssetId', '=', 'ppa.asset_id');
-            })
-            ->where('pad.IsActive', 1)
-            ->where('pad.IsDeleted', 0)
-            ->whereNull('ppa.id');
-
-        if ($officer->district_id) {
-            $tempQuery->where('ppp.DistrictId', $officer->district_id);
-        } elseif ($officer->district_name) {
-            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
-        }
-
-        $tempQuery->select([
-            'pad.PropertyAuctionId',
-            'pad.AssetId',
-            'pad.PurchaserID',
-            'pad.FlatCost',
-            'pad.ReceivedAmount',
-            'pad.BalanceAmount',
-            'ppp.PrivatePurchaserName',
-            'ppp.PurchaserFatherName',
-            'ppp.Address',
-            'ppp.MobileNo',
-            'ppp.ApplicationNo',
-            'ppp.PPPId',
-            'ppp.MemberID',
-            'ppp.DistrictId',
-            'd.DistrictName',
-        ])
-        ->selectRaw("
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
-                0
-            ) as total_paid
-        ");
-
-        $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
-            ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
-            ->get();
-
-        foreach ($missing as $p) {
-            $user = User::where('private_purchaser_id', $p->PurchaserID)
-                ->orWhere('mobile', $p->MobileNo)
-                ->first();
-
-            if (!$user) {
-                $user = User::create([
-                    'name' => $p->PrivatePurchaserName,
-                    'mobile' => $p->MobileNo,
-                    'role' => 'citizen',
-                    'private_purchaser_id' => $p->PurchaserID,
-                ]);
-            } else {
-                if (empty($user->private_purchaser_id)) {
-                    $user->private_purchaser_id = $p->PurchaserID;
-                    $user->save();
-                }
-            }
-
-            PhysicalPossessionApplication::create([
-                'user_id' => $user->id,
-                'private_purchaser_id' => $p->PurchaserID,
-                'asset_id' => $p->AssetId,
-                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
-                'slip_id' => 'SLIP-' . uniqid(),
-                'district_id' => $p->DistrictId,
-                'district_name' => $p->DistrictName,
-                'mobile' => $p->MobileNo,
-                'applicant_name' => $p->PrivatePurchaserName,
-                'father_name' => $p->PurchaserFatherName ?? '',
-                'address' => $p->Address ?? '',
-                'flat_cost' => $p->FlatCost,
-                'received_amount' => $p->ReceivedAmount,
-                'balance_amount' => $p->BalanceAmount,
-                'physical_possession_status' => 'Eligible for Physical Possession',
-                'status' => 'pending',
-            ]);
-        }
     }
 }
