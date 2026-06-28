@@ -22,6 +22,7 @@ Route::get('introduction', function () {
     return view('home.introduction');
 });
 
+
 Route::get('organisation-chart', function () {
     return view('home.organisationChart');
 });
