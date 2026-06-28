@@ -56,6 +56,10 @@ class OtpAuthController extends Controller
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
 
+        if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
+            return back()->withInput()->with('error', $config['not_registered_message']);
+        }
+
         if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
             return back()->withInput()->with('error', $config['wrong_group_message']);
         }
@@ -136,6 +140,10 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
+        if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
+            return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        }
+
         if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
             return redirect()->route($config['login_route'])->with('error', $config['wrong_group_message']);
         }
@@ -201,6 +209,10 @@ class OtpAuthController extends Controller
         $user = User::where('mobile', $mobile)->first();
 
         if (! $user) {
+            return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        }
+
+        if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 

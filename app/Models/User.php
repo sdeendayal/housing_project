@@ -85,6 +85,10 @@ class User extends Authenticatable
 
     public function dashboardRoute(): string
     {
+        if ($this->scheme === 'MMGAY' && ($this->roleGroupSlug() ?? $this->role) === 'citizen') {
+            return route('mmgay.citizen.dashboard');
+        }
+
         $role = $this->assignedRole();
 
         if ($role) {
