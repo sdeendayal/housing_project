@@ -27,7 +27,7 @@ Route::prefix('possession')->group(function () {
         Route::get('/reports', [PpOfficerApiController::class, 'reports']);
 
         Route::get('/eligibility-list', [PpOfficerApiController::class, 'eligibilityList']);
-
+        
         Route::get('/schedule/capacity/check', [PpOfficerApiController::class, 'getSlotCapacityCheck']);
         
         Route::get('/schedule/{application}', [PpOfficerApiController::class, 'scheduleForm'])->where('application', '[a-f0-9]{32}');

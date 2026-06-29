@@ -467,11 +467,33 @@ class PpOfficerApiController extends Controller
         ");
 
         // 5. Wrap query in a subquery structure (SQLite compatibility logic)
-        $purchasers = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+        $purchaserQuery = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
-            ->paginate(25)
-            ->withQueryString();
+            ->where('temp.total_paid', '>=', 40000);
+
+        // Apply status/type filter if provided
+        $status = $request->input('status') ?? $request->input('type');
+        if ($status) {
+            $statusLower = strtolower($status);
+            if (in_array($statusLower, ['awaiting', 'awaiting_schedule', 'eligible', 'not_initiated'])) {
+                $purchaserQuery->where(function ($q) {
+                    $q->whereNull('temp.physical_possession_status')
+                      ->orWhere('temp.physical_possession_status', 'Eligible for Physical Possession');
+                });
+            } elseif (in_array($statusLower, ['scheduled', 'visit scheduled'])) {
+                $purchaserQuery->where('temp.physical_possession_status', 'Visit Scheduled');
+            } elseif (in_array($statusLower, ['submitted', 'pending', 'pending_verify', 'physical possession submitted'])) {
+                $purchaserQuery->whereIn('temp.physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
+            } elseif (in_array($statusLower, ['approved', 'verified'])) {
+                $purchaserQuery->where('temp.physical_possession_status', 'Verified');
+            } elseif (in_array($statusLower, ['rejected'])) {
+                $purchaserQuery->where('temp.physical_possession_status', 'Rejected');
+            } else {
+                $purchaserQuery->where('temp.physical_possession_status', $status);
+            }
+        }
+
+        $purchasers = $purchaserQuery->paginate(25)->withQueryString();
 
         // 6. JSON output load karein
         return response()->json([
