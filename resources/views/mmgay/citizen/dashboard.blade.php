@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>MMGAY Citizen Dashboard</title>
+    <title>MMGAV Villager Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Google Fonts: Plus Jakarta Sans & Inter -->
@@ -219,9 +219,9 @@
                     <div class="flex items-center gap-4">
                         <div class="hidden sm:flex items-center gap-2 pr-4 border-r border-slate-200">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span class="text-[10px] text-slate-500 font-bold font-mono">Verified Citizen session</span>
+                            <span class="text-[10px] text-slate-500 font-bold font-mono">Verified Villager session</span>
                         </div>
-                        <form action="{{ route('mmgay.logout') }}" method="POST" class="inline">
+                        <form action="{{ route('mmgav.villager.logout') }}" method="POST" class="inline">
                             @csrf
                             <button type="submit" class="bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm active:scale-95">
                                 <span class="material-symbols-outlined text-[13px] font-bold">logout</span>

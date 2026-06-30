@@ -452,7 +452,7 @@
                </div>
             </div>
 
-            <form id="verifyOtpForm" action="{{ route('mmgay.citizen.login.verify') }}" method="POST">
+            <form id="verifyOtpForm" action="{{ route('mmgav.villager.login.verify') }}" method="POST">
                @csrf
 
                <div class="cl-field">
@@ -485,7 +485,7 @@
                </button>
             </form>
 
-            <form id="resendOtpForm" action="{{ route('mmgay.citizen.login.resend-otp') }}" method="POST">
+            <form id="resendOtpForm" action="{{ route('mmgav.villager.login.resend-otp') }}" method="POST">
                @csrf
                <button type="submit" class="cl-btn-resend" id="resendOtpBtn">
                   <span class="btn-label-default">Resend OTP</span>
@@ -497,7 +497,7 @@
             </form>
 
             <p class="cl-link-wrap">
-               <a href="{{ route('mmgay.citizen.login') }}" class="cl-link">Change mobile number</a>
+               <a href="{{ route('mmgav.villager.login') }}" class="cl-link">Change mobile number</a>
             </p>
          </div>
       </div>

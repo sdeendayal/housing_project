@@ -95,8 +95,8 @@ class User extends Authenticatable
         $roleSlug = $this->roleSlug();
 
         return match ($roleSlug) {
-            'villager' => route('mmgay.citizen.dashboard'),
-            'citizen' => ($this->scheme === 'MMGAY') ? route('mmgay.citizen.dashboard') : route('citizen.dashboard'),
+            'villager' => route('mmgav.villager.dashboard'),
+            'citizen' => ($this->scheme === 'MMGAY') ? route('mmgav.villager.dashboard') : route('citizen.dashboard'),
             'district_officer' => route('pp.officer.dashboard'),
             'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
             default => route('home'),

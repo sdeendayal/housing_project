@@ -13,29 +13,35 @@ Route::get('/mmgay/refresh-captcha', [MMGAYAuthController::class, 'refreshCaptch
     ->name('mmgay.refresh.captcha');
 Route::post('/mmgay/logout', [MMGAYAuthController::class, 'logout'])->name('mmgay.logout');
 
-// MMGAV/MMGAY Citizen Auth Routes (Mobile & OTP)
-Route::get('/mmgav-citizen-login', [OtpAuthController::class, 'showLogin'])
-    ->defaults('context', 'mmgay_citizen')
-    ->name('mmgay.citizen.login');
-Route::redirect('/mmgay-citizen-login', '/mmgav-citizen-login');
+// MMGAV Villager Auth Routes (Mobile & OTP)
+Route::get('/mmgav/login', [OtpAuthController::class, 'showLogin'])
+    ->defaults('context', 'mmgav_villager')
+    ->name('mmgav.villager.login');
 
-Route::post('/mmgav-citizen-login/send-otp', [OtpAuthController::class, 'sendOtp'])
-    ->defaults('context', 'mmgay_citizen')
+Route::post('/mmgav/login/send-otp', [OtpAuthController::class, 'sendOtp'])
+    ->defaults('context', 'mmgav_villager')
     ->middleware('throttle:5,1')
-    ->name('mmgay.citizen.login.send-otp');
+    ->name('mmgav.villager.login.send-otp');
 
-Route::get('/mmgav-citizen-login/verify', [OtpAuthController::class, 'showVerifyOtp'])
-    ->defaults('context', 'mmgay_citizen')
-    ->name('mmgay.citizen.login.verify-page');
+Route::get('/mmgav/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+    ->defaults('context', 'mmgav_villager')
+    ->name('mmgav.villager.login.verify-page');
 
-Route::post('/mmgav-citizen-login/verify', [OtpAuthController::class, 'verifyOtp'])
-    ->defaults('context', 'mmgay_citizen')
-    ->name('mmgay.citizen.login.verify');
+Route::post('/mmgav/login/verify', [OtpAuthController::class, 'verifyOtp'])
+    ->defaults('context', 'mmgav_villager')
+    ->name('mmgav.villager.login.verify');
 
-Route::post('/mmgav-citizen-login/resend-otp', [OtpAuthController::class, 'resendOtp'])
-    ->defaults('context', 'mmgay_citizen')
+Route::post('/mmgav/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+    ->defaults('context', 'mmgav_villager')
     ->middleware('throttle:5,1')
-    ->name('mmgay.citizen.login.resend-otp');
+    ->name('mmgav.villager.login.resend-otp');
+
+Route::post('/mmgav/logout', [OtpAuthController::class, 'logout'])->name('mmgav.villager.logout');
+
+// Legacy MMGAV citizen URLs (redirect to villager login)
+Route::redirect('/mmgav-citizen-login', '/mmgav/login');
+Route::redirect('/mmgay-citizen-login', '/mmgav/login');
+Route::redirect('/mmgav-citizen-login/verify', '/mmgav/login/verify');
 
 // MMGAY Officer Protected Routes
 Route::middleware(['auth', 'mmgay'])->group(function () {
@@ -47,9 +53,12 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
         ->name('district.dashboard.phase');
 });
 
-// MMGAV/MMGAY Citizen Protected Routes
-Route::middleware(['auth', 'mmgay', 'role:citizen'])->group(function () {
+// MMGAV Villager Protected Routes
+Route::middleware(['auth', 'mmgay', 'role:villager'])->group(function () {
+    Route::get('/mmgav/villager/dashboard', [MMGAYCitizenController::class, 'dashboard'])
+        ->name('mmgav.villager.dashboard');
+
+    // Legacy URL and route name for existing bookmarks/DB records
     Route::get('/mmgav/citizen/dashboard', [MMGAYCitizenController::class, 'dashboard'])
         ->name('mmgay.citizen.dashboard');
 });
-?>

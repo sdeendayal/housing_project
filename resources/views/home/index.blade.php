@@ -305,14 +305,14 @@
                         <div
                             class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
 
-                            <a href="{{ route('mmgay.citizen.login') }}"
+                            <a href="{{ route('mmgav.villager.login') }}"
                                 class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all">
 
                                 <span class="material-symbols-outlined text-[18px]">
                                     person
                                 </span>
 
-                                Citizen Login
+                                Villager Login
                             </a>
 
                             <a href="{{ url('/mmgay/login') }}"

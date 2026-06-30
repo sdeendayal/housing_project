@@ -256,8 +256,12 @@ class OtpAuthController extends Controller
     {
         $loginRoute = 'citizen.login';
 
-        if (Auth::check() && Auth::user()->belongsToRoleGroup('department')) {
-            $loginRoute = 'pp.department.login';
+        if (Auth::check()) {
+            if (Auth::user()->belongsToRoleGroup('villager')) {
+                $loginRoute = 'mmgav.villager.login';
+            } elseif (Auth::user()->belongsToRoleGroup('department')) {
+                $loginRoute = 'pp.department.login';
+            }
         }
 
         Auth::logout();

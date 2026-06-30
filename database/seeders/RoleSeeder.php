@@ -32,7 +32,7 @@ class RoleSeeder extends Seeder
                 'role_group_id' => $villagerGroup->id,
                 'name' => 'Villager',
                 'slug' => 'villager',
-                'dashboard_route' => 'mmgay.citizen.dashboard',
+                'dashboard_route' => 'mmgav.villager.dashboard',
                 'dashboard_path' => null,
             ],
             [
@@ -85,6 +85,7 @@ class RoleSeeder extends Seeder
             $roleSlug = match (true) {
                 $userRole === 'district_officer' => 'district_officer',
                 $groupSlug === 'citizen' => 'citizen',
+                $groupSlug === 'villager' => 'villager',
                 in_array($groupSlug, ['department', 'departmental'], true) => 'admin',
                 default => null,
             };

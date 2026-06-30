@@ -9,6 +9,8 @@ class Otp extends Model
 {
     public const PURPOSE_CITIZEN_LOGIN = 'login';
 
+    public const PURPOSE_MMGAV_VILLAGER_LOGIN = 'mmgav_villager_login';
+
     public const PURPOSE_DEPARTMENT_LOGIN = 'department_login';
 
     public const PURPOSE_POSSESSION_CERTIFICATE = 'verify_possession_certificate';

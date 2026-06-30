@@ -14,6 +14,10 @@ class RoleMiddleware
             return $this->guardRoleGroup($request, $next, 'citizen', route('citizen.login'));
         }
 
+        if ($role === 'villager') {
+            return $this->guardRoleGroup($request, $next, 'villager', route('mmgav.villager.login'));
+        }
+
         if (in_array($role, ['department', 'departmental'], true)) {
             return $this->guardRoleGroup($request, $next, 'department', route('pp.department.login'));
         }

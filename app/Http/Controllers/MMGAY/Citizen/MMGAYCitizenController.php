@@ -14,8 +14,8 @@ class MMGAYCitizenController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user) {
-            return redirect()->route('mmgay.citizen.login');
+        if (! $user) {
+            return redirect()->route('mmgav.villager.login');
         }
 
         $ownerInfo = null;

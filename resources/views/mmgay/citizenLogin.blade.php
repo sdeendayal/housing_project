@@ -2,7 +2,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 @extends('layouts.auth')
-@section('title', 'MMGAV Citizen Login')
+@section('title', 'MMGAV Villager Login')
 @section('content')
 
 <style>
@@ -403,7 +403,7 @@
             </div>
             <div>
                <p class="cl-brand__title">Housing For All (MMGAV)</p>
-               <p class="cl-brand__sub">Citizen Portal</p>
+               <p class="cl-brand__sub">Villager Portal</p>
             </div>
          </div>
 
@@ -413,7 +413,7 @@
                   <span class="material-symbols-outlined">account_circle</span>
                </div>
                <div>
-                  <p class="cl-head__title">Citizen Login</p>
+                  <p class="cl-head__title">Villager Login</p>
                   <p class="cl-head__sub">Enter mobile number to receive OTP</p>
                </div>
             </div>
@@ -423,7 +423,7 @@
                <span class="cl-tag"><span class="material-symbols-outlined">sms</span> OTP</span>
             </div>
 
-            <form id="sendOtpForm" action="{{ route('mmgay.citizen.login.send-otp') }}" method="POST">
+            <form id="sendOtpForm" action="{{ route('mmgav.villager.login.send-otp') }}" method="POST">
                @csrf
 
                <div class="cl-field">

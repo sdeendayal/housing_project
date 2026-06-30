@@ -15,6 +15,7 @@ class OtpVerificationService
 
     private const LOGIN_PURPOSES = [
         Otp::PURPOSE_CITIZEN_LOGIN,
+        Otp::PURPOSE_MMGAV_VILLAGER_LOGIN,
         Otp::PURPOSE_DEPARTMENT_LOGIN,
     ];
 
