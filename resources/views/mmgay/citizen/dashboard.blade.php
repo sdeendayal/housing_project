@@ -420,7 +420,7 @@
                         <!-- Summary Data Grid -->
                         <div class="glass-card p-5 rounded-2xl">
                             <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Primary Registration Records</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
+                            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 text-xs">
                                 <div class="border-l-2 border-blue-500 pl-4 py-1">
                                     <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">Applicant Name</span>
                                     <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->OwnerName }}</span>
@@ -436,6 +436,10 @@
                                 <div class="border-l-2 border-emerald-500 pl-4 py-1">
                                     <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">District Name</span>
                                     <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->DistrictName ?? '—' }}</span>
+                                </div>
+                                <div class="border-l-2 border-purple-500 pl-4 py-1">
+                                    <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">Flat Number</span>
+                                    <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->FlatNo ?? '—' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -496,7 +500,7 @@
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Location & Area Mapping</h3>
                             </div>
                             <div class="p-5 space-y-4">
-                                <div class="grid grid-cols-2 md:grid-cols-4 gap-3.5 text-xs">
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 text-xs">
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
                                         <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District Name</span>
                                         <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictName ?? 'N/A' }}</span>
@@ -512,6 +516,10 @@
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
                                         <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat / Plot ID</span>
                                         <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->FlatId ?? '0' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat Number</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->FlatNo ?? 'N/A' }}</span>
                                     </div>
                                 </div>
                                 <div class="bg-blue-50/10 p-4 rounded-xl border border-blue-100/50 text-xs">

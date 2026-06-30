@@ -72,6 +72,18 @@ class OtpAuthController extends Controller
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
 
+        if ($context === 'mmgav_villager') {
+            $owner = DB::table('ownermaster')->where('MobileNo', $mobile)->first();
+            if (! $owner) {
+                return back()->withInput()->with('error', 'You have not been allotted a flat yet.');
+            }
+
+            $flatExists = DB::table('flatmaster')->where('FlatId', $owner->FlatId)->exists();
+            if (! $flatExists) {
+                return back()->withInput()->with('error', 'You have not been allotted a flat yet.');
+            }
+        }
+
         $purpose = $config['otp_purpose'];
 
         try {
@@ -160,6 +172,18 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
+        if ($context === 'mmgav_villager') {
+            $owner = DB::table('ownermaster')->where('MobileNo', $mobile)->first();
+            if (! $owner) {
+                return redirect()->route($config['login_route'])->with('error', 'You have not been allotted a flat yet.');
+            }
+
+            $flatExists = DB::table('flatmaster')->where('FlatId', $owner->FlatId)->exists();
+            if (! $flatExists) {
+                return redirect()->route($config['login_route'])->with('error', 'You have not been allotted a flat yet.');
+            }
+        }
+
         $purpose = $config['otp_purpose'];
         $result = $this->otpService->verify($mobile, $purpose, $request->otp);
 
@@ -230,6 +254,18 @@ class OtpAuthController extends Controller
 
         if (! $user->belongsToRoleGroup($config['role_group'])) {
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        }
+
+        if ($context === 'mmgav_villager') {
+            $owner = DB::table('ownermaster')->where('MobileNo', $mobile)->first();
+            if (! $owner) {
+                return redirect()->route($config['login_route'])->with('error', 'You have not been allotted a flat yet.');
+            }
+
+            $flatExists = DB::table('flatmaster')->where('FlatId', $owner->FlatId)->exists();
+            if (! $flatExists) {
+                return redirect()->route($config['login_route'])->with('error', 'You have not been allotted a flat yet.');
+            }
         }
 
         $purpose = $config['otp_purpose'];

@@ -56,6 +56,30 @@ class MMGAYCitizenAuthTest extends TestCase
             'role_group_id' => $villagerGroup->id,
         ]);
 
+        $village = \Illuminate\Support\Facades\DB::table('villagemaster')->first();
+        $villageId = $village ? $village->VillageId : 1;
+        $blockId = $village ? $village->BlockId : 1;
+        $districtId = $village ? $village->DistrictId : 1;
+
+        \Illuminate\Support\Facades\DB::table('flatmaster')->insert([
+            'FlatId' => 12345,
+            'FlatNo' => 'TEST_FLAT_123',
+            'VillageId' => $villageId,
+            'BlockId' => $blockId,
+            'DistrictId' => $districtId,
+            'IsActive' => 1,
+        ]);
+
+        \Illuminate\Support\Facades\DB::table('ownermaster')->insert([
+            'OwnerId' => 99999,
+            'OwnerName' => 'MMGAV Villager Test',
+            'FlatId' => 12345,
+            'MobileNo' => '8888800001',
+            'IsApproved' => 1,
+            'IsPaid' => 1,
+            'IsPaymentApproved' => 1,
+        ]);
+
         $this->withSession(['captcha' => '1234']);
 
         $sendOtpRes = $this->post('/mmgav/login/send-otp', [
