@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            ImportSqlTablesSeeder::class,
             EmOfficeSeeder::class,
             DistrictSeeder::class,
             CitySeeder::class,
@@ -30,5 +31,8 @@ class DatabaseSeeder extends Seeder
             LedgerSeeder::class,
             InstallmentDueSeeder::class,
         ]);
+
+        // Sync MMGAY citizen owners into users table
+        $this->command->call('citizens:sync-mmgay-users');
     }
 }

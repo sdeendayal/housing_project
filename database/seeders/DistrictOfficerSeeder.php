@@ -23,31 +23,41 @@ class DistrictOfficerSeeder extends Seeder
             return;
         }
 
-        $officers = [
-            ['name' => 'Saharanpur Officer', 'mobile' => '9999900001', 'district_name' => 'Saharanpur'],
-            ['name' => 'Muzaffarnagar Officer', 'mobile' => '9999900002', 'district_name' => 'Muzaffarnagar'],
-            ['name' => 'Meerut Officer', 'mobile' => '9999900003', 'district_name' => 'Meerut'],
-            ['name' => 'Haridwar Officer', 'mobile' => '9999900004', 'district_name' => 'Haridwar'],
-            ['name' => 'Rohtak Officer', 'mobile' => '9999900005', 'district_name' => 'ROHTAK'],
-        ];
+        $districtsWithApps = DB::table('property_private_purchasers')
+            ->select('DistrictId')
+            ->distinct()
+            ->pluck('DistrictId');
+
+        $districts = DB::table('districts')
+            ->whereIn('DistrictId', $districtsWithApps)
+            ->where('Is_Active', 1)
+            ->where('Is_Deleted', 0)
+            ->get();
+
+        if ($districts->isEmpty()) {
+            $this->command->warn('No active districts found in property_private_purchasers. Seeding fallback Rohtak Site Engineer.');
+            $districts = DB::table('districts')
+                ->where('DistrictName', 'ROHTAK')
+                ->where('Is_Active', 1)
+                ->where('Is_Deleted', 0)
+                ->get();
+        }
 
         $plainPassword = Hash::make('officer123');
 
-        foreach ($officers as $officerData) {
-            $district = DB::table('districts')
-                ->where('DistrictName', 'like', '%'.$officerData['district_name'].'%')
-                ->where('Is_Deleted', 0)
-                ->first();
+        foreach ($districts as $district) {
+            $mobile = '99999' . str_pad($district->DistrictId, 5, '0', STR_PAD_LEFT);
+            $name = ucwords(strtolower($district->DistrictName)) . ' Site Engineer';
 
             $user = User::updateOrCreate(
-                ['mobile' => $officerData['mobile']],
+                ['mobile' => $mobile],
                 [
-                    'name' => $officerData['name'],
+                    'name' => $name,
                     'email' => null,
                     'password' => $plainPassword,
                     'role' => 'district_officer',
-                    'district_id' => $district->DistrictId ?? null,
-                    'district_name' => $district->DistrictName ?? $officerData['district_name'],
+                    'district_id' => $district->DistrictId,
+                    'district_name' => $district->DistrictName,
                 ]
             );
 

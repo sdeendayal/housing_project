@@ -12,8 +12,9 @@ class RoleSeeder extends Seeder
     {
         $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
         $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
+        $villagerGroup = RoleGroup::where('slug', 'villager')->first();
 
-        if (! $citizenGroup || ! $departmentGroup) {
+        if (! $citizenGroup || ! $departmentGroup || ! $villagerGroup) {
             $this->command->error('Role groups not found. Run RoleGroupSeeder first.');
 
             return;
@@ -25,6 +26,13 @@ class RoleSeeder extends Seeder
                 'name' => 'Citizen',
                 'slug' => 'citizen',
                 'dashboard_route' => 'citizen.dashboard',
+                'dashboard_path' => null,
+            ],
+            [
+                'role_group_id' => $villagerGroup->id,
+                'name' => 'Villager',
+                'slug' => 'villager',
+                'dashboard_route' => 'mmgay.citizen.dashboard',
                 'dashboard_path' => null,
             ],
             [

@@ -27,11 +27,11 @@ class SyncMMGAYCitizens extends Command
     {
         ini_set('memory_limit', '512M');
 
-        $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
-        $citizenRole = Role::where('slug', 'citizen')->first();
+        $citizenGroup = RoleGroup::where('slug', 'villager')->first();
+        $citizenRole = Role::where('slug', 'villager')->first();
 
         if (! $citizenGroup || ! $citizenRole) {
-            $this->error('Citizen role/group not found. Run RoleGroupSeeder and RoleSeeder first.');
+            $this->error('Villager role/group not found. Run RoleGroupSeeder and RoleSeeder first.');
 
             return self::FAILURE;
         }
@@ -89,6 +89,21 @@ class SyncMMGAYCitizens extends Command
 
         $progressBar->finish();
         $this->newLine(2);
+
+        // Find all MMGAY users that are missing role mappings and insert them
+        $this->info('Verifying and fixing missing role mappings for all MMGAY users...');
+        $missingRoleUserIds = DB::table('users')
+            ->leftJoin('role_types', 'users.id', '=', 'role_types.user_id')
+            ->where('users.scheme', 'MMGAY')
+            ->whereNull('users.deleted_at')
+            ->whereNull('role_types.id')
+            ->pluck('users.id')
+            ->all();
+
+        if (count($missingRoleUserIds) > 0) {
+            $this->info('Found ' . count($missingRoleUserIds) . ' users missing role mappings. Generating mappings...');
+            $this->syncRoleMappings($missingRoleUserIds, $citizenGroup, $citizenRole, $now);
+        }
 
         $this->table(
             ['Metric', 'Count'],
@@ -169,7 +184,7 @@ class SyncMMGAYCitizens extends Command
                 'email' => null,
                 'mobile' => $mobile,
                 'password' => $passwordHash,
-                'role' => 'citizen',
+                'role' => 'villager',
                 'scheme' => 'MMGAY',
                 'district_id' => $owner->DistrictId,
                 'district_name' => $districtName,

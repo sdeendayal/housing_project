@@ -85,20 +85,20 @@ class User extends Authenticatable
 
     public function dashboardRoute(): string
     {
-        if ($this->scheme === 'MMGAY' && ($this->roleGroupSlug() ?? $this->role) === 'citizen') {
-            return route('mmgay.citizen.dashboard');
-        }
-
+        // 1. Check database role routing (highly dynamic, does not require editing code)
         $role = $this->assignedRole();
-
         if ($role) {
             return $role->dashboardUrl();
         }
 
-        return match ($this->roleGroupSlug() ?? $this->role) {
-            'citizen' => route('citizen.dashboard'),
-            'department', 'departmental' => route('department.dashboard'),
+        // 2. Fallback matching using roleSlug()
+        $roleSlug = $this->roleSlug();
+
+        return match ($roleSlug) {
+            'villager' => route('mmgay.citizen.dashboard'),
+            'citizen' => ($this->scheme === 'MMGAY') ? route('mmgay.citizen.dashboard') : route('citizen.dashboard'),
             'district_officer' => route('pp.officer.dashboard'),
+            'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
             default => route('home'),
         };
     }

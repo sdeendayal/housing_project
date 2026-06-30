@@ -56,6 +56,10 @@ class OtpAuthController extends Controller
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
 
+        if (! $user->roleType || ! $user->roleType->role_group_id) {
+            return back()->withInput()->with('error', 'Your account does not have a configured role group mapping.');
+        }
+
         if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
@@ -138,6 +142,10 @@ class OtpAuthController extends Controller
 
         if (! $user) {
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        }
+
+        if (! $user->roleType || ! $user->roleType->role_group_id) {
+            return redirect()->route($config['login_route'])->with('error', 'Your account does not have a configured role group mapping.');
         }
 
         if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {

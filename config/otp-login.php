@@ -49,7 +49,7 @@ return [
             'log_label' => 'Citizen',
         ],
         'mmgay_citizen' => [
-            'role_group' => 'citizen',
+            'role_group' => 'villager',
             'otp_purpose' => 'mmgay_citizen_login',
             'login_view' => 'mmgay.citizenLogin',
             'verify_view' => 'mmgay.citizenOtpVerify',

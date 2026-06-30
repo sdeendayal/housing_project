@@ -137,6 +137,21 @@ class SyncCitizenUsers extends Command
             $this->line("Resume with: php artisan citizens:sync-users --from-id={$lastId}");
         }
 
+        // Find all citizen users (MMSAY) that are missing role mappings and insert them
+        $this->info('Verifying and fixing missing role mappings for all MMSAY citizen users...');
+        $missingRoleUserIds = DB::table('users')
+            ->leftJoin('role_types', 'users.id', '=', 'role_types.user_id')
+            ->where('users.scheme', 'MMSAY')
+            ->whereNull('users.deleted_at')
+            ->whereNull('role_types.id')
+            ->pluck('users.id')
+            ->all();
+
+        if (count($missingRoleUserIds) > 0) {
+            $this->info('Found ' . count($missingRoleUserIds) . ' users missing role mappings. Generating mappings...');
+            $this->syncRoleMappings($missingRoleUserIds, $citizenGroup, $citizenRole, $now);
+        }
+
         return self::SUCCESS;
     }
 
