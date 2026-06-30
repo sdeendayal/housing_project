@@ -85,7 +85,7 @@ class MMGAYAuthController extends Controller
 
         $user = Auth::user();
 
-        if ($user->belongsToRoleGroup('villager') || $user->role === 'villager') {
+        if ($user->belongsToRoleGroup('villager') || $user->roleSlug() === 'villager') {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -95,7 +95,8 @@ class MMGAYAuthController extends Controller
                 ->with('info', 'Villager accounts must use Mobile OTP login.');
         }
 
-        if (! in_array($user->role, ['district_ceo', 'dc', 'admin'], true)) {
+        $roleSlug = $user->roleSlug();
+        if (! in_array($roleSlug, ['district_ceo', 'dc', 'admin'], true)) {
             Auth::logout();
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -132,11 +133,10 @@ class MMGAYAuthController extends Controller
 
         $villager = User::query()
             ->where('scheme', 'MMGAY')
-            ->where('role', 'villager')
             ->where('email', $login)
-            ->exists();
+            ->first();
 
-        if ($villager) {
+        if ($villager && $villager->belongsToRoleGroup('villager')) {
             return redirect()
                 ->route('mmgav.villager.login')
                 ->with('info', 'Villager accounts use Mobile OTP login, not email/password.');

@@ -98,6 +98,8 @@ class RoleSeeder extends Seeder
 
             $roleSlug = match (true) {
                 $userRole === 'district_officer' => 'district_officer',
+                $userRole === 'district_ceo' => 'district_ceo',
+                $userRole === 'dc' => 'dc',
                 $groupSlug === 'citizen' => 'citizen',
                 $groupSlug === 'villager' => 'villager',
                 in_array($groupSlug, ['department', 'departmental'], true) => 'admin',
