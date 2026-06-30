@@ -615,6 +615,8 @@
       showErrorAlert('Validation Error', @json($errors->first()));
    @elseif (session('error'))
       showErrorAlert('Unable to Send OTP', @json(session('error')));
+   @elseif (session('info'))
+      showValidationAlert('Villager Login', @json(session('info')));
    @endif
 })();
 </script>

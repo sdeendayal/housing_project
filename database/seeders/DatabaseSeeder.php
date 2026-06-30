@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
             PhysicalPossessionUserSeeder::class,
             LedgerSeeder::class,
             InstallmentDueSeeder::class,
+            MMGAYUserSeeder::class,
         ]);
 
         // Sync MMGAY citizen owners into users table

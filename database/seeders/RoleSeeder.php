@@ -63,6 +63,20 @@ class RoleSeeder extends Seeder
                 'dashboard_route' => 'department.dashboard',
                 'dashboard_path' => null,
             ],
+            [
+                'role_group_id' => $departmentGroup->id,
+                'name' => 'District CEO',
+                'slug' => 'district_ceo',
+                'dashboard_route' => 'district.dashboard',
+                'dashboard_path' => null,
+            ],
+            [
+                'role_group_id' => $departmentGroup->id,
+                'name' => 'Deputy Commissioner',
+                'slug' => 'dc',
+                'dashboard_route' => 'district.dashboard',
+                'dashboard_path' => null,
+            ],
         ];
 
         foreach ($roles as $role) {

@@ -15,9 +15,16 @@ class MMGAYUserSeeder extends Seeder
     {
         $districtRole = Role::where('slug', 'district_ceo')->first();
         $dcRole = Role::where('slug', 'dc')->first();
+        $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
 
-        $districtGroup = RoleGroup::where('slug', 'district_ceo')->first();
-        $dcGroup = RoleGroup::where('slug', 'dc')->first();
+        if (! $districtRole || ! $dcRole || ! $departmentGroup) {
+            $this->command->error('MMGAY officer roles not found. Run RoleGroupSeeder and RoleSeeder first.');
+
+            return;
+        }
+
+        $districtGroup = $departmentGroup;
+        $dcGroup = $departmentGroup;
 
         $users = [
 
