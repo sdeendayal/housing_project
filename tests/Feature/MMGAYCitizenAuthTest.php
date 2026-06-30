@@ -56,17 +56,28 @@ class MMGAYCitizenAuthTest extends TestCase
             'role_group_id' => $villagerGroup->id,
         ]);
 
-        $village = \Illuminate\Support\Facades\DB::table('villagemaster')->first();
-        $villageId = $village ? $village->VillageId : 1;
-        $blockId = $village ? $village->BlockId : 1;
-        $districtId = $village ? $village->DistrictId : 1;
+        \Illuminate\Support\Facades\DB::table('districtmaster')->insertOrIgnore([
+            'DistrictId' => 1,
+            'DistrictName' => 'TEST_DISTRICT',
+        ]);
+        \Illuminate\Support\Facades\DB::table('blockmaster')->insertOrIgnore([
+            'BlockId' => 1,
+            'DistrictId' => 1,
+            'BlockName' => 'TEST_BLOCK',
+        ]);
+        \Illuminate\Support\Facades\DB::table('villagemaster')->insertOrIgnore([
+            'VillageId' => 1,
+            'BlockId' => 1,
+            'DistrictId' => 1,
+            'VillageName' => 'TEST_VILLAGE',
+        ]);
 
         \Illuminate\Support\Facades\DB::table('flatmaster')->insert([
             'FlatId' => 12345,
             'FlatNo' => 'TEST_FLAT_123',
-            'VillageId' => $villageId,
-            'BlockId' => $blockId,
-            'DistrictId' => $districtId,
+            'VillageId' => 1,
+            'BlockId' => 1,
+            'DistrictId' => 1,
             'IsActive' => 1,
         ]);
 

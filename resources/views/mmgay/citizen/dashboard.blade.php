@@ -170,6 +170,10 @@
                                 <span class="material-symbols-outlined text-[18px]">location_on</span>
                                 <span class="tab-label">Location Mapping</span>
                             </button>
+                            <button onclick="switchTab('property')" id="tab-btn-property" class="tab-btn w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all hover:bg-slate-800/30 hover:text-white text-left">
+                                <span class="material-symbols-outlined text-[18px]">real_estate_agent</span>
+                                <span class="tab-label">Property Allotted Details</span>
+                            </button>
                         </div>
                     </div>
 
@@ -188,6 +192,30 @@
                         </div>
                     </div>
                 </nav>
+
+                <!-- Allotted Property Details (Sidebar Capsule) -->
+                @if(isset($ownerInfo->FlatNo))
+                <div class="mx-4 mb-2 p-3 bg-white/5 border border-white/5 rounded-2xl flex flex-col gap-1.5 backdrop-blur-md shadow-sm">
+                    <div class="flex items-center gap-2 text-indigo-400">
+                        <span class="material-symbols-outlined text-[15px] font-bold">real_estate_agent</span>
+                        <span class="text-[9px] font-extrabold uppercase tracking-wider">Allotted Property</span>
+                    </div>
+                    <div class="text-[10px] text-slate-300 font-semibold pl-6">
+                        <div class="flex justify-between border-b border-white/5 pb-1">
+                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Flat ID:</span>
+                            <span class="font-mono text-slate-300">#{{ $ownerInfo->FlatId }}</span>
+                        </div>
+                        <div class="flex justify-between border-b border-white/5 pt-1 pb-1">
+                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Flat No:</span>
+                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->FlatNo }}">{{ $ownerInfo->FlatNo }}</span>
+                        </div>
+                        <div class="flex justify-between pt-1">
+                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Village:</span>
+                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->VillageName }}">{{ $ownerInfo->VillageName }}</span>
+                        </div>
+                    </div>
+                </div>
+                @endif
 
                 <!-- Sidebar Footer Profile Card (Floating Glass Capsule) -->
                 <div class="m-4 p-3.5 bg-white/5 border border-white/10 rounded-2xl flex items-center gap-3 backdrop-blur-md shadow-lg shadow-black/20 flex-shrink-0">
@@ -233,6 +261,37 @@
 
                 <!-- Main Scrollable Body -->
                 <main class="flex-grow p-6 overflow-y-auto space-y-6">
+
+                    <!-- Payment Status Banner -->
+                    @if($ownerInfo)
+                        @if($ownerInfo->IsPaid == 1)
+                            <div class="glass-card p-4 rounded-2xl flex items-center justify-between border-l-[4px] border-l-emerald-500 bg-emerald-50/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">payments</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-emerald-800 leading-snug">Payment Status: Received</h4>
+                                        <p class="text-[10px] text-emerald-600 mt-0.5 font-medium">Your flat allotment payment has been successfully received and verified.</p>
+                                    </div>
+                                </div>
+                                <span class="bg-emerald-100/80 text-emerald-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Paid</span>
+                            </div>
+                        @else
+                            <div class="glass-card p-4 rounded-2xl flex items-center justify-between border-l-[4px] border-l-amber-500 bg-amber-50/30">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">hourglass_empty</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-amber-800 leading-snug">Payment Status: Pending</h4>
+                                        <p class="text-[10px] text-amber-600 mt-0.5 font-medium">Your flat allotment payment is currently pending. Please proceed with payment.</p>
+                                    </div>
+                                </div>
+                                <span class="bg-amber-100/80 text-amber-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Pending</span>
+                            </div>
+                        @endif
+                    @endif
 
                     <!-- 1. OVERVIEW TAB -->
                     <div id="tab-overview" class="tab-content space-y-6">
@@ -420,7 +479,7 @@
                         <!-- Summary Data Grid -->
                         <div class="glass-card p-5 rounded-2xl">
                             <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Primary Registration Records</h3>
-                            <div class="grid grid-cols-2 md:grid-cols-5 gap-6 text-xs">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
                                 <div class="border-l-2 border-blue-500 pl-4 py-1">
                                     <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">Applicant Name</span>
                                     <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->OwnerName }}</span>
@@ -436,10 +495,6 @@
                                 <div class="border-l-2 border-emerald-500 pl-4 py-1">
                                     <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">District Name</span>
                                     <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->DistrictName ?? '—' }}</span>
-                                </div>
-                                <div class="border-l-2 border-purple-500 pl-4 py-1">
-                                    <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider leading-none">Flat Number</span>
-                                    <span class="font-bold text-slate-800 block mt-1.5">{{ $ownerInfo->FlatNo ?? '—' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -624,6 +679,40 @@
                                     <div>
                                         <h4 class="font-bold text-slate-800 text-xs">Nodal Office</h4>
                                         <p class="text-[11px] text-slate-500 mt-1 leading-snug">Visit Nodal District HQ or the Department of Housing cell.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. PROPERTY ALLOTTED DETAILS TAB -->
+                    <div id="tab-property" class="tab-content space-y-5 hidden">
+                        <div class="glass-card overflow-hidden rounded-2xl">
+                            <div class="px-5 py-3.5 bg-slate-50/50 border-b border-slate-200/50 flex items-center justify-between">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Property Allotted Details</h3>
+                                <span class="bg-indigo-100 text-indigo-800 text-[9px] px-2 py-0.5 rounded-lg font-bold uppercase">Allotment Details</span>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 text-xs">
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat / Plot ID</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->FlatId ?? '—' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat Number</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5 font-mono">{{ $ownerInfo->FlatNo ?? '—' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village Name</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->VillageName ?? '—' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block Name</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->BlockName ?? '—' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District Name</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictName ?? '—' }}</span>
                                     </div>
                                 </div>
                             </div>
