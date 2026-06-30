@@ -51,6 +51,11 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
 
     Route::get('/district-ceo/dashboard/{phase}', [DistrictCEOController::class, 'getPhaseData'])
         ->name('district.dashboard.phase');
+
+    Route::get('/district-ceo/list/{phase}/{status}', [DistrictCEOController::class, 'list'])
+        ->name('district.list');
+
+        
 });
 
 // MMGAV Villager Protected Routes
