@@ -587,12 +587,19 @@ class PpOfficerApiController extends Controller
                 'pr.AssetName',
                 'pr.AssetSize',
                 'pr.Unit',
+                'pr.BranchId as pr_branch_id',
+                'pr.DistrictId as pr_district_id',
+                'pr.CityId as pr_city_id',
+                'pr.SectorId as pr_sector_id',
                 'c.CityName',
                 's.SectorName',
                 'd.DistrictName',
+                'pad.PropertyAuctionId as pad_property_auction_id',
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
                 'pad.BalanceAmount',
+                'ppp.PrivatePurchaserId as ppp_private_id',
+                'ppp.Flat_Id as ppp_flat_id',
                 'ppp.PrivatePurchaserName',
                 'ppp.PurchaserFatherName',
                 'ppp.MobileNo',
@@ -619,6 +626,7 @@ class PpOfficerApiController extends Controller
          * missing personal fields from there.
          */
         $flatIdCandidate = $application->flat_id
+            ?? ($property->ppp_flat_id ?? null)
             ?? (is_numeric($application->asset_id) ? (int) $application->asset_id : null);
 
         if ($flatIdCandidate) {
@@ -661,6 +669,60 @@ class PpOfficerApiController extends Controller
                     $property->Address = $purchaserByFlat->Address;
                 }
             }
+        }
+
+        // Hydrate application model fields from the joined details where they are currently null.
+        $applicationDirty = false;
+
+        if (empty($application->ppp_id) && !empty($property->purchaser_ppp_id)) {
+            $application->ppp_id = $property->purchaser_ppp_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->member_id) && !empty($property->purchaser_member_id)) {
+            $application->member_id = $property->purchaser_member_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->private_purchaser_id) && !empty($property->ppp_private_id)) {
+            $application->private_purchaser_id = $property->ppp_private_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->flat_id) && !empty($property->ppp_flat_id)) {
+            $application->flat_id = $property->ppp_flat_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->property_auction_id) && !empty($property->pad_property_auction_id)) {
+            $application->property_auction_id = $property->pad_property_auction_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->branch_id) && !empty($property->pr_branch_id)) {
+            $application->branch_id = $property->pr_branch_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->district_id) && !empty($property->pr_district_id)) {
+            $application->district_id = $property->pr_district_id;
+            $applicationDirty = true;
+        }
+
+        if (empty($application->city_id) && !empty($property->pr_city_id)) {
+            $application->city_id = $property->pr_city_id;
+            $application->city_name = $application->city_name ?: ($property->CityName ?? null);
+            $applicationDirty = true;
+        }
+
+        if (empty($application->sector_id) && !empty($property->pr_sector_id)) {
+            $application->sector_id = $property->pr_sector_id;
+            $application->sector_name = $application->sector_name ?: ($property->SectorName ?? null);
+            $applicationDirty = true;
+        }
+
+        if ($applicationDirty) {
+            $application->save();
         }
 
         $initialDeposit = 0.0;
