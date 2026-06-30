@@ -168,7 +168,7 @@
                     </div>
                     <p class="text-[9px] text-slate-400 mt-3 flex items-center gap-1">
                         <span class="material-symbols-outlined text-[12px] text-slate-300">info_outline</span>
-                        Note: The District Officer will conduct the site physical verification visit on the slot date and time you confirm above.
+                        Note: The Site Engineer will conduct the site physical verification visit on the slot date and time you confirm above.
                     </p>
                 </div>
 

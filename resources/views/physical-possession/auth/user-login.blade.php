@@ -3,7 +3,7 @@
 @section('title', 'Login')
 
 @section('authHeading', 'Login')
-@section('authSubheading', 'Citizen or District Officer — mobile & captcha to receive OTP')
+@section('authSubheading', 'Citizen or Site Engineer — mobile & captcha to receive OTP')
 
 @section('loginForm')
 <form method="POST" action="{{ route('pp.user.login.send-otp') }}" id="ppSendOtpForm" data-pp-loading>

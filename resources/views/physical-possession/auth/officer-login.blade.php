@@ -1,6 +1,6 @@
 @extends('physical-possession.layouts.auth-login', ['loginType' => 'officer'])
 
-@section('title', 'District Officer Login')
+@section('title', 'Site Engineer Login')
 
 @section('loginForm')
 <form method="POST" action="{{ route('pp.officer.login.send-otp') }}" id="ppOfficerSendOtpForm" data-pp-loading>

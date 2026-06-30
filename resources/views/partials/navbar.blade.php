@@ -91,7 +91,7 @@
                     <a href="{{ route('pp.department.login') }}"
                        class="flex items-center gap-3 px-5 py-3 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-700 transition border-t border-slate-100 border-l-4 border-transparent hover:border-indigo-500">
                         <span class="material-symbols-outlined text-[18px]">shield_person</span>
-                        District Officer Login
+                        Site Engineer Login
                     </a>
                     {{--
                     <a href="{{ route('pp.landing') }}"

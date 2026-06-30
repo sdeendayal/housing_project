@@ -352,7 +352,7 @@
 <div class="pp-dash-welcome">
     <div>
         <h2><i class="bi bi-geo-alt-fill me-1"></i>{{ $officer->district_name }} District</h2>
-        <p>{{ $officer->name }} &middot; District Officer</p>
+        <p>{{ $officer->name }} &middot; Site Engineer</p>
     </div>
     <span class="pp-dash-date"><i class="bi bi-calendar3 me-1"></i>{{ now()->format('d M Y') }}</span>
 </div>

@@ -34,7 +34,7 @@
         <a href="{{ route('pp.department.login') }}"
            class="inline-flex items-center justify-center gap-2 rounded-lg border-2 border-white/40 bg-white/10 px-4 py-2 text-xs md:text-sm font-bold text-white backdrop-blur-sm hover:bg-white/20 transition-all">
             <span class="material-symbols-outlined text-[18px]">shield_person</span>
-            District Officer Login
+            Site Engineer Login
         </a>
     </div>
 </div>

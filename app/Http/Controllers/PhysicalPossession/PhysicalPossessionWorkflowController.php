@@ -381,7 +381,7 @@ class PhysicalPossessionWorkflowController extends Controller
             'asset_id' => $application->asset_id,
             'old_status' => $oldStatus,
             'new_status' => 'Visit Scheduled',
-            'remarks' => 'Visit scheduled by District Officer. Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
+            'remarks' => 'Visit scheduled by Site Engineer. Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
             'changed_by_type' => 'officer',
             'changed_by_id' => Auth::id(),
         ]);
@@ -455,7 +455,7 @@ class PhysicalPossessionWorkflowController extends Controller
             'changed_by_id' => $user->id,
         ]);
 
-        return redirect()->route('citizen.dashboard')->with('success', 'Visit slot selected successfully. The District Officer will meet you at the site.');
+        return redirect()->route('citizen.dashboard')->with('success', 'Visit slot selected successfully. The Site Engineer will meet you at the site.');
     }
 
     /**
@@ -642,8 +642,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'old_status' => $oldStatus,
             'new_status' => $status,
             'remarks' => $status === 'Verified' 
-                ? 'Physical possession verified and approved on site by District Officer.' 
-                : 'Physical possession rejected by District Officer. Remarks: ' . $request->input('remarks'),
+                ? 'Physical possession verified and approved on site by Site Engineer.' 
+                : 'Physical possession rejected by Site Engineer. Remarks: ' . $request->input('remarks'),
             'changed_by_type' => 'officer',
             'changed_by_id' => $officer->id,
         ]);

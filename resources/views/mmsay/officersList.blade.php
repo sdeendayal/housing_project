@@ -36,7 +36,7 @@
                 <!-- Header -->
                 <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
                     <div>
-                        <h2 class="text-xl font-bold text-slate-800">District Officers</h2>
+                        <h2 class="text-xl font-bold text-slate-800">Site Engineers</h2>
                         <p class="text-sm text-slate-500">
                             Total Officers: {{ $officers->count() }}
                         </p>
@@ -190,7 +190,7 @@
                                             </h3>
 
                                             <p class="text-sm text-slate-500">
-                                                Add your first district officer.
+                                                Add your first site engineer.
                                             </p>
 
                                         </div>
@@ -211,7 +211,7 @@
 
                 <div class="flex items-center justify-between px-6 py-4 border-b">
                     <h3 class="text-lg font-semibold text-slate-800">
-                        Edit District Officer
+                        Edit Site Engineer
                     </h3>
 
                     <button onclick="closeEditModal()">
@@ -286,7 +286,7 @@
                 <div class="flex items-center justify-between px-6 py-4 border-b">
 
                     <h3 class="text-lg font-semibold">
-                        Transfer District Officer
+                        Transfer Site Engineer
                     </h3>
 
                     <button onclick="closeTransferModal()">

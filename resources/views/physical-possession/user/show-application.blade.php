@@ -229,7 +229,7 @@
         <div class="px-3 py-2.5 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
             <h2 class="text-[11px] font-extrabold text-slate-800 m-0 flex items-center gap-1.5">
                 <span class="material-symbols-outlined text-[16px] text-indigo-600">task_alt</span>
-                On-Site Verification Details (District Officer Actions)
+                On-Site Verification Details (Site Engineer Actions)
             </h2>
             @if($application->verified_at)
             <span class="text-[9px] font-semibold text-slate-400">Verified on {{ \Carbon\Carbon::parse($application->verified_at)->format('d M Y, h:i A') }}</span>
@@ -269,10 +269,10 @@
                             @php
                                 $verifier = \App\Models\User::find($application->verified_by);
                             @endphp
-                            <strong>{{ $verifier?->name ?? 'District Officer' }}</strong>
+                            <strong>{{ $verifier?->name ?? 'Site Engineer' }}</strong>
                             <div class="text-[9px] text-slate-400 mt-0.5">District: {{ $application->district_name }}</div>
                         @else
-                            <strong>District Officer</strong>
+                            <strong>Site Engineer</strong>
                             <div class="text-[9px] text-slate-400 mt-0.5">District: {{ $application->district_name }}</div>
                         @endif
                     </div>

@@ -76,7 +76,7 @@
         <a href="{{ url('mmsay-department-add-district-officer') }}"
             class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-add-district-officer') }}">
             <span class="material-symbols-outlined text-[18px]">person_add</span>
-            <span>Add District Officer</span>
+            <span>Add Site Engineer</span>
         </a>
 
         <hr class="my-2">

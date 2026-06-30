@@ -151,7 +151,7 @@
                 $ppStatus = $latestPpApplication ? $latestPpApplication->physical_possession_status : null;
                 
                 $statusBadgeClass = 'bg-slate-100 text-slate-700 border-slate-200';
-                $statusMessage = 'Physical Possession process is initiated by the District Officer only. Please contact the District Office for more information.';
+                $statusMessage = 'Physical Possession process is initiated by the Site Engineer only. Please contact the District Office for more information.';
                 
                 if ($ppStatus) {
                     $statusBadgeClass = match ($ppStatus) {
@@ -165,11 +165,11 @@
                     };
 
                     $statusMessage = match ($ppStatus) {
-                        'Eligible for Physical Possession' => 'You have been marked as Eligible for Physical Possession by the District Officer. The meeting/visit schedule will be assigned shortly.',
+                        'Eligible for Physical Possession' => 'You have been marked as Eligible for Physical Possession by the Site Engineer. The meeting/visit schedule will be assigned shortly.',
                         'Visit Scheduled' => 'A physical possession visit has been scheduled for your property. Please select your preferred time slot.',
-                        'Slot Selected' => 'You have selected your visit slot. The District Officer will visit your plot to capture GPS coordinates, photos, and get the possession certificate signed.',
-                        'Physical Possession Submitted' => 'The physical possession details have been uploaded. Your submission is currently undergoing verification by the District Officer.',
-                        'Verified' => 'Congratulations! Your physical possession has been verified and approved by the District Officer.',
+                        'Slot Selected' => 'You have selected your visit slot. The Site Engineer will visit your plot to capture GPS coordinates, photos, and get the possession certificate signed.',
+                        'Physical Possession Submitted' => 'The physical possession details have been uploaded. Your submission is currently undergoing verification by the Site Engineer.',
+                        'Verified' => 'Congratulations! Your physical possession has been verified and approved by the Site Engineer.',
                         'Rejected' => 'Your physical possession submission has been rejected. Remarks: ' . ($latestPpApplication->remarks ?? 'No remarks provided.') . ' Please correct and re-submit.',
                         default => 'Current physical possession status: ' . $ppStatus
                     };

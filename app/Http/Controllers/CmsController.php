@@ -31,7 +31,7 @@ class CmsController extends Controller
             'mobile' => 'required|digits:10|unique:users,mobile',
         ]);
 
-        // Check if District Officer already exists
+        // Check if Site Engineer already exists
         $districtOfficerExists = DB::table('users')
             ->where('district_id', $request->district_id)
             ->where('role', 'district_officer')
@@ -47,7 +47,7 @@ class CmsController extends Controller
                 ->withInput()
                 ->with(
                     'error',
-                    'District Officer already exists for ' . ($district->DistrictName ?? 'selected district') . '.'
+                    'Site Engineer already exists for ' . ($district->DistrictName ?? 'selected district') . '.'
                 );
         }
 
@@ -79,7 +79,7 @@ class CmsController extends Controller
             DB::commit();
 
             return redirect()->back()
-                ->with('success', 'District Officer Added Successfully.');
+                ->with('success', 'Site Engineer Added Successfully.');
 
         } catch (\Exception $e) {
 
@@ -254,7 +254,7 @@ class CmsController extends Controller
 
             return response()->json([
                 'status' => true,
-                'message' => 'District Officer deleted successfully.'
+                'message' => 'Site Engineer deleted successfully.'
             ]);
 
         } catch (\Exception $e) {

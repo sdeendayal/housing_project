@@ -80,7 +80,7 @@
                 <div class="pp-sidebar-avatar">{{ strtoupper(substr($officer->name, 0, 1)) }}</div>
                 <div class="pp-sidebar-user-info">
                     <strong>{{ $officer->name }}</strong>
-                    <small>District Officer</small>
+                    <small>Site Engineer</small>
                 </div>
             </div>
             <a href="{{ route('pp.officer.logout') }}" class="pp-sidebar-logout">

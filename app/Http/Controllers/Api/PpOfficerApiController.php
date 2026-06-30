@@ -17,7 +17,7 @@ class PpOfficerApiController extends Controller
 {
     /**
      * [Dashboard API]
-     * District Officer ka dashboard data return karta hai.
+     * Site Engineer ka dashboard data return karta hai.
      */
     public function dashboard(Request $request)
     {
@@ -801,7 +801,7 @@ class PpOfficerApiController extends Controller
             'asset_id' => $application->asset_id,
             'old_status' => $oldStatus,
             'new_status' => 'Visit Scheduled',
-            'remarks' => 'Visit scheduled by District Officer (API). Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
+            'remarks' => 'Visit scheduled by Site Engineer (API). Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
             'changed_by_type' => 'officer',
             'changed_by_id' => Auth::id(),
         ]);
@@ -1079,8 +1079,8 @@ class PpOfficerApiController extends Controller
             'old_status' => $oldStatus,
             'new_status' => $status,
             'remarks' => $status === 'Verified' 
-                ? 'Physical possession verified and approved on site by District Officer (API).' 
-                : 'Physical possession rejected by District Officer (API). Remarks: ' . $request->input('remarks'),
+                ? 'Physical possession verified and approved on site by Site Engineer (API).' 
+                : 'Physical possession rejected by Site Engineer (API). Remarks: ' . $request->input('remarks'),
             'changed_by_type' => 'officer',
             'changed_by_id' => $officer->id,
         ]);

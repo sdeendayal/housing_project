@@ -251,7 +251,7 @@
             title: '<div class="text-indigo-950 fw-bold fs-5 mb-1"><i class="bi bi-calendar3 me-2 text-indigo-600"></i>Offered Visit Slots</div><div class="text-muted fw-normal" style="font-size: 0.72rem; letter-spacing: 0.2px;">Physical Possession Application No: ' + appNo + '</div>',
             html: `
                 <div class="text-center mt-2 px-1">
-                    <p class="text-muted mb-3" style="font-size: 0.78rem; font-weight: 500; line-height: 1.4;">The District Officer has proposed the following three visit slots for on-site physical verification:</p>
+                    <p class="text-muted mb-3" style="font-size: 0.78rem; font-weight: 500; line-height: 1.4;">The Site Engineer has proposed the following three visit slots for on-site physical verification:</p>
                     <div class="d-flex flex-column">
                         ${slotsHtml}
                     </div>

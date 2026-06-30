@@ -47,7 +47,7 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         
         // Disable original apply routes by redirecting or showing a message
         Route::get('/apply', function() {
-            return redirect()->route('citizen.dashboard')->with('error', 'Direct citizen applications are disabled. Physical Possession must be initiated by the District Officer only.');
+            return redirect()->route('citizen.dashboard')->with('error', 'Direct citizen applications are disabled. Physical Possession must be initiated by the Site Engineer only.');
         })->name('user.apply');
         
         Route::post('/apply', [PpUserController::class, 'submitApplication'])->name('user.apply.submit');

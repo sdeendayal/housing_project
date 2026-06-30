@@ -54,7 +54,7 @@ class PpOfficerAuthController extends Controller
         $user = $this->findOfficerUser($mobile);
 
         if (! $user) {
-            return back()->withInput()->with('error', 'Mobile number is not registered as a district officer account.');
+            return back()->withInput()->with('error', 'Mobile number is not registered as a site engineer account.');
         }
 
         $latestOtp = Otp::where('mobile_number', $mobile)
@@ -141,7 +141,7 @@ class PpOfficerAuthController extends Controller
 
         if (! $user) {
             return redirect()->route('pp.officer.login')
-                ->with('error', 'Mobile number is not registered as a district officer account.');
+                ->with('error', 'Mobile number is not registered as a site engineer account.');
         }
 
         $otpRecord = Otp::where('mobile_number', $mobile)
@@ -200,7 +200,7 @@ class PpOfficerAuthController extends Controller
 
         if (! $this->findOfficerUser($mobile)) {
             return redirect()->route('pp.officer.login')
-                ->with('error', 'Mobile number is not registered as a district officer account.');
+                ->with('error', 'Mobile number is not registered as a site engineer account.');
         }
 
         $latestOtp = Otp::where('mobile_number', $mobile)

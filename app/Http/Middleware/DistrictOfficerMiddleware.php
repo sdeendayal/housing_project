@@ -13,7 +13,7 @@ class DistrictOfficerMiddleware
     {
         if (! Auth::guard('district_officer')->check()) {
             return redirect()->route('pp.department.login')
-                ->with('error', 'Please login as District Officer first.');
+                ->with('error', 'Please login as Site Engineer first.');
         }
 
         $officer = Auth::guard('district_officer')->user();
