@@ -610,6 +610,59 @@ class PpOfficerApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Applicant and property details not found.'], 404);
         }
 
+        /**
+         * Fallback (temporary):
+         * Some assets don't have a reliable `property_auction_detail.PurchaserID` link yet,
+         * which makes PPP/Member fields come back null.
+         *
+         * For now, match by `asset_id` ⇢ `property_private_purchasers.Flat_Id` and hydrate
+         * missing personal fields from there.
+         */
+        $flatIdCandidate = $application->flat_id
+            ?? (is_numeric($application->asset_id) ? (int) $application->asset_id : null);
+
+        if ($flatIdCandidate) {
+            $purchaserByFlat = DB::table('property_private_purchasers as ppp')
+                ->where('ppp.Flat_Id', $flatIdCandidate)
+                ->where('ppp.IsActive', 1)
+                ->where('ppp.IsDeleted', 0)
+                ->select([
+                    'ppp.PrivatePurchaserName',
+                    'ppp.PurchaserFatherName',
+                    'ppp.MobileNo',
+                    'ppp.Address',
+                    'ppp.ApplicationNo as purchaser_app_no',
+                    'ppp.PPPId as purchaser_ppp_id',
+                    'ppp.MemberID as purchaser_member_id',
+                    'ppp.CasteCategoryName as purchaser_category',
+                    'ppp.MaritalStatus as purchaser_marital_status',
+                    'ppp.CreateDate as purchaser_reg_date',
+                ])
+                ->first();
+
+            if ($purchaserByFlat) {
+                foreach ((array) $purchaserByFlat as $k => $v) {
+                    if (!property_exists($property, $k) || $property->{$k} === null || $property->{$k} === '') {
+                        $property->{$k} = $v;
+                    }
+                }
+
+                // Keep these core fields consistent too (only when missing).
+                if (($property->PrivatePurchaserName ?? null) === null && ($purchaserByFlat->PrivatePurchaserName ?? null)) {
+                    $property->PrivatePurchaserName = $purchaserByFlat->PrivatePurchaserName;
+                }
+                if (($property->PurchaserFatherName ?? null) === null && ($purchaserByFlat->PurchaserFatherName ?? null)) {
+                    $property->PurchaserFatherName = $purchaserByFlat->PurchaserFatherName;
+                }
+                if (($property->MobileNo ?? null) === null && ($purchaserByFlat->MobileNo ?? null)) {
+                    $property->MobileNo = $purchaserByFlat->MobileNo;
+                }
+                if (($property->Address ?? null) === null && ($purchaserByFlat->Address ?? null)) {
+                    $property->Address = $purchaserByFlat->Address;
+                }
+            }
+        }
+
         $initialDeposit = 0.0;
         $installmentPaid = 0.0;
         if ($property) {
