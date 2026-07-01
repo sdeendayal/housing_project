@@ -12,24 +12,32 @@ use App\Http\Controllers\CmsController;
 use App\Http\Controllers\WebsiteController;
 
 
-Route::get('/', [WebsiteController::class, 'index']);
+Route::get('/', [WebsiteController::class, 'index'])->name('home');
 
 Route::get('/help', function () {
     return view('home.help');
-});
+})->name('help');
 
-Route::get('introduction', function () {
+Route::get('/introduction', function () {
     return view('home.introduction');
-});
+})->name('introduction');
 
 
-Route::get('organisation-chart', function () {
+Route::get('/organisation-chart', function () {
     return view('home.organisationChart');
-});
+})->name('organisation.chart');
 
-Route::get('whos-who', function () {
+Route::get('/whos-who', function () {
     return view('home.whosWho');
-});
+})->name('whos.who');
+
+Route::get('/vision', function () {
+    return "Vision page is under construction. Please check back later.";
+})->name('vision');
+
+Route::get('/gallery', function () {
+    return "Gallery page is under construction. Please check back later.";
+})->name('gallery');
 
 // ─── Citizen Login (OTP — shared OtpAuthController) ─────────────────────────
 Route::middleware('')->group(function () {
