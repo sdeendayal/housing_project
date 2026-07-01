@@ -98,7 +98,7 @@
                     </div>
                     <div>
                         <h3 class="text-[20px] font-bold text-[#111c2d]">MMGAY Portal Login</h3>
-                        <p class="text-[#505f76] text-[14px]">Sign in to manage housing scheme operations</p>
+                        <p class="text-[#505f76] text-[14px]">Officer sign in — villagers use Mobile OTP login</p>
                     </div>
                 </div>
                 <!-- Form -->
@@ -205,6 +205,15 @@
                         </button>
 
                     </form>
+
+                    <div class="mt-5 pt-5 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-500 mb-2">Are you a villager / beneficiary?</p>
+                        <a href="{{ route('mmgav.villager.login') }}"
+                            class="inline-flex items-center gap-1 text-sm font-semibold text-[#0058bc] hover:underline">
+                            <span class="material-symbols-outlined text-[18px]">sms</span>
+                            Go to Villager Login (Mobile OTP)
+                        </a>
+                    </div>
 
                 </div>
             </div>
@@ -320,6 +329,18 @@
 
         });
     </script>
+    @if (session('info'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Villager Login',
+                    text: '{{ session('info') }}'
+                });
+            });
+        </script>
+    @endif
+
     @if (session('success'))
         <script>
             Swal.fire({

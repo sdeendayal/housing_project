@@ -63,6 +63,20 @@ class RoleSeeder extends Seeder
                 'dashboard_route' => 'department.dashboard',
                 'dashboard_path' => null,
             ],
+            [
+                'role_group_id' => $departmentGroup->id,
+                'name' => 'District CEO',
+                'slug' => 'district_ceo',
+                'dashboard_route' => 'district.dashboard',
+                'dashboard_path' => null,
+            ],
+            [
+                'role_group_id' => $departmentGroup->id,
+                'name' => 'Deputy Commissioner',
+                'slug' => 'dc',
+                'dashboard_route' => 'district.dashboard',
+                'dashboard_path' => null,
+            ],
         ];
 
         foreach ($roles as $role) {
@@ -84,6 +98,8 @@ class RoleSeeder extends Seeder
 
             $roleSlug = match (true) {
                 $userRole === 'district_officer' => 'district_officer',
+                $userRole === 'district_ceo' => 'district_ceo',
+                $userRole === 'dc' => 'dc',
                 $groupSlug === 'citizen' => 'citizen',
                 $groupSlug === 'villager' => 'villager',
                 in_array($groupSlug, ['department', 'departmental'], true) => 'admin',
