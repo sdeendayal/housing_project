@@ -170,7 +170,7 @@
                                             <span class="badge bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-1">Slot 1</span>
                                         </td>
                                         <td class="pt-2">
-                                            <input type="date" name="slot_date_1" id="slot_date_1" class="form-control form-control-sm rounded-3 @error('slot_date_1') is-invalid @enderror" value="{{ old('slot_date_1', $application && $application->visit_slot_1 ? $application->visit_slot_1->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d') }}">
+                                            <input type="date" name="slot_date_1" id="slot_date_1" class="form-control form-control-sm rounded-3 @error('slot_date_1') is-invalid @enderror" value="{{ old('slot_date_1', $application && $application->visit_slot_1 ? $application->visit_slot_1->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                             @error('slot_date_1')
                                                 <div class="invalid-feedback fs-9 mt-1">{{ $message }}</div>
                                             @enderror
@@ -202,7 +202,7 @@
                                             <span class="badge bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-1">Slot 2</span>
                                         </td>
                                         <td class="pt-2">
-                                            <input type="date" name="slot_date_2" id="slot_date_2" class="form-control form-control-sm rounded-3 @error('slot_date_2') is-invalid @enderror" value="{{ old('slot_date_2', $application && $application->visit_slot_2 ? $application->visit_slot_2->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d') }}">
+                                            <input type="date" name="slot_date_2" id="slot_date_2" class="form-control form-control-sm rounded-3 @error('slot_date_2') is-invalid @enderror" value="{{ old('slot_date_2', $application && $application->visit_slot_2 ? $application->visit_slot_2->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                             @error('slot_date_2')
                                                 <div class="invalid-feedback fs-9 mt-1">{{ $message }}</div>
                                             @enderror
@@ -234,7 +234,7 @@
                                             <span class="badge bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-1">Slot 3</span>
                                         </td>
                                         <td class="pt-2">
-                                            <input type="date" name="slot_date_3" id="slot_date_3" class="form-control form-control-sm rounded-3 @error('slot_date_3') is-invalid @enderror" value="{{ old('slot_date_3', $application && $application->visit_slot_3 ? $application->visit_slot_3->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d') }}">
+                                            <input type="date" name="slot_date_3" id="slot_date_3" class="form-control form-control-sm rounded-3 @error('slot_date_3') is-invalid @enderror" value="{{ old('slot_date_3', $application && $application->visit_slot_3 ? $application->visit_slot_3->format('Y-m-d') : '') }}" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
                                             @error('slot_date_3')
                                                 <div class="invalid-feedback fs-9 mt-1">{{ $message }}</div>
                                             @enderror
