@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\PpOfficerAuthApiController;
 use App\Http\Controllers\Api\PpOfficerApiController;
 use Illuminate\Support\Facades\Route;
 
+
 Route::prefix('possession')->group(function () {
 
     // Refresh captcha for APIs
