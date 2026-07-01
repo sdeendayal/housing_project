@@ -1,4 +1,5 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Micro-interactions Script -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -87,4 +88,37 @@
     function openList(status) {
         window.location.href = "/district-ceo/list/" + currentPhase + "/" + status;
     }
+
+    
 </script>
+<script>
+document.getElementById('grievanceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'Submit Grievance?',
+        text: "Once submitted, the application will move to Pending status.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#2563eb',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, Submit',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            this.submit();
+        }
+    });
+});
+</script>
+@if(session('success'))
+<script>
+Swal.fire({
+    icon: 'success',
+    title: 'Success',
+    text: '{{ session('success') }}',
+    confirmButtonColor: '#2563eb'
+});
+</script>
+@endif
+

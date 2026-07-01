@@ -71,7 +71,7 @@ class MMGAYAuthController extends Controller
             'Is_Deleted' => '0',
         ];
 
-        if (! Auth::attempt($credentials)) {
+        if (!Auth::attempt($credentials)) {
             if ($redirect = $this->redirectVillagerToOtpPortal($login)) {
                 return $redirect;
             }
@@ -96,19 +96,31 @@ class MMGAYAuthController extends Controller
         }
 
         $roleSlug = $user->roleSlug();
-        if (! in_array($roleSlug, ['district_ceo', 'dc', 'admin'], true)) {
-            Auth::logout();
-            $request->session()->invalidate();
-            $request->session()->regenerateToken();
-
+        // District CEO (Existing - Don't Change)
+        if ($roleSlug === 'district_ceo') {
             return redirect()
-                ->route('mmgay.login')
-                ->with('error', 'Unauthorized access. This portal is for MMGAY officers only.');
+                ->route('district.dashboard')
+                ->with('success', 'Welcome ' . $user->name);
         }
 
+        // DC Dashboard
+        if ($roleSlug === 'dc') {
+            return redirect()
+                ->route('dc.dashboard')
+                ->with('success', 'Welcome ' . $user->name);
+        }
+
+        // Admin Dashboard
+        if ($roleSlug === 'admin') {
+            return redirect()
+                ->route('admin.dashboard')
+                ->with('success', 'Welcome ' . $user->name);
+        }
+
+        // Fallback
         return redirect()
             ->intended($user->dashboardRoute())
-            ->with('success', 'Welcome '.$user->name);
+            ->with('success', 'Welcome ' . $user->name);
     }
 
     public function logout(Request $request): RedirectResponse

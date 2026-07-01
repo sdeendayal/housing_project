@@ -1,180 +1,259 @@
 @extends('layouts.mmgayCEOAuth')
-@section('title', 'MMGAY Department Dashboard')
+@section('title', 'MMGAY District CEO Dashboard')
 
-<!-- MAIN CONTENT AREA -->
-<main class="ml-[260px] mt-16 flex-1 h-[calc(100vh-64px)] overflow-y-auto p-lg bg-background">
-    <!-- Tab Sub-Navigation -->
-    <div class="mb-lg border-b border-outline-variant flex items-center gap-xl">
+@section('content')
 
-        <button class="phase-tab px-xs pb-sm text-primary font-bold border-b-2 border-primary transition-colors"
-            data-phase="1">
-            <span class="text-body-md">Phase 1</span>
-        </button>
+    <main class="ml-[260px] mt-16 min-h-screen bg-slate-100 p-6">
 
-        <button class="phase-tab px-xs pb-sm text-on-surface-variant hover:text-primary transition-colors" data-phase="2">
-            <span class="text-body-md">Phase 2</span>
-        </button>
+        <!-- ===================== DASHBOARD HEADER ===================== -->
 
-        <button class="phase-tab px-xs pb-sm text-on-surface-variant hover:text-primary transition-colors" data-phase="3">
-            <span class="text-body-md">Phase 3</span>
-        </button>
+        <!-- ===================== DASHBOARD HEADER ===================== -->
 
-    </div>
+        <div
+            class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-800 via-indigo-700 to-violet-700 shadow-xl">
 
-    <!-- KPI Grid (Bento Style) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            <!-- Background Circle -->
+            <div class="absolute -right-10 -top-10 w-72 h-72 bg-white/10 rounded-full blur-2xl">
+            </div>
 
-        <!-- KPI 1 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('total')">
-            <div
-                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    inventory_2
+            <div class="absolute right-20 bottom-0 opacity-10">
+                <span class="material-symbols-outlined text-[170px]">
+                    account_balance
                 </span>
             </div>
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Total Plots
-            </h4>
+            <div class="relative px-8 py-6">
 
-            <p class="text-2xl font-bold text-blue-700 mt-1" id="total">
-                0
-            </p>
+                <div class="flex items-center justify-between">
 
-            
-        </div>
+                    <!-- Left -->
 
-        <!-- KPI 2 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-green-50 hover:border-green-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('paid')">
+                    <div>
 
-            <div
-                class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    payments
-                </span>
-            </div>
+                        <h2 class="flex items-center gap-2 text-4xl font-bold text-white">
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Paid
-            </h4>
+                            <span class="material-symbols-outlined text-[34px]">
+                                location_on
+                            </span>
 
-            <p class="text-2xl font-bold text-green-700 mt-1" id="paid">
-                0
-            </p>
+                            {{ strtoupper(auth()->user()->district_name) }} District
 
-            
+                        </h2>
 
-            
-        </div>
+                        <p class="mt-2 text-lg text-blue-100">
 
-        <!-- KPI 3 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-blue-50 hover:border-blue-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('approved')">
+                            District CEO • Mukhyamantri Gramin Awas Yojana
 
-            <div
-                class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    verified
-                </span>
-            </div>
+                        </p>
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Approved
-            </h4>
+                    </div>
 
-            <p class="text-2xl font-bold text-blue-700 mt-1" id="approved">
-                0
-            </p>
+                    <!-- Right -->
 
-            <span class="mt-2 text-[10px] px-2 py-1 rounded-full bg-blue-100 text-blue-700">
-                Verified
-            </span>
+                    <div
+                        class="flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 rounded-xl px-5 py-3 text-white shadow">
 
-        </div>
+                        <span class="material-symbols-outlined">
+                            calendar_month
+                        </span>
 
-        <!-- KPI 4 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-yellow-50 hover:border-yellow-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('inprocess')">
+                        <span class="font-semibold text-lg">
 
-            <div
-                class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    cycle
-                </span>
-            </div>
+                            {{ now()->format('d M Y') }}
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                In Process
-            </h4>
+                        </span>
 
-            <p class="text-2xl font-bold text-yellow-700 mt-1" id="inprocess">
-                0
-            </p>
+                    </div>
 
-            <div class="flex items-center gap-1 mt-2">
-                <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span>
-                <span class="text-[10px] text-gray-500">
-                    Processing
-                </span>
+                </div>
+
             </div>
 
         </div>
 
-        <!-- KPI 5 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-red-50 hover:border-red-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('rejected')">
+        <!-- ===================== PHASE TAB ===================== -->
 
-            <div
-                class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    cancel
-                </span>
-            </div>
+        <div class="mt-6 flex gap-3">
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Rejected
-            </h4>
+            <button class="phase-tab activePhase px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow"
+                data-phase="1">
+                Phase 1
+            </button>
 
-            <p class="text-2xl font-bold text-red-600 mt-1" id="rejected">
-                0
-            </p>
+            <button class="phase-tab px-6 py-2 rounded-xl bg-white border hover:bg-slate-50 font-semibold" data-phase="2">
+                Phase 2
+            </button>
 
-            <span class="mt-2 text-[10px] font-medium text-red-600">
-                View List
-            </span>
+            <button class="phase-tab px-6 py-2 rounded-xl bg-white border hover:bg-slate-50 font-semibold" data-phase="3">
+                Phase 3
+            </button>
 
         </div>
 
-        <!-- KPI 6 -->
-        <div class="group bg-white border border-gray-200 rounded-xl shadow-sm hover:bg-orange-50 hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 p-4 min-h-[150px] flex flex-col items-center justify-center text-center cursor-pointer"
-            onclick="openList('pending')">
+        <!-- ===================== KPI CARDS ===================== -->
 
-            <div
-                class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 mb-2 transition-transform duration-300 group-hover:scale-110">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings:'FILL' 1;">
-                    pending_actions
-                </span>
+        <!-- ===================== KPI CARDS ===================== -->
+
+        <div class="grid xl:grid-cols-6 lg:grid-cols-3 md:grid-cols-2 gap-3 mt-6">
+
+            <!-- Total -->
+            <div onclick="openList('total')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-indigo-600">
+                            inventory_2
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            Total Plots
+                        </p>
+
+                        <h2 id="total" class="text-3xl font-bold leading-none text-slate-900 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
             </div>
 
-            <h4 class="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Pending Approval
-            </h4>
+            <!-- Paid -->
+            <div onclick="openList('paid')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
 
-            <p class="text-2xl font-bold text-orange-600 mt-1" id="pending">
-                0
-            </p>
+                <div class="flex items-center gap-3">
 
-            <div class="mt-2 px-2 py-1 rounded-full bg-orange-100">
-                <span class="text-[10px] font-medium text-orange-700">
-                    Needs Review
-                </span>
+                    <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-green-600">
+                            payments
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            Paid
+                        </p>
+
+                        <h2 id="paid" class="text-3xl font-bold leading-none text-green-700 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Approved -->
+            <div onclick="openList('approved')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-blue-600">
+                            verified
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            Approved
+                        </p>
+
+                        <h2 id="approved" class="text-3xl font-bold leading-none text-blue-700 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Pending -->
+            <div onclick="openList('pending')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-orange-600">
+                            pending_actions
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            Pending
+                        </p>
+
+                        <h2 id="pending" class="text-3xl font-bold leading-none text-orange-600 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Rejected -->
+            <div onclick="openList('rejected')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-red-600">
+                            cancel
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            Rejected
+                        </p>
+
+                        <h2 id="rejected" class="text-3xl font-bold leading-none text-red-600 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- In Process -->
+            <div onclick="openList('inprocess')"
+                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-yellow-600">
+                            sync
+                        </span>
+                    </div>
+
+                    <div class="flex-1">
+                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
+                            In Process
+                        </p>
+
+                        <h2 id="inprocess" class="text-3xl font-bold leading-none text-yellow-600 mt-1">
+                            0
+                        </h2>
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
 
-    </div>
-    <!-- Data Visualization Area (Asymmetric Component) -->
+        
 
-</main>
+       

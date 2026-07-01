@@ -5,6 +5,7 @@ use App\Http\Controllers\MMGAY\DistrictCEO\DistrictCEOController;
 use App\Http\Controllers\MMGAY\Citizen\MMGAYCitizenController;
 use App\Http\Controllers\OtpAuthController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\MMGAY\DC\DCController;
 
 // MMGAY Admin/Officer routes
 Route::get('/mmgay/login', [MMGAYAuthController::class, 'showLogin'])->name('mmgay.login');
@@ -55,8 +56,45 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
     Route::get('/district-ceo/list/{phase}/{status}', [DistrictCEOController::class, 'list'])
         ->name('district.list');
 
-        
+    Route::get('/owner/{id}', [DistrictCEOController::class, 'viewOwner'])
+        ->name('owner.view');
+
+    Route::post(
+        '/district-ceo/owner/action/{id}',
+        [DistrictCEOController::class, 'ownerAction']
+    )
+        ->name('district.owner.action');
+
+    Route::post('/district/owner/{id}/grievance', [DistrictCEOController::class, 'submitGrievance'])
+        ->name('district.owner.grievance.submit');
+
+    Route::post('/district/owner/{id}/action', [DistrictCEOController::class, 'ownerAction'])
+        ->name('district.owner.action');
+
 });
+
+Route::prefix('dc')
+    ->middleware(['auth'])
+    ->group(function () {
+
+        Route::get('/dashboard/{phase?}', [DCController::class, 'dashboard'])
+            ->name('dc.dashboard');
+
+        Route::get('/owner-list', [DCController::class, 'ownerList'])
+            ->name('dc.owner.list');
+
+        Route::get('/owner/{id}', [DCController::class, 'ownerView'])
+            ->name('dc.owner.view');
+
+        Route::post('/owner/action/{id}', [DCController::class, 'ownerAction'])
+            ->name('dc.owner.action');
+
+        Route::post('/owner/grievance/{id}', [DCController::class, 'submitGrievance'])
+            ->name('dc.owner.grievance.submit');
+
+        Route::post('/logout', [MMGAYAuthController::class, 'logout'])
+            ->name('dc.logout');
+    });
 
 // MMGAV Villager Protected Routes
 Route::middleware(['auth', 'mmgay', 'role:villager'])->group(function () {
