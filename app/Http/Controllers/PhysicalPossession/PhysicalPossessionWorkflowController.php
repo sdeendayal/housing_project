@@ -726,6 +726,68 @@ class PhysicalPossessionWorkflowController extends Controller
     }
 
     /**
+     * Public download of the prefilled Possession Certificate PDF (no authentication required).
+     */
+    public function publicDownloadCertificate(Request $request, PhysicalPossessionApplication $application)
+    {
+        // Query property purchaser details to build the profile dictionary
+        $purchaser = DB::table('property_private_purchasers as ppp')
+            ->leftJoin('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('cities as c', 'ppp.CityId', '=', 'c.CityId')
+            ->leftJoin('sectors as s', 'ppp.SectorId', '=', 's.SectorId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->where('ppp.PrivatePurchaserId', $application->private_purchaser_id)
+            ->select([
+                'ppp.*',
+                'd.DistrictName',
+                'c.CityName',
+                's.SectorName',
+                'pad.AssetId',
+                'pr.AssetName',
+            ])
+            ->first();
+
+        $name = $application->applicant_name;
+        $district = $application->district_name;
+
+        $plotNo = '—';
+        if ($purchaser) {
+            if (!empty($purchaser->Flat_Id)) {
+                $plotNo = (string) $purchaser->Flat_Id;
+            } elseif (!empty($purchaser->AssetId)) {
+                $plotNo = (string) $purchaser->AssetId;
+            } elseif (!empty($purchaser->AssetName)) {
+                $plotNo = $purchaser->AssetName;
+            }
+        }
+
+        $sectorName = $purchaser?->SectorName ?? '—';
+        $cityName = $purchaser?->CityName ?? '—';
+        $urbanEstate = strtoupper(trim($cityName !== '—' ? $cityName : ($district !== '—' ? $district : '—')));
+        $officeLocation = $urbanEstate !== '—' ? $urbanEstate : strtoupper(trim($district));
+
+        $profile = [
+            'name' => $name,
+            'mobile' => $application->mobile,
+            'application_no' => $purchaser?->ApplicationNo ?? '',
+            'plot_no' => $plotNo,
+            'sector' => $sectorName,
+            'urban_estate' => $urbanEstate,
+            'office_location' => $officeLocation,
+        ];
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', compact('profile'))
+            ->setPaper('a4');
+
+        if ($request->has('inline') || !$request->has('download')) {
+            return $pdf->stream('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+        }
+
+        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+    }
+
+    /**
      * Ensure all eligible district purchasers have physical possession application rows.
      */
     private function ensureDistrictApplications($officer)

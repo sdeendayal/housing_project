@@ -18,6 +18,11 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         ->name('allotment.verify')
         ->where('applicationNumber', '[0-9]+');
 
+    // Public download certificate (no login required, directly open in browser)
+    Route::get('/public/download-certificate/{application}', [PhysicalPossessionWorkflowController::class, 'publicDownloadCertificate'])
+        ->name('public.download-certificate')
+        ->where('application', '[a-f0-9]{32}');
+
     // Legacy PP login URLs → existing citizen login
     Route::redirect('/login', '/mmsay-citizen-login')->name('user.login');
     Route::redirect('/officer/login', '/physical-possession/department/login')->name('officer.login');
