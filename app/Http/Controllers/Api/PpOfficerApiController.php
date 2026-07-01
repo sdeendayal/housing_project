@@ -775,11 +775,11 @@ class PpOfficerApiController extends Controller
         }
 
         $request->validate([
-            'slot_date_1' => 'required|date|after_or_equal:today',
+            'slot_date_1' => 'required|date|after:today',
             'slot_time_1' => 'required|string',
-            'slot_date_2' => 'required|date|after_or_equal:today',
+            'slot_date_2' => 'required|date|after:today',
             'slot_time_2' => 'required|string',
-            'slot_date_3' => 'required|date|after_or_equal:today',
+            'slot_date_3' => 'required|date|after:today',
             'slot_time_3' => 'required|string',
             'visit_instructions' => 'nullable|string|max:1000',
         ]);
@@ -824,8 +824,12 @@ class PpOfficerApiController extends Controller
             }
         }
 
-        if ($dateTime1->equalTo($dateTime2) || $dateTime1->equalTo($dateTime3) || $dateTime2->equalTo($dateTime3)) {
-            return response()->json(['success' => false, 'message' => 'All three scheduled slots must be distinct dates and times.'], 422);
+        if (
+            ($dateTime1->toDateString() === $dateTime2->toDateString() && $dateTime1->format('H:i') === $dateTime2->format('H:i')) ||
+            ($dateTime1->toDateString() === $dateTime3->toDateString() && $dateTime1->format('H:i') === $dateTime3->format('H:i')) ||
+            ($dateTime2->toDateString() === $dateTime3->toDateString() && $dateTime2->format('H:i') === $dateTime3->format('H:i'))
+        ) {
+            return response()->json(['success' => false, 'message' => 'You cannot select the same date and time for more than one slot.'], 422);
         }
 
         $excludeId = $application->id;
