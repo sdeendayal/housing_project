@@ -21,4 +21,9 @@ class ApplicationStatusLog extends Model
     {
         return $this->belongsTo(PhysicalPossessionApplication::class, 'application_id');
     }
+
+    public function changer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'changed_by_id');
+    }
 }

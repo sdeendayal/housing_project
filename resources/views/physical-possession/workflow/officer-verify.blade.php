@@ -241,7 +241,14 @@
                                             </div>
                                             <div class="flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-center mb-0.5">
-                                                    <span class="fw-bold text-dark text-capitalize" style="font-size: 0.8rem;">{{ $log->new_status }}</span>
+                                                    <span class="fw-bold text-dark text-capitalize" style="font-size: 0.8rem;">
+                                                        {{ $log->new_status }}
+                                                        @if($log->changer)
+                                                            <small class="text-muted fw-normal" style="text-transform: none;">
+                                                                (by {{ $log->changer->name }})
+                                                            </small>
+                                                        @endif
+                                                    </span>
                                                     <span class="text-muted font-monospace" style="font-size: 0.72rem;">{{ $log->created_at->format('d M Y, h:i A') }}</span>
                                                 </div>
                                                 @if($log->remarks)
@@ -706,7 +713,14 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fw-bold text-dark small text-capitalize">{{ $log->new_status }}</span>
+                                                <span class="fw-bold text-dark small text-capitalize">
+                                                    {{ $log->new_status }}
+                                                    @if($log->changer)
+                                                        <small class="text-muted fw-normal" style="text-transform: none;">
+                                                            (by {{ $log->changer->name }})
+                                                        </small>
+                                                    @endif
+                                                </span>
                                                 <span class="text-muted font-monospace fs-8">{{ $log->created_at->format('d M Y, h:i A') }}</span>
                                             </div>
                                             @if($log->remarks)
