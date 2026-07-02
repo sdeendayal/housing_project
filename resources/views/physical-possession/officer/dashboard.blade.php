@@ -44,7 +44,7 @@
 
 .pp-dash-stats {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 0.4rem;
     margin-bottom: 0.625rem;
 }
@@ -53,13 +53,12 @@
 }
 @media (min-width: 576px) and (max-width: 767px) {
     .pp-dash-stats { grid-template-columns: repeat(2, 1fr); }
-    .pp-dash-stats .pp-dash-stat:last-child { grid-column: span 2; }
 }
 @media (min-width: 768px) and (max-width: 991px) {
     .pp-dash-stats { grid-template-columns: repeat(3, 1fr); }
 }
 @media (min-width: 992px) and (max-width: 1199px) {
-    .pp-dash-stats { grid-template-columns: repeat(5, 1fr); }
+    .pp-dash-stats { grid-template-columns: repeat(6, 1fr); }
 }
 
 .pp-dash-stat {
@@ -100,6 +99,7 @@
 .pp-dash-stat-icon.red { background: #fee2e2; color: #b91c1c; }
 .pp-dash-stat-icon.purple { background: #ede9fe; color: #6d28d9; }
 .pp-dash-stat-icon.indigo { background: #e0e7ff; color: #4338ca; }
+.pp-dash-stat-icon.teal { background: #e0f2fe; color: #0284c7; }
 .pp-dash-stat-label {
     font-size: 0.65rem;
     color: var(--pp-text-muted);
@@ -386,6 +386,13 @@
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['submitted'] }}">0</div>
         </div>
     </a>
+    <a href="{{ route('pp.officer.possession-applications', ['status' => 'Site Verified']) }}" class="pp-dash-stat">
+        <div class="pp-dash-stat-icon teal"><i class="bi bi-file-earmark-check"></i></div>
+        <div class="min-w-0">
+            <div class="pp-dash-stat-label">E-Possession Pending</div>
+            <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['site_verified'] }}">0</div>
+        </div>
+    </a>
     <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon green"><i class="bi bi-check-circle"></i></div>
         <div class="min-w-0">
@@ -477,6 +484,7 @@
                                             'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
                                             'Slot Selected' => 'bg-primary text-white border border-primary',
                                             'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Site Verified' => 'bg-info text-white border border-info shadow-sm',
                                             'Verified' => 'bg-success text-white border border-success shadow-sm',
                                             'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
                                             default => 'bg-secondary text-white border border-secondary'
@@ -505,6 +513,10 @@
                                 @elseif($p->physical_possession_status === 'Slot Selected')
                                     <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-schedule text-nowrap rounded-pill text-white shadow-sm">
                                         <i class="bi bi-shield-check me-1"></i>Perform Visit
+                                    </a>
+                                @elseif($p->physical_possession_status === 'Site Verified')
+                                    <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-info btn-schedule text-nowrap rounded-pill text-white shadow-sm">
+                                        <i class="bi bi-file-earmark-arrow-up me-1"></i>E-Verify
                                     </a>
                                 @else
                                     <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">

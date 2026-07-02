@@ -65,6 +65,7 @@ class PhysicalPossessionApplication extends Model
         'longitude',
         'image_capture_datetime',
         'possession_certificate',
+        'site_engineer_file',
         'verified_by',
         'verified_at',
     ];

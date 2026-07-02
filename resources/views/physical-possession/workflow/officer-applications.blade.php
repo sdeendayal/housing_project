@@ -90,6 +90,7 @@
                                             'Visit Scheduled' => 'bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20',
                                             'Slot Selected' => 'bg-primary text-white border border-primary',
                                             'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Site Verified' => 'bg-info text-white border border-info shadow-sm',
                                             'Verified' => 'bg-success text-white border border-success',
                                             'Rejected' => 'bg-danger text-white border border-danger',
                                             default => 'bg-secondary text-white border border-secondary'
@@ -103,6 +104,10 @@
                                     @if(in_array($app->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted']))
                                         <a href="{{ route('pp.officer.verify-form', $app->secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded-pill shadow-sm">
                                             <i class="bi bi-shield-check me-1"></i>Perform Visit
+                                        </a>
+                                    @elseif($app->physical_possession_status === 'Site Verified')
+                                        <a href="{{ route('pp.officer.verify-form', $app->secure_id) }}" class="btn btn-info text-white btn-action text-nowrap rounded-pill shadow-sm">
+                                            <i class="bi bi-file-earmark-arrow-up me-1"></i>E-Verify
                                         </a>
                                     @elseif($app->physical_possession_status === 'Eligible for Physical Possession')
                                         <a href="{{ route('pp.officer.schedule-form', $app->secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded-pill shadow-sm">
