@@ -47,11 +47,8 @@ Route::redirect('/mmgav-citizen-login/verify', '/mmgav/login/verify');
 // MMGAY Officer Protected Routes
 Route::middleware(['auth', 'mmgay'])->group(function () {
 
-    Route::get('/district-ceo/dashboard', [DistrictCEOController::class, 'dashboard'])
-        ->name('district.dashboard');
-
-    Route::get('/district-ceo/dashboard/{phase}', [DistrictCEOController::class, 'getPhaseData'])
-        ->name('district.dashboard.phase');
+    Route::get('/district-ceo/dashboard/{phase?}', [DistrictCEOController::class, 'dashboard'])
+    ->name('district.dashboard');
 
     Route::get('/district-ceo/list/{phase}/{status}', [DistrictCEOController::class, 'list'])
         ->name('district.list');
@@ -69,7 +66,7 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
         ->name('district.owner.grievance.submit');
 
     Route::post('/district/owner/{id}/action', [DistrictCEOController::class, 'ownerAction'])
-        ->name('district.owner.action');
+        ->name('district.owner.action_v2');
 
 });
 

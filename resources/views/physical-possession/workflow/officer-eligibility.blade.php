@@ -92,6 +92,7 @@
                                                 'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
                                                 'Slot Selected' => 'bg-primary text-white border border-primary',
                                                 'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                                'Site Verified' => 'bg-info text-white border border-info shadow-sm',
                                                 'Verified' => 'bg-success text-white border border-success shadow-sm',
                                                 'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
                                                 default => 'bg-secondary text-white border border-secondary'
@@ -120,6 +121,10 @@
                                      @elseif($p->physical_possession_status === 'Slot Selected')
                                          <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-schedule text-nowrap rounded-pill text-white shadow-sm">
                                              <i class="bi bi-shield-check me-1"></i>Perform Visit
+                                         </a>
+                                     @elseif($p->physical_possession_status === 'Site Verified')
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-info btn-schedule text-nowrap rounded-pill text-white shadow-sm">
+                                             <i class="bi bi-file-earmark-arrow-up me-1"></i>E-Verify
                                          </a>
                                      @else
                                          <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-schedule text-nowrap rounded-pill">

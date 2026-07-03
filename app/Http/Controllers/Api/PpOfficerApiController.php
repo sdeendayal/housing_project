@@ -162,10 +162,11 @@ class PpOfficerApiController extends Controller
             'awaiting_schedule' => $eligibleCount,
             'scheduled' => (clone $query)->where('physical_possession_status', 'Visit Scheduled')->count(),
             'submitted' => (clone $query)->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted'])->count(),
+            'epossession_pending' => (clone $query)->where('physical_possession_status', 'Site Verified')->count(),
             'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
-        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['verified'] + $stats['rejected'];
+        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['epossession_pending'] + $stats['verified'] + $stats['rejected'];
 
         // 6. Last 7 Days ka graph labels aur data taiyaar karein
         $chartLabels = [];
@@ -1128,6 +1129,8 @@ class PpOfficerApiController extends Controller
         $totalReceived = $initialDeposit + $installmentPaid;
         $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
 
+        $application->load(['statusLogs.changer']);
+
         return response()->json([
             'success' => true,
             'application' => $application,
@@ -1153,25 +1156,82 @@ class PpOfficerApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        $request->validate([
-            'status' => 'required|in:Verified,Rejected',
-            'remarks' => 'required|string|max:1000',
-            'latitude' => 'required_if:status,Verified|string',
-            'longitude' => 'required_if:status,Verified|string',
-            'plot_image' => 'required_if:status,Verified|image|mimes:jpeg,jpg,png|max:500',
-            'possession_certificate' => 'required_if:status,Verified|file|mimes:pdf|max:500',
-        ]);
+        // Handle Reschedule Action
+        if ($request->input('action') === 'reschedule') {
+            $oldStatus = $application->physical_possession_status;
 
-        $status = $request->input('status');
-        $oldStatus = $application->physical_possession_status;
-
-        if ($status === 'Verified') {
-            if ($request->hasFile('plot_image')) {
-                $plotImage = $request->file('plot_image');
-                $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
-                $application->plot_image = $plotImagePath;
+            // Capture the previous slot time before resetting
+            $prevSlotInfo = "N/A";
+            if ($application->possession_date) {
+                $dateFormatted = date('d M Y', strtotime($application->possession_date));
+                $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
             }
+
+            $application->physical_possession_status = 'Eligible for Physical Possession';
+            $application->possession_date = null;
+            $application->meeting_slot = null;
+            $application->visit_slot_1 = null;
+            $application->visit_slot_2 = null;
+            $application->visit_slot_3 = null;
+            $application->visit_instructions = null;
+            $application->save();
+
+            \App\Models\ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $oldStatus,
+                'new_status' => 'Eligible for Physical Possession',
+                'remarks' => "Citizen was absent / did not attend the scheduled visit slot: {$prevSlotInfo}. Visit slot has been reset for rescheduling by Site Engineer (API).",
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit slot has been reset successfully for rescheduling.',
+                'application' => $application,
+            ]);
+        }
+
+        // Handle Reject Decision (any time)
+        if ($request->input('status') === 'Rejected') {
+            $request->validate([
+                'remarks' => 'required|string|max:1000',
+            ]);
+
+            $oldStatus = $application->physical_possession_status;
+            $application->physical_possession_status = 'Rejected';
+            $application->status = 'rejected';
+            $application->remarks = $request->input('remarks');
+            $application->verified_by = $officer->id;
+            $application->verified_at = now();
+            $application->save();
+
+            \App\Models\ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $oldStatus,
+                'new_status' => 'Rejected',
+                'remarks' => 'Physical possession rejected by Site Engineer (API). Remarks: ' . $request->input('remarks'),
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Physical Possession application has been successfully rejected.',
+                'application' => $application,
+            ]);
+        }
+
+        $currentStatus = $application->physical_possession_status;
+
+        if ($currentStatus === 'Site Verified') {
+            // Step 2: E-Possession Verification
+            $request->validate([
+                'possession_certificate' => 'required|file|mimes:pdf|max:500',
+                'site_engineer_file' => 'required|file|mimes:pdf,jpeg,jpg,png|max:500',
+            ]);
 
             if ($request->hasFile('possession_certificate')) {
                 $certificate = $request->file('possession_certificate');
@@ -1180,37 +1240,74 @@ class PpOfficerApiController extends Controller
                 $application->possession_certificate = $certificatePath;
             }
 
+            if ($request->hasFile('site_engineer_file')) {
+                $seFile = $request->file('site_engineer_file');
+                $seFileName = 'se_' . $application->id . '_' . time() . '.' . $seFile->getClientOriginalExtension();
+                $seFilePath = $seFile->storeAs('possession_uploads/site_engineer', $seFileName, 'public');
+                $application->site_engineer_file = $seFilePath;
+            }
+
+            $application->physical_possession_status = 'Verified';
+            $application->status = 'approved';
+            $application->verified_by = $officer->id;
+            $application->verified_at = now();
+            $application->save();
+
+            \App\Models\ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $currentStatus,
+                'new_status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Physical Possession application has been successfully verified and approved.',
+                'application' => $application,
+            ]);
+
+        } else {
+            // Step 1: Site Verification
+            $request->validate([
+                'latitude' => 'required|string',
+                'longitude' => 'required|string',
+                'plot_image' => 'required|image|mimes:jpeg,jpg,png|max:500',
+                'remarks' => 'required|string|max:1000',
+            ]);
+
+            if ($request->hasFile('plot_image')) {
+                $plotImage = $request->file('plot_image');
+                $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
+                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $application->plot_image = $plotImagePath;
+            }
+
             $application->latitude = $request->latitude;
             $application->longitude = $request->longitude;
             $application->image_capture_datetime = now();
+            $application->remarks = $request->input('remarks');
+            $application->physical_possession_status = 'Site Verified';
+            $application->save();
+
+            \App\Models\ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $currentStatus,
+                'new_status' => 'Site Verified',
+                'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer (API).',
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Site verification details submitted successfully. Now proceed to Step 2 (E-Possession).',
+                'application' => $application,
+            ]);
         }
-
-        $application->physical_possession_status = $status;
-        $application->status = $status === 'Verified' ? 'approved' : 'rejected';
-        $application->verified_by = $officer->id;
-        $application->verified_at = now();
-        $application->remarks = $request->input('remarks');
-        $application->save();
-
-        \App\Models\ApplicationStatusLog::create([
-            'application_id' => $application->id,
-            'asset_id' => $application->asset_id,
-            'old_status' => $oldStatus,
-            'new_status' => $status,
-            'remarks' => $status === 'Verified' 
-                ? 'Physical possession verified and approved on site by Site Engineer (API).' 
-                : 'Physical possession rejected by Site Engineer (API). Remarks: ' . $request->input('remarks'),
-            'changed_by_type' => 'officer',
-            'changed_by_id' => $officer->id,
-        ]);
-
-        $statusMessage = $status === 'Verified' ? 'verified' : 'rejected';
-
-        return response()->json([
-            'success' => true,
-            'message' => "Physical Possession application has been successfully {$statusMessage}.",
-            'application' => $application,
-        ]);
     }
 
     /**
@@ -1225,7 +1322,27 @@ class PpOfficerApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
-        // Query property purchaser details to build the profile
+        $pdfData = $this->preparePdfData($application);
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', $pdfData)
+            ->setPaper('a4');
+
+        if ($request->has('base64')) {
+            return response()->json([
+                'success' => true,
+                'pdf_base64' => base64_encode($pdf->output()),
+                'filename' => 'Possession-Certificate-Request-'.$application->application_number.'.pdf',
+            ]);
+        }
+
+        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+    }
+
+    /**
+     * Prepare data for Physical Possession Application PDF
+     */
+    private function preparePdfData(PhysicalPossessionApplication $application): array
+    {
         $purchaser = DB::table('property_private_purchasers as ppp')
             ->leftJoin('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
@@ -1239,7 +1356,11 @@ class PpOfficerApiController extends Controller
                 'c.CityName',
                 's.SectorName',
                 'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
                 'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit as AssetUnit',
             ])
             ->first();
 
@@ -1262,27 +1383,68 @@ class PpOfficerApiController extends Controller
         $urbanEstate = strtoupper(trim($cityName !== '—' ? $cityName : ($district !== '—' ? $district : '—')));
         $officeLocation = $urbanEstate !== '—' ? $urbanEstate : strtoupper(trim($district));
 
-        $profile = [
+        // Payment Calculation
+        $flatCost = $purchaser ? ($purchaser->FlatCost ?? $application->flat_cost) : $application->flat_cost;
+        $initialDeposit = $purchaser ? ($purchaser->ReceivedAmount ?? 0) : 0;
+        $installmentPaid = DB::table('cash_receipt_details')
+            ->where('asset_number', $application->asset_id)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->sum('total_paid_amount');
+        $ledgerPaid = DB::table('ledger')
+            ->where('AssetId', $application->asset_id)
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->sum('Payment');
+
+        $totalPaid = $initialDeposit + max($installmentPaid, $ledgerPaid);
+        $pendingAmount = max(0, $flatCost - $totalPaid);
+
+        // Base64 Plot Image for DOMPDF compatibility
+        $plotImageBase64 = null;
+        if ($application->plot_image && Storage::disk('public')->exists($application->plot_image)) {
+            $imagePath = Storage::disk('public')->path($application->plot_image);
+            if (file_exists($imagePath)) {
+                $imageData = file_get_contents($imagePath);
+                $mimeType = mime_content_type($imagePath);
+                $plotImageBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+            }
+        }
+
+        // Get Site Engineer Name if verified
+        $siteEngineerName = '—';
+        if ($application->verified_by) {
+            $verifyingUser = User::find($application->verified_by);
+            if ($verifyingUser) {
+                $siteEngineerName = $verifyingUser->name;
+            }
+        }
+
+        return [
+            'application' => $application,
+            'purchaser' => $purchaser,
             'name' => $name,
+            'father_name' => $purchaser?->PurchaserFatherName ?? '—',
             'mobile' => $application->mobile,
-            'application_no' => $purchaser?->ApplicationNo ?? '',
+            'address' => $purchaser?->Address ?? '—',
+            'application_no' => $purchaser?->ApplicationNo ?? $application->application_number,
+            'ppp_id' => $purchaser?->PPPId ?? $application->ppp_id,
             'plot_no' => $plotNo,
             'sector' => $sectorName,
             'urban_estate' => $urbanEstate,
             'office_location' => $officeLocation,
+            'asset_name' => $purchaser?->AssetName ?? $application->asset_name,
+            'asset_size' => $purchaser?->AssetSize ?? $application->asset_size,
+            'asset_unit' => $purchaser?->AssetUnit ?? $application->asset_unit,
+            'flat_cost' => $flatCost,
+            'total_paid' => $totalPaid,
+            'pending_amount' => $pendingAmount,
+            'plot_image_base64' => $plotImageBase64,
+            'latitude' => $application->latitude ?? '—',
+            'longitude' => $application->longitude ?? '—',
+            'remarks' => $application->remarks ?? '—',
+            'verified_at' => $application->image_capture_datetime ? $application->image_capture_datetime->format('d M Y, h:i A') : '—',
+            'site_engineer_name' => $siteEngineerName,
         ];
-
-        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', compact('profile'))
-            ->setPaper('a4');
-
-        if ($request->has('base64')) {
-            return response()->json([
-                'success' => true,
-                'pdf_base64' => base64_encode($pdf->output()),
-                'filename' => 'Possession-Certificate-Request-'.$application->application_number.'.pdf',
-            ]);
-        }
-
-        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
     }
 }

@@ -592,34 +592,53 @@ class PhysicalPossessionWorkflowController extends Controller
             abort(403);
         }
 
-        $request->validate([
-            'status' => 'required|in:Verified,Rejected',
-            'remarks' => 'required|string|max:1000',
-            'latitude' => 'required_if:status,Verified|string',
-            'longitude' => 'required_if:status,Verified|string',
-            'plot_image' => 'required_if:status,Verified|image|mimes:jpeg,jpg,png|max:500',
-            'possession_certificate' => 'required_if:status,Verified|file|mimes:pdf|max:500',
-        ], [
-            'remarks.required' => 'Please provide verification remarks/comments.',
-            'latitude.required_if' => 'GPS Latitude is required. Please capture location.',
-            'longitude.required_if' => 'GPS Longitude is required. Please capture location.',
-            'plot_image.required_if' => 'Plot site photo is required for verification.',
-            'plot_image.max' => 'The plot site photo must not exceed 500 KB.',
-            'possession_certificate.required_if' => 'Physical Possession Application (Citizen Signed) is required for verification.',
-            'possession_certificate.mimes' => 'The Physical Possession Application (Citizen Signed) must be a PDF file.',
-            'possession_certificate.max' => 'The Physical Possession Application (Citizen Signed) must not exceed 500 KB.',
-        ]);
+        if ($request->input('action') === 'reschedule') {
+            $oldStatus = $application->physical_possession_status;
 
-        $status = $request->input('status');
-        $oldStatus = $application->physical_possession_status;
-
-        if ($status === 'Verified') {
-            if ($request->hasFile('plot_image')) {
-                $plotImage = $request->file('plot_image');
-                $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
-                $application->plot_image = $plotImagePath;
+            // Capture the previous slot time before resetting
+            $prevSlotInfo = "N/A";
+            if ($application->possession_date) {
+                $dateFormatted = date('d M Y', strtotime($application->possession_date));
+                $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
             }
+
+            $application->physical_possession_status = 'Eligible for Physical Possession';
+            $application->possession_date = null;
+            $application->meeting_slot = null;
+            $application->visit_slot_1 = null;
+            $application->visit_slot_2 = null;
+            $application->visit_slot_3 = null;
+            $application->visit_instructions = null;
+            $application->save();
+
+            ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $oldStatus,
+                'new_status' => 'Eligible for Physical Possession',
+                'remarks' => "Citizen was absent / did not attend the scheduled visit slot: {$prevSlotInfo}. Visit slot has been reset for rescheduling by Site Engineer.",
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return redirect()->route('pp.officer.dashboard')->with('success', 'Visit slot reset successfully. You can now schedule a new visit from the dashboard.');
+        }
+
+        $currentStatus = $application->physical_possession_status;
+
+        if ($currentStatus === 'Site Verified') {
+            // Step 2 validation
+            $request->validate([
+                'possession_certificate' => 'required|file|mimes:pdf|max:500',
+                'site_engineer_file' => 'required|file|mimes:pdf,jpeg,jpg,png|max:500',
+            ], [
+                'possession_certificate.required' => 'Physical Possession Application (Citizen Signed) is required.',
+                'possession_certificate.mimes' => 'The Physical Possession Application must be a PDF file.',
+                'possession_certificate.max' => 'The Physical Possession Application must not exceed 500 KB.',
+                'site_engineer_file.required' => 'Site Engineer Document is required.',
+                'site_engineer_file.mimes' => 'The Site Engineer Document must be a PDF or image file (JPG, JPEG, PNG).',
+                'site_engineer_file.max' => 'The Site Engineer Document must not exceed 500 KB.',
+            ]);
 
             if ($request->hasFile('possession_certificate')) {
                 $certificate = $request->file('possession_certificate');
@@ -628,32 +647,71 @@ class PhysicalPossessionWorkflowController extends Controller
                 $application->possession_certificate = $certificatePath;
             }
 
+            if ($request->hasFile('site_engineer_file')) {
+                $siteFile = $request->file('site_engineer_file');
+                $siteFileName = 'site_engg_' . $application->id . '_' . time() . '.' . $siteFile->getClientOriginalExtension();
+                $siteFilePath = $siteFile->storeAs('possession_uploads/site_engineer', $siteFileName, 'public');
+                $application->site_engineer_file = $siteFilePath;
+            }
+
+            $application->physical_possession_status = 'Verified';
+            $application->status = 'approved';
+            $application->verified_by = $officer->id;
+            $application->verified_at = now();
+            $application->save();
+
+            ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $currentStatus,
+                'new_status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified.',
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return redirect()->route('pp.officer.possession-applications')->with('success', 'Physical Possession application has been successfully verified and approved.');
+        } else {
+            // Step 1 validation
+            $request->validate([
+                'remarks' => 'required|string|max:1000',
+                'latitude' => 'required|string',
+                'longitude' => 'required|string',
+                'plot_image' => 'required|image|mimes:jpeg,jpg,png|max:500',
+            ], [
+                'remarks.required' => 'Please provide verification remarks/comments.',
+                'latitude.required' => 'GPS Latitude is required. Please capture location.',
+                'longitude.required' => 'GPS Longitude is required. Please capture location.',
+                'plot_image.required' => 'Plot site photo with applicant is required.',
+                'plot_image.max' => 'The plot site photo must not exceed 500 KB.',
+            ]);
+
+            if ($request->hasFile('plot_image')) {
+                $plotImage = $request->file('plot_image');
+                $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
+                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $application->plot_image = $plotImagePath;
+            }
+
             $application->latitude = $request->latitude;
             $application->longitude = $request->longitude;
             $application->image_capture_datetime = now();
+            $application->remarks = $request->input('remarks');
+            $application->physical_possession_status = 'Site Verified';
+            $application->save();
+
+            ApplicationStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id,
+                'old_status' => $currentStatus,
+                'new_status' => 'Site Verified',
+                'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer.',
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $officer->id,
+            ]);
+
+            return redirect()->route('pp.officer.verify-form', $application->secure_id)->with('success', 'Site verification submitted successfully. Now proceed to E-Possession step.');
         }
-
-        $application->physical_possession_status = $status;
-        $application->status = $status === 'Verified' ? 'approved' : 'rejected';
-        $application->verified_by = $officer->id;
-        $application->verified_at = now();
-        $application->remarks = $request->input('remarks');
-        $application->save();
-
-        ApplicationStatusLog::create([
-            'application_id' => $application->id,
-            'asset_id' => $application->asset_id,
-            'old_status' => $oldStatus,
-            'new_status' => $status,
-            'remarks' => $status === 'Verified' 
-                ? 'Physical possession verified and approved on site by Site Engineer.' 
-                : 'Physical possession rejected by Site Engineer. Remarks: ' . $request->input('remarks'),
-            'changed_by_type' => 'officer',
-            'changed_by_id' => $officer->id,
-        ]);
-
-        $statusMessage = $status === 'Verified' ? 'verified' : 'rejected';
-        return redirect()->route('pp.officer.possession-applications')->with('success', "Physical Possession application has been successfully {$statusMessage}.");
     }
 
     /**
@@ -668,7 +726,40 @@ class PhysicalPossessionWorkflowController extends Controller
             abort(403, 'Unauthorized access to application in another district.');
         }
 
-        // Query property purchaser details to build the profile dictionary
+        $pdfData = $this->preparePdfData($application);
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', $pdfData)
+            ->setPaper('a4');
+
+        if ($request->has('inline')) {
+            return $pdf->stream('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+        }
+
+        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+    }
+
+    /**
+     * Public download of the prefilled Possession Certificate PDF (no authentication required).
+     */
+    public function publicDownloadCertificate(Request $request, PhysicalPossessionApplication $application)
+    {
+        $pdfData = $this->preparePdfData($application);
+
+        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', $pdfData)
+            ->setPaper('a4');
+
+        if ($request->has('inline') || !$request->has('download')) {
+            return $pdf->stream('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+        }
+
+        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
+    }
+
+    /**
+     * Prepare data for Physical Possession Application PDF
+     */
+    private function preparePdfData(PhysicalPossessionApplication $application): array
+    {
         $purchaser = DB::table('property_private_purchasers as ppp')
             ->leftJoin('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
@@ -682,7 +773,11 @@ class PhysicalPossessionWorkflowController extends Controller
                 'c.CityName',
                 's.SectorName',
                 'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
                 'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit as AssetUnit',
             ])
             ->first();
 
@@ -705,24 +800,69 @@ class PhysicalPossessionWorkflowController extends Controller
         $urbanEstate = strtoupper(trim($cityName !== '—' ? $cityName : ($district !== '—' ? $district : '—')));
         $officeLocation = $urbanEstate !== '—' ? $urbanEstate : strtoupper(trim($district));
 
-        $profile = [
+        // Payment Calculation
+        $flatCost = $purchaser ? ($purchaser->FlatCost ?? $application->flat_cost) : $application->flat_cost;
+        $initialDeposit = $purchaser ? ($purchaser->ReceivedAmount ?? 0) : 0;
+        $installmentPaid = DB::table('cash_receipt_details')
+            ->where('asset_number', $application->asset_id)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->sum('total_paid_amount');
+        $ledgerPaid = DB::table('ledger')
+            ->where('AssetId', $application->asset_id)
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->sum('Payment');
+
+        $totalPaid = $initialDeposit + max($installmentPaid, $ledgerPaid);
+        $pendingAmount = max(0, $flatCost - $totalPaid);
+
+        // Base64 Plot Image for DOMPDF compatibility
+        $plotImageBase64 = null;
+        if ($application->plot_image && Storage::disk('public')->exists($application->plot_image)) {
+            $imagePath = Storage::disk('public')->path($application->plot_image);
+            if (file_exists($imagePath)) {
+                $imageData = file_get_contents($imagePath);
+                $mimeType = mime_content_type($imagePath);
+                $plotImageBase64 = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+            }
+        }
+
+        // Get Site Engineer Name if verified
+        $siteEngineerName = '—';
+        if ($application->verified_by) {
+            $verifyingUser = User::find($application->verified_by);
+            if ($verifyingUser) {
+                $siteEngineerName = $verifyingUser->name;
+            }
+        }
+
+        return [
+            'application' => $application,
+            'purchaser' => $purchaser,
             'name' => $name,
+            'father_name' => $purchaser?->PurchaserFatherName ?? '—',
             'mobile' => $application->mobile,
-            'application_no' => $purchaser?->ApplicationNo ?? '',
+            'address' => $purchaser?->Address ?? '—',
+            'application_no' => $purchaser?->ApplicationNo ?? $application->application_number,
+            'ppp_id' => $purchaser?->PPPId ?? $application->ppp_id,
             'plot_no' => $plotNo,
             'sector' => $sectorName,
             'urban_estate' => $urbanEstate,
             'office_location' => $officeLocation,
+            'asset_name' => $purchaser?->AssetName ?? $application->asset_name,
+            'asset_size' => $purchaser?->AssetSize ?? $application->asset_size,
+            'asset_unit' => $purchaser?->AssetUnit ?? $application->asset_unit,
+            'flat_cost' => $flatCost,
+            'total_paid' => $totalPaid,
+            'pending_amount' => $pendingAmount,
+            'plot_image_base64' => $plotImageBase64,
+            'latitude' => $application->latitude ?? '—',
+            'longitude' => $application->longitude ?? '—',
+            'remarks' => $application->remarks ?? '—',
+            'verified_at' => $application->image_capture_datetime ? $application->image_capture_datetime->format('d M Y, h:i A') : '—',
+            'site_engineer_name' => $siteEngineerName,
         ];
-
-        $pdf = Pdf::loadView('physical-possession.user.pdf.prefilled-form', compact('profile'))
-            ->setPaper('a4');
-
-        if ($request->has('inline')) {
-            return $pdf->stream('Possession-Certificate-Request-'.$application->application_number.'.pdf');
-        }
-
-        return $pdf->download('Possession-Certificate-Request-'.$application->application_number.'.pdf');
     }
 
     /**

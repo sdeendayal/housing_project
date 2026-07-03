@@ -287,7 +287,7 @@
                                     person
                                 </span>
 
-                                Villager Login
+                                Applicant Login
                             </a>
 
                             <a href="{{ route('mmgay.login') }}"

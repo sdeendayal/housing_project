@@ -21,7 +21,7 @@
         </div>
     @endif
 
-    @if(in_array($application->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted']))
+    @if(in_array($application->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted', 'Site Verified']))
         <!-- Perform Verification Flow (Active Submission) -->
         <form id="verificationForm" action="{{ route('pp.officer.verify-save', $application->secure_id) }}" method="POST" enctype="multipart/form-data">
             @csrf
@@ -57,6 +57,7 @@
                                                     'Visit Scheduled' => 'bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20',
                                                     'Slot Selected' => 'bg-primary text-white border border-primary',
                                                     'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                                    'Site Verified' => 'bg-info text-white border border-info',
                                                     'Verified' => 'bg-success text-white border border-success',
                                                     'Rejected' => 'bg-danger text-white border border-danger',
                                                     default => 'bg-secondary text-white border border-secondary'
@@ -240,7 +241,14 @@
                                             </div>
                                             <div class="flex-grow-1">
                                                 <div class="d-flex justify-content-between align-items-center mb-0.5">
-                                                    <span class="fw-bold text-dark text-capitalize" style="font-size: 0.8rem;">{{ $log->new_status }}</span>
+                                                    <span class="fw-bold text-dark text-capitalize" style="font-size: 0.8rem;">
+                                                        {{ $log->new_status }}
+                                                        @if($log->changer)
+                                                            <small class="text-muted fw-normal" style="text-transform: none;">
+                                                                (by {{ $log->changer->name }})
+                                                            </small>
+                                                        @endif
+                                                    </span>
                                                     <span class="text-muted font-monospace" style="font-size: 0.72rem;">{{ $log->created_at->format('d M Y, h:i A') }}</span>
                                                 </div>
                                                 @if($log->remarks)
@@ -254,35 +262,101 @@
                         </div>
                     @endif
 
+                    <!-- E-Possession Details Card -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-3">
+                        <div class="card-header bg-white border-0 pt-3 px-3 pb-1">
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-shield-check text-primary me-2"></i>E-Possession Status</h6>
+                        </div>
+                        <div class="card-body px-3 pb-3 pt-1">
+                            <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
+                                <div class="col-12">
+                                    <span class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Signed Application</span>
+                                    @if($application->possession_certificate)
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span class="text-success fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>Uploaded</span>
+                                            <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="btn btn-xs btn-outline-danger py-0.5 px-2 rounded-pill font-semibold" style="font-size: 0.68rem; padding: 1px 8px;">
+                                                <i class="bi bi-file-pdf"></i> View
+                                            </a>
+                                        </div>
+                                    @else
+                                        <span class="text-muted d-block mt-1" style="font-size: 0.76rem;"><i class="bi bi-dash-circle me-1"></i>Pending</span>
+                                    @endif
+                                </div>
+                                <div class="col-12 mt-2.5">
+                                    <span class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Site Engineer Document</span>
+                                    @if($application->site_engineer_file)
+                                        <div class="d-flex align-items-center gap-2 mt-1">
+                                            <span class="text-success fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>Uploaded</span>
+                                            <a href="{{ asset('storage/' . $application->site_engineer_file) }}" target="_blank" class="btn btn-xs btn-outline-primary py-0.5 px-2 rounded-pill font-semibold" style="font-size: 0.68rem; padding: 1px 8px;">
+                                                <i class="bi bi-file-earmark-arrow-down"></i> View
+                                            </a>
+                                        </div>
+                                    @else
+                                        <span class="text-muted d-block mt-1" style="font-size: 0.76rem;"><i class="bi bi-dash-circle me-1"></i>Pending</span>
+                                    @endif
+                                </div>
+                                <div class="col-12 mt-2.5 border-top pt-2">
+                                    <span class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Overall E-Verify Status</span>
+                                    @if($application->possession_certificate && $application->site_engineer_file)
+                                        <span class="badge bg-success text-white rounded-2 px-2 py-1 mt-1" style="font-size: 0.68rem;">Completed</span>
+                                    @else
+                                        <span class="badge bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20 rounded-2 px-2 py-1 mt-1" style="font-size: 0.68rem;">Pending Final Submission</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- On-Site Verification Steps Card -->
                     <div class="card border-0 shadow-sm rounded-4 mb-3">
                         <div class="card-header bg-white border-0 pt-3 px-3">
-                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle text-primary me-2"></i>On-Site Verification Steps</h6>
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-info-circle text-primary me-2"></i>Verification Steps</h6>
                         </div>
                         <div class="card-body px-3 pb-3 pt-2">
                             <div class="text-muted" style="font-size: 0.78rem; line-height: 1.4;">
-                                <ul class="list-unstyled mb-0">
-                                    <li class="mb-1.5 d-flex gap-2">
-                                        <i class="bi bi-1-circle-fill text-primary"></i>
-                                        <span>Download & print prefilled PDF form (on the right).</span>
-                                    </li>
-                                    <li class="mb-1.5 d-flex gap-2">
-                                        <i class="bi bi-2-circle-fill text-primary"></i>
-                                        <span>Visit site with citizen, obtain physical signatures.</span>
-                                    </li>
-                                    <li class="mb-1.5 d-flex gap-2">
-                                        <i class="bi bi-3-circle-fill text-primary"></i>
-                                        <span>Click "Capture GPS Location" at the plot.</span>
-                                    </li>
-                                    <li class="mb-1.5 d-flex gap-2">
-                                        <i class="bi bi-4-circle-fill text-primary"></i>
-                                        <span>Upload site photo & signed form.</span>
-                                    </li>
-                                    <li class="d-flex gap-2">
-                                        <i class="bi bi-5-circle-fill text-primary"></i>
-                                        <span>Add remarks and submit to complete.</span>
-                                    </li>
-                                </ul>
+                                @if($application->physical_possession_status === 'Site Verified')
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-1-circle-fill text-primary"></i>
+                                            <span>Download the prefilled application PDF.</span>
+                                        </li>
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-2-circle-fill text-primary"></i>
+                                            <span>Obtain citizen/applicant physical signature.</span>
+                                        </li>
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-3-circle-fill text-primary"></i>
+                                            <span>Upload the signed PDF & Site Engineer document.</span>
+                                        </li>
+                                        <li class="d-flex gap-2">
+                                            <i class="bi bi-4-circle-fill text-primary"></i>
+                                            <span>Click "Submit Final E-Possession" to complete.</span>
+                                        </li>
+                                    </ul>
+                                @else
+                                    <ul class="list-unstyled mb-0">
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-1-circle-fill text-primary"></i>
+                                            <span>Visit the site with the applicant.</span>
+                                        </li>
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-2-circle-fill text-primary"></i>
+                                            <span>Click "Capture GPS Location" at the plot location.</span>
+                                        </li>
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-3-circle-fill text-primary"></i>
+                                            <span>Upload Plot Photo with Applicant.</span>
+                                        </li>
+                                        <li class="mb-1.5 d-flex gap-2">
+                                            <i class="bi bi-4-circle-fill text-primary"></i>
+                                            <span>Add on-site remarks/comments.</span>
+                                        </li>
+                                        <li class="d-flex gap-2">
+                                            <i class="bi bi-5-circle-fill text-primary"></i>
+                                            <span>Click "Verify & Submit Site Verification" to proceed.</span>
+                                        </li>
+                                    </ul>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -292,110 +366,142 @@
                 <div class="col-lg-6">
                     <div class="card border-0 shadow-sm rounded-4 mb-3">
                         <div class="card-body px-3 pb-3 pt-3">
-                            <!-- 1. Download/View Physical Possession Application -->
-                            <div class="mb-3">
-                                <label class="form-label text-dark fw-semibold small mb-1.5">1. Download/View Physical Possession Application</label>
-                                <div class="p-2 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-                                    <div class="min-w-0">
-                                        <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.8rem;">Physical Possession Application PDF</span>
-                                        <small class="text-muted d-block text-wrap" style="font-size: 0.7rem; line-height: 1.2;">The citizen must download, sign, and upload the signed copy</small>
-                                    </div>
-                                    <div class="d-flex gap-1.5 shrink-0">
-                                        <a href="{{ route('pp.officer.download-certificate', ['application' => $application->secure_id, 'inline' => 1]) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
-                                            <i class="bi bi-eye"></i>
-                                            View
-                                        </a>
-                                        <a href="{{ route('pp.officer.download-certificate', $application->secure_id) }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
-                                            <i class="bi bi-file-earmark-arrow-down"></i>
-                                            Download
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="my-3 border-slate-100">
-
-                            <!-- 2. GPS Location Capture -->
-                            <div class="mb-3">
-                                <label class="form-label text-dark fw-semibold small mb-1.5">2. Capture GPS Coordinates <span class="text-danger">*</span></label>
-                                
-                                <div id="location-container" class="rounded-3 border border-secondary border-opacity-25 bg-light p-2 mb-2 d-flex align-items-center gap-2">
-                                    <div class="text-secondary">
-                                        <i id="location-icon" class="bi bi-geo-fill fs-5 text-secondary"></i>
-                                    </div>
-                                    <div id="location-status" class="text-dark m-0" style="font-size: 0.76rem;">
-                                        Location not captured. Click "Capture GPS Location" below.
+                            @if($application->physical_possession_status === 'Site Verified')
+                                <!-- Step 2: E-Possession Verification -->
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small mb-1.5"><i class="bi bi-geo-alt-fill text-primary"></i> Captured Site Verification Details</label>
+                                    <div class="p-3 bg-light rounded-3 border">
+                                        <div class="row g-2 mb-2" style="font-size: 0.8rem;">
+                                            <div class="col-6">
+                                                <span class="text-muted block mb-0.5" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Latitude</span>
+                                                <div class="font-monospace fw-bold text-slate-800">{{ $application->latitude }}</div>
+                                            </div>
+                                            <div class="col-6">
+                                                <span class="text-muted block mb-0.5" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Longitude</span>
+                                                <div class="font-monospace fw-bold text-slate-800">{{ $application->longitude }}</div>
+                                            </div>
+                                        </div>
+                                        @if($application->plot_image)
+                                            <div class="mb-2">
+                                                <span class="text-muted block mb-1" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Plot Photo with Applicant</span>
+                                                <div class="border rounded-2 p-1 bg-white text-center">
+                                                    <img src="{{ asset('storage/' . $application->plot_image) }}" class="img-fluid rounded-2" style="max-height: 180px; object-fit: contain;">
+                                                </div>
+                                            </div>
+                                        @endif
+                                        @if($application->remarks)
+                                            <div>
+                                                <span class="text-muted block mb-0.5" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Verification Remarks</span>
+                                                <div class="text-slate-700 bg-white p-2 rounded-2 border" style="font-size: 0.76rem; line-height: 1.35;">{{ $application->remarks }}</div>
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
 
-                                <button type="button" id="btn-get-location" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1 px-3 rounded-pill fw-bold" style="font-size: 0.78rem;">
-                                    <i class="bi bi-geo-alt"></i>
-                                    Capture GPS Location
+                                <hr class="my-3 border-slate-100">
+
+                                <!-- 1. Download Prefilled PDF -->
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small mb-1.5">1. Download/View Physical Possession Application</label>
+                                    <div class="p-2 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                                        <div class="min-w-0">
+                                            <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.8rem;">Physical Possession Application PDF</span>
+                                            <small class="text-muted d-block text-wrap" style="font-size: 0.7rem; line-height: 1.2;">Download, get signed by citizen, and upload below</small>
+                                        </div>
+                                        <div class="d-flex gap-1.5 shrink-0">
+                                            <a href="{{ route('pp.officer.download-certificate', ['application' => $application->secure_id, 'inline' => 1]) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
+                                                <i class="bi bi-eye"></i>
+                                                View
+                                            </a>
+                                            <a href="{{ route('pp.officer.download-certificate', $application->secure_id) }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
+                                                <i class="bi bi-file-earmark-arrow-down"></i>
+                                                Download
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-3 border-slate-100">
+
+                                <!-- 2. Upload Signed PDF & Site Engineer Document -->
+                                <div class="row g-2 mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Citizen Signed) <span class="text-danger">*</span></label>
+                                        <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm" style="font-size: 0.78rem;">
+                                        <div class="form-text text-muted" style="font-size: 0.65rem;">PDF only (Max file size 500 KB)</div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">3. Upload Site Engineer Document <span class="text-danger">*</span></label>
+                                        <input type="file" name="site_engineer_file" id="site_engineer_file" required accept="application/pdf,image/jpeg,image/jpg,image/png" class="form-control form-control-sm" style="font-size: 0.78rem;">
+                                        <div class="form-text text-muted" style="font-size: 0.65rem;">PDF or image (Max file size 500 KB)</div>
+                                    </div>
+                                </div>
+
+                                <hr class="my-3 border-slate-100">
+
+                                <button type="submit" class="btn btn-sm btn-primary w-100 py-2 rounded-pill fw-bold" style="font-size: 0.85rem;">
+                                    <i class="bi bi-check-circle me-1"></i>Submit Final E-Possession
                                 </button>
-
-                                <div class="row g-2 mt-2">
-                                    <div class="col-6">
-                                        <label class="text-muted uppercase tracking-wider mb-0.5 block" style="font-size: 0.68rem; font-weight: 600;">Latitude <span class="text-danger">*</span></label>
-                                        <input type="text" name="latitude" id="latitude" readonly required class="form-control form-control-sm bg-light text-dark font-monospace" style="font-size: 0.78rem;" placeholder="Latitude">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="text-muted uppercase tracking-wider mb-0.5 block" style="font-size: 0.68rem; font-weight: 600;">Longitude <span class="text-danger">*</span></label>
-                                        <input type="text" name="longitude" id="longitude" readonly required class="form-control form-control-sm bg-light text-dark font-monospace" style="font-size: 0.78rem;" placeholder="Longitude">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- <hr class="my-3 border-slate-100"> -->
-
-                            <!-- Payment Summary Reference -->
-                            <!-- <div class="mb-3">
-                                <label class="form-label text-dark fw-semibold small mb-1.5"><i class="bi bi-currency-rupee text-primary"></i> Payment Summary Reference</label>
-                                <div class="p-3 bg-light rounded-3 border">
-                                    <div class="row text-center">
-                                        <div class="col-4 border-end">
-                                            <span class="text-muted uppercase tracking-wider block mb-1" style="font-size: 0.65rem; font-weight: 700;">Property Cost</span>
-                                            <span class="fw-bold text-dark d-block" style="font-size: 0.82rem;">₹{{ number_format($property->FlatCost ?? $application->flat_cost, 2) }}</span>
+                            @else
+                                <!-- Step 1: Active Site Verification -->
+                                <!-- 1. GPS Location Capture -->
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small mb-1.5">1. Capture GPS Coordinates <span class="text-danger">*</span></label>
+                                    
+                                    <div id="location-container" class="rounded-3 border border-secondary border-opacity-25 bg-light p-2 mb-2 d-flex align-items-center gap-2">
+                                        <div class="text-secondary">
+                                            <i id="location-icon" class="bi bi-geo-fill fs-5 text-secondary"></i>
                                         </div>
-                                        <div class="col-4 border-end">
-                                            <span class="text-success uppercase tracking-wider block mb-1" style="font-size: 0.65rem; font-weight: 700;">Received Amount</span>
-                                            <span class="fw-bold text-success d-block" style="font-size: 0.82rem;" title="Initial Deposit: ₹{{ number_format($initialDeposit, 2) }} + Installments: ₹{{ number_format($installmentPaid, 2) }}">₹{{ number_format($totalReceived, 2) }}</span>
+                                        <div id="location-status" class="text-dark m-0" style="font-size: 0.76rem;">
+                                            Location not captured. Click "Capture GPS Location" below.
                                         </div>
-                                        <div class="col-4">
-                                            <span class="text-danger uppercase tracking-wider block mb-1" style="font-size: 0.65rem; font-weight: 700;">Balance Amount</span>
-                                            <span class="fw-bold text-danger d-block" style="font-size: 0.82rem;">₹{{ number_format($balanceAmount, 2) }}</span>
+                                    </div>
+
+                                    <button type="button" id="btn-get-location" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1.5 py-1 px-3 rounded-pill fw-bold" style="font-size: 0.78rem;">
+                                        <i class="bi bi-geo-alt"></i>
+                                        Capture GPS Location
+                                    </button>
+
+                                    <div class="row g-2 mt-2">
+                                        <div class="col-6">
+                                            <label class="text-muted uppercase tracking-wider mb-0.5 block" style="font-size: 0.68rem; font-weight: 600;">Latitude <span class="text-danger">*</span></label>
+                                            <input type="text" name="latitude" id="latitude" readonly required class="form-control form-control-sm bg-light text-dark font-monospace" style="font-size: 0.78rem;" placeholder="Latitude">
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="text-muted uppercase tracking-wider mb-0.5 block" style="font-size: 0.68rem; font-weight: 600;">Longitude <span class="text-danger">*</span></label>
+                                            <input type="text" name="longitude" id="longitude" readonly required class="form-control form-control-sm bg-light text-dark font-monospace" style="font-size: 0.78rem;" placeholder="Longitude">
                                         </div>
                                     </div>
                                 </div>
-                            </div> -->
 
-                            <hr class="my-3 border-slate-100">
+                                <hr class="my-3 border-slate-100">
 
-                            <!-- 3 & 4. Upload Files -->
-                            <div class="row g-2 mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">3. Upload Plot Photo <span class="text-danger">*</span></label>
+                                <!-- 2. Upload Plot Photo with Applicant -->
+                                <div class="mb-3">
+                                    <label class="form-label text-dark fw-semibold small mb-1">2. Upload plot photo with applicant <span class="text-danger">*</span></label>
                                     <input type="file" name="plot_image" id="plot_image" disabled required accept="image/jpeg,image/jpg,image/png" class="form-control form-control-sm" style="font-size: 0.78rem;">
                                     <div class="form-text text-muted" style="font-size: 0.65rem;">PNG, JPG, JPEG (Max file size 500 KB)</div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">4. Upload Physical Possession Application (Citizen Signed) <span class="text-danger">*</span></label>
-                                    <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm" style="font-size: 0.78rem;">
-                                    <div class="form-text text-muted" style="font-size: 0.65rem;">PDF only (Max file size 500 KB)</div>
+
+                                <hr class="my-3 border-slate-100">
+
+                                <!-- Remarks (Verification Remarks) -->
+                                <div class="mb-3">
+                                    <label for="remarks" class="form-label text-dark fw-semibold small mb-1">3. Verification Remarks / Comments <span class="text-danger">*</span></label>
+                                    <textarea name="remarks" id="remarks" required rows="3" class="form-control form-control-sm" placeholder="Add verification remarks here..." style="font-size: 0.8rem;"></textarea>
+                                    <div class="form-text text-muted" style="font-size: 0.68rem;">Provide details of physical matching, plot dimensions, or checklist checks.</div>
                                 </div>
-                            </div>
 
-                            <hr class="my-3 border-slate-100">
-
-                            <!-- Remarks (Verification Remarks) -->
-                            <div class="mb-3">
-                                <label for="remarks" class="form-label text-dark fw-semibold small mb-1">5. Verification Remarks / Comments <span class="text-danger">*</span></label>
-                                <textarea name="remarks" id="remarks" required rows="2" class="form-control form-control-sm" placeholder="Add verification remarks here..." style="font-size: 0.8rem;"></textarea>
-                                <div class="form-text text-muted" style="font-size: 0.68rem;">Provide details of physical matching, plot dimensions, or checklist checks.</div>
-                            </div>
-
-                            <button type="submit" class="btn btn-sm btn-primary w-100 py-2 rounded-pill fw-bold" style="font-size: 0.85rem;">
-                                <i class="bi bi-check-circle me-1"></i>Verify & Submit Site Verification
-                            </button>
+                                <button type="submit" class="btn btn-sm btn-primary w-100 py-2 rounded-pill fw-bold" style="font-size: 0.85rem;">
+                                    <i class="bi bi-check-circle me-1"></i>Verify & Submit Site Verification
+                                </button>
+                                <button type="button" id="btn-citizen-absent" class="btn btn-sm btn-outline-danger w-100 py-2 rounded-pill fw-bold mt-3" style="font-size: 0.85rem;">
+                                    <i class="bi bi-person-x me-1"></i>Citizen Absent / Reschedule
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
                         </div>
                     </div>
                 </div>
@@ -607,7 +713,14 @@
                                         </div>
                                         <div class="flex-grow-1">
                                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                                <span class="fw-bold text-dark small text-capitalize">{{ $log->new_status }}</span>
+                                                <span class="fw-bold text-dark small text-capitalize">
+                                                    {{ $log->new_status }}
+                                                    @if($log->changer)
+                                                        <small class="text-muted fw-normal" style="text-transform: none;">
+                                                            (by {{ $log->changer->name }})
+                                                        </small>
+                                                    @endif
+                                                </span>
                                                 <span class="text-muted font-monospace fs-8">{{ $log->created_at->format('d M Y, h:i A') }}</span>
                                             </div>
                                             @if($log->remarks)
@@ -730,6 +843,45 @@
                             @endif
                         @else
                             <div class="text-center text-muted py-4">No possession certificate document uploaded.</div>
+                        @endif
+                    </div>
+                </div>
+
+                <!-- Site Engineer Document preview -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-0 pt-4 px-4">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Site Engineer Document</h5>
+                    </div>
+                    <div class="card-body px-4 pb-4">
+                        @if($application->site_engineer_file)
+                            @php
+                                $isPdf = str_ends_with(strtolower($application->site_engineer_file), '.pdf');
+                            @endphp
+                            @if ($isPdf)
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 border">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="bi bi-file-earmark-pdf-fill fs-2 text-primary"></i>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">Site Engineer Document PDF</h6>
+                                            <small class="text-muted">Document uploaded by Site Engineer</small>
+                                        </div>
+                                    </div>
+                                    <a href="{{ asset('storage/' . $application->site_engineer_file) }}" target="_blank" class="btn btn-primary btn-sm px-3 rounded-pill">
+                                        <i class="bi bi-file-pdf me-1"></i>View PDF
+                                    </a>
+                                </div>
+                            @else
+                                <div class="border rounded-3 p-2 bg-light mb-3 text-center">
+                                    <img src="{{ asset('storage/' . $application->site_engineer_file) }}" class="img-fluid rounded-3 border" style="max-height: 280px; object-fit: contain;">
+                                </div>
+                                <div class="text-center">
+                                    <a href="{{ asset('storage/' . $application->site_engineer_file) }}" target="_blank" class="btn btn-sm btn-outline-secondary rounded-pill">
+                                        <i class="bi bi-arrows-fullscreen me-1"></i>View Full Document Image
+                                    </a>
+                                </div>
+                            @endif
+                        @else
+                            <div class="text-center text-muted py-4">No site engineer document uploaded.</div>
                         @endif
                     </div>
                 </div>
@@ -884,58 +1036,116 @@
             });
         }
 
+        const siteEngineerFileInput = document.getElementById('site_engineer_file');
+        if (siteEngineerFileInput) {
+            siteEngineerFileInput.addEventListener('change', function() {
+                if (this.files.length > 0) {
+                    const file = this.files[0];
+                    const fileName = file.name.toLowerCase();
+                    const isAllowed = file.type === 'application/pdf' || file.type.startsWith('image/') || fileName.endsWith('.pdf') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
+                    const maxSize = 500 * 1024; // 500KB
+
+                    if (!isAllowed) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Invalid File Format',
+                            text: 'Please upload only PDF or image files (JPG, JPEG, PNG) for the Site Engineer Document.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        this.value = ''; // clear select
+                        return;
+                    }
+
+                    if (file.size > maxSize) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'File Too Large',
+                            text: 'Site Engineer Document size must not exceed 500 KB.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        this.value = '';
+                        return;
+                    }
+                }
+            });
+        }
+
         // Form submit frontend validation
         const verifyForm = document.getElementById('verificationForm');
         if (verifyForm) {
             verifyForm.addEventListener('submit', function(e) {
-                const lat = latitudeInput.value.trim();
-                const lng = longitudeInput.value.trim();
-                const plotImg = plotImageInput.files.length;
-                const certFile = possessionCertificateInput ? possessionCertificateInput.files.length : 0;
-
-                if (!lat || !lng) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Location Required',
-                        text: 'Please capture GPS location coordinates before submitting.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    return false;
+                const actionInput = verifyForm.querySelector('input[name="action"]');
+                if (actionInput && actionInput.value === 'reschedule') {
+                    return true;
                 }
 
-                if (!plotImg) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Plot Photo Required',
-                        text: 'Please upload a Plot Photo.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    return false;
-                }
+                const isStep2 = document.getElementById('site_engineer_file') !== null;
 
-                if (!certFile) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Signed Application Required',
-                        text: 'Please upload the Physical Possession Application (Citizen Signed).',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    return false;
-                }
+                if (isStep2) {
+                    const certInput = document.getElementById('possession_certificate');
+                    const siteInput = document.getElementById('site_engineer_file');
+                    const certFile = certInput ? certInput.files.length : 0;
+                    const siteFile = siteInput ? siteInput.files.length : 0;
 
-                const remarks = document.getElementById('remarks').value.trim();
-                if (!remarks) {
-                    e.preventDefault();
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Remarks Required',
-                        text: 'Please enter verification remarks/comments.',
-                        confirmButtonColor: '#3085d6'
-                    });
-                    return false;
+                    if (!certFile) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Signed Application Required',
+                            text: 'Please upload the Physical Possession Application (Citizen Signed).',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
+
+                    if (!siteFile) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Site Engineer Document Required',
+                            text: 'Please upload the Site Engineer Document.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
+                } else {
+                    const lat = latitudeInput.value.trim();
+                    const lng = longitudeInput.value.trim();
+                    const plotImg = plotImageInput.files.length;
+
+                    if (!lat || !lng) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Location Required',
+                            text: 'Please capture GPS location coordinates before submitting.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
+
+                    if (!plotImg) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Plot Photo Required',
+                            text: 'Please upload the Plot Photo with Applicant.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
+
+                    const remarks = document.getElementById('remarks').value.trim();
+                    if (!remarks) {
+                        e.preventDefault();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Remarks Required',
+                            text: 'Please enter verification remarks/comments.',
+                            confirmButtonColor: '#3085d6'
+                        });
+                        return false;
+                    }
                 }
 
                 // Show loading state and let submit proceed
@@ -946,6 +1156,35 @@
                         submitBtn.disabled = true;
                     }, 10);
                 }
+            });
+        }
+
+        const btnCitizenAbsent = document.getElementById('btn-citizen-absent');
+        if (btnCitizenAbsent && verifyForm) {
+            btnCitizenAbsent.addEventListener('click', function() {
+                Swal.fire({
+                    title: 'Citizen Absent / Reschedule?',
+                    text: "Are you sure the citizen was absent? This will reset their scheduled visit slot and return the application to the scheduling pool so you can offer new slot dates.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, Reset & Reschedule',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        actionInput.value = 'reschedule';
+                        verifyForm.appendChild(actionInput);
+
+                        btnCitizenAbsent.disabled = true;
+                        btnCitizenAbsent.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Rescheduling...';
+
+                        verifyForm.submit();
+                    }
+                });
             });
         }
     });

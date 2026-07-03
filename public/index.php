@@ -1,5 +1,10 @@
 <?php
 
+if (isset($_SERVER['REQUEST_URI']) && str_starts_with($_SERVER['REQUEST_URI'], '/hfa')) {
+    $_SERVER['SCRIPT_NAME'] = '/hfa/index.php';
+    $_SERVER['PHP_SELF'] = '/hfa/index.php';
+}
+
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 

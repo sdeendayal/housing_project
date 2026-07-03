@@ -402,8 +402,8 @@
                <span class="material-symbols-outlined">apartment</span>
             </div>
             <div>
-               <p class="cl-brand__title">Housing For All (MMGAV)</p>
-               <p class="cl-brand__sub">Villager Portal</p>
+               <p class="cl-brand__title">Housing For All (MMGAY)</p>
+               {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
             </div>
          </div>
 
@@ -413,7 +413,7 @@
                   <span class="material-symbols-outlined">account_circle</span>
                </div>
                <div>
-                  <p class="cl-head__title">Villager Login</p>
+                  <p class="cl-head__title">Applicant Login</p>
                   <p class="cl-head__sub">Enter mobile number to receive OTP</p>
                </div>
             </div>

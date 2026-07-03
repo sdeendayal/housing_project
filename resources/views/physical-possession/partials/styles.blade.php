@@ -254,10 +254,12 @@ body.pp-body-auth {
 .pp-sidebar-link-icon.purple { color: #6d28d9; background: #ede9fe; }
 .pp-sidebar-link-icon.orange { color: #ea580c; background: #ffedd5; }
 .pp-sidebar-link-icon.green { color: #059669; background: #d1fae5; }
+.pp-sidebar-link-icon.teal { color: #0284c7; background: #e0f2fe; }
 
 [data-bs-theme="dark"] .pp-sidebar-link-icon.purple { color: #a78bfa; background: rgba(109, 40, 217, 0.2); }
 [data-bs-theme="dark"] .pp-sidebar-link-icon.orange { color: #fb923c; background: rgba(234, 88, 12, 0.2); }
 [data-bs-theme="dark"] .pp-sidebar-link-icon.green { color: #34d399; background: rgba(5, 150, 105, 0.2); }
+[data-bs-theme="dark"] .pp-sidebar-link-icon.teal { color: #38bdf8; background: rgba(2, 132, 199, 0.2); }
 
 
 .pp-sidebar-link-label {

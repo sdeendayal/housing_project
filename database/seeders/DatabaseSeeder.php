@@ -30,6 +30,12 @@ class DatabaseSeeder extends Seeder
             PhysicalPossessionUserSeeder::class,
             LedgerSeeder::class,
             InstallmentDueSeeder::class,
+            DistrictMasterSeeder::class,
+            BlockMasterSeeder::class,
+            VillageMasterSeeder::class,
+            SocialCategoryMasterSeeder::class,
+            FlatMasterSeeder::class,
+            OwnerMasterSeeder::class,
             MMGAYUserSeeder::class,
         ]);
 

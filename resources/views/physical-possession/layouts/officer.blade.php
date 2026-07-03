@@ -67,6 +67,11 @@
                 <span class="pp-sidebar-link-label">Pending Verify</span>
             </a>
 
+            <a href="{{ route('pp.officer.possession-applications', ['status' => 'Site Verified']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Site Verified') || ($isVerifyForm && $appStatus === 'Site Verified') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon teal"><i class="bi bi-file-earmark-check"></i></span>
+                <span class="pp-sidebar-link-label">E-Possession Pending</span>
+            </a>
+
             <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Verified') || ($isVerifyForm && in_array($appStatus, ['Verified', 'Rejected'])) ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon green"><i class="bi bi-check-circle"></i></span>
                 <span class="pp-sidebar-link-label">Verified</span>
