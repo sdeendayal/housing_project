@@ -66,7 +66,7 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
         ->name('district.owner.grievance.submit');
 
     Route::post('/district/owner/{id}/action', [DistrictCEOController::class, 'ownerAction'])
-        ->name('district.owner.action');
+        ->name('district.owner.action_v2');
 
 });
 

@@ -189,32 +189,7 @@
                         </li>
                     </ul>
                 </div>
-                <!-- Panel: Public Notice -->
-                {{-- <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
-                <div class="bg-sky-400 text-white px-4 py-2 font-semibold text-sm">
-                    Important Public Notice
-                </div>
-                <ul class="divide-y divide-slate-100 text-sm">
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-start space-x-2" href="#">
-                            <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">ALERT:
-                                Beware of fraudulent calls regarding housing allotment
-                                fees.</span>
-                        </a>
-                    </li>
-                    <li class="p-3 hover:bg-slate-50">
-                        <a class="flex items-start space-x-2" href="#">
-                            <span class="text-green-500 mt-0.5">●</span>
-                            <span class="text-slate-700">Extension of deadline for document verification for Phase 1
-                                applicants.</span>
-                        </a>
-                    </li>
-                </ul>
-                <div class="bg-slate-50 px-4 py-2 text-right border-t border-slate-100">
-                    <a class="text-sm text-sky-600 hover:underline" href="#">View more</a>
-                </div>
-            </div> --}}
+
             </aside>
             <!-- CENTER AREA -->
             <section class="lg:col-span-2 space-y-6">
@@ -315,7 +290,7 @@
                                 Applicant Login
                             </a>
 
-                            <a href="{{ url('/mmgay/login') }}"
+                            <a href="{{ route('mmgay.login') }}"
                                 class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
 
                                 <span class="material-symbols-outlined text-[18px]">
@@ -804,23 +779,27 @@
                 <div class="grid md:grid-cols-4 gap-6">
 
                     <div class="group rounded-3xl overflow-hidden shadow-lg">
-                        <img src="1654693046606798243.jpg"
-                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                        <img src="{{ asset('1654693046606798243.jpg') }}"
+                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500"
+                            alt="Gallery Image">
                     </div>
 
                     <div class="group rounded-3xl overflow-hidden shadow-lg">
-                        <img src="16546930511289561504.jpg"
-                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                        <img src="{{ asset('16546930511289561504.jpg') }}"
+                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500"
+                            alt="Gallery Image">
                     </div>
 
                     <div class="group rounded-3xl overflow-hidden shadow-lg">
-                        <img src="16546930602025626684.jpg"
-                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                        <img src="{{ asset('16546930602025626684.jpg') }}"
+                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500"
+                            alt="Gallery Image">
                     </div>
 
                     <div class="group rounded-3xl overflow-hidden shadow-lg">
-                        <img src="1654693080605359150.jpg"
-                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500">
+                        <img src="{{ asset('1654693080605359150.jpg') }}"
+                            class="h-64 w-full object-cover group-hover:scale-110 transition duration-500"
+                            alt="Gallery Image">
                     </div>
 
                 </div>

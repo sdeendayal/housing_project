@@ -67,10 +67,11 @@ class PpOfficerController extends Controller
             'awaiting_schedule' => $eligibleCount,
             'scheduled' => (clone $query)->where('physical_possession_status', 'Visit Scheduled')->count(),
             'submitted' => (clone $query)->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted'])->count(),
+            'site_verified' => (clone $query)->where('physical_possession_status', 'Site Verified')->count(),
             'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
-        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['verified'] + $stats['rejected'];
+        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['site_verified'] + $stats['verified'] + $stats['rejected'];
 
         // Chart ke liye last 7 days data
         $chartLabels = [];

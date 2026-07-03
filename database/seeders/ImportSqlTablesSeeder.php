@@ -35,12 +35,15 @@ class ImportSqlTablesSeeder extends Seeder
             $this->command->error('family_id_data.sql not found at: '.$familyIdSqlPath);
         }
 
+        // MMGAY SQL table import bypassed in favor of Excel seeders
+        /*
         $mmgaySqlPath = database_path('seeders/data/mmgay.sql');
         if (File::exists($mmgaySqlPath)) {
             $this->importSqlFile($mmgaySqlPath, 'mmgay.sql');
         } else {
             $this->command->error('mmgay.sql not found at: '.$mmgaySqlPath);
         }
+        */
     }
 
     private function prepareConnection(): void
