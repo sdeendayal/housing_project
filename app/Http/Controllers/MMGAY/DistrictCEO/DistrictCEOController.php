@@ -8,13 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class DistrictCEOController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request, $phase = 1)
     {
         $user = auth()->user();
-
-        if (!$user) {
-            return redirect()->route('mmgay.login');
-        }
 
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
@@ -24,77 +20,148 @@ class DistrictCEOController extends Controller
             abort(404, 'District not found.');
         }
 
-        // Default Phase
-        $phase = 1;
+        // Phase Wise Plot Column
+        switch ($phase) {
+            case 2:
+                $plotColumn = 'v.totalPlotsPhase2';
+                break;
 
-        $summary = "
-            COUNT(*) AS Total,
-            COALESCE(SUM(CASE WHEN IsPaid = 1 THEN 1 ELSE 0 END),0) AS Paid,
-            COALESCE(SUM(CASE WHEN IsApproved = 1 AND IFNULL(IsPaid,0)=0 THEN 1 ELSE 0 END),0) AS Approved,
-            COALESCE(SUM(CASE WHEN IsRejected = 1 THEN 1 ELSE 0 END),0) AS Rejected,
-            COALESCE(SUM(CASE WHEN IsDcReconsidered = 1 THEN 1 ELSE 0 END),0) AS InProcess,
-            COALESCE(SUM(
-                CASE
-                    WHEN IFNULL(IsApproved,0)=0
-                     AND IFNULL(IsRejected,0)=0
-                     AND IFNULL(IsPaid,0)=0
-                     AND IFNULL(IsDcReconsidered,0)=0
-                    THEN 1 ELSE 0
-                END
-            ),0) AS Pending
-        ";
+            case 3:
+                $plotColumn = 'v.totalPlotsPhase3';
+                break;
 
-        $data = DB::table('OwnerMaster')
-            ->where('DistrictId', $districtId)
-            ->where('Phase', $phase)
-            ->selectRaw($summary)
-            ->first();
-
-        return view('mmgay.district-ceo.dashboard', compact('data'));
-    }
-
-    public function getPhaseData($phase)
-    {
-        $user = auth()->user();
-
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            default:
+                $plotColumn = 'v.TotalPlots';
+                break;
         }
 
-        $districtId = DB::table('DistrictMaster')
-            ->where('DistrictName', $user->district_name)
-            ->value('DistrictId');
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->join('DistrictMaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('FlatMaster as f', 'o.FlatId', '=', 'f.FlatId')
 
-        if (!$districtId) {
+            ->where('o.DistrictId', $districtId)
+            ->where('o.Phase', $phase);
+
+        // NULL Plot wale villages hide
+        if ($phase == 1) {
+            $query->whereNotNull('v.TotalPlots');
+        } elseif ($phase == 2) {
+            $query->whereNotNull('v.totalPlotsPhase2');
+        } else {
+            $query->whereNotNull('v.totalPlotsPhase3');
+        }
+
+        $villageData = $query
+            ->groupBy(
+                'd.DistrictName',
+                'v.VillageId',
+                'v.VillageName',
+                DB::raw($plotColumn)
+            )
+
+            ->orderBy('v.VillageName')
+
+            ->selectRaw("
+    d.DistrictName,
+    v.VillageId,
+    v.VillageName,
+
+    $plotColumn AS TotalPlots,
+
+    COUNT(o.OwnerId) AS TotalApplicants,
+
+    SUM(
+        CASE
+            WHEN o.IsApproved = 1
+             AND o.IsPaid = 1
+            THEN 1 ELSE 0
+        END
+    ) AS Paid,
+
+    SUM(
+        CASE
+            WHEN o.IsApproved = 1
+             AND o.IsPaid = 1
+             AND o.Caste = 'SC'
+            THEN 1 ELSE 0
+        END
+    ) AS SC,
+
+    SUM(
+        CASE
+            WHEN o.IsApproved = 1
+             AND o.IsPaid = 1
+             AND o.Caste = 'Ghumantu'
+            THEN 1 ELSE 0
+        END
+    ) AS Ghumantu,
+
+    SUM(
+        CASE
+            WHEN o.IsApproved = 1
+             AND o.IsPaid = 1
+             AND o.Caste = 'Widow'
+            THEN 1 ELSE 0
+        END
+    ) AS Widow,
+
+    SUM(
+        CASE
+            WHEN o.IsApproved = 1
+             AND o.IsPaid = 1
+             AND (o.Caste = 'General' OR o.Caste = 'Others')
+            THEN 1 ELSE 0
+        END
+    ) AS Others,
+
+    (
+    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='SC' THEN 1 ELSE 0 END)
+    +
+    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='Ghumantu' THEN 1 ELSE 0 END)
+    +
+    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='Widow' THEN 1 ELSE 0 END)
+    +
+    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1
+        AND (o.Caste='General' OR o.Caste='Others')
+        THEN 1 ELSE 0 END)
+) AS TotalAllotment,
+
+    SUM(
+        CASE
+            WHEN o.IsPaymentApproved = 1
+            THEN 1 ELSE 0
+        END
+    ) AS Possession
+")
+            ->get();
+
+        $totals = [
+            'totalVillages' => $villageData->count(),
+            'totalPlots' => $villageData->sum('TotalPlots'),
+            'totalApplicants' => $villageData->sum('TotalApplicants'),
+            'totalPaid' => $villageData->sum('Paid'),
+            'totalAllotment' => $villageData->sum('TotalAllotment'),
+            'totalPossession' => $villageData->sum('Possession'),
+            'totalSC' => $villageData->sum('SC'),
+            'totalGhumantu' => $villageData->sum('Ghumantu'),
+            'totalWidow' => $villageData->sum('Widow'),
+            'totalOthers' => $villageData->sum('Others'),
+        ];
+
+        if ($request->ajax()) {
             return response()->json([
-                'message' => 'District not found.'
-            ], 404);
+                'phase' => $phase,
+                'totals' => $totals,
+                'villageData' => $villageData
+            ]);
         }
 
-        $summary = "
-            COUNT(*) AS Total,
-            COALESCE(SUM(CASE WHEN IsPaid = 1 THEN 1 ELSE 0 END),0) AS Paid,
-            COALESCE(SUM(CASE WHEN IsApproved = 1 AND IFNULL(IsPaid,0)=0 THEN 1 ELSE 0 END),0) AS Approved,
-            COALESCE(SUM(CASE WHEN IsRejected = 1 THEN 1 ELSE 0 END),0) AS Rejected,
-            COALESCE(SUM(CASE WHEN IsDcReconsidered = 1 THEN 1 ELSE 0 END),0) AS InProcess,
-            COALESCE(SUM(
-                CASE
-                    WHEN IFNULL(IsApproved,0)=0
-                     AND IFNULL(IsRejected,0)=0
-                     AND IFNULL(IsPaid,0)=0
-                     AND IFNULL(IsDcReconsidered,0)=0
-                    THEN 1 ELSE 0
-                END
-            ),0) AS Pending
-        ";
-
-        $data = DB::table('OwnerMaster')
-            ->where('DistrictId', $districtId)
-            ->where('Phase', $phase)
-            ->selectRaw($summary)
-            ->first();
-
-        return response()->json($data);
+        return view('mmgay.district-ceo.dashboard', compact(
+            'phase',
+            'totals',
+            'villageData'
+        ));
     }
 
     public function list($phase, $status)
@@ -255,7 +322,7 @@ class DistrictCEOController extends Controller
         return view('mmgay.district-ceo.owner-view', compact('owner'));
     }
 
-   
+
 
     public function submitGrievance(Request $request, $id)
     {

@@ -71,189 +71,262 @@
 
         </div>
 
+
+
         <!-- ===================== PHASE TAB ===================== -->
 
         <div class="mt-6 flex gap-3">
 
-            <button class="phase-tab activePhase px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold shadow"
-                data-phase="1">
+            <button class="phase-tab px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold" data-phase="1">
                 Phase 1
             </button>
 
-            <button class="phase-tab px-6 py-2 rounded-xl bg-white border hover:bg-slate-50 font-semibold" data-phase="2">
+            <button class="phase-tab px-6 py-2 rounded-xl bg-white border" data-phase="2">
                 Phase 2
             </button>
 
-            <button class="phase-tab px-6 py-2 rounded-xl bg-white border hover:bg-slate-50 font-semibold" data-phase="3">
+            <button class="phase-tab px-6 py-2 rounded-xl bg-white border" data-phase="3">
                 Phase 3
             </button>
 
         </div>
 
-        <!-- ===================== KPI CARDS ===================== -->
+
 
         <!-- ===================== KPI CARDS ===================== -->
 
-        <div class="grid xl:grid-cols-6 lg:grid-cols-3 md:grid-cols-2 gap-3 mt-6">
+        <!-- ===================== KPI CARDS ===================== -->
 
-            <!-- Total -->
-            <div onclick="openList('total')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
+        <!-- Total Villages -->
+        <!-- ===================== KPI CARDS ===================== -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-5 mt-6">
 
-                <div class="flex items-center gap-3">
-
-                    <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-indigo-600">
-                            inventory_2
-                        </span>
-                    </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            Total Plots
-                        </p>
-
-                        <h2 id="total" class="text-3xl font-bold leading-none text-slate-900 mt-1">
-                            0
+            <!-- Total Villages -->
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Villages</p>
+                        <h2 id="totalVillages" class="text-3xl font-bold text-blue-700">
+                            {{ $totals['totalVillages'] }}
                         </h2>
                     </div>
-
+                    <div class="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-blue-700 text-3xl">
+                            location_city
+                        </span>
+                    </div>
                 </div>
+            </div>
 
+            <!-- Total Plots -->
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Plots</p>
+                        <h2 id="totalPlots" class="text-3xl font-bold text-green-700">
+                            {{ $totals['totalPlots'] }}
+                        </h2>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-green-700 text-3xl">
+                            grid_view
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Applicants -->
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Applicants</p>
+                        <h2 id="totalApplicants" class="text-3xl font-bold text-indigo-700">
+                            {{ $totals['totalApplicants'] }}
+                        </h2>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-indigo-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-indigo-700 text-3xl">
+                            groups
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Allotment -->
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Allotment</p>
+                        <h2 id="totalAllotment" class="text-3xl font-bold text-orange-700">
+                            {{ $totals['totalAllotment'] }}
+                        </h2>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-orange-700 text-3xl">
+                            home_work
+                        </span>
+                    </div>
+                </div>
             </div>
 
             <!-- Paid -->
-            <div onclick="openList('paid')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
-
-                <div class="flex items-center gap-3">
-
-                    <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-green-600">
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Paid</p>
+                        <h2 id="totalPaid" class="text-3xl font-bold text-emerald-700">
+                            {{ $totals['totalPaid'] }}
+                        </h2>
+                    </div>
+                    <div class="w-14 h-14 rounded-xl bg-emerald-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-emerald-700 text-3xl">
                             payments
                         </span>
                     </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            Paid
-                        </p>
-
-                        <h2 id="paid" class="text-3xl font-bold leading-none text-green-700 mt-1">
-                            0
-                        </h2>
-                    </div>
-
                 </div>
-
             </div>
 
-            <!-- Approved -->
-            <div onclick="openList('approved')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
 
-                <div class="flex items-center gap-3">
 
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-blue-600">
-                            verified
-                        </span>
-                    </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            Approved
-                        </p>
-
-                        <h2 id="approved" class="text-3xl font-bold leading-none text-blue-700 mt-1">
-                            0
+            <!-- Possession -->
+            <div class="bg-white rounded-2xl shadow border p-5">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-xs uppercase text-gray-500">Possession</p>
+                        <h2 id="totalPossession" class="text-3xl font-bold text-purple-700">
+                            {{-- {{ $totals['totalPossession'] }} --}}--
                         </h2>
                     </div>
-
-                </div>
-
-            </div>
-
-            <!-- Pending -->
-            <div onclick="openList('pending')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
-
-                <div class="flex items-center gap-3">
-
-                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-orange-600">
-                            pending_actions
+                    <div class="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-purple-700 text-3xl">
+                            key
                         </span>
                     </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            Pending
-                        </p>
-
-                        <h2 id="pending" class="text-3xl font-bold leading-none text-orange-600 mt-1">
-                            0
-                        </h2>
-                    </div>
-
                 </div>
-
-            </div>
-
-            <!-- Rejected -->
-            <div onclick="openList('rejected')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
-
-                <div class="flex items-center gap-3">
-
-                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-red-600">
-                            cancel
-                        </span>
-                    </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            Rejected
-                        </p>
-
-                        <h2 id="rejected" class="text-3xl font-bold leading-none text-red-600 mt-1">
-                            0
-                        </h2>
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- In Process -->
-            <div onclick="openList('inprocess')"
-                class="cursor-pointer bg-white border border-gray-200 rounded-2xl px-4 py-3 hover:shadow-md transition">
-
-                <div class="flex items-center gap-3">
-
-                    <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center">
-                        <span class="material-symbols-outlined text-yellow-600">
-                            sync
-                        </span>
-                    </div>
-
-                    <div class="flex-1">
-                        <p class="text-[11px] uppercase font-semibold tracking-wide text-gray-500">
-                            In Process
-                        </p>
-
-                        <h2 id="inprocess" class="text-3xl font-bold leading-none text-yellow-600 mt-1">
-                            0
-                        </h2>
-                    </div>
-
-                </div>
-
             </div>
 
         </div>
 
-        
+        <!-- Village Wise Summary -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mt-8">
 
-       
+            <div class="px-6 py-4 border-b flex items-center justify-between">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">
+                        Village Wise Summary
+                    </h3>
+                    <p class="text-sm text-gray-500" id="phaseTitle">
+                        Phase {{ $phase }} Village Statistics
+                    </p>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+
+                <table class="min-w-full text-sm">
+
+                    <thead class="bg-blue-600 text-white sticky top-0">
+
+                        <tr>
+                            <th class="px-4 py-3 text-left">#</th>
+                            <th class="px-4 py-3 text-left">Village</th>
+                            <th class="px-4 py-3 text-center">Total Plots</th>
+                            <th class="px-4 py-3 text-center">Applicants</th>
+                            <th class="px-4 py-3 text-center">Paid</th>
+                            <th class="px-4 py-3 text-center">SC</th>
+                            <th class="px-4 py-3 text-center">Ghumantu</th>
+                            <th class="px-4 py-3 text-center">Widow</th>
+                            <th class="px-4 py-3 text-center">Others</th>
+                            <th class="px-4 py-3 text-center">Allotted</th>
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="villageTableBody">
+
+                        @php
+                            $plots = 0;
+                            $applicants = 0;
+                            $paid = 0;
+                            $allotted = 0;
+                            $sc = 0;
+                            $ghumantu = 0;
+                            $widow = 0;
+                            $others = 0;
+                        @endphp
+
+                        @foreach ($villageData as $row)
+                            @php
+                                $plots += $row->TotalPlots;
+                                $applicants += $row->TotalApplicants;
+                                $paid += $row->Paid;
+                                $allotted += $row->TotalAllotment;
+                                $sc += $row->SC;
+                                $ghumantu += $row->Ghumantu;
+                                $widow += $row->Widow;
+                                $others += $row->Others;
+                            @endphp
+
+                            <tr class="border-b hover:bg-blue-50">
+
+                                <td class="px-4 py-3">{{ $loop->iteration }}</td>
+
+                                <td class="px-4 py-3 font-medium">{{ $row->VillageName }}</td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->TotalPlots }}</td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->TotalApplicants }}</td>
+
+                                <td class="px-4 py-3 text-center text-green-600 font-semibold">
+                                    {{ $row->Paid }}
+                                </td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->SC }}</td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->Ghumantu }}</td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->Widow }}</td>
+
+                                <td class="px-4 py-3 text-center">{{ $row->Others }}</td>
+
+                                <td class="px-4 py-3 text-center text-blue-600 font-semibold">
+                                    {{ $row->TotalAllotment }}
+                                </td>
+                            </tr>
+                        @endforeach
+
+                    </tbody>
+
+                    <tfoot id="grandTotalFooter" class="bg-slate-100 font-bold">
+
+                        <tr>
+
+                            <td colspan="2" class="px-4 py-3">
+                                Grand Total
+                            </td>
+
+                            <td class="text-center" id="gtPlots">{{ $plots }}</td>
+
+                            <td class="text-center" id="gtApplicants">{{ $applicants }}</td>
+
+                            <td class="text-center" id="gtPaid">{{ $paid }}</td>
+
+                            
+
+                            <td class="text-center" id="gtSC">{{ $sc }}</td>
+
+                            <td class="text-center" id="gtGhumantu">{{ $ghumantu }}</td>
+
+                            <td class="text-center" id="gtWidow">{{ $widow }}</td>
+
+                            <td class="text-center" id="gtOthers">{{ $others }}</td>
+                             <td class="text-center" id="gtAllotment">{{ $allotted }}</td>
+                        </tr>
+
+                    </tfoot>
+
+                </table>
+
+            </div>
+
+        </div>
