@@ -18,7 +18,10 @@ class OwnerMasterSeeder extends Seeder
     {
         ini_set('memory_limit', '1024M');
 
-        $csvFile = $this->csvPath('owners.csv');
+        $csvFile = database_path('seeders/data/owners/owners.csv');
+        if (!file_exists($csvFile)) {
+            $csvFile = $this->csvPath('owners.csv');
+        }
 
         $imported = $this->withoutForeignKeyChecks(function () use ($csvFile) {
             DB::table('ownermaster')->truncate();
