@@ -209,9 +209,18 @@
                     <div class="mt-5 pt-5 border-t border-slate-100 text-center">
                         <p class="text-xs text-slate-500 mb-2">Are you a villager / beneficiary?</p>
                         <a href="{{ route('mmgav.villager.login') }}"
-                            class="inline-flex items-center gap-1 text-sm font-semibold text-[#0058bc] hover:underline">
+                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
                             <span class="material-symbols-outlined text-[18px]">sms</span>
                             Go to Villager Login (Mobile OTP)
+                        </a>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-500 mb-2">Are you a Block Development Officer?</p>
+                        <a href="{{ route('mmgay.bdo.login') }}"
+                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
+                            <span class="material-symbols-outlined text-[18px]">login</span>
+                            MMGAY BDO Login
                         </a>
                     </div>
 

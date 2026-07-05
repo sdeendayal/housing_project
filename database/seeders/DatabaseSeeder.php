@@ -37,6 +37,7 @@ class DatabaseSeeder extends Seeder
             FlatMasterSeeder::class,
             OwnerMasterSeeder::class,
             MMGAYUserSeeder::class,
+            MmgayBdoSeeder::class,
         ]);
 
         // Sync MMGAY citizen owners into users table

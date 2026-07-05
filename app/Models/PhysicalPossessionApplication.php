@@ -20,6 +20,9 @@ class PhysicalPossessionApplication extends Model
 
     protected $fillable = [
         'user_id',
+        'secure_id',
+        'owner_id',
+        'scheme',
         'private_purchaser_id',
         'asset_id',
         'property_auction_id',

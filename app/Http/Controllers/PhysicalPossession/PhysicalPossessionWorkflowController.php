@@ -380,6 +380,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'physical_possession_status' => 'Visit Scheduled',
         ]);
 
+        $siteEngg = Auth::user();
+
         ApplicationStatusLog::create([
             'application_id' => $application->id,
             'asset_id' => $application->asset_id,
@@ -387,7 +389,18 @@ class PhysicalPossessionWorkflowController extends Controller
             'new_status' => 'Visit Scheduled',
             'remarks' => 'Visit scheduled by Site Engineer. Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
             'changed_by_type' => 'officer',
-            'changed_by_id' => Auth::id(),
+            'changed_by_id' => $siteEngg->id,
+        ]);
+
+        \App\Models\SiteEnggStatus::create([
+            'application_id' => $application->id,
+            'application_number' => $application->application_number,
+            'site_engg_user_id' => $siteEngg->id,
+            'site_engg_name' => $siteEngg->name,
+            'site_engg_email' => $siteEngg->email,
+            'site_engg_mobile' => $siteEngg->mobile ?? null,
+            'status' => 'Visit Scheduled',
+            'remarks' => $request->visit_instructions ?? 'Visit scheduled by Site Engineer.',
         ]);
 
         // Mock/Log Citizen notification
@@ -670,6 +683,17 @@ class PhysicalPossessionWorkflowController extends Controller
                 'changed_by_id' => $officer->id,
             ]);
 
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified.',
+            ]);
+
             return redirect()->route('pp.officer.possession-applications')->with('success', 'Physical Possession application has been successfully verified and approved.');
         } else {
             // Step 1 validation
@@ -708,6 +732,17 @@ class PhysicalPossessionWorkflowController extends Controller
                 'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer.',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Site Verified',
+                'remarks' => $request->remarks,
             ]);
 
             return redirect()->route('pp.officer.verify-form', $application->secure_id)->with('success', 'Site verification submitted successfully. Now proceed to E-Possession step.');
