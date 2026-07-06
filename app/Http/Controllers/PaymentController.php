@@ -211,11 +211,13 @@ class PaymentController extends Controller
         $merchantTxnNo = 'MMSAY-TXN-' . now()->format('YmdHis') . rand(100, 999);
         $currencyCode = '356'; // INR
         $payType = '0';
-        $customerEmailID = $user->email ?? 'test@gmail.com';
+        $customerEmailID = $user->email;
         $transactionType = 'SALE';
         $returnURL = route('citizen.payment.callback');
         $txnDate = now()->format('YmdHis');
-        $customerMobileNo = $user->mobile ?? ($purchaser->MobileNo ?? '9146153247');
+        // $customerMobileNo = $user->mobile ?? ($purchaser->MobileNo ?? '9146153247');
+        $customerMobileNo = $user->mobile ?? $purchaser->MobileNo;
+
         
         // Strip out any non-alphanumeric chars for name
         $customerName = preg_replace('/[^A-Za-z0-9 ]/', '', $purchaser->PrivatePurchaserName ?? ($user->name ?? 'Citizen'));
