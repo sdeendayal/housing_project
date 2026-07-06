@@ -189,6 +189,11 @@ class CitizenAuthController extends Controller
             ? 'HR-MMSAY-'.($purchaseDate?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
             : ($purchaser?->PPPId ?? '—');
 
+        $onlineTransactions = DB::table('payment_transactions')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get();
+
         return view('mmsayPaymentStatus', [
             'displayName' => $user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'),
             'applicationId' => $applicationId,
@@ -203,6 +208,7 @@ class CitizenAuthController extends Controller
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],
+            'onlineTransactions' => $onlineTransactions,
         ]);
     }
 

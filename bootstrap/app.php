@@ -30,6 +30,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'mmgay' => \App\Http\Middleware\MMGAYMiddleware::class,
         ]);
 
+
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, \Illuminate\Http\Request $request) {

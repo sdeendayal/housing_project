@@ -41,3 +41,8 @@ Route::prefix('possession')->group(function () {
     });
 
 });
+
+// Phicommerce payment gateway callback route (outside web session scope)
+Route::post('/mmsay/citizen/payment/callback', [App\Http\Controllers\PaymentController::class, 'payCallback'])
+    ->name('citizen.payment.callback');
+

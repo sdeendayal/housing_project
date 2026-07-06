@@ -84,8 +84,11 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::post('/mmsay/citizen/payment/pay', [PaymentController::class, 'paySubmit'])
         ->name('citizen.payment.pay.submit');
 
-    Route::get('/mmsay/citizen/payment/result', [PaymentController::class, 'result'])
-        ->name('citizen.payment.result');
+    Route::get('/mmsay/citizen/payment/reconcile/{id}', [PaymentController::class, 'reconcile'])
+        ->name('citizen.payment.reconcile')
+        ->where('id', '[0-9]+');
+
+
 
     Route::get('/mmsay/citizen/cash-receipt/{receipt}/download', [CitizenAuthController::class, 'downloadCashReceipt'])
         ->where('receipt', '[0-9]+')
@@ -119,6 +122,10 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
         ->name('citizen.logout');
 });
+
+// Public payment result page (to prevent SameSite/Host session issues on redirect)
+Route::get('/mmsay/citizen/payment/result', [PaymentController::class, 'result'])
+    ->name('citizen.payment.result');
 
 // Captcha refresh (shared by citizen and department login pages)
 Route::post('/refresh-captcha', function () {
