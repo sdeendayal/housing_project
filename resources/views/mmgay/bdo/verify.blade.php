@@ -109,7 +109,7 @@
                 </div>
                 @if($application->visit_instructions)
                     <div class="mt-2 text-slate-500 bg-white p-2 rounded-lg border border-slate-100 leading-normal">
-                        <strong>BDO Instructions:</strong> {{ $application->visit_instructions }}
+                        <strong>BDPO Instructions:</strong> {{ $application->visit_instructions }}
                     </div>
                 @endif
             </div>
@@ -143,6 +143,33 @@
                 </div>
             @endif
 
+            <!-- Stage 2 Uploaded Documents Display -->
+            @if($application->site_engineer_file || $application->possession_certificate)
+                <div class="bg-emerald-50/50 border border-emerald-100 rounded-xl p-3.5 mb-4 text-xs">
+                    <h4 class="text-[10px] uppercase font-bold text-emerald-800 mb-1.5 block">Uploaded Verification Documents</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        @if($application->site_engineer_file)
+                            <a href="{{ asset('storage/' . $application->site_engineer_file) }}" target="_blank" class="flex items-center gap-2 bg-white hover:bg-slate-50 transition p-2.5 rounded-lg border border-slate-200/60 font-bold text-slate-700">
+                                <span class="material-symbols-outlined text-red-500 text-xl">picture_as_pdf</span>
+                                <div>
+                                    <span class="block text-[10px] text-slate-800">Signed Possession Report</span>
+                                    <span class="block text-[8px] text-slate-400 font-semibold uppercase mt-0.5">Click to View PDF</span>
+                                </div>
+                            </a>
+                        @endif
+                        @if($application->possession_certificate)
+                            <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="flex items-center gap-2 bg-white hover:bg-slate-50 transition p-2.5 rounded-lg border border-slate-200/60 font-bold text-slate-700">
+                                <span class="material-symbols-outlined text-red-500 text-xl">picture_as_pdf</span>
+                                <div>
+                                    <span class="block text-[10px] text-slate-800">Official BDPO Verification Order</span>
+                                    <span class="block text-[8px] text-slate-400 font-semibold uppercase mt-0.5">Click to View PDF</span>
+                                </div>
+                            </a>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             <!-- Action Select Options or Awaiting Box -->
             @if($application->physical_possession_status === 'Visit Scheduled')
                 <!-- Card 3: Awaiting Citizen Action -->
@@ -151,7 +178,7 @@
                     <div>
                         <p class="font-bold">Awaiting Applicant Action</p>
                         <p class="text-[11px] text-amber-700/90 mt-0.5 leading-normal">
-                            The offered schedule visit slots have been sent to the applicant. BDO can verify or reschedule this application once the applicant selects one of the slots.
+                            The offered schedule visit slots have been sent to the applicant. BDPO can verify or reschedule this application once the applicant selects one of the slots.
                         </p>
                     </div>
                 </div>
@@ -170,17 +197,17 @@
 
                         <div class="grid grid-cols-2 gap-3">
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Latitude</label>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Latitude <span class="text-rose-500">*</span></label>
                                 <input type="text" name="latitude" id="latitude" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-mono font-bold" readonly required placeholder="Awaiting GPS capture...">
                             </div>
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Longitude</label>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Longitude <span class="text-rose-500">*</span></label>
                                 <input type="text" name="longitude" id="longitude" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs text-slate-700 font-mono font-bold" readonly required placeholder="Awaiting GPS capture...">
                             </div>
                         </div>
 
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload Plot Photo (with Applicant)</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload Plot Photo (with Applicant) <span class="text-rose-500">*</span></label>
                             <div class="border-2 border-dashed border-slate-200 rounded-lg p-4 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50/50 transition relative">
                                 <input type="file" name="plot_image" id="plot_image" class="absolute inset-0 opacity-0 cursor-pointer" required accept=".png,.jpg,.jpeg" onchange="updatePlotFileName(this)">
                                 <span class="material-symbols-outlined text-slate-400 text-2xl mb-1">photo_camera</span>
@@ -190,7 +217,7 @@
                         </div>
 
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Verification Remarks / Comments</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Verification Remarks / Comments <span class="text-rose-500">*</span></label>
                             <textarea name="remarks" id="remarks" rows="2" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 leading-normal" required placeholder="Describe site condition, boundary pillars, applicant presence, etc..."></textarea>
                         </div>
                     </div>
@@ -203,7 +230,7 @@
                         </button>
                     </div>
                 </form>
-            @else
+            @elseif($application->physical_possession_status === 'Site Verified')
                 <!-- Card 5: E-Possession Report (Stage 2) -->
                 <form action="{{ route('mmgay.bdo.verify-save', $application->secure_id) }}" method="POST" enctype="multipart/form-data" class="space-y-4 font-semibold">
                     @csrf
@@ -214,7 +241,7 @@
                         <div class="bg-white p-3 rounded-lg border border-slate-150 shadow-sm space-y-1.5">
                             <span class="text-xs font-bold text-slate-700 font-extrabold block">Application Preview & Print</span>
                             <p class="text-[10px] text-slate-400 leading-normal">
-                                Click the button below to view and download the prefilled MMGAY E-Possession Certificate. BDO must print this document, sign it, and upload the signed copy.
+                                Click the button below to view and download the prefilled MMGAY E-Possession Certificate. BDPO must print this document, sign it, and upload the signed copy.
                             </p>
                             <a href="{{ route('mmgay.bdo.download-certificate', $application->secure_id) }}?inline=1" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3.5 py-1.5 rounded-lg font-bold transition shadow-sm font-bold">
                                 <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Download & View Prefilled Certificate PDF
@@ -224,11 +251,11 @@
                         <!-- Upload 1: Signed prefilled report -->
                         <div class="space-y-2 border-b border-slate-200/60 pb-3">
                             <div>
-                                <span class="text-xs font-bold text-slate-700 font-extrabold block">1. Upload App Preview (Sign BDO Also Required)</span>
+                                <span class="text-xs font-bold text-slate-700 font-extrabold block">1. Upload App Preview (Sign BDPO Also Required)</span>
                             </div>
 
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload Prefilled Document signed by BDO (PDF only)</label>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload Prefilled Document signed by BDPO (PDF only) <span class="text-rose-500">*</span></label>
                                 <div class="border-2 border-dashed border-slate-200 rounded-lg p-3.5 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50/50 transition relative">
                                     <input type="file" name="site_engineer_file" id="site_engineer_file" class="absolute inset-0 opacity-0 cursor-pointer" required accept=".pdf" onchange="updateFileName(this)">
                                     <span class="material-symbols-outlined text-slate-400 text-2xl mb-0.5">cloud_upload</span>
@@ -238,14 +265,14 @@
                             </div>
                         </div>
 
-                        <!-- Upload 2: BDO's own official document -->
+                        <!-- Upload 2: BDPO's own official document -->
                         <div class="space-y-2">
                             <div>
-                                <span class="text-xs font-bold text-slate-700 font-extrabold block">2. Upload BDO Official Document / Verification Report</span>
+                                <span class="text-xs font-bold text-slate-700 font-extrabold block">2. Upload BDPO Official Document / Verification Report</span>
                             </div>
 
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload BDO Official verification office document/order (PDF only)</label>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload BDPO Official verification office document/order (PDF only) <span class="text-rose-500">*</span></label>
                                 <div class="border-2 border-dashed border-slate-200 rounded-lg p-3.5 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50/50 transition relative">
                                     <input type="file" name="possession_certificate" id="possession_certificate" class="absolute inset-0 opacity-0 cursor-pointer" required accept=".pdf" onchange="updateOfficialFileName(this)">
                                     <span class="material-symbols-outlined text-slate-400 text-2xl mb-0.5">cloud_upload</span>
@@ -264,6 +291,36 @@
                         </button>
                     </div>
                 </form>
+            @elseif($application->physical_possession_status === 'Verified')
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-xs text-emerald-800 font-semibold flex items-start gap-2.5 shadow-sm">
+                    <span class="material-symbols-outlined text-emerald-600 text-lg">check_circle</span>
+                    <div>
+                        <p class="font-bold">Verification Completed</p>
+                        <p class="text-[11px] text-emerald-700/90 mt-0.5 leading-normal">
+                            This physical possession application has been successfully verified and completed. No further action is required.
+                        </p>
+                        <div class="mt-3">
+                            <a href="{{ route('mmgay.bdo.possession-applications') }}" class="inline-flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded px-2.5 py-1 text-[10px] font-bold">
+                                <span class="material-symbols-outlined text-[12px]">arrow_back</span> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @elseif($application->physical_possession_status === 'Rejected')
+                <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 text-xs text-rose-800 font-semibold flex items-start gap-2.5 shadow-sm">
+                    <span class="material-symbols-outlined text-rose-600 text-lg">cancel</span>
+                    <div>
+                        <p class="font-bold">Application Rejected</p>
+                        <p class="text-[11px] text-rose-700/90 mt-0.5 leading-normal">
+                            This physical possession application was rejected. Please review the timeline logs for remarks.
+                        </p>
+                        <div class="mt-3">
+                            <a href="{{ route('mmgay.bdo.possession-applications') }}" class="inline-flex items-center gap-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded px-2.5 py-1 text-[10px] font-bold">
+                                <span class="material-symbols-outlined text-[12px]">arrow_back</span> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
             @endif
 
             <!-- Timeline Progress Logs Section -->
@@ -284,9 +341,9 @@
                                     {{ Carbon\Carbon::parse($log->created_at)->format('d M Y - h:i A') }}
                                 </span>
                             </div>
-                            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">{{ $log->remarks }}</p>
+                            <p class="text-[11px] text-slate-500 mt-0.5 leading-normal">{{ $log->remarks }}</p>
                             <p class="text-[9px] text-slate-400 uppercase mt-0.5 font-bold tracking-wider">
-                                Action By: {{ $log->changed_by_type === 'officer' ? 'BDO Officer' : 'Applicant' }}
+                                Action By: {{ $log->changed_by_type === 'officer' ? 'BDPO Officer' : 'Applicant' }}
                             </p>
                         </div>
                     @empty
@@ -342,7 +399,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'File Too Large',
-                    text: 'The BDO verification document must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
+                    text: 'The BDPO verification document must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
                 });
                 input.value = '';
                 textSpan.textContent = 'Click to upload report (PDF only)';
@@ -376,7 +433,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'File Too Large',
-                    text: 'The BDO official document must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
+                    text: 'The BDPO official document must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
                 });
                 input.value = '';
                 textSpan.textContent = 'Click to upload official document (PDF only)';
@@ -410,8 +467,8 @@
                         icon: 'success',
                         title: 'Location Captured',
                         text: 'Latitude: ' + position.coords.latitude + ', Longitude: ' + position.coords.longitude,
-                        timer: 2000,
-                        showConfirmButton: false
+                        confirmButtonColor: '#0058bc',
+                        confirmButtonText: 'OK'
                     });
                 },
                 function(error) {

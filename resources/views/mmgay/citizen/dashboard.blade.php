@@ -311,7 +311,7 @@
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-bold text-amber-800 leading-snug">Physical Possession: Visit Scheduled</h4>
-                                        <p class="text-[10px] text-amber-600 mt-0.5 font-medium">BDO has scheduled your visit. Please select your preferred time slot.</p>
+                                        <p class="text-[10px] text-amber-600 mt-0.5 font-medium">BDPO has scheduled your visit. Please select your preferred time slot.</p>
                                     </div>
                                 </div>
                                 <button type="button" onclick="openSlotSelectionModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-amber-500/10 flex items-center gap-1">
@@ -326,7 +326,7 @@
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-bold text-indigo-800 leading-snug">Physical Possession: Slot Selected</h4>
-                                        <p class="text-[10px] text-indigo-600 mt-0.5 font-medium">Visit date: <strong class="text-indigo-800">{{ date('d M Y, h:i A', strtotime($possessionApplication->citizen_visit_date)) }}</strong>. Awaiting BDO site verification.</p>
+                                        <p class="text-[10px] text-indigo-600 mt-0.5 font-medium">Visit date: <strong class="text-indigo-800">{{ date('d M Y, h:i A', strtotime($possessionApplication->citizen_visit_date)) }}</strong>. Awaiting BDPO site verification.</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -344,7 +344,7 @@
                                     </div>
                                     <div>
                                         <h4 class="text-xs font-bold text-blue-800 leading-snug">Physical Possession: Site Verified</h4>
-                                        <p class="text-[10px] text-blue-600 mt-0.5 font-medium">BDO has completed site verification. E-Possession Report generation is in progress.</p>
+                                        <p class="text-[10px] text-blue-600 mt-0.5 font-medium">BDPO has completed site verification. E-Possession Report generation is in progress.</p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -595,7 +595,7 @@
                                             </div>
                                             <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">{{ $log->remarks }}</p>
                                             <p class="text-[9px] text-slate-400 uppercase mt-0.5 font-bold tracking-wider">
-                                                Action By: {{ $log->changed_by_type === 'officer' ? 'BDO Officer' : 'Applicant' }}
+                                                Action By: {{ $log->changed_by_type === 'officer' ? 'BDPO Officer' : 'Applicant' }}
                                             </p>
                                         </div>
                                     @empty
@@ -799,7 +799,7 @@
                                             </div>
                                             <div>
                                                 <h4 class="text-xs font-bold text-slate-800">Visit Scheduled</h4>
-                                                <p class="text-[9px] text-slate-400">BDO offered slots</p>
+                                                <p class="text-[9px] text-slate-400">BDPO offered slots</p>
                                             </div>
                                         </div>
 
@@ -857,7 +857,7 @@
                                                 </span>
                                             </div>
                                             <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
-                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDO Officer ID</span>
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDPO Officer ID</span>
                                                 <span class="font-bold text-slate-700 block mt-1 font-mono">
                                                     {{ $possessionApplication->verified_by ? '#'.$possessionApplication->verified_by : '—' }}
                                                 </span>
@@ -872,7 +872,7 @@
 
                                         @if($possessionApplication->remarks)
                                             <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
-                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDO Verification Remarks</span>
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDPO Verification Remarks</span>
                                                 <p class="font-semibold text-slate-700 mt-1 leading-relaxed">{{ $possessionApplication->remarks }}</p>
                                             </div>
                                         @endif
@@ -1155,38 +1155,98 @@
                 }
             }).then((result) => {
                 if (result.isConfirmed) {
+                    const form = document.getElementById('swal_slot_form');
+                    const selectedRadio = form.querySelector('input[name="selected_slot"]:checked');
+                    const optionDiv = selectedRadio.nextElementSibling;
+                    const optionLabel = optionDiv.querySelector('span.uppercase').textContent.trim();
+                    const dateStr = optionDiv.querySelector('span.text-xs').textContent.trim();
+                    
                     Swal.fire({
-                        title: 'Confirming Selection...',
-                        text: 'Please wait, updating your choice.',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
+                        icon: 'question',
+                        title: 'Confirm Slot Choice',
+                        html: `You have selected:<br><strong class="text-[#0058bc] text-sm">${optionLabel}: ${dateStr}</strong><br><br>Are you sure you want to select this visit slot?`,
+                        showCancelButton: true,
+                        confirmButtonColor: '#0058bc',
+                        cancelButtonColor: '#cbd5e1',
+                        confirmButtonText: 'Yes, Confirm',
+                        cancelButtonText: 'Cancel'
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            Swal.fire({
+                                title: 'Confirming Selection...',
+                                text: 'Please wait, updating your choice.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Create dynamic form and submit
+                            const formEl = document.createElement('form');
+                            formEl.method = 'POST';
+                            formEl.action = "{{ route('mmgay.villager.submit.post') }}";
+                            
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_token';
+                            csrfInput.value = "{{ csrf_token() }}";
+                            formEl.appendChild(csrfInput);
+
+                            const slotInput = document.createElement('input');
+                            slotInput.type = 'hidden';
+                            slotInput.name = 'selected_slot';
+                            slotInput.value = result.value;
+                            formEl.appendChild(slotInput);
+
+                            document.body.appendChild(formEl);
+                            formEl.submit();
+                        } else {
+                            // Re-open slot selection modal if cancelled
+                            openSlotSelectionModal();
                         }
                     });
-                    
-                    // Create dynamic form and submit
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = "{{ route('mmgay.villager.submit.post') }}";
-                    
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = '_token';
-                    csrfInput.value = "{{ csrf_token() }}";
-                    form.appendChild(csrfInput);
-
-                    const slotInput = document.createElement('input');
-                    slotInput.type = 'hidden';
-                    slotInput.name = 'selected_slot';
-                    slotInput.value = result.value;
-                    form.appendChild(slotInput);
-
-                    document.body.appendChild(form);
-                    form.submit();
                 }
             });
         }
-    </script>
 
+        // Render Laravel Session Alerts via SweetAlert2
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: '<span class="text-sm font-bold text-slate-800">Success</span>',
+                    text: "{{ session('success') }}",
+                    confirmButtonColor: '#0058bc'
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: '<span class="text-sm font-bold text-slate-800">Error</span>',
+                    text: "{{ session('error') }}",
+                    confirmButtonColor: '#ba1a1a'
+                });
+            @endif
+
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: '<span class="text-sm font-bold text-slate-800">Validation Failures</span>',
+                    html: `
+                        <div class="text-left text-xs text-slate-600 space-y-1 pl-4 pr-2 max-h-48 overflow-y-auto list-disc">
+                            <ul class="list-disc space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    `,
+                    confirmButtonColor: '#ba1a1a'
+                });
+            @endif
+        });
+    </script>
+    @include('partials.global-loader')
 </body>
 </html>

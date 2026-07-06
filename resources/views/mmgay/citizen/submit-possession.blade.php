@@ -110,7 +110,7 @@
                         <p class="font-bold text-slate-800 mt-0.5">{{ $application->applicant_name }}</p>
                     </div>
                     <div class="col-span-2 border-t border-slate-200/40 pt-3">
-                        <p class="text-slate-400">BDO Instructions</p>
+                        <p class="text-slate-400">BDPO Instructions</p>
                         <p class="font-medium text-slate-700 mt-1 italic">
                             "{{ $application->visit_instructions ?? 'Please bring original identity documents.' }}"
                         </p>
@@ -225,7 +225,7 @@
                                 </div>
                                 <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">{{ $log->remarks }}</p>
                                 <p class="text-[9px] text-slate-400 uppercase mt-0.5 font-bold tracking-wider">
-                                    Action By: {{ $log->changed_by_type === 'officer' ? 'BDO Officer' : 'Applicant' }}
+                                    Action By: {{ $log->changed_by_type === 'officer' ? 'BDPO Officer' : 'Applicant' }}
                                 </p>
                             </div>
                         @empty
@@ -242,16 +242,43 @@
         © {{ date('Y') }} Haryana Gramin Development Authority. All Rights Reserved.
     </footer>
     <script>
-        document.querySelector('form').addEventListener('submit', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const selectedRadio = form.querySelector('input[name="selected_slot"]:checked');
+            if (!selectedRadio) return;
+            
+            const card = selectedRadio.nextElementSibling;
+            const divs = card.querySelectorAll('span');
+            const optionLabel = divs[1].textContent.trim(); // Option X
+            const dateStr = divs[2].textContent.trim(); // Date
+            const timeStr = divs[3].textContent.trim(); // Time
+            
             Swal.fire({
-                title: 'Confirming Selection...',
-                text: 'Please wait, updating your scheduled visit choice.',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
+                icon: 'question',
+                title: 'Confirm Slot Choice',
+                html: `You have selected:<br><strong class="text-[#0058bc] text-sm">${optionLabel}: ${dateStr} at ${timeStr}</strong><br><br>Are you sure you want to select this visit slot?`,
+                showCancelButton: true,
+                confirmButtonColor: '#0058bc',
+                cancelButtonColor: '#cbd5e1',
+                confirmButtonText: 'Yes, Confirm',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Confirming Selection...',
+                        text: 'Please wait, updating your scheduled visit choice.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    form.submit();
                 }
             });
         });
     </script>
+    @include('partials.global-loader')
 </body>
 </html>

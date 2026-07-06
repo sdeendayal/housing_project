@@ -26,20 +26,20 @@ class MmgayBdoSeeder extends Seeder
             ['slug' => 'mmgay_bdo'],
             [
                 'role_group_id' => $departmentGroup->id,
-                'name' => 'MMGAY BDO',
+                'name' => 'MMGAY BDPO',
                 'slug' => 'mmgay_bdo',
                 'dashboard_route' => 'mmgay.bdo.dashboard',
                 'dashboard_path' => null,
             ]
         );
 
-        $this->command->info('MMGAY BDO Role seeded.');
+        $this->command->info('MMGAY BDPO Role seeded.');
 
         // 3. Create MMGAY BDO user
         $bdoUser = User::updateOrCreate(
             ['email' => 'bdo@mmgay.com'],
             [
-                'name' => 'MMGAY BDO',
+                'name' => 'MMGAY BDPO',
                 'email' => 'bdo@mmgay.com',
                 'mobile' => '8888888888',
                 'password' => Hash::make('password123'),
@@ -49,6 +49,8 @@ class MmgayBdoSeeder extends Seeder
                 'Is_Deleted' => '0',
                 'district_id' => 3, // Default district Rewari in districtmaster table
                 'district_name' => 'REWARI',
+                'block_id' => 37, // Rewari block in blockmaster table
+                'block_name' => 'Rewari',
             ]
         );
 
@@ -61,6 +63,6 @@ class MmgayBdoSeeder extends Seeder
             ]
         );
 
-        $this->command->info('MMGAY BDO User seeded successfully. Login with: bdo@mmgay.com / password123');
+        $this->command->info('MMGAY BDPO User seeded successfully. Login with: bdo@mmgay.com / password123');
     }
 }

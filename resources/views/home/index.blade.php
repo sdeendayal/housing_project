@@ -307,7 +307,7 @@
                                     shield_person
                                 </span>
 
-                                BDO Login
+                                BDPO Login
                             </a>
 
                         </div>

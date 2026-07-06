@@ -656,14 +656,18 @@ class PhysicalPossessionWorkflowController extends Controller
             if ($request->hasFile('possession_certificate')) {
                 $certificate = $request->file('possession_certificate');
                 $certificateName = 'cert_' . $application->id . '_' . time() . '.' . $certificate->getClientOriginalExtension();
-                $certificatePath = $certificate->storeAs('possession_uploads/certificates', $certificateName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $certificatePath = $certificate->storeAs($memberFolder . '/possession_certificates', $certificateName, 'public');
                 $application->possession_certificate = $certificatePath;
             }
 
             if ($request->hasFile('site_engineer_file')) {
                 $siteFile = $request->file('site_engineer_file');
                 $siteFileName = 'site_engg_' . $application->id . '_' . time() . '.' . $siteFile->getClientOriginalExtension();
-                $siteFilePath = $siteFile->storeAs('possession_uploads/site_engineer', $siteFileName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $siteFilePath = $siteFile->storeAs($memberFolder . '/site_engineer_files', $siteFileName, 'public');
                 $application->site_engineer_file = $siteFilePath;
             }
 
@@ -713,7 +717,9 @@ class PhysicalPossessionWorkflowController extends Controller
             if ($request->hasFile('plot_image')) {
                 $plotImage = $request->file('plot_image');
                 $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $plotImagePath = $plotImage->storeAs($memberFolder . '/plot_images', $plotImageName, 'public');
                 $application->plot_image = $plotImagePath;
             }
 

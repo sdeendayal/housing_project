@@ -264,9 +264,9 @@
             <li>Please arrive at the allotted site 15 minutes before the scheduled time slot.</li>
             <li>Carry a printed copy of this **Appointment Slip** along with a valid Identity proof (Aadhaar Card / PPP Family ID).</li>
             <li>Ensure you have completed all pending payments for the flat and carry copies of payment receipts.</li>
-            <li>The Block Development Officer (BDO) or physical possession verification officer will meet you at the site to verify boundaries and record GPS coordinates.</li>
+            <li>The Block Development & Panchayat Officer (BDPO) or physical possession verification officer will meet you at the site to verify boundaries and record GPS coordinates.</li>
             @if(!empty($application->visit_instructions))
-                <li style="font-weight: bold; color: #0058bc;">Additional BDO Guidelines: "{{ $application->visit_instructions }}"</li>
+                <li style="font-weight: bold; color: #0058bc;">Additional BDPO Guidelines: "{{ $application->visit_instructions }}"</li>
             @endif
         </ol>
     </div>

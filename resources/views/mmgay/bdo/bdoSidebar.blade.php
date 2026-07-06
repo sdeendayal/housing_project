@@ -5,7 +5,7 @@
             <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">holiday_village</span>
         </div>
         <div>
-            <h1 class="text-headline-md font-headline-md text-on-surface font-bold leading-tight">MMGAY BDO</h1>
+            <h1 class="text-headline-md font-headline-md text-on-surface font-bold leading-tight">MMGAY BDPO</h1>
             <p class="text-[10px] uppercase tracking-wider text-on-surface-variant font-bold">Possession Portal</p>
         </div>
     </div>
@@ -58,8 +58,13 @@
     <!-- Footer / Support -->
     <div class="mt-auto px-md pt-lg border-t border-outline-variant pb-md">
         <div class="mb-4 px-2">
-            <p class="text-xs text-slate-400 font-bold">District Profile</p>
-            <p class="text-xs font-bold text-[#0058bc] uppercase mt-1">{{ Auth::user()->district_name ?? 'ALL DISTRICTS' }}</p>
+            <p class="text-xs text-slate-400 font-bold">Block Profile</p>
+            <p class="text-xs font-bold text-[#0058bc] uppercase mt-1">
+                {{ Auth::user()->block_name ?? 'ALL BLOCKS' }}
+                @if(Auth::user()->district_name)
+                    ({{ Auth::user()->district_name }})
+                @endif
+            </p>
         </div>
         <form action="{{ route('mmgay.bdo.logout') }}" method="POST">
             @csrf
@@ -74,7 +79,7 @@
 <!-- Top Navbar Header mapping -->
 <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-lg bg-surface-container-lowest shadow-sm border-b border-outline-variant">
     <div class="flex items-center gap-md">
-        <h2 class="text-headline-md font-headline-md font-bold text-primary">@yield('page_header', 'BDO Portal')</h2>
+        <h2 class="text-headline-md font-headline-md font-bold text-primary">@yield('page_header', 'BDPO Portal')</h2>
         <div class="h-6 w-[1px] bg-outline-variant"></div>
         <span class="text-xs text-slate-500 font-medium">Mukhyamantri Gramin Awas Yojana</span>
     </div>
@@ -82,7 +87,7 @@
         <div class="flex items-center gap-sm pl-md">
             <div class="text-right">
                 <p class="text-body-md font-body-md font-bold text-on-surface">{{ Auth::user()->name }}</p>
-                <p class="text-[10px] text-on-surface-variant font-semibold">BDO Officer</p>
+                <p class="text-[10px] text-on-surface-variant font-semibold">BDPO Officer</p>
             </div>
             <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
                 {{ substr(Auth::user()->name, 0, 2) }}

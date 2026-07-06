@@ -216,11 +216,11 @@
                     </div>
 
                     <div class="mt-3 pt-3 border-t border-slate-100 text-center">
-                        <p class="text-xs text-slate-500 mb-2">Are you a Block Development Officer?</p>
+                        <p class="text-xs text-slate-500 mb-2">Are you a Block Development & Panchayat Officer?</p>
                         <a href="{{ route('mmgay.bdo.login') }}"
                             class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
                             <span class="material-symbols-outlined text-[18px]">login</span>
-                            MMGAY BDO Login
+                            MMGAY BDPO Login
                         </a>
                     </div>
 

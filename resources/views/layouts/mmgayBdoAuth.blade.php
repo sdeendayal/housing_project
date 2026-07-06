@@ -210,6 +210,7 @@
         });
     </script>
     @yield('scripts')
+    @include('partials.global-loader')
 </body>
 
 </html>

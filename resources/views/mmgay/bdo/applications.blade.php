@@ -86,13 +86,22 @@
                                 </span>
                             </td>
                             <td class="px-3 py-1.5 text-center">
-                                @if(in_array($app->physical_possession_status, ['Slot Selected', 'Site Verified', 'Visit Scheduled', 'Rejected']))
+                                @if(in_array($app->physical_possession_status, ['Slot Selected', 'Site Verified', 'Visit Scheduled']))
                                     <a href="{{ route('mmgay.bdo.verify-form', $app->secure_id) }}" class="inline-flex items-center gap-1 bg-[#10b981] hover:bg-[#059669] text-white text-[10px] px-2.5 py-1 rounded-md font-extrabold transition">
                                         <span class="material-symbols-outlined text-[13px] font-bold">assignment_turned_in</span> Action / Verify
                                     </a>
                                 @elseif($app->physical_possession_status === 'Verified')
-                                    <a href="{{ route('mmgay.bdo.download-certificate', $app->secure_id) }}?inline=1" target="_blank" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold border border-slate-200 transition">
-                                        <span class="material-symbols-outlined text-[13px] font-bold">picture_as_pdf</span> View PDF
+                                    <div class="flex items-center justify-center gap-1.5">
+                                        <a href="{{ route('mmgay.bdo.verify-form', $app->secure_id) }}" class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold border border-blue-200 transition">
+                                            <span class="material-symbols-outlined text-[13px] font-bold">visibility</span> View Details
+                                        </a>
+                                        <a href="{{ route('mmgay.bdo.download-certificate', $app->secure_id) }}?inline=1" target="_blank" class="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold border border-slate-200 transition">
+                                            <span class="material-symbols-outlined text-[13px] font-bold">picture_as_pdf</span> View PDF
+                                        </a>
+                                    </div>
+                                @elseif($app->physical_possession_status === 'Rejected')
+                                    <a href="{{ route('mmgay.bdo.verify-form', $app->secure_id) }}" class="inline-flex items-center gap-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] px-2.5 py-1 rounded-md font-extrabold border border-blue-200 transition">
+                                        <span class="material-symbols-outlined text-[13px] font-bold">visibility</span> View Details
                                     </a>
                                 @endif
                             </td>

@@ -192,8 +192,6 @@
     {{-- Footer --}}
     @include('partials.mmsay.department.departmentScripts')
 
-     <!-- Global Styles and Scripts -->
-     
+    @include('partials.global-loader')
 </body>
-
 </html>

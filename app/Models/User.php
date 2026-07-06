@@ -24,6 +24,8 @@ class User extends Authenticatable
         'Is_Deleted',
         'district_id',
         'district_name',
+        'block_id',
+        'block_name',
     ];
 
     protected $hidden = [

@@ -172,7 +172,7 @@
                 <span class="value">{{ $verified_at }}</span>
             </td>
             <td>
-                <span class="label">Verifying Authority (BDO)</span>
+                <span class="label">Verifying Authority (BDPO)</span>
                 <span class="value">{{ $bdoName }}</span>
             </td>
         </tr>
@@ -191,12 +191,9 @@
     <!-- Section 4: Signatures -->
     <table class="footer-signatures">
         <tr>
+            <td class="sig-col"></td>
             <td class="sig-col">
-                <div class="sig-line">Signature of Applicant / Beneficiary</div>
-                <div style="font-size: 8px; color: #718096; margin-top: 4px;">Name: {{ strtoupper($application->applicant_name) }}</div>
-            </td>
-            <td class="sig-col">
-                <div class="sig-line">Signature of Block Development Officer</div>
+                <div class="sig-line">Signature of Block Development & Panchayat Officer (BDPO)</div>
                 <div style="font-size: 8px; color: #718096; margin-top: 4px;">Name: {{ strtoupper($bdoName) }}</div>
                 <div style="font-size: 8px; color: #718096; margin-top: 2px;">Date: {{ $verified_at }}</div>
             </td>

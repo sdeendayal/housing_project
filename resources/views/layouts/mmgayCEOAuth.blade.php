@@ -178,7 +178,6 @@
 
     {{-- Footer --}}
     @include('mmgay.district-ceo.footerScript')
-
+    @include('partials.global-loader')
 </body>
-
 </html>

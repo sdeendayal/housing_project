@@ -102,12 +102,12 @@ class MMGAYBdoPossessionController extends Controller
     public function dashboard(Request $request)
     {
         $bdo = Auth::user();
-        $districtMasterId = $bdo->district_id;
+        $blockMasterId = $bdo->block_id;
 
-        // 1. Total Eligible (All owners in BDO district)
-        $totalEligibleQuery = DB::table('ownermaster');
-        if ($districtMasterId) {
-            $totalEligibleQuery->where('DistrictId', $districtMasterId);
+        // 1. Total Eligible (All owners in BDO block who have paid)
+        $totalEligibleQuery = DB::table('ownermaster')->where('IsPaid', 1);
+        if ($blockMasterId) {
+            $totalEligibleQuery->where('BlockId', $blockMasterId);
         }
         $totalEligibleCount = $totalEligibleQuery->count();
 
@@ -116,19 +116,20 @@ class MMGAYBdoPossessionController extends Controller
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             })
+            ->where('o.IsPaid', 1)
             ->where(function($q) {
                 $q->whereNull('ppa.id')
                   ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
             });
-        if ($districtMasterId) {
-            $notScheduledQuery->where('o.DistrictId', $districtMasterId);
+        if ($blockMasterId) {
+            $notScheduledQuery->where('o.BlockId', $blockMasterId);
         }
         $notScheduledCount = $notScheduledQuery->count();
 
         // Base query for physical possession applications
         $ppaQuery = DB::table('mmgay_possession_applications');
-        if ($districtMasterId) {
-            $ppaQuery->where('district_id', $districtMasterId);
+        if ($blockMasterId) {
+            $ppaQuery->where('block_id', $blockMasterId);
         }
 
         $stats = [
@@ -152,20 +153,25 @@ class MMGAYBdoPossessionController extends Controller
     public function eligibilityList(Request $request)
     {
         $bdo = Auth::user();
-        $districtMasterId = $bdo->district_id;
+        $blockMasterId = $bdo->block_id;
 
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             })
-            ->where(function($q) {
+            ->where('o.IsPaid', 1);
+
+        if (!$request->has('all')) {
+            $query->where(function($q) {
                 $q->whereNull('ppa.id')
                   ->orWhereIn('ppa.physical_possession_status', ['Eligible for Physical Possession', 'Visit Scheduled']);
             });
+        }
 
-        if ($districtMasterId) {
-            $query->where('o.DistrictId', $districtMasterId);
+        if ($blockMasterId) {
+            $query->where('o.BlockId', $blockMasterId);
         }
 
         // Search filter
@@ -185,6 +191,7 @@ class MMGAYBdoPossessionController extends Controller
             'o.FatherHusbandName as father_name',
             'o.MobileNo as mobile',
             'd.DistrictName as district_name',
+            'b.BlockName as block_name',
             'ppa.application_number',
             DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as physical_possession_status")
         )->paginate(25)->withQueryString();
@@ -214,8 +221,12 @@ class MMGAYBdoPossessionController extends Controller
             abort(404, 'Beneficiary record not found.');
         }
 
-        if ($bdo->district_id && $owner->DistrictId !== $bdo->district_id) {
-            abort(403, 'Unauthorized access to beneficiary in another district.');
+        if ($bdo->block_id && $owner->BlockId !== $bdo->block_id) {
+            abort(403, 'Unauthorized access to beneficiary in another block.');
+        }
+
+        if ($owner->IsPaid != 1) {
+            abort(400, 'Physical Possession is only available for beneficiaries who have completed their payment.');
         }
 
         // 2. Find or dynamically create the physical possession application row
@@ -238,6 +249,8 @@ class MMGAYBdoPossessionController extends Controller
                     'Is_Deleted' => '0',
                     'district_id' => $owner->DistrictId,
                     'district_name' => $owner->DistrictName,
+                    'block_id' => $owner->BlockId,
+                    'block_name' => $owner->BlockName,
                 ]);
 
                 // Seed role type for this new user
@@ -265,6 +278,8 @@ class MMGAYBdoPossessionController extends Controller
                 'slip_id' => 'SLIP-MMGAY-' . uniqid(),
                 'district_id' => $owner->DistrictId,
                 'district_name' => $owner->DistrictName,
+                'block_id' => $owner->BlockId,
+                'block_name' => $owner->BlockName,
                 'mobile' => $owner->MobileNo,
                 'applicant_name' => $owner->OwnerName,
                 'father_name' => $owner->FatherHusbandName ?? '',
@@ -295,7 +310,7 @@ class MMGAYBdoPossessionController extends Controller
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo->district_id && $application->district_id !== $bdo->district_id) {
+        if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
         }
 
@@ -345,14 +360,14 @@ class MMGAYBdoPossessionController extends Controller
             return back()->withErrors(['slot_date_1' => 'You cannot select the same date and time for more than one slot.'])->withInput();
         }
 
-        // Capacity slot check (max 10 people per 1-hour window per district)
-        $districtId = $application->district_id;
+        // Capacity slot check (max 10 people per 1-hour window per block)
+        $blockId = $application->block_id;
         foreach ([$dateTime1, $dateTime2, $dateTime3] as $idx => $dt) {
             $slotStart = $dt->copy()->startOfHour();
             $slotEnd = $slotStart->copy()->addHour();
 
             $existingCount = DB::table('mmgay_possession_applications')
-                ->where('district_id', $districtId)
+                ->where('block_id', $blockId)
                 ->where('id', '!=', $application->id)
                 ->where(function($q) use ($slotStart, $slotEnd) {
                     $q->where(function($sub) use ($slotStart, $slotEnd) {
@@ -424,13 +439,13 @@ class MMGAYBdoPossessionController extends Controller
     public function applications(Request $request)
     {
         $bdo = Auth::user();
-        $districtMasterId = $bdo->district_id;
+        $blockMasterId = $bdo->block_id;
 
         $query = MmgayPossessionApplication::query()
             ->where('physical_possession_status', '!=', 'Eligible for Physical Possession');
 
-        if ($districtMasterId) {
-            $query->where('district_id', $districtMasterId);
+        if ($blockMasterId) {
+            $query->where('block_id', $blockMasterId);
         }
 
         $status = $request->input('status');
@@ -472,7 +487,7 @@ class MMGAYBdoPossessionController extends Controller
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo->district_id && $application->district_id !== $bdo->district_id) {
+        if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
         }
 
@@ -510,7 +525,7 @@ class MMGAYBdoPossessionController extends Controller
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo->district_id && $application->district_id !== $bdo->district_id) {
+        if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
         }
 
@@ -534,7 +549,10 @@ class MMGAYBdoPossessionController extends Controller
             if ($request->hasFile('plot_image')) {
                 $plotImage = $request->file('plot_image');
                 $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
+                $memberId = $owner ? trim($owner->MemberId) : '';
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $plotImagePath = $plotImage->storeAs($memberFolder . '/plot_images', $plotImageName, 'public');
                 $application->plot_image = $plotImagePath;
             }
 
@@ -585,14 +603,20 @@ class MMGAYBdoPossessionController extends Controller
             if ($request->hasFile('site_engineer_file')) {
                 $siteFile = $request->file('site_engineer_file');
                 $siteFileName = 'bdo_verify_' . $application->id . '_' . time() . '.' . $siteFile->getClientOriginalExtension();
-                $siteFilePath = $siteFile->storeAs('possession_uploads/bdo', $siteFileName, 'public');
+                $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
+                $memberId = $owner ? trim($owner->MemberId) : '';
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $siteFilePath = $siteFile->storeAs($memberFolder . '/bdo_verify', $siteFileName, 'public');
                 $application->site_engineer_file = $siteFilePath;
             }
 
             if ($request->hasFile('possession_certificate')) {
                 $certFile = $request->file('possession_certificate');
                 $certFileName = 'bdo_cert_' . $application->id . '_' . time() . '.' . $certFile->getClientOriginalExtension();
-                $certFilePath = $certFile->storeAs('possession_uploads/certs', $certFileName, 'public');
+                $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
+                $memberId = $owner ? trim($owner->MemberId) : '';
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $certFilePath = $certFile->storeAs($memberFolder . '/bdo_certs', $certFileName, 'public');
                 $application->possession_certificate = $certFilePath;
             }
 
@@ -640,7 +664,7 @@ class MMGAYBdoPossessionController extends Controller
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo && $bdo->district_id && $application->district_id !== $bdo->district_id) {
+        if ($bdo && $bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
         }
 
@@ -699,9 +723,9 @@ class MMGAYBdoPossessionController extends Controller
         $excludeId = $request->input('exclude_id', 0);
         $bdo = Auth::user();
         
-        $districtId = $bdo->district_id;
-        if (!$districtId) {
-            return response()->json(['success' => false, 'message' => 'BDO district not defined.']);
+        $blockId = $bdo->block_id;
+        if (!$blockId) {
+            return response()->json(['success' => false, 'message' => 'BDO block not defined.']);
         }
 
         $counts = [];
@@ -710,7 +734,7 @@ class MMGAYBdoPossessionController extends Controller
             $slotEnd = $slotStart->copy()->addHour();
             
             $count = DB::table('mmgay_possession_applications')
-                ->where('district_id', $districtId)
+                ->where('block_id', $blockId)
                 ->where('id', '!=', $excludeId)
                 ->where(function($q) use ($slotStart, $slotEnd) {
                     $q->where(function($sub) use ($slotStart, $slotEnd) {
@@ -753,6 +777,11 @@ class MMGAYBdoPossessionController extends Controller
             return redirect()->route('mmgav.villager.dashboard')->with('error', 'No active scheduled visit found for your application.');
         }
 
+        $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
+        if (!$owner || $owner->IsPaid != 1) {
+            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available after completing payment.');
+        }
+
         $logs = MmgayPossessionStatusLog::where('application_id', $application->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -774,6 +803,11 @@ class MMGAYBdoPossessionController extends Controller
 
         if (!$application) {
             return redirect()->route('mmgav.villager.dashboard')->with('error', 'No active scheduled visit found for your application.');
+        }
+
+        $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
+        if (!$owner || $owner->IsPaid != 1) {
+            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available after completing payment.');
         }
 
         $request->validate([
@@ -803,7 +837,7 @@ class MMGAYBdoPossessionController extends Controller
             'changed_by_id' => $user->id,
         ]);
 
-        return redirect()->route('mmgav.villager.dashboard')->with('success', 'Visit slot selected successfully. The BDO will meet you at the site.');
+        return redirect()->route('mmgav.villager.dashboard')->with('success', 'You have successfully selected the visit slot: ' . $dateTime->format('d M Y - h:i A') . ' and submitted your request.');
     }
 
     /**

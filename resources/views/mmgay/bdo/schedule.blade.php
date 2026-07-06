@@ -88,7 +88,7 @@
                     <ul class="list-disc pl-4 mt-1 space-y-0.5 text-[10px] text-blue-800/90 font-medium">
                         <li>Only **future dates** (from tomorrow onwards) are allowed. Past and current dates are disabled in the calendar.</li>
                         <li>Visits must be scheduled on the hour (e.g. 09:00 AM, 10:00 AM) between **09:00 AM and 05:00 PM**.</li>
-                        <li>**Capacity Restriction:** Max **10 citizens** can be approved within any 1-hour slot in your district.</li>
+                        <li>**Capacity Restriction:** Max **10 citizens** can be approved within any 1-hour slot in your block.</li>
                     </ul>
                 </div>
             </div>
@@ -114,11 +114,11 @@
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date <span class="text-rose-500">*</span></label>
                             <input type="date" name="slot_date_1" id="slot_date_1" min="{{ now()->addDay()->format('Y-m-d') }}" value="{{ old('slot_date_1', $application->visit_slot_1 ? date('Y-m-d', strtotime($application->visit_slot_1)) : '') }}" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                         </div>
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time <span class="text-rose-500">*</span></label>
                             <select name="slot_time_1" id="slot_time_1" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                                 <option value="">Select Time</option>
                                 @for($hour = 9; $hour <= 16; $hour++)
@@ -142,11 +142,11 @@
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date <span class="text-rose-500">*</span></label>
                             <input type="date" name="slot_date_2" id="slot_date_2" min="{{ now()->addDay()->format('Y-m-d') }}" value="{{ old('slot_date_2', $application->visit_slot_2 ? date('Y-m-d', strtotime($application->visit_slot_2)) : '') }}" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                         </div>
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time <span class="text-rose-500">*</span></label>
                             <select name="slot_time_2" id="slot_time_2" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                                 <option value="">Select Time</option>
                                 @for($hour = 9; $hour <= 16; $hour++)
@@ -170,11 +170,11 @@
                     </h4>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Date <span class="text-rose-500">*</span></label>
                             <input type="date" name="slot_date_3" id="slot_date_3" min="{{ now()->addDay()->format('Y-m-d') }}" value="{{ old('slot_date_3', $application->visit_slot_3 ? date('Y-m-d', strtotime($application->visit_slot_3)) : '') }}" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                         </div>
                         <div>
-                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time</label>
+                            <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Time <span class="text-rose-500">*</span></label>
                             <select name="slot_time_3" id="slot_time_3" class="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-xs focus:ring-1 focus:ring-blue-500 focus:outline-none" required>
                                 <option value="">Select Time</option>
                                 @for($hour = 9; $hour <= 16; $hour++)
@@ -207,11 +207,12 @@
         </div>
 
     </div>
-</main>
+@endsection
 
+@section('scripts')
 <script>
     // Capacity real-time alerts
-    document.addEventListener('DOMContentLoaded', function() {
+    (function() {
         const dateFields = [1, 2, 3];
         dateFields.forEach(num => {
             const dateInput = document.getElementById('slot_date_' + num);
@@ -258,7 +259,29 @@
         });
 
         // Form Submission Loader
-        document.querySelector('form').addEventListener('submit', function() {
+        const form = document.querySelector('form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        submitBtn.addEventListener('click', function(e) {
+            // Trigger native HTML5 validation report
+            if (!form.reportValidity()) {
+                // If form is invalid, browser shows validation bubbles, keep button enabled
+                return;
+            }
+            
+            // If form is valid, prevent default, disable button, show spinner, and submit
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            submitBtn.innerHTML = `
+                <svg class="animate-spin h-4 w-4 text-white inline-block mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Confirming...
+            `;
+            
             Swal.fire({
                 title: 'Submitting Slots...',
                 text: 'Please wait, setting up the 3 slot choices.',
@@ -267,7 +290,9 @@
                     Swal.showLoading();
                 }
             });
+            
+            form.submit();
         });
-    });
+    })();
 </script>
 @endsection

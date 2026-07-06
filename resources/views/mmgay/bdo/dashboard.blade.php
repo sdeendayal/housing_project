@@ -1,5 +1,5 @@
 @extends('layouts.mmgayBdoAuth')
-@section('title', 'MMGAY BDO Dashboard')
+@section('title', 'MMGAY BDPO Dashboard')
 @section('page_header', 'Dashboard')
 
 @section('content')
@@ -16,9 +16,9 @@
                 </div>
                 <div>
                     <h2 class="text-lg font-extrabold tracking-tight">
-                        {{ strtoupper($bdo->district_name ?? 'Haryana') }} District BDO Panel
+                        {{ strtoupper($bdo->block_name ?? $bdo->district_name ?? 'Haryana') }} Block BDPO Panel
                     </h2>
-                    <p class="text-[10px] text-slate-300 font-semibold uppercase mt-0.5">Block Development Officer • Mukhyamantri Gramin Awas Yojana</p>
+                    <p class="text-[10px] text-slate-300 font-semibold uppercase mt-0.5">Block Development & Panchayat Officer • Mukhyamantri Gramin Awas Yojana</p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-lg px-3 py-1.5 shadow-sm text-xs font-bold">
@@ -31,7 +31,7 @@
     <!-- Stats Row - Tighter & More Densely Aligned -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-4">
         <!-- Total Eligible -->
-        <a href="{{ route('mmgay.bdo.possession-applications') }}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-slate-300 transition">
+        <a href="{{ route('mmgay.bdo.eligibility-list', ['all' => 1]) }}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-slate-300 transition">
             <div class="min-w-0">
                 <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Total Eligible</p>
                 <h2 class="text-lg font-extrabold text-slate-700 mt-0.5">{{ $stats['total_eligible'] }}</h2>

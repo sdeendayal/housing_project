@@ -88,8 +88,8 @@
                         <span class="material-symbols-outlined text-white text-[32px]" style="font-variation-settings: 'FILL' 1;">gavel</span>
                     </div>
                     <div>
-                        <h3 class="text-[20px] font-bold text-[#111c2d]">MMGAY BDO Login</h3>
-                        <p class="text-[#505f76] text-[14px]">Block Development Officer Sign In</p>
+                        <h3 class="text-[20px] font-bold text-[#111c2d]">MMGAY BDPO Login</h3>
+                        <p class="text-[#505f76] text-[14px]">Block Development & Panchayat Officer Sign In</p>
                     </div>
                 </div>
                 <!-- Login Card -->
@@ -111,7 +111,7 @@
                         {{-- Username/Email --}}
                         <div class="space-y-2">
                             <label class="text-[12px] font-bold text-[#414755] uppercase tracking-wider">
-                                BDO Email Address
+                                BDPO Email Address
                             </label>
                             <div class="relative">
                                 <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#414755]">

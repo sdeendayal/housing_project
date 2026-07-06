@@ -26,6 +26,8 @@ class MmgayPossessionApplication extends Model
         'application_number',
         'district_id',
         'district_name',
+        'block_id',
+        'block_name',
         'mobile',
         'applicant_name',
         'father_name',
