@@ -1244,7 +1244,7 @@ class PpOfficerApiController extends Controller
 
             if ($request->hasFile('site_engineer_file')) {
                 $seFile = $request->file('site_engineer_file');
-                $seFileName = 'se_' . $application->id . '_' . time() . '.' . $seFile->getClientOriginalExtension();
+                $seFileName = 'site_engg_' . $application->id . '_' . time() . '.' . $seFile->getClientOriginalExtension();
                 $memberId = trim($application->member_id);
                 $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
                 $seFilePath = $seFile->storeAs($memberFolder . '/site_engineer_files', $seFileName, 'public');
@@ -1265,6 +1265,17 @@ class PpOfficerApiController extends Controller
                 'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
             ]);
 
             return response()->json([
@@ -1306,6 +1317,17 @@ class PpOfficerApiController extends Controller
                 'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer (API).',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Site Verified',
+                'remarks' => $request->remarks,
             ]);
 
             return response()->json([
