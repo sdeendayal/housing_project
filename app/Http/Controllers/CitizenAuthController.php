@@ -184,6 +184,7 @@ class CitizenAuthController extends Controller
 
         $hasOutstanding = $auction !== null && $outstanding > 0;
         $isFullyPaid = $auction !== null && $outstanding <= 0 && $flatCost > 0;
+        $reachedLimit = ($totalPaid >= 100000.00);
         $applicationNo = $purchaser?->ApplicationNo;
         $applicationId = $applicationNo
             ? 'HR-MMSAY-'.($purchaseDate?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
@@ -205,6 +206,7 @@ class CitizenAuthController extends Controller
             'paymentProgress' => $paymentProgress,
             'hasOutstanding' => $hasOutstanding,
             'isFullyPaid' => $isFullyPaid,
+            'reachedLimit' => $reachedLimit,
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],
