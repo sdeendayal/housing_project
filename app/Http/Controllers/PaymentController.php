@@ -376,19 +376,29 @@ class PaymentController extends Controller
 
         // Update transaction log status
         $merchantTxnNo = $responseParams['merchantTxnNo'] ?? null;
+        $alreadySuccess = false;
         if ($merchantTxnNo) {
-            DB::table('payment_transactions')
+            $txLog = DB::table('payment_transactions')
                 ->where('merchant_txn_no', $merchantTxnNo)
-                ->update([
-                    'status' => $isSuccess ? 'SUCCESS' : 'FAIL',
-                    'gateway_txn_id' => $responseParams['txnID'] ?? null,
-                    'payment_id' => $responseParams['paymentID'] ?? null,
-                    'payment_mode' => $responseParams['paymentMode'] ?? null,
-                    'response_code' => $responseParams['responseCode'] ?? null,
-                    'response_description' => $responseParams['respDescription'] ?? null,
-                    'response_payload_dump' => json_encode($request->all()),
-                    'updated_at' => now(),
-                ]);
+                ->first();
+            if ($txLog && $txLog->status === 'SUCCESS') {
+                $alreadySuccess = true;
+            }
+
+            if (!$alreadySuccess) {
+                DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->update([
+                        'status' => $isSuccess ? 'SUCCESS' : 'FAIL',
+                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                        'payment_id' => $responseParams['paymentID'] ?? null,
+                        'payment_mode' => $responseParams['paymentMode'] ?? null,
+                        'response_code' => $responseParams['responseCode'] ?? null,
+                        'response_description' => $responseParams['respDescription'] ?? null,
+                        'response_payload_dump' => json_encode($request->all()),
+                        'updated_at' => now(),
+                    ]);
+            }
         }
 
         if ($isSuccess) {
@@ -403,28 +413,35 @@ class PaymentController extends Controller
                     ->first();
 
                 if ($property) {
-                    $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
-                    $newId = $maxId + 1;
+                    $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $responseParams['merchantTxnNo']);
+                    $existingReceipt = DB::table('cash_receipt_details')
+                        ->where('receipt_number', $receiptNo)
+                        ->first();
 
-                    DB::table('cash_receipt_details')->insert([
-                        'id' => $newId,
-                        'asset_number' => $assetId,
-                        'total_paid_amount' => (float)$responseParams['amount'],
-                        'receipt_number' => $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $responseParams['merchantTxnNo']),
-                        'BranchId' => $property->BranchId,
-                        'DistrictId' => $property->DistrictId,
-                        'CityId' => $property->CityId,
-                        'SectorId' => $property->SectorId,
-                        'IsActive' => 1,
-                        'IsDeleted' => 0,
-                        'created_date' => Carbon::now(),
-                        'CreatedBy' => $userId ?: null,
-                        'CompanyId' => $property->CompanyId ?? 544,
-                    ]);
+                    if (!$existingReceipt) {
+                        $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
+                        $newId = $maxId + 1;
+
+                        DB::table('cash_receipt_details')->insert([
+                            'id' => $newId,
+                            'asset_number' => $assetId,
+                            'total_paid_amount' => (float)$responseParams['amount'],
+                            'receipt_number' => $receiptNo,
+                            'BranchId' => $property->BranchId,
+                            'DistrictId' => $property->DistrictId,
+                            'CityId' => $property->CityId,
+                            'SectorId' => $property->SectorId,
+                            'IsActive' => 1,
+                            'IsDeleted' => 0,
+                            'created_date' => Carbon::now(),
+                            'CreatedBy' => $userId ?: null,
+                            'CompanyId' => $property->CompanyId ?? 544,
+                        ]);
+                    }
                 }
 
                 DB::commit();
-                Log::info('Payment successfully registered in database', ['txn' => $responseParams['txnID']]);
+                Log::info('Payment successfully registered in database', ['txn' => $responseParams['txnID'] ?? $merchantTxnNo]);
 
             } catch (\Exception $e) {
                 DB::rollBack();
