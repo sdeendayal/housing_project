@@ -11,7 +11,7 @@ class SuperAdminController extends Controller
     public function dashboard()
     {
         // =========================
-        // OVERALL SUMMARY (Strictly Synchronized with Plot-Based Villages)
+        // OVERALL SUMMARY
         // =========================
         $summary = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
@@ -21,24 +21,32 @@ class SuperAdminController extends Controller
                     ->orWhere('v.totalPlotsPhase3', '>', 0);
             })
             ->selectRaw("
-                (SELECT COUNT(*) FROM DistrictMaster) AS TotalDistricts,
-                (
-                    SELECT COUNT(*) 
-                    FROM VillageMaster 
-                    WHERE COALESCE(TotalPlots,0) > 0 
-                       OR COALESCE(totalPlotsPhase2,0) > 0 
-                       OR COALESCE(totalPlotsPhase3,0) > 0
-                ) AS TotalVillages,
-                COUNT(DISTINCT o.OwnerId) AS TotalBeneficiaries,
-                SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN 1 ELSE 0 END) AS TotalPaid,
-                SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 THEN 1 ELSE 0 END) AS TotalNotPaid,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 THEN o.FlatId END) AS TotalAllotment,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN o.FlatId END) AS TotalAssignedFlats
-            ")
+            (SELECT COUNT(*) FROM DistrictMaster) AS TotalDistricts,
+
+            (
+                SELECT COUNT(*)
+                FROM VillageMaster
+                WHERE COALESCE(TotalPlots,0) > 0
+                   OR COALESCE(totalPlotsPhase2,0) > 0
+                   OR COALESCE(totalPlotsPhase3,0) > 0
+            ) AS TotalVillages,
+
+            COUNT(DISTINCT o.OwnerId) AS TotalBeneficiaries,
+
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN 1 ELSE 0 END) AS TotalPaid,
+
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 THEN 1 ELSE 0 END) AS TotalNotPaid,
+
+            COUNT(DISTINCT o.FlatId) AS TotalAllotment,
+
+            COUNT(DISTINCT CASE
+                WHEN o.IsPaid = 1 THEN o.FlatId
+            END) AS TotalAssignedFlats
+        ")
             ->first();
 
         // =========================
-        // BASE QUERY FOR REUSE
+        // BASE QUERY
         // =========================
         $baseQuery = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
@@ -53,31 +61,48 @@ class SuperAdminController extends Controller
         // =========================
         $phaseData = (clone $baseQuery)
             ->selectRaw("
-                o.Phase,
-                COUNT(DISTINCT o.VillageId) AS TotalVillages,
-                COUNT(DISTINCT o.OwnerId) AS TotalBeneficiaries,
-                SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN 1 ELSE 0 END) AS TotalPaid,
-                SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 THEN 1 ELSE 0 END) AS TotalNotPaid,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 THEN o.FlatId END) AS TotalAllotment,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN o.FlatId END) AS TotalAssignedFlats
-            ")
+            o.Phase,
+
+            COUNT(DISTINCT o.VillageId) AS TotalVillages,
+
+            COUNT(DISTINCT o.OwnerId) AS TotalBeneficiaries,
+
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN 1 ELSE 0 END) AS TotalPaid,
+
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 THEN 1 ELSE 0 END) AS TotalNotPaid,
+
+            COUNT(DISTINCT o.FlatId) AS TotalAllotment,
+
+            COUNT(DISTINCT CASE
+                WHEN o.IsPaid = 1 THEN o.FlatId
+            END) AS TotalAssignedFlats
+        ")
             ->groupBy('o.Phase')
             ->orderBy('o.Phase')
             ->get();
 
-
+        // =========================
+        // DISTRICT GAP REPORT
+        // =========================
         $gapData = (clone $baseQuery)
             ->join('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
             ->selectRaw("
-                d.DistrictName,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 THEN o.FlatId END) AS Allotment,
-                COUNT(DISTINCT CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN o.FlatId END) AS Paid,
-                (
-                    COUNT(DISTINCT CASE WHEN o.IsApproved = 1 THEN o.FlatId END)
-                    -
-                    COUNT(DISTINCT CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN o.FlatId END)
-                ) AS Gap
-            ")
+            d.DistrictName,
+
+            COUNT(DISTINCT o.FlatId) AS Allotment,
+
+            COUNT(DISTINCT CASE
+                WHEN o.IsPaid = 1 THEN o.FlatId
+            END) AS Paid,
+
+            (
+                COUNT(DISTINCT o.FlatId)
+                -
+                COUNT(DISTINCT CASE
+                    WHEN o.IsPaid = 1 THEN o.FlatId
+                END)
+            ) AS Gap
+        ")
             ->groupBy('d.DistrictName')
             ->orderBy('d.DistrictName')
             ->paginate(10, ['*'], 'gap_page');
@@ -225,7 +250,7 @@ class SuperAdminController extends Controller
 
         $grossTotal = (object) [
             'Beneficiaries' => $totalsData->Beneficiaries ?? 0,
-            'Paid' => $totalsData->Paid ?? 0,          // Ab Ambala select karne par exact 164 aayega
+            'Paid' => $totalsData->Paid ?? 0,
             'NotPaid' => $totalsData->NotPaid ?? 0,
             'AssignedFlats' => $totalsData->AssignedFlats ?? 0,
             'Allotment' => $totalsData->Allotment ?? 0,
@@ -264,7 +289,6 @@ class SuperAdminController extends Controller
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->join('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
             ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            // Strict Validation: Sirf wahi gaon jinko plots mile hain
             ->where(function ($q) {
                 $q->where('v.TotalPlots', '>', 0)
                     ->orWhere('v.totalPlotsPhase2', '>', 0)
@@ -275,6 +299,7 @@ class SuperAdminController extends Controller
                 'o.OwnerName',
                 'o.FatherHusbandName',
                 'o.MobileNo',
+                'o.RegistrationNo',
                 'o.Phase',
                 'd.DistrictName',
                 'v.VillageName',
@@ -288,7 +313,7 @@ class SuperAdminController extends Controller
             $query->where(function ($q) {
                 $q->where('o.OwnerName', 'LIKE', '%' . $search . '%')
                     ->orWhere('o.MobileNo', 'LIKE', '%' . $search . '%')
-                    ->orWhere('o.PPPId', 'LIKE', '%' . $search . '%');
+                    ->orWhere('o.RegistrationNo', 'LIKE', '%' . $search . '%');
             });
         }
         if (!empty($phaseFilter)) {
@@ -303,7 +328,7 @@ class SuperAdminController extends Controller
 
         $beneficiaries = $query->orderBy('o.OwnerName')->paginate(15)->appends($request->query());
 
-        // 2. Dropdown Filter Sync: Sirf plots wale dynamic districts load honge
+        // 2. Dropdown Filter Sync
         $districts = DB::table('DistrictMaster as d')
             ->join('VillageMaster as vm', 'vm.DistrictId', '=', 'd.DistrictId')
             ->where(function ($q) {
@@ -316,7 +341,6 @@ class SuperAdminController extends Controller
             ->orderBy('d.DistrictName')
             ->get();
 
-        // 3. Dropdown Filter Sync: Selected district ke andar bhi sirf plots wale villages load honge
         $villages = !empty($districtFilter)
             ? DB::table('VillageMaster')
                 ->where('DistrictId', $districtFilter)
@@ -340,10 +364,8 @@ class SuperAdminController extends Controller
         ));
     }
 
-
     public function getBeneficiaryFullDetails($ownerId)
     {
-        // Subqueries/joins ko completely safe aur independent banaya hai taaki data leak na ho
         $details = DB::table('OwnerMaster as o')
             ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
@@ -390,4 +412,159 @@ class SuperAdminController extends Controller
         ]);
     }
 
+    public function allotmentList(Request $request)
+    {
+        $search = $request->search;
+
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->where(function ($q) {
+                $q->where('v.TotalPlots', '>', 0)
+                    ->orWhere('v.totalPlotsPhase2', '>', 0)
+                    ->orWhere('v.totalPlotsPhase3', '>', 0);
+            })
+            ->where('o.FlatId', '>', 0);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                    ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                    ->orWhere('o.RegistrationNo', 'like', "%{$search}%")
+                    ->orWhere('f.FlatNo', 'like', "%{$search}%")
+                    ->orWhere('v.VillageName', 'like', "%{$search}%");
+            });
+        }
+
+        $totalAllotment = (clone $query)->distinct('o.FlatId')->count('o.FlatId');
+
+        $allotments = $query
+            ->selectRaw("
+            o.FlatId,
+            MAX(f.FlatNo) as FlatNo,
+            MAX(o.OwnerId) as OwnerId,
+            MAX(o.OwnerName) as OwnerName,
+            MAX(o.FatherHusbandName) as FatherHusbandName,
+            MAX(o.MobileNo) as MobileNo,
+            MAX(o.RegistrationNo) as RegistrationNo,
+            MAX(d.DistrictName) as DistrictName,
+            MAX(b.BlockName) as BlockName,
+            MAX(v.VillageName) as VillageName,
+            MAX(o.Phase) as Phase,
+            MAX(o.IsPaid) as IsPaid,
+            MAX(o.IsApproved) as IsApproved
+        ")
+            ->groupBy('o.FlatId')
+            ->orderBy('o.FlatId')
+            ->paginate(20)
+            ->appends($request->query());
+
+        return view('mmgay.super-admin.allotment-list', compact(
+            'allotments',
+            'totalAllotment',
+            'search'
+        ));
+    }
+
+    public function assignedFlatsList(Request $request)
+    {
+        $search = $request->input('search');
+
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->where(function ($q) {
+                $q->where('v.TotalPlots', '>', 0)
+                    ->orWhere('v.totalPlotsPhase2', '>', 0)
+                    ->orWhere('v.totalPlotsPhase3', '>', 0);
+            })
+            ->where('o.FlatId', '>', 0)
+            ->where('o.IsPaid', 1);
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                    ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                    ->orWhere('o.RegistrationNo', 'like', "%{$search}%")
+                    ->orWhere('f.FlatNo', 'like', "%{$search}%")
+                    ->orWhere('v.VillageName', 'like', "%{$search}%");
+            });
+        }
+
+        $totalAssigned = (clone $query)->distinct('o.FlatId')->count('o.FlatId');
+
+        $assignedFlats = $query->selectRaw("
+            o.FlatId,
+            MAX(f.FlatNo) as FlatNo,
+            MAX(o.OwnerId) as OwnerId,
+            MAX(o.OwnerName) as OwnerName,
+            MAX(o.FatherHusbandName) as FatherHusbandName,
+            MAX(o.MobileNo) as MobileNo,
+            MAX(o.RegistrationNo) as RegistrationNo,
+            MAX(d.DistrictName) as DistrictName,
+            MAX(b.BlockName) as BlockName,
+            MAX(v.VillageName) as VillageName,
+            MAX(o.Phase) as Phase,
+            MAX(o.IsPaid) as IsPaid,
+            MAX(o.IsApproved) as IsApproved
+        ")
+            ->groupBy('o.FlatId')
+            ->orderBy('o.FlatId')
+            ->paginate(20)
+            ->appends($request->query());
+
+        return view('mmgay.super-admin.assigned-flats-list', compact(
+            'assignedFlats',
+            'totalAssigned',
+            'search'
+        ));
+    }
+
+    public function paidBeneficiaries(Request $request)
+    {
+        $search = $request->input('search');
+
+        // Logic completely synced with OwnerMaster, VillageMaster and DistrictMaster
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->where(function ($q) {
+                $q->where('v.TotalPlots', '>', 0)
+                    ->orWhere('v.totalPlotsPhase2', '>', 0)
+                    ->orWhere('v.totalPlotsPhase3', '>', 0);
+            })
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1); // Logic matching TotalPaid summary state
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'LIKE', "%{$search}%")
+                    ->orWhere('o.MobileNo', 'LIKE', "%{$search}%")
+                    ->orWhere('o.RegistrationNo', 'LIKE', "%{$search}%")
+                    ->orWhere('v.VillageName', 'LIKE', "%{$search}%")
+                    ->orWhere('d.DistrictName', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $totalPaid = (clone $query)->count('o.OwnerId');
+
+        $paidBeneficiaries = $query->select([
+            'o.OwnerId',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.RegistrationNo',
+            'v.VillageName',
+            'd.DistrictName'
+        ])
+            ->orderBy('o.OwnerName')
+            ->paginate(20)
+            ->appends($request->query());
+
+        return view('mmgay.super-admin.paid-beneficiaries-list', compact('paidBeneficiaries', 'search', 'totalPaid'));
+    }
 }

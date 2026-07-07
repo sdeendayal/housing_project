@@ -33,13 +33,10 @@
                         <tr>
                             <th class="p-3 text-left">District</th>
                             <th class="p-3 text-center">Villages</th>
-                            <th class="p-3 text-center">Beneficiaries</th>
-                            <th class="p-3 text-center">Paid</th>
-                            <th class="p-3 text-center">Not Paid</th>
-                            <th class="p-3 text-center">Assigned Flats</th>
-                            <th class="p-3 text-center">Allotment</th>
-                            <th class="p-3 text-center">Gap</th>
-                            <th class="p-3 text-center">Status</th>
+                            <th class="p-3 text-center">Applicants</th>
+                            <th class="p-3 text-center">Number of Plots</th>
+                            <th class="p-3 text-center">Paid</th>                            
+                            <th class="p-3 text-center">Assigned Flats</th>   
                         </tr>
                     </thead>
 
@@ -53,28 +50,15 @@
 
                                 <td class="p-3 text-center text-gray-600">{{ $d->VillagesWithPlots }}</td>
                                 <td class="p-3 text-center text-gray-600">{{ $d->Beneficiaries }}</td>
-                                <td class="p-3 text-center text-green-600 font-semibold">{{ $d->Paid }}</td>
-                                <td class="p-3 text-center text-red-600 font-semibold">{{ $d->NotPaid }}</td>
-                                <td class="p-3 text-center text-gray-600">{{ $d->AssignedFlats ?? 0 }}</td>
                                 <td class="p-3 text-center text-gray-600">{{ $d->Allotment }}</td>
+                                <td class="p-3 text-center text-green-600 font-semibold">{{ $d->Paid }}</td>
+                                
+                                <td class="p-3 text-center text-gray-600">{{ $d->AssignedFlats ?? 0 }}</td>
+                                
 
-                                <td class="p-3 text-center font-bold text-orange-600">
-                                    {{ $d->Gap }}
-                                </td>
+                               
 
-                                <td class="p-3 text-center">
-                                    @if ($d->Gap <= 0)
-                                        <span
-                                            class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                            Completed
-                                        </span>
-                                    @else
-                                        <span
-                                            class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-xs font-medium">
-                                            Pending
-                                        </span>
-                                    @endif
-                                </td>
+                                
 
                             </tr>
                         @empty
@@ -93,22 +77,9 @@
                                 <td class="p-3 text-left font-bold text-blue-900 text-base">Gross Total</td>
                                 <td class="p-3 text-center text-base">{{ $grossTotal->VillagesWithPlots }}</td>
                                 <td class="p-3 text-center text-base">{{ $grossTotal->Beneficiaries }}</td>
-                                <td class="p-3 text-center text-green-700 text-base">{{ $grossTotal->Paid }}</td>
-                                <td class="p-3 text-center text-red-700 text-base">{{ $grossTotal->NotPaid }}</td>
-                                <td class="p-3 text-center text-base">{{ $grossTotal->AssignedFlats }}</td>
-                                <td class="p-3 text-center text-base">{{ $grossTotal->Allotment }}</td>
-                                <td class="p-3 text-center text-orange-700 text-base">{{ $grossTotal->Gap }}</td>
-                                <td class="p-3 text-center">
-                                    @if ($grossTotal->Gap <= 0)
-                                        <span class="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs">
-                                            All Done
-                                        </span>
-                                    @else
-                                        <span class="px-3 py-1 bg-orange-200 text-orange-800 rounded-full text-xs">
-                                            Action Req.
-                                        </span>
-                                    @endif
-                                </td>
+                                 <td class="p-3 text-center text-base">{{ $grossTotal->Allotment }}</td>
+                                <td class="p-3 text-center text-green-700 text-base">{{ $grossTotal->Paid }}</td>                               
+                                <td class="p-3 text-center text-base">{{ $grossTotal->AssignedFlats }}</td>  
                             </tr>
                             </footer>
                     @endif

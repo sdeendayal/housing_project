@@ -126,9 +126,22 @@ Route::prefix('super-admin')
         Route::get('/super-admin/all-villages', [SuperAdminController::class, 'allVillagesList'])->name('superadmin.all-villages');
 
         Route::get('/super-admin/beneficiaries', [SuperAdminController::class, 'beneficiariesList'])->name('superadmin.beneficiaries.index');
-        
+
         Route::get('/super-admin/beneficiary-details/{id}', [SuperAdminController::class, 'getBeneficiaryFullDetails']);
 
+        Route::get(
+            '/super-admin/allotments',
+            [SuperAdminController::class, 'allotmentList']
+        )->name('superadmin.allotment.index');
+
+        Route::get('/allotment-details/{id}', [SuperAdminController::class, 'getAllotmentDetails'])
+            ->name('superadmin.allotment.details');
+
+        Route::get('/super-admin/assigned-flats', [SuperAdminController::class, 'assignedFlatsList'])
+            ->name('superadmin.assigned.flats');
+
+        // routes/web.php mein ise replace karein
+        Route::get('/super-admin/paid-beneficiaries', [SuperAdminController::class, 'paidBeneficiaries'])->name('superadmin.paid.beneficiaries');
 
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');

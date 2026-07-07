@@ -68,9 +68,10 @@
 
 
                 <!-- Allotment -->
-                <div
-                    class="bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
-                            transition-all duration-300 hover:shadow-orange-500/20 hover:-translate-y-1">
+                <a href="{{ route('superadmin.allotment.index') }}"
+                    class="block bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
+    transition-all duration-300 hover:shadow-orange-500/20 hover:-translate-y-1">
+
                     <div class="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-orange-500/20 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-orange-400" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -78,16 +79,20 @@
                                 d="M9 12h6m-6 4h6M9 8h6M5 4h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z" />
                         </svg>
                     </div>
+
                     <p class="text-xs text-gray-400">Allotment</p>
+
                     <h2 class="text-2xl sm:text-3xl font-bold text-orange-400">
                         {{ $summary->TotalAllotment }}
                     </h2>
-                </div>
+
+                </a>
 
                 <!-- Assigned Flats -->
-                <div
-                    class="bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
-                            transition-all duration-300 hover:shadow-purple-500/20 hover:-translate-y-1">
+                <a href="{{ route('superadmin.assigned.flats') }}"
+                    class="block bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
+          transition-all duration-300 hover:shadow-purple-500/20 hover:-translate-y-1 cursor-pointer">
+
                     <div class="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-purple-500/20 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-400" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -95,16 +100,18 @@
                                 d="M5 20h14M12 3l9 7-9 7-9-7 9-7z" />
                         </svg>
                     </div>
+
                     <p class="text-xs text-gray-400">Assigned Flats</p>
                     <h2 class="text-2xl sm:text-3xl font-bold text-purple-400">
                         {{ $summary->TotalAssignedFlats }}
                     </h2>
-                </div>
+                </a>
 
                 <!-- Paid -->
-                <div
-                    class="bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
-                            transition-all duration-300 hover:shadow-emerald-500/20 hover:-translate-y-1">
+                <a href="{{ route('superadmin.paid.beneficiaries') }}"
+                    class="block bg-[#1F2937] rounded-xl p-4 text-center border border-gray-700 shadow
+          transition-all duration-300 hover:shadow-emerald-500/20 hover:-translate-y-1 cursor-pointer">
+
                     <div class="mx-auto w-10 h-10 flex items-center justify-center rounded-full bg-emerald-500/20 mb-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-emerald-400" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -112,11 +119,12 @@
                                 d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
+
                     <p class="text-xs text-gray-400">Paid</p>
                     <h2 class="text-2xl sm:text-3xl font-bold text-emerald-400">
                         {{ $summary->TotalPaid }}
                     </h2>
-                </div>
+                </a>
 
                 <!-- Not Paid -->
                 <div
