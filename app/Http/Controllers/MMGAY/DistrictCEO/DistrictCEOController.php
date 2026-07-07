@@ -11,7 +11,7 @@ class DistrictCEOController extends Controller
     public function dashboard(Request $request, $phase = 1)
     {
         $user = auth()->user();
-
+        
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
@@ -19,6 +19,8 @@ class DistrictCEOController extends Controller
         if (!$districtId) {
             abort(404, 'District not found.');
         }
+
+        
 
         // Phase Wise Plot Column
         switch ($phase) {
