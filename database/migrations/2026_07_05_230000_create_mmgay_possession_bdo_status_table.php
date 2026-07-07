@@ -14,6 +14,11 @@ return new class extends Migration
         Schema::create('mmgay_possession_bdo_status', function (Blueprint $table) {
             $table->id();
             $table->foreignId('application_id')->constrained('mmgay_possession_applications')->cascadeOnDelete();
+            $table->unsignedBigInteger('possession_id')->nullable();
+            $table->string('ppp_id')->nullable();
+            $table->string('member_id')->nullable();
+            $table->string('mobile', 15)->nullable();
+            $table->unsignedBigInteger('flat_id')->nullable();
             $table->string('application_number');
             $table->unsignedBigInteger('bdo_user_id');
             $table->string('bdo_name');

@@ -16,8 +16,12 @@ return new class extends Migration
         Schema::create('mmgay_possession_applications', function (Blueprint $table) {
             $table->id();
             $table->char('secure_id', 32)->unique();
+            $table->unsignedBigInteger('possession_id')->nullable()->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->unsignedBigInteger('owner_id')->nullable();
+            $table->string('ppp_id')->nullable();
+            $table->string('member_id')->nullable();
+            $table->unsignedBigInteger('flat_id')->nullable();
             
             $table->string('slip_id')->nullable();
             $table->string('application_number')->unique();
@@ -57,7 +61,11 @@ return new class extends Migration
         Schema::create('mmgay_possession_status_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('application_id')->constrained('mmgay_possession_applications')->cascadeOnDelete();
-            $table->unsignedBigInteger('asset_id')->default(0);
+            $table->unsignedBigInteger('possession_id')->nullable();
+            $table->string('ppp_id')->nullable();
+            $table->string('member_id')->nullable();
+            $table->string('mobile', 15)->nullable();
+            $table->unsignedBigInteger('flat_id')->nullable();
             $table->string('old_status')->nullable();
             $table->string('new_status');
             $table->text('remarks')->nullable();

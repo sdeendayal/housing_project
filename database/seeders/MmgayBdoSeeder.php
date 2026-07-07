@@ -13,27 +13,27 @@ class MmgayBdoSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Fetch the department role group
-        $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
+        // 1. Fetch the mmgav_bdeo role group
+        $bdoGroup = RoleGroup::where('slug', 'mmgav_bdeo')->first();
 
-        if (!$departmentGroup) {
-            $this->command->error('Department group not found. Run RoleGroupSeeder first.');
+        if (!$bdoGroup) {
+            $this->command->error('MMGAV BDO role group not found. Run RoleGroupSeeder first.');
             return;
         }
 
-        // 2. Create MMGAY BDO role
+        // 2. Create MMGAV BDO role
         $bdoRole = Role::updateOrCreate(
-            ['slug' => 'mmgay_bdo'],
+            ['slug' => 'mmgav_bdeo'],
             [
-                'role_group_id' => $departmentGroup->id,
-                'name' => 'MMGAY BDPO',
-                'slug' => 'mmgay_bdo',
+                'role_group_id' => $bdoGroup->id,
+                'name' => 'MMGAV BDO',
+                'slug' => 'mmgav_bdeo',
                 'dashboard_route' => 'mmgay.bdo.dashboard',
                 'dashboard_path' => null,
             ]
         );
 
-        $this->command->info('MMGAY BDPO Role seeded.');
+        $this->command->info('MMGAV BDO Role seeded.');
 
         // 3. Create MMGAY BDO user
         $bdoUser = User::updateOrCreate(
@@ -43,7 +43,7 @@ class MmgayBdoSeeder extends Seeder
                 'email' => 'bdo@mmgay.com',
                 'mobile' => '8888888888',
                 'password' => Hash::make('password123'),
-                'role' => 'mmgay_bdo',
+                'role' => 'mmgav_bdeo',
                 'scheme' => 'MMGAY',
                 'Is_Active' => '1',
                 'Is_Deleted' => '0',
@@ -59,7 +59,7 @@ class MmgayBdoSeeder extends Seeder
             ['user_id' => $bdoUser->id],
             [
                 'role_id' => $bdoRole->id,
-                'role_group_id' => $departmentGroup->id,
+                'role_group_id' => $bdoGroup->id,
             ]
         );
 

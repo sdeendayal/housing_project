@@ -62,7 +62,6 @@ class MmgayBdoAuthApiController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'scheme' => 'MMGAY',
-            'role' => 'mmgay_bdo',
             'Is_Active' => '1',
             'Is_Deleted' => '0',
         ];
@@ -73,10 +72,15 @@ class MmgayBdoAuthApiController extends Controller
 
         $user = Auth::user();
 
+        if (!$user->belongsToRoleGroup('mmgav_bdeo') || !$user->hasRole('mmgav_bdeo')) {
+            Auth::logout();
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Access is restricted to MMGAV BDO officers only.'], 403);
+        }
+
         // Generate Sanctum Token
         $token = $user->createToken('bdo_api_token')->plainTextToken;
 
-        Log::info("MMGAY BDO logged in via API", [
+        Log::info("MMGAV BDO logged in via API", [
             'user_id' => $user->id,
             'email' => $user->email,
         ]);
@@ -90,7 +94,7 @@ class MmgayBdoAuthApiController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'mobile' => $user->mobile,
-                'role' => 'mmgay_bdo',
+                'role' => 'mmgav_bdeo',
                 'block_id' => $user->block_id,
                 'block_name' => $user->block_name,
             ]

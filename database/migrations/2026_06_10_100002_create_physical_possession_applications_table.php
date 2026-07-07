@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('physical_possession_applications', function (Blueprint $table) {
             $table->id();
             $table->char('secure_id', 32)->unique();
+            $table->unsignedBigInteger('possession_id')->nullable()->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->integer('private_purchaser_id')->nullable();
             $table->string('ppp_id', 50)->nullable();

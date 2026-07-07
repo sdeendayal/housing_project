@@ -23,7 +23,7 @@ Route::prefix('mmgay')->group(function () {
     Route::post('/villager/login/resend-otp', [MmgayVillagerAuthApiController::class, 'resendOtp']);
 
     // BDO Authenticated APIs
-    Route::middleware(['auth:sanctum', 'role:mmgay_bdo'])->prefix('bdo')->group(function () {
+    Route::middleware(['auth:sanctum', 'role:mmgav_bdeo'])->prefix('bdo')->group(function () {
         Route::post('/logout', [MmgayBdoAuthApiController::class, 'logout']);
         Route::get('/dashboard', [MmgayBdoApiController::class, 'dashboard']);
         Route::get('/eligibility-list', [MmgayBdoApiController::class, 'eligibilityList']);

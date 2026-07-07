@@ -15,13 +15,23 @@ class MmgayPossessionApplication extends Model
             if (empty($application->secure_id)) {
                 $application->secure_id = self::generateSecureId();
             }
+            if (empty($application->possession_id)) {
+                do {
+                    $num = rand(100000, 999999);
+                } while (self::where('possession_id', $num)->exists());
+                $application->possession_id = $num;
+            }
         });
     }
 
     protected $fillable = [
         'user_id',
         'secure_id',
+        'possession_id',
         'owner_id',
+        'ppp_id',
+        'member_id',
+        'flat_id',
         'slip_id',
         'application_number',
         'district_id',

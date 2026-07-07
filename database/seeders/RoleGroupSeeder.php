@@ -28,6 +28,12 @@ class RoleGroupSeeder extends Seeder
                 'slug' => 'villager',
                 'description' => 'Rural/Villager users under MMGAY scheme who login via mobile OTP.',
             ],
+            [
+                'id' => 4,
+                'name' => 'MMGAV BDO',
+                'slug' => 'mmgav_bdeo',
+                'description' => 'MMGAV BDO officers who login via email and password.',
+            ],
         ];
 
         foreach ($groups as $group) {

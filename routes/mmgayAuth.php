@@ -110,7 +110,7 @@ Route::post('/mmgay/bdo/logout', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossess
 Route::get('/mmgay/bdo/refresh-captcha', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'refreshCaptcha'])->name('mmgay.bdo.refresh.captcha');
 
 // BDO Protected Routes
-Route::middleware(['auth', 'mmgay'])->prefix('mmgay/bdo')->name('mmgay.bdo.')->group(function () {
+Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->name('mmgay.bdo.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'dashboard'])->name('dashboard');
     Route::get('/eligibility-list', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'eligibilityList'])->name('eligibility-list');
     Route::get('/schedule/capacity/check', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'getSlotCapacityCheck'])->name('schedule.capacity-check');

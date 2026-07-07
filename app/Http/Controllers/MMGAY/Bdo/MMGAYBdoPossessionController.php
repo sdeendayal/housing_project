@@ -23,7 +23,7 @@ class MMGAYBdoPossessionController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            if ($user->scheme === 'MMGAY' && $user->role === 'mmgay_bdo') {
+            if ($user->scheme === 'MMGAY' && $user->belongsToRoleGroup('mmgav_bdeo') && $user->hasRole('mmgav_bdeo')) {
                 return redirect()->route('mmgay.bdo.dashboard');
             }
         }
@@ -65,7 +65,6 @@ class MMGAYBdoPossessionController extends Controller
             'email' => $request->email,
             'password' => $request->password,
             'scheme' => 'MMGAY',
-            'role' => 'mmgay_bdo',
             'Is_Active' => '1',
             'Is_Deleted' => '0',
         ];
@@ -74,6 +73,14 @@ class MMGAYBdoPossessionController extends Controller
             return back()
                 ->withInput()
                 ->with('error', 'Invalid BDO login credentials.');
+        }
+
+        $user = Auth::user();
+        if (!$user->belongsToRoleGroup('mmgav_bdeo') || !$user->hasRole('mmgav_bdeo')) {
+            Auth::logout();
+            return back()
+                ->withInput()
+                ->with('error', 'Unauthorized. Access is restricted to MMGAV BDO officers only.');
         }
 
         $request->session()->regenerate();

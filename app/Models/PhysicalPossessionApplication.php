@@ -15,12 +15,19 @@ class PhysicalPossessionApplication extends Model
             if (empty($application->secure_id)) {
                 $application->secure_id = self::generateSecureId();
             }
+            if (empty($application->possession_id)) {
+                do {
+                    $num = rand(10000000, 99999999);
+                } while (self::where('possession_id', $num)->exists());
+                $application->possession_id = $num;
+            }
         });
     }
 
     protected $fillable = [
         'user_id',
         'secure_id',
+        'possession_id',
         'owner_id',
         'scheme',
         'private_purchaser_id',

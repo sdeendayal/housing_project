@@ -7,8 +7,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApplicationStatusLog extends Model
 {
+    protected static function booted(): void
+    {
+        static::creating(function (self $log) {
+            $application = $log->application;
+            if ($application) {
+                $log->possession_id = $application->possession_id;
+            }
+        });
+    }
+
     protected $fillable = [
         'application_id',
+        'possession_id',
         'asset_id',
         'old_status',
         'new_status',
