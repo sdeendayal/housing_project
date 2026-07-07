@@ -320,7 +320,7 @@
                         <div class="w-12 h-12 rounded-full bg-red-50 text-red-500 flex items-center justify-center mb-3">
                             <span class="material-symbols-outlined text-[24px]">picture_as_pdf</span>
                         </div>
-                        <p class="text-[10px] font-bold text-slate-700 m-0 mb-3 text-center">Physical Possession Application (Citizen Signed)</p>
+                        <p class="text-[10px] font-bold text-slate-700 m-0 mb-3 text-center">Physical Possession Application (Signed)</p>
                         <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-[10px] font-bold text-red-700 no-underline hover:bg-red-100">
                             <span class="material-symbols-outlined text-[14px]">download</span> Download PDF
                         </a>

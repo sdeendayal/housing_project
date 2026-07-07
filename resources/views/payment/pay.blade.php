@@ -176,7 +176,7 @@
                                 <input type="number" name="amount_raw" id="amountInput" 
                                     class="w-full pl-8 pr-3 py-2.5 border rounded-lg font-extrabold text-[15px] outline-none {{ $isLastInstallment ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed' : 'bg-white border-slate-300 text-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' }}" 
                                     value="{{ $amountRaw }}" 
-                                    min="1" 
+                                    min="{{ $minAmountToPay }}" 
                                     max="{{ $maxAllowedAmount }}" 
                                     step="0.01" 
                                     {{ $isLastInstallment ? 'readonly' : '' }} 
@@ -185,7 +185,7 @@
                             @if ($isLastInstallment)
                                 <p class="text-[9px] text-indigo-700 font-bold mt-1.5">This is the 36th (last) installment. The amount is fixed at ₹{{ number_format($maxAllowedAmount, 2) }} to reach the ₹1,00,000 maximum total payment limit.</p>
                             @else
-                                <p class="text-[9px] text-slate-400 mt-1.5">You can pay any custom amount up to ₹{{ number_format($maxAllowedAmount, 2) }} to stay within the ₹1,00,000 limit.</p>
+                                <p class="text-[9px] text-slate-400 mt-1.5">You can pay any custom amount between ₹{{ number_format($minAmountToPay, 2) }} and ₹{{ number_format($maxAllowedAmount, 2) }} to stay within the ₹1,00,000 limit.</p>
                             @endif
                         </div>
 
@@ -219,10 +219,24 @@
 (function () {
     const amountInput = document.getElementById('amountInput');
     const btnAmount = document.getElementById('btnAmount');
+    const form = document.getElementById('paymentForm');
+
     if (amountInput && btnAmount) {
         amountInput.addEventListener('input', function () {
             const val = parseFloat(amountInput.value) || 0;
             btnAmount.textContent = val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        });
+    }
+
+    if (form && amountInput) {
+        form.addEventListener('submit', function (e) {
+            const val = parseFloat(amountInput.value) || 0;
+            const minAllowed = parseFloat(amountInput.getAttribute('min')) || 1;
+            if (val < minAllowed) {
+                e.preventDefault();
+                alert('Payment amount cannot be less than the minimum required installment of ₹' + minAllowed.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
+                return false;
+            }
         });
     }
 

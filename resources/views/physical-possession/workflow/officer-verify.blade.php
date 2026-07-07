@@ -150,15 +150,15 @@
                                 <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
                                     <div class="col-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Cost</label>
-                                        <div class="fw-bold">₹{{ number_format($property->FlatCost ?? $application->flat_cost, 2) }}</div>
+                                        <div class="fw-bold">@indianCurrency($property->FlatCost ?? $application->flat_cost)</div>
                                     </div>
                                     <div class="col-4">
                                         <label class="text-success mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Received Amount</label>
-                                        <div class="fw-bold text-success" title="Initial Deposit: ₹{{ number_format($initialDeposit, 2) }} + Installments: ₹{{ number_format($installmentPaid, 2) }}">₹{{ number_format($totalReceived, 2) }}</div>
+                                        <div class="fw-bold text-success" title="Initial Deposit: @indianCurrency($initialDeposit) + Installments: @indianCurrency($installmentPaid)">@indianCurrency($totalReceived)</div>
                                     </div>
                                     <div class="col-4">
                                         <label class="text-danger mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Balance Amount</label>
-                                        <div class="fw-bold text-danger">₹{{ number_format($balanceAmount, 2) }}</div>
+                                        <div class="fw-bold text-danger">@indianCurrency($balanceAmount)</div>
                                     </div>
                                 </div>
                             </div>
@@ -426,7 +426,7 @@
                                 <!-- 2. Upload Signed PDF & Site Engineer Document -->
                                 <div class="row g-2 mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Citizen Signed) <span class="text-danger">*</span></label>
+                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Signed) <span class="text-danger">*</span></label>
                                         <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm" style="font-size: 0.78rem;">
                                         <div class="form-text text-muted" style="font-size: 0.65rem;">PDF only (Max file size 500 KB)</div>
                                     </div>
@@ -629,15 +629,15 @@
                             <div class="row g-3 text-slate-800" style="font-size: 0.85rem;">
                                 <div class="col-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Property Cost</label>
-                                    <div class="fw-bold">₹{{ number_format($property->FlatCost ?? $application->flat_cost, 2) }}</div>
+                                    <div class="fw-bold">@indianCurrency($property->FlatCost ?? $application->flat_cost)</div>
                                 </div>
                                 <div class="col-4">
                                     <label class="text-success small uppercase tracking-wider mb-1 block">Received Amount</label>
-                                    <div class="fw-bold text-success" title="Initial Deposit: ₹{{ number_format($initialDeposit, 2) }} + Installments: ₹{{ number_format($installmentPaid, 2) }}">₹{{ number_format($totalReceived, 2) }}</div>
+                                    <div class="fw-bold text-success" title="Initial Deposit: @indianCurrency($initialDeposit) + Installments: @indianCurrency($installmentPaid)">@indianCurrency($totalReceived)</div>
                                 </div>
                                 <div class="col-4">
                                     <label class="text-danger small uppercase tracking-wider mb-1 block">Balance Amount</label>
-                                    <div class="fw-bold text-danger">₹{{ number_format($balanceAmount, 2) }}</div>
+                                    <div class="fw-bold text-danger">@indianCurrency($balanceAmount)</div>
                                 </div>
                             </div>
                         </div>
@@ -811,7 +811,7 @@
                 <!-- Possession Certificate preview -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Physical Possession Application (Citizen Signed)</h5>
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Physical Possession Application (Signed)</h5>
                     </div>
                     <div class="card-body px-4 pb-4">
                         @if($application->possession_certificate)
@@ -823,8 +823,8 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <i class="bi bi-file-earmark-pdf-fill fs-2 text-danger"></i>
                                         <div>
-                                            <h6 class="fw-bold text-dark mb-0">Physical Possession Application PDF (Citizen Signed)</h6>
-                                            <small class="text-muted">Signed document uploaded by citizen</small>
+                                            <h6 class="fw-bold text-dark mb-0">Physical Possession Application PDF (Signed)</h6>
+                                            <small class="text-muted">Signed document uploaded by site engineer</small>
                                         </div>
                                     </div>
                                     <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="btn btn-danger btn-sm px-3 rounded-pill">
@@ -1092,7 +1092,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Signed Application Required',
-                            text: 'Please upload the Physical Possession Application (Citizen Signed).',
+                            text: 'Please upload the Physical Possession Application (Signed).',
                             confirmButtonColor: '#3085d6'
                         });
                         return false;

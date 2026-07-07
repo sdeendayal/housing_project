@@ -73,7 +73,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         // Search filter
         $search = $request->input('search');
@@ -645,7 +645,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 'possession_certificate' => 'required|file|mimes:pdf|max:500',
                 'site_engineer_file' => 'required|file|mimes:pdf,jpeg,jpg,png|max:500',
             ], [
-                'possession_certificate.required' => 'Physical Possession Application (Citizen Signed) is required.',
+                'possession_certificate.required' => 'Physical Possession Application (Signed) is required.',
                 'possession_certificate.mimes' => 'The Physical Possession Application must be a PDF file.',
                 'possession_certificate.max' => 'The Physical Possession Application must not exceed 500 KB.',
                 'site_engineer_file.required' => 'Site Engineer Document is required.',
@@ -952,7 +952,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         $missing = $query->get();
 

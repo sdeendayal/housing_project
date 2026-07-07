@@ -137,6 +137,7 @@ class PaymentController extends Controller
             'email' => $user->email ?? 'citizen@example.com',
             'amountToPay' => number_format($amountToPay, 2, '.', ''),
             'amountRaw' => round($amountToPay),
+            'minAmountToPay' => $amountToPay,
             'merchantOrderId' => 'MMSAY-ORD-'.now()->format('YmdHis'),
             'assetId' => $auction?->AssetId ?? 0,
             'isLastInstallment' => $isLastInstallment,
@@ -195,10 +196,25 @@ class PaymentController extends Controller
             $firstUnpaidInstNumber = $firstUnpaid ? (int)$firstUnpaid->installment_number : null;
             $isLastInstallment = ($firstUnpaidInstNumber === 36);
 
+            $minAmountToPay = 1.0;
+            if ($isLastInstallment) {
+                $minAmountToPay = $maxAllowedAmount;
+            } else {
+                if ($firstUnpaid) {
+                    $minAmountToPay = min($firstUnpaid->total_due, $maxAllowedAmount);
+                } else {
+                    $minAmountToPay = min($outstanding, $maxAllowedAmount);
+                }
+            }
+
             if ($isLastInstallment) {
                 // Force exactly $maxAllowedAmount
                 $amountRaw = $maxAllowedAmount;
             } else {
+                if ($amountRaw < $minAmountToPay) {
+                    return redirect()->back()
+                        ->with('error', 'Payment amount cannot be less than the minimum required installment of ₹' . number_format($minAmountToPay, 2));
+                }
                 if ($amountRaw > $maxAllowedAmount) {
                     return redirect()->back()
                         ->with('error', 'Payment amount cannot exceed the ₹1,00,000 total limit. Maximum allowed amount is ₹' . number_format($maxAllowedAmount, 2));

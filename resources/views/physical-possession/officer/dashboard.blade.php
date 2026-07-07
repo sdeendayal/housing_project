@@ -415,7 +415,7 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-3">
             <div>
                 <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-person-check text-primary me-2"></i>Eligible Applicants Awaiting Schedule</h6>
-                <p class="text-muted mb-0" style="font-size: 0.7rem;">Applicants with paid amount >= ₹40,000. Action required to propose slot dates.</p>
+                <p class="text-muted mb-0" style="font-size: 0.7rem;">Applicants with paid amount >= ₹60,000. Action required to propose slot dates.</p>
             </div>
             <form action="{{ route('pp.officer.dashboard') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
                 <div class="input-group input-group-sm" style="max-width: 250px;">

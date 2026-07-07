@@ -69,7 +69,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {
@@ -154,7 +154,7 @@ class PpOfficerApiController extends Controller
 
         $eligibleCount = DB::table(DB::raw("({$tempEligibleQuery->toSql()}) as temp"))
             ->mergeBindings($tempEligibleQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->count();
 
         // 5. Har ek status (Scheduled, Verified, Rejected) ke counts nikaalein
@@ -364,7 +364,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {
@@ -470,7 +470,7 @@ class PpOfficerApiController extends Controller
         // 5. Wrap query in a subquery structure (SQLite compatibility logic)
         $purchaserQuery = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000);
+            ->where('temp.total_paid', '>=', 60000);
 
         // Apply status/type filter if provided
         $status = $request->input('status') ?? $request->input('type');
@@ -986,7 +986,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {

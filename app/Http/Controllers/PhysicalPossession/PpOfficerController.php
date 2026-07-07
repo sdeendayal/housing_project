@@ -59,7 +59,7 @@ class PpOfficerController extends Controller
                 (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
-        ')->having('total_paid', '>=', 40000)->toSql()}) as sub"))
+        ')->having('total_paid', '>=', 60000)->toSql()}) as sub"))
             ->mergeBindings($eligibleQuery)
             ->count();
 
@@ -139,7 +139,7 @@ class PpOfficerController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         $search = $request->input('search');
         if ($search) {
@@ -824,7 +824,7 @@ class PpOfficerController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         $missing = $query->get();
 
