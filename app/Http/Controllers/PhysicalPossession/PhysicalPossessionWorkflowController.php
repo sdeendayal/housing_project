@@ -648,9 +648,9 @@ class PhysicalPossessionWorkflowController extends Controller
                 'possession_certificate.required' => 'Physical Possession Application (Signed) is required.',
                 'possession_certificate.mimes' => 'The Physical Possession Application must be a PDF file.',
                 'possession_certificate.max' => 'The Physical Possession Application must not exceed 500 KB.',
-                'site_engineer_file.required' => 'Site Engineer Document is required.',
-                'site_engineer_file.mimes' => 'The Site Engineer Document must be a PDF or image file (JPG, JPEG, PNG).',
-                'site_engineer_file.max' => 'The Site Engineer Document must not exceed 500 KB.',
+                'site_engineer_file.required' => 'Final Possession Letter is required.',
+                'site_engineer_file.mimes' => 'The Final Possession Letter must be a PDF or image file (JPG, JPEG, PNG).',
+                'site_engineer_file.max' => 'The Final Possession Letter must not exceed 500 KB.',
             ]);
 
             if ($request->hasFile('possession_certificate')) {

@@ -161,7 +161,7 @@
                             <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="flex items-center gap-2 bg-white hover:bg-slate-50 transition p-2.5 rounded-lg border border-slate-200/60 font-bold text-slate-700">
                                 <span class="material-symbols-outlined text-red-500 text-xl">picture_as_pdf</span>
                                 <div>
-                                    <span class="block text-[10px] text-slate-800">Official BDPO Verification Order</span>
+                                    <span class="block text-[10px] text-slate-800">Final Possession Letter</span>
                                     <span class="block text-[8px] text-slate-400 font-semibold uppercase mt-0.5">Click to View PDF</span>
                                 </div>
                             </a>
@@ -265,18 +265,18 @@
                             </div>
                         </div>
 
-                        <!-- Upload 2: BDPO's own official document -->
+                        <!-- Upload 2: Final Possession Letter -->
                         <div class="space-y-2">
                             <div>
-                                <span class="text-xs font-bold text-slate-700 font-extrabold block">2. Upload BDPO Official Document / Verification Report</span>
+                                <span class="text-xs font-bold text-slate-700 font-extrabold block">2. Upload Final Possession Letter</span>
                             </div>
 
                             <div>
-                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload BDPO Official verification office document/order (PDF only) <span class="text-rose-500">*</span></label>
+                                <label class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Upload Final Possession Letter (PDF only) <span class="text-rose-500">*</span></label>
                                 <div class="border-2 border-dashed border-slate-200 rounded-lg p-3.5 bg-white flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50/50 transition relative">
                                     <input type="file" name="possession_certificate" id="possession_certificate" class="absolute inset-0 opacity-0 cursor-pointer" required accept=".pdf" onchange="updateOfficialFileName(this)">
                                     <span class="material-symbols-outlined text-slate-400 text-2xl mb-0.5">cloud_upload</span>
-                                    <span id="official_file_picker_text" class="text-xs font-bold text-slate-600">Click to upload official document (PDF only)</span>
+                                    <span id="official_file_picker_text" class="text-xs font-bold text-slate-600">Click to upload Final Possession Letter (PDF only)</span>
                                     <span class="text-[9px] text-slate-400 uppercase mt-0.5 font-bold">Maximum size: 500 KB</span>
                                 </div>
                             </div>
@@ -425,7 +425,7 @@
                     text: 'Please select a valid PDF document.'
                 });
                 input.value = '';
-                textSpan.textContent = 'Click to upload official document (PDF only)';
+                textSpan.textContent = 'Click to upload Final Possession Letter (PDF only)';
                 textSpan.style.color = '#475569';
                 return;
             }
@@ -433,17 +433,17 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'File Too Large',
-                    text: 'The BDPO official document must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
+                    text: 'The Final Possession Letter must not exceed 500 KB. (Selected: ' + (file.size / 1024).toFixed(1) + ' KB)'
                 });
                 input.value = '';
-                textSpan.textContent = 'Click to upload official document (PDF only)';
+                textSpan.textContent = 'Click to upload Final Possession Letter (PDF only)';
                 textSpan.style.color = '#475569';
                 return;
             }
             textSpan.textContent = 'Selected: ' + file.name;
             textSpan.style.color = '#2563eb';
         } else {
-            textSpan.textContent = 'Click to upload official document (PDF only)';
+            textSpan.textContent = 'Click to upload Final Possession Letter (PDF only)';
             textSpan.style.color = '#475569';
         }
     }

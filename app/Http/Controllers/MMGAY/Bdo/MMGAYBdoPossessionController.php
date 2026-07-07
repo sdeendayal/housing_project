@@ -595,9 +595,9 @@ class MMGAYBdoPossessionController extends Controller
                 'site_engineer_file.required' => 'BDO signed report (PDF) is required.',
                 'site_engineer_file.mimes' => 'The signed report must be a PDF file.',
                 'site_engineer_file.max' => 'The signed report must not exceed 500 KB.',
-                'possession_certificate.required' => 'BDO official verification document (PDF) is required.',
-                'possession_certificate.mimes' => 'The official verification document must be a PDF file.',
-                'possession_certificate.max' => 'The official verification document must not exceed 500 KB.',
+                'possession_certificate.required' => 'Final Possession Letter (PDF) is required.',
+                'possession_certificate.mimes' => 'The Final Possession Letter must be a PDF file.',
+                'possession_certificate.max' => 'The Final Possession Letter must not exceed 500 KB.',
             ]);
 
             if ($request->hasFile('site_engineer_file')) {
