@@ -180,6 +180,13 @@
                         <p class="text-[11px] text-amber-700/90 mt-0.5 leading-normal">
                             The offered schedule visit slots have been sent to the applicant. BDPO can verify or reschedule this application once the applicant selects one of the slots.
                         </p>
+                        <form id="rescheduleForm" action="{{ route('mmgay.bdo.verify-save', $application->secure_id) }}" method="POST" class="mt-2.5">
+                            @csrf
+                            <input type="hidden" name="action" value="reschedule">
+                            <button type="button" onclick="confirmReschedule('rescheduleForm')" class="flex items-center gap-1 bg-rose-600 hover:bg-rose-700 text-white font-bold text-[10px] px-3 py-1.5 rounded-lg transition shadow-sm font-bold">
+                                <span class="material-symbols-outlined text-sm">event_busy</span> Reset & Reschedule Visit
+                            </button>
+                        </form>
                     </div>
                 </div>
             @elseif($application->physical_possession_status === 'Slot Selected')
@@ -225,6 +232,9 @@
                     <!-- Action Buttons -->
                     <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
                         <a href="{{ route('mmgay.bdo.possession-applications') }}" class="px-4 py-2 border border-slate-200 rounded-lg text-xs font-bold text-slate-500 hover:bg-slate-50">Cancel</a>
+                        <button type="button" onclick="confirmReschedule('verify_form')" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+                            <span class="material-symbols-outlined text-[16px]">event_busy</span> Citizen Absent / Reschedule
+                        </button>
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
                             <span class="material-symbols-outlined text-[16px]">save</span> Save Field Coordinates
                         </button>
@@ -497,11 +507,51 @@
         }
     }
 
+    function confirmReschedule(formId) {
+        Swal.fire({
+            title: 'Citizen Absent / Reschedule?',
+            text: "Are you sure you want to reset this application's scheduled slot? This will return the application to the scheduling pool and BDPO will need to reschedule new visit slots.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#e11d48',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Yes, Reset & Reschedule',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const targetForm = document.getElementById(formId);
+                if (targetForm) {
+                    if (formId === 'verify_form') {
+                        let actionInput = document.createElement('input');
+                        actionInput.type = 'hidden';
+                        actionInput.name = 'action';
+                        actionInput.value = 'reschedule';
+                        targetForm.appendChild(actionInput);
+                    }
+                    Swal.fire({
+                        title: 'Resetting Slots...',
+                        text: 'Please wait.',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+                    targetForm.submit();
+                }
+            }
+        });
+    }
+
     // Form Submission Loader
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.querySelector('form');
         if (form) {
             form.addEventListener('submit', function() {
+                // Ignore loader if rescheduling action was sent
+                const actionInput = form.querySelector('input[name="action"]');
+                if (actionInput && actionInput.value === 'reschedule') {
+                    return;
+                }
                 Swal.fire({
                     title: 'Submitting Verification...',
                     text: 'Please wait, saving details.',

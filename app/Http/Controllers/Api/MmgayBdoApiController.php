@@ -461,6 +461,43 @@ class MmgayBdoApiController extends Controller
 
         $currentStatus = $application->physical_possession_status;
 
+        if ($request->input('action') === 'reschedule') {
+            $oldStatus = $application->physical_possession_status;
+
+            // Capture the previous slot time before resetting
+            $prevSlotInfo = "N/A";
+            if ($application->possession_date) {
+                $dateFormatted = date('d M Y', strtotime($application->possession_date));
+                $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
+            }
+
+            $application->physical_possession_status = 'Eligible for Physical Possession';
+            $application->possession_date = null;
+            $application->meeting_slot = null;
+            $application->citizen_visit_date = null;
+            $application->visit_slot_1 = null;
+            $application->visit_slot_2 = null;
+            $application->visit_slot_3 = null;
+            $application->visit_instructions = null;
+            $application->save();
+
+            MmgayPossessionStatusLog::create([
+                'application_id' => $application->id,
+                'asset_id' => $application->asset_id ?? 0,
+                'old_status' => $oldStatus,
+                'new_status' => 'Eligible for Physical Possession',
+                'remarks' => "Applicant was absent / did not attend the scheduled visit slot: {$prevSlotInfo}. Visit slot has been reset for rescheduling by BDPO.",
+                'changed_by_type' => 'officer',
+                'changed_by_id' => $bdo->id,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Visit slot has been reset for rescheduling successfully.',
+                'application' => $application
+            ]);
+        }
+
         if ($currentStatus === 'Slot Selected') {
             // Stage 1: Coordinates and Plot image capture
             $request->validate([
