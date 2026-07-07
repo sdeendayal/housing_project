@@ -384,21 +384,6 @@ class PaymentController extends Controller
             if ($txLog && $txLog->status === 'SUCCESS') {
                 $alreadySuccess = true;
             }
-
-            if (!$alreadySuccess) {
-                DB::table('payment_transactions')
-                    ->where('merchant_txn_no', $merchantTxnNo)
-                    ->update([
-                        'status' => $isSuccess ? 'SUCCESS' : 'FAIL',
-                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
-                        'payment_id' => $responseParams['paymentID'] ?? null,
-                        'payment_mode' => $responseParams['paymentMode'] ?? null,
-                        'response_code' => $responseParams['responseCode'] ?? null,
-                        'response_description' => $responseParams['respDescription'] ?? null,
-                        'response_payload_dump' => json_encode($request->all()),
-                        'updated_at' => now(),
-                    ]);
-            }
         }
 
         if ($isSuccess) {
@@ -407,6 +392,21 @@ class PaymentController extends Controller
             
             DB::beginTransaction();
             try {
+                if ($merchantTxnNo && !$alreadySuccess) {
+                    DB::table('payment_transactions')
+                        ->where('merchant_txn_no', $merchantTxnNo)
+                        ->update([
+                            'status' => 'SUCCESS',
+                            'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                            'payment_id' => $responseParams['paymentID'] ?? null,
+                            'payment_mode' => $responseParams['paymentMode'] ?? null,
+                            'response_code' => $responseParams['responseCode'] ?? null,
+                            'response_description' => $responseParams['respDescription'] ?? null,
+                            'response_payload_dump' => json_encode($request->all()),
+                            'updated_at' => now(),
+                        ]);
+                }
+
                 // Fetch property registration details to populate cash receipt correctly
                 $property = DB::table('property_registration')
                     ->where('AssetId', $assetId)
@@ -457,6 +457,21 @@ class PaymentController extends Controller
                 'date' => Carbon::parse($responseParams['paymentDateTime'] ?? now())->format('d M Y H:i:s'),
             ]);
         } else {
+            if ($merchantTxnNo && !$alreadySuccess) {
+                DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->update([
+                        'status' => 'FAIL',
+                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                        'payment_id' => $responseParams['paymentID'] ?? null,
+                        'payment_mode' => $responseParams['paymentMode'] ?? null,
+                        'response_code' => $responseParams['responseCode'] ?? null,
+                        'response_description' => $responseParams['respDescription'] ?? null,
+                        'response_payload_dump' => json_encode($request->all()),
+                        'updated_at' => now(),
+                    ]);
+            }
+
             return redirect()->route('citizen.payment.result', [
                 'status' => 'FAIL',
                 'message' => $responseParams['respDescription'] ?? ($request->input('respDescription') ?? 'Transaction Failed'),
