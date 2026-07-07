@@ -111,7 +111,7 @@ class MMGAYAuthController extends Controller
         }
 
         // Admin Dashboard
-        if ($roleSlug === 'admin') {
+        if ($roleSlug === 'super_admin') {
             return redirect()
                 ->route('admin.dashboard')
                 ->with('success', 'Welcome ' . $user->name);

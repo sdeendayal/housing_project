@@ -16,7 +16,7 @@ class DepartmentUserSeeder extends Seeder
         $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
         $adminRole = Role::where('slug', 'admin')->first();
 
-        if (! $departmentGroup || ! $adminRole) {
+        if (!$departmentGroup || !$adminRole) {
             $this->command->error('Department group or admin role not found. Run RoleGroupSeeder and RoleSeeder first.');
 
             return;
@@ -35,13 +35,25 @@ class DepartmentUserSeeder extends Seeder
             return;
         }
 
-        $user = User::create([
-            'name' => 'Department User',
-            'email' => 'department@gmail.com',
-            'mobile' => '9876543210',
-            'password' => Hash::make('123456'),
-            'role' => 'department',
-        ]);
+        $user = User::firstOrCreate(
+            ['email' => 'department@gmail.com'],
+            [
+                'name' => 'Department User',
+                'mobile' => '9876543210',
+                'password' => Hash::make('123456'),
+                'role' => 'department',
+            ]
+        );
+
+        User::firstOrCreate(
+            ['email' => 'superadmin@gmail.com'],
+            [
+                'name' => 'Super Admin',
+                'mobile' => '9990009999',
+                'password' => Hash::make('123456'),
+                'role' => 'super_admin',
+            ]
+        );
 
         RoleType::create([
             'user_id' => $user->id,

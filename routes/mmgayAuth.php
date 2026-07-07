@@ -6,6 +6,7 @@ use App\Http\Controllers\MMGAY\Citizen\MMGAYCitizenController;
 use App\Http\Controllers\OtpAuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\MMGAY\DC\DCController;
+use App\Http\Controllers\MMGAY\SuperAdmin\SuperAdminController;
 
 // MMGAY Admin/Officer routes
 Route::get('/mmgay/login', [MMGAYAuthController::class, 'showLogin'])->name('mmgay.login');
@@ -48,7 +49,7 @@ Route::redirect('/mmgav-citizen-login/verify', '/mmgav/login/verify');
 Route::middleware(['auth', 'mmgay'])->group(function () {
 
     Route::get('/district-ceo/dashboard/{phase?}', [DistrictCEOController::class, 'dashboard'])
-    ->name('district.dashboard');
+        ->name('district.dashboard');
 
     Route::get('/district-ceo/list/{phase}/{status}', [DistrictCEOController::class, 'list'])
         ->name('district.list');
@@ -102,3 +103,34 @@ Route::middleware(['auth', 'mmgay', 'role:villager'])->group(function () {
     Route::get('/mmgav/citizen/dashboard', [MMGAYCitizenController::class, 'dashboard'])
         ->name('mmgay.citizen.dashboard');
 });
+
+Route::prefix('super-admin')
+    ->middleware(['auth'])
+    ->group(function () {
+
+        Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])
+            ->name('admin.dashboard');
+
+        Route::get('/districts', [SuperAdminController::class, 'districtList'])
+            ->name('superadmin.districts');
+
+        Route::get('/district/{id}', [SuperAdminController::class, 'districtDetail'])
+            ->name('superadmin.district.detail');
+
+        Route::get('/paid', [SuperAdminController::class, 'paidList'])
+            ->name('superadmin.paid');
+
+        Route::get('/not-paid', [SuperAdminController::class, 'notPaidList'])
+            ->name('superadmin.notpaid');
+
+        Route::get('/super-admin/all-villages', [SuperAdminController::class, 'allVillagesList'])->name('superadmin.all-villages');
+
+        Route::get('/super-admin/beneficiaries', [SuperAdminController::class, 'beneficiariesList'])->name('superadmin.beneficiaries.index');
+        
+        Route::get('/super-admin/beneficiary-details/{id}', [SuperAdminController::class, 'getBeneficiaryFullDetails']);
+
+
+        Route::post('/logout', [MMGAYAuthController::class, 'logout'])
+            ->name('admin.logout');
+
+    });
