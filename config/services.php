@@ -35,4 +35,11 @@ return [
         ],
     ],
 
+    'phicommerce' => [
+        'mid' => env('PHICOMMERCE_MID', 'T_88882'),
+        'secret_key' => env('PHICOMMERCE_SECRET_KEY', 'abc'),
+        'url' => env('PHICOMMERCE_URL', 'https://uat.stage.phicommerce.com/pg/api/v2/initiateSale'),
+        'command_url' => env('PHICOMMERCE_COMMAND_URL', 'https://uat.stage.phicommerce.com/pg/api/command'),
+    ],
+
 ];

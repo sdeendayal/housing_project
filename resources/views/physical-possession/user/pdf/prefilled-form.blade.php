@@ -272,10 +272,7 @@
     <!-- Section 5: Signatures -->
     <table class="footer-signatures">
         <tr>
-            <td class="sig-col">
-                <div class="sig-line">Signature of Applicant / Allottee</div>
-                <div style="font-size: 8px; color: #718096; margin-top: 4px;">Name: {{ strtoupper($name) }}</div>
-            </td>
+            <td class="sig-col"></td>
             <td class="sig-col">
                 <div class="sig-line">Signature of Site Engineer</div>
                 <div style="font-size: 8px; color: #718096; margin-top: 4px;">Name: {{ strtoupper($site_engineer_name) }}</div>

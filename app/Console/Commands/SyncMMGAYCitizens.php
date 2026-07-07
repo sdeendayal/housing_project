@@ -42,6 +42,29 @@ class SyncMMGAYCitizens extends Command
         $now = now();
 
         $totalOwners = DB::table('ownermaster')->count();
+
+        if (!$dryRun) {
+            $this->info('Cleaning up existing MMGAY citizen users to perform a clean sync...');
+            DB::statement('SET foreign_key_checks = 0');
+            
+            // Get IDs of MMGAY citizen users to delete their role types
+            $mmgayUserIds = DB::table('users')
+                ->where('scheme', 'MMGAY')
+                ->where('role', 'villager')
+                ->pluck('id')
+                ->all();
+                
+            if (count($mmgayUserIds) > 0) {
+                foreach (array_chunk($mmgayUserIds, 5000) as $userIdChunk) {
+                    DB::table('role_types')->whereIn('user_id', $userIdChunk)->delete();
+                    DB::table('users')->whereIn('id', $userIdChunk)->delete();
+                }
+            }
+            
+            DB::statement('SET foreign_key_checks = 1');
+            $this->info('Cleanup complete.');
+        }
+
         $this->info(sprintf(
             'Starting MMGAY citizen user sync%s (%s owner records, chunk size %d).',
             $dryRun ? ' [DRY RUN]' : '',
@@ -52,11 +75,12 @@ class SyncMMGAYCitizens extends Command
         $progressBar = $this->output->createProgressBar($totalOwners);
         $progressBar->start();
 
-        // Load all districts for lookup
+        // Load all districts and blocks for lookup
         $districts = DB::table('districtmaster')->pluck('DistrictName', 'DistrictId')->all();
+        $blocks = DB::table('blockmaster')->pluck('BlockName', 'BlockId')->all();
 
         DB::table('ownermaster')
-            ->select(['OwnerId', 'OwnerName', 'MobileNo', 'DistrictId'])
+            ->select(['OwnerId', 'OwnerName', 'MobileNo', 'DistrictId', 'BlockId'])
             ->orderBy('OwnerId')
             ->chunkById($chunkSize, function ($owners) use (
                 $citizenGroup,
@@ -65,7 +89,8 @@ class SyncMMGAYCitizens extends Command
                 $now,
                 $dryRun,
                 $progressBar,
-                $districts
+                $districts,
+                $blocks
             ) {
                 $this->processed += $owners->count();
 
@@ -76,9 +101,10 @@ class SyncMMGAYCitizens extends Command
                         $citizenRole,
                         $passwordHash,
                         $now,
-                        $districts
+                        $districts,
+                        $blocks
                     ) {
-                        $this->processChunk($owners, $citizenGroup, $citizenRole, $passwordHash, $now, $districts);
+                        $this->processChunk($owners, $citizenGroup, $citizenRole, $passwordHash, $now, $districts, $blocks);
                     });
                 } else {
                     $this->analyzeChunk($owners);
@@ -135,7 +161,8 @@ class SyncMMGAYCitizens extends Command
         Role $citizenRole,
         string $passwordHash,
         $now,
-        array $districts
+        array $districts,
+        array $blocks
     ): void {
         $mobilesInChunk = [];
 
@@ -177,6 +204,7 @@ class SyncMMGAYCitizens extends Command
             }
 
             $districtName = $districts[$owner->DistrictId] ?? null;
+            $blockName = $blocks[$owner->BlockId] ?? null;
             $name = trim((string) $owner->OwnerName) ?: 'Citizen User';
 
             $newUserRows[] = [
@@ -188,6 +216,8 @@ class SyncMMGAYCitizens extends Command
                 'scheme' => 'MMGAY',
                 'district_id' => $owner->DistrictId,
                 'district_name' => $districtName,
+                'block_id' => $owner->BlockId,
+                'block_name' => $blockName,
                 'Is_Active' => '1',
                 'Is_Deleted' => '0',
                 'created_at' => $now,

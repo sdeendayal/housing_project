@@ -37,6 +37,21 @@ class MMGAYCitizenController extends Controller
                 ->first();
         }
 
-        return view('mmgay.citizen.dashboard', compact('user', 'ownerInfo'));
+        $possessionApplication = null;
+        $logs = [];
+        if ($ownerInfo) {
+            $possessionApplication = DB::table('mmgay_possession_applications')
+                ->where('owner_id', $ownerInfo->OwnerId)
+                ->first();
+
+            if ($possessionApplication) {
+                $logs = DB::table('mmgay_possession_status_logs')
+                    ->where('application_id', $possessionApplication->id)
+                    ->orderBy('created_at', 'desc')
+                    ->get();
+            }
+        }
+
+        return view('mmgay.citizen.dashboard', compact('user', 'ownerInfo', 'possessionApplication', 'logs'));
     }
 }

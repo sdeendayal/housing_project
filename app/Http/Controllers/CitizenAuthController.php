@@ -90,7 +90,7 @@ class CitizenAuthController extends Controller
         $ppHasApplication = $latestPpApplication !== null;
         $ppHasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
 
-        $ppMinTotalPaidRequired = 40000;
+        $ppMinTotalPaidRequired = 60000;
         $isPpEligible = $totalPaid >= $ppMinTotalPaidRequired;
 
         $applicationSections = $this->buildApplicationDetailSections(
@@ -184,10 +184,16 @@ class CitizenAuthController extends Controller
 
         $hasOutstanding = $auction !== null && $outstanding > 0;
         $isFullyPaid = $auction !== null && $outstanding <= 0 && $flatCost > 0;
+        $reachedLimit = ($totalPaid >= 100000.00);
         $applicationNo = $purchaser?->ApplicationNo;
         $applicationId = $applicationNo
             ? 'HR-MMSAY-'.($purchaseDate?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
             : ($purchaser?->PPPId ?? '—');
+
+        $onlineTransactions = DB::table('payment_transactions')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get();
 
         return view('mmsayPaymentStatus', [
             'displayName' => $user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'),
@@ -200,9 +206,11 @@ class CitizenAuthController extends Controller
             'paymentProgress' => $paymentProgress,
             'hasOutstanding' => $hasOutstanding,
             'isFullyPaid' => $isFullyPaid,
+            'reachedLimit' => $reachedLimit,
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],
+            'onlineTransactions' => $onlineTransactions,
         ]);
     }
 

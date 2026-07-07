@@ -103,5 +103,6 @@
 
     @stack('scripts')
 
+    @include('partials.global-loader')
 </body>
 </html>

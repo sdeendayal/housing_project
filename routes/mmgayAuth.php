@@ -104,6 +104,32 @@ Route::middleware(['auth', 'mmgay', 'role:villager'])->group(function () {
         ->name('mmgay.citizen.dashboard');
 });
 
+// BDO Login
+Route::get('/mmgay/bdo/login', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'showLogin'])->name('mmgay.bdo.login');
+Route::post('/mmgay/bdo/login', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'login'])->name('mmgay.bdo.login.submit');
+Route::post('/mmgay/bdo/logout', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'logout'])->name('mmgay.bdo.logout');
+Route::get('/mmgay/bdo/refresh-captcha', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'refreshCaptcha'])->name('mmgay.bdo.refresh.captcha');
+
+// BDO Protected Routes
+Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->name('mmgay.bdo.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'dashboard'])->name('dashboard');
+    Route::get('/eligibility-list', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'eligibilityList'])->name('eligibility-list');
+    Route::get('/schedule/capacity/check', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'getSlotCapacityCheck'])->name('schedule.capacity-check');
+    Route::get('/schedule/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'scheduleForm'])->name('schedule-form');
+    Route::post('/schedule/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'scheduleSave'])->name('schedule-save');
+    Route::get('/possession-applications', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'applications'])->name('possession-applications');
+    Route::get('/verify/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'verifyForm'])->name('verify-form');
+    Route::post('/verify/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'verifySave'])->name('verify-save');
+    Route::get('/download-certificate/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadCertificate'])->name('download-certificate');
+});
+
+// Villager Possession Routes
+Route::middleware(['auth', 'mmgay', 'role:villager'])->prefix('mmgav/villager')->name('mmgay.villager.')->group(function () {
+    Route::get('/submit-possession', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'submitPossessionForm'])->name('submit');
+    Route::post('/submit-possession', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'submitPossession'])->name('submit.post');
+    Route::get('/download-slip', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadSlip'])->name('download-slip');
+});
+
 Route::prefix('super-admin')
     ->middleware(['auth'])
     ->group(function () {

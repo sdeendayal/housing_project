@@ -114,50 +114,143 @@
 
     <div class="pg-result-card hidden mt-3" id="finalResult">
         <div class="p-5 sm:p-6 text-center">
-            <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
-                <span class="material-symbols-outlined text-[36px]">hourglass_top</span>
-            </div>
-            <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Gateway Integration Under Process</h2>
-            <p class="text-[11px] text-slate-500 m-0 mb-4">Online Payment Facility Will Be Available Soon</p>
+            @if ($payment['status'] === 'SUCCESS')
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[36px]">check_circle</span>
+                </div>
+                <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Successful!</h2>
+                <p class="text-[11px] text-slate-500 m-0 mb-4">Your transaction has been processed successfully.</p>
 
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-[10px] space-y-2 mb-4">
-                <div class="flex justify-between gap-2">
-                    <span class="text-slate-500">Transaction ID</span>
-                    <span class="font-bold text-indigo-700">{{ $payment['txn_id'] }}</span>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-[10px] space-y-2 mb-4">
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Transaction ID</span>
+                        <span class="font-bold text-indigo-700">{{ $payment['txn_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Order ID</span>
+                        <span class="font-bold text-slate-800">{{ $payment['order_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Amount Paid</span>
+                        <span class="font-bold text-emerald-700">{{ $payment['amount'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Payment Mode</span>
+                        <span class="font-bold text-slate-800">{{ $payment['mode'] }}</span>
+                    </div>
+                    @if (isset($payment['date']))
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Date & Time</span>
+                        <span class="font-bold text-slate-800">{{ $payment['date'] }}</span>
+                    </div>
+                    @endif
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Status</span>
+                        <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold text-[9px]">SUCCESS</span>
+                    </div>
                 </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-slate-500">Order ID</span>
-                    <span class="font-bold text-slate-800">{{ $payment['order_id'] }}</span>
-                </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-slate-500">Amount</span>
-                    <span class="font-bold text-emerald-700">{{ $payment['amount'] }}</span>
-                </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-slate-500">Payment Mode</span>
-                    <span class="font-bold text-slate-800">{{ $payment['mode'] }}</span>
-                </div>
-                <div class="flex justify-between gap-2">
-                    <span class="text-slate-500">Status</span>
-                    <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[9px]">RECORDED — PENDING GATEWAY</span>
-                </div>
-            </div>
 
-            <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-4">
-                <p class="text-[11px] font-bold text-emerald-800 m-0">
-                    Your payment request has been recorded successfully.
-                </p>
-            </div>
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-4">
+                    <p class="text-[11px] font-bold text-emerald-800 m-0">
+                        Cash Receipt has been automatically generated. You can download it from your dashboard.
+                    </p>
+                </div>
+            @elseif ($payment['status'] === 'FAIL')
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[36px]">cancel</span>
+                </div>
+                <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Failed!</h2>
+                <p class="text-[11px] text-slate-500 m-0 mb-4">{{ $payment['message'] ?? 'Transaction was declined by the gateway.' }}</p>
 
-            <p class="text-[9px] text-slate-400 m-0 mb-4">Demo transaction — no real amount deducted.</p>
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-[10px] space-y-2 mb-4">
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Transaction ID</span>
+                        <span class="font-bold text-indigo-700">{{ $payment['txn_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Order ID</span>
+                        <span class="font-bold text-slate-800">{{ $payment['order_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Amount</span>
+                        <span class="font-bold text-slate-800">{{ $payment['amount'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Payment Mode</span>
+                        <span class="font-bold text-slate-800">{{ $payment['mode'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Status</span>
+                        <span class="px-2 py-0.5 rounded-full bg-red-100 text-red-700 font-bold text-[9px]">FAILED</span>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 mb-4">
+                    <p class="text-[11px] font-bold text-red-800 m-0">
+                        Please try making the payment again or choose another payment method.
+                    </p>
+                </div>
+            @else
+                <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[36px]">hourglass_top</span>
+                </div>
+                <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Gateway Integration Under Process</h2>
+                <p class="text-[11px] text-slate-500 m-0 mb-4">Online Payment Facility Will Be Available Soon</p>
+
+                <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-[10px] space-y-2 mb-4">
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Transaction ID</span>
+                        <span class="font-bold text-indigo-700">{{ $payment['txn_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Order ID</span>
+                        <span class="font-bold text-slate-800">{{ $payment['order_id'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Amount</span>
+                        <span class="font-bold text-emerald-700">{{ $payment['amount'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Payment Mode</span>
+                        <span class="font-bold text-slate-800">{{ $payment['mode'] }}</span>
+                    </div>
+                    <div class="flex justify-between gap-2">
+                        <span class="text-slate-500">Status</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[9px]">RECORDED — PENDING GATEWAY</span>
+                    </div>
+                </div>
+
+                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-4">
+                    <p class="text-[11px] font-bold text-emerald-800 m-0">
+                        Your payment request has been recorded successfully.
+                    </p>
+                </div>
+
+                <p class="text-[9px] text-slate-400 m-0 mb-4">Demo transaction — no real amount deducted.</p>
+            @endif
 
             <div class="flex flex-wrap justify-center gap-2">
-                <a href="{{ route('citizen.payment-status') }}" class="btn-v2-primary inline-flex items-center gap-1.5 px-4 py-2 text-[11px] no-underline">
-                    Back to Payment
-                </a>
-                <a href="{{ route('citizen.dashboard') }}" class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-[11px] font-bold text-slate-600 no-underline hover:bg-slate-100">
-                    Dashboard
-                </a>
+                @if ($payment['status'] === 'SUCCESS')
+                    <a href="{{ route('citizen.dashboard') }}" class="btn-v2-primary inline-flex items-center gap-1.5 px-6 py-2.5 text-[12px] font-extrabold no-underline shadow-lg shadow-indigo-200">
+                        <span class="material-symbols-outlined text-[16px]">dashboard</span>
+                        Back to Dashboard
+                    </a>
+                @elseif ($payment['status'] === 'FAIL')
+                    <a href="{{ route('citizen.payment.pay') }}" class="btn-v2-primary inline-flex items-center gap-1.5 px-4 py-2 text-[11px] no-underline">
+                        <span class="material-symbols-outlined text-[16px]">replay</span>
+                        Retry Payment
+                    </a>
+                    <a href="{{ route('citizen.dashboard') }}" class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-[11px] font-bold text-slate-600 no-underline hover:bg-slate-100">
+                        Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('citizen.payment-status') }}" class="btn-v2-primary inline-flex items-center gap-1.5 px-4 py-2 text-[11px] no-underline">
+                        Back to Payment
+                    </a>
+                    <a href="{{ route('citizen.dashboard') }}" class="inline-flex items-center gap-1 px-4 py-2 rounded-lg text-[11px] font-bold text-slate-600 no-underline hover:bg-slate-100">
+                        Dashboard
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -194,6 +287,20 @@
                 markDone(steps[steps.length - 1]);
                 document.getElementById('processingCard').classList.add('hidden');
                 document.getElementById('finalResult').classList.remove('hidden');
+
+                @if ($payment['status'] === 'SUCCESS')
+                    setTimeout(function() {
+                        Swal.fire({
+                            title: 'Payment Successful!',
+                            text: 'Your transaction has been processed successfully and the receipt is generated. You can now review your receipt details below.',
+                            icon: 'success',
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#4f46e5',
+                            allowOutsideClick: true,
+                            allowEscapeKey: true
+                        });
+                    }, 300);
+                @endif
             }, 800);
         }
     }, 1200);

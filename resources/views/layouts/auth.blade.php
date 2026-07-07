@@ -167,5 +167,6 @@
     @stack('scripts')
 
     @include('partials.mmsay.citizen-toast')
+    @include('partials.global-loader')
 </body>
 </html>

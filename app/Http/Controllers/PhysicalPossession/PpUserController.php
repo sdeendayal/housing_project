@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Storage;
 
 class PpUserController extends Controller
 {
-    private const PP_MIN_TOTAL_PAID = 40000;
+    private const PP_MIN_TOTAL_PAID = 60000;
 
     public function __construct(
         private PhysicalPossessionAssetService $assetService,

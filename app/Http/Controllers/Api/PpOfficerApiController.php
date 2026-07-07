@@ -69,7 +69,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {
@@ -154,7 +154,7 @@ class PpOfficerApiController extends Controller
 
         $eligibleCount = DB::table(DB::raw("({$tempEligibleQuery->toSql()}) as temp"))
             ->mergeBindings($tempEligibleQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->count();
 
         // 5. Har ek status (Scheduled, Verified, Rejected) ke counts nikaalein
@@ -364,7 +364,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {
@@ -470,7 +470,7 @@ class PpOfficerApiController extends Controller
         // 5. Wrap query in a subquery structure (SQLite compatibility logic)
         $purchaserQuery = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000);
+            ->where('temp.total_paid', '>=', 60000);
 
         // Apply status/type filter if provided
         $status = $request->input('status') ?? $request->input('type');
@@ -986,7 +986,7 @@ class PpOfficerApiController extends Controller
 
         $missing = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
             ->mergeBindings($tempQuery)
-            ->where('temp.total_paid', '>=', 40000)
+            ->where('temp.total_paid', '>=', 60000)
             ->get();
 
         foreach ($missing as $p) {
@@ -1236,14 +1236,18 @@ class PpOfficerApiController extends Controller
             if ($request->hasFile('possession_certificate')) {
                 $certificate = $request->file('possession_certificate');
                 $certificateName = 'cert_' . $application->id . '_' . time() . '.' . $certificate->getClientOriginalExtension();
-                $certificatePath = $certificate->storeAs('possession_uploads/certificates', $certificateName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $certificatePath = $certificate->storeAs($memberFolder . '/possession_certificates', $certificateName, 'public');
                 $application->possession_certificate = $certificatePath;
             }
 
             if ($request->hasFile('site_engineer_file')) {
                 $seFile = $request->file('site_engineer_file');
-                $seFileName = 'se_' . $application->id . '_' . time() . '.' . $seFile->getClientOriginalExtension();
-                $seFilePath = $seFile->storeAs('possession_uploads/site_engineer', $seFileName, 'public');
+                $seFileName = 'site_engg_' . $application->id . '_' . time() . '.' . $seFile->getClientOriginalExtension();
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $seFilePath = $seFile->storeAs($memberFolder . '/site_engineer_files', $seFileName, 'public');
                 $application->site_engineer_file = $seFilePath;
             }
 
@@ -1261,6 +1265,17 @@ class PpOfficerApiController extends Controller
                 'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
             ]);
 
             return response()->json([
@@ -1281,7 +1296,9 @@ class PpOfficerApiController extends Controller
             if ($request->hasFile('plot_image')) {
                 $plotImage = $request->file('plot_image');
                 $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $plotImagePath = $plotImage->storeAs($memberFolder . '/plot_images', $plotImageName, 'public');
                 $application->plot_image = $plotImagePath;
             }
 
@@ -1300,6 +1317,17 @@ class PpOfficerApiController extends Controller
                 'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer (API).',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Site Verified',
+                'remarks' => $request->remarks,
             ]);
 
             return response()->json([

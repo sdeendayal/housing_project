@@ -73,7 +73,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         // Search filter
         $search = $request->input('search');
@@ -380,6 +380,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'physical_possession_status' => 'Visit Scheduled',
         ]);
 
+        $siteEngg = Auth::user();
+
         ApplicationStatusLog::create([
             'application_id' => $application->id,
             'asset_id' => $application->asset_id,
@@ -387,7 +389,18 @@ class PhysicalPossessionWorkflowController extends Controller
             'new_status' => 'Visit Scheduled',
             'remarks' => 'Visit scheduled by Site Engineer. Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
             'changed_by_type' => 'officer',
-            'changed_by_id' => Auth::id(),
+            'changed_by_id' => $siteEngg->id,
+        ]);
+
+        \App\Models\SiteEnggStatus::create([
+            'application_id' => $application->id,
+            'application_number' => $application->application_number,
+            'site_engg_user_id' => $siteEngg->id,
+            'site_engg_name' => $siteEngg->name,
+            'site_engg_email' => $siteEngg->email,
+            'site_engg_mobile' => $siteEngg->mobile ?? null,
+            'status' => 'Visit Scheduled',
+            'remarks' => $request->visit_instructions ?? 'Visit scheduled by Site Engineer.',
         ]);
 
         // Mock/Log Citizen notification
@@ -632,25 +645,29 @@ class PhysicalPossessionWorkflowController extends Controller
                 'possession_certificate' => 'required|file|mimes:pdf|max:500',
                 'site_engineer_file' => 'required|file|mimes:pdf,jpeg,jpg,png|max:500',
             ], [
-                'possession_certificate.required' => 'Physical Possession Application (Citizen Signed) is required.',
+                'possession_certificate.required' => 'Physical Possession Application (Signed) is required.',
                 'possession_certificate.mimes' => 'The Physical Possession Application must be a PDF file.',
                 'possession_certificate.max' => 'The Physical Possession Application must not exceed 500 KB.',
-                'site_engineer_file.required' => 'Site Engineer Document is required.',
-                'site_engineer_file.mimes' => 'The Site Engineer Document must be a PDF or image file (JPG, JPEG, PNG).',
-                'site_engineer_file.max' => 'The Site Engineer Document must not exceed 500 KB.',
+                'site_engineer_file.required' => 'Final Possession Letter is required.',
+                'site_engineer_file.mimes' => 'The Final Possession Letter must be a PDF or image file (JPG, JPEG, PNG).',
+                'site_engineer_file.max' => 'The Final Possession Letter must not exceed 500 KB.',
             ]);
 
             if ($request->hasFile('possession_certificate')) {
                 $certificate = $request->file('possession_certificate');
                 $certificateName = 'cert_' . $application->id . '_' . time() . '.' . $certificate->getClientOriginalExtension();
-                $certificatePath = $certificate->storeAs('possession_uploads/certificates', $certificateName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $certificatePath = $certificate->storeAs($memberFolder . '/possession_certificates', $certificateName, 'public');
                 $application->possession_certificate = $certificatePath;
             }
 
             if ($request->hasFile('site_engineer_file')) {
                 $siteFile = $request->file('site_engineer_file');
                 $siteFileName = 'site_engg_' . $application->id . '_' . time() . '.' . $siteFile->getClientOriginalExtension();
-                $siteFilePath = $siteFile->storeAs('possession_uploads/site_engineer', $siteFileName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $siteFilePath = $siteFile->storeAs($memberFolder . '/site_engineer_files', $siteFileName, 'public');
                 $application->site_engineer_file = $siteFilePath;
             }
 
@@ -668,6 +685,17 @@ class PhysicalPossessionWorkflowController extends Controller
                 'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified.',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Verified',
+                'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified.',
             ]);
 
             return redirect()->route('pp.officer.possession-applications')->with('success', 'Physical Possession application has been successfully verified and approved.');
@@ -689,7 +717,9 @@ class PhysicalPossessionWorkflowController extends Controller
             if ($request->hasFile('plot_image')) {
                 $plotImage = $request->file('plot_image');
                 $plotImageName = 'plot_' . $application->id . '_' . time() . '.' . $plotImage->getClientOriginalExtension();
-                $plotImagePath = $plotImage->storeAs('possession_uploads/images', $plotImageName, 'public');
+                $memberId = trim($application->member_id);
+                $memberFolder = $memberId ? preg_replace('/[^A-Za-z0-9_-]/', '', $memberId) : 'member_' . $application->id;
+                $plotImagePath = $plotImage->storeAs($memberFolder . '/plot_images', $plotImageName, 'public');
                 $application->plot_image = $plotImagePath;
             }
 
@@ -708,6 +738,17 @@ class PhysicalPossessionWorkflowController extends Controller
                 'remarks' => 'Site verification details (GPS, Photo with Applicant) submitted by Site Engineer.',
                 'changed_by_type' => 'officer',
                 'changed_by_id' => $officer->id,
+            ]);
+
+            \App\Models\SiteEnggStatus::create([
+                'application_id' => $application->id,
+                'application_number' => $application->application_number,
+                'site_engg_user_id' => $officer->id,
+                'site_engg_name' => $officer->name,
+                'site_engg_email' => $officer->email,
+                'site_engg_mobile' => $officer->mobile ?? null,
+                'status' => 'Site Verified',
+                'remarks' => $request->remarks,
             ]);
 
             return redirect()->route('pp.officer.verify-form', $application->secure_id)->with('success', 'Site verification submitted successfully. Now proceed to E-Possession step.');
@@ -911,7 +952,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 0
             ) as total_paid
         ")
-        ->having('total_paid', '>=', 40000);
+        ->having('total_paid', '>=', 60000);
 
         $missing = $query->get();
 

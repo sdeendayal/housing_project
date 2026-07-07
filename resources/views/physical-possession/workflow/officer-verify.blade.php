@@ -150,15 +150,15 @@
                                 <div class="row g-2 text-slate-800" style="font-size: 0.8rem;">
                                     <div class="col-4">
                                         <label class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Property Cost</label>
-                                        <div class="fw-bold">₹{{ number_format($property->FlatCost ?? $application->flat_cost, 2) }}</div>
+                                        <div class="fw-bold">@indianCurrency($property->FlatCost ?? $application->flat_cost)</div>
                                     </div>
                                     <div class="col-4">
                                         <label class="text-success mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Received Amount</label>
-                                        <div class="fw-bold text-success" title="Initial Deposit: ₹{{ number_format($initialDeposit, 2) }} + Installments: ₹{{ number_format($installmentPaid, 2) }}">₹{{ number_format($totalReceived, 2) }}</div>
+                                        <div class="fw-bold text-success" title="Initial Deposit: @indianCurrency($initialDeposit) + Installments: @indianCurrency($installmentPaid)">@indianCurrency($totalReceived)</div>
                                     </div>
                                     <div class="col-4">
                                         <label class="text-danger mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Balance Amount</label>
-                                        <div class="fw-bold text-danger">₹{{ number_format($balanceAmount, 2) }}</div>
+                                        <div class="fw-bold text-danger">@indianCurrency($balanceAmount)</div>
                                     </div>
                                 </div>
                             </div>
@@ -283,7 +283,7 @@
                                     @endif
                                 </div>
                                 <div class="col-12 mt-2.5">
-                                    <span class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Site Engineer Document</span>
+                                    <span class="text-muted mb-0.5 block" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px;">Final Possession Letter</span>
                                     @if($application->site_engineer_file)
                                         <div class="d-flex align-items-center gap-2 mt-1">
                                             <span class="text-success fw-bold" style="font-size: 0.76rem;"><i class="bi bi-check-circle-fill me-1"></i>Uploaded</span>
@@ -326,7 +326,7 @@
                                         </li>
                                         <li class="mb-1.5 d-flex gap-2">
                                             <i class="bi bi-3-circle-fill text-primary"></i>
-                                            <span>Upload the signed PDF & Site Engineer document.</span>
+                                            <span>Upload the signed PDF & Final Possession Letter.</span>
                                         </li>
                                         <li class="d-flex gap-2">
                                             <i class="bi bi-4-circle-fill text-primary"></i>
@@ -426,12 +426,12 @@
                                 <!-- 2. Upload Signed PDF & Site Engineer Document -->
                                 <div class="row g-2 mb-3">
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Citizen Signed) <span class="text-danger">*</span></label>
+                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Signed) <span class="text-danger">*</span></label>
                                         <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm" style="font-size: 0.78rem;">
                                         <div class="form-text text-muted" style="font-size: 0.65rem;">PDF only (Max file size 500 KB)</div>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">3. Upload Site Engineer Document <span class="text-danger">*</span></label>
+                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">3. Upload Final Possession Letter <span class="text-danger">*</span></label>
                                         <input type="file" name="site_engineer_file" id="site_engineer_file" required accept="application/pdf,image/jpeg,image/jpg,image/png" class="form-control form-control-sm" style="font-size: 0.78rem;">
                                         <div class="form-text text-muted" style="font-size: 0.65rem;">PDF or image (Max file size 500 KB)</div>
                                     </div>
@@ -629,15 +629,15 @@
                             <div class="row g-3 text-slate-800" style="font-size: 0.85rem;">
                                 <div class="col-4">
                                     <label class="text-muted small uppercase tracking-wider mb-1 block">Property Cost</label>
-                                    <div class="fw-bold">₹{{ number_format($property->FlatCost ?? $application->flat_cost, 2) }}</div>
+                                    <div class="fw-bold">@indianCurrency($property->FlatCost ?? $application->flat_cost)</div>
                                 </div>
                                 <div class="col-4">
                                     <label class="text-success small uppercase tracking-wider mb-1 block">Received Amount</label>
-                                    <div class="fw-bold text-success" title="Initial Deposit: ₹{{ number_format($initialDeposit, 2) }} + Installments: ₹{{ number_format($installmentPaid, 2) }}">₹{{ number_format($totalReceived, 2) }}</div>
+                                    <div class="fw-bold text-success" title="Initial Deposit: @indianCurrency($initialDeposit) + Installments: @indianCurrency($installmentPaid)">@indianCurrency($totalReceived)</div>
                                 </div>
                                 <div class="col-4">
                                     <label class="text-danger small uppercase tracking-wider mb-1 block">Balance Amount</label>
-                                    <div class="fw-bold text-danger">₹{{ number_format($balanceAmount, 2) }}</div>
+                                    <div class="fw-bold text-danger">@indianCurrency($balanceAmount)</div>
                                 </div>
                             </div>
                         </div>
@@ -811,7 +811,7 @@
                 <!-- Possession Certificate preview -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Physical Possession Application (Citizen Signed)</h5>
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Physical Possession Application (Signed)</h5>
                     </div>
                     <div class="card-body px-4 pb-4">
                         @if($application->possession_certificate)
@@ -823,8 +823,8 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <i class="bi bi-file-earmark-pdf-fill fs-2 text-danger"></i>
                                         <div>
-                                            <h6 class="fw-bold text-dark mb-0">Physical Possession Application PDF (Citizen Signed)</h6>
-                                            <small class="text-muted">Signed document uploaded by citizen</small>
+                                            <h6 class="fw-bold text-dark mb-0">Physical Possession Application PDF (Signed)</h6>
+                                            <small class="text-muted">Signed document uploaded by site engineer</small>
                                         </div>
                                     </div>
                                     <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="btn btn-danger btn-sm px-3 rounded-pill">
@@ -847,10 +847,10 @@
                     </div>
                 </div>
 
-                <!-- Site Engineer Document preview -->
+                <!-- Final Possession Letter preview -->
                 <div class="card border-0 shadow-sm rounded-4 mb-4">
                     <div class="card-header bg-white border-0 pt-4 px-4">
-                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Site Engineer Document</h5>
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-file-earmark-check text-primary me-2"></i>Final Possession Letter</h5>
                     </div>
                     <div class="card-body px-4 pb-4">
                         @if($application->site_engineer_file)
@@ -862,7 +862,7 @@
                                     <div class="d-flex align-items-center gap-3">
                                         <i class="bi bi-file-earmark-pdf-fill fs-2 text-primary"></i>
                                         <div>
-                                            <h6 class="fw-bold text-dark mb-0">Site Engineer Document PDF</h6>
+                                            <h6 class="fw-bold text-dark mb-0">Final Possession Letter PDF</h6>
                                             <small class="text-muted">Document uploaded by Site Engineer</small>
                                         </div>
                                     </div>
@@ -881,7 +881,7 @@
                                 </div>
                             @endif
                         @else
-                            <div class="text-center text-muted py-4">No site engineer document uploaded.</div>
+                            <div class="text-center text-muted py-4">No final possession letter uploaded.</div>
                         @endif
                     </div>
                 </div>
@@ -1049,7 +1049,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Invalid File Format',
-                            text: 'Please upload only PDF or image files (JPG, JPEG, PNG) for the Site Engineer Document.',
+                            text: 'Please upload only PDF or image files (JPG, JPEG, PNG) for the Final Possession Letter.',
                             confirmButtonColor: '#3085d6'
                         });
                         this.value = ''; // clear select
@@ -1060,7 +1060,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'File Too Large',
-                            text: 'Site Engineer Document size must not exceed 500 KB.',
+                            text: 'Final Possession Letter size must not exceed 500 KB.',
                             confirmButtonColor: '#3085d6'
                         });
                         this.value = '';
@@ -1092,7 +1092,7 @@
                         Swal.fire({
                             icon: 'error',
                             title: 'Signed Application Required',
-                            text: 'Please upload the Physical Possession Application (Citizen Signed).',
+                            text: 'Please upload the Physical Possession Application (Signed).',
                             confirmButtonColor: '#3085d6'
                         });
                         return false;
@@ -1102,8 +1102,8 @@
                         e.preventDefault();
                         Swal.fire({
                             icon: 'error',
-                            title: 'Site Engineer Document Required',
-                            text: 'Please upload the Site Engineer Document.',
+                            title: 'Final Possession Letter Required',
+                            text: 'Please upload the Final Possession Letter.',
                             confirmButtonColor: '#3085d6'
                         });
                         return false;

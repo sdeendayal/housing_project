@@ -1,9 +1,10 @@
-﻿@extends('layouts.mmsayCitizen', [
+@extends('layouts.mmsayCitizen', [
     'pageTitle' => 'Payment Status',
     'activeNav' => 'payments',
 ])
 
 @section('content')
+    @if (!$reachedLimit)
     {{-- Pay Now — gateway link (installment details below unchanged) --}}
     <div class="mb-3 rounded-2xl overflow-hidden border border-indigo-200 bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 p-3 sm:p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg shadow-indigo-200/50">
         <div class="flex items-center gap-3 min-w-0">
@@ -24,6 +25,7 @@
             Pay Now
         </a>
     </div>
+    @endif
 
     <div class="border border-slate-100 rounded-lg p-2.5 bg-white mb-2">
         <p class="text-[9px] text-slate-400 uppercase tracking-wider font-bold mb-0.5">Application</p>

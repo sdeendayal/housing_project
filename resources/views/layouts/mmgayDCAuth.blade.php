@@ -72,6 +72,6 @@
                 drawSparkline('sparkline-6', '#fb923c');
             });
         </script>
+        @include('partials.global-loader')
 </body>
-
 </html>

@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -174,6 +176,12 @@
                                 <span class="material-symbols-outlined text-[18px]">real_estate_agent</span>
                                 <span class="tab-label">Property Allotted Details</span>
                             </button>
+                            @if($possessionApplication)
+                            <button onclick="switchTab('possession')" id="tab-btn-possession" class="tab-btn w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all hover:bg-slate-800/30 hover:text-white text-left">
+                                <span class="material-symbols-outlined text-[18px]">event_available</span>
+                                <span class="tab-label">Physical Possession</span>
+                            </button>
+                            @endif
                         </div>
                     </div>
 
@@ -289,6 +297,77 @@
                                     </div>
                                 </div>
                                 <span class="bg-amber-100/80 text-amber-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Pending</span>
+                            </div>
+                        @endif
+                    @endif
+
+                    <!-- Physical Possession Status Banner -->
+                    @if($possessionApplication)
+                        @if($possessionApplication->physical_possession_status === 'Visit Scheduled' || $possessionApplication->physical_possession_status === 'Rejected')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-amber-500 bg-amber-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">calendar_month</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-amber-800 leading-snug">Physical Possession: Visit Scheduled</h4>
+                                        <p class="text-[10px] text-amber-600 mt-0.5 font-medium">BDPO has scheduled your visit. Please select your preferred time slot.</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="openSlotSelectionModal()" class="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-amber-500/10 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">touch_app</span> Select Visit Slot
+                                </button>
+                            </div>
+                        @elseif($possessionApplication->physical_possession_status === 'Slot Selected')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-indigo-500 bg-indigo-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 text-white flex items-center justify-center shadow-md shadow-indigo-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">schedule</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-indigo-800 leading-snug">Physical Possession: Slot Selected</h4>
+                                        <p class="text-[10px] text-indigo-600 mt-0.5 font-medium">Visit date: <strong class="text-indigo-800">{{ date('d M Y, h:i A', strtotime($possessionApplication->citizen_visit_date)) }}</strong>. Awaiting BDPO site verification.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('mmgay.villager.download-slip') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                        <span class="material-symbols-outlined text-[14px]">picture_as_pdf</span> Download Slip
+                                    </a>
+                                    <span class="bg-indigo-100 text-indigo-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Awaiting Visit</span>
+                                </div>
+                            </div>
+                        @elseif($possessionApplication->physical_possession_status === 'Site Verified')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-blue-500 bg-blue-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-blue-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">verified</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-blue-800 leading-snug">Physical Possession: Site Verified</h4>
+                                        <p class="text-[10px] text-blue-600 mt-0.5 font-medium">BDPO has completed site verification. E-Possession Report generation is in progress.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="{{ route('mmgay.villager.download-slip') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                        <span class="material-symbols-outlined text-[14px]">picture_as_pdf</span> Download Slip
+                                    </a>
+                                    <span class="bg-blue-100 text-blue-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Site Verified</span>
+                                </div>
+                            </div>
+                        @elseif($possessionApplication->physical_possession_status === 'Verified')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-emerald-500 bg-emerald-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">check_circle</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-emerald-800 leading-snug">Physical Possession: Verified & Completed</h4>
+                                        <p class="text-[10px] text-emerald-600 mt-0.5 font-medium">Your physical possession was successfully verified on {{ date('d M Y', strtotime($possessionApplication->verified_at)) }}.</p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('mmgay.bdo.download-certificate', $possessionApplication->id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-emerald-500/10 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">picture_as_pdf</span> Download Possession Report
+                                </a>
                             </div>
                         @endif
                     @endif
@@ -498,6 +577,33 @@
                                 </div>
                             </div>
                         </div>
+                        <!-- Physical Possession Timeline -->
+                        @if($possessionApplication)
+                            <div class="glass-card p-5 rounded-2xl">
+                                <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Physical Possession Progress Timeline</h3>
+                                <div class="space-y-4 pl-1.5 mt-2">
+                                    @forelse($logs as $log)
+                                        <div class="relative pl-5 border-l-2 border-slate-200 last:border-l-0 pb-1 text-xs">
+                                            <span class="absolute -left-[5.5px] top-1.5 w-2.5 h-2.5 rounded-full bg-indigo-500 border border-white"></span>
+                                            <div class="flex items-center justify-between font-bold text-slate-700 text-[10px]">
+                                                <span class="uppercase tracking-wider text-indigo-600">
+                                                    {{ $log->new_status }}
+                                                </span>
+                                                <span class="text-slate-400 font-normal">
+                                                    {{ Carbon\Carbon::parse($log->created_at)->format('d M Y - h:i A') }}
+                                                </span>
+                                            </div>
+                                            <p class="text-slate-500 text-[11px] mt-0.5 leading-normal">{{ $log->remarks }}</p>
+                                            <p class="text-[9px] text-slate-400 uppercase mt-0.5 font-bold tracking-wider">
+                                                Action By: {{ $log->changed_by_type === 'officer' ? 'BDPO Officer' : 'Applicant' }}
+                                            </p>
+                                        </div>
+                                    @empty
+                                        <p class="text-slate-400 font-semibold text-[11px] py-1">No activity log found.</p>
+                                    @endforelse
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- 2. APPLICANT PROFILE TAB -->
@@ -646,6 +752,195 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 7. PHYSICAL POSSESSION TAB -->
+                    @if($possessionApplication)
+                    <div id="tab-possession" class="tab-content space-y-5 hidden">
+                        <!-- Upper Detail Card -->
+                        <div class="glass-card overflow-hidden rounded-2xl">
+                            <div class="px-5 py-4 bg-slate-50/50 border-b border-slate-200/50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                                <div>
+                                    <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Physical Possession Status & Verification Details</h3>
+                                    <p class="text-[9px] text-slate-400 mt-1 font-bold">App Number: <span class="font-mono">{{ $possessionApplication->application_number }}</span> | Slip ID: <span class="font-mono">{{ $possessionApplication->slip_id }}</span></p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    @if($possessionApplication->physical_possession_status !== 'Visit Scheduled')
+                                        <a href="{{ route('mmgay.villager.download-slip') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[13px]">picture_as_pdf</span> Download Slip
+                                        </a>
+                                    @endif
+                                    @if($possessionApplication->physical_possession_status === 'Verified' && $possessionApplication->site_engineer_file)
+                                        <a href="{{ route('mmgay.bdo.download-certificate', $possessionApplication->secure_id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[13px]">verified_user</span> Download Report
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <div class="p-5 space-y-6">
+                                <!-- Stepper status tracker -->
+                                <div>
+                                    <h4 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Possession Milestone Tracker</h4>
+                                    <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 mt-2 pl-4 md:pl-0">
+                                        <!-- Line -->
+                                        <div class="absolute left-[20px] top-4 md:left-[12.5%] md:right-[12.5%] md:top-5 h-[90%] md:h-[2px] w-[2px] md:w-auto bg-slate-100 z-0"></div>
+                                        
+                                        <!-- Step 1: Visit Scheduled -->
+                                        @php
+                                            $status = $possessionApplication->physical_possession_status;
+                                            $isScheduled = in_array($status, ['Visit Scheduled', 'Slot Selected', 'Site Verified', 'Verified']);
+                                            $isSelected = in_array($status, ['Slot Selected', 'Site Verified', 'Verified']);
+                                            $isVerified = in_array($status, ['Site Verified', 'Verified']);
+                                            $isCompleted = ($status === 'Verified');
+                                        @endphp
+                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
+                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isScheduled ? 'bg-amber-500 text-white' : '' }}">
+                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">calendar_today</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800">Visit Scheduled</h4>
+                                                <p class="text-[9px] text-slate-400">BDPO offered slots</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 2: Slot Selected -->
+                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
+                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isSelected ? 'bg-indigo-500 text-white' : '' }}">
+                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">how_to_reg</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800">Slot Selected</h4>
+                                                <p class="text-[9px] text-slate-400">Citizen confirmed date</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 3: Site Verified -->
+                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
+                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isVerified ? 'bg-blue-500 text-white' : '' }}">
+                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">pin_drop</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800">Site Verified</h4>
+                                                <p class="text-[9px] text-slate-400">GPS & Photo captured</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- Step 4: Completed -->
+                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
+                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isCompleted ? 'bg-emerald-500 text-white' : '' }}">
+                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">check_circle</span>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-xs font-bold text-slate-800">Verified & Approved</h4>
+                                                <p class="text-[9px] text-slate-400">E-Possession report uploaded</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr class="border-slate-100">
+
+                                <!-- Grid Details -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                                    <!-- Appointment Details Block -->
+                                    <div class="space-y-4">
+                                        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[9px] text-slate-400 mb-2">Verification Appointment Info</h4>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">Current Status</span>
+                                                <span class="font-bold text-blue-600 block mt-1">{{ $possessionApplication->physical_possession_status }}</span>
+                                            </div>
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">Scheduled Visit Date</span>
+                                                <span class="font-bold text-slate-700 block mt-1">
+                                                    {{ $possessionApplication->citizen_visit_date ? date('d M Y, h:i A', strtotime($possessionApplication->citizen_visit_date)) : 'Awaiting confirmation' }}
+                                                </span>
+                                            </div>
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDPO Officer ID</span>
+                                                <span class="font-bold text-slate-700 block mt-1 font-mono">
+                                                    {{ $possessionApplication->verified_by ? '#'.$possessionApplication->verified_by : '—' }}
+                                                </span>
+                                            </div>
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">Verified DateTime</span>
+                                                <span class="font-bold text-slate-700 block mt-1">
+                                                    {{ $possessionApplication->verified_at ? date('d M Y, h:i A', strtotime($possessionApplication->verified_at)) : '—' }}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        @if($possessionApplication->remarks)
+                                            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">BDPO Verification Remarks</span>
+                                                <p class="font-semibold text-slate-700 mt-1 leading-relaxed">{{ $possessionApplication->remarks }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <!-- Location Mapping Block -->
+                                    <div class="space-y-4">
+                                        <h4 class="font-bold text-slate-800 uppercase tracking-wider text-[9px] text-slate-400 mb-2">Captured Site Geolocation & Coordinates</h4>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">GPS Latitude</span>
+                                                <span class="font-bold text-slate-700 block mt-1 font-mono">{{ $possessionApplication->latitude ?? '—' }}</span>
+                                            </div>
+                                            <div class="bg-slate-50/40 p-3 rounded-xl border border-slate-200/40">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">GPS Longitude</span>
+                                                <span class="font-bold text-slate-700 block mt-1 font-mono">{{ $possessionApplication->longitude ?? '—' }}</span>
+                                            </div>
+                                        </div>
+
+                                        @if($possessionApplication->latitude && $possessionApplication->longitude)
+                                            <a href="https://www.google.com/maps/search/?api=1&query={{ $possessionApplication->latitude }},{{ $possessionApplication->longitude }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 transition py-2 px-3 rounded-xl font-bold border border-blue-100/60 mt-2 text-center text-[10px] active:scale-95">
+                                                <span class="material-symbols-outlined text-[15px]">map</span> View Captured Location on Google Maps
+                                            </a>
+                                        @endif
+
+                                        @if($possessionApplication->plot_image)
+                                            <div class="mt-2 space-y-1">
+                                                <span class="text-slate-400 font-extrabold uppercase text-[8px] block">Captured Site Image</span>
+                                                <div class="relative w-48 h-32 rounded-xl overflow-hidden border border-slate-200 shadow-sm group">
+                                                    <img src="{{ asset('storage/' . $possessionApplication->plot_image) }}" class="w-full h-full object-cover transition duration-300 group-hover:scale-110" alt="Captured Plot Image">
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Physical Possession Logs Section -->
+                        <div class="glass-card overflow-hidden rounded-2xl">
+                            <div class="px-5 py-3.5 bg-slate-50/50 border-b border-slate-200/50 flex items-center justify-between">
+                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Physical Possession Audit Log</h3>
+                                <span class="bg-amber-100 text-amber-800 text-[9px] px-2 py-0.5 rounded-lg font-bold uppercase">Timeline</span>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                @if(count($logs) > 0)
+                                    <div class="relative border-l-2 border-slate-200 pl-6 space-y-5">
+                                        @foreach($logs as $log)
+                                            <div class="relative">
+                                                <!-- Marker -->
+                                                <div class="absolute -left-[31px] top-1 w-4 h-4 rounded-full border-2 border-slate-200 bg-white flex items-center justify-center">
+                                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div>
+                                                </div>
+                                                <div class="text-xs">
+                                                    <span class="text-[9px] text-slate-400 font-bold font-mono">{{ date('d M Y - h:i A', strtotime($log->created_at)) }}</span>
+                                                    <h4 class="font-bold text-slate-800 mt-0.5">Status: <span class="text-blue-600">{{ $log->old_status }}</span> &rarr; <span class="text-green-600">{{ $log->new_status }}</span></h4>
+                                                    <p class="text-[11px] text-slate-600 mt-1 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">{{ $log->remarks }}</p>
+                                                </div>
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-xs text-slate-400 text-center font-bold">No possession status logs found.</p>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    @endif
 
                     <!-- 5. HELP & SUPPORT TAB -->
                     <div id="tab-support" class="tab-content space-y-5 hidden">
@@ -798,7 +1093,160 @@
                 menuIcon.innerText = isCollapsed ? 'menu' : 'menu_open';
             }
         }
-    </script>
 
+        function openSlotSelectionModal() {
+            Swal.fire({
+                title: '<span class="text-sm font-extrabold text-slate-800 uppercase tracking-wide block">Select Visit Slot</span>',
+                html: `
+                    <form id="swal_slot_form" class="text-left space-y-3 mt-3">
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Select one option for the physical visit:</p>
+                        
+                        @if($possessionApplication && $possessionApplication->visit_slot_1)
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer block">
+                                <input type="radio" name="selected_slot" value="{{ date('Y-m-d H:i:s', strtotime($possessionApplication->visit_slot_1)) }}" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" required>
+                                <div>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">Option 1</span>
+                                    <span class="text-xs font-bold text-slate-800 block mt-0.5">{{ date('d M Y - h:i A', strtotime($possessionApplication->visit_slot_1)) }}</span>
+                                </div>
+                            </label>
+                        @endif
+                        
+                        @if($possessionApplication && $possessionApplication->visit_slot_2)
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer block">
+                                <input type="radio" name="selected_slot" value="{{ date('Y-m-d H:i:s', strtotime($possessionApplication->visit_slot_2)) }}" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" required>
+                                <div>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">Option 2</span>
+                                    <span class="text-xs font-bold text-slate-800 block mt-0.5">{{ date('d M Y - h:i A', strtotime($possessionApplication->visit_slot_2)) }}</span>
+                                </div>
+                            </label>
+                        @endif
+                        
+                        @if($possessionApplication && $possessionApplication->visit_slot_3)
+                            <label class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition cursor-pointer block">
+                                <input type="radio" name="selected_slot" value="{{ date('Y-m-d H:i:s', strtotime($possessionApplication->visit_slot_3)) }}" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" required>
+                                <div>
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wide block">Option 3</span>
+                                    <span class="text-xs font-bold text-slate-800 block mt-0.5">{{ date('d M Y - h:i A', strtotime($possessionApplication->visit_slot_3)) }}</span>
+                                </div>
+                            </label>
+                        @endif
+                        
+                        @if($possessionApplication && $possessionApplication->visit_instructions)
+                            <div class="bg-blue-50 border border-blue-100 text-blue-800 p-3 rounded-xl text-[10px] leading-relaxed mt-2 font-medium">
+                                <strong class="text-blue-900 block font-bold uppercase tracking-wider text-[9px]">Instructions:</strong>
+                                "{{ $possessionApplication->visit_instructions }}"
+                            </div>
+                        @endif
+                    </form>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Confirm Selection',
+                confirmButtonColor: '#0058bc',
+                cancelButtonText: 'Cancel',
+                focusConfirm: false,
+                preConfirm: () => {
+                    const form = document.getElementById('swal_slot_form');
+                    const selected = form.querySelector('input[name="selected_slot"]:checked');
+                    if (!selected) {
+                        Swal.showValidationMessage('Please select one of the available slots');
+                        return false;
+                    }
+                    return selected.value;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('swal_slot_form');
+                    const selectedRadio = form.querySelector('input[name="selected_slot"]:checked');
+                    const optionDiv = selectedRadio.nextElementSibling;
+                    const optionLabel = optionDiv.querySelector('span.uppercase').textContent.trim();
+                    const dateStr = optionDiv.querySelector('span.text-xs').textContent.trim();
+                    
+                    Swal.fire({
+                        icon: 'question',
+                        title: 'Confirm Slot Choice',
+                        html: `You have selected:<br><strong class="text-[#0058bc] text-sm">${optionLabel}: ${dateStr}</strong><br><br>Are you sure you want to select this visit slot?`,
+                        showCancelButton: true,
+                        confirmButtonColor: '#0058bc',
+                        cancelButtonColor: '#cbd5e1',
+                        confirmButtonText: 'Yes, Confirm',
+                        cancelButtonText: 'Cancel'
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            Swal.fire({
+                                title: 'Confirming Selection...',
+                                text: 'Please wait, updating your choice.',
+                                allowOutsideClick: false,
+                                didOpen: () => {
+                                    Swal.showLoading();
+                                }
+                            });
+                            
+                            // Create dynamic form and submit
+                            const formEl = document.createElement('form');
+                            formEl.method = 'POST';
+                            formEl.action = "{{ route('mmgay.villager.submit.post') }}";
+                            
+                            const csrfInput = document.createElement('input');
+                            csrfInput.type = 'hidden';
+                            csrfInput.name = '_token';
+                            csrfInput.value = "{{ csrf_token() }}";
+                            formEl.appendChild(csrfInput);
+
+                            const slotInput = document.createElement('input');
+                            slotInput.type = 'hidden';
+                            slotInput.name = 'selected_slot';
+                            slotInput.value = result.value;
+                            formEl.appendChild(slotInput);
+
+                            document.body.appendChild(formEl);
+                            formEl.submit();
+                        } else {
+                            // Re-open slot selection modal if cancelled
+                            openSlotSelectionModal();
+                        }
+                    });
+                }
+            });
+        }
+
+        // Render Laravel Session Alerts via SweetAlert2
+        document.addEventListener('DOMContentLoaded', function () {
+            @if (session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: '<span class="text-sm font-bold text-slate-800">Success</span>',
+                    text: "{{ session('success') }}",
+                    confirmButtonColor: '#0058bc'
+                });
+            @endif
+
+            @if (session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: '<span class="text-sm font-bold text-slate-800">Error</span>',
+                    text: "{{ session('error') }}",
+                    confirmButtonColor: '#ba1a1a'
+                });
+            @endif
+
+            @if ($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: '<span class="text-sm font-bold text-slate-800">Validation Failures</span>',
+                    html: `
+                        <div class="text-left text-xs text-slate-600 space-y-1 pl-4 pr-2 max-h-48 overflow-y-auto list-disc">
+                            <ul class="list-disc space-y-1">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    `,
+                    confirmButtonColor: '#ba1a1a'
+                });
+            @endif
+        });
+    </script>
+    @include('partials.global-loader')
 </body>
 </html>

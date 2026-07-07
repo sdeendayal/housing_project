@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('application_status_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('application_id')->constrained('physical_possession_applications')->cascadeOnDelete();
+            $table->unsignedBigInteger('possession_id')->nullable();
             $table->string('old_status')->nullable();
             $table->string('new_status');
             $table->text('remarks')->nullable();

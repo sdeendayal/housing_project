@@ -23,7 +23,7 @@
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
                     <h5 class="fw-bold mb-1 text-dark">Eligible Applicants</h5>
-                    <p class="text-muted small mb-0">Applicants whose total payments are at least ₹40,000 (auto-aggregated from cash receipts and installment ledger).</p>
+                    <p class="text-muted small mb-0">Applicants whose total payments are at least ₹60,000 (auto-aggregated from cash receipts and installment ledger).</p>
                 </div>
                 <form action="{{ route('pp.officer.eligibility-list') }}" method="GET" class="d-flex gap-2 align-items-center">
                     <div class="input-group">

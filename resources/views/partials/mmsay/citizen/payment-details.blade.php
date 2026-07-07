@@ -117,6 +117,80 @@
         </div>
     </div>
     @endif
+
+    {{-- Online Payment Attempts --}}
+    @if (isset($onlineTransactions) && $onlineTransactions->isNotEmpty())
+    @php
+        $txScrollable = $onlineTransactions->count() > 5;
+    @endphp
+    <div class="mt-4 rounded-lg border border-slate-100 overflow-hidden">
+        <div class="px-2.5 py-1.5 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-2">
+            <p class="text-[9px] font-bold uppercase text-slate-500 m-0">Online Transaction Logs (Gateway Attempts)</p>
+            <p class="text-[9px] text-slate-400 m-0">Track payments, status checks, and failures</p>
+        </div>
+        <div @class([
+            'overflow-x-auto',
+            'max-h-[11.25rem] overflow-y-auto' => $txScrollable,
+        ])>
+            <table class="w-full text-[10px]">
+                <thead @class([
+                    'bg-white border-b border-slate-100',
+                    'sticky top-0 z-10' => $txScrollable,
+                ])>
+                    <tr>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">Ref. Number</th>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">Date & Time</th>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">Amount</th>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">Gateway Tx ID</th>
+                        <th class="px-2 py-1.5 text-left font-bold text-slate-500">Gateway Status</th>
+                        <th class="px-2 py-1.5 text-center font-bold text-slate-500">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @foreach ($onlineTransactions as $tx)
+                    @php
+                        $statusClass = match($tx->status) {
+                            'SUCCESS' => 'bg-emerald-100 text-emerald-700',
+                            'FAIL' => 'bg-red-100 text-red-700',
+                            default => 'bg-amber-100 text-amber-700', // PENDING
+                        };
+                    @endphp
+                    <tr class="hover:bg-slate-50/80">
+                        <td class="px-2 py-1.5 font-bold text-slate-800 break-all">{{ $tx->merchant_txn_no }}</td>
+                        <td class="px-2 py-1.5 text-slate-600 whitespace-nowrap">
+                            {{ $tx->created_at ? \Carbon\Carbon::parse($tx->created_at)->format('d M Y h:i A') : '—' }}
+                        </td>
+                        <td class="px-2 py-1.5 font-bold text-slate-800">₹ {{ number_format($tx->amount, 2) }}</td>
+                        <td class="px-2 py-1.5 text-slate-600 font-semibold">{{ $tx->gateway_txn_id ?: ($tx->payment_id ?: '—') }}</td>
+                        <td class="px-2 py-1.5 whitespace-nowrap">
+                            <span class="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase {{ $statusClass }}">
+                                {{ $tx->status }}
+                            </span>
+                            @if ($tx->response_description && $tx->status !== 'SUCCESS')
+                                <p class="text-[8px] text-slate-400 m-0 mt-0.5 break-all max-w-[150px] leading-tight">
+                                    {{ $tx->response_description }}
+                                </p>
+                            @endif
+                        </td>
+                        <td class="px-2 py-1.5 text-center whitespace-nowrap">
+                            @if ($tx->status === 'PENDING')
+                                <a href="{{ route('citizen.payment.reconcile', $tx->id) }}"
+                                    class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-indigo-600 text-[9px] font-bold text-white no-underline hover:bg-indigo-700"
+                                    title="Verify Status with Gateway">
+                                    <span class="material-symbols-outlined text-[10px]">sync</span>
+                                    Verify
+                                </a>
+                            @else
+                                <span class="text-slate-400 font-bold">—</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 @else
     <p class="text-[10px] text-slate-500 m-0 mt-3">No installment records found for your allotted property.</p>
 @endif

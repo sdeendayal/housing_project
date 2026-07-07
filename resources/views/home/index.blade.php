@@ -300,6 +300,16 @@
                                 Officer Login
                             </a>
 
+                            <a href="{{ route('mmgay.bdo.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    shield_person
+                                </span>
+
+                                BDPO Login
+                            </a>
+
                         </div>
 
                     </div>
