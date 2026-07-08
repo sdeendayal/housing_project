@@ -970,7 +970,7 @@
                             <div class="px-5 py-3.5 bg-slate-50/50 border-b border-slate-100">
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Official Help & Support Channels</h3>
                             </div>
-                            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                 <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
                                     <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-[18px]">phone_in_talk</span>
@@ -986,16 +986,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-800 text-xs">Support Email</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Write to: <strong class="text-slate-700">housingforall@hry.gov.in</strong>.</p>
-                                    </div>
-                                </div>
-                                <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
-                                    <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-                                        <span class="material-symbols-outlined text-[18px]">domain</span>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-slate-800 text-xs">Nodal Office</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Visit Nodal District HQ or the Department of Housing cell.</p>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Write to: <strong class="text-slate-700">director-hfa@hry.gov.in</strong>.</p>
                                     </div>
                                 </div>
                             </div>
