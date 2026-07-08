@@ -977,7 +977,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-800 text-xs">Helpline Center</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Call: <strong class="text-slate-700">1800-180-2128</strong> (Toll Free).</p>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Call: <strong class="text-slate-700">0172-2585852</strong>, <strong class="text-slate-700">0172-2568687</strong>, <strong class="text-slate-700">0172-2567233</strong></p>
                                     </div>
                                 </div>
                                 <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
