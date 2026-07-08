@@ -387,7 +387,15 @@ class MmgayBdoApiController extends Controller
 
         $status = $request->input('status');
         if ($status) {
-            $query->where('physical_possession_status', $status);
+            $mappedStatus = match ($status) {
+                'awaiting_citizen' => 'Visit Scheduled',
+                'awaiting_coordinates' => 'Slot Selected',
+                'awaiting_bdo_doc' => 'Site Verified',
+                'verified' => 'Verified',
+                default => $status
+            };
+
+            $query->where('physical_possession_status', $mappedStatus);
         }
 
         $search = $request->input('search');
