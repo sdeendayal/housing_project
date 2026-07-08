@@ -707,13 +707,21 @@ class MMGAYBdoPossessionController extends Controller
      */
     public function downloadCertificate(Request $request, $secureId)
     {
-        $bdo = Auth::user();
+        $user = Auth::user();
 
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo && $bdo->block_id && $application->block_id !== $bdo->block_id) {
-            abort(403, 'Unauthorized.');
+        if ($user) {
+            if ($user->role === 'villager' || $user->hasRole('villager')) {
+                if ($application->user_id !== $user->id) {
+                    abort(403, 'Unauthorized.');
+                }
+            } else {
+                if ($user->block_id && $application->block_id !== $user->block_id) {
+                    abort(403, 'Unauthorized.');
+                }
+            }
         }
 
         // Get owner details from ownermaster
