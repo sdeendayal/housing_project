@@ -82,18 +82,19 @@
                 </svg>
             </div>
             <div class="w-full max-w-md z-10">
-                <!-- Branding Header -->
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-[60px] h-[60px] bg-[#0070eb] rounded-[14px] flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <span class="material-symbols-outlined text-white text-[32px]" style="font-variation-settings: 'FILL' 1;">gavel</span>
-                    </div>
-                    <div>
-                        <h3 class="text-[20px] font-bold text-[#111c2d]">MMGAY BDPO Login</h3>
-                        <p class="text-[#505f76] text-[14px]">Block Development & Panchayat Officer Sign In</p>
-                    </div>
-                </div>
                 <!-- Login Card -->
-                <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_rgba(0,88,188,0.15)] border border-blue-100 p-8">
+                <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_15px_45px_rgba(0,88,188,0.12)] border border-slate-100 p-6">
+                    <!-- Branding Header (Inside Card) -->
+                    <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
+                        <div class="w-[44px] h-[44px] bg-[#0070eb] rounded-xl flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0">
+                            <span class="material-symbols-outlined text-white text-[24px]" style="font-variation-settings: 'FILL' 1;">gavel</span>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-bold text-[#111c2d]">MMGAY BDPO Login</h3>
+                            <p class="text-xs text-slate-500 font-medium">Block Development & Panchayat Officer</p>
+                        </div>
+                    </div>
+
                     @if (session('error'))
                         <div class="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-xs font-semibold">
                             {{ session('error') }}
@@ -105,76 +106,76 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('mmgay.bdo.login.submit') }}" class="space-y-5">
+                    <form method="POST" action="{{ route('mmgay.bdo.login.submit') }}" class="space-y-4">
                         @csrf
 
                         {{-- Username/Email --}}
-                        <div class="space-y-2">
-                            <label class="text-[12px] font-bold text-[#414755] uppercase tracking-wider">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-bold text-[#414755] uppercase tracking-wider">
                                 BDPO Email Address
                             </label>
                             <div class="relative">
-                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#414755]">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                     mail
                                 </span>
-                                <input type="email" name="email" value="{{ old('email') }}" placeholder="bdo@mmgay.com" class="w-full h-[45px] pl-12 pr-4 border rounded-xl @error('email') border-red-500 @enderror" required>
+                                <input type="email" name="email" value="{{ old('email') }}" placeholder="bdo@mmgay.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
                             </div>
                             @error('email')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Password --}}
-                        <div class="space-y-2">
-                            <label class="text-[12px] font-bold text-[#414755] uppercase tracking-wider">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-bold text-[#414755] uppercase tracking-wider">
                                 Password
                             </label>
                             <div class="relative">
-                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                     lock
                                 </span>
-                                <input id="password" type="password" name="password" placeholder="••••••••" class="w-full h-[45px] pl-12 pr-12 border rounded-xl @error('password') border-red-500 @enderror" required>
-                                <button type="button" id="togglePassword" class="absolute right-4 top-1/2 -translate-y-1/2">
-                                    <span id="eyeIcon" class="material-symbols-outlined">
+                                <input id="password" type="password" name="password" placeholder="••••••••" class="w-full h-[40px] pl-10 pr-10 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('password') border-red-500 @enderror" required>
+                                <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                                    <span id="eyeIcon" class="material-symbols-outlined text-[18px]">
                                         visibility
                                     </span>
                                 </button>
                             </div>
                             @error('password')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Captcha --}}
-                        <div class="space-y-2">
-                            <label class="text-[12px] font-bold uppercase tracking-wider">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-bold uppercase tracking-wider text-[#414755]">
                                 Security Verification
                             </label>
-                            <div class="flex gap-3">
-                                <div id="captchaBox" class="flex items-center justify-center w-[120px] h-[45px] rounded-xl bg-blue-50 border font-bold tracking-widest text-lg text-[#0058bc]">
+                            <div class="flex gap-2">
+                                <div id="captchaBox" class="flex items-center justify-center w-[90px] h-[40px] rounded-lg bg-blue-50/50 border border-blue-100 font-bold tracking-widest text-sm text-[#0058bc]">
                                     {{ $captcha }}
                                 </div>
-                                <button type="button" id="refreshCaptcha" class="w-[45px] h-[45px] rounded-xl border border-[#c1c6d7] hover:bg-blue-50 transition flex items-center justify-center">
-                                    <span id="refreshIcon" class="material-symbols-outlined">
+                                <button type="button" id="refreshCaptcha" class="w-[40px] h-[40px] rounded-lg border border-slate-200 hover:bg-blue-50/50 hover:border-blue-200 transition-all flex items-center justify-center">
+                                    <span id="refreshIcon" class="material-symbols-outlined text-[18px] text-slate-500">
                                         refresh
                                     </span>
                                 </button>
-                                <input type="text" name="captcha" placeholder="Enter Captcha" class="flex-1 h-[45px] border rounded-xl @error('captcha') border-red-500 @enderror" required>
+                                <input type="text" name="captcha" placeholder="Enter Captcha" class="flex-1 min-w-0 h-[40px] px-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('captcha') border-red-500 @enderror" required>
                             </div>
                             @error('captcha')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
                             @enderror
                         </div>
 
-                        <button type="submit" class="login-btn w-full h-[45px] bg-[#0058bc] text-white rounded-xl font-semibold hover:bg-blue-700 transition">
+                        <button type="submit" class="login-btn w-full h-[40px] bg-[#0058bc] text-white rounded-lg text-xs font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm shadow-blue-500/10 mt-2">
                             Login
                         </button>
                     </form>
 
-                    <div class="mt-5 pt-5 border-t border-slate-100 text-center">
-                        <p class="text-xs text-slate-500 mb-2">Are you a regular officer?</p>
-                        <a href="{{ route('mmgay.login') }}" class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">admin_panel_settings</span>
+                    <div class="mt-4 pt-4 border-t border-slate-100 text-center">
+                        <p class="text-[11px] text-slate-400 mb-1.5">Are you a regular officer?</p>
+                        <a href="{{ route('mmgay.login') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-[#0058bc] hover:underline">
+                            <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
                             Go to Officer Login
                         </a>
                     </div>
