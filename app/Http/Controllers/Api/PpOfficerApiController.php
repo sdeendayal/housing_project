@@ -490,6 +490,8 @@ class PpOfficerApiController extends Controller
                 $purchaserQuery->where('temp.physical_possession_status', 'Visit Scheduled');
             } elseif (in_array($statusLower, ['submitted', 'pending', 'pending_verify', 'physical possession submitted'])) {
                 $purchaserQuery->whereIn('temp.physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
+            } elseif (in_array($statusLower, ['epossession_pending', 'site_verified', 'site verified'])) {
+                $purchaserQuery->where('temp.physical_possession_status', 'Site Verified');
             } elseif (in_array($statusLower, ['approved', 'verified'])) {
                 $purchaserQuery->where('temp.physical_possession_status', 'Verified');
             } elseif (in_array($statusLower, ['rejected'])) {
