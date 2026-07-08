@@ -5,7 +5,7 @@
 @php
     $loginType = $loginType ?? 'user';
     $isOfficer = $loginType === 'officer';
-    $bgImage = asset('images/citizen-login/background.jpg');
+    $bgImage = asset('images/citizen-login/sehri_bg.png');
 @endphp
 
 @section('content')
