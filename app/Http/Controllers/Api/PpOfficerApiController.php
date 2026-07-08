@@ -757,6 +757,8 @@ class PpOfficerApiController extends Controller
         $totalReceived = $initialDeposit + $installmentPaid;
         $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
 
+        $application->load(['statusLogs.changer']);
+
         return response()->json([
             'success' => true,
             'application' => $application,
