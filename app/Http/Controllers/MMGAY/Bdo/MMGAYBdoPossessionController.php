@@ -111,12 +111,20 @@ class MMGAYBdoPossessionController extends Controller
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
+        // dd($blockMasterId);
+
         // 1. Total Eligible (All owners in BDO block who have paid)
         $totalEligibleQuery = DB::table('ownermaster')->where('IsPaid', 1);
+
+    //    dd($totalEligibleQuery->get());
+
         if ($blockMasterId) {
             $totalEligibleQuery->where('BlockId', $blockMasterId);
+                // dd($totalEligibleQuery->get());
         }
         $totalEligibleCount = $totalEligibleQuery->count();
+
+        // dd($totalEligibleCount);
 
         // 2. Not Scheduled (No app or status is Eligible for Physical Possession)
         $notScheduledQuery = DB::table('ownermaster as o')

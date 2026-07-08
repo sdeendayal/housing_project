@@ -46,6 +46,14 @@ class OwnerMasterSeeder extends Seeder
                     continue;
                 }
 
+                $isApproved = isset($headerMap['IsApproved'])
+                    ? $this->parseBool($this->getValue($row, $headerMap, 'IsApproved'))
+                    : (rand(1, 100) <= 40 ? 1 : 0);
+
+                $isPaid = isset($headerMap['IsPaid'])
+                    ? $this->parseBool($this->getValue($row, $headerMap, 'IsPaid'))
+                    : ($isApproved && (rand(1, 100) <= 50) ? 1 : 0);
+
                 $buffer[] = [
                     'OwnerId' => $this->nullableInt($this->getValue($row, $headerMap, 'OwnerId')),
                     'OwnerName' => $this->getValue($row, $headerMap, 'OwnerName', ''),
@@ -64,12 +72,12 @@ class OwnerMasterSeeder extends Seeder
                     'MobileNo' => $this->getValue($row, $headerMap, 'MobileNo'),
                     'CompanyId' => $this->nullableInt($this->getValue($row, $headerMap, 'CompanyId')),
                     'Phase' => $this->nullableInt($this->getValue($row, $headerMap, 'Phase')),
-                    'IsApproved' => $this->parseBool($this->getValue($row, $headerMap, 'IsApproved')),
+                    'IsApproved' => $isApproved,
                     'IsRejected' => $this->parseBool($this->getValue($row, $headerMap, 'IsRejected')),
                     'IsDcReconsidered' => $this->parseBool($this->getValue($row, $headerMap, 'IsDcReconsidered')),
                     'DCReOpenedCount' => $this->nullableInt($this->getValue($row, $headerMap, 'DCReOpenedCount')) ?? 0,
-                    'IsPaid' => $this->parseBool($this->getValue($row, $headerMap, 'IsPaid')),
-                    'IsPaymentApproved' => $this->parseBool($this->getValue($row, $headerMap, 'IsPaymentApproved')),
+                    'IsPaid' => $isPaid,
+                    'IsPaymentApproved' => $isPaid, // If paid, then payment is also approved
                     'IsAllotmentCancelled' => $this->parseBool($this->getValue($row, $headerMap, 'IsAllotmentCancelled')),
                     'Remarks' => $this->getValue($row, $headerMap, 'Remarks'),
                     'DCRemarks' => $this->getValue($row, $headerMap, 'DCRemarks'),
@@ -96,7 +104,11 @@ class OwnerMasterSeeder extends Seeder
             return $importedCount;
         });
 
-        $this->command?->info("Owners imported: {$imported}");
+         $this->command?->info("Owners imported: {$imported}");
+
+        // Generate secure_id for all newly seeded records
+        DB::statement("UPDATE ownermaster SET secure_id = MD5(CONCAT(OwnerId, RAND(), UUID())) WHERE secure_id IS NULL OR secure_id = ''");
+        $this->command?->info("Generated secure_id for all owners.");
     }
 
     private function getValue(array $row, array $headerMap, string $column, ?string $default = null): ?string
