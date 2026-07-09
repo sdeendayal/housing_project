@@ -202,6 +202,9 @@ class MmgayBdoApiController extends Controller
             $application = MmgayPossessionApplication::create([
                 'user_id' => $user->id,
                 'owner_id' => $owner->OwnerId,
+                'ppp_id' => $owner->PPPId ?? null,
+                'member_id' => $owner->MemberId ?? null,
+                'flat_id' => $owner->FlatId ?? null,
                 'scheme' => 'MMGAY',
                 'application_number' => 'PP-MMGAY-' . now()->format('Y') . '-' . ($owner->RegistrationNo ?? rand(1000, 9999)),
                 'secure_id' => $owner->secure_id,
