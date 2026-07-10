@@ -38,25 +38,25 @@ class MmgayBdoAuthApiController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
-            'captcha' => 'required|string',
-            'captcha_key' => 'nullable|string',
+            // 'captcha' => 'required|string',
+            // 'captcha_key' => 'nullable|string',
         ]);
 
         // Captcha Verification
-        $captcha = $request->input('captcha');
-        $captchaKey = $request->input('captcha_key');
+        // $captcha = $request->input('captcha');
+        // $captchaKey = $request->input('captcha_key');
 
-        if ($captchaKey) {
-            $cachedCaptcha = Cache::get('bdo_captcha_' . $captchaKey);
-            if (!$cachedCaptcha || $cachedCaptcha != $captcha) {
-                return response()->json(['success' => false, 'message' => 'Invalid captcha. Please try again.'], 422);
-            }
-            Cache::forget('bdo_captcha_' . $captchaKey);
-        } else {
-            if ($captcha != session('bdo_captcha')) {
-                return response()->json(['success' => false, 'message' => 'Invalid captcha. Please try again.'], 422);
-            }
-        }
+        // if ($captchaKey) {
+        //     $cachedCaptcha = Cache::get('bdo_captcha_' . $captchaKey);
+        //     if (!$cachedCaptcha || $cachedCaptcha != $captcha) {
+        //         return response()->json(['success' => false, 'message' => 'Invalid captcha. Please try again.'], 422);
+        //     }
+        //     Cache::forget('bdo_captcha_' . $captchaKey);
+        // } else {
+        //     if ($captcha != session('bdo_captcha')) {
+        //         return response()->json(['success' => false, 'message' => 'Invalid captcha. Please try again.'], 422);
+        //     }
+        // }
 
         $credentials = [
             'email' => $request->email,
