@@ -1,6 +1,6 @@
 @extends('layouts.mmgayAdmin')
 
-@section('title', 'Beneficiaries Master List')
+@section('title', 'Beneficiaries Directory - Super Admin')
 
 @section('content')
     <main class="min-h-screen bg-slate-100 p-6 pt-20 ml-[260px] w-[calc(100%-260px)]">

@@ -11,7 +11,7 @@ class DistrictCEOController extends Controller
     public function dashboard(Request $request, $phase = 1)
     {
         $user = auth()->user();
-        
+
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
@@ -20,7 +20,7 @@ class DistrictCEOController extends Controller
             abort(404, 'District not found.');
         }
 
-        
+
 
         // Phase Wise Plot Column
         switch ($phase) {
@@ -376,5 +376,176 @@ class DistrictCEOController extends Controller
             ->update($data);
 
         return back()->with('success', 'Application updated successfully.');
+    }
+
+    public function physicalPossessionDashboard(Request $request)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        $totalApplications = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId)
+            ->count();
+
+        $visitScheduled = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId)
+            ->where('physical_possession_status', 'Visit Scheduled')
+            ->count();
+
+        $slotSelected = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId)
+            ->where('physical_possession_status', 'Slot Selected')
+            ->count();
+
+        $siteVerified = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId)
+            ->where('physical_possession_status', 'Site Verified')
+            ->count();
+
+        $verified = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId)
+            ->where('physical_possession_status', 'Verified')
+            ->count();
+
+        $query = DB::table('mmgay_possession_applications')
+            ->where('district_id', $districtId);
+
+        if ($request->application_number) {
+            $query->where('application_number', 'like', '%' . $request->application_number . '%');
+        }
+
+        if ($request->mobile) {
+            $query->where('mobile', 'like', '%' . $request->mobile . '%');
+        }
+
+        if ($request->status) {
+            $query->where('physical_possession_status', $request->status);
+        }
+
+        if ($request->from_date) {
+            $query->whereDate('created_at', '>=', $request->from_date);
+        }
+
+        if ($request->to_date) {
+            $query->whereDate('created_at', '<=', $request->to_date);
+        }
+
+        $recentApplications = $query
+            ->latest('id')
+            ->paginate(10);
+
+        return view(
+            'mmgay.district-ceo.physical-possession.dashboard',
+            compact(
+                'totalApplications',
+                'visitScheduled',
+                'slotSelected',
+                'siteVerified',
+                'verified',
+                'recentApplications'
+            )
+        );
+    }
+
+    public function physicalPossessionView($secure_id)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        $application = DB::table('mmgay_possession_applications as p')
+
+            ->leftJoin('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+
+            ->where('p.secure_id', $secure_id)
+            ->where('p.district_id', $districtId)
+
+            ->select(
+                'p.*',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.OwnerAddress',
+                'o.PPPId',
+                'o.Caste',
+                'o.Remarks',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName'
+            )
+
+            ->first();
+
+        abort_if(!$application, 404);
+
+        $timeline = DB::table('mmgay_possession_status_logs')
+
+            ->where('application_id', $application->id)
+
+            ->orderBy('created_at')
+
+            ->get();
+
+        return view(
+            'mmgay.district-ceo.physical-possession.view',
+            compact(
+                'application',
+                'timeline'
+            )
+        );
+    }
+
+    public function viewPossession($secureId)
+    {
+        $user = auth()->user();
+
+        $application = DB::table('physical_possession_applications as p')
+            ->join('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->where('p.secure_id', $secureId)
+            ->select(
+                'p.*',
+                'o.OwnerName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.FatherHusbandName',
+                'o.Address',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'f.FlatNo'
+            )
+            ->first();
+
+
+        abort_if(!$application, 404);
+
+
+
+        // Timeline
+        $timeline = DB::table('physical_possession_logs')
+            ->where('application_id', $application->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+
+
+        return view(
+            'mmgay.district-ceo.physical-possession.view',
+            compact('application', 'timeline')
+        );
     }
 }

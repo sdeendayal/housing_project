@@ -5,7 +5,8 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>MMGAY Admin Dashboard</title>
+    <title>@yield('title')</title>
+    <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <!-- Material Symbols -->

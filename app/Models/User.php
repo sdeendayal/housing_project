@@ -47,26 +47,11 @@ class User extends Authenticatable
 
     public function belongsToRoleGroup(string $slug): bool
     {
-        $this->loadMissing('roleType.role.roleGroup', 'roleType.roleGroup');
-
-        $groupSlug = $this->roleType?->role?->roleGroup?->slug
-            ?? $this->roleType?->roleGroup?->slug;
-
-        if (! $groupSlug) {
-            return false;
-        }
-
-        return $groupSlug === $slug || $this->roleGroupAliases($slug)->contains($groupSlug);
+        return $this->roleGroupSlug() === $slug;
     }
 
     public function hasRole(string $slug): bool
     {
-        $this->loadMissing('roleType.role');
-
-        if ($this->roleType?->role?->slug === $slug) {
-            return true;
-        }
-
         return $this->role === $slug;
     }
 
@@ -80,9 +65,7 @@ class User extends Authenticatable
 
     public function roleSlug(): ?string
     {
-        $this->loadMissing('roleType.role');
-
-        return $this->roleType?->role?->slug ?? $this->role;
+        return $this->role;
     }
 
     public function dashboardRoute(): string

@@ -1,7 +1,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 @extends('layouts.mmgayAdmin')
 
-@section('title', 'Allotment List')
+@section('title', 'Allotment List - Super Admin')
 
 @section('content')
 

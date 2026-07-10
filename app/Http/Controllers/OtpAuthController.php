@@ -39,6 +39,7 @@ class OtpAuthController extends Controller
 
     public function sendOtp(SendOtpRequest $request, string $context): RedirectResponse
     {
+        
         $config = config("otp-login.contexts.{$context}");
 
         if (! $config) {
@@ -52,25 +53,32 @@ class OtpAuthController extends Controller
         $mobile = $request->mobile;
         $user = User::where('mobile', $mobile)->first();
 
+       
+
         if (! $user) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
-
+          
         if (! $user->roleType || ! $user->roleType->role_group_id) {
             return back()->withInput()->with('error', 'Your account does not have a configured role group mapping.');
         }
+       
 
         if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
 
+         
+
         if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
             return back()->withInput()->with('error', $config['wrong_group_message']);
         }
-
+        
         if (! $user->belongsToRoleGroup($config['role_group'])) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
+
+        
 
         if ($context === 'mmgav_villager') {
             $owner = DB::table('ownermaster')->where('MobileNo', $mobile)->first();

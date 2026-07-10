@@ -1,6 +1,6 @@
 @extends('layouts.mmgayAdmin')
 
-@section('title', 'All Villages Report')
+@section('title', 'All Villages Master List - Super Admin')
 
 @section('content')
 

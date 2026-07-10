@@ -1,6 +1,6 @@
 @extends('layouts.mmgayAdmin')
 
-@section('title', 'District List')
+@section('title', 'District List - Super Admin')
 
 @section('content')
 
