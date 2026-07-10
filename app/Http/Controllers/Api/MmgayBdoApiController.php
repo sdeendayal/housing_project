@@ -185,12 +185,10 @@ class MmgayBdoApiController extends Controller
 
                 // Seed role type for this new user
                 $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
-                $villagerGroup = DB::table('role_groups')->where('slug', 'villager')->first();
-                if ($villagerRole && $villagerGroup) {
+                if ($villagerRole) {
                     DB::table('role_types')->insert([
                         'user_id' => $user->id,
                         'role_id' => $villagerRole->id,
-                        'role_group_id' => $villagerGroup->id,
                         'Is_Active' => '1',
                         'Is_Deleted' => '0',
                         'created_at' => now(),

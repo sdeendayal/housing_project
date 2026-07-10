@@ -15,7 +15,29 @@ class DistrictOfficerApiTest extends TestCase
     {
         parent::setUp();
         // Seed database
-        $this->seed();
+        $this->seed(\Database\Seeders\EmOfficeSeeder::class);
+        $this->seed(\Database\Seeders\DistrictSeeder::class);
+        $this->seed(\Database\Seeders\RoleSeeder::class);
+        $this->seed(\Database\Seeders\DistrictOfficerSeeder::class);
+
+        // Ensure the test user expected by the tests exists
+        $role = \App\Models\Role::where('slug', 'district_officer')->first();
+        $user = \App\Models\User::updateOrCreate(
+            ['mobile' => '9999900005'],
+            [
+                'name' => 'Rohtak Site Engineer',
+                'role' => 'district_officer',
+                'district_id' => 5,
+                'district_name' => 'ROHTAK',
+                'password' => \Illuminate\Support\Facades\Hash::make('officer123'),
+            ]
+        );
+        \App\Models\RoleType::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'role_id' => $role->id,
+            ]
+        );
     }
 
     /**
@@ -163,6 +185,9 @@ class DistrictOfficerApiTest extends TestCase
                 'success' => true,
                 'message' => 'Logged out successfully.'
             ]);
+
+        $this->app['auth']->forgetUser();
+        $this->app['auth']->guard('sanctum')->forgetUser();
 
         // 8. Verify token is revoked by calling dashboard again
         $revokedRes = $this->withHeader('Authorization', 'Bearer ' . $token)

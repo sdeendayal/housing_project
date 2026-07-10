@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Route;
 class Role extends Model
 {
     protected $fillable = [
-        'role_group_id',
         'name',
         'slug',
         'dashboard_route',
@@ -23,11 +22,6 @@ class Role extends Model
         return [
             'is_active' => 'boolean',
         ];
-    }
-
-    public function roleGroup(): BelongsTo
-    {
-        return $this->belongsTo(RoleGroup::class);
     }
 
     public function roleTypes(): HasMany

@@ -23,7 +23,7 @@ class MMGAYBdoPossessionController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            if ($user->scheme === 'MMGAY' && $user->belongsToRoleGroup('mmgav_bdeo') && $user->hasRole('mmgav_bdeo')) {
+            if ($user->scheme === 'MMGAY' && $user->hasRole('mmgav_bdeo')) {
                 return redirect()->route('mmgay.bdo.dashboard');
             }
         }
@@ -76,7 +76,7 @@ class MMGAYBdoPossessionController extends Controller
         }
 
         $user = Auth::user();
-        if (!$user->belongsToRoleGroup('mmgav_bdeo') || !$user->hasRole('mmgav_bdeo')) {
+        if (!$user->hasRole('mmgav_bdeo')) {
             Auth::logout();
             return back()
                 ->withInput()
@@ -270,12 +270,10 @@ class MMGAYBdoPossessionController extends Controller
 
                 // Seed role type for this new user
                 $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
-                $villagerGroup = DB::table('role_groups')->where('slug', 'villager')->first();
-                if ($villagerRole && $villagerGroup) {
+                if ($villagerRole) {
                     DB::table('role_types')->insert([
                         'user_id' => $user->id,
                         'role_id' => $villagerRole->id,
-                        'role_group_id' => $villagerGroup->id,
                         'Is_Active' => '1',
                         'Is_Deleted' => '0',
                         'created_at' => now(),

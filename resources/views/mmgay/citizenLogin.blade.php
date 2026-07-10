@@ -412,10 +412,10 @@
             <div class="cl-brand__icon">
                <span class="material-symbols-outlined">apartment</span>
             </div>
-            <div>
-               <p class="cl-brand__title">Housing For All (MMGAY)</p>
-               {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
-            </div>
+             <div>
+                <p class="cl-brand__title">Housing For All ({{ (isset($context) && str_contains($context, 'mmgav')) || str_contains(request()->url(), 'mmgav') ? 'MMGAV' : 'MMGAY' }})</p>
+                {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
+             </div>
          </div>
 
          <div class="cl-body">

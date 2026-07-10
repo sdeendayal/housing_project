@@ -72,7 +72,7 @@ class MmgayBdoAuthApiController extends Controller
 
         $user = Auth::user();
 
-        if (!$user->belongsToRoleGroup('mmgav_bdeo') || !$user->hasRole('mmgav_bdeo')) {
+        if (!$user->hasRole('mmgav_bdeo')) {
             Auth::logout();
             return response()->json(['success' => false, 'message' => 'Unauthorized. Access is restricted to MMGAV BDO officers only.'], 403);
         }

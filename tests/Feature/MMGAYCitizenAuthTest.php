@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Otp;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\RoleGroup;
 use App\Models\RoleType;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +17,9 @@ class MMGAYCitizenAuthTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed();
+        $this->seed(\Database\Seeders\EmOfficeSeeder::class);
+        $this->seed(\Database\Seeders\DistrictSeeder::class);
+        $this->seed(\Database\Seeders\RoleSeeder::class);
     }
 
     /**
@@ -48,12 +49,10 @@ class MMGAYCitizenAuthTest extends TestCase
         ]);
 
         $villagerRole = Role::where('slug', 'villager')->first();
-        $villagerGroup = RoleGroup::where('slug', 'villager')->first();
 
         RoleType::create([
             'user_id' => $user->id,
             'role_id' => $villagerRole->id,
-            'role_group_id' => $villagerGroup->id,
         ]);
 
         \Illuminate\Support\Facades\DB::table('districtmaster')->insertOrIgnore([
@@ -131,12 +130,10 @@ class MMGAYCitizenAuthTest extends TestCase
         ]);
 
         $citizenRole = Role::where('slug', 'citizen')->first();
-        $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
 
         RoleType::create([
             'user_id' => $user->id,
             'role_id' => $citizenRole->id,
-            'role_group_id' => $citizenGroup->id,
         ]);
 
         $this->withSession(['captcha' => '1234']);
@@ -165,12 +162,10 @@ class MMGAYCitizenAuthTest extends TestCase
         ]);
 
         $citizenRole = Role::where('slug', 'citizen')->first();
-        $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
 
         RoleType::create([
             'user_id' => $user->id,
             'role_id' => $citizenRole->id,
-            'role_group_id' => $citizenGroup->id,
         ]);
 
         $response = $this->actingAs($user)->get('/mmgav/villager/dashboard');

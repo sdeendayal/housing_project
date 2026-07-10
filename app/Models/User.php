@@ -45,20 +45,6 @@ class User extends Authenticatable
         return $this->roleType?->role;
     }
 
-    public function belongsToRoleGroup(string $slug): bool
-    {
-        $this->loadMissing('roleType.role.roleGroup', 'roleType.roleGroup');
-
-        $groupSlug = $this->roleType?->role?->roleGroup?->slug
-            ?? $this->roleType?->roleGroup?->slug;
-
-        if (! $groupSlug) {
-            return false;
-        }
-
-        return $groupSlug === $slug || $this->roleGroupAliases($slug)->contains($groupSlug);
-    }
-
     public function hasRole(string $slug): bool
     {
         $this->loadMissing('roleType.role');
@@ -68,14 +54,6 @@ class User extends Authenticatable
         }
 
         return $this->role === $slug;
-    }
-
-    public function roleGroupSlug(): ?string
-    {
-        $this->loadMissing('roleType.role.roleGroup', 'roleType.roleGroup');
-
-        return $this->roleType?->role?->roleGroup?->slug
-            ?? $this->roleType?->roleGroup?->slug;
     }
 
     public function roleSlug(): ?string
@@ -103,14 +81,6 @@ class User extends Authenticatable
             'district_officer' => route('pp.officer.dashboard'),
             'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
             default => route('home'),
-        };
-    }
-
-    private function roleGroupAliases(string $slug): \Illuminate\Support\Collection
-    {
-        return match ($slug) {
-            'department', 'departmental' => collect(['department', 'departmental']),
-            default => collect([$slug]),
         };
     }
 }

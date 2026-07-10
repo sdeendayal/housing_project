@@ -15,16 +15,12 @@ class MMGAYUserSeeder extends Seeder
     {
         $districtRole = Role::where('slug', 'district_ceo')->first();
         $dcRole = Role::where('slug', 'dc')->first();
-        $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
 
-        if (! $districtRole || ! $dcRole || ! $departmentGroup) {
-            $this->command->error('MMGAY officer roles not found. Run RoleGroupSeeder and RoleSeeder first.');
+        if (! $districtRole || ! $dcRole) {
+            $this->command->error('MMGAY officer roles not found. Run RoleSeeder first.');
 
             return;
         }
-
-        $districtGroup = $departmentGroup;
-        $dcGroup = $departmentGroup;
 
         $users = [
 
@@ -402,17 +398,12 @@ class MMGAYUserSeeder extends Seeder
                 ? $districtRole
                 : $dcRole;
 
-            $group = $data['role'] == 'district_ceo'
-                ? $districtGroup
-                : $dcGroup;
-
             RoleType::updateOrCreate(
                 [
                     'user_id' => $user->id
                 ],
                 [
                     'role_id' => $role->id,
-                    'role_group_id' => $group->id,
                 ]
             );
         }

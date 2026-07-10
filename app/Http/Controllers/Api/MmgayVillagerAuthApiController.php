@@ -57,11 +57,7 @@ class MmgayVillagerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if ($user->roleSlug() !== 'villager') {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
@@ -125,11 +121,7 @@ class MmgayVillagerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if ($user->roleSlug() !== 'villager') {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
@@ -193,11 +185,7 @@ class MmgayVillagerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if ($user->roleSlug() !== 'villager') {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 

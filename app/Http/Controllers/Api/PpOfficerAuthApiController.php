@@ -42,8 +42,8 @@ class PpOfficerAuthApiController extends Controller
     {
         $request->validate([
             'mobile' => 'required|string',
-            // 'captcha' => 'required|string',
-            // 'captcha_key' => 'nullable|string',
+            'captcha' => 'required',
+            'captcha_key' => 'nullable|string',
         ]);
 
         // Captcha Verification
@@ -70,11 +70,7 @@ class PpOfficerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if (in_array($user->roleSlug(), ['citizen', 'villager', 'mmgav_bdeo'], true)) {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
@@ -124,11 +120,7 @@ class PpOfficerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if (in_array($user->roleSlug(), ['citizen', 'villager', 'mmgav_bdeo'], true)) {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
@@ -187,11 +179,7 @@ class PpOfficerAuthApiController extends Controller
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return response()->json(['success' => false, 'message' => $config['wrong_group_message']], 403);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
+        if (in_array($user->roleSlug(), ['citizen', 'villager', 'mmgav_bdeo'], true)) {
             return response()->json(['success' => false, 'message' => $config['not_registered_message']], 404);
         }
 
