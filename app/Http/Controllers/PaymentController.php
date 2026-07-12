@@ -683,7 +683,24 @@ class PaymentController extends Controller
                 }
 
                 // If still pending (P0030 / Awaiting user action / REQ)
-                return redirect()->back()->with('warning', 'This transaction is still awaiting action from the user or bank.');
+                $createdAt = $tx->created_at ? \Carbon\Carbon::parse($tx->created_at) : null;
+                $diffInMinutes = $createdAt ? $createdAt->diffInMinutes(now()) : 9999;
+
+                if ($diffInMinutes >= 60) {
+                    DB::table('payment_transactions')
+                        ->where('id', $tx->id)
+                        ->update([
+                            'status' => 'FAIL',
+                            'response_code' => $txnResponseCode ?: ($responseCode ?: 'INCOMPLETE'),
+                            'response_description' => $txnRespDescription ?: ($respDescription ?: 'Payment was not completed within 1 hour.'),
+                            'response_payload_dump' => json_encode($data),
+                            'updated_at' => now(),
+                        ]);
+
+                    return redirect()->back()->with('error', 'Payment was not completed. This transaction has been marked as failed.');
+                }
+
+                return redirect()->back()->with('warning', 'This transaction is still awaiting action from the user or bank. Please try verifying again after 1 hour of initiation.');
             }
 
             Log::error('Phicommerce status check API failed response', [
