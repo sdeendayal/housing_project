@@ -136,7 +136,7 @@ class PaymentController extends Controller
             'mobile' => $user->mobile ?? ($purchaser->MobileNo ?? '—'),
             'email' => $user->email ?? 'citizen@example.com',
             'amountToPay' => number_format($amountToPay, 2, '.', ''),
-            'amountRaw' => round($amountToPay),
+            'amountRaw' => number_format($amountToPay, 2, '.', ''),
             'minAmountToPay' => $amountToPay,
             'merchantOrderId' => 'MMSAY-ORD-'.now()->format('YmdHis'),
             'assetId' => $auction?->AssetId ?? 0,
