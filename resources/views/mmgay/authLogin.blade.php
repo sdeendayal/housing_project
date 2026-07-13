@@ -79,7 +79,7 @@
     <!-- Main Content Canvas: 50/50 Split Screen -->
     <main class="flex-grow flex flex-col md:flex-row overflow-hidden">
         <!-- Left Side: Login Form -->
-        <section class="w-full md:w-1/2 flex flex-col justify-center items-center relative login-bg-pattern px-12 py-4">
+        <section class="w-full md:w-1/2 flex flex-col justify-center items-center relative login-bg-pattern px-6 md:px-12 py-4 overflow-hidden h-full">
             <!-- Subtle wave background at bottom as seen in Image 4 -->
             <div class="absolute bottom-0 left-0 w-full opacity-10 pointer-events-none">
                 <svg viewbox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
@@ -90,68 +90,68 @@
             </div>
             <div class="w-full max-w-md z-10">
                 <!-- Branding Header -->
-                <div class="flex items-center gap-4 mb-6">
+                <div class="flex items-center gap-3 mb-3">
                     <div
-                        class="w-[60px] h-[60px] bg-[#0070eb] rounded-[14px] flex items-center justify-center shadow-lg shadow-blue-500/20">
-                        <span class="material-symbols-outlined text-white text-[32px]"
+                        class="w-[42px] h-[42px] bg-[#0070eb] rounded-[10px] flex items-center justify-center shadow-lg shadow-blue-500/20">
+                        <span class="material-symbols-outlined text-white text-[24px]"
                             style="font-variation-settings: 'FILL' 1;">shield_person</span>
                     </div>
                     <div>
-                        <h3 class="text-[20px] font-bold text-[#111c2d]">MMGAY Portal Login</h3>
-                        <p class="text-[#505f76] text-[14px]">Officer sign in — villagers use Mobile OTP login</p>
+                        <h3 class="text-[16px] font-bold text-[#111c2d]">MMGAY Portal Login</h3>
+                        <p class="text-[#505f76] text-[12px]">Officer sign in — villagers use Mobile OTP</p>
                     </div>
                 </div>
                 <!-- Form -->
                 <!-- Login Card -->
                 <div
-                    class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-[0_20px_50px_rgba(0,88,188,0.15)] border border-blue-100 p-8">
+                    class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_15px_40px_rgba(0,88,188,0.12)] border border-blue-100 p-5">
 
-                    <form method="POST" action="{{ route('mmgay.login.submit') }}" class="space-y-5">
+                    <form method="POST" action="{{ route('mmgay.login.submit') }}" class="space-y-3">
                         @csrf
 
                         {{-- Username --}}
-                        <div class="space-y-2">
-                            <label class="text-[12px] font-bold text-[#414755] uppercase tracking-wider">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold text-[#414755] uppercase tracking-wider">
                                 Username or Email
                             </label>
 
                             <div class="relative">
                                 <span
-                                    class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#414755]">
+                                    class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#414755] text-[18px]">
                                     person
                                 </span>
 
                                 <input type="text" name="email" value="{{ old('email') }}"
                                     placeholder="Username or Email"
-                                    class="w-full h-[45px] pl-12 pr-4 border rounded-xl @error('email') border-red-500 @enderror">
+                                    class="w-full h-[38px] pl-9 pr-4 text-xs border rounded-lg @error('email') border-red-500 @enderror focus:ring-1 focus:ring-[#0058bc] focus:border-[#0058bc]">
 
                             </div>
 
                             @error('email')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-[10px] mt-0.5">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Password --}}
-                        <div class="space-y-2">
+                        <div class="space-y-1">
 
-                            <label class="text-[12px] font-bold text-[#414755] uppercase tracking-wider">
+                            <label class="text-[10px] font-bold text-[#414755] uppercase tracking-wider">
                                 Password
                             </label>
 
                             <div class="relative">
 
-                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[#414755] text-[18px]">
                                     lock
                                 </span>
 
                                 <input id="password" type="password" name="password" placeholder="Password"
-                                    class="w-full h-[45px] pl-12 pr-12 border rounded-xl @error('password') border-red-500 @enderror">
+                                    class="w-full h-[38px] pl-9 pr-9 text-xs border rounded-lg @error('password') border-red-500 @enderror focus:ring-1 focus:ring-[#0058bc] focus:border-[#0058bc]">
 
                                 <button type="button" id="togglePassword"
-                                    class="absolute right-4 top-1/2 -translate-y-1/2">
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-[#414755]">
 
-                                    <span id="eyeIcon" class="material-symbols-outlined">
+                                    <span id="eyeIcon" class="material-symbols-outlined text-[18px]">
                                         visibility
                                     </span>
 
@@ -160,45 +160,45 @@
                             </div>
 
                             @error('password')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-[10px] mt-0.5">{{ $message }}</p>
                             @enderror
                         </div>
 
                         {{-- Captcha --}}
-                        <div class="space-y-2">
+                        <div class="space-y-1">
 
-                            <label class="text-[12px] font-bold uppercase tracking-wider">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-[#414755]">
                                 Security Verification
                             </label>
 
-                            <div class="flex gap-3">
+                            <div class="flex gap-2">
 
                                 <div id="captchaBox"
-                                    class="flex items-center justify-center w-[120px] h-[45px] rounded-xl bg-blue-50 border">
+                                    class="flex items-center justify-center w-[90px] h-[38px] rounded-lg bg-blue-50 border text-xs font-semibold tracking-widest text-[#0058bc]">
                                     {{ session('captcha') }}
                                 </div>
 
                                 <button type="button" id="refreshCaptcha"
-                                    class="w-[45px] h-[45px] rounded-xl border border-[#c1c6d7] hover:bg-blue-50 transition">
+                                    class="w-[38px] h-[38px] rounded-lg border border-[#c1c6d7] hover:bg-blue-50 transition flex items-center justify-center">
 
-                                    <span id="refreshIcon" class="material-symbols-outlined">
+                                    <span id="refreshIcon" class="material-symbols-outlined text-[18px]">
                                         refresh
                                     </span>
 
                                 </button>
 
                                 <input type="text" name="captcha" placeholder="Enter Captcha"
-                                    class="flex-1 h-[45px] border rounded-xl @error('captcha') border-red-500 @enderror">
+                                    class="flex-1 h-[38px] text-xs border rounded-lg @error('captcha') border-red-500 @enderror focus:ring-1 focus:ring-[#0058bc] focus:border-[#0058bc]">
 
                             </div>
 
                             @error('captcha')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
+                                <p class="text-red-500 text-[10px] mt-0.5">{{ $message }}</p>
                             @enderror
 
                         </div>
 
-                        <button type="submit" class="login-btn w-full h-[45px] bg-[#0058bc] text-white rounded-xl">
+                        <button type="submit" class="login-btn w-full h-[38px] bg-[#0058bc] text-white rounded-lg text-xs font-semibold hover:bg-[#004bb4] transition">
 
                             Login
 
@@ -206,22 +206,24 @@
 
                     </form>
 
-                    <div class="mt-5 pt-5 border-t border-slate-100 text-center">
-                        <p class="text-xs text-slate-500 mb-2">Are you a villager / beneficiary?</p>
-                        <a href="{{ route('mmgav.villager.login') }}"
-                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">sms</span>
-                            Go to Villager Login (Mobile OTP)
-                        </a>
-                    </div>
-
-                    <div class="mt-3 pt-3 border-t border-slate-100 text-center">
-                        <p class="text-xs text-slate-500 mb-2">Are you a Block Development & Panchayat Officer?</p>
-                        <a href="{{ route('mmgay.bdo.login') }}"
-                            class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#0058bc] hover:underline">
-                            <span class="material-symbols-outlined text-[18px]">login</span>
-                            MMGAY BDPO Login
-                        </a>
+                    {{-- Compact Footers --}}
+                    <div class="mt-3.5 pt-3.5 border-t border-slate-100 flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-[11px]">
+                            <span class="text-slate-500">Villager / Beneficiary?</span>
+                            <a href="{{ route('mmgav.villager.login') }}"
+                                class="font-semibold text-[#0058bc] hover:underline flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">sms</span>
+                                Applicant  Login
+                            </a>
+                        </div>
+                        <div class="flex items-center justify-between text-[11px] border-t border-dashed border-slate-100 pt-2">
+                            <span class="text-slate-500">Block Development Officer?</span>
+                            <a href="{{ route('mmgay.bdo.login') }}"
+                                class="font-semibold text-[#0058bc] hover:underline flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[14px]">login</span>
+                                BDPO Login
+                            </a>
+                        </div>
                     </div>
 
                 </div>

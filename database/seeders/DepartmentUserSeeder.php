@@ -51,6 +51,7 @@ class DepartmentUserSeeder extends Seeder
                 'mobile' => '9990009999',
                 'password' => Hash::make('123456'),
                 'role' => 'super_admin',
+                'scheme' => 'MMGAY'
             ]
         );
 

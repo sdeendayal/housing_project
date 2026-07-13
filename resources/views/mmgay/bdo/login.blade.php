@@ -65,8 +65,10 @@
             background-size: 32px 32px;
         }
 
-        body {
-            overflow: hidden;
+        @media (min-height: 680px) and (min-width: 768px) {
+            body {
+                overflow: hidden;
+            }
         }
     </style>
 </head>
@@ -75,7 +77,7 @@
 
     <main class="flex-grow flex flex-col md:flex-row overflow-hidden">
         <!-- Left Side: Login Form -->
-        <section class="w-full md:w-1/2 flex flex-col justify-center items-center relative login-bg-pattern px-12 py-4">
+        <section class="w-full md:w-1/2 flex flex-col justify-center items-center relative login-bg-pattern px-6 md:px-12 py-6 overflow-y-auto h-full">
             <div class="absolute bottom-0 left-0 w-full opacity-10 pointer-events-none">
                 <svg viewbox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
                     <path d="M0,192L48,197.3C96,203,192,213,288,197.3C384,181,480,139,576,138.7C672,139,768,181,864,197.3C960,213,1056,203,1152,186.7C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="#0058bc" fill-opacity="1"></path>
