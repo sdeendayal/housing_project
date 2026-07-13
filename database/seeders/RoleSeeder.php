@@ -58,6 +58,30 @@ class RoleSeeder extends Seeder
                 'dashboard_route' => 'district.dashboard',
                 'dashboard_path' => null,
             ],
+            [
+                'name' => 'Super Admin',
+                'slug' => 'super_admin',
+                'dashboard_route' => 'admin.dashboard',
+                'dashboard_path' => null,
+            ],
+            [
+                'name' => 'EWS User',
+                'slug' => 'ews_user',
+                'dashboard_route' => null,
+                'dashboard_path' => null,
+            ],
+            [
+                'name' => 'EWS Department',
+                'slug' => 'ews_department',
+                'dashboard_route' => null,
+                'dashboard_path' => null,
+            ],
+            [
+                'name' => 'EWS Developer',
+                'slug' => 'ews_developer',
+                'dashboard_route' => null,
+                'dashboard_path' => null,
+            ],
         ];
 
         foreach ($roles as $role) {

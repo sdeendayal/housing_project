@@ -23,6 +23,7 @@ class DatabaseSeeder extends Seeder
             PropertyAuctionDetailSeeder::class,
             CashReceiptDetailsSeeder::class,
             RoleSeeder::class,
+            RegistarySeeder::class,
             CitizenUserSeeder::class,
             DepartmentUserSeeder::class,
             DistrictOfficerSeeder::class,
