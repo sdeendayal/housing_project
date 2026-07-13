@@ -21,43 +21,32 @@ class DepartmentUserSeeder extends Seeder
             return;
         }
 
-        // Skip if department user already exists
-        $existing = User::where('email', 'department@gmail.com')->first();
-
-        if ($existing) {
-            // Ensure role mapping exists
-            RoleType::updateOrCreate(
-                ['user_id' => $existing->id],
-                ['role_id' => $adminRole->id]
-            );
-
-            return;
-        }
-
-        $user = User::firstOrCreate(
+        $departmentUser = User::updateOrCreate(
             ['email' => 'department@gmail.com'],
             [
                 'name' => 'Department User',
                 'mobile' => '9876543210',
                 'password' => Hash::make('123456'),
                 'role' => 'department',
+                'scheme' => 'MMGAY',
             ]
         );
 
-        User::firstOrCreate(
+        // Ensure role mapping exists
+        RoleType::updateOrCreate(
+            ['user_id' => $departmentUser->id],
+            ['role_id' => $adminRole->id]
+        );
+
+        User::updateOrCreate(
             ['email' => 'superadmin@gmail.com'],
             [
                 'name' => 'Super Admin',
                 'mobile' => '9990009999',
                 'password' => Hash::make('123456'),
                 'role' => 'super_admin',
-                'scheme' => 'MMGAY'
+                'scheme' => 'MMGAY',
             ]
         );
-
-        RoleType::create([
-            'user_id' => $user->id,
-            'role_id' => $adminRole->id,
-        ]);
     }
 }
