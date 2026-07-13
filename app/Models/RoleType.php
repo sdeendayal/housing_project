@@ -15,7 +15,6 @@ class RoleType extends Model
         'role_id',
         'Is_Active',
         'Is_Deleted',
-        'role_group_id',
     ];
 
     public function user(): BelongsTo
@@ -26,10 +25,5 @@ class RoleType extends Model
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
-    }
-
-    public function roleGroup(): BelongsTo
-    {
-        return $this->belongsTo(RoleGroup::class);
     }
 }

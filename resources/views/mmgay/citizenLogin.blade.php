@@ -49,22 +49,33 @@
       display: none !important;
    }
 
-   .cl-page {
-      flex: 1;
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0.75rem 1rem;
-      background:
-         linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.65)),
-         url('{{ asset('images/citizen-login/background.jpg') }}') center / cover no-repeat;
-   }
-   .cl-shell {
-      width: 100%;
-      max-width: 22rem;
-      margin: 0 auto;
-   }
+    .cl-page {
+       flex: 1;
+       width: 100%;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       padding: 0.75rem 1rem;
+       background:
+          linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.65)),
+          url('{{ asset('images/citizen-login/gramin_bg.png') }}') center / cover no-repeat;
+    }
+    @media (min-width: 768px) {
+       .cl-page {
+          justify-content: flex-start;
+          padding-left: 8%;
+       }
+    }
+    .cl-shell {
+       width: 100%;
+       max-width: 22rem;
+       margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+       .cl-shell {
+          margin: 0;
+       }
+    }
    .cl-card {
       background: #fff;
       border-radius: 0.75rem;
@@ -401,10 +412,10 @@
             <div class="cl-brand__icon">
                <span class="material-symbols-outlined">apartment</span>
             </div>
-            <div>
-               <p class="cl-brand__title">Housing For All (MMGAY)</p>
-               {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
-            </div>
+             <div>
+                <p class="cl-brand__title">Housing For All ({{ (isset($context) && str_contains($context, 'mmgav')) || str_contains(request()->url(), 'mmgav') ? 'MMGAV' : 'MMGAY' }})</p>
+                {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
+             </div>
          </div>
 
          <div class="cl-body">

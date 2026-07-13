@@ -775,8 +775,8 @@ body.pp-body-auth {
     object-fit: cover;
     object-position: 62% 38%;
     display: block;
-    filter: blur(4px);
-    transform: scale(1.04);
+    filter: blur(1.5px);
+    transform: scale(1.02);
 }
 
 .pp-auth-bg::after {

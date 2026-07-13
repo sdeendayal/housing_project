@@ -45,22 +45,9 @@ class User extends Authenticatable
         return $this->roleType?->role;
     }
 
-    public function belongsToRoleGroup(string $slug): bool
-    {
-        return $this->roleGroupSlug() === $slug;
-    }
-
     public function hasRole(string $slug): bool
     {
         return $this->role === $slug;
-    }
-
-    public function roleGroupSlug(): ?string
-    {
-        $this->loadMissing('roleType.role.roleGroup', 'roleType.roleGroup');
-
-        return $this->roleType?->role?->roleGroup?->slug
-            ?? $this->roleType?->roleGroup?->slug;
     }
 
     public function roleSlug(): ?string
@@ -86,14 +73,6 @@ class User extends Authenticatable
             'district_officer' => route('pp.officer.dashboard'),
             'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
             default => route('home'),
-        };
-    }
-
-    private function roleGroupAliases(string $slug): \Illuminate\Support\Collection
-    {
-        return match ($slug) {
-            'department', 'departmental' => collect(['department', 'departmental']),
-            default => collect([$slug]),
         };
     }
 }

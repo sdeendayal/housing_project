@@ -67,11 +67,13 @@ class CmsController extends Controller
                 'updated_at' => now(),
             ]);
 
+            $role = DB::table('roles')->where('slug', 'district_officer')->first();
+            $roleId = $role ? $role->id : 2;
+
             // Insert Role Mapping
             DB::table('role_types')->insert([
                 'user_id' => $userId,
-                'role_id' => 2,
-                'role_group_id' => 2,
+                'role_id' => $roleId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

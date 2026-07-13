@@ -246,8 +246,15 @@
                     
                     @if($latestPpApplication && $latestPpApplication->possession_certificate)
                         <a href="{{ asset('storage/' . $latestPpApplication->possession_certificate) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[10px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
-                            <span class="material-symbols-outlined text-[16px]">visibility</span>
-                            View Uploaded Certificate
+                            <span class="material-symbols-outlined text-[16px]">verified_user</span>
+                            Download Signed Possession Certificate
+                        </a>
+                    @endif
+
+                    @if($latestPpApplication && $latestPpApplication->site_engineer_file)
+                        <a href="{{ asset('storage/' . $latestPpApplication->site_engineer_file) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
+                            <span class="material-symbols-outlined text-[16px]">description</span>
+                            Download Final Possession Letter
                         </a>
                     @endif
                 </div>

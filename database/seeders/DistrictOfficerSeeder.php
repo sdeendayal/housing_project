@@ -14,11 +14,10 @@ class DistrictOfficerSeeder extends Seeder
 {
     public function run(): void
     {
-        $departmentGroup = RoleGroup::whereIn('slug', ['department', 'departmental'])->first();
         $districtOfficerRole = Role::where('slug', 'district_officer')->first();
 
-        if (! $departmentGroup || ! $districtOfficerRole) {
-            $this->command->error('Department group or district_officer role not found. Run RoleGroupSeeder and RoleSeeder first.');
+        if (! $districtOfficerRole) {
+            $this->command->error('District_officer role not found. Run RoleSeeder first.');
 
             return;
         }
@@ -65,7 +64,6 @@ class DistrictOfficerSeeder extends Seeder
                 ['user_id' => $user->id],
                 [
                     'role_id' => $districtOfficerRole->id,
-                    'role_group_id' => $departmentGroup->id,
                 ]
             );
         }

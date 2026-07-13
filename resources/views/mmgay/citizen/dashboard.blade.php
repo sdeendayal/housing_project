@@ -365,9 +365,21 @@
                                         <p class="text-[10px] text-emerald-600 mt-0.5 font-medium">Your physical possession was successfully verified on {{ date('d M Y', strtotime($possessionApplication->verified_at)) }}.</p>
                                     </div>
                                 </div>
-                                <a href="{{ route('mmgay.bdo.download-certificate', $possessionApplication->id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-emerald-500/10 flex items-center gap-1">
-                                    <span class="material-symbols-outlined text-[14px]">picture_as_pdf</span> Download Possession Report
-                                </a>
+                                <div class="flex flex-wrap items-center gap-2 mt-2 md:mt-0">
+                                    <a href="{{ route('mmgay.villager.download-certificate', $possessionApplication->secure_id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-emerald-500/10 flex items-center gap-1 active:scale-95">
+                                        <span class="material-symbols-outlined text-[14px]">picture_as_pdf</span> Download Report
+                                    </a>
+                                    @if($possessionApplication->possession_certificate)
+                                        <a href="{{ asset('storage/' . $possessionApplication->possession_certificate) }}" target="_blank" rel="noopener" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-blue-500/10 flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[14px]">description</span> Final Possession Letter
+                                        </a>
+                                    @endif
+                                    @if($possessionApplication->site_engineer_file)
+                                        <a href="{{ asset('storage/' . $possessionApplication->site_engineer_file) }}" target="_blank" rel="noopener" class="bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-teal-500/10 flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[14px]">task</span> BDO Signed Report
+                                        </a>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     @endif
@@ -763,15 +775,25 @@
                                     <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-700">Physical Possession Status & Verification Details</h3>
                                     <p class="text-[9px] text-slate-400 mt-1 font-bold">App Number: <span class="font-mono">{{ $possessionApplication->application_number }}</span> | Slip ID: <span class="font-mono">{{ $possessionApplication->slip_id }}</span></p>
                                 </div>
-                                <div class="flex items-center gap-2">
+                                <div class="flex flex-wrap items-center gap-2">
                                     @if($possessionApplication->physical_possession_status !== 'Visit Scheduled')
                                         <a href="{{ route('mmgay.villager.download-slip') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
                                             <span class="material-symbols-outlined text-[13px]">picture_as_pdf</span> Download Slip
                                         </a>
                                     @endif
-                                    @if($possessionApplication->physical_possession_status === 'Verified' && $possessionApplication->site_engineer_file)
-                                        <a href="{{ route('mmgay.bdo.download-certificate', $possessionApplication->secure_id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                    @if($possessionApplication->physical_possession_status === 'Verified')
+                                        <a href="{{ route('mmgay.villager.download-certificate', $possessionApplication->secure_id) }}?inline=1" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
                                             <span class="material-symbols-outlined text-[13px]">verified_user</span> Download Report
+                                        </a>
+                                    @endif
+                                    @if($possessionApplication->possession_certificate)
+                                        <a href="{{ asset('storage/' . $possessionApplication->possession_certificate) }}" target="_blank" rel="noopener" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[13px]">description</span> Final Possession Letter
+                                        </a>
+                                    @endif
+                                    @if($possessionApplication->site_engineer_file)
+                                        <a href="{{ asset('storage/' . $possessionApplication->site_engineer_file) }}" target="_blank" rel="noopener" class="bg-teal-600 hover:bg-teal-700 text-white text-[10px] font-extrabold uppercase px-3 py-2 rounded-xl transition shadow flex items-center gap-1 active:scale-95">
+                                            <span class="material-symbols-outlined text-[13px]">task</span> BDO Signed Report
                                         </a>
                                     @endif
                                 </div>
@@ -948,14 +970,14 @@
                             <div class="px-5 py-3.5 bg-slate-50/50 border-b border-slate-100">
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Official Help & Support Channels</h3>
                             </div>
-                            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                            <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                                 <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
                                     <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
                                         <span class="material-symbols-outlined text-[18px]">phone_in_talk</span>
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-800 text-xs">Helpline Center</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Call: <strong class="text-slate-700">1800-180-2128</strong> (Toll Free).</p>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Call: <strong class="text-slate-700">0172-2585852</strong>, <strong class="text-slate-700">0172-2568687</strong>, <strong class="text-slate-700">0172-2567233</strong></p>
                                     </div>
                                 </div>
                                 <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
@@ -964,16 +986,7 @@
                                     </div>
                                     <div>
                                         <h4 class="font-bold text-slate-800 text-xs">Support Email</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Write to: <strong class="text-slate-700">housingforall@hry.gov.in</strong>.</p>
-                                    </div>
-                                </div>
-                                <div class="border border-slate-200/65 rounded-2xl p-4 hover:bg-slate-50/50 transition-all flex gap-3.5 items-start glass-card">
-                                    <div class="w-8 h-8 bg-amber-50 text-amber-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm">
-                                        <span class="material-symbols-outlined text-[18px]">domain</span>
-                                    </div>
-                                    <div>
-                                        <h4 class="font-bold text-slate-800 text-xs">Nodal Office</h4>
-                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Visit Nodal District HQ or the Department of Housing cell.</p>
+                                        <p class="text-[11px] text-slate-500 mt-1 leading-snug">Write to: <strong class="text-slate-700">director-hfa@hry.gov.in</strong>.</p>
                                     </div>
                                 </div>
                             </div>

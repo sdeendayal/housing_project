@@ -27,14 +27,14 @@ class OtpAuthController extends Controller
             abort(404);
         }
 
-        if (Auth::check() && Auth::user()->belongsToRoleGroup($config['role_group'])) {
+        if (Auth::check()) {
             return redirect()->intended(Auth::user()->dashboardRoute());
         }
 
         $captcha = rand(1000, 9999);
         session(['captcha' => $captcha]);
 
-        return view($config['login_view'], compact('captcha'));
+        return view($config['login_view'], compact('captcha', 'context', 'config'));
     }
 
     public function sendOtp(SendOtpRequest $request, string $context): RedirectResponse
@@ -58,9 +58,9 @@ class OtpAuthController extends Controller
         if (! $user) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
-          
-        if (! $user->roleType || ! $user->roleType->role_group_id) {
-            return back()->withInput()->with('error', 'Your account does not have a configured role group mapping.');
+
+        if (! $user->roleType || ! $user->roleType->role_id) {
+            return back()->withInput()->with('error', 'Your account does not have a configured role mapping.');
         }
        
 
@@ -70,12 +70,19 @@ class OtpAuthController extends Controller
 
          
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return back()->withInput()->with('error', $config['wrong_group_message']);
-        }
-        
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
-            return back()->withInput()->with('error', $config['not_registered_message']);
+        $userRole = $user->roleSlug();
+        if ($context === 'citizen') {
+            if ($userRole !== 'citizen') {
+                return back()->withInput()->with('error', 'Mobile number is not registered as a citizen account.');
+            }
+        } elseif ($context === 'mmgav_villager') {
+            if ($userRole !== 'villager') {
+                return back()->withInput()->with('error', 'Mobile number is not registered as an MMGAV villager account.');
+            }
+        } elseif ($context === 'department') {
+            if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
+                return back()->withInput()->with('error', 'Mobile number is not registered as a department officer account.');
+            }
         }
 
         
@@ -164,20 +171,27 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
-        if (! $user->roleType || ! $user->roleType->role_group_id) {
-            return redirect()->route($config['login_route'])->with('error', 'Your account does not have a configured role group mapping.');
+        if (! $user->roleType || ! $user->roleType->role_id) {
+            return redirect()->route($config['login_route'])->with('error', 'Your account does not have a configured role mapping.');
         }
 
         if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return redirect()->route($config['login_route'])->with('error', $config['wrong_group_message']);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
-            return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        $userRole = $user->roleSlug();
+        if ($context === 'citizen') {
+            if ($userRole !== 'citizen') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a citizen account.');
+            }
+        } elseif ($context === 'mmgav_villager') {
+            if ($userRole !== 'villager') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an MMGAV villager account.');
+            }
+        } elseif ($context === 'department') {
+            if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a department officer account.');
+            }
         }
 
         if ($context === 'mmgav_villager') {
@@ -256,12 +270,19 @@ class OtpAuthController extends Controller
             return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
         }
 
-        if ($user->belongsToRoleGroup($config['wrong_group_slug'])) {
-            return redirect()->route($config['login_route'])->with('error', $config['wrong_group_message']);
-        }
-
-        if (! $user->belongsToRoleGroup($config['role_group'])) {
-            return redirect()->route($config['login_route'])->with('error', $config['not_registered_message']);
+        $userRole = $user->roleSlug();
+        if ($context === 'citizen') {
+            if ($userRole !== 'citizen') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a citizen account.');
+            }
+        } elseif ($context === 'mmgav_villager') {
+            if ($userRole !== 'villager') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an MMGAV villager account.');
+            }
+        } elseif ($context === 'department') {
+            if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a department officer account.');
+            }
         }
 
         if ($context === 'mmgav_villager') {
@@ -301,9 +322,10 @@ class OtpAuthController extends Controller
         $loginRoute = 'citizen.login';
 
         if (Auth::check()) {
-            if (Auth::user()->belongsToRoleGroup('villager')) {
+            $userRole = Auth::user()->roleSlug();
+            if ($userRole === 'villager') {
                 $loginRoute = 'mmgav.villager.login';
-            } elseif (Auth::user()->belongsToRoleGroup('department')) {
+            } elseif (!in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 $loginRoute = 'pp.department.login';
             }
         }

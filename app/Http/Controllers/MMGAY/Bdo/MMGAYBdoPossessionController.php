@@ -23,7 +23,7 @@ class MMGAYBdoPossessionController extends Controller
     {
         if (Auth::check()) {
             $user = Auth::user();
-            if ($user->scheme === 'MMGAY' && $user->belongsToRoleGroup('mmgav_bdeo') && $user->hasRole('mmgav_bdeo')) {
+            if ($user->scheme === 'MMGAY' && $user->hasRole('mmgav_bdeo')) {
                 return redirect()->route('mmgay.bdo.dashboard');
             }
         }
@@ -76,7 +76,7 @@ class MMGAYBdoPossessionController extends Controller
         }
 
         $user = Auth::user();
-        if (!$user->belongsToRoleGroup('mmgav_bdeo') || !$user->hasRole('mmgav_bdeo')) {
+        if (!$user->hasRole('mmgav_bdeo')) {
             Auth::logout();
             return back()
                 ->withInput()
@@ -270,12 +270,10 @@ class MMGAYBdoPossessionController extends Controller
 
                 // Seed role type for this new user
                 $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
-                $villagerGroup = DB::table('role_groups')->where('slug', 'villager')->first();
-                if ($villagerRole && $villagerGroup) {
+                if ($villagerRole) {
                     DB::table('role_types')->insert([
                         'user_id' => $user->id,
                         'role_id' => $villagerRole->id,
-                        'role_group_id' => $villagerGroup->id,
                         'Is_Active' => '1',
                         'Is_Deleted' => '0',
                         'created_at' => now(),
@@ -287,6 +285,9 @@ class MMGAYBdoPossessionController extends Controller
             $application = MmgayPossessionApplication::create([
                 'user_id' => $user->id,
                 'owner_id' => $owner->OwnerId,
+                'ppp_id' => $owner->PPPId ?? null,
+                'member_id' => $owner->MemberId ?? null,
+                'flat_id' => $owner->FlatId ?? null,
                 'scheme' => 'MMGAY',
                 'application_number' => 'PP-MMGAY-' . now()->format('Y') . '-' . ($owner->RegistrationNo ?? rand(1000, 9999)),
                 'secure_id' => $owner->secure_id, // Match owner's unique random 32-character secure_id
@@ -707,13 +708,21 @@ class MMGAYBdoPossessionController extends Controller
      */
     public function downloadCertificate(Request $request, $secureId)
     {
-        $bdo = Auth::user();
+        $user = Auth::user();
 
         $application = MmgayPossessionApplication::where('secure_id', $secureId)
             ->firstOrFail();
 
-        if ($bdo && $bdo->block_id && $application->block_id !== $bdo->block_id) {
-            abort(403, 'Unauthorized.');
+        if ($user) {
+            if ($user->role === 'villager' || $user->hasRole('villager')) {
+                if ($application->user_id !== $user->id) {
+                    abort(403, 'Unauthorized.');
+                }
+            } else {
+                if ($user->block_id && $application->block_id !== $user->block_id) {
+                    abort(403, 'Unauthorized.');
+                }
+            }
         }
 
         // Get owner details from ownermaster

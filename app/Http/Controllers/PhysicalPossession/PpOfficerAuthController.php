@@ -24,7 +24,7 @@ class PpOfficerAuthController extends Controller
 
     public function showLogin()
     {
-        if (Auth::check() && Auth::user()->belongsToRoleGroup('district_officer')) {
+        if (Auth::check() && Auth::user()->hasRole('district_officer')) {
             return redirect()->route('pp.officer.dashboard');
         }
 
@@ -258,7 +258,7 @@ class PpOfficerAuthController extends Controller
     {
         $user = User::where('mobile', $mobile)->first();
 
-        if (! $user || (! $user->belongsToRoleGroup('district_officer') && $user->role !== 'district_officer')) {
+        if (! $user || !$user->hasRole('district_officer')) {
             return null;
         }
 

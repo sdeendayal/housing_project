@@ -36,11 +36,10 @@ class SyncCitizenUsers extends Command
     {
         ini_set('memory_limit', '512M');
 
-        $citizenGroup = RoleGroup::where('slug', 'citizen')->first();
         $citizenRole = Role::where('slug', 'citizen')->first();
 
-        if (! $citizenGroup || ! $citizenRole) {
-            $this->error('Citizen role/group not found. Run RoleGroupSeeder and RoleSeeder first.');
+        if (! $citizenRole) {
+            $this->error('Citizen role not found. Run RoleSeeder first.');
 
             return self::FAILURE;
         }
@@ -73,7 +72,6 @@ class SyncCitizenUsers extends Command
             ->where('PrivatePurchaserId', '>', $fromId)
             ->orderBy('PrivatePurchaserId')
             ->chunkById($chunkSize, function ($purchasers) use (
-                $citizenGroup,
                 $citizenRole,
                 $passwordHash,
                 $now,
@@ -89,12 +87,11 @@ class SyncCitizenUsers extends Command
                 } else {
                     DB::transaction(function () use (
                         $purchasers,
-                        $citizenGroup,
                         $citizenRole,
                         $passwordHash,
                         $now
                     ) {
-                        $this->processChunk($purchasers, $citizenGroup, $citizenRole, $passwordHash, $now);
+                        $this->processChunk($purchasers, $citizenRole, $passwordHash, $now);
                     });
                 }
 
@@ -149,7 +146,7 @@ class SyncCitizenUsers extends Command
 
         if (count($missingRoleUserIds) > 0) {
             $this->info('Found ' . count($missingRoleUserIds) . ' users missing role mappings. Generating mappings...');
-            $this->syncRoleMappings($missingRoleUserIds, $citizenGroup, $citizenRole, $now);
+            $this->syncRoleMappings($missingRoleUserIds, $citizenRole, $now);
         }
 
         return self::SUCCESS;
@@ -178,7 +175,6 @@ class SyncCitizenUsers extends Command
      */
     private function processChunk(
         Collection $purchasers,
-        RoleGroup $citizenGroup,
         Role $citizenRole,
         string $passwordHash,
         $now
@@ -272,7 +268,7 @@ class SyncCitizenUsers extends Command
             ->pluck('id')
             ->all();
 
-        $this->syncRoleMappings($userIds, $citizenGroup, $citizenRole, $now);
+        $this->syncRoleMappings($userIds, $citizenRole, $now);
     }
 
     /**
@@ -356,7 +352,6 @@ class SyncCitizenUsers extends Command
      */
     private function syncRoleMappings(
         array $userIds,
-        RoleGroup $citizenGroup,
         Role $citizenRole,
         $now
     ): void {
@@ -383,7 +378,6 @@ class SyncCitizenUsers extends Command
             $roleRows[] = [
                 'user_id' => $userId,
                 'role_id' => $citizenRole->id,
-                'role_group_id' => $citizenGroup->id,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

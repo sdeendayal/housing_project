@@ -185,12 +185,10 @@ class MmgayBdoApiController extends Controller
 
                 // Seed role type for this new user
                 $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
-                $villagerGroup = DB::table('role_groups')->where('slug', 'villager')->first();
-                if ($villagerRole && $villagerGroup) {
+                if ($villagerRole) {
                     DB::table('role_types')->insert([
                         'user_id' => $user->id,
                         'role_id' => $villagerRole->id,
-                        'role_group_id' => $villagerGroup->id,
                         'Is_Active' => '1',
                         'Is_Deleted' => '0',
                         'created_at' => now(),
@@ -202,6 +200,9 @@ class MmgayBdoApiController extends Controller
             $application = MmgayPossessionApplication::create([
                 'user_id' => $user->id,
                 'owner_id' => $owner->OwnerId,
+                'ppp_id' => $owner->PPPId ?? null,
+                'member_id' => $owner->MemberId ?? null,
+                'flat_id' => $owner->FlatId ?? null,
                 'scheme' => 'MMGAY',
                 'application_number' => 'PP-MMGAY-' . now()->format('Y') . '-' . ($owner->RegistrationNo ?? rand(1000, 9999)),
                 'secure_id' => $owner->secure_id,
@@ -387,7 +388,15 @@ class MmgayBdoApiController extends Controller
 
         $status = $request->input('status');
         if ($status) {
-            $query->where('physical_possession_status', $status);
+            $mappedStatus = match ($status) {
+                'awaiting_citizen' => 'Visit Scheduled',
+                'awaiting_coordinates' => 'Slot Selected',
+                'awaiting_bdo_doc' => 'Site Verified',
+                'verified' => 'Verified',
+                default => $status
+            };
+
+            $query->where('physical_possession_status', $mappedStatus);
         }
 
         $search = $request->input('search');

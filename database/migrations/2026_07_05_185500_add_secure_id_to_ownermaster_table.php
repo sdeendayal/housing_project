@@ -18,7 +18,16 @@ return new class extends Migration
         });
 
         // 2. Generate random 32-character MD5 hashes for all existing records
-        DB::statement("UPDATE ownermaster SET secure_id = MD5(CONCAT(OwnerId, RAND(), UUID())) WHERE secure_id IS NULL OR secure_id = ''");
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            $owners = DB::table('ownermaster')->whereNull('secure_id')->orWhere('secure_id', '')->get();
+            foreach ($owners as $owner) {
+                DB::table('ownermaster')->where('OwnerId', $owner->OwnerId)->update([
+                    'secure_id' => md5($owner->OwnerId . uniqid(rand(), true))
+                ]);
+            }
+        } else {
+            DB::statement("UPDATE ownermaster SET secure_id = MD5(CONCAT(OwnerId, RAND(), UUID())) WHERE secure_id IS NULL OR secure_id = ''");
+        }
     }
 
     /**

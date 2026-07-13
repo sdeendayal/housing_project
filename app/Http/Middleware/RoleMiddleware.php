@@ -10,82 +10,42 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, $role)
     {
+        if (! Auth::check()) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            }
+            $loginUrl = match ($role) {
+                'citizen' => route('citizen.login'),
+                'villager' => route('mmgav.villager.login'),
+                default => route('pp.department.login'),
+            };
+            return redirect()->guest($loginUrl);
+        }
+
+        $user = Auth::user();
+        $userRole = $user->roleSlug();
+
+        $authorized = false;
         if ($role === 'citizen') {
-            return $this->guardRoleGroup($request, $next, 'citizen', route('citizen.login'));
+            $authorized = ($userRole === 'citizen');
+        } elseif ($role === 'villager') {
+            $authorized = ($userRole === 'villager');
+        } elseif (in_array($role, ['department', 'departmental'], true)) {
+            $authorized = !in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true);
+        } else {
+            $authorized = ($userRole === $role);
         }
 
-        if ($role === 'villager') {
-            return $this->guardRoleGroup($request, $next, 'villager', route('mmgav.villager.login'));
-        }
-
-        if (in_array($role, ['department', 'departmental'], true)) {
-            return $this->guardRoleGroup($request, $next, 'department', route('pp.department.login'));
-        }
-
-        if ($role === 'district_officer') {
-            return $this->guardRoleSlug($request, $next, 'district_officer', route('pp.department.login'));
-        }
-
-        // Legacy department email/password routes
-        if (! Auth::check()) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
-            }
-            return redirect()->route('login');
-        }
-
-        if (Auth::user()->role !== $role && ! Auth::user()->hasRole($role)) {
+        if (!$authorized) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
             }
             Auth::logout();
-
-            return redirect()->route('login')->with('error', 'Unauthorized access');
-        }
-
-        return $next($request);
-    }
-
-    private function guardRoleGroup(Request $request, Closure $next, string $groupSlug, string $loginUrl)
-    {
-        if (! Auth::check()) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
-            }
-            return redirect()->guest($loginUrl);
-        }
-
-        $user = Auth::user();
-
-        if (! $user->belongsToRoleGroup($groupSlug)) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
-            }
-            Auth::logout();
-
-            return redirect($loginUrl)->with('error', 'Unauthorized access.');
-        }
-
-        return $next($request);
-    }
-
-    private function guardRoleSlug(Request $request, Closure $next, string $roleSlug, string $loginUrl)
-    {
-        if (! Auth::check()) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
-            }
-            return redirect()->guest($loginUrl);
-        }
-
-        $user = Auth::user();
-
-        if (! $user->hasRole($roleSlug)) {
-            if ($request->expectsJson() || $request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
-            }
-            Auth::logout();
-
+            $loginUrl = match ($role) {
+                'citizen' => route('citizen.login'),
+                'villager' => route('mmgav.villager.login'),
+                default => route('pp.department.login'),
+            };
             return redirect($loginUrl)->with('error', 'Unauthorized access.');
         }
 

@@ -27,11 +27,10 @@ class SyncMMGAYCitizens extends Command
     {
         ini_set('memory_limit', '512M');
 
-        $citizenGroup = RoleGroup::where('slug', 'villager')->first();
         $citizenRole = Role::where('slug', 'villager')->first();
 
-        if (! $citizenGroup || ! $citizenRole) {
-            $this->error('Villager role/group not found. Run RoleGroupSeeder and RoleSeeder first.');
+        if (! $citizenRole) {
+            $this->error('Villager role not found. Run RoleSeeder first.');
 
             return self::FAILURE;
         }
@@ -83,7 +82,6 @@ class SyncMMGAYCitizens extends Command
             ->select(['OwnerId', 'OwnerName', 'MobileNo', 'DistrictId', 'BlockId'])
             ->orderBy('OwnerId')
             ->chunkById($chunkSize, function ($owners) use (
-                $citizenGroup,
                 $citizenRole,
                 $passwordHash,
                 $now,
@@ -97,14 +95,13 @@ class SyncMMGAYCitizens extends Command
                 if (!$dryRun) {
                     DB::transaction(function () use (
                         $owners,
-                        $citizenGroup,
                         $citizenRole,
                         $passwordHash,
                         $now,
                         $districts,
                         $blocks
                     ) {
-                        $this->processChunk($owners, $citizenGroup, $citizenRole, $passwordHash, $now, $districts, $blocks);
+                        $this->processChunk($owners, $citizenRole, $passwordHash, $now, $districts, $blocks);
                     });
                 } else {
                     $this->analyzeChunk($owners);
@@ -128,7 +125,7 @@ class SyncMMGAYCitizens extends Command
 
         if (count($missingRoleUserIds) > 0) {
             $this->info('Found ' . count($missingRoleUserIds) . ' users missing role mappings. Generating mappings...');
-            $this->syncRoleMappings($missingRoleUserIds, $citizenGroup, $citizenRole, $now);
+            $this->syncRoleMappings($missingRoleUserIds, $citizenRole, $now);
         }
 
         $this->table(
@@ -157,7 +154,6 @@ class SyncMMGAYCitizens extends Command
 
     private function processChunk(
         Collection $owners,
-        RoleGroup $citizenGroup,
         Role $citizenRole,
         string $passwordHash,
         $now,
@@ -255,7 +251,7 @@ class SyncMMGAYCitizens extends Command
                 ->pluck('id')
                 ->all();
 
-            $this->syncRoleMappings($userIds, $citizenGroup, $citizenRole, $now);
+            $this->syncRoleMappings($userIds, $citizenRole, $now);
         }
     }
 
@@ -305,7 +301,6 @@ class SyncMMGAYCitizens extends Command
 
     private function syncRoleMappings(
         array $userIds,
-        RoleGroup $citizenGroup,
         Role $citizenRole,
         $now
     ): void {
@@ -330,7 +325,6 @@ class SyncMMGAYCitizens extends Command
             $roleRows[] = [
                 'user_id' => $userId,
                 'role_id' => $citizenRole->id,
-                'role_group_id' => $citizenGroup->id,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];

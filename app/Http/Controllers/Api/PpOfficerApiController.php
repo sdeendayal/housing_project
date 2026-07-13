@@ -474,6 +474,11 @@ class PpOfficerApiController extends Controller
 
         // Apply status/type filter if provided
         $status = $request->input('status') ?? $request->input('type');
+        
+
+
+
+
         if ($status) {
             $statusLower = strtolower($status);
             if (in_array($statusLower, ['awaiting', 'awaiting_schedule', 'eligible', 'not_initiated'])) {
@@ -485,6 +490,8 @@ class PpOfficerApiController extends Controller
                 $purchaserQuery->where('temp.physical_possession_status', 'Visit Scheduled');
             } elseif (in_array($statusLower, ['submitted', 'pending', 'pending_verify', 'physical possession submitted'])) {
                 $purchaserQuery->whereIn('temp.physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
+            } elseif (in_array($statusLower, ['epossession_pending', 'site_verified', 'site verified'])) {
+                $purchaserQuery->where('temp.physical_possession_status', 'Site Verified');
             } elseif (in_array($statusLower, ['approved', 'verified'])) {
                 $purchaserQuery->where('temp.physical_possession_status', 'Verified');
             } elseif (in_array($statusLower, ['rejected'])) {
@@ -749,6 +756,8 @@ class PpOfficerApiController extends Controller
         }
         $totalReceived = $initialDeposit + $installmentPaid;
         $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
+
+        $application->load(['statusLogs.changer']);
 
         return response()->json([
             'success' => true,
@@ -1040,10 +1049,20 @@ class PpOfficerApiController extends Controller
         // Status filter
         $status = $request->input('status');
         if ($status) {
-            if ($status === 'Physical Possession Submitted') {
-                $query->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
+            $mappedStatus = match ($status) {
+                'awaiting_schedule' => 'Eligible for Physical Possession',
+                'scheduled' => 'Visit Scheduled',
+                'submitted', 'Physical Possession Submitted' => ['Slot Selected', 'Physical Possession Submitted'],
+                'epossession_pending' => 'Site Verified',
+                'verified' => 'Verified',
+                'rejected' => 'Rejected',
+                default => $status
+            };
+
+            if (is_array($mappedStatus)) {
+                $query->whereIn('physical_possession_status', $mappedStatus);
             } else {
-                $query->where('physical_possession_status', $status);
+                $query->where('physical_possession_status', $mappedStatus);
             }
         }
 

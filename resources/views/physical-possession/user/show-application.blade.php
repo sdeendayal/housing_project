@@ -290,7 +290,7 @@
             </div>
 
             <!-- Uploaded outcomes -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <!-- Plot Photo -->
                 @if($application->plot_image)
                 <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
@@ -323,6 +323,28 @@
                         <p class="text-[10px] font-bold text-slate-700 m-0 mb-3 text-center">Physical Possession Application (Signed)</p>
                         <a href="{{ asset('storage/' . $application->possession_certificate) }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg border border-red-200 bg-red-50 text-[10px] font-bold text-red-700 no-underline hover:bg-red-100">
                             <span class="material-symbols-outlined text-[14px]">download</span> Download PDF
+                        </a>
+                    </div>
+                </div>
+                @endif
+
+                <!-- Final Possession Letter -->
+                @if($application->site_engineer_file)
+                <div class="flex flex-col rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+                    <div class="p-2.5 bg-slate-50 border-b border-slate-100 flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-[16px] text-indigo-500">verified</span>
+                        <span class="text-[10px] font-bold text-slate-800">Final Possession Letter</span>
+                    </div>
+                    <div class="p-3 flex-1 flex flex-col items-center justify-center bg-slate-100/50">
+                        @php
+                            $isPdf = str_ends_with(strtolower($application->site_engineer_file), '.pdf');
+                        @endphp
+                        <div class="w-12 h-12 rounded-full {{ $isPdf ? 'bg-red-50 text-red-500' : 'bg-blue-50 text-blue-500' }} flex items-center justify-center mb-3">
+                            <span class="material-symbols-outlined text-[24px]">{{ $isPdf ? 'picture_as_pdf' : 'image' }}</span>
+                        </div>
+                        <p class="text-[10px] font-bold text-slate-700 m-0 mb-3 text-center">Final Possession Letter (Signed)</p>
+                        <a href="{{ asset('storage/' . $application->site_engineer_file) }}" target="_blank" class="w-full inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg border {{ $isPdf ? 'border-red-200 bg-red-50 text-red-700 hover:bg-red-100' : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100' }} text-[10px] font-bold no-underline">
+                            <span class="material-symbols-outlined text-[14px]">download</span> Download Document
                         </a>
                     </div>
                 </div>

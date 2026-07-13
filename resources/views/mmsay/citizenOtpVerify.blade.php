@@ -58,12 +58,23 @@
       padding: 0.75rem 1rem;
       background:
          linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.65)),
-         url('{{ asset('images/citizen-login/background.jpg') }}') center / cover no-repeat;
+         url('{{ asset('images/citizen-login/sehri_bg.png') }}') center / cover no-repeat;
+   }
+   @media (min-width: 768px) {
+      .cl-page {
+         justify-content: flex-start;
+         padding-left: 8%;
+      }
    }
    .cl-shell {
       width: 100%;
       max-width: 22rem;
       margin: 0 auto;
+   }
+   @media (min-width: 768px) {
+      .cl-shell {
+         margin: 0;
+      }
    }
    .cl-card {
       background: #fff;

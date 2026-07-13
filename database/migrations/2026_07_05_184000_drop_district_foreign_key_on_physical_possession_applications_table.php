@@ -13,7 +13,9 @@ return new class extends Migration
     {
         Schema::table('physical_possession_applications', function (Blueprint $table) {
             // Drop foreign key to districts table to allow mapping from districtmaster
-            $table->dropForeign('physical_possession_applications_district_id_foreign');
+            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                $table->dropForeign('physical_possession_applications_district_id_foreign');
+            }
         });
     }
 

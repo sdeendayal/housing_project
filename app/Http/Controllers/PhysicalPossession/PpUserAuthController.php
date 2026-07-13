@@ -270,11 +270,8 @@ class PpUserAuthController extends Controller
             return false;
         }
 
-        if ($user->belongsToRoleGroup('citizen') || $user->belongsToRoleGroup('district_officer')) {
-            return true;
-        }
-
-        return in_array($user->role, ['citizen', 'district_officer'], true);
+        $roleSlug = $user->roleSlug();
+        return in_array($roleSlug, ['citizen', 'district_officer'], true);
     }
 
     private function isOtpResendOnCooldown(Otp $latestOtp): bool
