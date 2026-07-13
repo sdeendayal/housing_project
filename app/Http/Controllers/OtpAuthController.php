@@ -39,6 +39,7 @@ class OtpAuthController extends Controller
 
     public function sendOtp(SendOtpRequest $request, string $context): RedirectResponse
     {
+        
         $config = config("otp-login.contexts.{$context}");
 
         if (! $config) {
@@ -52,6 +53,8 @@ class OtpAuthController extends Controller
         $mobile = $request->mobile;
         $user = User::where('mobile', $mobile)->first();
 
+       
+
         if (! $user) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
@@ -59,10 +62,13 @@ class OtpAuthController extends Controller
         if (! $user->roleType || ! $user->roleType->role_id) {
             return back()->withInput()->with('error', 'Your account does not have a configured role mapping.');
         }
+       
 
         if (isset($config['scheme']) && $user->scheme !== $config['scheme']) {
             return back()->withInput()->with('error', $config['not_registered_message']);
         }
+
+         
 
         $userRole = $user->roleSlug();
         if ($context === 'citizen') {
@@ -78,6 +84,8 @@ class OtpAuthController extends Controller
                 return back()->withInput()->with('error', 'Mobile number is not registered as a department officer account.');
             }
         }
+
+        
 
         if ($context === 'mmgav_villager') {
             $owner = DB::table('ownermaster')->where('MobileNo', $mobile)->first();

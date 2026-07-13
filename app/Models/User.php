@@ -47,20 +47,12 @@ class User extends Authenticatable
 
     public function hasRole(string $slug): bool
     {
-        $this->loadMissing('roleType.role');
-
-        if ($this->roleType?->role?->slug === $slug) {
-            return true;
-        }
-
         return $this->role === $slug;
     }
 
     public function roleSlug(): ?string
     {
-        $this->loadMissing('roleType.role');
-
-        return $this->roleType?->role?->slug ?? $this->role;
+        return $this->role;
     }
 
     public function dashboardRoute(): string

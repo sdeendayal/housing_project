@@ -22,6 +22,19 @@
             <span class="text-sm">Dashboard</span>
         </a>
 
+        <a href="{{ route('superadmin.possession.dashboard') }}"
+            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
+    {{ request()->routeIs('superadmin.possession.*') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined text-[22px]
+    {{ request()->routeIs('superadmin.possession.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">
+                real_estate_agent
+            </span>
+
+            <span class="text-sm">Physical Possession</span>
+        </a>
+
         <a href="{{ route('superadmin.districts') }}"
             class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
            {{ request()->routeIs('superadmin.districts') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
@@ -51,7 +64,7 @@
            {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
             <span
                 class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">check_circle</span>
-            <span class="text-sm">Paid Beneficiaries</span>            
+            <span class="text-sm">Paid Beneficiaries</span>
         </a>
 
         <a href="{{ route('superadmin.allotment.index') }}"
@@ -69,7 +82,6 @@
                 class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.assigned.flats') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">vpn_key</span>
             <span class="text-sm">Assigned Flats</span>
         </a>
-
     </nav>
 
     <div class="p-4 border-t border-slate-100 bg-slate-50/50">

@@ -69,6 +69,22 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
     Route::post('/district/owner/{id}/action', [DistrictCEOController::class, 'ownerAction'])
         ->name('district.owner.action_v2');
 
+    Route::get(
+        '/district-ceo/physical-possession',
+        [DistrictCEOController::class, 'physicalPossessionDashboard']
+    )->name('district.possession.dashboard');
+
+
+    Route::get(
+        '/district-ceo/physical-possession/view/{secure_id}',
+        [DistrictCEOController::class, 'physicalPossessionView']
+    )->name('district.possession.view');
+
+    Route::get(
+        '/district-ceo/physical-possession/view/{id}',
+        [DistrictCEOController::class, 'viewPossession']
+    )->name('district.possession.view');
+
 });
 
 Route::prefix('dc')
@@ -169,6 +185,14 @@ Route::prefix('super-admin')
 
         // routes/web.php mein ise replace karein
         Route::get('/super-admin/paid-beneficiaries', [SuperAdminController::class, 'paidBeneficiaries'])->name('superadmin.paid.beneficiaries');
+
+        Route::get('/physical-possession/dashboard', [SuperAdminController::class, 'physicalPossessionDashboard'])
+            ->name('superadmin.possession.dashboard');
+
+        Route::get(
+            '/physical-possession/view/{secure_id}',
+            [SuperAdminController::class, 'physicalPossessionView']
+        )->name('superadmin.possession.application.view');
 
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');

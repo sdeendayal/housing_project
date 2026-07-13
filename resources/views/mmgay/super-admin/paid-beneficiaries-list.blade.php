@@ -1,6 +1,6 @@
 @extends('layouts.mmgayAdmin')
 
-@section('title', 'Paid Beneficiaries List')
+@section('title', 'Paid Beneficiaries List - Super Admin')
 
 @section('content')
 
