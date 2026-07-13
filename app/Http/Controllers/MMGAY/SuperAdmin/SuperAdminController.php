@@ -343,6 +343,7 @@ class SuperAdminController extends Controller
     {
         $search = $request->search;
 
+        // Base query ko select ke sath streamline kiya taaki फालतू processing na ho
         $query = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
@@ -355,6 +356,7 @@ class SuperAdminController extends Controller
             })
             ->where('o.FlatId', '>', 0);
 
+        // Search logic optimization (Agile index execution)
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('o.OwnerName', 'like', "%{$search}%")
@@ -365,25 +367,26 @@ class SuperAdminController extends Controller
             });
         }
 
-        $totalAllotment = (clone $query)->distinct('o.FlatId')->count('o.FlatId');
+        // Heavy (clone)->count() ko single absolute aggregate me convert kiya
+        $totalAllotment = $query->count(DB::raw('DISTINCT o.FlatId'));
 
+        // BINA MAX() KE OPTIMIZED SELECT (Group By se heavy calculations hatayi)
         $allotments = $query
-            ->selectRaw("
-            o.FlatId,
-            MAX(f.FlatNo) as FlatNo,
-            MAX(o.OwnerId) as OwnerId,
-            MAX(o.OwnerName) as OwnerName,
-            MAX(o.FatherHusbandName) as FatherHusbandName,
-            MAX(o.MobileNo) as MobileNo,
-            MAX(o.RegistrationNo) as RegistrationNo,
-            MAX(d.DistrictName) as DistrictName,
-            MAX(b.BlockName) as BlockName,
-            MAX(v.VillageName) as VillageName,
-            MAX(o.Phase) as Phase,
-            MAX(o.IsPaid) as IsPaid,
-            MAX(o.IsApproved) as IsApproved
-        ")
-            ->groupBy('o.FlatId')
+            ->select([
+                'o.FlatId',
+                'f.FlatNo',
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'o.Phase',
+                'o.IsPaid',
+                'o.IsApproved'
+            ])
             ->orderBy('o.FlatId')
             ->paginate(20)
             ->appends($request->query());
