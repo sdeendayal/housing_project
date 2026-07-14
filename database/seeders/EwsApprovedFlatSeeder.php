@@ -14,7 +14,7 @@ class EwsApprovedFlatSeeder extends Seeder
      */
     public function run(): void
     {
-        $filePath = 'C:/Users/hp/Downloads/aws_flats_crid.xlsx';
+        $filePath = database_path('seeders/data/ews_approved_flat.xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
