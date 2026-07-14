@@ -193,7 +193,7 @@
                 <div class="flex justify-between items-center">
                     <div>
                         <p class="text-xs uppercase text-gray-500">Possession</p>
-                        <h2 id="totalPossession" class="text-3xl font-bold text-purple-700">
+                        <h2 id="totalPossession1" class="text-3xl font-bold text-purple-700">
                             {{-- {{ $totals['totalPossession'] }} --}}--
                         </h2>
                     </div>
