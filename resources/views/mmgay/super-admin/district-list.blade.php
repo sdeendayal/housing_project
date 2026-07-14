@@ -28,61 +28,112 @@
 
                 <table class="w-full text-sm">
 
-                    <!-- HEADER -->
-                    <thead class="bg-blue-600 text-white text-xs uppercase tracking-wider">
+                    <thead class="bg-blue-600 text-white text-xs uppercase">
                         <tr>
                             <th class="p-3 text-left">District</th>
                             <th class="p-3 text-center">Villages</th>
-                            <th class="p-3 text-center">Applicants</th>
-                            <th class="p-3 text-center">Number of Plots</th>
-                            <th class="p-3 text-center">Paid</th>                            
-                            <th class="p-3 text-center">Assigned Flats</th>   
+                            <th class="p-3 text-center">Registered Beneficiaries</th>
+                            <th class="p-3 text-center">Allotted</th>
+                            <th class="p-3 text-center">Approved & Paid</th>
+                            <th class="p-3 text-center">Approved & Unpaid</th>
+                            <th class="p-3 text-center">Pending</th>
+                            <th class="p-3 text-center">Rejected</th>
+                            <th class="p-3 text-center">Cancelled</th>
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-slate-200">
-                        @forelse($data as $d)
-                            <tr class="hover:bg-slate-50 transition-colors">
+                    <tbody class="divide-y divide-gray-200">
 
-                                <td class="p-3 font-semibold text-gray-700">
+                        @forelse($data as $d)
+                            <tr class="hover:bg-gray-50">
+
+                                <td class="p-3 font-semibold">
                                     {{ $d->DistrictName }}
                                 </td>
 
-                                <td class="p-3 text-center text-gray-600">{{ $d->VillagesWithPlots }}</td>
-                                <td class="p-3 text-center text-gray-600">{{ $d->Beneficiaries }}</td>
-                                <td class="p-3 text-center text-gray-600">{{ $d->Allotment }}</td>
-                                <td class="p-3 text-center text-green-600 font-semibold">{{ $d->Paid }}</td>
-                                
-                                <td class="p-3 text-center text-gray-600">{{ $d->AssignedFlats ?? 0 }}</td>
-                                
+                                <td class="text-center">
+                                    {{ number_format($d->VillagesWithPlots) }}
+                                </td>
 
-                               
+                                <td class="text-center">
+                                    {{ number_format($d->RegisteredBeneficiaries) }}
+                                </td>
 
-                                
+                                <td class="text-center font-semibold text-blue-600">
+                                    {{ number_format($d->AllottedBeneficiaries) }}
+                                </td>
+
+                                <td class="text-center text-green-600 font-semibold">
+                                    {{ number_format($d->ApprovedPaid) }}
+                                </td>
+
+                                <td class="text-center text-yellow-600 font-semibold">
+                                    {{ number_format($d->ApprovedUnpaid) }}
+                                </td>
+
+                                <td class="text-center text-orange-600 font-semibold">
+                                    {{ number_format($d->PendingApprovalPayment) }}
+                                </td>
+
+                                <td class="text-center text-red-600 font-semibold">
+                                    {{ number_format($d->Rejected) }}
+                                </td>
+
+                                <td class="text-center text-gray-700 font-semibold">
+                                    {{ number_format($d->AllotmentCancelled) }}
+                                </td>
 
                             </tr>
+
                         @empty
+
                             <tr>
-                                <td colspan="9" class="text-center p-10 text-gray-500">
-                                    No data found
+                                <td colspan="9" class="p-8 text-center text-gray-500">
+                                    No Records Found
                                 </td>
                             </tr>
                         @endforelse
-                    </tbody>
 
-                    <!-- GROSS TOTAL FOOTER (Only visible if data exists) -->
-                    @if (count($data) > 0)
-                        <tfoot class="bg-slate-50 border-t-2 border-slate-300 font-bold text-gray-800">
-                            <tr>
-                                <td class="p-3 text-left font-bold text-blue-900 text-base">Gross Total</td>
-                                <td class="p-3 text-center text-base">{{ $grossTotal->VillagesWithPlots }}</td>
-                                <td class="p-3 text-center text-base">{{ $grossTotal->Beneficiaries }}</td>
-                                 <td class="p-3 text-center text-base">{{ $grossTotal->Allotment }}</td>
-                                <td class="p-3 text-center text-green-700 text-base">{{ $grossTotal->Paid }}</td>                               
-                                <td class="p-3 text-center text-base">{{ $grossTotal->AssignedFlats }}</td>  
-                            </tr>
-                            </footer>
-                    @endif
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold border-t-2">
+                        <tr>
+
+                            <td class="p-3">Gross Total</td>
+
+                            <td class="text-center">
+                                {{ number_format($grossTotal->VillagesWithPlots) }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ number_format($grossTotal->RegisteredBeneficiaries) }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ number_format($grossTotal->AllottedBeneficiaries) }}
+                            </td>
+
+                            <td class="text-center text-green-600">
+                                {{ number_format($grossTotal->ApprovedPaid) }}
+                            </td>
+
+                            <td class="text-center text-yellow-600">
+                                {{ number_format($grossTotal->ApprovedUnpaid) }}
+                            </td>
+
+                            <td class="text-center text-orange-600">
+                                {{ number_format($grossTotal->PendingApprovalPayment) }}
+                            </td>
+
+                            <td class="text-center text-red-600">
+                                {{ number_format($grossTotal->Rejected) }}
+                            </td>
+
+                            <td class="text-center text-gray-700">
+                                {{ number_format($grossTotal->AllotmentCancelled) }}
+                            </td>
+
+                        </tr>
+                    </tfoot>
 
                 </table>
 
