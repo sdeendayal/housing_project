@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_approved_flat', function (Blueprint $table) {
+        Schema::create('aws_flats_crid', function (Blueprint $table) {
             $table->unsignedBigInteger('Id')->primary();
             $table->string('FLAG')->nullable();
             $table->string('ApplicationID')->nullable();
@@ -60,6 +60,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_approved_flat');
+        Schema::dropIfExists('aws_flats_crid');
     }
 };

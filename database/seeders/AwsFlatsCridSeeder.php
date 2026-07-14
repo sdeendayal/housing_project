@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-class EwsApprovedFlatSeeder extends Seeder
+class AwsFlatsCridSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $filePath = database_path('seeders/data/ews_approved_flat.xlsx');
+        $filePath = database_path('seeders/data/aws_flats_crid.xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
@@ -47,8 +47,8 @@ class EwsApprovedFlatSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_approved_flat table...");
-        DB::table('ews_approved_flat')->truncate();
+        $this->command->info("Truncating existing aws_flats_crid table...");
+        DB::table('aws_flats_crid')->truncate();
 
         $this->command->info("Seeding data...");
 
@@ -113,17 +113,17 @@ class EwsApprovedFlatSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_approved_flat')->insert($batch);
+                DB::table('aws_flats_crid')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_approved_flat')->insert($batch);
+            DB::table('aws_flats_crid')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_approved_flat table.");
+        $this->command->info("Successfully seeded {$count} records into the aws_flats_crid table.");
     }
 }
