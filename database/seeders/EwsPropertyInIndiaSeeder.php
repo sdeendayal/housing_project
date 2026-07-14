@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
-class EwsPppExclusionSeeder extends Seeder
+class EwsPropertyInIndiaSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -24,9 +24,9 @@ class EwsPppExclusionSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath}...");
         
         $spreadsheet = IOFactory::load($filePath);
-        $sheet = $spreadsheet->getSheetByName('exclusion');
+        $sheet = $spreadsheet->getSheetByName('property in india');
         if (!$sheet) {
-            $this->command->error("Sheet 'exclusion' not found in Excel file.");
+            $this->command->error("Sheet 'property in india' not found in Excel file.");
             return;
         }
         
@@ -34,7 +34,7 @@ class EwsPppExclusionSeeder extends Seeder
         $highestColumn = $sheet->getHighestColumn();
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
-        $this->command->info("Excel sheet 'exclusion' loaded. Total rows: {$highestRow}, Total columns: {$highestColumnIndex}.");
+        $this->command->info("Excel sheet 'property in india' loaded. Total rows: {$highestRow}, Total columns: {$highestColumnIndex}.");
 
         // Read header row (row 2)
         $header = [];
@@ -51,10 +51,10 @@ class EwsPppExclusionSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_reject_ppp_exclusion table...");
-        DB::table('ews_reject_ppp_exclusion')->truncate();
+        $this->command->info("Truncating existing ews_reject_property_in_india table...");
+        DB::table('ews_reject_property_in_india')->truncate();
 
-        $this->command->info("Seeding data into ews_reject_ppp_exclusion table (starting from row 3)...");
+        $this->command->info("Seeding data into ews_reject_property_in_india table (starting from row 3)...");
 
         for ($row = 3; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -82,17 +82,17 @@ class EwsPppExclusionSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_reject_ppp_exclusion')->insert($batch);
+                DB::table('ews_reject_property_in_india')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_reject_ppp_exclusion')->insert($batch);
+            DB::table('ews_reject_property_in_india')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_reject_ppp_exclusion table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_reject_property_in_india table.");
     }
 }

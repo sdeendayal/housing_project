@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_ppp_exclusion', function (Blueprint $table) {
+        Schema::create('ews_reject_property_in_india', function (Blueprint $table) {
             $table->id();
             $table->string('application_number')->nullable();
             $table->string('full_name')->nullable();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_ppp_exclusion');
+        Schema::dropIfExists('ews_reject_property_in_india');
     }
 };
