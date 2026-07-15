@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_bookings', function (Blueprint $table) {
+        Schema::create('ews_bookings_7', function (Blueprint $table) {
             $table->id();
             $table->text('aadhar_no')->nullable();
             $table->text('address')->nullable();
@@ -94,6 +94,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_bookings');
+        Schema::dropIfExists('ews_bookings_7');
     }
 };

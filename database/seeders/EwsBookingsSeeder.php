@@ -51,10 +51,10 @@ class EwsBookingsSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_bookings table...");
-        DB::table('ews_bookings')->truncate();
+        $this->command->info("Truncating existing ews_bookings_7 table...");
+        DB::table('ews_bookings_7')->truncate();
 
-        $this->command->info("Seeding data into ews_bookings table...");
+        $this->command->info("Seeding data into ews_bookings_7 table...");
 
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -83,17 +83,17 @@ class EwsBookingsSeeder extends Seeder
             $batch[] = $rowInsert;
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_bookings')->insert($batch);
+                DB::table('ews_bookings_7')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_bookings')->insert($batch);
+            DB::table('ews_bookings_7')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_bookings table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_bookings_7 table.");
     }
 }

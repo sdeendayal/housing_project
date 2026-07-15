@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_house_ownership_reject', function (Blueprint $table) {
+        Schema::create('ews_reject_property_in_india_3', function (Blueprint $table) {
             $table->id();
             $table->string('application_number')->nullable();
             $table->string('full_name')->nullable();
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_house_ownership_reject');
+        Schema::dropIfExists('ews_reject_property_in_india_3');
     }
 };

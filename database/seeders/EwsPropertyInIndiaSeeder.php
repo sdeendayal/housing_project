@@ -51,10 +51,10 @@ class EwsPropertyInIndiaSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_reject_property_in_india table...");
-        DB::table('ews_reject_property_in_india')->truncate();
+        $this->command->info("Truncating existing ews_reject_property_in_india_3 table...");
+        DB::table('ews_reject_property_in_india_3')->truncate();
 
-        $this->command->info("Seeding data into ews_reject_property_in_india table (starting from row 3)...");
+        $this->command->info("Seeding data into ews_reject_property_in_india_3 table (starting from row 3)...");
 
         for ($row = 3; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -82,17 +82,17 @@ class EwsPropertyInIndiaSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_reject_property_in_india')->insert($batch);
+                DB::table('ews_reject_property_in_india_3')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_reject_property_in_india')->insert($batch);
+            DB::table('ews_reject_property_in_india_3')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_reject_property_in_india table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_reject_property_in_india_3 table.");
     }
 }

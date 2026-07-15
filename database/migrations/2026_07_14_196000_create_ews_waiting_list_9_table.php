@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_waiting_list', function (Blueprint $table) {
+        Schema::create('ews_waiting_list_9', function (Blueprint $table) {
             $table->id();
             $table->string('application_number')->nullable();
             $table->string('full_name')->nullable();
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_waiting_list');
+        Schema::dropIfExists('ews_waiting_list_9');
     }
 };

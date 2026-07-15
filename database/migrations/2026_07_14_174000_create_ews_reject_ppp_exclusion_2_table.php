@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_allotted', function (Blueprint $table) {
+        Schema::create('ews_reject_ppp_exclusion_2', function (Blueprint $table) {
             $table->id();
             $table->string('application_number')->nullable();
             $table->string('full_name')->nullable();
             $table->string('aadhar_no')->nullable();
             $table->string('mobile_number')->nullable();
-            $table->string('flat_no')->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_allotted');
+        Schema::dropIfExists('ews_reject_ppp_exclusion_2');
     }
 };

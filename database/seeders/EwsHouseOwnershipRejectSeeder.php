@@ -51,10 +51,10 @@ class EwsHouseOwnershipRejectSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_house_ownership_reject table...");
-        DB::table('ews_house_ownership_reject')->truncate();
+        $this->command->info("Truncating existing ews_house_ownership_reject_4 table...");
+        DB::table('ews_house_ownership_reject_4')->truncate();
 
-        $this->command->info("Seeding data into ews_house_ownership_reject table (starting from row 3)...");
+        $this->command->info("Seeding data into ews_house_ownership_reject_4 table (starting from row 3)...");
 
         for ($row = 3; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -82,17 +82,17 @@ class EwsHouseOwnershipRejectSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_house_ownership_reject')->insert($batch);
+                DB::table('ews_house_ownership_reject_4')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_house_ownership_reject')->insert($batch);
+            DB::table('ews_house_ownership_reject_4')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_house_ownership_reject table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_house_ownership_reject_4 table.");
     }
 }

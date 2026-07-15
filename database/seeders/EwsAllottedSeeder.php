@@ -51,10 +51,10 @@ class EwsAllottedSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_allotted table...");
-        DB::table('ews_allotted')->truncate();
+        $this->command->info("Truncating existing ews_allotted_8 table...");
+        DB::table('ews_allotted_8')->truncate();
 
-        $this->command->info("Seeding data into ews_allotted table (starting from row 4)...");
+        $this->command->info("Seeding data into ews_allotted_8 table (starting from row 4)...");
 
         for ($row = 4; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -83,17 +83,17 @@ class EwsAllottedSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_allotted')->insert($batch);
+                DB::table('ews_allotted_8')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_allotted')->insert($batch);
+            DB::table('ews_allotted_8')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_allotted table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_allotted_8 table.");
     }
 }

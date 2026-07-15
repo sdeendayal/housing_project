@@ -51,10 +51,10 @@ class EwsEligibleSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_eligible table...");
-        DB::table('ews_eligible')->truncate();
+        $this->command->info("Truncating existing ews_eligible_6 table...");
+        DB::table('ews_eligible_6')->truncate();
 
-        $this->command->info("Seeding data into ews_eligible table (starting from row 3)...");
+        $this->command->info("Seeding data into ews_eligible_6 table (starting from row 3)...");
 
         for ($row = 3; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -85,17 +85,17 @@ class EwsEligibleSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_eligible')->insert($batch);
+                DB::table('ews_eligible_6')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_eligible')->insert($batch);
+            DB::table('ews_eligible_6')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_eligible table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_eligible_6 table.");
     }
 }

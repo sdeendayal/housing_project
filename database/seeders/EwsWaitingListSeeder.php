@@ -51,10 +51,10 @@ class EwsWaitingListSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_waiting_list table...");
-        DB::table('ews_waiting_list')->truncate();
+        $this->command->info("Truncating existing ews_waiting_list_9 table...");
+        DB::table('ews_waiting_list_9')->truncate();
 
-        $this->command->info("Seeding data into ews_waiting_list table (starting from row 4)...");
+        $this->command->info("Seeding data into ews_waiting_list_9 table (starting from row 4)...");
 
         for ($row = 4; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -83,17 +83,17 @@ class EwsWaitingListSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_waiting_list')->insert($batch);
+                DB::table('ews_waiting_list_9')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_waiting_list')->insert($batch);
+            DB::table('ews_waiting_list_9')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_waiting_list table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_waiting_list_9 table.");
     }
 }

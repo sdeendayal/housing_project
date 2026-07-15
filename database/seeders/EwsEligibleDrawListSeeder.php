@@ -51,10 +51,10 @@ class EwsEligibleDrawListSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing ews_eligible_draw_list table...");
-        DB::table('ews_eligible_draw_list')->truncate();
+        $this->command->info("Truncating existing ews_eligible_draw_list_5 table...");
+        DB::table('ews_eligible_draw_list_5')->truncate();
 
-        $this->command->info("Seeding data into ews_eligible_draw_list table (starting from row 2)...");
+        $this->command->info("Seeding data into ews_eligible_draw_list_5 table (starting from row 2)...");
 
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -82,17 +82,17 @@ class EwsEligibleDrawListSeeder extends Seeder
             ];
 
             if (count($batch) >= $batchSize) {
-                DB::table('ews_eligible_draw_list')->insert($batch);
+                DB::table('ews_eligible_draw_list_5')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('ews_eligible_draw_list')->insert($batch);
+            DB::table('ews_eligible_draw_list_5')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_eligible_draw_list table.");
+        $this->command->info("Successfully seeded {$count} records into the ews_eligible_draw_list_5 table.");
     }
 }

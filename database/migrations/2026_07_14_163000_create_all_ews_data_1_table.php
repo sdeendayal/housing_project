@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('all_ews_data', function (Blueprint $table) {
+        Schema::create('all_ews_data_1', function (Blueprint $table) {
             $table->id();
             $table->text('aadhar_no')->nullable();
             $table->text('address')->nullable();
@@ -92,6 +92,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('all_ews_data');
+        Schema::dropIfExists('all_ews_data_1');
     }
 };

@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('ews_reject_property_in_india', function (Blueprint $table) {
+        Schema::create('ews_eligible_6', function (Blueprint $table) {
             $table->id();
             $table->string('application_number')->nullable();
             $table->string('full_name')->nullable();
             $table->string('aadhar_no')->nullable();
             $table->string('mobile_number')->nullable();
+            $table->string('status')->nullable();
+            $table->string('priority')->nullable();
+            $table->string('category')->nullable();
             $table->timestamps();
         });
     }
@@ -26,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('ews_reject_property_in_india');
+        Schema::dropIfExists('ews_eligible_6');
     }
 };

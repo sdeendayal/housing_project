@@ -53,10 +53,10 @@ class AllEwsDataSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Truncating existing all_ews_data table...");
-        DB::table('all_ews_data')->truncate();
+        $this->command->info("Truncating existing all_ews_data_1 table...");
+        DB::table('all_ews_data_1')->truncate();
 
-        $this->command->info("Seeding data into all_ews_data table from 'org data'...");
+        $this->command->info("Seeding data into all_ews_data_1 table from 'org data'...");
 
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -85,17 +85,17 @@ class AllEwsDataSeeder extends Seeder
             $batch[] = $rowInsert;
 
             if (count($batch) >= $batchSize) {
-                DB::table('all_ews_data')->insert($batch);
+                DB::table('all_ews_data_1')->insert($batch);
                 $count += count($batch);
                 $batch = [];
             }
         }
 
         if (count($batch) > 0) {
-            DB::table('all_ews_data')->insert($batch);
+            DB::table('all_ews_data_1')->insert($batch);
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the all_ews_data table from 'org data' sheet.");
+        $this->command->info("Successfully seeded {$count} records into the all_ews_data_1 table from 'org data' sheet.");
     }
 }
