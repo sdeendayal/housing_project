@@ -84,15 +84,19 @@
                         <span>Verification Status</span>
                     </button>
 
+                    @if(!$pppExclusion && !$propertyReject && !$houseReject)
                     <button onclick="switchTab('bookings')" id="nav-bookings" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
                         <i class="bi bi-calendar-check-fill text-slate-400"></i>
                         <span>Draw & Bookings</span>
                     </button>
+                    @endif
 
+                    @if(!$pppExclusion && !$propertyReject && !$houseReject && $eligibleDraw && $booking)
                     <button onclick="switchTab('allotment')" id="nav-allotment" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
                         <i class="bi bi-house-check-fill text-slate-400"></i>
                         <span>Allotment Status</span>
                     </button>
+                    @endif
                 </nav>
             </div>
 
@@ -160,7 +164,13 @@
                         </div>
                         <div class="glass-widget px-3 py-1.5 rounded-lg">
                             <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Monthly Income</span>
-                            <div class="text-[11px] font-black text-emerald-600 mt-0.5 leading-tight">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</div>
+                            <div class="text-[11px] font-black text-emerald-600 mt-0.5 leading-tight">
+                                @if(is_numeric($ewsData->monthly_income ?? null))
+                                    ₹ {{ number_format((float)$ewsData->monthly_income) }}
+                                @else
+                                    {{ $ewsData->monthly_income ?? '—' }}
+                                @endif
+                            </div>
                         </div>
                         <div class="glass-widget px-3 py-1.5 rounded-lg">
                             <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Caste Group</span>
@@ -209,7 +219,13 @@
                                         </div>
                                         <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
                                             <span class="text-slate-400">Monthly Income</span>
-                                            <span class="font-extrabold text-emerald-600">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</span>
+                                            <span class="font-extrabold text-emerald-600">
+                                                @if(is_numeric($ewsData->monthly_income ?? null))
+                                                    ₹ {{ number_format((float)$ewsData->monthly_income) }}
+                                                @else
+                                                    {{ $ewsData->monthly_income ?? '—' }}
+                                                @endif
+                                            </span>
                                         </div>
                                         <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
                                             <span class="text-slate-400">Electricity A/c</span>
@@ -228,7 +244,13 @@
                                         </div>
                                         <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
                                             <span class="text-slate-400">Rent Paid</span>
-                                            <span class="font-bold text-slate-800">₹ {{ number_format($ewsData->rent_amount ?? 0) }}</span>
+                                            <span class="font-bold text-slate-800">
+                                                @if(is_numeric($ewsData->rent_amount ?? null))
+                                                    ₹ {{ number_format((float)$ewsData->rent_amount) }}
+                                                @else
+                                                    {{ $ewsData->rent_amount ?? '—' }}
+                                                @endif
+                                            </span>
                                         </div>
                                         <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
                                             <span class="text-slate-400">Vehicle Type</span>
@@ -391,6 +413,7 @@
                             </div>
                         </div>
 
+                        @if(!$pppExclusion)
                         <!-- Property in India Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
                             <div class="space-y-1">
@@ -413,7 +436,9 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
+                        @if(!$pppExclusion && !$propertyReject)
                         <!-- Existing House Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
                             <div class="space-y-1">
@@ -436,6 +461,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
                 </div>
