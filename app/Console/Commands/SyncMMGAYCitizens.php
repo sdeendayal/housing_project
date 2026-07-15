@@ -25,7 +25,7 @@ class SyncMMGAYCitizens extends Command
 
     public function handle(): int
     {
-        ini_set('memory_limit', '512M');
+        ini_set('memory_limit', '2048M');
 
         $citizenRole = Role::where('slug', 'villager')->first();
 

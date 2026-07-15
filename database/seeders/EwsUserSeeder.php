@@ -19,69 +19,106 @@ class EwsUserSeeder extends Seeder
             return;
         }
 
-        $this->command->info("Checking if aws_flats_crid table has data...");
-        $recordsCount = DB::table('aws_flats_crid')->count();
+        $this->command->info("Checking if all_ews_data_1 table has data...");
+        $recordsCount = DB::table('all_ews_data_1')->count();
         if ($recordsCount === 0) {
-            $this->command->warn("aws_flats_crid table is empty. Running AwsFlatsCridSeeder first...");
-            $seeder = new AwsFlatsCridSeeder();
+            $this->command->warn("all_ews_data_1 table is empty. Running AllEwsDataSeeder first...");
+            $seeder = new AllEwsDataSeeder();
             $seeder->setCommand($this->command);
             $seeder->run();
         }
 
         $this->command->info("Deleting existing EWS users and role types...");
         $existingEwsUserIds = User::where('role', 'ews_user')->pluck('id');
+        
+        // Delete in chunks to avoid query parameter limit issues
         RoleType::whereIn('user_id', $existingEwsUserIds)->delete();
         User::where('role', 'ews_user')->delete();
 
-        $this->command->info("Seeding EWS users from aws_flats_crid table into users and role_types...");
+        $this->command->info("Seeding EWS users from all_ews_data_1 table...");
 
-        $count = 0;
         $passwordHash = Hash::make('123456');
+        $batch = [];
+        $batchSize = 1000;
+        
+        $insertedMobiles = [];
+        // Fetch all existing mobiles in database to prevent unique constraint conflicts
+        $existingMobiles = DB::table('users')->whereNotNull('mobile')->pluck('mobile')->toArray();
+        foreach ($existingMobiles as $m) {
+            $insertedMobiles[$m] = true;
+        }
 
-        DB::transaction(function () use ($ewsRole, $passwordHash, &$count) {
-            $beneficiaries = DB::table('aws_flats_crid')->orderBy('Id', 'asc')->get();
-            $rowIndex = 2; // Mimic the excel row index for mobile mapping consistency
+        $allEwsData = DB::table('all_ews_data_1')->orderBy('id', 'asc')->get();
 
-            foreach ($beneficiaries as $data) {
-                $ewsId = $data->Id;
-
-                // Determine mobile number
-                if ($rowIndex === 2) {
-                    $mobile = '8888888888';
-                } elseif ($rowIndex === 3) {
-                    $mobile = '7777777777';
-                } else {
-                    $mobile = '9' . str_pad((string)$ewsId, 9, '0', STR_PAD_LEFT);
-                }
-
-                $userId = DB::table('users')->insertGetId([
-                    'name' => $data->membername ?? 'EWS User',
-                    'email' => "ews_{$ewsId}@gmail.com",
-                    'mobile' => $mobile,
-                    'password' => $passwordHash,
-                    'role' => 'ews_user',
-                    'scheme' => 'EWS',
-                    'Is_Active' => '1',
-                    'Is_Deleted' => '0',
-                    'district_name' => $data->District ?? null,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                DB::table('role_types')->insert([
-                    'user_id' => $userId,
-                    'role_id' => $ewsRole->id,
-                    'Is_Active' => '1',
-                    'Is_Deleted' => '0',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                $count++;
-                $rowIndex++;
+        foreach ($allEwsData as $record) {
+            $mobile = trim($record->mobile_number ?? '');
+            
+            // Clean mobile number
+            if ($mobile === 'NA' || $mobile === 'None' || $mobile === 'none' || $mobile === 'null' || !is_numeric($mobile) || strlen($mobile) !== 10) {
+                $mobile = null;
             }
-        });
 
-        $this->command->info("Successfully seeded {$count} users and role mappings from aws_flats_crid.");
+            // Avoid inserting duplicate mobile numbers to respect unique constraint
+            if ($mobile !== null) {
+                if (isset($insertedMobiles[$mobile])) {
+                    $mobile = null; // Set to null to avoid conflict
+                } else {
+                    $insertedMobiles[$mobile] = true;
+                }
+            }
+
+            $batch[] = [
+                'name' => trim($record->full_name ?? 'EWS User'),
+                'email' => "ews_{$record->id}@gmail.com",
+                'mobile' => $mobile,
+                'password' => $passwordHash,
+                'role' => 'ews_user',
+                'scheme' => 'EWS',
+                'Is_Active' => '1',
+                'Is_Deleted' => '0',
+                'district_name' => trim($record->bt_name ?? 'Sonipat'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if (count($batch) >= $batchSize) {
+                DB::table('users')->insert($batch);
+                $batch = [];
+            }
+        }
+
+        if (count($batch) > 0) {
+            DB::table('users')->insert($batch);
+        }
+
+        // Now, seed the role types mapping in bulk
+        $this->command->info("Seeding role mappings for the newly created EWS users...");
+        
+        $newEwsUserIds = DB::table('users')
+            ->where('role', 'ews_user')
+            ->pluck('id');
+
+        $roleBatch = [];
+        foreach ($newEwsUserIds as $userId) {
+            $roleBatch[] = [
+                'user_id' => $userId,
+                'role_id' => $ewsRole->id,
+                'Is_Active' => '1',
+                'Is_Deleted' => '0',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if (count($roleBatch) >= $batchSize) {
+                DB::table('role_types')->insert($roleBatch);
+                $roleBatch = [];
+            }
+        }
+
+        if (count($roleBatch) > 0) {
+            DB::table('role_types')->insert($roleBatch);
+        }
+
+        $this->command->info("Successfully seeded " . $newEwsUserIds->count() . " EWS users and role mappings from all_ews_data_1.");
     }
 }
