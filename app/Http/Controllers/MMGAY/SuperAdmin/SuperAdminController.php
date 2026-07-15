@@ -5,6 +5,7 @@ namespace App\Http\Controllers\MMGAY\SuperAdmin;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class SuperAdminController extends Controller
 {
@@ -556,17 +557,19 @@ class SuperAdminController extends Controller
 
     public function beneficiariesList(Request $request)
     {
-        $search = $request->input('search');
+        $search = trim($request->input('search'));
         $phaseFilter = $request->input('phase');
         $districtFilter = $request->input('district_id');
         $villageFilter = $request->input('village_id');
 
         $perPage = 20;
-        $page = $request->input('page', 1);
-        $offset = ($page - 1) * $perPage;
 
+        /*
+        |--------------------------------------------------------------------------
+        | Base Query
+        |--------------------------------------------------------------------------
+        */
 
-        // Same Dashboard Logic
         $query = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
@@ -577,18 +580,26 @@ class SuperAdminController extends Controller
                     ->orWhere('v.totalPlotsPhase3', '>', 0);
             });
 
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
 
-        // Search
-        if (!empty($search)) {
+        if ($search != '') {
             $query->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'LIKE', "{$search}%")
-                    ->orWhere('o.MobileNo', 'LIKE', "{$search}%")
-                    ->orWhere('o.RegistrationNo', 'LIKE', "{$search}%");
+                $q->where('o.OwnerName', 'LIKE', $search . '%')
+                    ->orWhere('o.MobileNo', 'LIKE', $search . '%')
+                    ->orWhere('o.RegistrationNo', 'LIKE', $search . '%');
             });
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Filters
+        |--------------------------------------------------------------------------
+        */
 
-        // Filters
         if (!empty($phaseFilter)) {
             $query->where('o.Phase', $phaseFilter);
         }
@@ -601,85 +612,124 @@ class SuperAdminController extends Controller
             $query->where('o.VillageId', $villageFilter);
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Fast Count Query (Without Flat Join)
+        |--------------------------------------------------------------------------
+        */
 
-        // Dashboard same count
-        $totalCount = (clone $query)
-            ->count('o.OwnerId');
-
-
-        // Listing
-        $items = $query->select([
-            'o.OwnerId',
-            'o.OwnerName',
-            'o.FatherHusbandName',
-            'o.MobileNo',
-            'o.RegistrationNo',
-            'o.Phase',
-            'd.DistrictName',
-            'v.VillageName',
-            'f.FlatNo',
-            'o.IsApproved',
-            'o.IsPaid'
-        ])
-            ->orderBy('o.OwnerId', 'desc')
-            ->offset($offset)
-            ->limit($perPage)
-            ->get();
-
-
-
-        $beneficiaries = new \Illuminate\Pagination\LengthAwarePaginator(
-            $items,
-            $totalCount,
-            $perPage,
-            $page,
-            [
-                'path' => request()->url(),
-                'query' => request()->query()
-            ]
-        );
-
-
-        // District dropdown (same dashboard villages)
-        $districts = DB::table('DistrictMaster as d')
-            ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
+        $countQuery = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->where(function ($q) {
                 $q->where('v.TotalPlots', '>', 0)
                     ->orWhere('v.totalPlotsPhase2', '>', 0)
                     ->orWhere('v.totalPlotsPhase3', '>', 0);
-            })
-            ->select(
-                'd.DistrictId',
-                'd.DistrictName'
-            )
-            ->distinct()
-            ->orderBy('d.DistrictName')
-            ->get();
+            });
 
+        if ($search != '') {
+            $countQuery->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'LIKE', $search . '%')
+                    ->orWhere('o.MobileNo', 'LIKE', $search . '%')
+                    ->orWhere('o.RegistrationNo', 'LIKE', $search . '%');
+            });
+        }
 
-        $villages = !empty($districtFilter)
-            ? DB::table('VillageMaster')
-                ->where('DistrictId', $districtFilter)
+        if (!empty($phaseFilter)) {
+            $countQuery->where('o.Phase', $phaseFilter);
+        }
+
+        if (!empty($districtFilter)) {
+            $countQuery->where('o.DistrictId', $districtFilter);
+        }
+
+        if (!empty($villageFilter)) {
+            $countQuery->where('o.VillageId', $villageFilter);
+        }
+
+        $totalCount = $countQuery->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Listing
+        |--------------------------------------------------------------------------
+        */
+
+        $items = $query
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.Phase',
+                'd.DistrictName',
+                'v.VillageName',
+                'f.FlatNo',
+                'o.IsApproved',
+                'o.IsPaid'
+            ])
+            ->orderByDesc('o.OwnerId')
+            ->paginate($perPage);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dropdowns
+        |--------------------------------------------------------------------------
+        */
+
+        $districts = Cache::remember('beneficiary_districts', 3600, function () {
+
+            return DB::table('DistrictMaster as d')
+                ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
                 ->where(function ($q) {
-                    $q->where('TotalPlots', '>', 0)
-                        ->orWhere('totalPlotsPhase2', '>', 0)
-                        ->orWhere('totalPlotsPhase3', '>', 0);
+                    $q->where('v.TotalPlots', '>', 0)
+                        ->orWhere('v.totalPlotsPhase2', '>', 0)
+                        ->orWhere('v.totalPlotsPhase3', '>', 0);
                 })
-                ->orderBy('VillageName')
-                ->get()
-            : collect();
+                ->select(
+                    'd.DistrictId',
+                    'd.DistrictName'
+                )
+                ->distinct()
+                ->orderBy('d.DistrictName')
+                ->get();
+        });
 
+        $villages = collect();
 
-        return view('mmgay.super-admin.beneficiaries-list', compact(
-            'beneficiaries',
-            'districts',
-            'villages',
-            'search',
-            'phaseFilter',
-            'districtFilter',
-            'villageFilter',
-            'totalCount'
-        ));
+        if (!empty($districtFilter)) {
+
+            $villages = Cache::remember(
+                'beneficiary_village_' . $districtFilter,
+                3600,
+                function () use ($districtFilter) {
+
+                    return DB::table('VillageMaster')
+                        ->where('DistrictId', $districtFilter)
+                        ->where(function ($q) {
+                            $q->where('TotalPlots', '>', 0)
+                                ->orWhere('totalPlotsPhase2', '>', 0)
+                                ->orWhere('totalPlotsPhase3', '>', 0);
+                        })
+                        ->orderBy('VillageName')
+                        ->get();
+                }
+            );
+        }
+
+        return view(
+            'mmgay.super-admin.beneficiaries-list',
+            [
+                'beneficiaries' => $items,
+                'districts' => $districts,
+                'villages' => $villages,
+                'search' => $search,
+                'phaseFilter' => $phaseFilter,
+                'districtFilter' => $districtFilter,
+                'villageFilter' => $villageFilter,
+                'totalCount' => $totalCount,
+            ]
+        );
     }
 
     public function getBeneficiaryFullDetails($ownerId)
@@ -883,45 +933,57 @@ class SuperAdminController extends Controller
 
     public function paidBeneficiaries(Request $request)
     {
-        $search = $request->input('search');
+        $search = trim($request->input('search'));
 
         $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->join('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId') // Dashboard Same
+            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            })
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1);
 
-        if (!empty($search)) {
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->where('o.IsAllotmentCancelled', 0);
+
+        if ($search != '') {
+
             $query->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'LIKE', "%{$search}%")
-                    ->orWhere('o.MobileNo', 'LIKE', "%{$search}%")
-                    ->orWhere('o.RegistrationNo', 'LIKE', "%{$search}%")
-                    ->orWhere('v.VillageName', 'LIKE', "%{$search}%")
-                    ->orWhere('d.DistrictName', 'LIKE', "%{$search}%");
+
+                $q->where('o.OwnerName', 'LIKE', "{$search}%")
+                    ->orWhere('o.MobileNo', 'LIKE', "{$search}%")
+                    ->orWhere('o.RegistrationNo', 'LIKE', "{$search}%")
+                    ->orWhere('v.VillageName', 'LIKE', "{$search}%")
+                    ->orWhere('d.DistrictName', 'LIKE', "{$search}%")
+                    ->orWhere('f.FlatNo', 'LIKE', "{$search}%");
+
             });
+
         }
 
-        $totalPaid = $query->count('o.OwnerId');
+        $totalPaid = (clone $query)->count();
 
-        $paidBeneficiaries = $query->select([
-            'o.OwnerId',
-            'o.OwnerName',
-            'o.FatherHusbandName',
-            'o.MobileNo',
-            'o.RegistrationNo',
-            'v.VillageName',
-            'd.DistrictName'
-        ])
+        $paidBeneficiaries = $query
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'v.VillageName',
+                'd.DistrictName',
+                'f.FlatNo'
+            ])
             ->orderBy('o.OwnerName')
             ->paginate(20)
             ->appends($request->query());
 
-        return view('mmgay.super-admin.paid-beneficiaries-list', compact('paidBeneficiaries', 'search', 'totalPaid'));
+        return view(
+            'mmgay.super-admin.paid-beneficiaries-list',
+            compact(
+                'paidBeneficiaries',
+                'search',
+                'totalPaid'
+            )
+        );
     }
 
     public function physicalPossessionDashboard()
@@ -988,5 +1050,101 @@ class SuperAdminController extends Controller
             ->get();
 
         return view('mmgay.super-admin.physical-possession.view', compact('application', 'timeline'));
+    }
+
+    public function totalRegistrationList(Request $request)
+    {
+        $search = trim($request->search);
+
+        $query = DB::table('registary');
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('SecondParty', 'like', "%{$search}%")
+                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
+                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
+                    ->orWhere('Village', 'like', "%{$search}%")
+                    ->orWhere('District', 'like', "%{$search}%")
+                    ->orWhere('TehsilName', 'like', "%{$search}%");
+            });
+        }
+
+        $registrations = $query
+            ->orderByDesc('RegistaryDate')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view(
+            'mmgay.super-admin.total-registration-list',
+            compact('registrations', 'search')
+        );
+    }
+
+    public function matchedRegistrationList(Request $request)
+    {
+        $search = trim($request->search);
+
+        $query = DB::table('registary')
+            ->whereIn('SecondPartyMobile', function ($q) {
+                $q->select('MobileNo')
+                    ->from('OwnerMaster')
+                    ->whereNotNull('MobileNo')
+                    ->distinct();
+            });
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('SecondParty', 'like', "%{$search}%")
+                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
+                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
+                    ->orWhere('Village', 'like', "%{$search}%")
+                    ->orWhere('District', 'like', "%{$search}%")
+                    ->orWhere('TehsilName', 'like', "%{$search}%");
+            });
+        }
+
+        $registrations = $query
+            ->orderByDesc('RegistaryDate')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view(
+            'mmgay.super-admin.matched-registration-list',
+            compact('registrations', 'search')
+        );
+    }
+
+    public function unmatchedRegistrationList(Request $request)
+    {
+        $search = trim($request->search);
+
+        $query = DB::table('registary')
+            ->whereNotIn('SecondPartyMobile', function ($q) {
+                $q->select('MobileNo')
+                    ->from('OwnerMaster')
+                    ->whereNotNull('MobileNo')
+                    ->distinct();
+            });
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('SecondParty', 'like', "%{$search}%")
+                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
+                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
+                    ->orWhere('Village', 'like', "%{$search}%")
+                    ->orWhere('District', 'like', "%{$search}%")
+                    ->orWhere('TehsilName', 'like', "%{$search}%");
+            });
+        }
+
+        $registrations = $query
+            ->orderByDesc('RegistaryDate')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view(
+            'mmgay.super-admin.unmatched-registration-list',
+            compact('registrations', 'search')
+        );
     }
 }

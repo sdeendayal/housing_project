@@ -296,77 +296,89 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
 
                 {{-- Total Registration --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-violet-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
+                <a href="{{ route('superadmin.total.registration') }}" class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-violet-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M8 3h7l5 5v13H8a2 2 0 01-2-2V5a2 2 0 012-2z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 3v5h5" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-violet-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-violet-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-violet-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M8 3h7l5 5v13H8a2 2 0 01-2-2V5a2 2 0 012-2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 3v5h5" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Total Registration
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($registration->TotalRegistration) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">
-                            Total Registration
-                        </p>
-
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($registration->TotalRegistration) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Matched --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
+                <a href="{{ route('superadmin.matched.registration') }}" class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12l3 3 5-6" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12l3 3 5-6" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Matched
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($registration->Matched) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">
-                            Matched
-                        </p>
-
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($registration->Matched) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Unmatched --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-red-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
+                <a href="{{ route('superadmin.unmatched.registration') }}" class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-red-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Unmatched
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($registration->UnMatched) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">
-                            Unmatched
-                        </p>
-
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($registration->UnMatched) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
             </div>
 
