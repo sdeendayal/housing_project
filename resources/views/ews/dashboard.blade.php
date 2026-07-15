@@ -343,30 +343,7 @@
                                 </div>
                             </div>
 
-                            <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
-                                <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
-                                    <i class="bi bi-cpu-fill text-indigo-500 text-xs"></i>
-                                    <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Verification Checklist</span>
-                                </div>
-                                <div class="grid grid-cols-2 gap-2 text-[9px] font-mono font-bold">
-                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                        <span class="text-slate-400">AGE CHECK:</span>
-                                        <span class="text-emerald-600">PASS</span>
-                                    </div>
-                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                        <span class="text-slate-400">PENSION:</span>
-                                        <span class="text-emerald-600">PASS</span>
-                                    </div>
-                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                        <span class="text-slate-400">PROPERTY:</span>
-                                        <span class="text-emerald-600">PASS</span>
-                                    </div>
-                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                        <span class="text-slate-400">AC CHECK:</span>
-                                        <span class="text-emerald-600">PASS</span>
-                                    </div>
-                                </div>
-                            </div>
+
 
 
                         </div>
