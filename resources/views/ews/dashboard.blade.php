@@ -25,6 +25,11 @@
             background: rgba(255, 255, 255, 0.9);
             border: 1px solid rgba(226, 232, 240, 0.8);
             box-shadow: 0 4px 15px rgba(148, 163, 184, 0.03);
+            transition: all 0.2s ease;
+        }
+        .glass-widget:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.05);
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 4px;
@@ -68,11 +73,26 @@
                 <div class="border-t border-slate-100 my-1.5"></div>
 
                 <!-- Navigation List -->
-                <nav class="space-y-1">
-                    <a href="#" class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-[10px] font-extrabold uppercase tracking-wider shadow-sm transition-all">
+                <nav class="space-y-1" id="sidebar-nav">
+                    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-indigo-500 to-purple-600 text-[10px] font-extrabold uppercase tracking-wider shadow-sm transition-all text-left">
                         <i class="bi bi-grid-1x2-fill"></i>
                         <span>Dashboard</span>
-                    </a>
+                    </button>
+                    
+                    <button onclick="switchTab('rejections')" id="nav-rejections" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
+                        <i class="bi bi-exclamation-triangle-fill text-slate-400"></i>
+                        <span>Verification Status</span>
+                    </button>
+
+                    <button onclick="switchTab('bookings')" id="nav-bookings" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
+                        <i class="bi bi-calendar-check-fill text-slate-400"></i>
+                        <span>Draw & Bookings</span>
+                    </button>
+
+                    <button onclick="switchTab('allotment')" id="nav-allotment" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
+                        <i class="bi bi-house-check-fill text-slate-400"></i>
+                        <span>Allotment Status</span>
+                    </button>
                 </nav>
             </div>
 
@@ -114,274 +134,556 @@
             <!-- Scrollable Content Frame -->
             <main class="flex-1 overflow-y-auto p-3.5 space-y-3 custom-scrollbar">
 
-                <!-- Welcome Header Panel (More Compact Height) -->
-                <div class="p-3.5 dashboard-vibrant-header rounded-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md text-white">
-                    <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
-                    
-                    <div class="space-y-0.5 relative z-10">
-                        <span class="text-[8px] font-black text-indigo-100 uppercase tracking-widest flex items-center gap-1">
-                            <i class="bi bi-building"></i> EWS Scheme Beneficiary Registry
-                        </span>
-                        <h3 class="text-base font-black leading-none uppercase">APPLICATION ID: {{ $ewsData->application_number ?? '—' }}</h3>
-                        <p class="text-white/80 text-[9px] font-light max-w-xl">This record contains validated socio-economic status information verified via local administrative block authorities.</p>
+                <!-- 1. DASHBOARD PROFILE SECTION -->
+                <div id="section-dashboard" class="space-y-3">
+                    <!-- Welcome Header Panel -->
+                    <div class="p-3.5 dashboard-vibrant-header rounded-xl relative overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-md text-white">
+                        <div class="absolute -right-12 -bottom-12 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="space-y-0.5 relative z-10">
+                            <span class="text-[8px] font-black text-indigo-100 uppercase tracking-widest flex items-center gap-1">
+                                <i class="bi bi-building"></i> EWS Scheme Beneficiary Registry
+                            </span>
+                            <h3 class="text-base font-black leading-none uppercase">APPLICATION ID: {{ $ewsData->application_number ?? '—' }}</h3>
+                            <p class="text-white/80 text-[9px] font-light max-w-xl">This record contains validated socio-economic status information verified via local administrative block authorities.</p>
+                        </div>
                     </div>
 
-                    <!-- Flow Tracker Checklist (Tighter padding & spacing) -->
-                    <div class="flex items-center gap-1.5 relative z-10 w-full sm:w-auto overflow-x-auto py-0.5">
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                            <div class="w-5 h-5 rounded-full bg-white text-indigo-650 flex items-center justify-center text-[10px] font-bold shadow">
-                                <i class="bi bi-check-lg"></i>
-                            </div>
-                            <span class="text-[8px] font-bold text-white">Survey</span>
+                    <!-- 5 Metrics Cards -->
+                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                        <div class="glass-widget px-3 py-1.5 rounded-lg">
+                            <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">File Status</span>
+                            <div class="text-[11px] font-black text-indigo-600 mt-0.5 uppercase leading-tight">{{ $ewsData->status ?? 'Verified' }}</div>
                         </div>
-                        <div class="h-0.5 w-3 bg-white/50 flex-shrink-0"></div>
-
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                            <div class="w-5 h-5 rounded-full bg-white text-indigo-650 flex items-center justify-center text-[10px] font-bold shadow">
-                                <i class="bi bi-check-lg"></i>
-                            </div>
-                            <span class="text-[8px] font-bold text-white">Verified</span>
+                        <div class="glass-widget px-3 py-1.5 rounded-lg">
+                            <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Income Bracket</span>
+                            <div class="text-[11px] font-black text-slate-800 mt-0.5 leading-tight">{{ $ewsData->IncomeVerified ?? '—' }}</div>
                         </div>
-                        <div class="h-0.5 w-3 bg-white/50 flex-shrink-0"></div>
-
-                        <div class="flex items-center gap-1 flex-shrink-0">
-                            <div class="w-5 h-5 rounded-full bg-white text-indigo-650 flex items-center justify-center text-[10px] font-bold shadow animate-pulse">
-                                <i class="bi bi-cpu-fill text-[9px]"></i>
-                            </div>
-                            <span class="text-[8px] font-bold text-white">Allotment</span>
+                        <div class="glass-widget px-3 py-1.5 rounded-lg">
+                            <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Monthly Income</span>
+                            <div class="text-[11px] font-black text-emerald-600 mt-0.5 leading-tight">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</div>
                         </div>
-                        <div class="h-0.5 w-3 bg-white/20 flex-shrink-0"></div>
+                        <div class="glass-widget px-3 py-1.5 rounded-lg">
+                            <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Caste Group</span>
+                            <div class="text-[11px] font-black text-slate-800 mt-0.5 leading-tight">{{ $ewsData->caste ?? 'General' }}</div>
+                        </div>
+                        <div class="glass-widget px-3 py-1.5 rounded-lg col-span-2 sm:col-span-1">
+                            <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Admin Block</span>
+                            <div class="text-[11px] font-black text-slate-700 mt-0.5 leading-tight truncate">{{ $ewsData->bt_name ?? '—' }}</div>
+                        </div>
+                    </div>
 
-                        <div class="flex items-center gap-1 flex-shrink-0 opacity-40">
-                            <div class="w-5 h-5 rounded-full bg-indigo-900 border border-indigo-800 text-indigo-300 flex items-center justify-center text-[10px] font-bold">
-                                <i class="bi bi-key text-[9px]"></i>
+                    <!-- Layout splits -->
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                        <div class="lg:col-span-8 space-y-3">
+                            <div class="glass-widget p-3.5 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                                    <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1">
+                                        <i class="bi bi-file-text text-indigo-500"></i> Citizen Personal & Socio-Economic Matrix
+                                    </span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[10px] font-light">
+                                    <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                                        <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">General Info</div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Full Name</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->full_name ?? '—' }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Father's Name</span>
+                                            <span class="font-bold text-slate-800 truncate max-w-[80px]" title="{{ $ewsData->fathers_full_name ?? ($ewsData->father_name ?? '') }}">{{ $ewsData->fathers_full_name ?? ($ewsData->father_name ?? '—') }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Age / Gender</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->age ?? '—' }} yrs / {{ $ewsData->gender ?? '—' }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5">
+                                            <span class="text-slate-400">Date of Birth</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->date_of_birth ?? '—' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                                        <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">Financial & ID</div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Aadhar Reference</span>
+                                            <span class="font-bold text-slate-800">XXXX-XXXX-{{ substr($ewsData->aadhar_no ?? '0000', -4) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Monthly Income</span>
+                                            <span class="font-extrabold text-emerald-600">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Electricity A/c</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->electricity_bill_account_no ?? '0' }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5">
+                                            <span class="text-slate-400">Marital Status</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->MaritalStatus ?? ($ewsData->do_you_have_spouce ?? '—') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
+                                        <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">Properties & Assets</div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Ownership</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->house_ownership ?? '—' }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Rent Paid</span>
+                                            <span class="font-bold text-slate-800">₹ {{ number_format($ewsData->rent_amount ?? 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
+                                            <span class="text-slate-400">Vehicle Type</span>
+                                            <span class="font-bold text-slate-800 truncate max-w-[80px]" title="{{ $ewsData->vehicle_ownership ?? '—' }} ({{ $ewsData->type_of_vehicle ?? '—' }})">
+                                                {{ $ewsData->vehicle_ownership ?? '—' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-0.5">
+                                            <span class="text-slate-400">Property in India?</span>
+                                            <span class="font-bold text-slate-800">{{ $ewsData->do_you_own_any_property_or_house_across_india ?? '—' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <span class="text-[8px] font-bold">Possession</span>
+
+                            <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
+                                <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
+                                    <i class="bi bi-geo-alt-fill text-indigo-500 text-xs"></i>
+                                    <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Geographical Coordinates</span>
+                                </div>
+                                <div class="grid grid-cols-3 gap-2.5 text-[10px] font-light">
+                                    <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
+                                        <span class="text-slate-400 text-[8px] uppercase font-bold">House Coordinates</span>
+                                        <div class="flex items-center justify-between font-bold text-slate-800 mt-0.5">
+                                            <span>{{ $ewsData->coordinates_of_current_house_address ?? '—' }}</span>
+                                            <a href="https://maps.google.com/?q={{ urlencode($ewsData->coordinates_of_current_house_address ?? '') }}" target="_blank" class="text-indigo-600 hover:text-indigo-500">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
+                                        <span class="text-slate-400 text-[8px] uppercase font-bold">Ward Details</span>
+                                        <span class="font-bold text-slate-800 mt-0.5 block">Ward No: {{ $ewsData->ward_no ?? '—' }}</span>
+                                    </div>
+                                    <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
+                                        <span class="text-slate-400 text-[8px] uppercase font-bold">Survey Block</span>
+                                        <span class="font-bold text-slate-800 mt-0.5 block truncate">{{ $ewsData->bt_name ?? '—' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel -->
+                        <div class="lg:col-span-4 space-y-3">
+                            <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
+                                <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
+                                    <i class="bi bi-camera-video-fill text-indigo-500 text-xs"></i>
+                                    <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Survey Documents & Media Preview</span>
+                                </div>
+                                <div class="space-y-2.5">
+                                    @if(!empty($ewsData->capture_photo_of_family_and_house))
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-500">
+                                            <span><i class="bi bi-image text-indigo-500"></i> House & Family Photo</span>
+                                            <a href="{{ $ewsData->capture_photo_of_family_and_house }}" target="_blank" class="text-indigo-600 hover:text-indigo-500 text-[8px] uppercase font-bold flex items-center gap-0.5">
+                                                <span>Open Full</span> <i class="bi bi-box-arrow-up-right text-[7px]"></i>
+                                            </a>
+                                        </div>
+                                        <div class="relative group overflow-hidden rounded-lg border border-slate-200 bg-slate-50 shadow-sm cursor-zoom-in" onclick="openPhotoModal('{{ $ewsData->capture_photo_of_family_and_house }}')">
+                                            <img src="{{ $ewsData->capture_photo_of_family_and_house }}" class="w-full h-24 object-cover group-hover:scale-105 transition-transform duration-255" alt="EWS House Photo">
+                                            <div class="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
+                                                <i class="bi bi-zoom-in text-lg"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    @if(!empty($ewsData->capture_video_of_family_and_house))
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-500">
+                                            <span><i class="bi bi-play-btn text-indigo-500"></i> Survey Video Clip</span>
+                                            <a href="{{ $ewsData->capture_video_of_family_and_house }}" target="_blank" class="text-indigo-600 hover:text-indigo-500 text-[8px] uppercase font-bold flex items-center gap-0.5">
+                                                <span>Open Full</span> <i class="bi bi-box-arrow-up-right text-[7px]"></i>
+                                            </a>
+                                        </div>
+                                        <div class="rounded-lg overflow-hidden border border-slate-200 shadow-sm bg-slate-950">
+                                            <video controls class="w-full h-24 object-cover focus:outline-none">
+                                                <source src="{{ $ewsData->capture_video_of_family_and_house }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
+                                        </div>
+                                    </div>
+                                    @endif
+
+                                    @if(empty($ewsData->capture_photo_of_family_and_house) && empty($ewsData->capture_video_of_family_and_house))
+                                    <div class="text-center py-4 text-slate-400 text-[10px] font-light">
+                                        No digital survey photo or video attachments found.
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
+                                <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
+                                    <i class="bi bi-cpu-fill text-indigo-500 text-xs"></i>
+                                    <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Verification Checklist</span>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-[9px] font-mono font-bold">
+                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
+                                        <span class="text-slate-400">AGE CHECK:</span>
+                                        <span class="text-emerald-600">PASS</span>
+                                    </div>
+                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
+                                        <span class="text-slate-400">PENSION:</span>
+                                        <span class="text-emerald-600">PASS</span>
+                                    </div>
+                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
+                                        <span class="text-slate-400">PROPERTY:</span>
+                                        <span class="text-emerald-600">PASS</span>
+                                    </div>
+                                    <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
+                                        <span class="text-slate-400">AC CHECK:</span>
+                                        <span class="text-emerald-600">PASS</span>
+                                    </div>
+                                </div>
+                            </div>
+
+
                         </div>
                     </div>
                 </div>
 
-                <!-- 5 Metrics Cards (Extremely compact heights) -->
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-                    
-                    <div class="glass-widget px-3 py-1.5 rounded-lg">
-                        <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">File Status</span>
-                        <div class="text-[11px] font-black text-indigo-600 mt-0.5 uppercase leading-tight">{{ $ewsData->status ?? 'Verified' }}</div>
+                <!-- 2. VERIFICATION & EXCLUSIONS SECTION -->
+                <div id="section-rejections" class="space-y-3 hidden">
+                    <!-- Heading -->
+                    <div class="p-3.5 bg-gradient-to-r from-red-500/10 to-transparent border border-red-500/20 rounded-xl text-slate-900 flex justify-between items-center">
+                        <div class="space-y-0.5">
+                            <span class="text-[8px] font-black text-red-655 uppercase tracking-widest flex items-center gap-1">
+                                <i class="bi bi-shield-fill-exclamation text-red-500"></i> Exclusion Matrix
+                            </span>
+                            <h3 class="text-sm font-black uppercase">System Exclusion & Rejections Checker</h3>
+                            <p class="text-slate-500 text-[9px] font-light">Cross-references registered mobile against criteria databases (PPP, Property, House Ownership).</p>
+                        </div>
+                        <span class="text-[9px] font-bold text-red-600 bg-red-100 border border-red-200 px-2 py-0.5 rounded font-mono">DATABASE SYNCED</span>
                     </div>
 
-                    <div class="glass-widget px-3 py-1.5 rounded-lg">
-                        <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Income Bracket</span>
-                        <div class="text-[11px] font-black text-slate-800 mt-0.5 leading-tight">{{ $ewsData->IncomeVerified ?? '—' }}</div>
-                    </div>
+                    <!-- Exclusions Grid -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        
+                        <!-- PPP Exclusion Card -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">PPP Exclusion Check</span>
+                                    @if($pppExclusion)
+                                        <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-bold rounded uppercase">FAILED</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">PASSED</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($pppExclusion)
+                                        <strong class="text-red-600 font-bold block mb-1">Status: Rejected Application</strong>
+                                        "PPP (Parivar Pehchan Patra) exclusion is active, hence your application has been rejected and you will not get a flat." (ppp ka exclusion laga h, esliye reject ho gyi apki application or flat nahi milega)
+                                    @else
+                                        <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
+                                        No Parivar Pehchan Patra (PPP) income or property limits exclusion matched for this user.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="glass-widget px-3 py-1.5 rounded-lg">
-                        <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Monthly Income</span>
-                        <div class="text-[11px] font-black text-emerald-600 mt-0.5 leading-tight">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</div>
-                    </div>
+                        <!-- Property in India Card -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Property in India Check</span>
+                                    @if($propertyReject)
+                                        <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-bold rounded uppercase">FAILED</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">PASSED</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($propertyReject)
+                                        <strong class="text-red-600 font-bold block mb-1">Status: Rejected Application</strong>
+                                        "Application rejected because citizen owns registered property or land across India." (enke nam ind me koi property h)
+                                    @else
+                                        <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
+                                        Citizen does not own any registered commercial/residential properties in other states/districts.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="glass-widget px-3 py-1.5 rounded-lg">
-                        <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Caste Group</span>
-                        <div class="text-[11px] font-black text-slate-800 mt-0.5 leading-tight">{{ $ewsData->caste ?? 'General' }}</div>
-                    </div>
+                        <!-- Existing House Card -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">House Ownership Check</span>
+                                    @if($houseReject)
+                                        <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-bold rounded uppercase">FAILED</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">PASSED</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($houseReject)
+                                        <strong class="text-red-600 font-bold block mb-1">Status: Rejected Application</strong>
+                                        "Application rejected because citizen already owns a residential house." (enke nam koi phle se ghar h)
+                                    @else
+                                        <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
+                                        No registered house ownership records detected under this citizen's credentials.
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
 
-                    <div class="glass-widget px-3 py-1.5 rounded-lg col-span-2 sm:col-span-1">
-                        <span class="text-[8px] text-slate-400 uppercase font-bold tracking-wider">Admin Block</span>
-                        <div class="text-[11px] font-black text-slate-700 mt-0.5 leading-tight truncate">{{ $ewsData->bt_name ?? '—' }}</div>
                     </div>
-
                 </div>
 
-                <!-- Main Layout splits -->
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
+                <!-- 3. DRAW & BOOKINGS SECTION -->
+                <div id="section-bookings" class="space-y-3 hidden">
+                    <!-- Heading -->
+                    <div class="p-3.5 bg-gradient-to-r from-indigo-500/10 to-transparent border border-indigo-500/20 rounded-xl text-slate-900 flex justify-between items-center">
+                        <div class="space-y-0.5">
+                            <span class="text-[8px] font-black text-indigo-655 uppercase tracking-widest flex items-center gap-1">
+                                <i class="bi bi-calendar-check text-indigo-500"></i> Draw & Bookings Registry
+                            </span>
+                            <h3 class="text-sm font-black uppercase">Draw List Selection & Booking Audit</h3>
+                            <p class="text-slate-500 text-[9px] font-light">Details about draw list inclusion, plot bookings status, and ADC level verification checks.</p>
+                        </div>
+                        <span class="text-[9px] font-bold text-indigo-600 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded font-mono">SYNC STATUS: LIVE</span>
+                    </div>
 
-                    <!-- Left: Table Database Console (Col-span 8) -->
-                    <div class="lg:col-span-8 space-y-3">
+                    <!-- Selection workflow logs -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         
-                        <!-- Master data list (Refactored to be denser, 3-column layout) -->
-                        <div class="glass-widget p-3.5 rounded-xl space-y-2">
-                            <div class="flex items-center justify-between border-b border-slate-100 pb-1.5">
-                                <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider flex items-center gap-1">
-                                    <i class="bi bi-file-text text-indigo-500"></i> Citizen Personal & Socio-Economic Matrix
-                                </span>
-                                <span class="text-[8px] font-mono text-slate-400">DB: all_ews_data_1</span>
-                            </div>
-
-                            <!-- Dense Grid Layout: 3 Columns instead of 2 for better space utilization -->
-                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-x-4 gap-y-1.5 text-[10px] font-light">
-                                
-                                <!-- Col 1: Personal Details -->
-                                <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
-                                    <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">General Info</div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Full Name</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->full_name ?? '—' }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Father's Name</span>
-                                        <span class="font-bold text-slate-800 truncate max-w-[80px]" title="{{ $ewsData->fathers_full_name ?? ($ewsData->father_name ?? '') }}">{{ $ewsData->fathers_full_name ?? ($ewsData->father_name ?? '—') }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Age / Gender</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->age ?? '—' }} yrs / {{ $ewsData->gender ?? '—' }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5">
-                                        <span class="text-slate-400">Date of Birth</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->date_of_birth ?? '—' }}</span>
-                                    </div>
+                        <!-- Eligible in Draw List -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Draw list Eligibility</span>
+                                    @if($eligibleDraw)
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">ELIGIBLE</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-bold rounded uppercase">NOT ELIGIBLE</span>
+                                    @endif
                                 </div>
-
-                                <!-- Col 2: Income & Identity Details -->
-                                <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
-                                    <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">Financial & ID</div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Aadhar Reference</span>
-                                        <span class="font-bold text-slate-800">XXXX-XXXX-{{ substr($ewsData->aadhar_no ?? '0000', -4) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Monthly Income</span>
-                                        <span class="font-extrabold text-emerald-600">₹ {{ number_format($ewsData->monthly_income ?? 0) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Electricity A/c</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->electricity_bill_account_no ?? '0' }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5">
-                                        <span class="text-slate-400">Marital Status</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->MaritalStatus ?? ($ewsData->do_you_have_spouce ?? '—') }}</span>
-                                    </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($eligibleDraw)
+                                        <strong class="text-emerald-600 font-bold block mb-1">Status: Draw List Confirmed</strong>
+                                        Citizen is included in the EWS scheme draw list and qualified for booking phase selection.
+                                    @else
+                                        <strong class="text-slate-500 font-bold block mb-1">Status: Non-Eligible</strong>
+                                        Citizen record is not found in the draw list selection parameters.
+                                    @endif
                                 </div>
-
-                                <!-- Col 3: Assets & Property Details -->
-                                <div class="space-y-1 bg-slate-50/50 p-2 rounded-lg border border-slate-100">
-                                    <div class="text-[8px] text-slate-400 font-extrabold uppercase mb-1">Properties & Assets</div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Ownership</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->house_ownership ?? '—' }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Rent Paid</span>
-                                        <span class="font-bold text-slate-800">₹ {{ number_format($ewsData->rent_amount ?? 0) }}</span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5 border-b border-slate-200/50">
-                                        <span class="text-slate-400">Vehicle Type</span>
-                                        <span class="font-bold text-slate-800 truncate max-w-[80px]" title="{{ $ewsData->vehicle_ownership ?? '—' }} ({{ $ewsData->type_of_vehicle ?? '—' }})">
-                                            {{ $ewsData->vehicle_ownership ?? '—' }}
-                                        </span>
-                                    </div>
-                                    <div class="flex justify-between items-center py-0.5">
-                                        <span class="text-slate-400">Property in India?</span>
-                                        <span class="font-bold text-slate-800">{{ $ewsData->do_you_own_any_property_or_house_across_india ?? '—' }}</span>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
 
-                        <!-- Geographical info (Refactored to be more compact) -->
-                        <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
-                            <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
-                                <i class="bi bi-geo-alt-fill text-indigo-500 text-xs"></i>
-                                <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Geographical Coordinates</span>
+                        <!-- Plot Booking Status -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Plot Booking Status</span>
+                                    @if($booking)
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">BOOKED</span>
+                                    @elseif($eligibleDraw)
+                                        <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-bold rounded uppercase">UNBOOKED</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-bold rounded uppercase">NO BOOKING</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($booking)
+                                        <strong class="text-emerald-600 font-bold block mb-1">Status: Booking Confirmed</strong>
+                                        Citizen has registered plot booking selection. Form references, payment logs, and assets are cleared.
+                                    @elseif($eligibleDraw)
+                                        <strong class="text-red-655 font-bold block mb-1">Status: Rejected/Expired</strong>
+                                        "Application rejected because citizen did not book the allotted plot within the deadline." (انہوں نے booking नहीं की)
+                                    @else
+                                        <strong class="text-slate-500 font-bold block mb-1">Status: No Record</strong>
+                                        Ineligible for booking due to exclusion criteria failure.
+                                    @endif
+                                </div>
                             </div>
+                        </div>
 
-                            <div class="grid grid-cols-3 gap-2.5 text-[10px] font-light">
-                                <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
-                                    <span class="text-slate-400 text-[8px] uppercase font-bold">House Coordinates</span>
-                                    <div class="flex items-center justify-between font-bold text-slate-800 mt-0.5">
-                                        <span>{{ $ewsData->coordinates_of_current_house_address ?? '—' }}</span>
-                                        <a href="https://maps.google.com/?q={{ urlencode($ewsData->coordinates_of_current_house_address ?? '') }}" target="_blank" class="text-indigo-600 hover:text-indigo-500">
-                                            <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                    </div>
+                        <!-- ADC Level Verification Check -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">ADC Level Clearance</span>
+                                    @if($booking)
+                                        @if($eligibleFinal)
+                                            <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">PASSED</span>
+                                        @else
+                                            <span class="px-1.5 py-0.5 bg-red-100 text-red-700 text-[8px] font-bold rounded uppercase">REJECTED</span>
+                                        @endif
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-bold rounded uppercase">PENDING</span>
+                                    @endif
                                 </div>
-                                <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
-                                    <span class="text-slate-400 text-[8px] uppercase font-bold">Ward Details</span>
-                                    <span class="font-bold text-slate-800 mt-0.5 block">Ward No: {{ $ewsData->ward_no ?? '—' }}</span>
-                                </div>
-                                <div class="bg-slate-50 border border-slate-100 p-1.5 rounded-lg flex flex-col justify-between">
-                                    <span class="text-slate-400 text-[8px] uppercase font-bold">Survey Block</span>
-                                    <span class="font-bold text-slate-800 mt-0.5 block truncate">{{ $ewsData->bt_name ?? '—' }}</span>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($booking)
+                                        @if($eligibleFinal)
+                                            <strong class="text-emerald-600 font-bold block mb-1">Status: ADC Verified</strong>
+                                            Citizen has cleared the final physical verification and documentation assessment conducted by the ADC committee.
+                                        @else
+                                            <strong class="text-red-600 font-bold block mb-1">Status: Excluded by ADC</strong>
+                                            "Application rejected at the final ADC level verification checkpoint." (ये ADC level पर बाहर हो गए)
+                                        @endif
+                                    @else
+                                        <strong class="text-slate-450 font-bold block mb-1">Status: Awaiting Verification</strong>
+                                        Final verification is pending due to incomplete booking logs.
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
                     </div>
+                </div>
 
-                    <!-- Right Panel: Side attachments & checklists (Col-span 4) -->
-                    <div class="lg:col-span-4 space-y-3">
+                <!-- 4. ALLOTMENT STATUS SECTION -->
+                <div id="section-allotment" class="space-y-3 hidden">
+                    <!-- Heading -->
+                    <div class="p-3.5 bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-xl text-slate-900 flex justify-between items-center">
+                        <div class="space-y-0.5">
+                            <span class="text-[8px] font-black text-emerald-650 uppercase tracking-widest flex items-center gap-1">
+                                <i class="bi bi-house-check text-emerald-500"></i> Allotment & Waiting Registry
+                            </span>
+                            <h3 class="text-sm font-black uppercase">Final Flat/Plot Allotment Status</h3>
+                            <p class="text-slate-500 text-[9px] font-light">Official allotment lists and waiting queue registries details.</p>
+                        </div>
+                        <span class="text-[9px] font-bold text-emerald-600 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded font-mono">REFRESHED STATUS</span>
+                    </div>
+
+                    <!-- Details Matrix -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         
-                        <!-- Media frames & Checklists (Combined together to save screen height) -->
-                        <div class="glass-widget p-3 rounded-xl space-y-2">
-                            <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
-                                <i class="bi bi-link-45deg text-indigo-500 text-xs"></i>
-                                <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Survey Documents & Media</span>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2 text-[10px]">
-                                <!-- House / Family Photo -->
-                                @if(!empty($ewsData->capture_photo_of_family_and_house))
-                                <a href="{{ $ewsData->capture_photo_of_family_and_house }}" target="_blank" class="p-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-lg flex items-center justify-between text-slate-750 transition-colors">
-                                    <span class="truncate"><i class="bi bi-image text-indigo-500 mr-1"></i> Photo file</span>
-                                    <i class="bi bi-box-arrow-up-right text-[9px] text-slate-400"></i>
-                                </a>
-                                @endif
-
-                                <!-- House / Family Video -->
-                                @if(!empty($ewsData->capture_video_of_family_and_house))
-                                <a href="{{ $ewsData->capture_video_of_family_and_house }}" target="_blank" class="p-1.5 bg-slate-50 hover:bg-indigo-50 border border-slate-100 rounded-lg flex items-center justify-between text-slate-755 transition-colors">
-                                    <span class="truncate"><i class="bi bi-camera-video text-indigo-500 mr-1"></i> Video clip</span>
-                                    <i class="bi bi-play text-[9px] text-slate-400"></i>
-                                </a>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- Checklists status (Refactored to 2 columns to make it extremely compact) -->
-                        <div class="glass-widget p-3 rounded-xl space-y-2 bg-white">
-                            <div class="flex items-center gap-2 border-b border-slate-100 pb-1">
-                                <i class="bi bi-cpu-fill text-indigo-500 text-xs"></i>
-                                <span class="text-[9px] font-black text-slate-800 uppercase tracking-wider">Verification Checklist</span>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-2 text-[9px] font-mono font-bold">
-                                <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                    <span class="text-slate-400">AGE CHECK:</span>
-                                    <span class="text-emerald-600">PASS</span>
+                        <!-- Final Allotment Card -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">EWS Final Allotment</span>
+                                    @if($allotted)
+                                        <span class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-bold rounded uppercase">ALLOTTED</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-bold rounded uppercase">NOT ALLOTTED</span>
+                                    @endif
                                 </div>
-                                <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                    <span class="text-slate-400">PENSION:</span>
-                                    <span class="text-emerald-600">PASS</span>
-                                </div>
-                                <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                    <span class="text-slate-400">PROPERTY:</span>
-                                    <span class="text-emerald-600">PASS</span>
-                                </div>
-                                <div class="p-1 bg-slate-50 border border-slate-100 rounded flex justify-between items-center px-1.5">
-                                    <span class="text-slate-400">AC CHECK:</span>
-                                    <span class="text-emerald-600">PASS</span>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($allotted)
+                                        <strong class="text-emerald-600 font-bold block mb-1">Congratulations! Plot/Flat Allotted</strong>
+                                        "Plot/Flat allotted successfully. Details of your allotted residential asset are verified and registered."
+                                        <div class="mt-2 p-2 bg-emerald-50/50 border border-emerald-100 rounded-lg text-emerald-950 text-xs font-mono font-black space-y-0.5">
+                                            <div>Asset Number: <span class="text-indigo-600">{{ $allotted->flat_no ?? 'FLAT-Not Specified' }}</span></div>
+                                            <div>Allotted To: <span>{{ $allotted->full_name ?? '—' }}</span></div>
+                                            <div>Ref File No: <span>{{ $allotted->application_number ?? '—' }}</span></div>
+                                        </div>
+                                    @else
+                                        <strong class="text-slate-500 font-bold block mb-1">Status: Unallotted</strong>
+                                        Citizen does not have any allotted properties in the current phase allotments.
+                                    @endif
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Downloader / actions -->
-                        <div class="glass-widget p-3 rounded-xl space-y-2">
-                            <div class="grid grid-cols-2 gap-2 text-[9px] font-extrabold uppercase">
-                                <button onclick="alert('Generating survey certified copy...')" class="py-1.5 rounded-lg bg-white hover:bg-indigo-500 hover:text-white border border-slate-200 text-slate-700 hover:border-indigo-500 transition-all flex items-center justify-center gap-1 shadow-sm">
-                                    <i class="bi bi-file-pdf"></i> Get PDF Slip
-                                </button>
-                                <button onclick="alert('Lodge survey grievance query')" class="py-1.5 rounded-lg bg-white hover:bg-indigo-500 hover:text-white border border-slate-200 text-slate-700 hover:border-indigo-500 transition-all flex items-center justify-center gap-1 shadow-sm">
-                                    <i class="bi bi-exclamation-square"></i> File Dispute
-                                </button>
+                        <!-- Waiting / Pending List Card -->
+                        <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between border-b border-slate-100 pb-1">
+                                    <span class="text-[9px] font-extrabold text-slate-800 uppercase tracking-wider">Waiting / Queue List Status</span>
+                                    @if($waiting)
+                                        <span class="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-bold rounded uppercase animate-pulse">PENDING IN WAITING</span>
+                                    @else
+                                        <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 text-[8px] font-bold rounded uppercase">NOT IN QUEUE</span>
+                                    @endif
+                                </div>
+                                <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
+                                    @if($waiting)
+                                        <strong class="text-amber-600 font-bold block mb-1">Status: Waiting List Active</strong>
+                                        "Flat will be allotted, but currently your application is in the Pending/Waiting list queue." (makan milegi par abhi pending me h)
+                                    @else
+                                        <strong class="text-slate-500 font-bold block mb-1">Status: No Queue Record</strong>
+                                        Citizen is not registered in the active EWS waiting list queue.
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
                     </div>
-
                 </div>
 
             </main>
         </div>
 
+    </div>
+
+    <!-- Script for Switching Tabs -->
+    <script>
+        function switchTab(tabId) {
+            // Hide all sections
+            document.getElementById('section-dashboard').classList.add('hidden');
+            document.getElementById('section-rejections').classList.add('hidden');
+            document.getElementById('section-bookings').classList.add('hidden');
+            document.getElementById('section-allotment').classList.add('hidden');
+
+            // Show selected section
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+
+            // Reset all buttons style
+            var buttons = ['dashboard', 'rejections', 'bookings', 'allotment'];
+            buttons.forEach(function(b) {
+                var btn = document.getElementById('nav-' + b);
+                if (b === tabId) {
+                    btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-indigo-500 to-purple-600 text-[10px] font-extrabold uppercase tracking-wider shadow-sm transition-all text-left";
+                    // Reset icon color to white inside active button
+                    var icon = btn.querySelector('i');
+                    if (icon) icon.className = icon.className.replace('text-slate-400', 'text-white');
+                } else {
+                    btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left";
+                    // Reset icon color to slate inside inactive button
+                    var icon = btn.querySelector('i');
+                    if (icon) icon.className = icon.className.replace('text-white', 'text-slate-400');
+                }
+            });
+        }
+
+        // LIGHTBOX MODAL FOR IMAGE PREVIEW
+        function openPhotoModal(src) {
+            var modal = document.getElementById('photoModal');
+            var img = document.getElementById('modalImg');
+            var dl = document.getElementById('modalDownload');
+            img.src = src;
+            dl.href = src;
+            modal.classList.remove('hidden');
+            setTimeout(function() {
+                modal.classList.remove('opacity-0');
+            }, 50);
+        }
+        
+        function closePhotoModal(e) {
+            if (e) e.stopPropagation();
+            var modal = document.getElementById('photoModal');
+            modal.classList.add('opacity-0');
+            setTimeout(function() {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
+
+    <!-- Lightbox Modal Container -->
+    <div id="photoModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 hidden opacity-0 transition-opacity duration-300" onclick="closePhotoModal()">
+        <button class="absolute top-4 right-4 text-white text-2xl hover:text-slate-300 transition-colors" onclick="closePhotoModal(event)">
+            <i class="bi bi-x-circle-fill"></i>
+        </button>
+        <div class="max-w-[90vw] max-h-[90vh] overflow-hidden rounded-xl border border-white/20 shadow-2xl bg-[#0c0a10]" onclick="event.stopPropagation()">
+            <img id="modalImg" src="" class="max-w-full max-h-[80vh] object-contain" alt="Enlarged survey photo">
+            <div class="p-3 text-center text-white text-xs font-semibold bg-slate-900/95 flex justify-between items-center">
+                <span>EWS Housing Survey Capture Photo</span>
+                <a id="modalDownload" href="" download class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold transition-all text-[10px]">Download File</a>
+            </div>
+        </div>
     </div>
 
 </body>
