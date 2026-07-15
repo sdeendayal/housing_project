@@ -14,22 +14,17 @@ class EwsDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $flatDetails = null;
 
-        // Extract EWS ID from the user email (seeded as ews_{id}@gmail.com)
-        if (preg_match('/ews_(\d+)/', $user->email, $matches)) {
-            $ewsId = $matches[1];
-            $flatDetails = DB::table('aws_flats_crid')->where('Id', $ewsId)->first();
-        }
+        $ewsData = DB::table('all_ews_data_1')
+            ->where('mobile_number', $user->mobile)
+            ->first();
 
-        // Fallback: search by mobile number/name if email did not match
-        if (!$flatDetails) {
-            $flatDetails = DB::table('aws_flats_crid')
-                ->where('Member_ID', $user->role)
-                ->orWhere('membername', $user->name)
+        if (!$ewsData) {
+            $ewsData = DB::table('all_ews_data_1')
+                ->where('full_name', $user->name)
                 ->first();
         }
 
-        return view('ews.dashboard', compact('flatDetails'));
+        return view('ews.dashboard', compact('ewsData'));
     }
 }

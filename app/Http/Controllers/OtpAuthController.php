@@ -79,6 +79,10 @@ class OtpAuthController extends Controller
             if ($userRole !== 'villager') {
                 return back()->withInput()->with('error', 'Mobile number is not registered as an MMGAV villager account.');
             }
+        } elseif ($context === 'ews_citizen') {
+            if ($userRole !== 'ews_user') {
+                return back()->withInput()->with('error', 'Mobile number is not registered as an EWS citizen account.');
+            }
         } elseif ($context === 'department') {
             if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 return back()->withInput()->with('error', 'Mobile number is not registered as a department officer account.');
@@ -188,6 +192,10 @@ class OtpAuthController extends Controller
             if ($userRole !== 'villager') {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an MMGAV villager account.');
             }
+        } elseif ($context === 'ews_citizen') {
+            if ($userRole !== 'ews_user') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS citizen account.');
+            }
         } elseif ($context === 'department') {
             if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a department officer account.');
@@ -279,6 +287,10 @@ class OtpAuthController extends Controller
             if ($userRole !== 'villager') {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an MMGAV villager account.');
             }
+        } elseif ($context === 'ews_citizen') {
+            if ($userRole !== 'ews_user') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS citizen account.');
+            }
         } elseif ($context === 'department') {
             if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as a department officer account.');
@@ -325,6 +337,8 @@ class OtpAuthController extends Controller
             $userRole = Auth::user()->roleSlug();
             if ($userRole === 'villager') {
                 $loginRoute = 'mmgav.villager.login';
+            } elseif ($userRole === 'ews_user') {
+                $loginRoute = 'ews.citizen.login';
             } elseif (!in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 $loginRoute = 'pp.department.login';
             }

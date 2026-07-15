@@ -10,6 +10,7 @@ use App\Http\Controllers\PhysicalPossession\PpUserController;
 use App\Http\Controllers\PropertyManagementController;
 use App\Http\Controllers\CmsController;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\EwsDashboardController;
 
 
 Route::get('/', [WebsiteController::class, 'index'])->name('home');
@@ -62,6 +63,39 @@ Route::middleware('')->group(function () {
         ->defaults('context', 'citizen')
         ->middleware('throttle:5,1')
         ->name('citizen.login.resend-otp');
+});
+
+// ─── EWS Citizen Login (OTP — shared OtpAuthController) ─────────────────────────
+Route::middleware('')->group(function () {
+    Route::get('/ews/citizen/login', [OtpAuthController::class, 'showLogin'])
+        ->defaults('context', 'ews_citizen')
+        ->name('ews.citizen.login');
+
+    Route::post('/ews/citizen/login/send-otp', [OtpAuthController::class, 'sendOtp'])
+        ->defaults('context', 'ews_citizen')
+        ->middleware('throttle:5,1')
+        ->name('ews.citizen.login.send-otp');
+
+    Route::get('/ews/citizen/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+        ->defaults('context', 'ews_citizen')
+        ->name('ews.citizen.login.verify-page');
+
+    Route::post('/ews/citizen/login/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->defaults('context', 'ews_citizen')
+        ->name('ews.citizen.login.verify');
+
+    Route::post('/ews/citizen/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+        ->defaults('context', 'ews_citizen')
+        ->middleware('throttle:5,1')
+        ->name('ews.citizen.login.resend-otp');
+});
+
+// EWS Citizen Protected Routes
+Route::middleware(['auth', 'role:ews_user'])->group(function () {
+    Route::get('/ews/dashboard', [EwsDashboardController::class, 'index'])
+        ->name('ews.dashboard');
+    Route::get('/ews/logout', [OtpAuthController::class, 'logout'])
+        ->name('ews.logout');
 });
 
 // Citizen protected routes
