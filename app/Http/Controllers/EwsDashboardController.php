@@ -14,22 +14,40 @@ class EwsDashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-        $flatDetails = null;
 
-        // Extract EWS ID from the user email (seeded as ews_{id}@gmail.com)
-        if (preg_match('/ews_(\d+)/', $user->email, $matches)) {
-            $ewsId = $matches[1];
-            $flatDetails = DB::table('aws_flats_crid')->where('Id', $ewsId)->first();
-        }
+        $ewsData = DB::table('all_ews_data_1')
+            ->where('mobile_number', $user->mobile)
+            ->first();
 
-        // Fallback: search by mobile number/name if email did not match
-        if (!$flatDetails) {
-            $flatDetails = DB::table('aws_flats_crid')
-                ->where('Member_ID', $user->role)
-                ->orWhere('membername', $user->name)
+        if (!$ewsData) {
+            $ewsData = DB::table('all_ews_data_1')
+                ->where('full_name', $user->name)
                 ->first();
         }
 
-        return view('ews.dashboard', compact('flatDetails'));
+        $mobile = $ewsData ? ($ewsData->mobile_number ?? $user->mobile) : $user->mobile;
+
+        // Query status checks across all EWS tables
+        $pppExclusion = DB::table('ews_reject_ppp_exclusion_2')->where('mobile_number', $mobile)->first();
+        $propertyReject = DB::table('ews_reject_property_in_india_3')->where('mobile_number', $mobile)->first();
+        $houseReject = DB::table('ews_house_ownership_reject_4')->where('mobile_number', $mobile)->first();
+        
+        $eligibleDraw = DB::table('ews_eligible_draw_list_5')->where('mobile_number', $mobile)->first();
+        $booking = DB::table('ews_bookings_7')->where('mobile_number', $mobile)->first();
+        $eligibleFinal = DB::table('ews_eligible_6')->where('mobile_number', $mobile)->first();
+        $allotted = DB::table('ews_allotted_8')->where('mobile_number', $mobile)->first();
+        $waiting = DB::table('ews_waiting_list_9')->where('mobile_number', $mobile)->first();
+
+        return view('ews.dashboard', compact(
+            'ewsData',
+            'pppExclusion',
+            'propertyReject',
+            'houseReject',
+            'eligibleDraw',
+            'booking',
+            'eligibleFinal',
+            'allotted',
+            'waiting'
+        ));
     }
 }

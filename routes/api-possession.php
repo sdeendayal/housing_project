@@ -52,6 +52,23 @@ Route::prefix('possession')->group(function () {
     // Refresh captcha for APIs
     Route::get('/refresh-captcha', [PpOfficerAuthApiController::class, 'refreshCaptcha']);
 
+    // BDO Login fallback (Support for /api/possession/bdo/login URL)
+    Route::post('/bdo/login', [MmgayBdoAuthApiController::class, 'login']);
+
+    // BDO Authenticated APIs fallback (Support for /api/possession/bdo/...)
+    Route::middleware(['auth:sanctum', 'role:mmgav_bdeo'])->prefix('bdo')->group(function () {
+        Route::post('/logout', [MmgayBdoAuthApiController::class, 'logout']);
+        Route::get('/dashboard', [MmgayBdoApiController::class, 'dashboard']);
+        Route::get('/eligibility-list', [MmgayBdoApiController::class, 'eligibilityList']);
+        Route::get('/schedule/capacity/check', [MmgayBdoApiController::class, 'getSlotCapacityCheck']);
+        Route::get('/schedule/{secure_id}', [MmgayBdoApiController::class, 'scheduleForm']);
+        Route::post('/schedule/{secure_id}', [MmgayBdoApiController::class, 'scheduleSave']);
+        Route::get('/possession-applications', [MmgayBdoApiController::class, 'applications']);
+        Route::get('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifyForm']);
+        Route::post('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifySave']);
+        Route::get('/download-certificate/{secure_id}', [MmgayBdoApiController::class, 'downloadCertificate']);
+    });
+
     // Department officer OTP Login (public)
     Route::post('/department/login/send-otp', [PpOfficerAuthApiController::class, 'sendOtp']);
     Route::post('/department/login/verify', [PpOfficerAuthApiController::class, 'verifyOtp']);

@@ -42,10 +42,9 @@ class PpOfficerAuthApiController extends Controller
     {
         $request->validate([
             'mobile' => 'required|string',
-            'captcha' => 'required',
-            'captcha_key' => 'nullable|string',
         ]);
 
+        /*
         // Captcha Verification
         $captcha = $request->input('captcha');
         $captchaKey = $request->input('captcha_key');
@@ -61,6 +60,7 @@ class PpOfficerAuthApiController extends Controller
                 return response()->json(['success' => false, 'message' => 'Invalid captcha. Please try again.'], 422);
             }
         }
+        */
 
         $config = config("otp-login.contexts.department");
         $mobile = $request->mobile;

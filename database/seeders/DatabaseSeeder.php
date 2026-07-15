@@ -38,8 +38,17 @@ class DatabaseSeeder extends Seeder
             OwnerMasterSeeder::class,
             MMGAYUserSeeder::class,
             MmgayBdoSeeder::class,
+            AllEwsDataSeeder::class,
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
+            EwsPppExclusionSeeder::class,
+            EwsPropertyInIndiaSeeder::class,
+            EwsHouseOwnershipRejectSeeder::class,
+            EwsEligibleDrawListSeeder::class,
+            EwsBookingsSeeder::class,
+            EwsEligibleSeeder::class,
+            EwsAllottedSeeder::class,
+            EwsWaitingListSeeder::class,
         ]);
 
         // Sync MMGAY citizen owners into users table

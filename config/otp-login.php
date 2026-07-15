@@ -64,5 +64,15 @@ return [
             'not_registered_message' => 'Mobile number is not registered as a department officer account.',
             'log_label' => 'Department',
         ],
+        'ews_citizen' => [
+            'otp_purpose' => 'ews_citizen_login',
+            'login_view' => 'ews.auth.login',
+            'verify_view' => 'ews.auth.otp-verify',
+            'login_route' => 'ews.citizen.login',
+            'verify_page_route' => 'ews.citizen.login.verify-page',
+            'not_registered_message' => 'Mobile number is not registered as an EWS citizen account.',
+            'scheme' => 'EWS',
+            'log_label' => 'EWS Citizen',
+        ],
     ],
 ];
