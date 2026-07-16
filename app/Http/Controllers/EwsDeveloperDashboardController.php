@@ -21,7 +21,13 @@ class EwsDeveloperDashboardController extends Controller
         // Load districts alphabetically for the filter dropdown
         $districts = \App\Models\EwsDeveloperDistrict::orderBy('name', 'asc')->get();
 
-        return view('ews.developer.dashboard', compact('user', 'districts'));
+        $stats = [
+            'total_flats' => EwsBuilderFlat::count(),
+            'active_districts' => EwsBuilderFlat::distinct('district_id')->count(),
+            'total_logs' => EwsDeveloperLog::count(),
+        ];
+
+        return view('ews.developer.dashboard', compact('user', 'districts', 'stats'));
     }
 
     /**
@@ -284,5 +290,21 @@ class EwsDeveloperDashboardController extends Controller
 
         $pdf = Pdf::loadView('ews.developer.pdf_report', compact('flats'));
         return $pdf->download('ews_builder_flats_' . date('Ymd_His') . '.pdf');
+    }
+
+    public function districtStats()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        // Calculate counts for all 23 districts seeded (alphabetically)
+        $districts = \App\Models\EwsDeveloperDistrict::orderBy('name', 'asc')->get()->map(function ($district) {
+            $district->flats_count = \App\Models\EwsBuilderFlat::where('district_id', $district->id)->count();
+            return $district;
+        });
+
+        return view('ews.developer.district_stats', compact('user', 'districts'));
     }
 }

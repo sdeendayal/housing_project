@@ -145,6 +145,8 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.flats.export.pdf');
     Route::get('/ews/developer/logs', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'logs'])
         ->name('ews.developer.logs');
+    Route::get('/ews/developer/districts-stats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'districtStats'])
+        ->name('ews.developer.districts-stats');
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });

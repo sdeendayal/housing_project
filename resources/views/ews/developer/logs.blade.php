@@ -54,8 +54,12 @@
             </div>
 
             <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit Trails</span>
+                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Summary</span>
                 <div class="space-y-1">
+                    <a href="{{ route('ews.developer.districts-stats') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
+                        <i class="bi bi-map text-slate-400"></i>
+                        <span>District Stats</span>
+                    </a>
                     <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
                         <i class="bi bi-activity text-sky-400"></i>
                         <span>Developer logs</span>

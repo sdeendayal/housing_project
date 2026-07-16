@@ -153,8 +153,12 @@
             </div>
 
             <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit Trails</span>
+                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Summary</span>
                 <div class="space-y-1">
+                    <a href="{{ route('ews.developer.districts-stats') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
+                        <i class="bi bi-map text-slate-400"></i>
+                        <span>District Stats</span>
+                    </a>
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-activity text-slate-400"></i>
                         <span>Developer logs</span>
@@ -203,8 +207,25 @@
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-6 custom-scroll">
+        <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll">
             
+            <!-- Summary Statistic Banner -->
+            <div class="bg-white border border-slate-250 rounded-xl p-5 shadow-sm dev-shadow flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-lg bg-sky-50 flex items-center justify-center text-sky-500 border border-sky-100 shadow-inner">
+                        <i class="bi bi-building text-base"></i>
+                    </div>
+                    <div>
+                        <span class="block text-[9px] font-black uppercase tracking-wider text-slate-400">Telemetry Status Console</span>
+                        <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">Total Registered Flats</h3>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-black text-sky-600 font-mono tracking-tight">{{ $stats['total_flats'] }}</span>
+                    <span class="block text-[8px] text-slate-400 font-mono uppercase">Audited Records</span>
+                </div>
+            </div>
+
             <!-- SECTION A: Registry Listing Card -->
             <section class="bg-white border border-slate-200/80 rounded-xl shadow-sm dev-shadow overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
@@ -320,6 +341,13 @@
 
         // Initialize Yajra Server-side DataTables
         $(document).ready(function() {
+            // Read and apply district_id from URL query string if present
+            const urlParams = new URLSearchParams(window.location.search);
+            const queryDistrictId = urlParams.get('district_id');
+            if (queryDistrictId) {
+                $('#filter-district').val(queryDistrictId);
+            }
+
             const table = $('#flats-table').DataTable({
                 processing: true,
                 serverSide: true,
