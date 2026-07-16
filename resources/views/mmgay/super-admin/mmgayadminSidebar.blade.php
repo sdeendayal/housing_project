@@ -12,87 +12,183 @@
         </div>
     </div>
 
-    <nav class="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto">
+    <nav class="flex-1 px-3 py-5 space-y-1 overflow-y-auto">
 
+        {{-- Dashboard --}}
         <a href="{{ route('admin.dashboard') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('admin.dashboard') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">dashboard</span>
-            <span class="text-sm">Dashboard</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('admin.dashboard') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+            <span class="text-[13px] font-medium">Dashboard</span>
+
         </a>
 
+        {{-- Section --}}
+        <div class="px-3 pt-3 pb-1">
+            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
+                Master
+            </p>
+        </div>
+
         <a href="{{ route('superadmin.possession.dashboard') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-    {{ request()->routeIs('superadmin.possession.*') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.possession.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
 
-            <span
-                class="material-symbols-outlined text-[22px]
-    {{ request()->routeIs('superadmin.possession.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">
-                real_estate_agent
-            </span>
+            <span class="material-symbols-outlined text-[20px]">real_estate_agent</span>
+            <span class="text-[13px] font-medium">Physical Possession</span>
 
-            <span class="text-sm">Physical Possession</span>
         </a>
 
         <a href="{{ route('superadmin.districts') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.districts') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.districts') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">map</span>
-            <span class="text-sm">Districts</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.districts') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">map</span>
+            <span class="text-[13px] font-medium">Districts</span>
+
         </a>
 
         <a href="{{ route('superadmin.all-villages') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.all-villages') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.all-villages') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">holiday_village</span>
-            <span class="text-sm">Villages</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.all-villages') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">holiday_village</span>
+            <span class="text-[13px] font-medium">Villages</span>
+
         </a>
 
+        {{-- Beneficiary --}}
+        <div class="px-3 pt-4 pb-1">
+            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
+                Beneficiary
+            </p>
+        </div>
+
         <a href="{{ route('superadmin.beneficiaries.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.beneficiaries.*') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.beneficiaries.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">group</span>
-            <span class="text-sm">Beneficiaries</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.beneficiaries.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">group</span>
+            <span class="text-[13px] font-medium">Beneficiaries</span>
+
         </a>
 
         <a href="{{ route('superadmin.paid.beneficiaries') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">check_circle</span>
-            <span class="text-sm">Paid Beneficiaries</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px] text-green-600">check_circle</span>
+            <span class="text-[13px] font-medium">Paid Beneficiaries</span>
+
         </a>
 
         <a href="{{ route('superadmin.allotment.index') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.allotment.*') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.allotment.*') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">assignment</span>
-            <span class="text-sm">Allotments</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.allotment.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">assignment</span>
+            <span class="text-[13px] font-medium">Allotments</span>
+
         </a>
 
         <a href="{{ route('superadmin.assigned.flats') }}"
-            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group
-           {{ request()->routeIs('superadmin.assigned.flats') ? 'bg-indigo-50 text-indigo-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
-            <span
-                class="material-symbols-outlined text-[22px] {{ request()->routeIs('superadmin.assigned.flats') ? 'text-indigo-600' : 'text-slate-400 group-hover:text-slate-600' }}">vpn_key</span>
-            <span class="text-sm">Assigned Flats</span>
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.assigned.flats') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px]">vpn_key</span>
+            <span class="text-[13px] font-medium">Assigned Flats</span>
+
         </a>
+
+        {{-- Registration --}}
+        <div class="px-3 pt-4 pb-1">
+            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
+                Registration
+            </p>
+        </div>
+
+        <a href="{{ route('superadmin.total.registration') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.total.registration') ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px] text-blue-600">description</span>
+            <span class="text-[13px] font-medium">Total Registration</span>
+
+        </a>
+
+        <a href="{{ route('superadmin.matched.registration') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.matched.registration') ? 'bg-green-50 border-l-4 border-green-600 text-green-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px] text-green-600">task_alt</span>
+            <span class="text-[13px] font-medium">Matched Registration</span>
+
+        </a>
+
+        <a href="{{ route('superadmin.unmatched.registration') }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+        {{ request()->routeIs('superadmin.unmatched.registration') ? 'bg-red-50 border-l-4 border-red-600 text-red-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+
+            <span class="material-symbols-outlined text-[20px] text-red-600">highlight_off</span>
+            <span class="text-[13px] font-medium">Unmatched Registration</span>
+
+        </a>
+
     </nav>
 
-    <div class="p-4 border-t border-slate-100 bg-slate-50/50">
+    <!-- Bottom Profile & Logout -->
+
+    <!-- Bottom Profile & Logout -->
+
+    <div class="border-t border-slate-200 bg-gradient-to-r from-slate-50 to-white p-3">
+
+        <!-- Profile -->
+
+        <div class="flex items-center gap-2.5 mb-3 p-2.5 rounded-xl bg-white border border-slate-200 shadow-sm">
+
+            <div
+                class="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-600 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow">
+
+                SA
+
+            </div>
+
+            <div>
+
+                <h4 class="text-[12px] font-semibold text-slate-800 tracking-wide">
+                    Super Admin
+                </h4>
+
+                <p class="text-[10px] text-slate-500">
+                    MMGAY Management Portal
+                </p>
+
+            </div>
+
+        </div>
+
+        <!-- Logout -->
+
         <form action="{{ route('mmgay.logout') }}" method="POST">
             @csrf
+
             <button type="submit"
-                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 hover:text-red-700 transition-all duration-200 group">
-                <span class="material-symbols-outlined text-[22px] text-red-400 group-hover:text-red-600">logout</span>
-                <span>Logout</span>
+                class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl
+            bg-red-50 border border-red-200 text-red-600 text-[12px] font-semibold
+            hover:bg-red-600 hover:text-white hover:border-red-600
+            transition-all duration-300">
+
+                <span class="material-symbols-outlined text-[18px]">
+                    logout
+                </span>
+
+                Logout
+
             </button>
+
         </form>
+
     </div>
 
 </aside>

@@ -186,6 +186,17 @@ Route::prefix('super-admin')
         // routes/web.php mein ise replace karein
         Route::get('/super-admin/paid-beneficiaries', [SuperAdminController::class, 'paidBeneficiaries'])->name('superadmin.paid.beneficiaries');
 
+        Route::get(
+            '/super-admin/total-registration',
+            [SuperAdminController::class, 'totalRegistrationList']
+        )->name('superadmin.total.registration');
+
+        Route::get('/super-admin/matched-registration', [SuperAdminController::class, 'matchedRegistrationList'])
+            ->name('superadmin.matched.registration');
+
+        Route::get('/super-admin/unmatched-registration', [SuperAdminController::class, 'unmatchedRegistrationList'])
+            ->name('superadmin.unmatched.registration');
+
         Route::get('/physical-possession/dashboard', [SuperAdminController::class, 'physicalPossessionDashboard'])
             ->name('superadmin.possession.dashboard');
 
