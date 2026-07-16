@@ -561,7 +561,7 @@
                     </div>
 
                     <!-- Details Matrix -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 {{ $allotted ? '' : 'md:grid-cols-2' }} gap-3">
                         
                         <!-- Final Allotment Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
@@ -591,6 +591,7 @@
                             </div>
                         </div>
 
+                        @if(!$allotted)
                         <!-- Waiting / Pending List Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
                             <div class="space-y-1">
@@ -613,6 +614,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
                 </div>
