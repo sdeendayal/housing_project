@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EwsBuilderFlat;
+use App\Models\EwsDeveloperLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Yajra\DataTables\Facades\DataTables;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class EwsDeveloperDashboardController extends Controller
 {
@@ -14,6 +18,271 @@ class EwsDeveloperDashboardController extends Controller
             abort(403, 'Unauthorized access to Developer dashboard.');
         }
 
-        return view('ews.developer.dashboard', compact('user'));
+        // Load districts alphabetically for the filter dropdown
+        $districts = \App\Models\EwsDeveloperDistrict::orderBy('name', 'asc')->get();
+
+        return view('ews.developer.dashboard', compact('user', 'districts'));
+    }
+
+    /**
+     * Helper to get registry query with applied search & district filters.
+     */
+    private function getFilteredQuery(Request $request)
+    {
+        $query = EwsBuilderFlat::query();
+
+        // 1. District Dropdown Filter
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        }
+
+        // 2. Search Filter (Standard string parameter or Yajra request array)
+        $searchValue = '';
+        if ($request->has('search')) {
+            $searchParam = $request->search;
+            if (is_array($searchParam)) {
+                $searchValue = $searchParam['value'] ?? '';
+            } else {
+                $searchValue = $searchParam;
+            }
+        }
+
+        if (!empty($searchValue)) {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('district_name', 'like', "%{$searchValue}%")
+                  ->orWhere('town_name', 'like', "%{$searchValue}%")
+                  ->orWhere('project_name', 'like', "%{$searchValue}%")
+                  ->orWhere('block_tower_number', 'like', "%{$searchValue}%")
+                  ->orWhere('floor', 'like', "%{$searchValue}%")
+                  ->orWhere('flat_number', 'like', "%{$searchValue}%");
+            });
+        }
+
+        return $query->orderBy('id', 'desc');
+    }
+
+    public function getFlatsData(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $query = $this->getFilteredQuery($request);
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('actions', function ($row) {
+                $editUrl = route('ews.developer.flats.edit', $row->id);
+                $destroyRoute = route('ews.developer.flats.destroy', $row->id);
+                $csrf = csrf_field();
+                $method = method_field('DELETE');
+
+                return '
+                    <div class="inline-flex gap-1.5 justify-end w-full">
+                        <a href="'.$editUrl.'"
+                            class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-500 hover:text-white text-sky-600 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-0.5 border border-sky-100 shadow-sm">
+                            <i class="bi bi-pencil-square"></i>
+                            <span>Edit</span>
+                        </a>
+                        <form action="'.$destroyRoute.'" method="POST" class="inline m-0" id="delete-form-'.$row->id.'">
+                            '.$csrf.'
+                            '.$method.'
+                            <button type="button" onclick="confirmDelete('.$row->id.')"
+                                class="px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-0.5 border border-red-100 shadow-sm">
+                                <i class="bi bi-trash3"></i>
+                                <span>Delete</span>
+                            </button>
+                        </form>
+                    </div>
+                ';
+            })
+            ->rawColumns(['actions'])
+            ->make(true);
+    }
+
+    public function create()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+        $districts = \App\Models\EwsDeveloperDistrict::orderBy('id', 'asc')->get();
+        return view('ews.developer.create', compact('user', 'districts'));
+    }
+
+    public function store(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'district_id' => 'required|exists:ews_developer_districts,id',
+            'town_name' => 'required|string|max:255',
+            'project_name' => 'required|string|max:255',
+            'block_tower_number' => 'required|string|max:255',
+            'floor' => 'required|string|max:255',
+            'flat_number' => 'required|string|max:255',
+        ]);
+
+        $district = \App\Models\EwsDeveloperDistrict::findOrFail($request->district_id);
+        $validated['district_name'] = $district->name;
+        $validated['created_by'] = $user->id;
+
+        $flat = EwsBuilderFlat::create($validated);
+
+        // Create log entry
+        EwsDeveloperLog::create([
+            'user_id' => $user->id,
+            'action' => 'CREATED',
+            'details' => "Added EWS Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->route('ews.developer.dashboard')->with('success', 'EWS Builder Flat record created successfully.');
+    }
+
+    public function edit($id)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $flat = EwsBuilderFlat::findOrFail($id);
+        $districts = \App\Models\EwsDeveloperDistrict::orderBy('id', 'asc')->get();
+        return view('ews.developer.edit', compact('user', 'flat', 'districts'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $flat = EwsBuilderFlat::findOrFail($id);
+
+        $validated = $request->validate([
+            'district_id' => 'required|exists:ews_developer_districts,id',
+            'town_name' => 'required|string|max:255',
+            'project_name' => 'required|string|max:255',
+            'block_tower_number' => 'required|string|max:255',
+            'floor' => 'required|string|max:255',
+            'flat_number' => 'required|string|max:255',
+        ]);
+
+        $district = \App\Models\EwsDeveloperDistrict::findOrFail($request->district_id);
+        $validated['district_name'] = $district->name;
+
+        $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
+
+        $flat->update($validated);
+
+        $newDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
+
+        // Create log entry
+        EwsDeveloperLog::create([
+            'user_id' => $user->id,
+            'action' => 'UPDATED',
+            'details' => "Updated EWS Flat ID #{$flat->id} from [{$oldDetails}] to [{$newDetails}]",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->route('ews.developer.dashboard')->with('success', 'EWS Builder Flat record updated successfully.');
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $flat = EwsBuilderFlat::findOrFail($id);
+        $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
+
+        $flat->delete();
+
+        // Create log entry
+        EwsDeveloperLog::create([
+            'user_id' => $user->id,
+            'action' => 'DELETED',
+            'details' => "Deleted EWS Flat ID #{$id} [{$oldDetails}]",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'EWS Builder Flat record deleted successfully.');
+    }
+
+    public function logs()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        // Fetch logs with pagination
+        $logs = EwsDeveloperLog::with('developer')
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        return view('ews.developer.logs', compact('user', 'logs'));
+    }
+
+    public function exportCsv(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        // Respect search and custom district filters
+        $flats = $this->getFilteredQuery($request)->get();
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="ews_builder_flats_' . date('Ymd_His') . '.csv"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($flats) {
+            $file = fopen('php://output', 'w');
+            fputcsv($file, ['S.No.', 'District Name', 'Town Name', 'Project Name', 'Block/Tower No.', 'Floor Details', 'Flat No.', 'Registered At']);
+
+            foreach ($flats as $index => $flat) {
+                fputcsv($file, [
+                    $index + 1,
+                    $flat->district_name,
+                    $flat->town_name,
+                    $flat->project_name,
+                    $flat->block_tower_number,
+                    $flat->floor,
+                    $flat->flat_number,
+                    $flat->created_at->format('Y-m-d H:i:s'),
+                ]);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        // Respect search and custom district filters
+        $flats = $this->getFilteredQuery($request)->get();
+
+        $pdf = Pdf::loadView('ews.developer.pdf_report', compact('flats'));
+        return $pdf->download('ews_builder_flats_' . date('Ymd_His') . '.pdf');
     }
 }

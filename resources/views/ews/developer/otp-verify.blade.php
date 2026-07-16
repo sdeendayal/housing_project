@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-955 text-[#f3f4f6]">
+<html lang="en" class="h-full bg-slate-50 text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,36 +20,29 @@
         .code-font {
             font-family: 'Fira Code', monospace;
         }
-        .dev-glow {
+        .dev-shadow {
             box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.15);
-        }
-        .neon-border {
-            border-color: rgba(139, 92, 246, 0.2);
-        }
-        .neon-border:focus-within {
-            border-color: rgba(139, 92, 246, 0.7);
-            box-shadow: 0 0 8px rgba(139, 92, 246, 0.2);
         }
     </style>
 </head>
-<body class="h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden relative bg-gradient-to-tr from-slate-950 via-[#0f172a] to-slate-900">
+<body class="h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden relative bg-gradient-to-tr from-slate-100 via-slate-50 to-slate-100">
     
     <!-- Tech grid background pattern -->
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-25 pointer-events-none"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 pointer-events-none"></div>
 
     <!-- Soft colored ambient background glows -->
-    <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-violet-550/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
-    <!-- Main Container (Restricted to 85vh to prevent vertical scroll) -->
-    <div class="w-full max-w-5xl h-full max-h-[85vh] bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl dev-glow z-10">
+    <!-- Main Container -->
+    <div class="w-full max-w-5xl h-full max-h-[85vh] bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl dev-shadow z-10">
         
         <!-- Left Side: Generated Developer Banner (5/12 width) -->
         <div class="hidden md:flex md:w-5/12 h-full flex-col justify-between p-7 text-slate-355 relative overflow-hidden">
             <!-- Background Image with Overlay -->
             <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[8000ms] hover:scale-110" 
                  style="background-image: url('{{ asset('developer_login_banner.png') }}');"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/85 to-transparent"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
             
             <!-- Branding Header -->
             <div class="relative z-10 flex items-center gap-2.5">
@@ -83,17 +76,17 @@
         </div>
 
         <!-- Right Side: Developer OTP Verify Form (7/12 width) -->
-        <div class="w-full md:w-7/12 h-full flex flex-col justify-between p-6 sm:p-8 bg-slate-900/45 backdrop-blur-md relative overflow-y-auto custom-scroll">
+        <div class="w-full md:w-7/12 h-full flex flex-col justify-between p-6 sm:p-8 bg-white relative overflow-y-auto custom-scroll">
             
             <!-- Mobile Header logo -->
-            <div class="flex md:hidden items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex md:hidden items-center justify-between border-b border-slate-200 pb-3">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded bg-violet-500/10 border border-violet-500/30 flex items-center justify-center">
-                        <i class="bi bi-shield-fill-check text-violet-400 text-xs"></i>
+                    <div class="w-7 h-7 rounded bg-violet-50 border border-violet-100 flex items-center justify-center">
+                        <i class="bi bi-shield-fill-check text-violet-650 text-xs"></i>
                     </div>
-                    <span class="font-black text-slate-200 text-xs tracking-wider">EWS DEV MFA</span>
+                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS DEV MFA</span>
                 </div>
-                <span class="text-[8px] text-violet-400 bg-violet-400/10 px-2 py-0.5 rounded border border-violet-400/20 font-bold font-mono">VERIFY</span>
+                <span class="text-[8px] text-violet-600 bg-violet-50 px-2 py-0.5 rounded border border-violet-100 font-bold font-mono">VERIFY</span>
             </div>
 
             <!-- Spacer -->
@@ -102,20 +95,20 @@
             <!-- Developer OTP Form Container (Centered & Clean) -->
             <div class="w-full max-w-sm mx-auto space-y-4 my-auto">
                 <div class="text-center md:text-left space-y-1">
-                    <h3 class="text-base font-black tracking-tight text-white uppercase">OTP Verification</h3>
+                    <h3 class="text-base font-black tracking-tight text-slate-800 uppercase">OTP Verification</h3>
                     <p class="text-slate-400 text-[10px] font-light">Enter 6-digit OTP code sent to +91 ******{{ substr($mobile, -4) }}.</p>
                 </div>
 
                 @if(session('error'))
-                    <div class="bg-red-500/10 border border-red-500/25 text-red-400 p-2.5 rounded-lg text-xs flex items-start gap-2">
-                        <i class="bi bi-exclamation-triangle-fill text-xs mt-0.5 shrink-0"></i>
+                    <div class="bg-red-50 border border-red-100 text-red-655 p-2.5 rounded-lg text-xs flex items-start gap-2">
+                        <i class="bi bi-exclamation-triangle-fill text-xs shrink-0 mt-0.5"></i>
                         <span>{{ session('error') }}</span>
                     </div>
                 @endif
 
                 @if(session('success'))
-                    <div class="bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 p-2.5 rounded-lg text-xs flex items-start gap-2">
-                        <i class="bi bi-check-circle-fill text-xs mt-0.5 shrink-0"></i>
+                    <div class="bg-emerald-50 border border-emerald-100 text-emerald-650 p-2.5 rounded-lg text-xs flex items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-xs shrink-0 mt-0.5"></i>
                         <span>{{ session('success') }}</span>
                     </div>
                 @endif
@@ -124,47 +117,47 @@
                     @csrf
 
                     <!-- OTP Input -->
-                    <div class="space-y-1">
-                        <label for="otp" class="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Verification OTP Code</label>
+                    <div class="space-y-1.5">
+                        <label for="otp" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Verification OTP Code</label>
                         <input type="text" id="otp" name="otp" maxlength="6" placeholder="******" autocomplete="off"
-                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-violet-500 focus:ring-0 focus:outline-none placeholder-slate-650 font-mono text-center tracking-widest font-bold" required>
+                            class="w-full bg-slate-50 border border-slate-250 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center tracking-widest font-bold" required>
                     </div>
 
                     <!-- Sandbox Alert Banner -->
                     @if(app()->environment('local'))
-                        <div class="bg-cyan-500/5 border border-cyan-500/25 rounded-lg p-2 text-[9px] text-cyan-400 font-mono">
-                            <span class="font-bold uppercase">Sandbox:</span> Use test OTP <span class="bg-cyan-950 px-1 py-0.5 rounded text-white font-bold">111111</span> to proceed.
+                        <div class="bg-cyan-50 border border-cyan-150 rounded-lg p-2 text-[9px] text-cyan-700 font-mono">
+                            <span class="font-bold uppercase">Sandbox:</span> Use test OTP <span class="bg-cyan-100 border border-cyan-200 px-1 py-0.5 rounded text-cyan-800 font-bold">111111</span> to proceed.
                         </div>
                     @else
-                        <div class="bg-yellow-500/5 border border-yellow-500/25 rounded-lg p-2 text-[9px] text-yellow-500/80 font-mono">
+                        <div class="bg-yellow-50 border border-yellow-150 rounded-lg p-2 text-[9px] text-yellow-750 font-mono">
                             <span class="font-bold uppercase">Production:</span> Enter code sent to your registered phone.
                         </div>
                     @endif
 
                     <!-- Buttons Group -->
                     <button type="submit"
-                        class="w-full py-2 bg-gradient-to-r from-violet-500 to-violet-600 hover:from-violet-600 hover:to-violet-750 text-slate-950 font-black uppercase tracking-wider rounded-lg text-[10px] shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 transition-all flex items-center justify-center gap-1.5">
+                        class="w-full py-2.5 bg-gradient-to-r from-violet-550 to-violet-650 hover:from-violet-600 hover:to-violet-750 text-white font-black uppercase tracking-wider rounded-lg text-[10px] shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 transition-all flex items-center justify-center gap-1.5">
                         <span>Authorize Login</span>
                         <i class="bi bi-shield-check-fill text-[11px]"></i>
                     </button>
                 </form>
 
                 <!-- Resend OTP and Change Number -->
-                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 font-mono">
+                <div class="flex items-center justify-between text-[10px] text-slate-450 pt-1 font-mono">
                     <form method="POST" action="{{ route('ews.developer.login.resend-otp') }}" class="m-0">
                         @csrf
-                        <button type="submit" class="text-violet-400 hover:text-violet-300 font-bold transition">
+                        <button type="submit" class="text-violet-600 hover:text-violet-700 font-bold transition">
                             <i class="bi bi-arrow-clockwise text-[11px]"></i> Resend OTP
                         </button>
                     </form>
-                    <a href="{{ route('ews.developer.login') }}" class="text-slate-500 hover:text-slate-400 transition">
+                    <a href="{{ route('ews.developer.login') }}" class="text-slate-400 hover:text-slate-650 transition">
                         <i class="bi bi-arrow-left text-[11px]"></i> Change Mobile
                     </a>
                 </div>
             </div>
 
             <!-- Mobile/Desktop Footer guidelines -->
-            <div class="flex items-center justify-between text-[8px] text-slate-650 pt-3 border-t border-slate-800">
+            <div class="flex items-center justify-between text-[8px] text-slate-400 pt-3 border-t border-slate-200">
                 <span>© 2026 Housing For All, Haryana.</span>
                 <span class="font-mono text-violet-500/50">ENV: LOCAL</span>
             </div>
@@ -173,5 +166,15 @@
         </div>
     </div>
 
+    <script>
+        document.getElementById('devOtpForm').addEventListener('submit', function (e) {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="flex items-center justify-center gap-1.5"><i class="bi bi-arrow-repeat animate-spin"></i> Verifying OTP...</span>';
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -127,6 +127,24 @@ Route::middleware('')->group(function () {
 Route::middleware(['auth', 'role:ews_developer'])->group(function () {
     Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
         ->name('ews.developer.dashboard');
+    Route::get('/ews/developer/flats/data', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getFlatsData'])
+        ->name('ews.developer.flats.data');
+    Route::get('/ews/developer/flats/create', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'create'])
+        ->name('ews.developer.flats.create');
+    Route::post('/ews/developer/flats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'store'])
+        ->name('ews.developer.flats.store');
+    Route::get('/ews/developer/flats/{id}/edit', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'edit'])
+        ->name('ews.developer.flats.edit');
+    Route::put('/ews/developer/flats/{id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'update'])
+        ->name('ews.developer.flats.update');
+    Route::delete('/ews/developer/flats/{id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
+        ->name('ews.developer.flats.destroy');
+    Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])
+        ->name('ews.developer.flats.export.csv');
+    Route::get('/ews/developer/flats/export/pdf', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportPdf'])
+        ->name('ews.developer.flats.export.pdf');
+    Route::get('/ews/developer/logs', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'logs'])
+        ->name('ews.developer.logs');
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });
