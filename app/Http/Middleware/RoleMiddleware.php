@@ -17,6 +17,8 @@ class RoleMiddleware
             $loginUrl = match ($role) {
                 'citizen' => route('citizen.login'),
                 'villager' => route('mmgav.villager.login'),
+                'ews_user' => route('ews.citizen.login'),
+                'ews_developer' => route('ews.developer.login'),
                 default => route('pp.department.login'),
             };
             return redirect()->guest($loginUrl);
@@ -44,6 +46,8 @@ class RoleMiddleware
             $loginUrl = match ($role) {
                 'citizen' => route('citizen.login'),
                 'villager' => route('mmgav.villager.login'),
+                'ews_user' => route('ews.citizen.login'),
+                'ews_developer' => route('ews.developer.login'),
                 default => route('pp.department.login'),
             };
             return redirect($loginUrl)->with('error', 'Unauthorized access.');

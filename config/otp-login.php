@@ -74,5 +74,15 @@ return [
             'scheme' => 'EWS',
             'log_label' => 'EWS Citizen',
         ],
+        'ews_developer' => [
+            'otp_purpose' => 'ews_developer_login',
+            'login_view' => 'ews.developer.login',
+            'verify_view' => 'ews.developer.otp-verify',
+            'login_route' => 'ews.developer.login',
+            'verify_page_route' => 'ews.developer.login.verify-page',
+            'not_registered_message' => 'Mobile number is not registered as an EWS developer account.',
+            'scheme' => 'EWS',
+            'log_label' => 'EWS Developer',
+        ],
     ],
 ];

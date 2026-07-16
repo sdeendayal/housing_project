@@ -73,6 +73,7 @@ class User extends Authenticatable
             'district_officer' => route('pp.officer.dashboard'),
             'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
             'ews_user' => route('ews.dashboard'),
+            'ews_developer' => route('ews.developer.dashboard'),
             default => route('home'),
         };
     }

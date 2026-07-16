@@ -83,6 +83,10 @@ class OtpAuthController extends Controller
             if ($userRole !== 'ews_user') {
                 return back()->withInput()->with('error', 'Mobile number is not registered as an EWS citizen account.');
             }
+        } elseif ($context === 'ews_developer') {
+            if ($userRole !== 'ews_developer') {
+                return back()->withInput()->with('error', 'Mobile number is not registered as an EWS developer account.');
+            }
         } elseif ($context === 'department') {
             if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 return back()->withInput()->with('error', 'Mobile number is not registered as a department officer account.');
@@ -195,6 +199,10 @@ class OtpAuthController extends Controller
         } elseif ($context === 'ews_citizen') {
             if ($userRole !== 'ews_user') {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS citizen account.');
+            }
+        } elseif ($context === 'ews_developer') {
+            if ($userRole !== 'ews_developer') {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS developer account.');
             }
         } elseif ($context === 'department') {
             if (in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
@@ -339,6 +347,8 @@ class OtpAuthController extends Controller
                 $loginRoute = 'mmgav.villager.login';
             } elseif ($userRole === 'ews_user') {
                 $loginRoute = 'ews.citizen.login';
+            } elseif ($userRole === 'ews_developer') {
+                $loginRoute = 'ews.developer.login';
             } elseif (!in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 $loginRoute = 'pp.department.login';
             }

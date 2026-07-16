@@ -364,7 +364,7 @@
                                 Citizen Login
                             </a>
 
-                            <a href="#"
+                            <a href="{{ route('ews.developer.login') }}"
                                 class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
 
                                 <span class="material-symbols-outlined text-[18px]">

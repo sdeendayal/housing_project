@@ -98,6 +98,39 @@ Route::middleware(['auth', 'role:ews_user'])->group(function () {
         ->name('ews.logout');
 });
 
+// ─── EWS Developer Login (OTP — shared OtpAuthController) ─────────────────────────
+Route::middleware('')->group(function () {
+    Route::get('/ews/developer/login', [OtpAuthController::class, 'showLogin'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login');
+
+    Route::post('/ews/developer/login/send-otp', [OtpAuthController::class, 'sendOtp'])
+        ->defaults('context', 'ews_developer')
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.login.send-otp');
+
+    Route::get('/ews/developer/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login.verify-page');
+
+    Route::post('/ews/developer/login/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login.verify');
+
+    Route::post('/ews/developer/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+        ->defaults('context', 'ews_developer')
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.login.resend-otp');
+});
+
+// EWS Developer Protected Routes
+Route::middleware(['auth', 'role:ews_developer'])->group(function () {
+    Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
+        ->name('ews.developer.dashboard');
+    Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
+        ->name('ews.developer.logout');
+});
+
 // Citizen protected routes
 Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay/citizen/dashboard', [CitizenAuthController::class, 'dashboard'])
