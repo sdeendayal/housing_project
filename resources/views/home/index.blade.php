@@ -245,6 +245,16 @@
                                 Department Login
                             </a>
 
+                            <a href="{{ route('pp.department.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    shield_person
+                                </span>
+
+                                Site Engg Login
+                            </a>
+
                         </div>
 
                     </div>
@@ -471,7 +481,7 @@
                                         class="text-sky-600 font-bold hover:underline">User Login</a>
                                     |
                                     <a href="{{ route('pp.department.login') }}"
-                                        class="text-sky-600 font-bold hover:underline">Officer Login</a>
+                                        class="text-sky-600 font-bold hover:underline">Site Engg Login</a>
                                 </p>
                             </div>
                         </div>
