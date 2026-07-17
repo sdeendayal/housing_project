@@ -90,4 +90,35 @@ class MmgayPossessionApplication extends Model
     {
         return md5(uniqid(rand(), true));
     }
+
+    public static function isWhitelistedForPossession($registrationNo)
+    {
+        if (empty($registrationNo)) {
+            return false;
+        }
+
+        // Environment-driven bypass for testing
+        if (env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'))) {
+            return true;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(10)
+                ->withHeaders([
+                    'X-API-KEY' => 'HFA26@hry#',
+                ])
+                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland', [
+                    'RegistrationNo' => $registrationNo,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return !empty($data);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("HFA Land Registration API Error for " . $registrationNo . ": " . $e->getMessage());
+        }
+
+        return false;
+    }
 }

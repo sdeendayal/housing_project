@@ -109,26 +109,36 @@
                 <a href="{{ route('mmgay.bdo.possession-applications') }}" class="text-[10px] text-blue-600 font-bold hover:underline">View All</a>
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="w-full">
                 <table class="w-full text-xs">
                     <thead>
                         <tr class="bg-slate-50 text-slate-500 uppercase text-[9px] font-bold border-b border-slate-100">
-                            <th class="px-3 py-2 text-left">Sr.No.</th>
-                            <th class="px-3 py-2 text-left">App Number</th>
-                            <th class="px-3 py-2 text-left">Applicant</th>
-                            <th class="px-3 py-2 text-left">Mobile</th>
-                            <th class="px-3 py-2 text-left">Status</th>
-                            <th class="px-3 py-2 text-center">Action</th>
+                            <th class="px-1.5 py-2 text-left">Sr.No.</th>
+                            <th class="px-1.5 py-2 text-left">App Number</th>
+                            <th class="px-1.5 py-2 text-left">Applicant</th>
+                            <th class="px-1.5 py-2 text-left">Phase</th>
+                            <th class="px-1.5 py-2 text-left">Mobile</th>
+                            <th class="px-1.5 py-2 text-left">Status</th>
+                            <th class="px-1.5 py-2 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse($recentApplications as $app)
                             <tr class="hover:bg-slate-50/50 transition">
-                                <td class="px-3 py-1.5 font-bold text-slate-400">{{ $loop->iteration }}</td>
-                                <td class="px-3 py-1.5 font-bold text-slate-800">{{ $app->application_number }}</td>
-                                <td class="px-3 py-1.5 text-slate-700 font-medium">{{ $app->applicant_name }}</td>
-                                <td class="px-3 py-1.5 font-mono text-slate-500 text-[11px]">{{ $app->mobile }}</td>
-                                <td class="px-3 py-1.5">
+                                <td class="px-1.5 py-1.5 font-bold text-slate-400">{{ $loop->iteration }}</td>
+                                <td class="px-1.5 py-1.5 font-bold text-slate-800">{{ $app->application_number }}</td>
+                                <td class="px-1.5 py-1.5 text-slate-700 font-medium">
+                                    {{ $app->applicant_name }}
+                                </td>
+                                <td class="px-1.5 py-1.5">
+                                    @if($app->owner_phase)
+                                        <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded whitespace-nowrap">Phase {{ $app->owner_phase }}</span>
+                                    @else
+                                        <span class="text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-1.5 py-1.5 font-mono text-slate-500 text-[11px]">{{ $app->mobile }}</td>
+                                <td class="px-1.5 py-1.5">
                                     <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase
                                         @if($app->physical_possession_status === 'Verified') bg-emerald-50 text-emerald-700 border border-emerald-100
                                         @elseif($app->physical_possession_status === 'Visit Scheduled') bg-orange-50 text-orange-700 border border-orange-100
@@ -139,7 +149,7 @@
                                         {{ $app->physical_possession_status }}
                                     </span>
                                 </td>
-                                <td class="px-3 py-1.5 text-center">
+                                <td class="px-1.5 py-1.5 text-center">
                                     @if($app->physical_possession_status === 'Eligible for Physical Possession')
                                         <a href="{{ route('mmgay.bdo.schedule-form', $app->secure_id) }}" class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-2 py-1 rounded-md font-extrabold transition">
                                             <span class="material-symbols-outlined text-[12px] font-bold">calendar_month</span> Schedule
@@ -153,7 +163,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="px-3 py-6 text-center text-slate-400 font-semibold">No recent applications found.</td>
+                                <td colspan="7" class="px-1.5 py-6 text-center text-slate-400 font-semibold">No recent applications found.</td>
                             </tr>
                         @endforelse
                     </tbody>

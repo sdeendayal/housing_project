@@ -113,38 +113,38 @@ class MMGAYBdoPossessionController extends Controller
 
         // dd($blockMasterId);
 
-        // 1. Total Eligible (All owners in BDO block who have paid)
-        $totalEligibleQuery = DB::table('ownermaster')->where('IsPaid', 1);
-
-    //    dd($totalEligibleQuery->get());
-
-        if ($blockMasterId) {
-            $totalEligibleQuery->where('BlockId', $blockMasterId);
-                // dd($totalEligibleQuery->get());
-        }
-        $totalEligibleCount = $totalEligibleQuery->count();
-
-        // dd($totalEligibleCount);
-
-        // 2. Not Scheduled (No app or status is Eligible for Physical Possession)
-        $notScheduledQuery = DB::table('ownermaster as o')
-            ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
-                $join->on('o.OwnerId', '=', 'ppa.owner_id');
-            })
-            ->where('o.IsPaid', 1)
-            ->where(function($q) {
-                $q->whereNull('ppa.id')
-                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
-            });
-        if ($blockMasterId) {
-            $notScheduledQuery->where('o.BlockId', $blockMasterId);
-        }
-        $notScheduledCount = $notScheduledQuery->count();
-
-        // Base query for physical possession applications
         $ppaQuery = DB::table('mmgay_possession_applications');
         if ($blockMasterId) {
             $ppaQuery->where('block_id', $blockMasterId);
+        }
+
+        $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
+
+        if ($bypassApi) {
+            // 1. Total Eligible (All registered owners in BDO block)
+            $totalEligibleQuery = DB::table('ownermaster');
+            if ($blockMasterId) {
+                $totalEligibleQuery->where('BlockId', $blockMasterId);
+            }
+            $totalEligibleCount = $totalEligibleQuery->count();
+
+            // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
+            $notScheduledQuery = DB::table('ownermaster as o')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id');
+            if ($blockMasterId) {
+                $notScheduledQuery->where('o.BlockId', $blockMasterId);
+            }
+            $notScheduledQuery->where(function($q) {
+                $q->whereNull('ppa.id')
+                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+            });
+            $notScheduledCount = $notScheduledQuery->count();
+        } else {
+            // 1. Total Eligible (All owners verified/synced from HFA API in BDO block)
+            $totalEligibleCount = (clone $ppaQuery)->count();
+
+            // 2. Not Scheduled (Synced owners whose schedule is pending)
+            $notScheduledCount = (clone $ppaQuery)->where('physical_possession_status', 'Eligible for Physical Possession')->count();
         }
 
         $stats = [
@@ -156,7 +156,12 @@ class MMGAYBdoPossessionController extends Controller
             'verified' => (clone $ppaQuery)->where('physical_possession_status', 'Verified')->count(),
         ];
 
-        $recentApplications = (clone $ppaQuery)->latest()->take(6)->get();
+        $recentApplications = (clone $ppaQuery)
+            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
+            ->latest('mmgay_possession_applications.created_at')
+            ->take(6)
+            ->get();
 
         $activeMenu = 'dashboard';
         return view('mmgay.bdo.dashboard', compact('bdo', 'stats', 'recentApplications', 'activeMenu'));
@@ -170,13 +175,18 @@ class MMGAYBdoPossessionController extends Controller
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
+        $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
+
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
-            })
-            ->where('o.IsPaid', 1);
+            });
+
+        if (!$bypassApi) {
+            $query->whereNotNull('ppa.id');
+        }
 
         if (!$request->has('all')) {
             $query->where(function($q) {
@@ -205,9 +215,11 @@ class MMGAYBdoPossessionController extends Controller
             'o.OwnerName as applicant_name',
             'o.FatherHusbandName as father_name',
             'o.MobileNo as mobile',
+            'o.Phase as owner_phase',
             'd.DistrictName as district_name',
             'b.BlockName as block_name',
             'ppa.application_number',
+            'ppa.created_at as app_created_at',
             DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as physical_possession_status")
         )->paginate(25)->withQueryString();
 
@@ -240,8 +252,8 @@ class MMGAYBdoPossessionController extends Controller
             abort(403, 'Unauthorized access to beneficiary in another block.');
         }
 
-        if ($owner->IsPaid != 1) {
-            abort(400, 'Physical Possession is only available for beneficiaries who have completed their payment.');
+        if (!\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            abort(400, 'Physical Possession is only available for beneficiaries verified under HFA land registration.');
         }
 
         // 2. Find or dynamically create the physical possession application row
@@ -458,26 +470,28 @@ class MMGAYBdoPossessionController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $query = MmgayPossessionApplication::query()
-            ->where('physical_possession_status', '!=', 'Eligible for Physical Possession');
+            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
+            ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
 
         if ($blockMasterId) {
-            $query->where('block_id', $blockMasterId);
+            $query->where('mmgay_possession_applications.block_id', $blockMasterId);
         }
 
         $status = $request->input('status');
         if ($status) {
-            $query->where('physical_possession_status', $status);
+            $query->where('mmgay_possession_applications.physical_possession_status', $status);
         }
 
         $search = $request->input('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('applicant_name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('application_number', 'like', "%{$search}%");
+                $q->where('mmgay_possession_applications.applicant_name', 'like', "%{$search}%")
+                  ->orWhere('mmgay_possession_applications.mobile', 'like', "%{$search}%")
+                  ->orWhere('mmgay_possession_applications.application_number', 'like', "%{$search}%");
             });
         }
-        $applications = $query->latest()->paginate(25)->withQueryString();
+        $applications = $query->latest('mmgay_possession_applications.created_at')->paginate(25)->withQueryString();
 
         $activeMenu = '';
         if ($status === 'Visit Scheduled') {
@@ -835,8 +849,8 @@ class MMGAYBdoPossessionController extends Controller
         }
 
         $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
-        if (!$owner || $owner->IsPaid != 1) {
-            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available after completing payment.');
+        if (!$owner || !\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available for verified HFA land registration entries.');
         }
 
         $logs = MmgayPossessionStatusLog::where('application_id', $application->id)
@@ -863,8 +877,8 @@ class MMGAYBdoPossessionController extends Controller
         }
 
         $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
-        if (!$owner || $owner->IsPaid != 1) {
-            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available after completing payment.');
+        if (!$owner || !\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            return redirect()->route('mmgav.villager.dashboard')->with('error', 'Physical Possession is only available for verified HFA land registration entries.');
         }
 
         $request->validate([
@@ -934,5 +948,94 @@ class MMGAYBdoPossessionController extends Controller
         $safeAppNo = str_replace(['/', '\\'], '-', $application->application_number);
 
         return $pdf->download('Possession-Slip-MMGAY-'.$safeAppNo.'.pdf');
+    }
+
+    public function phaseReport(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase', $phases->first() ?: 1);
+
+        // Fetch villages having entries in this phase
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                $q->where('o.BlockId', $blockMasterId);
+            })
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        $selectedVillageId = $request->input('village_id');
+        $selectedVillageName = '';
+        $beneficiaries = [];
+        $search = $request->input('search');
+
+        if ($selectedVillageId) {
+            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.Phase', $selectedPhase)
+                ->where('o.VillageId', $selectedVillageId)
+                ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                    $q->where('o.BlockId', $blockMasterId);
+                });
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('o.OwnerName', 'like', "%{$search}%")
+                      ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                      ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+                });
+            }
+
+            $beneficiaries = $query->select(
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.secure_id',
+                'd.DistrictName',
+                'b.BlockName',
+                'f.FlatNo',
+                DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
+                'ppa.application_number',
+                'o.PPPId',
+                'o.MemberId',
+                'o.OwnerAddress'
+            )
+            ->orderBy('o.OwnerName', 'asc')
+            ->paginate(10)
+            ->withQueryString();
+        }
+
+        $activeMenu = 'phase_report';
+        return view('mmgay.bdo.phase_report', compact(
+            'bdo',
+            'phases',
+            'selectedPhase',
+            'villages',
+            'selectedVillageId',
+            'selectedVillageName',
+            'beneficiaries',
+            'search',
+            'activeMenu'
+        ));
     }
 }
