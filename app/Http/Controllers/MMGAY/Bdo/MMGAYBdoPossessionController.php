@@ -1124,4 +1124,153 @@ class MMGAYBdoPossessionController extends Controller
             'activeMenu'
         ));
     }
+
+    public function siteDevelopmentForm(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        // Fetch all villages mapping to the BDO's block
+        $villages = DB::table('villagemaster')
+            ->where('BlockId', $blockMasterId)
+            ->orderBy('VillageName', 'asc')
+            ->get();
+
+        $selectedVillageId = $request->input('village_id');
+        
+        // Auto-select the first village of the block by default if none is selected
+        if (!$selectedVillageId && $villages->isNotEmpty()) {
+            $selectedVillageId = $villages->first()->VillageId;
+        }
+
+        $selectedVillageName = '';
+        $siteDev = null;
+        $photos = collect();
+        $logs = collect();
+
+        if ($selectedVillageId) {
+            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+
+            $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
+                ->where('village_id', $selectedVillageId)
+                ->first();
+
+            if ($siteDev) {
+                $photos = $siteDev->photos;
+                $logs = $siteDev->logs;
+            }
+        }
+
+        $activeMenu = 'site_development';
+
+        return view('mmgay.bdo.site_development', compact(
+            'bdo',
+            'villages',
+            'selectedVillageId',
+            'selectedVillageName',
+            'siteDev',
+            'photos',
+            'logs',
+            'activeMenu'
+        ));
+    }
+
+    public function siteDevelopmentSave(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        $villageId = $request->input('village_id');
+
+        $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
+            ->where('village_id', $villageId)
+            ->first();
+
+        $request->validate([
+            'village_id' => 'required|integer',
+            'road_status' => 'required|string',
+            'water_status' => 'required|string',
+            'electricity_status' => 'required|string',
+            'sewerage_status' => 'required|string',
+            'remarks' => 'required|string',
+            'road_photo' => ($siteDevExists && $siteDevExists->road_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'water_photo' => ($siteDevExists && $siteDevExists->water_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'electricity_photo' => ($siteDevExists && $siteDevExists->electricity_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'sewerage_photo' => ($siteDevExists && $siteDevExists->sewerage_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+        ]);
+
+        // Verify if the village belongs to the BDO block and retrieve name
+        $villageRecord = DB::table('villagemaster')
+            ->where('VillageId', $villageId)
+            ->where('BlockId', $blockMasterId)
+            ->first();
+
+        if (!$villageRecord) {
+            return redirect()->back()->with('error', 'Unauthorized access to a village outside your block.');
+        }
+
+        $selectedVillageName = $villageRecord->VillageName;
+
+        $districtId = $bdo->district_id;
+        if (!$districtId && $blockMasterId) {
+            $blockRecord = DB::table('blockmaster')->where('BlockId', $blockMasterId)->first();
+            $districtId = $blockRecord ? $blockRecord->DistrictId : null;
+        }
+
+        $updateData = [
+            'district_id' => $districtId,
+            'block_id' => $blockMasterId,
+            'village_id' => $villageId,
+            'road_status' => $request->input('road_status'),
+            'water_status' => $request->input('water_status'),
+            'electricity_status' => $request->input('electricity_status'),
+            'sewerage_status' => $request->input('sewerage_status'),
+            'remarks' => $request->input('remarks'),
+            'updated_by' => $bdo->id,
+        ];
+
+        // Handle uploaded category photos using Laravel Storage public disk
+        foreach (['road_photo', 'water_photo', 'electricity_photo', 'sewerage_photo'] as $field) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                if ($file->isValid()) {
+                    $sluggedVillageName = \Illuminate\Support\Str::slug($selectedVillageName);
+                    $fileName = 'site_' . $field . '_' . $villageId . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    
+                    // Saves to: storage/app/public/site_developments/{village-name}/{filename}
+                    $storedPath = $file->storeAs('site_developments/' . $sluggedVillageName, $fileName, 'public');
+                    $updateData[$field] = $storedPath;
+                }
+            }
+        }
+
+        // Update or create site development record
+        $siteDev = \App\Models\MmgaySiteDevelopment::updateOrCreate(
+            [
+                'district_id' => $districtId,
+                'block_id' => $blockMasterId,
+                'village_id' => $villageId,
+            ],
+            $updateData
+        );
+
+        // Record the submission in audit log trail
+        \App\Models\MmgaySiteDevelopmentLog::create([
+            'site_development_id' => $siteDev->id,
+            'district_id' => $districtId,
+            'block_id' => $blockMasterId,
+            'village_id' => $villageId,
+            'road_status' => $siteDev->road_status,
+            'water_status' => $siteDev->water_status,
+            'electricity_status' => $siteDev->electricity_status,
+            'sewerage_status' => $siteDev->sewerage_status,
+            'remarks' => $siteDev->remarks,
+            'updated_by' => $bdo->id,
+            'updated_by_name' => $bdo->name ?? 'BDO Officer',
+        ]);
+
+        return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId])
+            ->with('success', 'Site Development details updated successfully.');
+    }
 }
