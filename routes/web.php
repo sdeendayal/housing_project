@@ -356,4 +356,16 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// ─── EWS Department Login & Dashboard ─────────────────────────
+Route::get('/ews/department/login', [\App\Http\Controllers\EwsDepartmentController::class, 'showLogin'])->name('ews.department.login');
+Route::post('/ews/department/login', [\App\Http\Controllers\EwsDepartmentController::class, 'login'])->name('ews.department.login.submit');
+
+Route::middleware(['auth', 'role:ews_department'])->group(function () {
+    Route::get('/ews/department/dashboard', [\App\Http\Controllers\EwsDepartmentController::class, 'dashboard'])->name('ews.department.dashboard');
+    Route::get('/ews/department/list', [\App\Http\Controllers\EwsDepartmentController::class, 'list'])->name('ews.department.list');
+    Route::get('/ews/department/beneficiary/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getBeneficiaryData'])->name('ews.department.beneficiary.data');
+    Route::get('/ews/department/beneficiary/{type}/{id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showBeneficiary'])->name('ews.department.beneficiary.show');
+    Route::get('/ews/department/logout', [\App\Http\Controllers\EwsDepartmentController::class, 'logout'])->name('ews.department.logout');
+});
+
 

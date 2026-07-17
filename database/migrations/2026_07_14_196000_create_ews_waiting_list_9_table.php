@@ -18,6 +18,9 @@ return new class extends Migration
             $table->string('aadhar_no')->nullable();
             $table->string('mobile_number')->nullable();
             $table->string('flat_no')->nullable();
+            $table->string('secure_id', 32)->nullable()->unique();
+            $table->string('dist_name')->nullable();
+            $table->unsignedBigInteger('dist_id')->nullable();
             $table->timestamps();
         });
     }

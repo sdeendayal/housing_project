@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             OwnerMasterSeeder::class,
             MMGAYUserSeeder::class,
             MmgayBdoSeeder::class,
+            EwsMasterDistSeeder::class,
             AllEwsDataSeeder::class,
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
