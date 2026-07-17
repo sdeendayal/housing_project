@@ -163,8 +163,91 @@ class MMGAYBdoPossessionController extends Controller
             ->take(6)
             ->get();
 
+        // Phase Wise Drill Down Analytics data
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase', $phases->first() ?: 1);
+
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                $q->where('o.BlockId', $blockMasterId);
+            })
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        $selectedVillageId = $request->input('village_id');
+        if (!$selectedVillageId && $villages->isNotEmpty()) {
+            $selectedVillageId = $villages->first()->VillageId;
+        }
+        $selectedVillageName = '';
+        $beneficiaries = [];
+        $search = $request->input('search');
+
+        if ($selectedVillageId) {
+            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.Phase', $selectedPhase)
+                ->where('o.VillageId', $selectedVillageId)
+                ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                    $q->where('o.BlockId', $blockMasterId);
+                });
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('o.OwnerName', 'like', "%{$search}%")
+                      ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                      ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+                });
+            }
+
+            $beneficiaries = $query->select(
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.secure_id',
+                'd.DistrictName',
+                'b.BlockName',
+                'f.FlatNo',
+                DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
+                'ppa.application_number',
+                'o.PPPId',
+                'o.MemberId',
+                'o.OwnerAddress'
+            )
+            ->paginate(10)
+            ->withQueryString();
+        }
+
         $activeMenu = 'dashboard';
-        return view('mmgay.bdo.dashboard', compact('bdo', 'stats', 'recentApplications', 'activeMenu'));
+        return view('mmgay.bdo.dashboard', compact(
+            'bdo', 
+            'stats', 
+            'recentApplications', 
+            'activeMenu',
+            'phases',
+            'selectedPhase',
+            'villages',
+            'selectedVillageId',
+            'selectedVillageName',
+            'beneficiaries',
+            'search'
+        ));
     }
 
     /**
@@ -977,6 +1060,9 @@ class MMGAYBdoPossessionController extends Controller
             ->get();
 
         $selectedVillageId = $request->input('village_id');
+        if (!$selectedVillageId && $villages->isNotEmpty()) {
+            $selectedVillageId = $villages->first()->VillageId;
+        }
         $selectedVillageName = '';
         $beneficiaries = [];
         $search = $request->input('search');
