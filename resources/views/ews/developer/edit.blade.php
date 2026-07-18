@@ -104,13 +104,13 @@
                                 <i class="bi bi-pencil-square text-sky-500 text-sm"></i>
                                 Edit Flat Registry Entry
                             </h3>
-                            <p class="text-[8px] text-slate-400 font-mono mt-0.5 uppercase">Modify EWS Allotment Record ID #{{ $flat->id }}</p>
+                            <p class="text-[8px] text-slate-400 font-mono mt-0.5 uppercase">Modify EWS Allotment Record</p>
                         </div>
-                        <span class="text-[8px] text-slate-400 font-mono font-bold">ID: {{ $flat->id }}</span>
+                        <span class="text-[8px] text-slate-400 font-mono font-bold">SECURE ID: {{ $secureId ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}</span>
                     </div>
 
                     <!-- Form Content -->
-                    <form method="POST" action="{{ route('ews.developer.flats.update', $flat->id) }}" class="p-6 space-y-4" id="devEditForm">
+                    <form method="POST" action="{{ route('ews.developer.flats.update', $secureId ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id)) }}" class="p-6 space-y-4" id="devEditForm">
                         @csrf
                         @method('PUT')
 

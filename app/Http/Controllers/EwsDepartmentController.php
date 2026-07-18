@@ -12,6 +12,7 @@ use App\Models\Role;
 use App\Models\RoleType;
 use App\Models\EwsBuilderFlat;
 use App\Models\EwsDeveloperLog;
+use App\Helpers\EwsHelper;
 
 class EwsDepartmentController extends Controller
 {
@@ -223,45 +224,45 @@ class EwsDepartmentController extends Controller
 
         if ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Registered' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Registered' as status"), 'dist_name');
         } elseif ($type === 'allotted') {
             $query = DB::table('ews_allotted_8')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), 'dist_name');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Pending' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Pending' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
             $query = DB::table('ews_reject_property_in_india_3')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_property' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_property' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_ownership') {
             $query = DB::table('ews_house_ownership_reject_4')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ownership' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ownership' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'eligible_draw') {
             $query = DB::table('ews_eligible_draw_list_5')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible' as status"), 'dist_name');
         } elseif ($type === 'booking') {
             $query = DB::table('ews_bookings_7')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'booking' as type"), DB::raw("'Visited' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'booking' as type"), DB::raw("'Visited' as status"), 'dist_name');
         } elseif ($type === 'not_visited') {
             $query = DB::table('ews_eligible_draw_list_5')
                 ->whereNotIn('mobile_number', function($q) use ($districtId) {
                     $q->select('mobile_number')->from('ews_bookings_7')->whereNotNull('mobile_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'not_visited' as type"), DB::raw("'Not Visited' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'not_visited' as type"), DB::raw("'Not Visited' as status"), 'dist_name');
         } elseif ($type === 'adc_passed') {
             $query = DB::table('ews_eligible_6')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Passed' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Passed' as status"), 'dist_name');
         } elseif ($type === 'adc_failed') {
             $query = DB::table('ews_bookings_7')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
                     $q->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_failed' as type"), DB::raw("'Failed' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_failed' as type"), DB::raw("'Failed' as status"), 'dist_name');
         } elseif ($type === 'draw_remaining') {
             $query = DB::table('ews_eligible_6')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
@@ -272,12 +273,12 @@ class EwsDepartmentController extends Controller
                     $q->select('application_number')->from('ews_waiting_list_9')->whereNotNull('application_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'draw_remaining' as type"), DB::raw("'Unallotted' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'draw_remaining' as type"), DB::raw("'Unallotted' as status"), 'dist_name');
         } else {
             $query = DB::table(DB::raw("(
-                SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'allotted' as type, 'Allotted' as status, dist_name, dist_id FROM ews_allotted_8
+                SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'allotted' as type, 'Allotted' as status, dist_name, dist_id FROM ews_allotted_8
                 UNION ALL
-                SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Pending' as status, dist_name, dist_id FROM ews_waiting_list_9
+                SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Pending' as status, dist_name, dist_id FROM ews_waiting_list_9
             ) as beneficiaries"));
         }
 
@@ -288,7 +289,8 @@ class EwsDepartmentController extends Controller
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('actions', function ($row) {
-                $viewUrl = route('ews.department.beneficiary.show', ['type' => $row->type, 'id' => $row->id]);
+                $secId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
+                $viewUrl = route('ews.department.beneficiary.show', ['type' => $row->type, 'secure_id' => $secId]);
                 return '
                     <div class="text-right">
                         <a href="'.$viewUrl.'" class="px-2.5 py-1.5 bg-orange-50 hover:bg-orange-500 hover:text-white text-orange-600 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm border border-orange-100">
@@ -301,74 +303,70 @@ class EwsDepartmentController extends Controller
             ->make(true);
     }
 
-    public function showBeneficiary($type, $id)
+    public function showBeneficiary($type, $secureId)
     {
         $user = Auth::user();
 
+        $fetchBySecId = function($tableName) use ($secureId) {
+            return DB::table($tableName)->where('secure_id', $secureId)->first();
+        };
+
         if ($type === 'registered') {
-            $beneficiary = DB::table('all_ews_data_1')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('all_ews_data_1');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'allotted') {
-            $beneficiary = DB::table('ews_allotted_8')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_allotted_8');
         } elseif ($type === 'pending') {
-            $beneficiary = DB::table('ews_waiting_list_9')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_waiting_list_9');
         } elseif ($type === 'rejected_ppp') {
-            $beneficiary = DB::table('ews_reject_ppp_exclusion_2')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_reject_ppp_exclusion_2');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'rejected_property') {
-            $beneficiary = DB::table('ews_reject_property_in_india_3')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_reject_property_in_india_3');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'rejected_ownership') {
-            $beneficiary = DB::table('ews_house_ownership_reject_4')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_house_ownership_reject_4');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'eligible_draw') {
-            $beneficiary = DB::table('ews_eligible_draw_list_5')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_eligible_draw_list_5');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'booking') {
-            $beneficiary = DB::table('ews_bookings_7')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_bookings_7');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'not_visited') {
-            $beneficiary = DB::table('ews_eligible_draw_list_5')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_eligible_draw_list_5');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'adc_passed') {
-            $beneficiary = DB::table('ews_eligible_6')->where('id', $id)->first();
+            $beneficiary = $fetchBySecId('ews_eligible_6');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'adc_failed') {
             $beneficiary = DB::table('ews_bookings_7')
-                ->whereNotIn('application_number', function($q) {
-                    $q->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number');
-                })
-                ->where('id', $id)
+                ->where('secure_id', $secureId)
                 ->first();
+            if (!$beneficiary) {
+                $beneficiary = $fetchBySecId('ews_bookings_7');
+            }
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'draw_remaining') {
-            $beneficiary = DB::table('ews_eligible_6')
-                ->whereNotIn('application_number', function($q) {
-                    $q->select('application_number')->from('ews_allotted_8')->whereNotNull('application_number');
-                })
-                ->whereNotIn('application_number', function($q) {
-                    $q->select('application_number')->from('ews_waiting_list_9')->whereNotNull('application_number');
-                })
-                ->where('id', $id)
-                ->first();
+            $beneficiary = $fetchBySecId('ews_eligible_6');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
@@ -414,7 +412,7 @@ class EwsDepartmentController extends Controller
         };
         $beneficiary->type = $type;
 
-        return view('ews.department.show_beneficiary', compact('user', 'beneficiary'));
+        return view('ews.department.show_beneficiary', compact('user', 'beneficiary', 'type'));
     }
 
     public function logout(Request $request)
@@ -456,8 +454,9 @@ class EwsDepartmentController extends Controller
                 return '<span class="px-2.5 py-1 bg-rose-50 text-rose-700 border border-rose-200 rounded-full text-[9px] font-black uppercase tracking-wide">Inactive</span>';
             })
             ->addColumn('actions', function ($row) {
+                $secureId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
                 $editDataStr = htmlspecialchars(json_encode([
-                    'id' => $row->id,
+                    'secure_id' => $secureId,
                     'name' => $row->name,
                     'email' => $row->email,
                     'mobile' => $row->mobile,
@@ -465,7 +464,7 @@ class EwsDepartmentController extends Controller
                     'Is_Active' => $row->Is_Active,
                 ]), ENT_QUOTES, 'UTF-8');
 
-                $deleteRoute = route('ews.department.developers.destroy', $row->id);
+                $deleteRoute = route('ews.department.developers.destroy', $secureId);
                 $csrf = csrf_field();
                 $method = method_field('DELETE');
 
@@ -474,10 +473,10 @@ class EwsDepartmentController extends Controller
                         <button type="button" onclick=\'openEditModal('.$editDataStr.')\' class="px-2.5 py-1.5 bg-sky-50 text-sky-600 border border-sky-100 hover:bg-sky-500 hover:text-white rounded-lg text-[9px] font-black uppercase transition shadow-sm flex items-center gap-1">
                             <span class="material-symbols-outlined text-xs">edit</span> Edit
                         </button>
-                        <form id="delete-form-'.$row->id.'" action="'.$deleteRoute.'" method="POST" class="inline m-0">
+                        <form id="delete-form-'.$secureId.'" action="'.$deleteRoute.'" method="POST" class="inline m-0">
                             '.$csrf.'
                             '.$method.'
-                            <button type="button" onclick="confirmDelete('.$row->id.')" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-500 hover:text-white rounded-lg text-[9px] font-black uppercase transition shadow-sm flex items-center gap-1">
+                            <button type="button" onclick="confirmDelete(\''.$secureId.'\')" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 border border-rose-100 hover:bg-rose-500 hover:text-white rounded-lg text-[9px] font-black uppercase transition shadow-sm flex items-center gap-1">
                                 <span class="material-symbols-outlined text-xs">delete</span> Delete
                             </button>
                         </form>
@@ -509,6 +508,8 @@ class EwsDepartmentController extends Controller
             ]);
         }
 
+        $secureId = md5(uniqid("dev_" . microtime() . rand(), true));
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -519,6 +520,7 @@ class EwsDepartmentController extends Controller
             'Is_Active' => $request->input('Is_Active', '1'),
             'Is_Deleted' => '0',
             'district_name' => $request->district_name ?? 'Sonipat',
+            'secure_id' => $secureId,
         ]);
 
         RoleType::create([
@@ -528,17 +530,28 @@ class EwsDepartmentController extends Controller
             'Is_Deleted' => '0',
         ]);
 
+        // Log Developer Creation Activity
+        EwsDeveloperLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'DEVELOPER_CREATED',
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') created Developer Account '{$user->name}' (Mobile: {$user->mobile}, District: {$user->district_name}) with status " . ($user->Is_Active == '1' ? 'ACTIVE' : 'INACTIVE'),
+            'ip_address' => $request->ip(),
+        ]);
+
         return redirect()->back()->with('success', 'Developer account created successfully!');
     }
 
-    public function updateDeveloper(Request $request, $id)
+    public function updateDeveloper(Request $request, $secureId)
     {
-        $user = User::where('role', 'ews_developer')->findOrFail($id);
+        $user = User::where('role', 'ews_developer')->where('secure_id', $secureId)->firstOrFail();
+
+        $oldActive = $user->Is_Active;
+        $oldName = $user->name;
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$id,
-            'mobile' => 'required|string|digits:10|unique:users,mobile,'.$id,
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'mobile' => 'required|string|digits:10|unique:users,mobile,'.$user->id,
             'district_name' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6',
         ]);
@@ -555,14 +568,45 @@ class EwsDepartmentController extends Controller
 
         $user->save();
 
+        // Log Update / Status Change Activity
+        $actionName = 'DEVELOPER_UPDATED';
+        $statusNote = '';
+        if ($oldActive !== $user->Is_Active) {
+            if ($user->Is_Active == '1') {
+                $actionName = 'DEVELOPER_ACTIVATED';
+                $statusNote = " (Status changed from INACTIVE to ACTIVE)";
+            } else {
+                $actionName = 'DEVELOPER_DEACTIVATED';
+                $statusNote = " (Status changed from ACTIVE to INACTIVE)";
+            }
+        }
+
+        EwsDeveloperLog::create([
+            'user_id' => Auth::id(),
+            'action' => $actionName,
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') updated Developer Account '{$user->name}' (Mobile: {$user->mobile}, District: {$user->district_name})" . $statusNote,
+            'ip_address' => $request->ip(),
+        ]);
+
         return redirect()->back()->with('success', 'Developer account updated successfully!');
     }
 
-    public function destroyDeveloper($id)
+    public function destroyDeveloper($secureId)
     {
-        $user = User::where('role', 'ews_developer')->findOrFail($id);
+        $user = User::where('role', 'ews_developer')->where('secure_id', $secureId)->firstOrFail();
+        $devName = $user->name;
+        $devMobile = $user->mobile;
+
         RoleType::where('user_id', $user->id)->delete();
         $user->delete();
+
+        // Log Delete Activity
+        EwsDeveloperLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'DEVELOPER_DELETED',
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') deleted Developer Account '{$devName}' (Mobile: {$devMobile})",
+            'ip_address' => request()->ip(),
+        ]);
 
         return redirect()->back()->with('success', 'Developer account deleted successfully!');
     }

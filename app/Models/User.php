@@ -26,7 +26,17 @@ class User extends Authenticatable
         'district_name',
         'block_id',
         'block_name',
+        'secure_id',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($user) {
+            if (empty($user->secure_id)) {
+                $user->secure_id = md5(uniqid(microtime() . rand(), true));
+            }
+        });
+    }
 
     protected $hidden = [
         'password',
@@ -70,8 +80,9 @@ class User extends Authenticatable
             'villager' => route('mmgav.villager.dashboard'),
             'citizen' => ($this->scheme === 'MMGAY') ? route('mmgav.villager.dashboard') : route('citizen.dashboard'),
             'district_ceo', 'dc' => route('district.dashboard'),
-            'district_officer' => route('pp.officer.dashboard'),
-            'admin', 'director', 'department', 'departmental' => route('department.dashboard'),
+            'district_officer', 'department' => route('pp.officer.dashboard'),
+            'admin', 'director', 'departmental' => route('mmsay.dashboard'),
+            'ews_department' => route('ews.department.dashboard'),
             'ews_user' => route('ews.dashboard'),
             'ews_developer' => route('ews.developer.dashboard'),
             default => route('home'),

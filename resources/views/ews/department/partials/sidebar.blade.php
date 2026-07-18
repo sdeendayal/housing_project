@@ -14,6 +14,7 @@
     </div>
 
     @php
+        $currentType = $type ?? request()->route('type') ?? request()->query('type') ?? ($beneficiary->type ?? '');
         $isFunnelActive = request()->routeIs('ews.department.list') || request()->routeIs('ews.department.beneficiary.*');
         $isDevActive = request()->routeIs('ews.department.developers.*') || request()->routeIs('ews.department.developer-flats.*') || request()->routeIs('ews.department.developer-logs.*');
     @endphp
@@ -41,7 +42,7 @@
             <!-- Group 1: Registration Phase -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">1. Registration Phase</div>
-                <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'registered') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'registered') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">list_alt</span>
                         <span>Registered</span>
@@ -55,7 +56,7 @@
             <!-- Group 2: Eligibility Rejections -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">2. Eligibility Rejections</div>
-                <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'rejected_ppp') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'rejected_ppp') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">cancel</span>
                         <span>PPP Exclusion</span>
@@ -64,7 +65,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPppCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'rejected_property') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'rejected_property') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">domain_disabled</span>
                         <span>Property in India</span>
@@ -73,7 +74,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPropertyCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'rejected_ownership') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'rejected_ownership') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">home_work</span>
                         <span>House Ownership</span>
@@ -87,7 +88,7 @@
             <!-- Group 3: Verification Visited/Absent -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">3. Verification Visited/Absent</div>
-                <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'eligible_draw') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'eligible_draw') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">how_to_reg</span>
                         <span>Eligible for Draw</span>
@@ -96,7 +97,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($eligibleDrawCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'booking') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'booking') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">verified</span>
                         <span>Visited</span>
@@ -105,7 +106,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($bookingCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'not_visited') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'not_visited') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">warning</span>
                         <span>Absent</span>
@@ -119,7 +120,7 @@
             <!-- Group 4: ADC Verification Outcomes -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">4. ADC Verification Outcomes</div>
-                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'adc_passed') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'adc_passed') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">check_circle_outline</span>
                         <span>Passed</span>
@@ -128,7 +129,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($adcPassedCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'adc_failed') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'adc_failed') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">error_outline</span>
                         <span>Failed</span>
@@ -142,7 +143,7 @@
             <!-- Group 5: Final Draw Allotment -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">5. Final Draw Allotment</div>
-                <a href="{{ route('ews.department.list', ['type' => 'all', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'all') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'all', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'all') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">groups</span>
                         <span>Total Beneficiaries</span>
@@ -151,7 +152,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($totalCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'allotted') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'allotted') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">check_circle</span>
                         <span>Allotted</span>
@@ -160,7 +161,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($allottedCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'pending') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'pending') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">hourglass_empty</span>
                         <span>Pending</span>
@@ -169,7 +170,7 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($pendingCount) }}</span>
                     @endif
                 </a>
-                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ (isset($type) && $type === 'draw_remaining') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'draw_remaining') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">hourglass_disabled</span>
                         <span>Unallotted Draw</span>

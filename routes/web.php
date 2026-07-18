@@ -133,11 +133,11 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.flats.create');
     Route::post('/ews/developer/flats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'store'])
         ->name('ews.developer.flats.store');
-    Route::get('/ews/developer/flats/{id}/edit', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'edit'])
+    Route::get('/ews/developer/flats/{secure_id}/edit', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'edit'])
         ->name('ews.developer.flats.edit');
-    Route::put('/ews/developer/flats/{id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'update'])
+    Route::put('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'update'])
         ->name('ews.developer.flats.update');
-    Route::delete('/ews/developer/flats/{id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
+    Route::delete('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
         ->name('ews.developer.flats.destroy');
     Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])
         ->name('ews.developer.flats.export.csv');
@@ -364,14 +364,14 @@ Route::middleware(['auth', 'role:ews_department'])->group(function () {
     Route::get('/ews/department/dashboard', [\App\Http\Controllers\EwsDepartmentController::class, 'dashboard'])->name('ews.department.dashboard');
     Route::get('/ews/department/list', [\App\Http\Controllers\EwsDepartmentController::class, 'list'])->name('ews.department.list');
     Route::get('/ews/department/beneficiary/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getBeneficiaryData'])->name('ews.department.beneficiary.data');
-    Route::get('/ews/department/beneficiary/{type}/{id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showBeneficiary'])->name('ews.department.beneficiary.show');
+    Route::get('/ews/department/beneficiary/{type}/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showBeneficiary'])->name('ews.department.beneficiary.show');
 
     // ─── EWS Developer Management Routes for Department Panel ─────────
     Route::get('/ews/department/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'developersIndex'])->name('ews.department.developers.index');
     Route::get('/ews/department/developers/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getDevelopersData'])->name('ews.department.developers.data');
     Route::post('/ews/department/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'storeDeveloper'])->name('ews.department.developers.store');
-    Route::put('/ews/department/developers/{id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateDeveloper'])->name('ews.department.developers.update');
-    Route::delete('/ews/department/developers/{id}', [\App\Http\Controllers\EwsDepartmentController::class, 'destroyDeveloper'])->name('ews.department.developers.destroy');
+    Route::put('/ews/department/developers/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateDeveloper'])->name('ews.department.developers.update');
+    Route::delete('/ews/department/developers/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'destroyDeveloper'])->name('ews.department.developers.destroy');
 
     Route::get('/ews/department/developer-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'developerFlatsIndex'])->name('ews.department.developer-flats.index');
     Route::get('/ews/department/developer-flats/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getDeveloperFlatsData'])->name('ews.department.developer-flats.data');

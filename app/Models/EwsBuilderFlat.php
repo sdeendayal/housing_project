@@ -18,7 +18,17 @@ class EwsBuilderFlat extends Model
         'floor',
         'flat_number',
         'created_by',
+        'secure_id',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($flat) {
+            if (empty($flat->secure_id)) {
+                $flat->secure_id = md5(uniqid(microtime() . rand(), true));
+            }
+        });
+    }
 
     public function creator(): BelongsTo
     {

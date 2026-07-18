@@ -6,8 +6,10 @@ use App\Models\EwsBuilderFlat;
 use App\Models\EwsDeveloperLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Helpers\EwsHelper;
 
 class EwsDeveloperDashboardController extends Controller
 {
@@ -79,8 +81,9 @@ class EwsDeveloperDashboardController extends Controller
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('actions', function ($row) {
-                $editUrl = route('ews.developer.flats.edit', $row->id);
-                $destroyRoute = route('ews.developer.flats.destroy', $row->id);
+                $secureId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
+                $editUrl = route('ews.developer.flats.edit', $secureId);
+                $destroyRoute = route('ews.developer.flats.destroy', $secureId);
                 $csrf = csrf_field();
                 $method = method_field('DELETE');
 
@@ -91,10 +94,10 @@ class EwsDeveloperDashboardController extends Controller
                             <i class="bi bi-pencil-square"></i>
                             <span>Edit</span>
                         </a>
-                        <form action="'.$destroyRoute.'" method="POST" class="inline m-0" id="delete-form-'.$row->id.'">
+                        <form action="'.$destroyRoute.'" method="POST" class="inline m-0" id="delete-form-'.$secureId.'">
                             '.$csrf.'
                             '.$method.'
-                            <button type="button" onclick="confirmDelete('.$row->id.')"
+                            <button type="button" onclick="confirmDelete(\''.$secureId.'\')"
                                 class="px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-0.5 border border-red-100 shadow-sm">
                                 <i class="bi bi-trash3"></i>
                                 <span>Delete</span>
@@ -113,7 +116,8 @@ class EwsDeveloperDashboardController extends Controller
         if (!$user || $user->role !== 'ews_developer') {
             abort(403);
         }
-        $districts = \App\Models\EwsDeveloperDistrict::orderBy('id', 'asc')->get();
+
+        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
         return view('ews.developer.create', compact('user', 'districts'));
     }
 
@@ -125,7 +129,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $validated = $request->validate([
-            'district_id' => 'required|exists:ews_developer_districts,id',
+            'district_id' => 'required|exists:ews_districts,id',
             'town_name' => 'required|string|max:255',
             'project_name' => 'required|string|max:255',
             'block_tower_number' => 'required|string|max:255',
@@ -133,9 +137,11 @@ class EwsDeveloperDashboardController extends Controller
             'flat_number' => 'required|string|max:255',
         ]);
 
-        $district = \App\Models\EwsDeveloperDistrict::findOrFail($request->district_id);
+        $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
+        $validated['district_id'] = $district->id;
         $validated['district_name'] = $district->name;
         $validated['created_by'] = $user->id;
+        $validated['secure_id'] = md5(uniqid("flat_" . microtime() . rand(), true));
 
         $flat = EwsBuilderFlat::create($validated);
 
@@ -150,29 +156,29 @@ class EwsDeveloperDashboardController extends Controller
         return redirect()->route('ews.developer.dashboard')->with('success', 'EWS Builder Flat record created successfully.');
     }
 
-    public function edit($id)
+    public function edit($secureId)
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'ews_developer') {
             abort(403);
         }
 
-        $flat = EwsBuilderFlat::findOrFail($id);
-        $districts = \App\Models\EwsDeveloperDistrict::orderBy('id', 'asc')->get();
-        return view('ews.developer.edit', compact('user', 'flat', 'districts'));
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
+        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+        return view('ews.developer.edit', compact('user', 'flat', 'districts', 'secureId'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $secureId)
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'ews_developer') {
             abort(403);
         }
 
-        $flat = EwsBuilderFlat::findOrFail($id);
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
 
         $validated = $request->validate([
-            'district_id' => 'required|exists:ews_developer_districts,id',
+            'district_id' => 'required|exists:ews_districts,id',
             'town_name' => 'required|string|max:255',
             'project_name' => 'required|string|max:255',
             'block_tower_number' => 'required|string|max:255',
@@ -180,7 +186,8 @@ class EwsDeveloperDashboardController extends Controller
             'flat_number' => 'required|string|max:255',
         ]);
 
-        $district = \App\Models\EwsDeveloperDistrict::findOrFail($request->district_id);
+        $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
+        $validated['district_id'] = $district->id;
         $validated['district_name'] = $district->name;
 
         $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
@@ -200,14 +207,14 @@ class EwsDeveloperDashboardController extends Controller
         return redirect()->route('ews.developer.dashboard')->with('success', 'EWS Builder Flat record updated successfully.');
     }
 
-    public function destroy(Request $request, $id)
+    public function destroy(Request $request, $secureId)
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'ews_developer') {
             abort(403);
         }
 
-        $flat = EwsBuilderFlat::findOrFail($id);
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
         $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
 
         $flat->delete();
@@ -216,7 +223,7 @@ class EwsDeveloperDashboardController extends Controller
         EwsDeveloperLog::create([
             'user_id' => $user->id,
             'action' => 'DELETED',
-            'details' => "Deleted EWS Flat ID #{$id} [{$oldDetails}]",
+            'details' => "Deleted EWS Flat [{$oldDetails}]",
             'ip_address' => $request->ip(),
         ]);
 
@@ -299,9 +306,9 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
-        // Calculate counts for all 23 districts seeded (alphabetically)
-        $districts = \App\Models\EwsDeveloperDistrict::orderBy('name', 'asc')->get()->map(function ($district) {
-            $district->flats_count = \App\Models\EwsBuilderFlat::where('district_id', $district->id)->count();
+        // Calculate counts for all 23 districts in ews_districts (alphabetically)
+        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get()->map(function ($district) {
+            $district->flats_count = EwsBuilderFlat::where('district_id', $district->id)->count();
             return $district;
         });
 

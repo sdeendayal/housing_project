@@ -119,9 +119,9 @@
                     <!-- Mobile Number -->
                     <div class="space-y-1.5">
                         <label for="mobile" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Registered Dev Mobile</label>
-                        <div class="flex rounded-lg overflow-hidden border border-slate-250 bg-slate-50 focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500 transition-all">
+                        <div class="flex rounded-lg overflow-hidden border border-slate-250 bg-slate-50 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-all">
                             <span class="flex items-center justify-center px-3 text-slate-400 border-r border-slate-200 text-[11px] font-mono bg-slate-100">+91</span>
-                            <input type="text" id="mobile" name="mobile" maxlength="10" placeholder="9999999999" value="{{ old('mobile') }}"
+                            <input type="text" id="mobile" name="mobile" maxlength="10" placeholder="9999999999" value="{{ old('mobile', '9999999999') }}"
                                 class="w-full bg-transparent border-0 px-3 py-1.5 text-xs text-slate-800 focus:ring-0 focus:outline-none placeholder-slate-400 font-mono font-medium" required>
                         </div>
                     </div>
@@ -131,21 +131,20 @@
                         <div class="space-y-1.5">
                             <label for="captcha" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Captcha Code</label>
                             <input type="text" id="captcha" name="captcha" placeholder="Enter code" autocomplete="off"
-                                class="w-full bg-slate-50 border border-slate-250 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center font-medium" required>
+                                class="w-full bg-slate-50 border border-slate-250 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center font-medium" required>
                         </div>
                         <div class="space-y-1.5 flex flex-col justify-end">
-                            <div class="bg-slate-50 border border-slate-200 rounded-lg h-9 flex items-center justify-center font-mono font-bold tracking-widest text-indigo-650 relative overflow-hidden select-none border-dashed border-indigo-500/20 text-xs">
-                                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-indigo-500/5 to-transparent animate-pulse"></div>
-                                <span class="tracking-widest">{{ $captcha }}</span>
+                            <div class="bg-slate-50 border border-slate-200 rounded-lg h-9 flex items-center justify-center font-mono font-bold tracking-widest text-slate-800 relative overflow-hidden select-none border-dashed border-amber-500/30 text-xs">
+                                <span class="tracking-widest font-black text-amber-600">{{ $captcha }}</span>
                             </div>
                         </div>
                     </div>
 
                     <!-- Authorization Button -->
                     <button type="submit"
-                        class="w-full py-2.5 bg-gradient-to-r from-indigo-550 to-indigo-650 hover:from-indigo-600 hover:to-indigo-700 text-white font-black uppercase tracking-wider rounded-lg text-[10px] shadow-md shadow-indigo-500/10 hover:shadow-indigo-500/20 transition-all flex items-center justify-center gap-1.5">
+                        class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-black uppercase tracking-wider rounded-lg text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-amber-400/30">
                         <span>Send Security OTP</span>
-                        <i class="bi bi-shield-lock-fill text-[11px]"></i>
+                        <i class="bi bi-shield-lock-fill text-sm"></i>
                     </button>
                 </form>
             </div>

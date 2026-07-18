@@ -119,14 +119,14 @@
                     <!-- OTP Input -->
                     <div class="space-y-1.5">
                         <label for="otp" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Verification OTP Code</label>
-                        <input type="text" id="otp" name="otp" maxlength="6" placeholder="******" autocomplete="off"
-                            class="w-full bg-slate-50 border border-slate-250 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center tracking-widest font-bold" required>
+                        <input type="text" id="otp" name="otp" maxlength="6" placeholder="111111" value="{{ old('otp', '111111') }}" autocomplete="off"
+                            class="w-full bg-slate-50 border border-slate-250 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center tracking-widest font-bold" required>
                     </div>
 
                     <!-- Sandbox Alert Banner -->
                     @if(app()->environment('local'))
-                        <div class="bg-cyan-50 border border-cyan-150 rounded-lg p-2 text-[9px] text-cyan-700 font-mono">
-                            <span class="font-bold uppercase">Sandbox:</span> Use test OTP <span class="bg-cyan-100 border border-cyan-200 px-1 py-0.5 rounded text-cyan-800 font-bold">111111</span> to proceed.
+                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[9px] text-amber-800 font-mono">
+                            <span class="font-bold uppercase">Sandbox:</span> Use test OTP <span class="bg-amber-200 border border-amber-300 px-1 py-0.5 rounded text-amber-900 font-black">111111</span> to proceed.
                         </div>
                     @else
                         <div class="bg-yellow-50 border border-yellow-150 rounded-lg p-2 text-[9px] text-yellow-750 font-mono">
@@ -136,9 +136,9 @@
 
                     <!-- Buttons Group -->
                     <button type="submit"
-                        class="w-full py-2.5 bg-gradient-to-r from-violet-550 to-violet-650 hover:from-violet-600 hover:to-violet-750 text-white font-black uppercase tracking-wider rounded-lg text-[10px] shadow-lg shadow-violet-500/10 hover:shadow-violet-500/20 transition-all flex items-center justify-center gap-1.5">
+                        class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-black uppercase tracking-wider rounded-lg text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-amber-400/30">
                         <span>Authorize Login</span>
-                        <i class="bi bi-shield-check-fill text-[11px]"></i>
+                        <i class="bi bi-shield-check-fill text-sm"></i>
                     </button>
                 </form>
 
