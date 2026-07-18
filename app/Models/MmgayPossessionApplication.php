@@ -86,6 +86,11 @@ class MmgayPossessionApplication extends Model
         return $this->belongsTo(District::class, 'district_id', 'DistrictId');
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'secure_id';
+    }
+
     public static function generateSecureId(): string
     {
         return md5(uniqid(rand(), true));
