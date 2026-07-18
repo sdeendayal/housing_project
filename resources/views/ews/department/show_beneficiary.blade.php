@@ -216,18 +216,20 @@
                 </div>
 
                 <!-- Basic Fields Grid (Compact) -->
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-x-4 gap-y-2.5 py-4 border-b border-slate-100 text-[11px] font-bold text-slate-700">
+                <div class="grid grid-cols-2 {{ ($beneficiary->type ?? '') === 'allotted' ? 'sm:grid-cols-5' : 'sm:grid-cols-4' }} gap-x-4 gap-y-2.5 py-4 border-b border-slate-100 text-[11px] font-bold text-slate-700">
                     <!-- Application Number -->
                     <div>
                         <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Application Number</span>
                         <span class="block uppercase">{{ $beneficiary->application_number ?? 'N/A' }}</span>
                     </div>
 
-                    <!-- Flat Number Details -->
-                    <div>
-                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Flat Number / Description</span>
-                        <span class="text-orange-600 block uppercase">{{ $beneficiary->flat_no ?? 'No Flat Allotted' }}</span>
-                    </div>
+                    @if(($beneficiary->type ?? '') === 'allotted')
+                        <!-- Flat Number Details -->
+                        <div>
+                            <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Flat Number / Description</span>
+                            <span class="text-orange-600 block uppercase">{{ $beneficiary->flat_no ?? 'No Flat Allotted' }}</span>
+                        </div>
+                    @endif
 
                     <!-- District -->
                     <div>

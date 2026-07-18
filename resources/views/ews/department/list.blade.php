@@ -327,7 +327,9 @@
                                 <th>District</th>
                                 <th>Aadhar Number</th>
                                 <th>Mobile Number</th>
-                                <th>Flat Number</th>
+                                @if($type === 'allotted')
+                                    <th>Flat Number</th>
+                                @endif
                                 <th>Status</th>
                                 <th style="text-align: right; width: 15%;">Action</th>
                             </tr>
@@ -364,6 +366,50 @@
             if (currentType === 'draw_remaining') titleText = 'Unallotted Draw (Remaining Eligible) List';
             $('#table-title').text(titleText);
 
+            let columnsConfig = [
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                { data: 'application_number', name: 'application_number', class: 'font-mono uppercase font-bold text-slate-500 text-[10px]' },
+                { data: 'full_name', name: 'full_name', class: 'font-bold text-slate-800 uppercase' },
+                { data: 'dist_name', name: 'dist_name', class: 'uppercase font-bold text-slate-600' },
+                { data: 'aadhar_no', name: 'aadhar_no', class: 'font-mono text-slate-500' },
+                { data: 'mobile_number', name: 'mobile_number', class: 'font-mono text-slate-700' }
+            ];
+
+            if (currentType === 'allotted') {
+                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
+            }
+
+            columnsConfig.push(
+                { 
+                    data: 'status', 
+                    name: 'status',
+                    render: function (data, type, row) {
+                        if (data === 'Allotted') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Allotted</span>';
+                        } else if (data === 'Pending') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-250"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>';
+                        } else if (data === 'Rejected') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Rejected</span>';
+                        } else if (data === 'Eligible') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-[9px] font-black uppercase text-indigo-700 tracking-wide border border-indigo-200"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Eligible</span>';
+                        } else if (data === 'Visited') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Visited</span>';
+                        } else if (data === 'Not Visited') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Not Visited</span>';
+                        } else if (data === 'Passed') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Passed</span>';
+                        } else if (data === 'Failed') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Failed</span>';
+                        } else if (data === 'Unallotted') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-[9px] font-black uppercase text-slate-700 tracking-wide border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Unallotted</span>';
+                        } else {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-[9px] font-black uppercase text-blue-700 tracking-wide border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Registered</span>';
+                        }
+                    }
+                },
+                { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
+            );
+
             table = $('#beneficiary-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -374,43 +420,7 @@
                         d.district_id = "{{ $districtId }}";
                     }
                 },
-                columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'application_number', name: 'application_number', class: 'font-mono uppercase font-bold text-slate-500 text-[10px]' },
-                    { data: 'full_name', name: 'full_name', class: 'font-bold text-slate-800 uppercase' },
-                    { data: 'dist_name', name: 'dist_name', class: 'uppercase font-bold text-slate-600' },
-                    { data: 'aadhar_no', name: 'aadhar_no', class: 'font-mono text-slate-500' },
-                    { data: 'mobile_number', name: 'mobile_number', class: 'font-mono text-slate-700' },
-                    { data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' },
-                    { 
-                        data: 'status', 
-                        name: 'status',
-                        render: function (data, type, row) {
-                            if (data === 'Allotted') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Allotted</span>';
-                            } else if (data === 'Pending') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-250"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>';
-                            } else if (data === 'Rejected') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Rejected</span>';
-                            } else if (data === 'Eligible') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-[9px] font-black uppercase text-indigo-700 tracking-wide border border-indigo-200"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Eligible</span>';
-                            } else if (data === 'Visited') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Visited</span>';
-                            } else if (data === 'Not Visited') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Not Visited</span>';
-                            } else if (data === 'Passed') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Passed</span>';
-                            } else if (data === 'Failed') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Failed</span>';
-                            } else if (data === 'Unallotted') {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-[9px] font-black uppercase text-slate-700 tracking-wide border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Unallotted</span>';
-                            } else {
-                                return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-[9px] font-black uppercase text-blue-700 tracking-wide border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Registered</span>';
-                            }
-                        }
-                    },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
-                ],
+                columns: columnsConfig,
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search beneficiaries...",
