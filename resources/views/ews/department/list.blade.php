@@ -10,10 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <!-- jQuery & DataTables CDN -->
+    <!-- jQuery, DataTables & SweetAlert2 CDN -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         body {
@@ -99,170 +100,7 @@
 <body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
 
     <!-- 1. Left Sidebar -->
-    <aside class="fixed left-0 top-0 h-full w-[260px] flex flex-col py-6 z-40 bg-[#1e293b] text-slate-300 shadow-xl border-r border-slate-800">
-        <!-- Logo -->
-        <div class="px-6 mb-6 flex items-center gap-3">
-            <div class="w-10 h-10 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-lg flex items-center justify-center text-white">
-                <span class="material-symbols-outlined text-xl font-bold">business</span>
-            </div>
-            <div>
-                <a href="{{ route('ews.department.dashboard') }}">
-                    <h1 class="text-md font-extrabold text-white leading-tight">EWS DEPT</h1>
-                    <p class="text-[9px] uppercase tracking-wider text-orange-400 font-bold">Housing Haryana</p>
-                </a>
-            </div>
-        </div>
-
-        <!-- Collapsible Structured Sidebar Navigation Links -->
-        <nav class="flex-grow px-3 space-y-3.5 overflow-y-auto text-xs">
-            
-            <!-- Dashboard Link -->
-            <a href="{{ route('ews.department.dashboard') }}" class="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 hover:bg-slate-800 hover:text-white transition-all text-left font-bold">
-                <span class="material-symbols-outlined text-base">dashboard</span>
-                <span>Overview Dashboard</span>
-            </a>
-
-            <!-- Main Dropdown Toggle Button -->
-            <button onclick="toggleFunnelSubmenu()" class="w-full flex items-center justify-between rounded-lg px-4 py-2 hover:bg-slate-800 hover:text-white transition-all text-left font-bold text-slate-350">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-base">filter_alt</span>
-                    <span>EWS Registry Funnel</span>
-                </div>
-                <span id="submenu-arrow" class="material-symbols-outlined text-sm">keyboard_arrow_right</span>
-            </button>
-
-            <!-- Collapsible submenus wrapper -->
-            <div id="funnel-submenus" class="hidden space-y-3.5 pl-2 border-l border-slate-700/60 ml-4 transition-all duration-300">
-                <!-- Group 1: Registration Phase -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">1. Registration Phase</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'registered' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">list_alt</span>
-                            <span>Registered</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($registeredCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 2: Eligibility Rejections -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">2. Eligibility Rejections</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'rejected_ppp' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">cancel</span>
-                            <span>PPP Exclusion</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPppCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'rejected_property' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">domain_disabled</span>
-                            <span>Property in India</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPropertyCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'rejected_ownership' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">home_work</span>
-                            <span>House Ownership</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedOwnershipCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 3: Verification Visited/Absent -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">3. Verification Visited/Absent</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'eligible_draw' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">how_to_reg</span>
-                            <span>Eligible for Draw</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($eligibleDrawCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'booking' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">verified</span>
-                            <span>Visited</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($bookingCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'not_visited' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">warning</span>
-                            <span>Absent</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($notVisitedCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 4: ADC Verification Outcomes -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">4. ADC Verification Outcomes</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'adc_passed' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">check_circle_outline</span>
-                            <span>Passed</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($adcPassedCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'adc_failed' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">error_outline</span>
-                            <span>Failed</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($adcFailedCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 5: Final Draw Allotment -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">5. Final Draw Allotment</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'all', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'all' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">groups</span>
-                            <span>Total Beneficiaries</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($totalCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'allotted' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                            <span>Allotted</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($allottedCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'pending' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">hourglass_empty</span>
-                            <span>Pending</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($pendingCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ $type === 'draw_remaining' ? 'bg-orange-600 text-white font-bold' : '' }}">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">hourglass_disabled</span>
-                            <span>Unallotted Draw</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($drawRemainingCount) }}</span>
-                    </a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Sidebar Footer -->
-        <div class="mt-auto px-6 pt-4 border-t border-slate-800">
-            <div class="mb-4 px-2">
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Scheme</p>
-                <p class="text-xs font-bold text-orange-400 uppercase mt-0.5">EWS HOUSING</p>
-            </div>
-            <a href="{{ route('ews.department.logout') }}" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-rose-500 hover:bg-rose-950/30 hover:text-rose-400 transition-all font-bold">
-                <span class="material-symbols-outlined text-base">logout</span>
-                <span>Logout</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
     <div class="flex-1 flex flex-col ml-[260px]">
@@ -301,8 +139,24 @@
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Active server-side datatable listings showing registration details</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <select id="district-filter" onchange="filterListByDistrict(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[160px]">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <!-- Export Action Buttons -->
+                        <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
+                            <button type="button" onclick="exportData('excel')" class="px-2.5 py-1 bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">table_view</span>
+                                <span>Excel</span>
+                            </button>
+                            <button type="button" onclick="exportData('csv')" class="px-2.5 py-1 bg-white hover:bg-sky-600 hover:text-white text-sky-700 border border-sky-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">csv</span>
+                                <span>CSV</span>
+                            </button>
+                            <button type="button" onclick="exportData('pdf')" class="px-2.5 py-1 bg-white hover:bg-rose-600 hover:text-white text-rose-700 border border-rose-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                                <span class="material-symbols-outlined text-sm">picture_as_pdf</span>
+                                <span>PDF</span>
+                            </button>
+                        </div>
+
+                        <select id="district-filter" onchange="filterListByDistrict(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[150px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
@@ -410,6 +264,17 @@
                 { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
             );
 
+            $.fn.dataTable.ext.errMode = 'none';
+            $('#beneficiary-table').on('error.dt', function (e, settings, techNote, message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Data Load Warning',
+                    text: 'Unable to fetch beneficiary data. Please refresh or try again.',
+                    confirmButtonColor: '#ea580c',
+                    customClass: { popup: 'rounded-2xl font-sans' }
+                });
+            });
+
             table = $('#beneficiary-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -427,23 +292,7 @@
                     processing: '<div class="flex items-center justify-center p-2 text-orange-600 font-bold text-[10px]"><i class="bi bi-arrow-repeat animate-spin mr-1"></i> Fetching registry...</div>'
                 },
             });
-
-            if (currentType && currentType !== 'all') {
-                toggleFunnelSubmenu();
-            }
         });
-
-        function toggleFunnelSubmenu() {
-            const container = document.getElementById('funnel-submenus');
-            const arrow = document.getElementById('submenu-arrow');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                arrow.textContent = 'keyboard_arrow_down';
-            } else {
-                container.classList.add('hidden');
-                arrow.textContent = 'keyboard_arrow_right';
-            }
-        }
 
         function filterListByDistrict(districtId) {
             let url = new URL(window.location.href);
@@ -454,6 +303,65 @@
             }
             window.location.href = url.toString();
         }
+
+        function exportData(format) {
+            let search = table ? table.search() : '';
+            let url = new URL("{{ route('ews.department.export.beneficiaries') }}");
+            
+            url.searchParams.set('format', format);
+            url.searchParams.set('type', currentType);
+            if ("{{ $districtId }}") url.searchParams.set('district_id', "{{ $districtId }}");
+            if (search) url.searchParams.set('search', search);
+
+            if (format === 'pdf') {
+                window.open(url.toString(), '_blank');
+                return;
+            }
+
+            Swal.fire({
+                title: 'Generating ' + format.toUpperCase() + ' Export...',
+                html: '<div class="text-xs text-slate-500 font-medium">Please wait while your filtered dataset is prepared for download.</div>',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            fetch(url.toString())
+                .then(response => {
+                    if (!response.ok) throw new Error('Export failed.');
+                    return response.blob();
+                })
+                .then(blob => {
+                    const downloadUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = downloadUrl;
+                    a.download = 'ews_beneficiaries_' + currentType + '_' + (format === 'excel' ? 'excel.csv' : 'csv');
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(downloadUrl);
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Export Downloaded!',
+                        text: 'Your ' + format.toUpperCase() + ' file has been saved successfully.',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        customClass: { popup: 'rounded-2xl font-sans' }
+                    });
+                })
+                .catch(error => {
+                    Swal.close();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Export Failed',
+                        text: 'An error occurred while exporting data. Please try again.',
+                        confirmButtonColor: '#ef4444'
+                    });
+                });
+        }
     </script>
+    @include('partials.global-toast')
 </body>
 </html>

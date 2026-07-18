@@ -95,7 +95,7 @@
                     </div>
                 @endif
 
-                @if($errors->any())
+                @if(isset($errors) && $errors->any())
                     <div class="bg-rose-950/40 border border-rose-900/50 text-rose-400 text-xs font-bold p-3.5 rounded-lg mb-5">
                         <div class="flex items-center gap-2 mb-1">
                             <span class="material-symbols-outlined text-base">warning</span>
@@ -152,5 +152,6 @@
 
     </div>
 
+    @include('partials.global-toast')
 </body>
 </html>

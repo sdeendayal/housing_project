@@ -297,12 +297,7 @@
                 color: '#0f172a',
             });
         }
-
-        @if ($errors->any())
-            showAlert('error', 'Validation Error', @json($errors->first()));
-        @elseif (session('error'))
-            showAlert('error', 'Unable to Send OTP', @json(session('error')));
-        @endif
     </script>
+    @include('partials.global-toast')
 </body>
 </html>

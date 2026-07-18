@@ -21,170 +21,7 @@
 <body class="bg-[#f3f6fc] text-slate-800 h-screen flex">
 
     <!-- 1. Left Sidebar -->
-    <aside class="fixed left-0 top-0 h-full w-[260px] flex flex-col py-5 z-40 bg-[#1e293b] text-slate-300 shadow-xl border-r border-slate-800">
-        <!-- Logo -->
-        <div class="px-6 mb-5 flex items-center gap-3">
-            <div class="w-9 h-9 bg-gradient-to-tr from-orange-600 to-amber-500 rounded-lg flex items-center justify-center text-white">
-                <span class="material-symbols-outlined text-lg font-bold">business</span>
-            </div>
-            <div>
-                <a href="{{ route('ews.department.dashboard') }}">
-                    <h1 class="text-sm font-extrabold text-white leading-tight">EWS DEPT</h1>
-                    <p class="text-[8px] uppercase tracking-wider text-orange-400 font-bold">Housing Haryana</p>
-                </a>
-            </div>
-        </div>
-
-        <!-- Collapsible Structured Sidebar Navigation Links -->
-        <nav class="flex-grow px-3 space-y-2 overflow-y-auto text-xs">
-            
-            <!-- Dashboard Link -->
-            <a href="{{ route('ews.department.dashboard') }}" class="w-full flex items-center gap-3 rounded-lg px-4 py-2 bg-orange-650 text-white font-bold transition-all text-left">
-                <span class="material-symbols-outlined text-base">dashboard</span>
-                <span>Overview Dashboard</span>
-            </a>
-
-            <!-- Main Dropdown Toggle Button -->
-            <button onclick="toggleFunnelSubmenu()" class="w-full flex items-center justify-between rounded-lg px-4 py-2 hover:bg-slate-800 hover:text-white transition-all text-left font-bold text-slate-350">
-                <div class="flex items-center gap-3">
-                    <span class="material-symbols-outlined text-base">filter_alt</span>
-                    <span>EWS Registry Funnel</span>
-                </div>
-                <span id="submenu-arrow" class="material-symbols-outlined text-sm">keyboard_arrow_right</span>
-            </button>
-
-            <!-- Collapsible submenus wrapper -->
-            <div id="funnel-submenus" class="hidden space-y-3.5 pl-2 border-l border-slate-700/60 ml-4 transition-all duration-300">
-                <!-- Group 1: Registration Phase -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">1. Registration Phase</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">list_alt</span>
-                            <span>Registered</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($registeredCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 2: Eligibility Rejections -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">2. Eligibility Rejections</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">cancel</span>
-                            <span>PPP Exclusion</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPppCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">domain_disabled</span>
-                            <span>Property in India</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedPropertyCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">home_work</span>
-                            <span>House Ownership</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($rejectedOwnershipCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 3: Verification Visited/Absent -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">3. Verification Visited/Absent</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">how_to_reg</span>
-                            <span>Eligible for Draw</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($eligibleDrawCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">verified</span>
-                            <span>Visited</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($bookingCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">warning</span>
-                            <span>Absent</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($notVisitedCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 4: ADC Verification Outcomes -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">4. ADC Verification Outcomes</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">check_circle_outline</span>
-                            <span>Passed</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($adcPassedCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">error_outline</span>
-                            <span>Failed</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($adcFailedCount) }}</span>
-                    </a>
-                </div>
-
-                <!-- Group 5: Final Draw Allotment -->
-                <div class="space-y-1">
-                    <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">5. Final Draw Allotment</div>
-                    <a href="{{ route('ews.department.list', ['type' => 'all', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">groups</span>
-                            <span>Total Beneficiaries</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($totalCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">check_circle</span>
-                            <span>Allotted</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($allottedCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">hourglass_empty</span>
-                            <span>Pending</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($pendingCount) }}</span>
-                    </a>
-                    <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId]) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">hourglass_disabled</span>
-                            <span>Unallotted Draw</span>
-                        </div>
-                        <span class="text-[9px] font-mono opacity-80">{{ number_format($drawRemainingCount) }}</span>
-                    </a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- Sidebar Footer -->
-        <div class="mt-auto px-6 pt-4 border-t border-slate-800">
-            <div class="mb-4 px-2">
-                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Scheme</p>
-                <p class="text-xs font-bold text-orange-400 uppercase mt-0.5">EWS HOUSING</p>
-            </div>
-            <a href="{{ route('ews.department.logout') }}" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg text-rose-500 hover:bg-rose-950/30 hover:text-rose-400 transition-all font-bold">
-                <span class="material-symbols-outlined text-base">logout</span>
-                <span>Logout</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
     <div class="flex-1 flex flex-col ml-[260px] h-screen overflow-hidden">
@@ -194,7 +31,7 @@
             <div class="flex items-center gap-3">
                 <h2 class="text-sm font-extrabold text-[#0f172a]">Department Panel</h2>
                 <div class="h-4 w-[1px] bg-slate-200"></div>
-                <span class="text-[11px] text-slate-500 font-medium">EWS Verification Funnel & Analytics Dashboard</span>
+                <span class="text-[11px] text-slate-500 font-medium">EWS Verification Funnel & Developer Management Dashboard</span>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -207,17 +44,17 @@
             </div>
         </header>
 
-        <!-- Content Body Wrapper (Compact layout, no vertical scrolling) -->
-        <main class="p-4 flex-grow flex flex-col gap-4 overflow-hidden">
+        <!-- Content Body Wrapper -->
+        <main class="p-4 flex-grow flex flex-col gap-4 overflow-y-auto">
 
-            <!-- Banner Header (Super Compact) -->
+            <!-- Banner Header -->
             <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#334155] py-2.5 px-4 border border-slate-700/10 shrink-0 shadow-sm">
                 <div class="relative flex items-center justify-between text-white">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-white text-lg">analytics</span>
                         <div>
-                            <h2 class="text-xs font-black tracking-tight leading-tight">EWS Verification Funnel Dashboard</h2>
-                            <p class="text-[8px] text-slate-350 font-semibold uppercase leading-none mt-0.5">Application flow tracking console</p>
+                            <h2 class="text-xs font-black tracking-tight leading-tight">EWS Verification Funnel & Developer Operations Console</h2>
+                            <p class="text-[8px] text-slate-350 font-semibold uppercase leading-none mt-0.5">Application flow tracking & developer management system</p>
                         </div>
                     </div>
                     <div class="bg-white/15 rounded px-2 py-0.5 text-[9px] font-bold">
@@ -226,7 +63,7 @@
                 </div>
             </div>
 
-            <!-- District Filter Card (Premium Design) -->
+            <!-- District Filter Card -->
             <div class="bg-white rounded-xl p-3 border border-slate-150 flex items-center justify-between shadow-sm shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-orange-600 text-sm">filter_list</span>
@@ -244,7 +81,7 @@
                 </div>
             </div>
 
-            <!-- EWS STAGE 1: APPLICATIONS & PRE-VERIFICATION REJECTIONS (High Density) -->
+            <!-- EWS STAGE 1: APPLICATIONS & PRE-VERIFICATION REJECTIONS -->
             <div class="space-y-1.5 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-blue-500"></span>
@@ -322,7 +159,7 @@
                 </div>
             </div>
 
-            <!-- EWS STAGE 2: VERIFICATION PROCESS, ADC STATUS & ALLOTMENT (High Density) -->
+            <!-- EWS STAGE 2: VERIFICATION PROCESS, ADC STATUS & ALLOTMENT -->
             <div class="space-y-1.5 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
@@ -447,23 +284,87 @@
                 </div>
             </div>
 
+            <!-- EWS STAGE 3: DEVELOPERS MANAGEMENT & FORM SUBMISSIONS -->
+            <div class="space-y-1.5 shrink-0 pt-2 border-t border-slate-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                        <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">Phase 3: EWS Developers Hub & Submissions Management</h3>
+                    </div>
+                    <a href="{{ route('ews.department.developers.index') }}" class="text-[9px] font-black text-amber-700 hover:text-amber-800 uppercase flex items-center gap-1">
+                        <span>Manage Developers</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
+                    </a>
+                </div>
+
+                <div class="grid grid-cols-3 gap-3">
+                    <!-- Developer Accounts Card -->
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-3.5 border border-slate-700 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[8.5px] uppercase tracking-wider text-amber-400 font-extrabold leading-none">Developer Accounts</span>
+                                <h2 class="text-2xl font-black text-white font-mono mt-1">{{ number_format($developerCount) }}</h2>
+                                <p class="text-[9px] text-slate-400 font-medium mt-0.5">Registered developer credentials</p>
+                            </div>
+                            <span class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                                <span class="material-symbols-outlined text-base">engineering</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-slate-700/80 flex items-center justify-between">
+                            <a href="{{ route('ews.department.developers.index') }}" class="text-[9.5px] text-amber-400 hover:text-amber-300 font-black uppercase tracking-wider flex items-center gap-1">
+                                <span>View / Add Developers</span>
+                                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Developer Flat Submissions Card -->
+                    <div class="bg-white rounded-xl p-3.5 border border-slate-150 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none">Builder Flat Submissions</span>
+                                <h2 class="text-2xl font-black text-amber-700 font-mono mt-1">{{ number_format($developerFlatsCount) }}</h2>
+                                <p class="text-[9px] text-slate-500 font-medium mt-0.5">Total builder flat form entries</p>
+                            </div>
+                            <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100">
+                                <span class="material-symbols-outlined text-base">apartment</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <a href="{{ route('ews.department.developer-flats.index') }}" class="text-[9.5px] text-amber-700 hover:text-amber-800 font-black uppercase tracking-wider flex items-center gap-1">
+                                <span>View Submitted Forms</span>
+                                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Developer Activity Logs Card -->
+                    <div class="bg-white rounded-xl p-3.5 border border-slate-150 flex flex-col justify-between shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none">Developer Activity Logs</span>
+                                <h2 class="text-2xl font-black text-slate-800 font-mono mt-1">{{ number_format($developerLogsCount) }}</h2>
+                                <p class="text-[9px] text-slate-500 font-medium mt-0.5">Action & audit logs</p>
+                            </div>
+                            <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
+                                <span class="material-symbols-outlined text-base">receipt_long</span>
+                            </span>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+                            <a href="{{ route('ews.department.developer-logs.index') }}" class="text-[9.5px] text-slate-700 hover:text-slate-900 font-black uppercase tracking-wider flex items-center gap-1">
+                                <span>View Activity Logs</span>
+                                <span class="material-symbols-outlined text-xs">chevron_right</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
     <!-- JS Dropdown Toggle logic -->
     <script>
-        function toggleFunnelSubmenu() {
-            const container = document.getElementById('funnel-submenus');
-            const arrow = document.getElementById('submenu-arrow');
-            if (container.classList.contains('hidden')) {
-                container.classList.remove('hidden');
-                arrow.textContent = 'keyboard_arrow_down';
-            } else {
-                container.classList.add('hidden');
-                arrow.textContent = 'keyboard_arrow_right';
-            }
-        }
-
         function filterByDistrict(districtId) {
             let url = new URL(window.location.href);
             if (districtId) {
@@ -475,5 +376,6 @@
         }
     </script>
 
+    @include('partials.global-toast')
 </body>
 </html>
