@@ -119,10 +119,14 @@
                             <div class="space-y-1">
                                 <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Select District</label>
                                 <select id="district_id" name="district_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
-                                    <option value="" disabled>Choose a district...</option>
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    @if(count($districts) > 1)
+                                        <option value="" disabled>Choose a district...</option>
+                                    @endif
                                     @foreach($districts as $district)
-                                        <option value="{{ $district->id }}" {{ $flat->district_id == $district->id ? 'selected' : '' }}>{{ $district->name }}</option>
+                                        <option value="{{ $district->id }}" {{ (count($districts) === 1 || $flat->district_id == $district->id) ? 'selected' : '' }}>
+                                            {{ strtoupper($district->name) }}
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>

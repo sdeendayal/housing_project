@@ -35,16 +35,29 @@ class EwsDeveloperDashboardController extends Controller
     /**
      * Helper to get registry query with applied search & district filters.
      */
+    /**
+     * Helper to get registry query with applied search & district filters.
+     */
     private function getFilteredQuery(Request $request)
     {
         $query = EwsBuilderFlat::query();
+        $user = Auth::user();
 
-        // 1. District Dropdown Filter
-        if ($request->filled('district_id')) {
+        // Lock flats data strictly to developer's assigned district
+        if ($user && !empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $query->where(function ($q) use ($user, $userDist) {
+                $q->where('district_name', $userDist)
+                  ->orWhere('district_name', $user->district_name);
+                if (!empty($user->district_id)) {
+                    $q->orWhere('district_id', $user->district_id);
+                }
+            });
+        } elseif ($request->filled('district_id')) {
             $query->where('district_id', $request->district_id);
         }
 
-        // 2. Search Filter (Standard string parameter or Yajra request array)
+        // Search Filter (Standard string parameter or Yajra request array)
         $searchValue = '';
         if ($request->has('search')) {
             $searchParam = $request->search;
@@ -117,7 +130,21 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
-        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+        // District wise locking: If developer is assigned a district, pre-select and restrict ONLY to their district!
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $districts = DB::table('ews_districts')
+                ->where('name', $userDist)
+                ->orWhere('id', $user->district_id)
+                ->orderBy('name', 'asc')
+                ->get();
+            if ($districts->isEmpty()) {
+                $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+            }
+        } else {
+            $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+        }
+
         return view('ews.developer.create', compact('user', 'districts'));
     }
 
@@ -138,6 +165,16 @@ class EwsDeveloperDashboardController extends Controller
         ]);
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
+
+        // Enforce District-wise lock: Developers can ONLY register flats for their assigned district!
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $selectedDist = strtoupper(trim($district->name));
+            if ($userDist !== $selectedDist && $user->district_id != $district->id) {
+                return back()->withInput()->with('error', "Unauthorized: You are assigned to {$user->district_name} district. You can only register flats for {$user->district_name}.");
+            }
+        }
+
         $validated['district_id'] = $district->id;
         $validated['district_name'] = $district->name;
         $validated['created_by'] = $user->id;
@@ -164,7 +201,30 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
-        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+
+        // District-wise edit check
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $flatDist = strtoupper(trim($flat->district_name));
+            if ($userDist !== $flatDist && $user->district_id != $flat->district_id && $flat->created_by != $user->id) {
+                abort(403, 'Unauthorized action for this district.');
+            }
+        }
+
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $districts = DB::table('ews_districts')
+                ->where('name', $userDist)
+                ->orWhere('id', $user->district_id)
+                ->orderBy('name', 'asc')
+                ->get();
+            if ($districts->isEmpty()) {
+                $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+            }
+        } else {
+            $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
+        }
+
         return view('ews.developer.edit', compact('user', 'flat', 'districts', 'secureId'));
     }
 
@@ -177,6 +237,15 @@ class EwsDeveloperDashboardController extends Controller
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
 
+        // District-wise update check
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $flatDist = strtoupper(trim($flat->district_name));
+            if ($userDist !== $flatDist && $user->district_id != $flat->district_id && $flat->created_by != $user->id) {
+                abort(403, 'Unauthorized action for this district.');
+            }
+        }
+
         $validated = $request->validate([
             'district_id' => 'required|exists:ews_districts,id',
             'town_name' => 'required|string|max:255',
@@ -187,6 +256,15 @@ class EwsDeveloperDashboardController extends Controller
         ]);
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
+
+        if (!empty($user->district_name)) {
+            $userDist = strtoupper(trim($user->district_name));
+            $selectedDist = strtoupper(trim($district->name));
+            if ($userDist !== $selectedDist && $user->district_id != $district->id) {
+                return back()->withInput()->with('error', "Unauthorized: You can only update flats for {$user->district_name}.");
+            }
+        }
+
         $validated['district_id'] = $district->id;
         $validated['district_name'] = $district->name;
 

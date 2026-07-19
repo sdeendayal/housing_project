@@ -28,9 +28,9 @@ class EwsDeveloperSeeder extends Seeder
             $dev->delete();
         }
 
-        // Create developer user with mobile 9999999999
+        // Create developer user with mobile 9999999999 assigned to Sonipat district
         $user = User::create([
-            'name' => 'EWS Developer Team',
+            'name' => 'EWS Developer Team (Sonipat)',
             'email' => 'ews_developer@gmail.com',
             'mobile' => '9999999999',
             'password' => Hash::make('password'),
@@ -38,7 +38,8 @@ class EwsDeveloperSeeder extends Seeder
             'scheme' => 'EWS',
             'Is_Active' => '1',
             'Is_Deleted' => '0',
-            'district_name' => 'Sonipat',
+            'district_id' => 22,
+            'district_name' => 'SONIPAT',
         ]);
 
         RoleType::create([

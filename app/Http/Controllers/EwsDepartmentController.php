@@ -510,6 +510,16 @@ class EwsDepartmentController extends Controller
 
         $secureId = md5(uniqid("dev_" . microtime() . rand(), true));
 
+        $districtId = null;
+        $districtName = $request->district_name ?? 'SONIPAT';
+        if (!empty($districtName)) {
+            $dist = DB::table('ews_districts')->where('name', strtoupper(trim($districtName)))->orWhere('id', $districtName)->first();
+            if ($dist) {
+                $districtId = $dist->id;
+                $districtName = $dist->name;
+            }
+        }
+
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -519,7 +529,8 @@ class EwsDepartmentController extends Controller
             'scheme' => 'EWS',
             'Is_Active' => $request->input('Is_Active', '1'),
             'Is_Deleted' => '0',
-            'district_name' => $request->district_name ?? 'Sonipat',
+            'district_id' => $districtId,
+            'district_name' => $districtName,
             'secure_id' => $secureId,
         ]);
 
@@ -559,7 +570,18 @@ class EwsDepartmentController extends Controller
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->mobile;
-        $user->district_name = $request->district_name ?? $user->district_name;
+
+        $reqDist = $request->district_name ?? $user->district_name;
+        if (!empty($reqDist)) {
+            $dist = DB::table('ews_districts')->where('name', strtoupper(trim($reqDist)))->orWhere('id', $reqDist)->first();
+            if ($dist) {
+                $user->district_id = $dist->id;
+                $user->district_name = $dist->name;
+            } else {
+                $user->district_name = $reqDist;
+            }
+        }
+
         $user->Is_Active = $request->input('Is_Active', '1');
 
         if ($request->filled('password')) {
