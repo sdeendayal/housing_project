@@ -384,7 +384,8 @@ Route::middleware(['auth', 'role:ews_department'])->group(function () {
     // Export Routes (CSV, Excel, PDF)
     Route::get('/ews/department/export/beneficiaries', [\App\Http\Controllers\EwsDepartmentController::class, 'exportBeneficiaries'])->name('ews.department.export.beneficiaries');
     Route::get('/ews/department/export/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDevelopers'])->name('ews.department.export.developers');
-    Route::get('/ews/department/export/developer-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperFlats'])->name('ews.department.export.developer-flats');
+    Route::get('/ews/department/export/developer-logs', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperLogs'])->name('ews.department.export.developer-logs');
+
     // Department Admin Profile Routes (bound to secure_id)
     Route::get('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showProfile'])->name('ews.department.profile.show');
     Route::put('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateProfile'])->name('ews.department.profile.update');
