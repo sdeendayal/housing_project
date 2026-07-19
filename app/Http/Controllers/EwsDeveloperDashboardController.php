@@ -451,67 +451,6 @@ class EwsDeveloperDashboardController extends Controller
         return response()->stream($callback, 200, $headers);
     }
 
-    public function profile()
-    {
-        $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
-            abort(403);
-        }
-
-        return view('ews.developer.profile', compact('user'));
-    }
-
-    public function updateProfile(Request $request)
-    {
-        $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
-            abort(403);
-        }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$user->id,
-            'password' => 'nullable|string|min:6|confirmed',
-        ]);
-
-        $changes = [];
-        $oldName = $user->name;
-        $oldEmail = $user->email;
-
-        if ($oldName !== $request->name) {
-            $changes[] = "Name updated from '{$oldName}' to '{$request->name}'";
-            $user->name = $request->name;
-        }
-
-        if ($oldEmail !== $request->email) {
-            $changes[] = "Email updated from '{$oldEmail}' to '{$request->email}'";
-            $user->email = $request->email;
-        }
-
-        if ($request->filled('password')) {
-            $changes[] = "Password credential updated";
-            $user->password = Hash::make($request->password);
-        }
-
-        if (empty($changes)) {
-            return redirect()->back()->with('success', 'No changes were made to your profile.');
-        }
-
-        $user->save();
-
-        $changeSummary = implode('; ', $changes);
-
-        // Log Profile Update with detailed changes
-        EwsDeveloperLog::create([
-            'user_id' => $user->id,
-            'action' => 'PROFILE_UPDATED',
-            'details' => "Developer Account Profile Updated: {$changeSummary}",
-            'ip_address' => $request->ip(),
-        ]);
-
-        return redirect()->back()->with('success', 'Profile updated successfully. Logged changes: ' . $changeSummary);
-    }
-
     public function districtStats()
     {
         return redirect()->route('ews.developer.dashboard');

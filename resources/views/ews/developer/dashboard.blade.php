@@ -164,12 +164,8 @@
             </div>
 
             <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Account & Audit</span>
+                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Activity</span>
                 <div class="space-y-1">
-                    <a href="{{ route('ews.developer.profile') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-person-gear text-slate-400"></i>
-                        <span>My Profile</span>
-                    </a>
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-journal-text text-slate-400"></i>
                         <span>Developer Logs</span>
@@ -215,13 +211,13 @@
 
             <!-- Profile context details -->
             <div class="flex items-center gap-3">
-                <a href="{{ route('ews.developer.profile') }}" class="text-right hover:opacity-80 transition-all">
+                <div class="text-right">
                     <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
                         <i class="bi bi-person-circle text-sky-600"></i>
                     </div>
-                    <div class="text-[8px] text-slate-400 font-mono">Mobile: {{ $user->mobile }} (Locked)</div>
-                </a>
+                    <div class="text-[8px] text-slate-400 font-mono">Mobile: {{ $user->mobile }}</div>
+                </div>
                 <a href="{{ route('ews.developer.logout') }}" class="md:hidden px-3 py-1.5 bg-red-50 text-red-650 rounded-lg text-[9px] font-black uppercase border border-red-100">
                     Logout
                 </a>
@@ -249,10 +245,6 @@
                             <a href="{{ route('ews.developer.flats.create') }}" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-all">
                                 <i class="bi bi-plus-lg"></i>
                                 <span>Register New Flat</span>
-                            </a>
-                            <a href="{{ route('ews.developer.profile') }}" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold uppercase border border-slate-700 flex items-center gap-1.5 transition-all">
-                                <i class="bi bi-person-gear"></i>
-                                <span>Profile</span>
                             </a>
                         </div>
                     </div>
