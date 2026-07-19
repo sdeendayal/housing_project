@@ -54,7 +54,7 @@
                             SECURE ACCESS CONTROL
                         </span>
                         <h2 class="text-sm font-black uppercase tracking-wider">Department Admin Profile Details</h2>
-                        <p class="text-[10px] text-slate-300 font-mono">Bound to Secure ID: {{ $user->secure_id }}</p>
+                        <p class="text-[10px] text-slate-300 font-medium">Administrator Account Settings & Credentials</p>
                     </div>
                     <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white shadow-md">
                         <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
