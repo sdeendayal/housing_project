@@ -141,8 +141,14 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.flats.destroy');
     Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])
         ->name('ews.developer.flats.export.csv');
+    Route::get('/ews/developer/flats/export/excel', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportExcel'])
+        ->name('ews.developer.flats.export.excel');
     Route::get('/ews/developer/flats/export/pdf', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportPdf'])
         ->name('ews.developer.flats.export.pdf');
+    Route::get('/ews/developer/profile', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'profile'])
+        ->name('ews.developer.profile');
+    Route::post('/ews/developer/profile', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'updateProfile'])
+        ->name('ews.developer.profile.update');
     Route::get('/ews/developer/logs', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'logs'])
         ->name('ews.developer.logs');
     Route::get('/ews/developer/districts-stats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'districtStats'])

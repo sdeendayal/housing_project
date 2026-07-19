@@ -13,28 +13,53 @@ use App\Helpers\EwsHelper;
 
 class EwsDeveloperDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'ews_developer') {
             abort(403, 'Unauthorized access to Developer dashboard.');
         }
 
-        // Load districts alphabetically for the filter dropdown
-        $districts = \App\Models\EwsDeveloperDistrict::orderBy('name', 'asc')->get();
+        $userDist = !empty($user->district_name) ? strtoupper(trim($user->district_name)) : null;
+
+        // District Flats Query
+        $districtFlatsQuery = EwsBuilderFlat::query();
+        if ($userDist) {
+            $districtFlatsQuery->where(function ($q) use ($user, $userDist) {
+                $q->where('district_name', $userDist)
+                  ->orWhere('district_name', $user->district_name);
+                if (!empty($user->district_id)) {
+                    $q->orWhere('district_id', $user->district_id);
+                }
+            });
+        }
+
+        // My Flats Query
+        $myFlatsQuery = EwsBuilderFlat::where('created_by', $user->id);
+
+        // Project Breakdown in District
+        $projectBreakdown = (clone $districtFlatsQuery)
+            ->select('town_name', 'project_name', DB::raw('count(*) as total_flats'), DB::raw('count(distinct block_tower_number) as towers_count'))
+            ->groupBy('town_name', 'project_name')
+            ->orderBy('total_flats', 'desc')
+            ->get();
+
+        // Recent Activity Logs
+        $recentLogs = EwsDeveloperLog::where('user_id', $user->id)->latest()->take(5)->get();
 
         $stats = [
-            'total_flats' => EwsBuilderFlat::count(),
-            'active_districts' => EwsBuilderFlat::distinct('district_id')->count(),
-            'total_logs' => EwsDeveloperLog::count(),
+            'total_flats' => (clone $districtFlatsQuery)->count(),
+            'my_flats' => (clone $myFlatsQuery)->count(),
+            'total_projects' => (clone $districtFlatsQuery)->distinct('project_name')->count('project_name'),
+            'total_towns' => (clone $districtFlatsQuery)->distinct('town_name')->count('town_name'),
+            'total_logs' => EwsDeveloperLog::where('user_id', $user->id)->count(),
         ];
 
-        return view('ews.developer.dashboard', compact('user', 'districts', 'stats'));
+        $currentView = $request->query('view', 'dashboard');
+
+        return view('ews.developer.dashboard', compact('user', 'stats', 'projectBreakdown', 'recentLogs', 'currentView'));
     }
 
-    /**
-     * Helper to get registry query with applied search & district filters.
-     */
     /**
      * Helper to get registry query with applied search & district filters.
      */
@@ -43,18 +68,23 @@ class EwsDeveloperDashboardController extends Controller
         $query = EwsBuilderFlat::query();
         $user = Auth::user();
 
-        // Lock flats data strictly to developer's assigned district
-        if ($user && !empty($user->district_name)) {
-            $userDist = strtoupper(trim($user->district_name));
-            $query->where(function ($q) use ($user, $userDist) {
-                $q->where('district_name', $userDist)
-                  ->orWhere('district_name', $user->district_name);
-                if (!empty($user->district_id)) {
-                    $q->orWhere('district_id', $user->district_id);
-                }
-            });
-        } elseif ($request->filled('district_id')) {
-            $query->where('district_id', $request->district_id);
+        // 1. Ownership Scope Filter (My Flats vs All District Flats)
+        if ($request->input('ownership_scope') === 'my_flats' || $request->input('my_flats') == '1') {
+            $query->where('created_by', $user->id);
+        } else {
+            // Lock flats data strictly to developer's assigned district
+            if ($user && !empty($user->district_name)) {
+                $userDist = strtoupper(trim($user->district_name));
+                $query->where(function ($q) use ($user, $userDist) {
+                    $q->where('district_name', $userDist)
+                      ->orWhere('district_name', $user->district_name);
+                    if (!empty($user->district_id)) {
+                        $q->orWhere('district_id', $user->district_id);
+                    }
+                });
+            } elseif ($request->filled('district_id')) {
+                $query->where('district_id', $request->district_id);
+            }
         }
 
         // Search Filter (Standard string parameter or Yajra request array)
@@ -93,6 +123,12 @@ class EwsDeveloperDashboardController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('added_by', function ($row) use ($user) {
+                if ($row->created_by == $user->id) {
+                    return '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-sm"><i class="bi bi-person-check-fill"></i> Added By Me</span>';
+                }
+                return '<span class="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-black uppercase inline-flex items-center gap-1"><i class="bi bi-building"></i> District Record</span>';
+            })
             ->addColumn('actions', function ($row) {
                 $secureId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
                 $editUrl = route('ews.developer.flats.edit', $secureId);
@@ -119,7 +155,7 @@ class EwsDeveloperDashboardController extends Controller
                     </div>
                 ';
             })
-            ->rawColumns(['actions'])
+            ->rawColumns(['added_by', 'actions'])
             ->make(true);
     }
 
@@ -377,19 +413,90 @@ class EwsDeveloperDashboardController extends Controller
         return $pdf->download('ews_builder_flats_' . date('Ymd_His') . '.pdf');
     }
 
-    public function districtStats()
+    public function exportExcel(Request $request)
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'ews_developer') {
             abort(403);
         }
 
-        // Calculate counts for all 23 districts in ews_districts (alphabetically)
-        $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get()->map(function ($district) {
-            $district->flats_count = EwsBuilderFlat::where('district_id', $district->id)->count();
-            return $district;
-        });
+        $flats = $this->getFilteredQuery($request)->get();
 
-        return view('ews.developer.district_stats', compact('user', 'districts'));
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel',
+            'Content-Disposition' => 'attachment; filename="ews_builder_flats_' . date('Ymd_His') . '.xls"',
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($flats) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "S.No.\tDistrict Name\tTown Name\tProject Name\tBlock/Tower No.\tFloor Details\tFlat No.\tRegistered At\n");
+
+            foreach ($flats as $index => $flat) {
+                fputs($file, ($index + 1) . "\t" .
+                    $flat->district_name . "\t" .
+                    $flat->town_name . "\t" .
+                    $flat->project_name . "\t" .
+                    $flat->block_tower_number . "\t" .
+                    $flat->floor . "\t" .
+                    $flat->flat_number . "\t" .
+                    $flat->created_at->format('Y-m-d H:i:s') . "\n"
+                );
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function profile()
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        return view('ews.developer.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_developer') {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        // Mobile number is LOCKED and CANNOT be updated by developer
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        // Log Profile Update
+        EwsDeveloperLog::create([
+            'user_id' => $user->id,
+            'action' => 'PROFILE_UPDATED',
+            'details' => "Developer updated profile information (Name: '{$user->name}', Email: '{$user->email}')",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'Profile updated successfully. (Note: Mobile number is locked & verified by Department Admin).');
+    }
+
+    public function districtStats()
+    {
+        return redirect()->route('ews.developer.dashboard');
     }
 }

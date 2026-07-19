@@ -43,8 +43,12 @@
                 <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Registry Matrix</span>
                 <div class="space-y-1">
                     <a href="{{ route('ews.developer.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-folder-fill text-slate-400"></i>
-                        <span>Flats Registry</span>
+                        <i class="bi bi-building text-sky-400"></i>
+                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
+                    </a>
+                    <a href="{{ route('ews.developer.dashboard', ['ownership_scope' => 'my_flats']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
+                        <i class="bi bi-person-check-fill text-emerald-400"></i>
+                        <span>Flats Added By Me</span>
                     </a>
                     <a href="{{ route('ews.developer.flats.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-plus-circle text-slate-400"></i>
@@ -54,15 +58,11 @@
             </div>
 
             <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Summary</span>
+                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Logs</span>
                 <div class="space-y-1">
-                    <a href="{{ route('ews.developer.districts-stats') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-map text-slate-400"></i>
-                        <span>District Stats</span>
-                    </a>
                     <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
-                        <i class="bi bi-activity text-sky-400"></i>
-                        <span>Developer logs</span>
+                        <i class="bi bi-journal-text text-sky-400"></i>
+                        <span>Developer Logs</span>
                     </a>
                 </div>
             </div>
