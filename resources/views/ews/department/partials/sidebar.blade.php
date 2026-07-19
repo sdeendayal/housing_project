@@ -226,7 +226,12 @@
                         <span class="text-[9px] font-mono bg-slate-800 text-amber-400 px-1.5 py-0.5 rounded font-bold">{{ number_format($developerLogsCount) }}</span>
                     @endif
                 </a>
-            </div>
+        <!-- 3. Account Settings Section -->
+        <div class="pt-2">
+            <a href="{{ route('ews.department.profile.show', Auth::user()->secure_id) }}" class="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all text-left font-bold {{ request()->routeIs('ews.department.profile.*') ? 'bg-orange-600 text-white shadow-md border-l-2 border-amber-400' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
+                <span class="material-symbols-outlined text-base text-sky-400">manage_accounts</span>
+                <span>My Profile</span>
+            </a>
         </div>
 
     </nav>

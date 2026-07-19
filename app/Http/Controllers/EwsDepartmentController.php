@@ -1049,4 +1049,64 @@ class EwsDepartmentController extends Controller
 
         return response($html, 200, ['Content-Type' => 'text/html']);
     }
+
+    public function showProfile($secureId)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'ews_department') {
+            abort(403);
+        }
+
+        if ($user->secure_id !== $secureId) {
+            return redirect()->route('ews.department.profile.show', $user->secure_id);
+        }
+
+        return view('ews.department.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request, $secureId)
+    {
+        $user = User::where('role', 'ews_department')->where('secure_id', $secureId)->firstOrFail();
+
+        if (Auth::id() !== $user->id) {
+            abort(403, 'Unauthorized profile update action.');
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'password' => 'nullable|string|min:6|confirmed',
+        ]);
+
+        $changes = [];
+        $oldName = $user->name;
+
+        // ONLY Name and Password can be updated by Department Admin
+        if ($oldName !== $request->name) {
+            $changes[] = "Name updated from '{$oldName}' to '{$request->name}'";
+            $user->name = $request->name;
+        }
+
+        if ($request->filled('password')) {
+            $changes[] = "Password credential updated";
+            $user->password = Hash::make($request->password);
+        }
+
+        if (empty($changes)) {
+            return redirect()->back()->with('success', 'No changes were made to profile.');
+        }
+
+        $user->save();
+
+        $changeSummary = implode('; ', $changes);
+
+        // Create log entry in ews_developer_logs
+        EwsDeveloperLog::create([
+            'user_id' => $user->id,
+            'action' => 'DEPT_ADMIN_PROFILE_UPDATED',
+            'details' => "Department Admin Profile Updated for user '{$user->email}': {$changeSummary}",
+            'ip_address' => $request->ip(),
+        ]);
+
+        return redirect()->back()->with('success', 'Department Admin profile updated successfully. Logged: ' . $changeSummary);
+    }
 }
