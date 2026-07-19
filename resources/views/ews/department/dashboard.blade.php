@@ -85,7 +85,7 @@
             <div class="space-y-1.5 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                    <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">Phase 1: Registered Applications & Eligibility Filters</h3>
+                    <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">Registered Applications & Eligibility Filters</h3>
                 </div>
 
                 <div class="grid grid-cols-4 gap-3">
@@ -163,7 +163,7 @@
             <div class="space-y-1.5 shrink-0">
                 <div class="flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">Phase 2: EWS Draw Eligibility, Physical Verification & Allotments</h3>
+                    <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">EWS Draw Eligibility, Physical Verification & Allotments</h3>
                 </div>
 
                 <div class="grid grid-cols-4 gap-3">
@@ -289,7 +289,7 @@
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                        <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">Phase 3: EWS Developers Hub & Submissions Management</h3>
+                        <h3 class="text-[9px] font-black text-slate-700 uppercase tracking-wider">EWS Developers Hub & Submissions Management</h3>
                     </div>
                     <a href="{{ route('ews.department.developers.index') }}" class="text-[9px] font-black text-amber-700 hover:text-amber-800 uppercase flex items-center gap-1">
                         <span>Manage Developers</span>
