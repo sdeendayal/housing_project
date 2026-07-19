@@ -100,16 +100,15 @@
                             <p class="text-[9px] text-slate-400 italic">System email address cannot be edited.</p>
                         </div>
 
-                        <!-- Mobile Number (LOCKED & READONLY) -->
+                        <!-- Mobile Number (EDITABLE) -->
                         <div class="space-y-1.5">
-                            <label for="mobile" class="block text-xs font-bold uppercase text-slate-600 tracking-wider flex items-center justify-between">
-                                <span>Mobile Number</span>
-                                <span class="text-amber-600 font-bold text-[9px] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">lock</span> Locked</span>
+                            <label for="mobile" class="block text-xs font-bold uppercase text-slate-600 tracking-wider">
+                                Mobile Number
                             </label>
                             <div class="relative">
-                                <input type="text" id="mobile" value="{{ $user->mobile ?? 'NOT SET' }}" readonly disabled
-                                    class="w-full bg-slate-100 border border-slate-200 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-500 font-mono font-bold cursor-not-allowed select-none">
-                                <span class="material-symbols-outlined absolute right-3 top-2.5 text-amber-500 text-base">lock</span>
+                                <input type="text" id="mobile" name="mobile" value="{{ old('mobile', $user->mobile) }}" placeholder="Enter 10-digit mobile number" maxlength="10"
+                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-900 font-bold focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all">
+                                <span class="material-symbols-outlined absolute right-3 top-2.5 text-slate-400 text-base">edit</span>
                             </div>
                         </div>
 

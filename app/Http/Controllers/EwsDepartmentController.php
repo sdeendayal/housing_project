@@ -29,12 +29,20 @@ class EwsDepartmentController extends Controller
 
     public function login(Request $request)
     {
+        $loginInput = $request->input('login') ?? $request->input('email');
+
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required_without:login|string',
+            'login' => 'required_without:email|string',
             'password' => 'required|string',
         ]);
 
-        $credentials = $request->only('email', 'password');
+        $field = filter_var($loginInput, FILTER_VALIDATE_EMAIL) ? 'email' : 'mobile';
+
+        $credentials = [
+            $field => $loginInput,
+            'password' => $request->password,
+        ];
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
@@ -48,7 +56,7 @@ class EwsDepartmentController extends Controller
             return redirect()->back()->with('error', 'Unauthorized: Only EWS Department accounts are permitted.');
         }
 
-        return redirect()->back()->with('error', 'Invalid email or password.');
+        return redirect()->back()->with('error', 'Invalid login credentials.');
     }
 
     public function dashboard(Request $request)
@@ -1074,16 +1082,22 @@ class EwsDepartmentController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'mobile' => 'nullable|string|digits:10',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
         $changes = [];
         $oldName = $user->name;
 
-        // ONLY Name and Password can be updated by Department Admin
         if ($oldName !== $request->name) {
             $changes[] = "Name updated from '{$oldName}' to '{$request->name}'";
             $user->name = $request->name;
+        }
+
+        if ($request->filled('mobile') && $user->mobile !== $request->mobile) {
+            $oldMobile = $user->mobile ?? 'NOT SET';
+            $changes[] = "Mobile number updated from '{$oldMobile}' to '{$request->mobile}'";
+            $user->mobile = $request->mobile;
         }
 
         if ($request->filled('password')) {

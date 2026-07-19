@@ -113,12 +113,12 @@
                 <form action="{{ route('ews.department.login.submit') }}" method="POST" class="space-y-4">
                     @csrf
 
-                    <!-- Email Input -->
+                    <!-- Email / Mobile Input -->
                     <div>
-                        <label for="email" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Email Address</label>
+                        <label for="email" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Email Address / Mobile Number</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-500 text-base">mail</span>
-                            <input type="email" name="email" id="email" required value="{{ old('email', 'ews_department@gmail.com') }}" placeholder="username@gmail.com" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-orange-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500 transition font-bold">
+                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-slate-500 text-base">person</span>
+                            <input type="text" name="email" id="email" required value="{{ old('email', 'ews_department@gmail.com') }}" placeholder="Email address or 10-digit mobile" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-orange-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500 transition font-bold">
                         </div>
                     </div>
 
