@@ -110,7 +110,7 @@
                 @endif
 
                 <!-- Login Form -->
-                <form action="{{ route('ews.department.login.submit') }}" method="POST" class="space-y-4">
+                <form id="loginForm" action="{{ route('ews.department.login.submit') }}" method="POST" class="space-y-4" onsubmit="handleLoginSubmit(this)">
                     @csrf
 
                     <!-- Email / Mobile Input -->
@@ -131,12 +131,31 @@
                         </div>
                     </div>
 
-                    <!-- Submit Button -->
-                    <button type="submit" class="w-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-black uppercase py-3.5 rounded-lg text-xs tracking-widest shadow-md flex items-center justify-center gap-1.5 transition-all mt-6">
-                        <span class="material-symbols-outlined text-[15px] font-bold">login</span>
-                        <span>Sign In</span>
+                    <!-- Submit Button with Spinner -->
+                    <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-black uppercase py-3.5 rounded-lg text-xs tracking-widest shadow-md flex items-center justify-center gap-2 transition-all mt-6 disabled:opacity-75 disabled:cursor-not-allowed">
+                        <span id="btnIcon" class="material-symbols-outlined text-[15px] font-bold">login</span>
+                        <svg id="btnSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="btnText">Sign In</span>
                     </button>
                 </form>
+
+                <script>
+                    function handleLoginSubmit(form) {
+                        const btn = document.getElementById('submitBtn');
+                        const icon = document.getElementById('btnIcon');
+                        const spinner = document.getElementById('btnSpinner');
+                        const btnText = document.getElementById('btnText');
+                        if (btn) {
+                            btn.disabled = true;
+                            if (icon) icon.classList.add('hidden');
+                            if (spinner) spinner.classList.remove('hidden');
+                            if (btnText) btnText.innerText = 'Signing In...';
+                        }
+                    }
+                </script>
 
                 <!-- Back to Homepage -->
                 <div class="mt-8 pt-6 border-t border-slate-800/60 text-center">
