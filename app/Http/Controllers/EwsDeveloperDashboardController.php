@@ -474,25 +474,42 @@ class EwsDeveloperDashboardController extends Controller
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        $user->name = $request->name;
-        $user->email = $request->email;
+        $changes = [];
+        $oldName = $user->name;
+        $oldEmail = $user->email;
 
-        // Mobile number is LOCKED and CANNOT be updated by developer
+        if ($oldName !== $request->name) {
+            $changes[] = "Name updated from '{$oldName}' to '{$request->name}'";
+            $user->name = $request->name;
+        }
+
+        if ($oldEmail !== $request->email) {
+            $changes[] = "Email updated from '{$oldEmail}' to '{$request->email}'";
+            $user->email = $request->email;
+        }
+
         if ($request->filled('password')) {
+            $changes[] = "Password credential updated";
             $user->password = Hash::make($request->password);
+        }
+
+        if (empty($changes)) {
+            return redirect()->back()->with('success', 'No changes were made to your profile.');
         }
 
         $user->save();
 
-        // Log Profile Update
+        $changeSummary = implode('; ', $changes);
+
+        // Log Profile Update with detailed changes
         EwsDeveloperLog::create([
             'user_id' => $user->id,
             'action' => 'PROFILE_UPDATED',
-            'details' => "Developer updated profile information (Name: '{$user->name}', Email: '{$user->email}')",
+            'details' => "Developer Account Profile Updated: {$changeSummary}",
             'ip_address' => $request->ip(),
         ]);
 
-        return redirect()->back()->with('success', 'Profile updated successfully. (Note: Mobile number is locked & verified by Department Admin).');
+        return redirect()->back()->with('success', 'Profile updated successfully. Logged changes: ' . $changeSummary);
     }
 
     public function districtStats()
