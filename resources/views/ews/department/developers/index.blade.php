@@ -270,6 +270,8 @@
             devTable = $('#developers-table').DataTable({
                 processing: true,
                 serverSide: true,
+                pageLength: 50,
+                lengthMenu: [[10, 25, 50, 100, 250], [10, 25, 50, 100, 250]],
                 ajax: "{{ route('ews.department.developers.data') }}",
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },

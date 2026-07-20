@@ -542,6 +542,8 @@
             table = $('#flats-table').DataTable({
                 processing: true,
                 serverSide: true,
+                pageLength: 50,
+                lengthMenu: [[10, 25, 50, 100, 250], [10, 25, 50, 100, 250]],
                 ajax: {
                     url: "{{ route('ews.developer.flats.data') }}",
                     data: function (d) {

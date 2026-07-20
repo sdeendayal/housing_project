@@ -354,7 +354,7 @@ class EwsDeveloperDashboardController extends Controller
         // Fetch logs with pagination
         $logs = EwsDeveloperLog::with('developer')
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(50);
 
         return view('ews.developer.logs', compact('user', 'logs'));
     }
