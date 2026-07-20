@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('ews_builder_flats', function (Blueprint $table) {
             $table->id();
+            $table->string('secure_id', 64)->nullable()->unique();
             $table->unsignedBigInteger('district_id')->nullable();
             $table->string('district_name');
             $table->string('town_name');
