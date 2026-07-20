@@ -90,8 +90,13 @@
             </div>
 
             <div class="text-right">
-                <div class="text-[10px] text-slate-650 font-bold">EWS Developer Team</div>
-                <div class="text-[8px] text-slate-405 font-mono">ID: #DEV_{{ substr(md5($user->id), 0, 6) }}</div>
+                <div class="text-[10px] text-slate-650 font-bold flex items-center gap-1 justify-end">
+                    <span>{{ $user->name }}</span>
+                    @if(!empty($user->district_name))
+                        <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                    @endif
+                </div>
+                <div class="text-[8.5px] text-slate-500 font-mono">District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
             </div>
         </header>
 

@@ -214,9 +214,14 @@
                 <div class="text-right">
                     <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
+                        @if(!empty($user->district_name))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                        @endif
                         <i class="bi bi-person-circle text-sky-600"></i>
                     </div>
-                    <div class="text-[8px] text-slate-400 font-mono">Mobile: {{ $user->mobile }}</div>
+                    <div class="text-[8.5px] text-slate-500 font-mono">
+                        District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
+                    </div>
                 </div>
                 <a href="{{ route('ews.developer.logout') }}" class="md:hidden px-3 py-1.5 bg-red-50 text-red-650 rounded-lg text-[9px] font-black uppercase border border-red-100">
                     Logout

@@ -30,7 +30,7 @@ class EwsDeveloperSeeder extends Seeder
 
         // Create developer user with mobile 9999999999 assigned to Sonipat district
         $user = User::create([
-            'name' => 'EWS Developer Team (Sonipat)',
+            'name' => 'Developer Login',
             'email' => 'ews_developer@gmail.com',
             'mobile' => '9999999999',
             'password' => Hash::make('password'),
