@@ -30,8 +30,105 @@
                 Master
             </p>
         </div>
+        <a href="{{ route('admin.district.report') }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+        {{ request()->routeIs('admin.district.report')
+            ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm'
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 items-center justify-center rounded-lg text-[20px]
+            {{ request()->routeIs('admin.district.report')
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700' }}">
+                assessment
+            </span>
 
-        <a href="{{ route('superadmin.possession.dashboard') }}"
+            <span class="flex-1 font-medium">
+                District Report
+            </span>
+
+            @if (request()->routeIs('admin.district.report'))
+                <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        <a href="{{ route('admin.village.report') }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+        {{ request()->routeIs('admin.village.report*')
+            ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm'
+            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+            {{ request()->routeIs('admin.village.report*')
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                holiday_village
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Village Report
+            </span>
+
+            @if (request()->routeIs('admin.village.report*'))
+                <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        <a href="{{ route('superadmin.applicants.index') }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('superadmin.applicants*')
+        ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('superadmin.applicants*')
+            ? 'bg-indigo-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                group
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Applicants
+            </span>
+
+            @if (request()->routeIs('superadmin.applicants*'))
+                <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
+            @endif
+
+        </a>
+
+        <div class="px-3 pt-4 pb-1">
+            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
+                Beneficiary
+            </p>
+        </div>
+
+        <a href="{{ route('admin.allotment.report') }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report')
+        ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report')
+            ? 'bg-indigo-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                home_work
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Allotment Report
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report'))
+                <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
+            @endif
+
+        </a>
+
+        {{-- <a href="{{ route('superadmin.possession.dashboard') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
         {{ request()->routeIs('superadmin.possession.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
 
@@ -40,39 +137,12 @@
 
         </a>
 
-        <a href="{{ route('superadmin.districts') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.districts') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
+        
 
-            <span class="material-symbols-outlined text-[20px]">map</span>
-            <span class="text-[13px] font-medium">Districts</span>
-
-        </a>
-
-        <a href="{{ route('superadmin.all-villages') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.all-villages') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px]">holiday_village</span>
-            <span class="text-[13px] font-medium">Villages</span>
-
-        </a>
+        
 
         {{-- Beneficiary --}}
-        <div class="px-3 pt-4 pb-1">
-            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
-                Beneficiary
-            </p>
-        </div>
-
-        <a href="{{ route('superadmin.beneficiaries.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.beneficiaries.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px]">group</span>
-            <span class="text-[13px] font-medium">Beneficiaries</span>
-
-        </a>
+        {{--
 
         <a href="{{ route('superadmin.paid.beneficiaries') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
@@ -102,7 +172,7 @@
         </a>
 
         {{-- Registration --}}
-        <div class="px-3 pt-4 pb-1">
+        {{-- <div class="px-3 pt-4 pb-1">
             <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
                 Registration
             </p>
@@ -133,7 +203,7 @@
             <span class="material-symbols-outlined text-[20px] text-red-600">highlight_off</span>
             <span class="text-[13px] font-medium">Unmatched Registration</span>
 
-        </a>
+        </a> --}}
 
     </nav>
 

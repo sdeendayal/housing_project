@@ -1,0 +1,597 @@
+@extends('layouts.mmgayAdmin')
+
+@section('title', 'Super Admin Dashboard')
+
+@section('content')
+    <main class="min-h-screen bg-slate-100 p-6 pt-20 ml-[260px] w-[calc(100%-260px)]">
+
+        <div class="space-y-6">
+
+            {{-- Page Heading --}}
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-800">
+                        Village Wise Report
+                    </h1>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Only villages having assigned plots are displayed.
+                    </p>
+                </div>
+
+                <a href="{{ route('admin.village.report') }}"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
+
+                    <span class="material-symbols-outlined text-[19px]">
+                        arrow_back
+                    </span>
+
+                    Village Report
+                </a>
+
+            </div>
+
+
+            {{-- Filter Card --}}
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="border-b border-slate-200 bg-slate-50 px-5 py-4">
+
+                    <div class="flex items-center gap-3">
+
+                        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                            <span class="material-symbols-outlined">
+                                filter_alt
+                            </span>
+                        </div>
+
+                        <div>
+                            <h2 class="font-semibold text-slate-800">
+                                Report Filters
+                            </h2>
+
+                            <p class="text-sm text-slate-500">
+                                Filter villages by phase and district.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <form method="GET" action="{{ route('admin.village.report') }}" class="p-5">
+
+                    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-12">
+
+                        {{-- Phase Filter --}}
+                        <div class="lg:col-span-3">
+
+                            <label for="phase" class="mb-2 block text-sm font-semibold text-slate-700">
+                                Phase
+                            </label>
+
+                            <select id="phase" name="phase"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+                                <option value="">All Phases</option>
+
+                                <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>
+                                    Phase 1
+                                </option>
+
+                                <option value="2" {{ request('phase') == '2' ? 'selected' : '' }}>
+                                    Phase 2
+                                </option>
+
+                                <option value="3" {{ request('phase') == '3' ? 'selected' : '' }}>
+                                    Phase 3
+                                </option>
+                            </select>
+
+                        </div>
+
+
+                        <div class="lg:col-span-3">
+                            <label for="village_id" class="mb-2 block text-sm font-semibold text-slate-700">
+                                Village
+                            </label>
+
+                            <select id="village_id" name="village_id"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
+
+                                <option value="">All Villages</option>
+
+                                @foreach ($villages as $village)
+                                    <option value="{{ $village->VillageId }}"
+                                        {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
+
+                                        {{ $village->VillageName }}
+
+                                    </option>
+                                @endforeach
+
+                            </select>
+                        </div>
+
+
+                        {{-- Apply and Reset --}}
+                        <div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
+
+                            <button type="submit"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200">
+                                <span class="material-symbols-outlined text-[19px]">
+                                    search
+                                </span>
+
+                                Apply
+                            </button>
+
+                            <a href="{{ route('admin.village.report') }}"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                                <span class="material-symbols-outlined text-[19px]">
+                                    restart_alt
+                                </span>
+
+                                Reset
+                            </a>
+
+                        </div>
+
+
+                        {{-- Export Buttons --}}
+                        <div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
+
+                            <a id="excelExportButton"
+                                href="{{ route('admin.village.report.excel', [
+                                    'phase' => request('phase'),
+                                    'village_name' => request('village_name'),
+                                ]) }}"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
+                                <span class="material-symbols-outlined text-[19px]">
+                                    table_view
+                                </span>
+
+                                <span>Excel</span>
+                            </a>
+
+                            <a id="pdfExportButton" href="{{ route('admin.village.report.pdf', request()->query()) }}"
+                                class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700">
+                                <span id="pdfDefaultIcon" class="material-symbols-outlined text-[19px]">
+                                    picture_as_pdf
+                                </span>
+
+                                <svg id="pdfLoader" class="hidden h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                        stroke-width="4">
+                                    </circle>
+
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                                    </path>
+                                </svg>
+
+                                <span id="pdfButtonText">PDF</span>
+                            </a>
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Active Filters --}}
+                    @if (request('phase') || request('village_id'))
+
+                        <div class="mt-5 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+
+                            <span class="text-sm font-medium text-slate-500">
+                                Active Filters:
+                            </span>
+
+                            @if (request('phase'))
+                                <span class="rounded-full bg-indigo-100 px-3 py-1 text-xs font-semibold text-indigo-700">
+                                    Phase {{ request('phase') }}
+                                </span>
+                            @endif
+
+                            @if (request('village_id'))
+
+                                @php
+                                    $selectedVillage = $villages->firstWhere('VillageId', request('village_id'));
+                                @endphp
+
+                                @if ($selectedVillage)
+                                    <span
+                                        class="rounded-full bg-violet-100 px-3 py-1 text-xs font-semibold text-violet-700">
+                                        {{ $selectedVillage->VillageName }}
+                                    </span>
+                                @endif
+
+                            @endif
+
+                        </div>
+
+                    @endif
+
+                </form>
+
+            </div>
+
+
+            {{-- Summary Cards --}}
+            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+                <div class="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-white p-5 shadow-sm">
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Villages With Plots
+                            </p>
+
+                            <h3 class="mt-2 text-2xl font-bold text-slate-800">
+                                {{ number_format($grossTotal->TotalVillages ?? 0) }}
+                            </h3>
+                        </div>
+
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                            <span class="material-symbols-outlined">
+                                holiday_village
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 shadow-sm">
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Total Plots
+                            </p>
+
+                            <h3 class="mt-2 text-2xl font-bold text-slate-800">
+                                {{ number_format($grossTotal->TotalPlots ?? 0) }}
+                            </h3>
+                        </div>
+
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                            <span class="material-symbols-outlined">
+                                grid_view
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 to-white p-5 shadow-sm">
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Registered Beneficiaries
+                            </p>
+
+                            <h3 class="mt-2 text-2xl font-bold text-slate-800">
+                                {{ number_format($grossTotal->RegisteredBeneficiaries ?? 0) }}
+                            </h3>
+                        </div>
+
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                            <span class="material-symbols-outlined">
+                                groups
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="rounded-2xl border border-amber-100 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
+
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                Allotted Beneficiaries
+                            </p>
+
+                            <h3 class="mt-2 text-2xl font-bold text-slate-800">
+                                {{ number_format($grossTotal->AllottedBeneficiaries ?? 0) }}
+                            </h3>
+                        </div>
+
+                        <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                            <span class="material-symbols-outlined">
+                                real_estate_agent
+                            </span>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            {{-- Report Table --}}
+            <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+                <div
+                    class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
+                    <div>
+                        <h2 class="font-semibold text-slate-800">
+                            Village Details
+                        </h2>
+
+                        <p class="mt-1 text-sm text-slate-500">
+                            Showing {{ $report->count() }} village records.
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="overflow-x-auto">
+
+                    <table class="min-w-full divide-y divide-slate-200">
+
+                        <thead class="bg-slate-50">
+
+                            <tr>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Sr. No.
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Village
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Phase
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Total Plots
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Applicants
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Allotted
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Approved Paid
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Approved Unpaid
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Yet to be Approved
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Rejected
+                                </th>
+
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Cancelled
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody class="divide-y divide-slate-100 bg-white">
+
+                            @forelse ($report as $index => $row)
+                                <tr class="transition hover:bg-slate-50">
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
+                                        {{ $index + 1 }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-indigo-700">
+                                        {{ $row->VillageName }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
+                                        {{ $row->Phase ?? '-' }}
+                                    </td>
+
+                                    <td
+                                        class="whitespace-nowrap px-4 py-3 text-center text-sm font-semibold text-slate-700">
+                                        {{ number_format($row->TotalPlots ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
+                                        {{ number_format($row->RegisteredBeneficiaries ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
+                                        {{ number_format($row->AllottedBeneficiaries ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-emerald-700">
+                                        {{ number_format($row->ApprovedPaid ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-amber-700">
+                                        {{ number_format($row->ApprovedUnpaid ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-blue-700">
+                                        {{ number_format($row->PendingApprovalPayment ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-rose-700">
+                                        {{ number_format($row->Rejected ?? 0) }}
+                                    </td>
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
+                                        {{ number_format($row->AllotmentCancelled ?? 0) }}
+                                    </td>
+
+                                </tr>
+
+                            @empty
+
+                                <tr>
+                                    <td colspan="12" class="px-6 py-12 text-center">
+
+                                        <div class="flex flex-col items-center">
+
+                                            <div
+                                                class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                                <span class="material-symbols-outlined text-3xl">
+                                                    holiday_village
+                                                </span>
+                                            </div>
+
+                                            <h3 class="mt-4 font-semibold text-slate-700">
+                                                No village records found
+                                            </h3>
+
+                                            <p class="mt-1 text-sm text-slate-500">
+                                                Try changing the selected filters.
+                                            </p>
+
+                                        </div>
+
+                                    </td>
+                                </tr>
+                            @endforelse
+
+                        </tbody>
+
+
+                        @if ($report->isNotEmpty())
+                            <tfoot class="bg-slate-100">
+
+                                <tr class="font-bold text-slate-800">
+
+                                    <td colspan="3" class="px-4 py-3 text-right">
+                                        Gross Total
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->TotalPlots ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->RegisteredBeneficiaries ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->AllottedBeneficiaries ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->ApprovedPaid ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->ApprovedUnpaid ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->PendingApprovalPayment ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->Rejected ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center">
+                                        {{ number_format($grossTotal->AllotmentCancelled ?? 0) }}
+                                    </td>
+
+                                </tr>
+
+                            </tfoot>
+                        @endif
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+    <div id="excelDownloadPopup"
+        class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="w-[340px] rounded-2xl bg-white p-6 text-center shadow-2xl">
+
+            <svg class="mx-auto h-12 w-12 animate-spin text-emerald-600" xmlns="http://www.w3.org/2000/svg"
+                fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                </circle>
+
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+
+            <h3 class="mt-5 text-lg font-bold text-slate-800">
+                Preparing Excel Report
+            </h3>
+
+            <p class="mt-2 text-sm text-slate-500">
+                Please wait, your Excel file is being generated...
+            </p>
+
+        </div>
+    </div>
+
+    <div id="pdfDownloadPopup"
+        class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="rounded-2xl bg-white p-6 shadow-xl text-center w-80">
+
+            <svg class="mx-auto h-10 w-10 animate-spin text-rose-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                </circle>
+
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                </path>
+
+            </svg>
+
+            <h3 class="mt-4 text-lg font-semibold">
+                Preparing PDF...
+            </h3>
+
+            <p class="mt-2 text-sm text-gray-500">
+                Please wait while your PDF is being generated.
+            </p>
+
+        </div>
+    </div>
+@endsection

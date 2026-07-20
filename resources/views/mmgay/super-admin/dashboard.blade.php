@@ -7,6 +7,150 @@
     <main class="min-h-screen bg-slate-100 p-6 pt-20 ml-[260px] w-[calc(100%-260px)] overflow-x-hidden">
 
         {{-- ================= Master Data ================= --}}
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 p-4 mb-5">
+
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h3 class="text-base font-semibold text-slate-800">Dashboard Filters</h3>
+                    <p class="text-[11px] text-slate-500">Filter data by Phase, District, Block and Village</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Reset Button -->
+                    <a href="{{ route('admin.dashboard') }}" class="text-xs text-red-600 hover:text-red-700 font-medium">
+                        ⟲ Reset
+                    </a>
+
+                    <!-- Export Excel Button -->
+                    {{-- <a href="{{ route('admin.export.excel', request()->all()) }}"
+                        class="text-xs text-green-700 hover:text-green-800 font-semibold border border-green-600 px-3 py-1 rounded-md">
+                        Excel
+                    </a>
+
+                    <!-- Export PDF Button -->
+                    <a href="{{ route('admin.export.pdf', request()->all()) }}"
+                        class="text-xs text-blue-700 hover:text-blue-800 font-semibold border border-blue-600 px-3 py-1 rounded-md">
+                        PDF
+                    </a> --}}
+                </div>
+            </div>
+
+            <form method="GET" id="dashboardFilter">
+
+                <div class="grid grid-cols-12 gap-3 items-end">
+
+                    <div class="col-span-2">
+                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">
+                            Phase
+                        </label>
+
+                        <select name="phase" id="phase"
+                            class="w-full h-9 text-xs rounded-lg border-gray-300 focus:ring-1 focus:ring-blue-500">
+
+                            <option value="">All Phase</option>
+
+                            <option value="1" {{ request('phase') == 1 ? 'selected' : '' }}>
+                                Phase 1
+                            </option>
+
+                            <option value="2" {{ request('phase') == 2 ? 'selected' : '' }}>
+                                Phase 2
+                            </option>
+
+                            <option value="3" {{ request('phase') == 3 ? 'selected' : '' }}>
+                                Phase 3
+                            </option>
+
+                            <option value="4" {{ request('phase') == 4 ? 'selected' : '' }}>
+                                Phase 4
+                            </option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-span-3">
+                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">
+                            District
+                        </label>
+
+                        <select name="district_id" id="district" class="w-full h-9 text-xs rounded-lg border-gray-300">
+                            <option value="">All District</option>
+
+                            @foreach ($districts as $district)
+                                <option value="{{ $district->DistrictId }}"
+                                    {{ request('district_id') == $district->DistrictId ? 'selected' : '' }}>
+
+                                    {{ $district->DistrictName }}
+
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-span-3">
+                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">
+                            Block
+                        </label>
+
+                        <select name="block_id" id="block" class="w-full h-9 text-xs rounded-lg border-gray-300">
+
+                            <option value="">All Block</option>
+
+                            @foreach ($blocks as $block)
+                                <option value="{{ $block->BlockId }}"
+                                    {{ request('block_id') == $block->BlockId ? 'selected' : '' }}>
+
+                                    {{ $block->BlockName }}
+
+                                </option>
+                            @endforeach
+
+                        </select>
+                    </div>
+
+                    <div class="col-span-3">
+                        <label class="block text-[11px] font-semibold text-gray-600 mb-1">
+                            Village
+                        </label>
+
+                        <select name="village_id" id="village" class="w-full h-9 text-xs rounded-lg border-gray-300">
+
+                            <option value="">All Village</option>
+
+                            @foreach ($villages as $village)
+                                <option value="{{ $village->VillageId }}"
+                                    {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
+
+                                    {{ $village->VillageName }}
+
+                                </option>
+                            @endforeach
+
+                        </select>
+                    </div>
+
+                    <div class="col-span-1 flex gap-2">
+
+                        <div class="col-span-2 flex gap-2">
+
+                            <button type="submit"
+                                class="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs">
+
+                                Apply
+
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+        {{-- ================= Master Statistics ================= --}}
         <div class="bg-white rounded-2xl shadow-lg border border-gray-200 mb-6">
 
             <div class="flex items-center justify-between px-5 py-4 border-b">
@@ -27,7 +171,7 @@
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 p-5">
 
                 {{-- District --}}
-                <a href="{{ route('superadmin.districts') }}"
+                <a href="{{ route('admin.district.report', request()->all()) }}"
                     class="flex items-center p-4 bg-gradient-to-r from-blue-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
 
                     <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4">
@@ -39,19 +183,17 @@
                     </div>
 
                     <div>
-                        <p class="text-xs text-gray-500 uppercase">
+                        <p class="text-xs text-gray-500 uppercase tracking-wider font-medium">
                             Districts
                         </p>
-
                         <h3 class="text-2xl font-bold text-gray-800">
                             {{ number_format($summary->TotalDistricts) }}
                         </h3>
                     </div>
-
                 </a>
 
                 {{-- Villages --}}
-                <a href="{{ route('superadmin.all-villages') }}"
+                <a href="{{ route('admin.village.report', ['phase' => request('phase'), 'district_id' => request('district_id'), 'block_id' => request('block_id'), 'village_id' => request('village_id')]) }}"
                     class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
 
                     <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mr-4">
@@ -75,12 +217,13 @@
                 </a>
 
                 {{-- Registered Beneficiaries --}}
-                <a href="{{ route('superadmin.beneficiaries.index') }}"
+                <a href="{{ route('superadmin.applicants.index', ['phase' => request('phase'), 'district_id' => request('district_id'), 'block_id' => request('block_id'), 'village_id' => request('village_id')]) }}"
                     class="flex items-center p-4 bg-gradient-to-r from-indigo-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
 
                     <div class="w-12 h-12 rounded-xl bg-indigo-100 flex items-center justify-center mr-4">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-indigo-600" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H4v-2a4 4 0 014-4h1m4-4a4 4 0 10-8 0 4 4 0 008 0zm6 2a3 3 0 100-6 3 3 0 000 6z" />
                         </svg>
@@ -88,18 +231,22 @@
 
                     <div>
                         <p class="text-xs text-gray-500 uppercase">
-                            Beneficiaries
+                            Applicants
                         </p>
 
                         <h3 class="text-2xl font-bold text-gray-800">
                             {{ number_format($summary->RegisteredBeneficiaries) }}
                         </h3>
                     </div>
-
                 </a>
 
                 {{-- Allotted Beneficiaries --}}
-                <a href="{{ route('superadmin.allotment.index') }}"
+                <a href="{{ route('admin.allotment.report', [
+                    'phase' => request('phase'),
+                    'district_id' => request('district_id'),
+                    'block_id' => request('block_id'),
+                    'village_id' => request('village_id'),
+                ]) }}"
                     class="flex items-center p-4 bg-gradient-to-r from-orange-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition">
 
                     <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mr-4">
@@ -120,7 +267,7 @@
                         </h3>
                     </div>
 
-                </a>
+                </a>    
 
             </div>
 
@@ -157,7 +304,7 @@
                     </div>
 
                     <div>
-                        <p class="text-xs uppercase text-gray-500">Gross Total</p>
+                        <p class="text-xs uppercase text-gray-500">Total</p>
                         <h3 class="text-2xl font-bold text-gray-800">
                             {{ number_format($summary->GrossTotal) }}
                         </h3>
@@ -220,7 +367,7 @@
                     </div>
 
                     <div>
-                        <p class="text-xs uppercase text-gray-500">Pending</p>
+                        <p class="text-xs uppercase text-gray-500">Yet to be Approved</p>
                         <h3 class="text-2xl font-bold text-gray-800">
                             {{ number_format($summary->PendingApprovalPayment) }}
                         </h3>
@@ -296,7 +443,7 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
 
                 {{-- Total Registration --}}
-                <a href="{{ route('superadmin.total.registration') }}" class="block">
+                <a href="#" class="block">
 
                     <div
                         class="flex items-center p-4 bg-gradient-to-r from-violet-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
@@ -325,7 +472,7 @@
                 </a>
 
                 {{-- Matched --}}
-                <a href="{{ route('superadmin.matched.registration') }}" class="block">
+                <a href="#" class="block">
 
                     <div
                         class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
@@ -353,7 +500,7 @@
                 </a>
 
                 {{-- Unmatched --}}
-                <a href="{{ route('superadmin.unmatched.registration') }}" class="block">
+                <a href="#" class="block">
 
                     <div
                         class="flex items-center p-4 bg-gradient-to-r from-red-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">
@@ -384,6 +531,23 @@
 
         </div>
 
-    </main>
 
+
+    </main>
+    <div id="dashboardLoader" class="hidden fixed inset-0 bg-white/80 z-50">
+
+        <div class="flex items-center justify-center h-full">
+
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600">
+            </div>
+
+            <span class="ml-4 text-lg font-semibold">
+
+                Loading Dashboard...
+
+            </span>
+
+        </div>
+
+    </div>
 @endsection

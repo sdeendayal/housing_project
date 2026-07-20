@@ -6,1145 +6,1445 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\DashboardExport;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DistrictReportExport;
+use App\Exports\VillageReportExport;
 
 class SuperAdminController extends Controller
 {
-    public function dashboard()
+    public function dashboard(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | 1. Master Data
-        |--------------------------------------------------------------------------
-        */
+        $phase = $request->phase;
+        $districtId = $request->district_id;
+        $blockId = $request->block_id;
+        $villageId = $request->village_id;
 
-        // Districts
-        $totalDistricts = DB::table('DistrictMaster')->count();
+        // 1. Dropdown Data (Consistent with filters)
+        $districts = DB::table('DistrictMaster as d')
+            ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
+            ->where('v.plots', '>', 0)
+            ->when($phase, fn($q) => $q->where('v.Phase', $phase))
+            ->select('d.DistrictId', 'd.DistrictName')
+            ->distinct()->orderBy('d.DistrictName')->get();
 
-        // Villages (275)
+        $blocks = $districtId ? DB::table('BlockMaster as b')
+            ->join('VillageMaster as v', 'v.BlockId', '=', 'b.BlockId')
+            ->where('b.DistrictId', $districtId)
+            ->when($phase, fn($q) => $q->where('v.Phase', $phase))
+            ->where('v.plots', '>', 0)
+            ->select('b.BlockId', 'b.BlockName')
+            ->distinct()->orderBy('b.BlockName')->get() : collect();
+
+        $villages = $blockId ? DB::table('VillageMaster')
+            ->where('BlockId', $blockId)
+            ->when($phase, fn($q) => $q->where('Phase', $phase))
+            ->where('plots', '>', 0)
+            ->orderBy('VillageName')
+            ->get(['VillageId', 'VillageName']) : collect();
+
+        // 2. Main Stats (Districts, Villages, Beneficiaries)
+        $totalDistricts = ($phase || $districtId)
+            ? DB::table('DistrictMaster as d')
+                ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
+                ->where('v.plots', '>', 0)
+                ->when($phase, fn($q) => $q->where('v.Phase', $phase))
+                ->when($districtId, fn($q) => $q->where('d.DistrictId', $districtId))
+                ->distinct('d.DistrictId')->count('d.DistrictId')
+            : 22;
+
         $totalVillages = DB::table('VillageMaster')
-            ->where(function ($q) {
-                $q->where('TotalPlots', '>', 0)
-                    ->orWhere('totalPlotsPhase2', '>', 0)
-                    ->orWhere('totalPlotsPhase3', '>', 0);
-            })
+            ->where('plots', '>', 0)
+            ->when($phase, fn($q) => $q->where('Phase', $phase))
+            ->when($districtId, fn($q) => $q->where('DistrictId', $districtId))
+            ->when($blockId, fn($q) => $q->where('BlockId', $blockId))
+            ->when($villageId, fn($q) => $q->where('VillageId', $villageId))
             ->count();
 
-        // Registered Beneficiaries (Only 275 Villages)
         $registeredBeneficiaries = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            })
+            ->where('v.plots', '>', 0)
+            ->when($phase, fn($q) => $q->where('o.Phase', $phase))
+            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
+            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
+            ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId))
             ->count();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | 2. Allotment Statistics
-        |--------------------------------------------------------------------------
-        */
-
-        $allotmentStats = DB::table('OwnerMaster as o')
+        // Allotment Stats (Single Query)
+        $stats = DB::table('OwnerMaster as o')
             ->join('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->when($phase, fn($q) => $q->where('o.Phase', $phase))
+            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
+            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
+            ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId))
             ->selectRaw("
-            COUNT(*) AS GrossTotal,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved = 1
-                    AND o.IsPaid = 1
-                    AND o.IsAllotmentCancelled = 0
-                    THEN 1 ELSE 0
-                END
-            ) AS ApprovedPaid,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved = 1
-                    AND o.IsPaid = 0
-                    AND o.IsAllotmentCancelled = 0
-                    THEN 1 ELSE 0
-                END
-            ) AS ApprovedUnpaid,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved = 0
-                    AND o.IsPaid = 0
-                    AND o.IsRejected = 0
-                    THEN 1 ELSE 0
-                END
-            ) AS PendingApprovalPayment,
-
-            SUM(
-                CASE
-                    WHEN o.IsRejected = 1
-                    THEN 1 ELSE 0
-                END
-            ) AS Rejected,
-
-            SUM(
-                CASE
-                    WHEN o.IsAllotmentCancelled = 1
-                    THEN 1 ELSE 0
-                END
-            ) AS AllotmentCancelled
+            COUNT(*) as GrossTotal,
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsAllotmentCancelled = 0 THEN 1 ELSE 0 END) as ApprovedPaid,
+            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsAllotmentCancelled = 0 THEN 1 ELSE 0 END) as ApprovedUnpaid,
+            SUM(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 THEN 1 ELSE 0 END) as PendingApprovalPayment,
+            SUM(CASE WHEN o.IsRejected = 1 THEN 1 ELSE 0 END) as Rejected,
+            SUM(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 ELSE 0 END) as AllotmentCancelled
         ")
             ->first();
 
+        // 3. Registration Stats (Filtered by Join)
+        $regBaseQuery = DB::table('registary as r')
+            ->join('OwnerMaster as o', 'r.SecondPartyMobile', '=', 'o.MobileNo')
+            ->when($phase, fn($q) => $q->where('o.Phase', $phase))
+            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
+            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
+            ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId));
 
-        /*
-        |--------------------------------------------------------------------------
-        | 3. Registration Statistics
-        |--------------------------------------------------------------------------
-        */
-
-
-
-        $totalRegistration = DB::table('registary')->count();
-
-        $matched = DB::table('registary')
-            ->whereIn('SecondPartyMobile', function ($q) {
-                $q->select('MobileNo')
-                    ->from('OwnerMaster')
-                    ->whereNotNull('MobileNo');
-            })
-            ->count();
+        $totalRegistration = (clone $regBaseQuery)->count();
+        $matched = (clone $regBaseQuery)->whereNotNull('o.MobileNo')->count();
 
         $registration = (object) [
             'TotalRegistration' => $totalRegistration,
             'Matched' => $matched,
-            'UnMatched' => ($totalRegistration - $matched),
+            'UnMatched' => max(0, $totalRegistration - $matched),
         ];
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | 4. Dashboard Summary
-        |--------------------------------------------------------------------------
-        */
-
+        // Summary Object
         $summary = (object) [
-
-            /*
-            |----------------------------------------------------------
-            | Master Data
-            |----------------------------------------------------------
-            */
-
             'TotalDistricts' => $totalDistricts,
             'TotalVillages' => $totalVillages,
             'RegisteredBeneficiaries' => $registeredBeneficiaries,
-            'AllottedBeneficiaries' => $allotmentStats->GrossTotal ?? 0,
-
-            /*
-            |----------------------------------------------------------
-            | Allotment Status
-            |----------------------------------------------------------
-            */
-
-            'GrossTotal' => $allotmentStats->GrossTotal ?? 0,
-            'ApprovedPaid' => $allotmentStats->ApprovedPaid ?? 0,
-            'ApprovedUnpaid' => $allotmentStats->ApprovedUnpaid ?? 0,
-            'PendingApprovalPayment' => $allotmentStats->PendingApprovalPayment ?? 0,
-            'Rejected' => $allotmentStats->Rejected ?? 0,
-            'AllotmentCancelled' => $allotmentStats->AllotmentCancelled ?? 0,
-
-            /*
-            |----------------------------------------------------------
-            | Backward Compatibility (optional)
-            |----------------------------------------------------------
-            */
-
-            'TotalBeneficiaries' => $registeredBeneficiaries,
-            'TotalAllotment' => $allotmentStats->GrossTotal ?? 0,
-            'TotalAssignedFlats' => $allotmentStats->ApprovedPaid ?? 0,
+            'AllottedBeneficiaries' => $stats->GrossTotal ?? 0, // Design ke Allotted card ke liye
+            'GrossTotal' => $stats->GrossTotal ?? 0, // Allotment Status cards ke liye
+            'ApprovedPaid' => $stats->ApprovedPaid ?? 0,
+            'ApprovedUnpaid' => $stats->ApprovedUnpaid ?? 0,
+            'PendingApprovalPayment' => $stats->PendingApprovalPayment ?? 0,
+            'Rejected' => $stats->Rejected ?? 0,
+            'AllotmentCancelled' => $stats->AllotmentCancelled ?? 0,
         ];
 
-
-        $phaseData = collect([]);
-        $gapData = collect([]);
-
-        return view('mmgay.super-admin.dashboard', compact(
-            'summary',
-            'registration',
-            'phaseData',
-            'gapData'
-        ));
+        return view('mmgay.super-admin.dashboard', compact('summary', 'registration', 'districts', 'blocks', 'villages'));
     }
-
-    public function districtList()
+    public function getDistricts($phase = null)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | District Master
-        |--------------------------------------------------------------------------
-        */
-        $districts = DB::table('DistrictMaster')
-            ->select('DistrictId', 'DistrictName')
-            ->orderBy('DistrictName')
-            ->get();
+        $villageQuery = DB::table('VillageMaster')
+            ->select('DistrictId');
 
+        if ($phase == 1 || $phase == 2 || $phase == 3) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Villages With Plots
-        |--------------------------------------------------------------------------
-        */
-        $villageStats = DB::table('VillageMaster')
-            ->selectRaw('DistrictId, COUNT(*) AS VillagesWithPlots')
-            ->where(function ($q) {
-                $q->where('TotalPlots', '>', 0)
-                    ->orWhere('totalPlotsPhase2', '>', 0)
-                    ->orWhere('totalPlotsPhase3', '>', 0);
-            })
-            ->groupBy('DistrictId')
-            ->pluck('VillagesWithPlots', 'DistrictId');
+            $villageQuery->where('phase', $phase)
+                ->where('plots', '>', 0);
 
+        } elseif ($phase == 4) {
 
-        /*
-        |--------------------------------------------------------------------------
-        | Registered Beneficiaries
-        |--------------------------------------------------------------------------
-        */
-        $registeredStats = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->selectRaw("
-            CAST(v.DistrictId AS UNSIGNED) AS DistrictId,
-            COUNT(o.OwnerId) AS RegisteredBeneficiaries
-        ")
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            })
-            ->groupBy(DB::raw('CAST(v.DistrictId AS UNSIGNED)'))
-            ->get()
-            ->keyBy('DistrictId');
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Allotment Statistics
-        |--------------------------------------------------------------------------
-        */
-        $allotmentStats = DB::table('OwnerMaster as o')
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            ->where('o.FlatId', '>', 0)
-            ->selectRaw("
-            CAST(COALESCE(f.DistrictId,o.DistrictId) AS UNSIGNED) AS DistrictId,
-
-            COUNT(o.OwnerId) AS AllottedBeneficiaries,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved=1
-                    AND o.IsPaid=1
-                    AND o.IsAllotmentCancelled=0
-                    THEN 1 ELSE 0
-                END
-            ) AS ApprovedPaid,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved=1
-                    AND o.IsPaid=0
-                    AND o.IsAllotmentCancelled=0
-                    THEN 1 ELSE 0
-                END
-            ) AS ApprovedUnpaid,
-
-            SUM(
-                CASE
-                    WHEN o.IsApproved=0
-                    AND o.IsPaid=0
-                    AND o.IsRejected=0
-                    THEN 1 ELSE 0
-                END
-            ) AS PendingApprovalPayment,
-
-            SUM(
-                CASE
-                    WHEN o.IsRejected=1
-                    THEN 1 ELSE 0
-                END
-            ) AS Rejected,
-
-            SUM(
-                CASE
-                    WHEN o.IsAllotmentCancelled=1
-                    THEN 1 ELSE 0
-                END
-            ) AS AllotmentCancelled
-        ")
-            ->groupBy(DB::raw('CAST(COALESCE(f.DistrictId,o.DistrictId) AS UNSIGNED)'))
-            ->get()
-            ->keyBy(function ($item) {
-                return (int) $item->DistrictId;
+            $villageQuery->where(function ($q) {
+                $q->where('plots', 0)
+                    ->orWhereNull('plots');
             });
 
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Merge Data
-        |--------------------------------------------------------------------------
-        */
-        $data = $allotmentStats->map(function ($allotment) use ($districts, $villageStats, $registeredStats) {
+        $districts = DB::table('DistrictMaster')
+            ->whereIn('DistrictId', $villageQuery)
+            ->orderBy('DistrictName')
+            ->get([
+                'DistrictId',
+                'DistrictName'
+            ]);
 
-            $districtId = (int) $allotment->DistrictId;
+        return response()->json($districts);
+    }
 
-            $district = $districts->firstWhere('DistrictId', $districtId);
+    public function getBlocks($districtId, $phase = null)
+    {
+        $village = DB::table('VillageMaster')
+            ->select('BlockId')
+            ->where('DistrictId', $districtId);
 
-            $r = $registeredStats->get($districtId);
+        if ($phase == 1 || $phase == 2 || $phase == 3) {
 
+            $village->where('phase', $phase)
+                ->where('plots', '>', 0);
+        }
 
-            return (object) [
+        if ($phase == 4) {
 
-                'DistrictId' => $districtId,
+            $village->where(function ($q) {
+                $q->where('plots', 0)
+                    ->orWhereNull('plots');
+            });
+        }
 
-                'DistrictName' => $district->DistrictName ?? 'Unknown',
+        $blocks = DB::table('BlockMaster')
+            ->whereIn('BlockId', $village)
+            ->orderBy('BlockName')
+            ->get(['BlockId', 'BlockName']);
 
-                'VillagesWithPlots' =>
-                    $villageStats[$districtId] ?? 0,
+        return response()->json($blocks);
+    }
 
-                'RegisteredBeneficiaries' =>
-                    $r->RegisteredBeneficiaries ?? 0,
+    public function getVillages($blockId, $phase = null)
+    {
+        $villages = DB::table('VillageMaster')
+            ->where('BlockId', $blockId);
 
+        if ($phase == 1 || $phase == 2 || $phase == 3) {
 
-                // OWNERMASTER BASE COUNT
-                'AllottedBeneficiaries' =>
-                    $allotment->AllottedBeneficiaries ?? 0,
+            $villages->where('phase', $phase)
+                ->where('plots', '>', 0);
+        }
 
-                'ApprovedPaid' =>
-                    $allotment->ApprovedPaid ?? 0,
+        if ($phase == 4) {
 
-                'ApprovedUnpaid' =>
-                    $allotment->ApprovedUnpaid ?? 0,
+            $villages->where(function ($q) {
+                $q->where('plots', 0)
+                    ->orWhereNull('plots');
+            });
+        }
 
-                'PendingApprovalPayment' =>
-                    $allotment->PendingApprovalPayment ?? 0,
+        return response()->json(
 
-                'Rejected' =>
-                    $allotment->Rejected ?? 0,
+            $villages
+                ->orderBy('VillageName')
+                ->get(['VillageId', 'VillageName'])
 
-                'AllotmentCancelled' =>
-                    $allotment->AllotmentCancelled ?? 0,
-            ];
-        });
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Gross Total
-        |--------------------------------------------------------------------------
-        */
-        $grossTotal = (object) [
-
-            'VillagesWithPlots' =>
-                $data->sum('VillagesWithPlots'),
-
-            'RegisteredBeneficiaries' =>
-                $data->sum('RegisteredBeneficiaries'),
-
-            'AllottedBeneficiaries' =>
-                $data->sum('AllottedBeneficiaries'),
-
-            'ApprovedPaid' =>
-                $data->sum('ApprovedPaid'),
-
-            'ApprovedUnpaid' =>
-                $data->sum('ApprovedUnpaid'),
-
-            'PendingApprovalPayment' =>
-                $data->sum('PendingApprovalPayment'),
-
-            'Rejected' =>
-                $data->sum('Rejected'),
-
-            'AllotmentCancelled' =>
-                $data->sum('AllotmentCancelled'),
-        ];
-
-
-        return view(
-            'mmgay.super-admin.district-list',
-            compact('data', 'grossTotal')
         );
     }
-    public function allVillagesList(Request $request)
+
+    public function dashboardPdf(Request $request)
     {
-        $search = $request->input('search');
-        $districtFilter = $request->input('district_id');
+        $data = $this->dashboardData($request);
 
-        /*
-        |--------------------------------------------------------------------------
-        | District Dropdown
-        |--------------------------------------------------------------------------
-        */
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.dashboard-pdf',
+            $data
+        );
 
-        $districtsList = DB::table('DistrictMaster as d')
-            ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('Dashboard_Report.pdf');
+    }
+
+    public function exportExcel(Request $request)
+    {
+        // dashboardData() method wahi array return karega jo aapne banaya hai
+        $data = $this->dashboardData($request);
+        return Excel::download(new DashboardExport($data), 'Dashboard_Report.xlsx');
+    }
+
+    public function exportPDF(Request $request)
+    {
+        // dashboardData() se array data lein
+        $data = $this->dashboardData($request);
+
+        $pdf = Pdf::loadView('mmgay.super-admin.dashboard-pdf', ['data' => $data]);
+        $pdf->setPaper('A4', 'landscape');
+        return $pdf->download('Dashboard_Report.pdf');
+    }
+
+    public function dashboardData(Request $request)
+    {
+        $phase = $request->phase;
+        $districtId = $request->district_id;
+        $blockId = $request->block_id;
+        $villageId = $request->village_id;
+
+        $villageQuery = DB::table('VillageMaster')
+            ->where('plots', '>', 0);
+
+        if ($phase)
+            $villageQuery->where('phase', $phase);
+
+        if ($districtId)
+            $villageQuery->where('DistrictId', $districtId);
+
+        if ($blockId)
+            $villageQuery->where('BlockId', $blockId);
+
+        if ($villageId)
+            $villageQuery->where('VillageId', $villageId);
+
+        $totalVillages = (clone $villageQuery)->count();
+
+        $registered = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->where('v.plots', '>', 0);
+
+        if ($phase)
+            $registered->where('v.phase', $phase);
+
+        if ($districtId)
+            $registered->where('o.DistrictId', $districtId);
+
+        if ($blockId)
+            $registered->where('o.BlockId', $blockId);
+
+        if ($villageId)
+            $registered->where('o.VillageId', $villageId);
+
+        $registeredBeneficiaries = $registered->count();
+
+        $allotment = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->where('v.plots', '>', 0);
+
+        if ($phase)
+            $allotment->where('v.phase', $phase);
+
+        if ($districtId)
+            $allotment->where('o.DistrictId', $districtId);
+
+        if ($blockId)
+            $allotment->where('o.BlockId', $blockId);
+
+        if ($villageId)
+            $allotment->where('o.VillageId', $villageId);
+
+        $stats = $allotment->selectRaw("
+        COUNT(*) GrossTotal,
+
+        SUM(CASE
+            WHEN IsApproved=1
+            AND IsPaid=1
+            AND IsAllotmentCancelled=0
+            THEN 1 ELSE 0 END) ApprovedPaid,
+
+        SUM(CASE
+            WHEN IsApproved=1
+            AND IsPaid=0
+            AND IsAllotmentCancelled=0
+            THEN 1 ELSE 0 END) ApprovedUnpaid,
+
+        SUM(CASE
+            WHEN IsApproved=0
+            AND IsRejected=0
+            THEN 1 ELSE 0 END) PendingApprovalPayment,
+
+        SUM(CASE
+            WHEN IsRejected=1
+            THEN 1 ELSE 0 END) Rejected,
+
+        SUM(CASE
+            WHEN IsAllotmentCancelled=1
+            THEN 1 ELSE 0 END) AllotmentCancelled
+
+    ")->first();
+
+        return [
+            'TotalVillages' => $totalVillages,
+            'RegisteredBeneficiaries' => $registeredBeneficiaries,
+            'GrossTotal' => $stats->GrossTotal ?? 0,
+            'ApprovedPaid' => $stats->ApprovedPaid ?? 0,
+            'ApprovedUnpaid' => $stats->ApprovedUnpaid ?? 0,
+            'PendingApprovalPayment' => $stats->PendingApprovalPayment ?? 0,
+            'Rejected' => $stats->Rejected ?? 0,
+            'AllotmentCancelled' => $stats->AllotmentCancelled ?? 0,
+        ];
+    }
+
+    public function districtWiseReport(Request $request)
+    {
+        $phase = $request->phase;
+        $districtId = $request->district_id;
+
+        $report = DB::table('DistrictMaster as d')
+            ->leftJoin('VillageMaster as v', function ($join) use ($phase) {
+                $join->on('d.DistrictId', '=', 'v.DistrictId')
+                    ->where('v.plots', '>', 0);
+
+                if ($phase) {
+                    $join->where('v.phase', $phase);
+                }
             })
-            ->select(
-                'd.DistrictId',
-                'd.DistrictName'
-            )
-            ->distinct()
+            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
+                $join->on('v.VillageId', '=', 'o.VillageId');
+
+                if ($phase) {
+                    $join->where('o.Phase', $phase);
+                }
+            })
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->select('d.DistrictId', 'd.DistrictName')
+            ->selectRaw("
+        COUNT(DISTINCT v.VillageId) AS VillagesWithPlots,
+
+        COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL THEN o.OwnerId
+        END) AS AllottedBeneficiaries,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+             AND o.IsApproved = 1
+             AND o.IsPaid = 1
+             AND o.IsAllotmentCancelled = 0
+            THEN o.OwnerId
+        END) AS ApprovedPaid,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+             AND o.IsApproved = 1
+             AND o.IsPaid = 0
+             AND o.IsAllotmentCancelled = 0
+            THEN o.OwnerId
+        END) AS ApprovedUnpaid,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+             AND o.IsApproved = 0
+             AND o.IsPaid = 0
+             AND o.IsRejected = 0
+            THEN o.OwnerId
+        END) AS PendingApprovalPayment,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+             AND o.IsRejected = 1
+            THEN o.OwnerId
+        END) AS Rejected,
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+             AND o.IsAllotmentCancelled = 1
+            THEN o.OwnerId
+        END) AS AllotmentCancelled
+    ")
+            ->when($districtId, function ($q) use ($districtId) {
+                $q->where('d.DistrictId', $districtId);
+            })
+            ->groupBy('d.DistrictId', 'd.DistrictName')
             ->orderBy('d.DistrictName')
             ->get();
 
-        /*
-        |--------------------------------------------------------------------------
-        | Village Listing
-        |--------------------------------------------------------------------------
-        */
+        $grossTotal = (object) [
+            'VillagesWithPlots' => $report->sum('VillagesWithPlots'),
+            'RegisteredBeneficiaries' => $report->sum('RegisteredBeneficiaries'),
+            'AllottedBeneficiaries' => $report->sum('AllottedBeneficiaries'),
+            'ApprovedPaid' => $report->sum('ApprovedPaid'),
+            'ApprovedUnpaid' => $report->sum('ApprovedUnpaid'),
+            'PendingApprovalPayment' => $report->sum('PendingApprovalPayment'),
+            'Rejected' => $report->sum('Rejected'),
+            'AllotmentCancelled' => $report->sum('AllotmentCancelled'),
+        ];
 
-        $villageQuery = DB::table('VillageMaster as v')
-            ->join(
-                'DistrictMaster as d',
+        $districts = DB::table('DistrictMaster')
+            ->orderBy('DistrictName')
+            ->get(['DistrictId', 'DistrictName']);
+
+        return view('mmgay.super-admin.district-report', compact('report', 'grossTotal', 'districts'));
+    }
+
+    public function districtReportPdf(Request $request)
+    {
+        $data = $this->districtReportData($request);
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.district-report-pdf',
+            $data
+        );
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('District_Report.pdf');
+    }
+
+
+    public function districtReportExcel(Request $request)
+    {
+        return Excel::download(
+            new DistrictReportExport($request),
+            'District_Report.xlsx'
+        );
+    }
+
+    public function districtReportData(Request $request)
+    {
+        $phase = $request->phase;
+
+        $districtId = $request->district_id;
+
+
+        $report = DB::table('DistrictMaster as d')
+
+            ->leftJoin('VillageMaster as v', function ($join) use ($phase) {
+
+                $join->on('d.DistrictId', '=', 'v.DistrictId')
+                    ->where('v.plots', '>', 0);
+
+                if ($phase) {
+                    $join->where('v.phase', $phase);
+                }
+
+            })
+
+            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
+
+                $join->on('v.VillageId', '=', 'o.VillageId');
+
+                if ($phase) {
+                    $join->where('o.Phase', $phase);
+                }
+
+            })
+
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+
+
+            ->select(
                 'd.DistrictId',
-                '=',
-                'v.DistrictId'
+                'd.DistrictName'
             )
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            });
 
-        if (!empty($districtFilter)) {
-            $villageQuery->where(
-                'v.DistrictId',
-                $districtFilter
-            );
-        }
 
-        if (!empty($search)) {
-            $villageQuery->where(
-                'v.VillageName',
-                'LIKE',
-                $search . '%'
-            );
-        }
+            ->selectRaw("
 
-        $villagesPaginated = $villageQuery
+        COUNT(DISTINCT v.VillageId) AS VillagesWithPlots,
+
+        COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL THEN o.OwnerId
+        END) AS AllottedBeneficiaries,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+            AND o.IsApproved = 1
+            AND o.IsPaid = 1
+            AND o.IsAllotmentCancelled = 0
+            THEN o.OwnerId
+        END) AS ApprovedPaid,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+            AND o.IsApproved = 1
+            AND o.IsPaid = 0
+            AND o.IsAllotmentCancelled = 0
+            THEN o.OwnerId
+        END) AS ApprovedUnpaid,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+            AND o.IsApproved = 0
+            AND o.IsPaid = 0
+            AND o.IsRejected = 0
+            THEN o.OwnerId
+        END) AS PendingApprovalPayment,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+            AND o.IsRejected = 1
+            THEN o.OwnerId
+        END) AS Rejected,
+
+
+        COUNT(DISTINCT CASE
+            WHEN f.FlatId IS NOT NULL
+            AND o.IsAllotmentCancelled = 1
+            THEN o.OwnerId
+        END) AS AllotmentCancelled
+
+    ")
+
+
+            ->when($districtId, function ($q) use ($districtId) {
+
+                $q->where('d.DistrictId', $districtId);
+
+            })
+
+
+            ->groupBy(
+                'd.DistrictId',
+                'd.DistrictName'
+            )
+
+
+            ->orderBy('d.DistrictName')
+
+
+            ->get();
+
+
+        $grossTotal = (object) [
+
+            'VillagesWithPlots' => $report->sum('VillagesWithPlots'),
+
+            'RegisteredBeneficiaries' => $report->sum('RegisteredBeneficiaries'),
+
+            'AllottedBeneficiaries' => $report->sum('AllottedBeneficiaries'),
+
+            'ApprovedPaid' => $report->sum('ApprovedPaid'),
+
+            'ApprovedUnpaid' => $report->sum('ApprovedUnpaid'),
+
+            'PendingApprovalPayment' => $report->sum('PendingApprovalPayment'),
+
+            'Rejected' => $report->sum('Rejected'),
+
+            'AllotmentCancelled' => $report->sum('AllotmentCancelled'),
+
+        ];
+
+
+        $districts = DB::table('DistrictMaster')
+            ->orderBy('DistrictName')
+            ->get([
+                'DistrictId',
+                'DistrictName'
+            ]);
+
+
+        return [
+
+            'report' => $report,
+
+            'grossTotal' => $grossTotal,
+
+            'districts' => $districts
+
+        ];
+    }
+
+    public function villageReportData(Request $request)
+    {
+        $phase = $request->phase;
+        $villageId = $request->village_id;
+
+        $report = DB::table('VillageMaster as v')
+
+            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
+                $join->on('v.VillageId', '=', 'o.VillageId');
+
+                if (!empty($phase)) {
+                    $join->where('o.Phase', '=', $phase);
+                }
+            })
+
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+
+            // Sirf wahi villages jinke plots 0 se zyada hain
+            ->where('v.plots', '>', 0)
+
+            // Phase filter
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.phase', '=', $phase);
+            })
+
+            // Village filter
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', '=', $villageId);
+            })
+
             ->select(
                 'v.VillageId',
                 'v.VillageName',
-                'v.DistrictId',
-                'd.DistrictName'
+                'v.phase as Phase',
+                'v.plots as TotalPlots'
             )
+
+            ->selectRaw("
+            COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END) AS AllottedBeneficiaries,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND COALESCE(o.IsApproved, 0) = 0
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS PendingApprovalPayment,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END) AS AllotmentCancelled
+        ")
+
+            ->groupBy(
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase',
+                'v.plots'
+            )
+
             ->orderBy('v.VillageName')
-            ->paginate(15)
-            ->appends($request->query());
 
-        /*
-        |--------------------------------------------------------------------------
-        | Owner Statistics Current Page Villages
-        |--------------------------------------------------------------------------
-        */
+            ->get();
 
-        $villageIds = $villagesPaginated
-            ->pluck('VillageId')
-            ->toArray();
+        $grossTotal = (object) [
+            'TotalVillages' => $report->count(),
 
-        $ownerStats = collect();
+            'TotalPlots' => $report->sum('TotalPlots'),
 
-        if (!empty($villageIds)) {
+            'RegisteredBeneficiaries' =>
+                $report->sum('RegisteredBeneficiaries'),
 
-            $ownerStats = DB::table('OwnerMaster')
-                ->selectRaw("
-                VillageId,
+            'AllottedBeneficiaries' =>
+                $report->sum('AllottedBeneficiaries'),
 
-                COUNT(OwnerId) AS Beneficiaries,
+            'ApprovedPaid' =>
+                $report->sum('ApprovedPaid'),
 
-                SUM(
-                    CASE
-                        WHEN IsApproved = 1
-                        AND IsPaid = 1
-                        THEN 1 ELSE 0
-                    END
-                ) AS Paid,
+            'ApprovedUnpaid' =>
+                $report->sum('ApprovedUnpaid'),
 
-                SUM(
-                    CASE
-                        WHEN IsApproved = 1
-                        AND IsPaid = 0
-                        THEN 1 ELSE 0
-                    END
-                ) AS NotPaid,
+            'PendingApprovalPayment' =>
+                $report->sum('PendingApprovalPayment'),
 
-                SUM(
-                    CASE
-                        WHEN FlatId > 0
-                        THEN 1 ELSE 0
-                    END
-                ) AS Allotment,
+            'Rejected' =>
+                $report->sum('Rejected'),
 
-                SUM(
-                    CASE
-                        WHEN FlatId > 0
-                        AND IsPaid = 1
-                        THEN 1 ELSE 0
-                    END
-                ) AS AssignedFlats
-            ")
-                ->whereIn('VillageId', $villageIds)
-                ->groupBy('VillageId')
-                ->get()
-                ->keyBy('VillageId');
-        }
+            'AllotmentCancelled' =>
+                $report->sum('AllotmentCancelled'),
+        ];
 
-        /*
-        |--------------------------------------------------------------------------
-        | Attach Village Statistics
-        |--------------------------------------------------------------------------
-        */
+        // Dropdown me sirf plots > 0 wale villages
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.plots', '>', 0)
 
-        $villagesData = $villagesPaginated->map(function ($village) use ($ownerStats) {
+            // Phase select hone par us phase ke villages hi dikhaye
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.phase', '=', $phase);
+            })
 
-            $stats = $ownerStats->get($village->VillageId);
+            ->orderBy('v.VillageName')
+            ->get([
+                'v.VillageId',
+                'v.VillageName',
+            ]);
 
-            $village->Beneficiaries = $stats->Beneficiaries ?? 0;
-            $village->Paid = $stats->Paid ?? 0;
-            $village->NotPaid = $stats->NotPaid ?? 0;
-            $village->Allotment = $stats->Allotment ?? 0;
-            $village->AssignedFlats = $stats->AssignedFlats ?? 0;
-            $village->Gap = $village->Allotment - $village->AssignedFlats;
+        return [
+            'report' => $report,
+            'grossTotal' => $grossTotal,
+            'villages' => $villages,
+        ];
+    }
 
-            return $village;
-        });
-
-        /*
-        |--------------------------------------------------------------------------
-        | Restore Pagination After Map
-        |--------------------------------------------------------------------------
-        */
-
-        $villagesData = new \Illuminate\Pagination\LengthAwarePaginator(
-            $villagesData,
-            $villagesPaginated->total(),
-            $villagesPaginated->perPage(),
-            $villagesPaginated->currentPage(),
-            [
-                'path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(),
-                'query' => $request->query()
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Return View
-        |--------------------------------------------------------------------------
-        */
+    public function villageWiseReport(Request $request)
+    {
+        $data = $this->villageReportData($request);
 
         return view(
-            'mmgay.super-admin.all-villages-list',
-            compact(
-                'villagesData',
-                'districtsList',
-                'search',
-                'districtFilter'
-            )
+            'mmgay.super-admin.village-report',
+            $data
         );
     }
 
-    public function beneficiariesList(Request $request)
+    public function villageReportPdf(Request $request)
     {
-        $search = trim($request->input('search'));
-        $phaseFilter = $request->input('phase');
-        $districtFilter = $request->input('district_id');
-        $villageFilter = $request->input('village_id');
+        $data = $this->villageReportData($request);
 
-        $perPage = 20;
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.village-report-pdf',
+            $data
+        );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Base Query
-        |--------------------------------------------------------------------------
-        */
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('Village_Report.pdf');
+    }
+
+    public function villageReportExcel(Request $request)
+    {
+        return Excel::download(
+            new VillageReportExport($request),
+            'Village_Report.xlsx'
+        );
+    }
+
+    public function applicants(Request $request)
+    {
+        $search = $request->search;
+        $phase = $request->phase;
+        $districtId = $request->district_id;
+        $blockId = $request->block_id;
+        $villageId = $request->village_id;
+        $status = $request->status;
 
         $query = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
             ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            });
-
-        /*
-        |--------------------------------------------------------------------------
-        | Search
-        |--------------------------------------------------------------------------
-        */
-
-        if ($search != '') {
-            $query->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'LIKE', $search . '%')
-                    ->orWhere('o.MobileNo', 'LIKE', $search . '%')
-                    ->orWhere('o.RegistrationNo', 'LIKE', $search . '%');
-            });
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filters
-        |--------------------------------------------------------------------------
-        */
-
-        if (!empty($phaseFilter)) {
-            $query->where('o.Phase', $phaseFilter);
-        }
-
-        if (!empty($districtFilter)) {
-            $query->where('o.DistrictId', $districtFilter);
-        }
-
-        if (!empty($villageFilter)) {
-            $query->where('o.VillageId', $villageFilter);
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fast Count Query (Without Flat Join)
-        |--------------------------------------------------------------------------
-        */
-
-        $countQuery = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->where(function ($q) {
-                $q->where('v.TotalPlots', '>', 0)
-                    ->orWhere('v.totalPlotsPhase2', '>', 0)
-                    ->orWhere('v.totalPlotsPhase3', '>', 0);
-            });
-
-        if ($search != '') {
-            $countQuery->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'LIKE', $search . '%')
-                    ->orWhere('o.MobileNo', 'LIKE', $search . '%')
-                    ->orWhere('o.RegistrationNo', 'LIKE', $search . '%');
-            });
-        }
-
-        if (!empty($phaseFilter)) {
-            $countQuery->where('o.Phase', $phaseFilter);
-        }
-
-        if (!empty($districtFilter)) {
-            $countQuery->where('o.DistrictId', $districtFilter);
-        }
-
-        if (!empty($villageFilter)) {
-            $countQuery->where('o.VillageId', $villageFilter);
-        }
-
-        $totalCount = $countQuery->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Listing
-        |--------------------------------------------------------------------------
-        */
-
-        $items = $query
-            ->select([
+            ->where('v.plots', '>', 0)
+            ->select(
                 'o.OwnerId',
+                'o.secure_id',
                 'o.OwnerName',
+                'o.Relation',
                 'o.FatherHusbandName',
-                'o.MobileNo',
-                'o.RegistrationNo',
-                'o.Phase',
-                'd.DistrictName',
-                'v.VillageName',
-                'f.FlatNo',
-                'o.IsApproved',
-                'o.IsPaid'
-            ])
-            ->orderByDesc('o.OwnerId')
-            ->paginate($perPage);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Dropdowns
-        |--------------------------------------------------------------------------
-        */
-
-        $districts = Cache::remember('beneficiary_districts', 3600, function () {
-
-            return DB::table('DistrictMaster as d')
-                ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
-                ->where(function ($q) {
-                    $q->where('v.TotalPlots', '>', 0)
-                        ->orWhere('v.totalPlotsPhase2', '>', 0)
-                        ->orWhere('v.totalPlotsPhase3', '>', 0);
-                })
-                ->select(
-                    'd.DistrictId',
-                    'd.DistrictName'
-                )
-                ->distinct()
-                ->orderBy('d.DistrictName')
-                ->get();
-        });
-
-        $villages = collect();
-
-        if (!empty($districtFilter)) {
-
-            $villages = Cache::remember(
-                'beneficiary_village_' . $districtFilter,
-                3600,
-                function () use ($districtFilter) {
-
-                    return DB::table('VillageMaster')
-                        ->where('DistrictId', $districtFilter)
-                        ->where(function ($q) {
-                            $q->where('TotalPlots', '>', 0)
-                                ->orWhere('totalPlotsPhase2', '>', 0)
-                                ->orWhere('totalPlotsPhase3', '>', 0);
-                        })
-                        ->orderBy('VillageName')
-                        ->get();
-                }
-            );
-        }
-
-        return view(
-            'mmgay.super-admin.beneficiaries-list',
-            [
-                'beneficiaries' => $items,
-                'districts' => $districts,
-                'villages' => $villages,
-                'search' => $search,
-                'phaseFilter' => $phaseFilter,
-                'districtFilter' => $districtFilter,
-                'villageFilter' => $villageFilter,
-                'totalCount' => $totalCount,
-            ]
-        );
-    }
-
-    public function getBeneficiaryFullDetails($ownerId)
-    {
-        $details = DB::table('OwnerMaster as o')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            ->where('o.OwnerId', $ownerId)
-            ->select([
-                'o.OwnerId',
-                'o.OwnerName',
+                'o.Gender',
+                'o.DistrictId',
+                'o.BlockId',
+                'o.VillageId',
+                'o.OwnerAddress',
                 'o.RegistrationNo',
                 'o.PPPId',
                 'o.MemberId',
-                'o.Gender',
-                'o.Relation',
-                'o.FatherHusbandName',
+                'o.Caste',
                 'o.MobileNo',
-                'o.OwnerAddress',
+                'o.CompanyId',
                 'o.Phase',
                 'o.IsApproved',
                 'o.IsRejected',
                 'o.IsPaid',
                 'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
                 'o.Remarks',
                 'o.DCRemarks',
-                'd.DistrictName',
-                'b.BlockName',
+                'o.CreatedDate',
                 'v.VillageName',
+                'f.FlatId',
                 'f.FlatNo',
-                'o.Caste as CasteName'
-            ])
-            ->first();
 
-        if (!$details) {
-            return response()->json(['success' => false, 'message' => 'Record not found in system']);
-        }
+                DB::raw("
+                CASE
+                    WHEN o.IsAllotmentCancelled = 1
+                        THEN 'Cancelled'
 
-        return response()->json(['success' => true, 'data' => $details]);
-    }
+                    WHEN o.IsRejected = 1
+                        THEN 'Rejected'
 
-    public function allotmentList(Request $request)
-    {
-        $search = $request->input('search');
+                    WHEN o.IsApproved = 1
+                        AND o.IsPaid = 1
+                        THEN 'Approved & Paid'
 
-        $perPage = 20;
-        $page = (int) $request->input('page', 1);
-        $offset = ($page - 1) * $perPage;
+                    WHEN o.IsApproved = 1
+                        AND (
+                            o.IsPaid = 0
+                            OR o.IsPaid IS NULL
+                        )
+                        THEN 'Approved & Unpaid'
 
-        // 1. Base Query (Strict Flat Table Query)
-        $query = DB::table('OwnerMaster')->where('FlatId', '>', 0);
+                    WHEN (
+                        o.IsApproved = 0
+                        OR o.IsApproved IS NULL
+                    )
+                        THEN 'Yet to be Approved'
 
-        // 2. Index Optimized Search Filters
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('OwnerName', 'LIKE', "{$search}%")
-                    ->orWhere('MobileNo', 'LIKE', "{$search}%")
-                    ->orWhere('RegistrationNo', 'LIKE', "{$search}%");
-            });
-        }
+                    ELSE 'Allotted'
+                END AS ApplicantStatus
+            ")
+            );
 
-        // 3. Current active page data chunk lookup (Super Fast)
-        $rawItems = $query->select([
-            'FlatId',
-            'OwnerId',
-            'OwnerName',
-            'FatherHusbandName',
-            'MobileNo',
-            'RegistrationNo',
-            'DistrictId',
-            'BlockId',
-            'VillageId',
-            'Phase',
-            'IsPaid',
-            'IsApproved',
-            'IsRejected'
-        ])
-            ->orderBy('FlatId', 'asc')
-            ->offset($offset)
-            ->limit($perPage)
-            ->get();
+        $query->when($phase, function ($q) use ($phase) {
+            $q->where('o.Phase', $phase);
+        });
 
-        // 4. Memory-Level Lookups for related details
-        $districtIds = $rawItems->pluck('DistrictId')->filter()->unique()->toArray();
-        $blockIds = $rawItems->pluck('BlockId')->filter()->unique()->toArray();
-        $villageIds = $rawItems->pluck('VillageId')->filter()->unique()->toArray();
-        $flatIds = $rawItems->pluck('FlatId')->filter()->unique()->toArray();
+        $query->when($districtId, function ($q) use ($districtId) {
+            $q->where('o.DistrictId', $districtId);
+        });
 
-        $districtsNames = !empty($districtIds) ? DB::table('DistrictMaster')->whereIn('DistrictId', $districtIds)->pluck('DistrictName', 'DistrictId')->toArray() : [];
-        $blocksNames = !empty($blockIds) ? DB::table('BlockMaster')->whereIn('BlockId', $blockIds)->pluck('BlockName', 'BlockId')->toArray() : [];
-        $villagesNames = !empty($villageIds) ? DB::table('VillageMaster')->whereIn('VillageId', $villageIds)->pluck('VillageName', 'VillageId')->toArray() : [];
-        $flatsNos = !empty($flatIds) ? DB::table('FlatMaster')->whereIn('FlatId', $flatIds)->pluck('FlatNo', 'FlatId')->toArray() : [];
+        $query->when($blockId, function ($q) use ($blockId) {
+            $q->where('o.BlockId', $blockId);
+        });
 
-        // Fast Array transformation
-        $items = [];
-        foreach ($rawItems as $item) {
-            $item->DistrictName = $districtsNames[$item->DistrictId] ?? '--';
-            $item->BlockName = $blocksNames[$item->BlockId] ?? '--';
-            $item->VillageName = $villagesNames[$item->VillageId] ?? '--';
-            $item->FlatNo = $flatsNos[$item->FlatId] ?? '--';
+        $query->when($villageId, function ($q) use ($villageId) {
+            $q->where('o.VillageId', $villageId);
+        });
 
-            // Status Logic Injection for Blade loop if needed
-            if ($item->IsRejected == 1) {
-                $item->StatusText = 'Rejected';
-            } elseif ($item->IsApproved == 1 && $item->IsPaid == 0) {
-                $item->StatusText = 'Not Paid';
-            } elseif ($item->IsApproved == 1 && $item->IsPaid == 1) {
-                $item->StatusText = 'Paid';
-            } else {
-                $item->StatusText = 'Pending';
-            }
-
-            $items[] = $item;
-        }
-
-        // 5. Total Count allocation (Strict Dashboard match)
-        if (empty($search)) {
-            $totalAllotment = 16477;
-        } else {
-            $totalAllotment = (clone $query)->limit(1000)->count('FlatId');
-        }
-
-        // Manual length aware pagination generation
-        $allotments = new \Illuminate\Pagination\LengthAwarePaginator(
-            collect($items),
-            $totalAllotment,
-            $perPage,
-            $page,
-            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath(), 'query' => $request->query()]
-        );
-
-        return view('mmgay.super-admin.allotment-list', compact('allotments', 'totalAllotment', 'search'));
-    }
-
-    public function assignedFlatsList(Request $request)
-    {
-        $search = $request->input('search');
-
-        $query = DB::table('OwnerMaster as o')
-            ->join('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->where('o.FlatId', '>', 0)
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1)
-            ->where('o.IsAllotmentCancelled', 0);
-
-
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'like', "%{$search}%")
+        $query->when($search, function ($q) use ($search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where('o.OwnerName', 'like', "%{$search}%")
                     ->orWhere('o.MobileNo', 'like', "%{$search}%")
                     ->orWhere('o.RegistrationNo', 'like', "%{$search}%")
-                    ->orWhere('f.FlatNo', 'like', "%{$search}%")
-                    ->orWhere('v.VillageName', 'like', "%{$search}%");
+                    ->orWhere('o.PPPId', 'like', "%{$search}%")
+                    ->orWhere('f.FlatNo', 'like', "%{$search}%");
             });
-        }
+        });
 
+        $query->when($status, function ($q) use ($status) {
+            switch ($status) {
+                case 'approved_paid':
+                    $q->where('o.IsApproved', 1)
+                        ->where('o.IsPaid', 1);
+                    break;
 
-        // Total Approved & Paid Assigned Flats
-        $totalAssigned = (clone $query)
-            ->distinct()
-            ->count('o.FlatId');
+                case 'approved_unpaid':
+                    $q->where('o.IsApproved', 1)
+                        ->where(function ($subQuery) {
+                            $subQuery
+                                ->where('o.IsPaid', 0)
+                                ->orWhereNull('o.IsPaid');
+                        });
+                    break;
 
+                case 'pending':
+                    $q->where(function ($subQuery) {
+                        $subQuery
+                            ->where('o.IsApproved', 0)
+                            ->orWhereNull('o.IsApproved');
+                    });
+                    break;
 
-        // Flat Wise List
-        $assignedFlats = $query
-            ->select([
-                'o.FlatId',
-                'f.FlatNo',
-                DB::raw('MAX(o.OwnerId) as OwnerId'),
-                DB::raw('MAX(o.OwnerName) as OwnerName'),
-                DB::raw('MAX(o.FatherHusbandName) as FatherHusbandName'),
-                DB::raw('MAX(o.MobileNo) as MobileNo'),
-                DB::raw('MAX(o.RegistrationNo) as RegistrationNo'),
-                DB::raw('MAX(d.DistrictName) as DistrictName'),
-                DB::raw('MAX(b.BlockName) as BlockName'),
-                DB::raw('MAX(v.VillageName) as VillageName'),
-                DB::raw('MAX(o.Phase) as Phase'),
-                DB::raw('MAX(o.IsPaid) as IsPaid'),
-                DB::raw('MAX(o.IsApproved) as IsApproved'),
-                DB::raw('MAX(o.IsAllotmentCancelled) as IsAllotmentCancelled')
-            ])
-            ->groupBy(
-                'o.FlatId',
-                'f.FlatNo'
-            )
-            ->orderBy('o.FlatId')
+                case 'rejected':
+                    $q->where('o.IsRejected', 1);
+                    break;
+
+                case 'cancelled':
+                    $q->where('o.IsAllotmentCancelled', 1);
+                    break;
+            }
+        });
+
+        $applicants = $query
+            ->orderByDesc('o.OwnerId')
             ->paginate(20)
-            ->appends($request->query());
+            ->withQueryString();
 
-
-        return view(
-            'mmgay.super-admin.assigned-flats-list',
-            compact('assignedFlats', 'totalAssigned', 'search')
-        );
-    }
-
-    public function paidBeneficiaries(Request $request)
-    {
-        $search = trim($request->input('search'));
-
-        $query = DB::table('OwnerMaster as o')
-            ->join('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId') // Dashboard Same
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1)
-            ->where('o.IsAllotmentCancelled', 0);
-
-        if ($search != '') {
-
-            $query->where(function ($q) use ($search) {
-
-                $q->where('o.OwnerName', 'LIKE', "{$search}%")
-                    ->orWhere('o.MobileNo', 'LIKE', "{$search}%")
-                    ->orWhere('o.RegistrationNo', 'LIKE', "{$search}%")
-                    ->orWhere('v.VillageName', 'LIKE', "{$search}%")
-                    ->orWhere('d.DistrictName', 'LIKE', "{$search}%")
-                    ->orWhere('f.FlatNo', 'LIKE', "{$search}%");
-
-            });
-
-        }
-
-        $totalPaid = (clone $query)->count();
-
-        $paidBeneficiaries = $query
-            ->select([
-                'o.OwnerId',
-                'o.OwnerName',
-                'o.FatherHusbandName',
-                'o.MobileNo',
-                'o.RegistrationNo',
-                'v.VillageName',
-                'd.DistrictName',
-                'f.FlatNo'
-            ])
-            ->orderBy('o.OwnerName')
-            ->paginate(20)
-            ->appends($request->query());
-
-        return view(
-            'mmgay.super-admin.paid-beneficiaries-list',
-            compact(
-                'paidBeneficiaries',
-                'search',
-                'totalPaid'
-            )
-        );
-    }
-
-    public function physicalPossessionDashboard()
-    {
-        $totalEligible = DB::table('mmgay_possession_applications')->count();
-        $schedulePending = DB::table('mmgay_possession_applications')->whereNull('meeting_slot')->count();
-
-        // Single execution group optimized query for multiple loops
-        $statusCounts = DB::table('mmgay_possession_applications')
-            ->selectRaw("
-                SUM(CASE WHEN physical_possession_status = 'Visit Scheduled' THEN 1 ELSE 0 END) as awaitingCitizen,
-                SUM(CASE WHEN physical_possession_status = 'Slot Selected' THEN 1 ELSE 0 END) as fieldVisitPending,
-                SUM(CASE WHEN physical_possession_status = 'Site Verified' THEN 1 ELSE 0 END) as ePossessionPending,
-                SUM(CASE WHEN physical_possession_status = 'Verified' THEN 1 ELSE 0 END) as verified
-            ")->first();
-
-        $awaitingCitizen = $statusCounts->awaitingCitizen ?? 0;
-        $fieldVisitPending = $statusCounts->fieldVisitPending ?? 0;
-        $ePossessionPending = $statusCounts->ePossessionPending ?? 0;
-        $verified = $statusCounts->verified ?? 0;
-
-        $recentApplications = DB::table('mmgay_possession_applications')->latest()->take(10)->get();
-
-        return view('mmgay.super-admin.physical-possession.dashboard', compact(
-            'totalEligible',
-            'schedulePending',
-            'awaitingCitizen',
-            'fieldVisitPending',
-            'ePossessionPending',
-            'verified',
-            'recentApplications'
-        ));
-    }
-
-    public function physicalPossessionView($secure_id)
-    {
-        $application = DB::table('mmgay_possession_applications as p')
-            ->leftJoin('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->select([
-                'p.*',
-                'o.OwnerName',
-                'o.FatherHusbandName',
-                'o.MobileNo',
-                'o.RegistrationNo',
-                'o.OwnerAddress',
-                'o.PPPId',
-                'o.Caste',
-                'o.Remarks',
-                'd.DistrictName',
-                'b.BlockName',
+        $villages = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->where('v.plots', '>', 0)
+            ->when($phase, fn($q) => $q->where('o.Phase', $phase))
+            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
+            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
+            ->select(
+                'v.VillageId',
                 'v.VillageName'
-            ])
-            ->where('p.secure_id', $secure_id)
-            ->first();
-
-        abort_if(!$application, 404);
-
-        $timeline = DB::table('mmgay_possession_status_logs')
-            ->where('application_id', $application->id)
-            ->orderBy('created_at')
+            )
+            ->distinct()
+            ->orderBy('v.VillageName')
             ->get();
 
-        return view('mmgay.super-admin.physical-possession.view', compact('application', 'timeline'));
-    }
-
-    public function totalRegistrationList(Request $request)
-    {
-        $search = trim($request->search);
-
-        $query = DB::table('registary');
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('SecondParty', 'like', "%{$search}%")
-                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
-                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
-                    ->orWhere('Village', 'like', "%{$search}%")
-                    ->orWhere('District', 'like', "%{$search}%")
-                    ->orWhere('TehsilName', 'like', "%{$search}%");
-            });
-        }
-
-        $registrations = $query
-            ->orderByDesc('RegistaryDate')
-            ->paginate(20)
-            ->withQueryString();
-
         return view(
-            'mmgay.super-admin.total-registration-list',
-            compact('registrations', 'search')
+            'mmgay.super-admin.applicants.index',
+            compact('applicants', 'villages')
         );
     }
 
-    public function matchedRegistrationList(Request $request)
+    private function applicantsQuery(Request $request)
     {
-        $search = trim($request->search);
+        $search = $request->search;
+        $phase = $request->phase;
+        $districtId = $request->district_id;
+        $blockId = $request->block_id;
+        $villageId = $request->village_id;
+        $status = $request->status;
 
-        $query = DB::table('registary')
-            ->whereIn('SecondPartyMobile', function ($q) {
-                $q->select('MobileNo')
-                    ->from('OwnerMaster')
-                    ->whereNotNull('MobileNo')
-                    ->distinct();
-            });
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->where('v.plots', '>', 0)
+            ->select(
+                'o.OwnerId',
+                'o.secure_id',
+                'o.OwnerName',
+                'o.Relation',
+                'o.FatherHusbandName',
+                'o.Gender',
+                'o.DistrictId',
+                'o.BlockId',
+                'o.VillageId',
+                'o.OwnerAddress',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Caste',
+                'o.MobileNo',
+                'o.CompanyId',
+                'o.Phase',
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
+                'o.Remarks',
+                'o.DCRemarks',
+                'o.CreatedDate',
+                'v.VillageName',
+                'f.FlatId',
+                'f.FlatNo',
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('SecondParty', 'like', "%{$search}%")
-                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
-                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
-                    ->orWhere('Village', 'like', "%{$search}%")
-                    ->orWhere('District', 'like', "%{$search}%")
-                    ->orWhere('TehsilName', 'like', "%{$search}%");
+                DB::raw("
+                    CASE
+                        WHEN o.IsAllotmentCancelled = 1
+                            THEN 'Cancelled'
+
+                        WHEN o.IsRejected = 1
+                            THEN 'Rejected'
+
+                        WHEN o.IsApproved = 1
+                            AND o.IsPaid = 1
+                            THEN 'Approved & Paid'
+
+                        WHEN o.IsApproved = 1
+                            AND (
+                                o.IsPaid = 0
+                                OR o.IsPaid IS NULL
+                            )
+                            THEN 'Approved & Unpaid'
+
+                        WHEN (
+                            o.IsApproved = 0
+                            OR o.IsApproved IS NULL
+                        )
+                            THEN 'Yet to be Approved'
+
+                        ELSE 'Allotted'
+                    END AS ApplicantStatus
+                ")
+            );
+
+        $query->when($phase, function ($q) use ($phase) {
+            $q->where('o.Phase', $phase);
+        });
+
+        $query->when($districtId, function ($q) use ($districtId) {
+            $q->where('o.DistrictId', $districtId);
+        });
+
+        $query->when($blockId, function ($q) use ($blockId) {
+            $q->where('o.BlockId', $blockId);
+        });
+
+        $query->when($villageId, function ($q) use ($villageId) {
+            $q->where('o.VillageId', $villageId);
+        });
+
+        $query->when($search, function ($q) use ($search) {
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where('o.OwnerName', 'like', "%{$search}%")
+                    ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                    ->orWhere('o.RegistrationNo', 'like', "%{$search}%")
+                    ->orWhere('o.PPPId', 'like', "%{$search}%")
+                    ->orWhere('f.FlatNo', 'like', "%{$search}%");
             });
+        });
+
+        $query->when($status, function ($q) use ($status) {
+            switch ($status) {
+                case 'approved_paid':
+                    $q->where('o.IsApproved', 1)
+                        ->where('o.IsPaid', 1);
+                    break;
+
+                case 'approved_unpaid':
+                    $q->where('o.IsApproved', 1)
+                        ->where(function ($subQuery) {
+                            $subQuery
+                                ->where('o.IsPaid', 0)
+                                ->orWhereNull('o.IsPaid');
+                        });
+                    break;
+
+                case 'pending':
+                    $q->where(function ($subQuery) {
+                        $subQuery
+                            ->where('o.IsApproved', 0)
+                            ->orWhereNull('o.IsApproved');
+                    });
+                    break;
+
+                case 'rejected':
+                    $q->where('o.IsRejected', 1);
+                    break;
+
+                case 'cancelled':
+                    $q->where('o.IsAllotmentCancelled', 1);
+                    break;
+            }
+        });
+
+        return $query;
+    }
+
+    public function applicantsExcel(Request $request)
+    {
+        $applicants = $this->applicantsQuery($request)
+            ->orderByDesc('o.OwnerId')
+            ->get();
+
+        $fileName = 'applicants-' . now()->format('Y-m-d-H-i-s') . '.csv';
+        $downloadToken = $request->download_token;
+
+        $response = response()->streamDownload(function () use ($applicants) {
+            $handle = fopen('php://output', 'w');
+
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'Sr. No.',
+                'Owner ID',
+                'Application No.',
+                'Applicant',
+                'Father / Husband',
+                'Mobile',
+                'PPP ID',
+                'Village',
+                'Phase',
+                'Flat ID',
+                'Flat No.',
+                'Status',
+            ]);
+
+            foreach ($applicants as $index => $applicant) {
+                fputcsv($handle, [
+                    $index + 1,
+                    $applicant->OwnerId,
+                    $applicant->RegistrationNo,
+                    $applicant->OwnerName,
+                    $applicant->FatherHusbandName,
+                    $applicant->MobileNo,
+                    $applicant->PPPId,
+                    $applicant->VillageName,
+                    $applicant->Phase,
+                    $applicant->FlatId,
+                    $applicant->FlatNo,
+                    $applicant->ApplicantStatus,
+                ]);
+            }
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+
+        if ($downloadToken) {
+            $response->headers->setCookie(
+                cookie(
+                    'download_token',
+                    $downloadToken,
+                    5,
+                    '/',
+                    null,
+                    false,
+                    false,
+                    false,
+                    'Lax'
+                )
+            );
         }
 
-        $registrations = $query
-            ->orderByDesc('RegistaryDate')
-            ->paginate(20)
+        return $response;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PDF Export
+    |--------------------------------------------------------------------------
+    */
+
+    public function applicantsPdf(Request $request)
+    {
+        $applicants = $this->applicantsQuery($request)
+            ->orderByDesc('o.OwnerId')
+            ->get();
+
+        $downloadToken = $request->download_token;
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.applicants.pdf',
+            compact('applicants')
+        )->setPaper('a4', 'landscape');
+
+        $response = $pdf->download(
+            'applicants-' . now()->format('Y-m-d-H-i-s') . '.pdf'
+        );
+
+        if ($downloadToken) {
+            $response->headers->setCookie(
+                cookie(
+                    'download_token',
+                    $downloadToken,
+                    5,
+                    '/',
+                    null,
+                    false,
+                    false,
+                    false,
+                    'Lax'
+                )
+            );
+        }
+
+        return $response;
+    }
+
+    public function allotmentReport(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Dropdown Data
+        |--------------------------------------------------------------------------
+        */
+
+        $phases = DB::table('OwnerMaster')
+            ->whereNotNull('Phase')
+            ->where('Phase', '!=', '')
+            ->select('Phase')
+            ->distinct()
+            ->orderBy('Phase')
+            ->pluck('Phase');
+
+        $districts = DB::table('DistrictMaster')
+            ->select('DistrictId', 'DistrictName')
+            ->orderBy('DistrictName')
+            ->get();
+
+        $blocks = DB::table('BlockMaster')
+            ->when($request->district_id, function ($query, $districtId) {
+                $query->where('DistrictId', $districtId);
+            })
+            ->select(
+                'BlockId',
+                'BlockName',
+                'DistrictId'
+            )
+            ->orderBy('BlockName')
+            ->get();
+
+        $villages = DB::table('VillageMaster')
+            ->where('plots', '>', 0)
+            ->when($request->district_id, function ($query, $districtId) {
+                $query->where('DistrictId', $districtId);
+            })
+            ->when($request->block_id, function ($query, $blockId) {
+                $query->where('BlockId', $blockId);
+            })
+            ->select(
+                'VillageId',
+                'VillageName',
+                'DistrictId',
+                'BlockId'
+            )
+            ->orderBy('VillageName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base Allotment Query
+        |--------------------------------------------------------------------------
+        */
+
+        $baseQuery = DB::table('OwnerMaster as o')
+            ->join(
+                'VillageMaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+            ->leftJoin(
+                'DistrictMaster as d',
+                'd.DistrictId',
+                '=',
+                'o.DistrictId'
+            )
+            ->leftJoin(
+                'BlockMaster as b',
+                'b.BlockId',
+                '=',
+                'o.BlockId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+            ->where('v.plots', '>', 0)
+            ->whereNotNull('o.FlatId')
+            ->where('o.FlatId', '>', 0);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Common Filters
+        |--------------------------------------------------------------------------
+        */
+
+        $baseQuery
+            ->when($request->filled('phase'), function ($query) use ($request) {
+                $query->where('o.Phase', $request->phase);
+            })
+            ->when($request->filled('district_id'), function ($query) use ($request) {
+                $query->where('o.DistrictId', $request->district_id);
+            })
+            ->when($request->filled('block_id'), function ($query) use ($request) {
+                $query->where('o.BlockId', $request->block_id);
+            })
+            ->when($request->filled('village_id'), function ($query) use ($request) {
+                $query->where('o.VillageId', $request->village_id);
+            })
+            ->when($request->filled('search'), function ($query) use ($request) {
+                $search = trim($request->search);
+
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery
+                        ->where('o.OwnerName', 'like', '%' . $search . '%')
+                        ->orWhere('o.RegistrationNo', 'like', '%' . $search . '%')
+                        ->orWhere('o.MobileNo', 'like', '%' . $search . '%')
+                        ->orWhere('o.PPPId', 'like', '%' . $search . '%')
+                        ->orWhere('o.FatherHusbandName', 'like', '%' . $search . '%')
+                        ->orWhere('f.FlatNo', 'like', '%' . $search . '%');
+                });
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Summary Counts
+        |--------------------------------------------------------------------------
+        */
+
+        $summary = (clone $baseQuery)
+            ->selectRaw("
+            COUNT(DISTINCT o.OwnerId) AS Total,
+
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(o.IsAllotmentCancelled, 0) = 0
+                    AND IFNULL(o.IsRejected, 0) = 0
+                    AND IFNULL(o.IsApproved, 0) = 1
+                    AND IFNULL(o.IsPaid, 0) = 1
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(o.IsAllotmentCancelled, 0) = 0
+                    AND IFNULL(o.IsRejected, 0) = 0
+                    AND IFNULL(o.IsApproved, 0) = 1
+                    AND IFNULL(o.IsPaid, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(o.IsAllotmentCancelled, 0) = 0
+                    AND IFNULL(o.IsRejected, 0) = 0
+                    AND IFNULL(o.IsApproved, 0) = 0
+                THEN o.OwnerId
+            END) AS PendingApproval,
+
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(o.IsAllotmentCancelled, 0) = 0
+                    AND IFNULL(o.IsRejected, 0) = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN IFNULL(o.IsAllotmentCancelled, 0) = 1
+                THEN o.OwnerId
+            END) AS Cancelled
+        ")
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+
+        $allotmentsQuery = clone $baseQuery;
+
+        switch ($request->status) {
+            case 'approved_paid':
+                $allotmentsQuery
+                    ->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsApproved, 0) = 1')
+                    ->whereRaw('IFNULL(o.IsPaid, 0) = 1');
+                break;
+
+            case 'approved_unpaid':
+                $allotmentsQuery
+                    ->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsApproved, 0) = 1')
+                    ->whereRaw('IFNULL(o.IsPaid, 0) = 0');
+                break;
+
+            case 'pending':
+                $allotmentsQuery
+                    ->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsApproved, 0) = 0');
+                break;
+
+            case 'rejected':
+                $allotmentsQuery
+                    ->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                    ->whereRaw('IFNULL(o.IsRejected, 0) = 1');
+                break;
+
+            case 'cancelled':
+                $allotmentsQuery
+                    ->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 1');
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allotment Records
+        |--------------------------------------------------------------------------
+        */
+
+        $allotments = $allotmentsQuery
+            ->select(
+                'o.OwnerId',
+                'o.RegistrationNo',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.PPPId',
+                'o.Phase',
+                'o.FlatId',
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsAllotmentCancelled',
+
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+
+                'f.FlatNo'
+            )
+            ->orderByDesc('o.OwnerId')
+            ->paginate(25)
             ->withQueryString();
 
         return view(
-            'mmgay.super-admin.matched-registration-list',
-            compact('registrations', 'search')
+            'mmgay.super-admin.allotment-report',
+            compact(
+                'allotments',
+                'summary',
+                'phases',
+                'districts',
+                'blocks',
+                'villages'
+            )
         );
     }
 
-    public function unmatchedRegistrationList(Request $request)
-    {
-        $search = trim($request->search);
-
-        $query = DB::table('registary')
-            ->whereNotIn('SecondPartyMobile', function ($q) {
-                $q->select('MobileNo')
-                    ->from('OwnerMaster')
-                    ->whereNotNull('MobileNo')
-                    ->distinct();
-            });
-
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('SecondParty', 'like', "%{$search}%")
-                    ->orWhere('SecondPartyMobile', 'like', "%{$search}%")
-                    ->orWhere('RegistaryNumber', 'like', "%{$search}%")
-                    ->orWhere('Village', 'like', "%{$search}%")
-                    ->orWhere('District', 'like', "%{$search}%")
-                    ->orWhere('TehsilName', 'like', "%{$search}%");
-            });
-        }
-
-        $registrations = $query
-            ->orderByDesc('RegistaryDate')
-            ->paginate(20)
-            ->withQueryString();
-
-        return view(
-            'mmgay.super-admin.unmatched-registration-list',
-            compact('registrations', 'search')
-        );
-    }
 }
