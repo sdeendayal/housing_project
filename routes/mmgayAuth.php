@@ -154,58 +154,68 @@ Route::prefix('super-admin')
         Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])
             ->name('admin.dashboard');
 
-        Route::get('/districts', [SuperAdminController::class, 'districtList'])
-            ->name('superadmin.districts');
+        Route::get('/dashboard/pdf', [SuperAdminController::class, 'dashboardPdf'])
+            ->name('admin.dashboard.pdf');
 
-        Route::get('/district/{id}', [SuperAdminController::class, 'districtDetail'])
-            ->name('superadmin.district.detail');
+        Route::get('/get-districts/{phase?}', [SuperAdminController::class, 'getDistricts'])
+            ->name('admin.getDistricts');
 
-        Route::get('/paid', [SuperAdminController::class, 'paidList'])
-            ->name('superadmin.paid');
+        Route::get('/get-blocks/{districtId}/{phase?}', [SuperAdminController::class, 'getBlocks'])
+            ->name('admin.getBlocks');
 
-        Route::get('/not-paid', [SuperAdminController::class, 'notPaidList'])
-            ->name('superadmin.notpaid');
+        Route::get('/get-villages/{blockId}/{phase?}', [SuperAdminController::class, 'getVillages'])
+            ->name('admin.getVillages');
 
-        Route::get('/super-admin/all-villages', [SuperAdminController::class, 'allVillagesList'])->name('superadmin.all-villages');
+        Route::get('/dashboard-data', [SuperAdminController::class, 'dashboardData'])
+            ->name('admin.dashboard.data');
 
-        Route::get('/super-admin/beneficiaries', [SuperAdminController::class, 'beneficiariesList'])->name('superadmin.beneficiaries.index');
+        Route::get('/super-admin/export/excel', [SuperAdminController::class, 'exportExcel'])->name('admin.export.excel');
+        Route::get('/super-admin/export/pdf', [SuperAdminController::class, 'exportPDF'])->name('admin.export.pdf');
 
-        Route::get('/super-admin/beneficiary-details/{id}', [SuperAdminController::class, 'getBeneficiaryFullDetails']);
+        // Badal kar ye kar dein:
+        Route::get('/district-report', [SuperAdminController::class, 'districtWiseReport'])
+            ->name('admin.district.report');
 
-        Route::get(
-            '/super-admin/allotments',
-            [SuperAdminController::class, 'allotmentList']
-        )->name('superadmin.allotment.index');
+        Route::get('/district-report/excel', [SuperAdminController::class, 'districtReportExcel'])
+            ->name('admin.district.report.excel');
 
-        Route::get('/allotment-details/{id}', [SuperAdminController::class, 'getAllotmentDetails'])
-            ->name('superadmin.allotment.details');
+        Route::get('/district-report/pdf', [SuperAdminController::class, 'districtReportPdf'])
+            ->name('admin.district.report.pdf');
 
-        Route::get('/super-admin/assigned-flats', [SuperAdminController::class, 'assignedFlatsList'])
-            ->name('superadmin.assigned.flats');
+        Route::get('/village-report', [SuperAdminController::class, 'villageWiseReport'])
+            ->name('admin.village.report');
 
-        // routes/web.php mein ise replace karein
-        Route::get('/super-admin/paid-beneficiaries', [SuperAdminController::class, 'paidBeneficiaries'])->name('superadmin.paid.beneficiaries');
+        Route::get('/village-report/excel', [SuperAdminController::class, 'villageReportExcel'])
+            ->name('admin.village.report.excel');
 
-        Route::get(
-            '/super-admin/total-registration',
-            [SuperAdminController::class, 'totalRegistrationList']
-        )->name('superadmin.total.registration');
+        Route::get('/village-report/pdf', [SuperAdminController::class, 'villageReportPdf'])
+            ->name('admin.village.report.pdf');
 
-        Route::get('/super-admin/matched-registration', [SuperAdminController::class, 'matchedRegistrationList'])
-            ->name('superadmin.matched.registration');
+        Route::get('/applicants', [SuperAdminController::class, 'applicants'])
+            ->name('superadmin.applicants.index');
 
-        Route::get('/super-admin/unmatched-registration', [SuperAdminController::class, 'unmatchedRegistrationList'])
-            ->name('superadmin.unmatched.registration');
+        Route::get('/applicants/export/excel', [
+            SuperAdminController::class,
+            'applicantsExcel'
+        ])->name('superadmin.applicants.excel');
 
-        Route::get('/physical-possession/dashboard', [SuperAdminController::class, 'physicalPossessionDashboard'])
-            ->name('superadmin.possession.dashboard');
+        Route::get('/applicants/export/pdf', [
+            SuperAdminController::class,
+            'applicantsPdf'
+        ])->name('superadmin.applicants.pdf');
 
-        Route::get(
-            '/physical-possession/view/{secure_id}',
-            [SuperAdminController::class, 'physicalPossessionView']
-        )->name('superadmin.possession.application.view');
+        Route::get('/allotment-report', [SuperAdminController::class, 'allotmentReport'])
+            ->name('admin.allotment.report');
+
+        Route::get('/allotment-report/excel', [SuperAdminController::class, 'exportAllotmentExcel'])
+            ->name('admin.allotment.export.excel');
+
+        Route::get('/allotment-report/pdf', [SuperAdminController::class, 'exportAllotmentPdf'])
+            ->name('admin.allotment.export.pdf');
+
+        Route::get('/registration', [SuperAdminController::class, 'registration'])
+            ->name('admin.registration');
 
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');
-
     });
