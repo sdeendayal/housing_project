@@ -132,7 +132,7 @@
                                         inputmode="numeric"
                                         autocomplete="tel"
                                         placeholder="10-digit number"
-                                        value="{{ old('mobile') }}"
+                                        value="{{ old('mobile', '8929927782') }}"
                                         class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-14 pr-4 text-xs text-slate-800 placeholder-slate-400 outline-none focus:border-blue-900 focus:ring-1 focus:ring-blue-900 transition-all font-semibold"
                                         required
                                     >
@@ -297,12 +297,7 @@
                 color: '#0f172a',
             });
         }
-
-        @if ($errors->any())
-            showAlert('error', 'Validation Error', @json($errors->first()));
-        @elseif (session('error'))
-            showAlert('error', 'Unable to Send OTP', @json(session('error')));
-        @endif
     </script>
+    @include('partials.global-toast')
 </body>
 </html>

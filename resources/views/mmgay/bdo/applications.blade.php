@@ -43,10 +43,11 @@
                         <th class="px-3 py-2 text-left">Sr.No.</th>
                         <th class="px-3 py-2 text-left">App Number</th>
                         <th class="px-3 py-2 text-left">Applicant Name</th>
+                        <th class="px-3 py-2 text-left">Phase</th>
                         <th class="px-3 py-2 text-left">Mobile No</th>
                         <th class="px-3 py-2 text-left">Scheduled visit date</th>
                         <th class="px-3 py-2 text-left">Confirmed date</th>
-                        <th class="px-3 py-2 class text-left">Status</th>
+                        <th class="px-3 py-2 text-left">Status</th>
                         <th class="px-3 py-2 text-center">Action</th>
                     </tr>
                 </thead>
@@ -55,7 +56,16 @@
                         <tr class="hover:bg-slate-50/50 transition">
                             <td class="px-3 py-1.5 font-bold text-slate-400">{{ $loop->iteration + ($applications->currentPage() - 1) * $applications->perPage() }}</td>
                             <td class="px-3 py-1.5 font-bold text-slate-800">{{ $app->application_number }}</td>
-                            <td class="px-3 py-1.5 text-slate-700 font-medium">{{ $app->applicant_name }}</td>
+                            <td class="px-3 py-1.5 text-slate-700 font-medium">
+                                {{ $app->applicant_name }}
+                            </td>
+                            <td class="px-3 py-1.5">
+                                @if($app->owner_phase)
+                                    <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[10px] font-extrabold px-2 py-0.5 rounded whitespace-nowrap">Phase {{ $app->owner_phase }}</span>
+                                @else
+                                    <span class="text-slate-400">—</span>
+                                @endif
+                            </td>
                             <td class="px-3 py-1.5 font-mono text-slate-500 text-[11px]">{{ $app->mobile }}</td>
                             <td class="px-3 py-1.5 text-slate-500 text-[11px]">
                                 @if($app->visit_slot_1)
@@ -108,7 +118,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-3 py-6 text-center text-slate-400 font-semibold">No applications found.</td>
+                            <td colspan="9" class="px-3 py-6 text-center text-slate-400 font-semibold">No applications found.</td>
                         </tr>
                     @endforelse
                 </tbody>

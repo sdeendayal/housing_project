@@ -20,6 +20,9 @@ return new class extends Migration
             $table->string('status')->nullable();
             $table->string('priority')->nullable();
             $table->string('category')->nullable();
+            $table->string('secure_id', 32)->nullable()->unique();
+            $table->string('dist_name')->nullable();
+            $table->unsignedBigInteger('dist_id')->nullable();
             $table->timestamps();
         });
     }

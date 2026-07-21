@@ -79,7 +79,7 @@ class RoleSeeder extends Seeder
             [
                 'name' => 'EWS Developer',
                 'slug' => 'ews_developer',
-                'dashboard_route' => null,
+                'dashboard_route' => 'ews.developer.dashboard',
                 'dashboard_path' => null,
             ],
         ];

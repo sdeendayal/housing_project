@@ -54,6 +54,20 @@
             <span class="material-symbols-outlined text-base">verified</span>
             <span class="font-label-md text-label-md text-xs">Verified / Completed</span>
         </a>
+
+        <!-- 7. Phase Analytics -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'phase_report') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.phase-report') }}">
+            <span class="material-symbols-outlined text-base">analytics</span>
+            <span class="font-label-md text-label-md text-xs">Phase Analytics</span>
+        </a>
+
+        <!-- 8. Site Development -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'site_development') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.site-development') }}">
+            <span class="material-symbols-outlined text-base">engineering</span>
+            <span class="font-label-md text-label-md text-xs">Site Development</span>
+        </a>
     </nav>
     <!-- Footer / Support -->
     <div class="mt-auto px-md pt-lg border-t border-outline-variant pb-md">

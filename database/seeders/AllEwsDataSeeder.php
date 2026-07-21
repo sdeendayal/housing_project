@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -58,6 +60,40 @@ class AllEwsDataSeeder extends Seeder
 
         $this->command->info("Seeding data into all_ews_data_1 table from 'org data'...");
 
+        // Ensure ews_districts table exists
+        if (!Schema::hasTable('ews_districts')) {
+            Schema::create('ews_districts', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
+        // Ensure all_ews_data_1 has the columns
+        if (!Schema::hasColumn('all_ews_data_1', 'secure_id')) {
+            Schema::table('all_ews_data_1', function (Blueprint $table) {
+                $table->string('secure_id', 32)->nullable()->unique();
+                $table->string('dist_name')->nullable();
+                $table->unsignedBigInteger('dist_id')->nullable();
+            });
+        }
+
+        // Fetch Sonipat ID from EWS master districts table
+        $masterDist = DB::table('ews_districts')->where('name', 'SONIPAT')->first();
+        $districtId = $masterDist ? $masterDist->id : 22;
+        $districtName = $masterDist ? $masterDist->name : 'SONIPAT';
+
+        // Ensure Sonipat is seeded in ews_districts and fetch the ID
+        $district = DB::table('ews_districts')->where('id', $districtId)->first();
+        if (!$district) {
+            DB::table('ews_districts')->insert([
+                'id' => $districtId,
+                'name' => $districtName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = [];
             for ($col = 1; $col <= $highestColumnIndex; $col++) {
@@ -79,6 +115,9 @@ class AllEwsDataSeeder extends Seeder
                 }
                 $rowInsert[$h] = $val;
             }
+            $rowInsert['secure_id'] = $data['secure_id'] ?? $data['secure_id'] ?? \Illuminate\Support\Str::random(32);
+            $rowInsert['dist_name'] = $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT';
+            $rowInsert['dist_id'] = $data['dist_id'] ?? $data['DistrictId'] ?? $districtId;
             $rowInsert['created_at'] = now();
             $rowInsert['updated_at'] = now();
 
