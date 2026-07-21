@@ -508,7 +508,7 @@ class MMGAYBdoPossessionController extends Controller
 
         $application->update([
             'possession_date' => $request->slot_date_1,
-            'meeting_slot' => $dateTime1->format('Y-m-d H:i:s') . ' | ' . $dateTime2->format('Y-m-d H:i:s') . ' | ' . $dateTime3->format('Y-m-d H:i:s'),
+            'meeting_slot' => $dateTime1->format('Y-m-d h:i A') . ' | ' . $dateTime2->format('Y-m-d h:i A') . ' | ' . $dateTime3->format('Y-m-d h:i A'),
             'citizen_visit_date' => $dateTime1,
             'visit_slot_1' => $dateTime1,
             'visit_slot_2' => $dateTime2,
