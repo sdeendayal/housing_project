@@ -231,27 +231,161 @@
                     </thead>
 
                     <tbody class="divide-y divide-gray-200">
-                        @forelse($report as $d)
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="p-3 font-semibold text-gray-700">{{ $d->DistrictName }}</td>
-                                <td class="text-center">{{ number_format($d->VillagesWithPlots) }}</td>
-                                <td class="text-center">{{ number_format($d->RegisteredBeneficiaries) }}</td>
-                                <td class="text-center font-semibold text-blue-600">
-                                    {{ number_format($d->AllottedBeneficiaries) }}</td>
-                                <td class="text-center text-green-600 font-semibold">{{ number_format($d->ApprovedPaid) }}
+                        @forelse ($report as $d)
+                            @php
+                                /*
+            |--------------------------------------------------------------------------
+            | Common filters
+            |--------------------------------------------------------------------------
+            */
+                                $commonFilters = array_filter([
+                                    'phase' => request('phase'),
+                                    'district_id' => $d->DistrictId,
+                                ]);
+
+                                /*
+            |--------------------------------------------------------------------------
+            | Report URLs
+            |--------------------------------------------------------------------------
+            */
+                                $districtUrl = route('admin.district.report', $commonFilters);
+
+                                $allottedUrl = route('admin.allotment.report', array_merge($commonFilters));
+
+                                $approvedPaidUrl = route(
+                                    'admin.allotment.report',
+                                    array_merge($commonFilters, [
+                                        'status' => 'approved_paid',
+                                    ]),
+                                );
+
+                                $approvedUnpaidUrl = route(
+                                    'admin.allotment.report',
+                                    array_merge($commonFilters, [
+                                        'status' => 'approved_unpaid',
+                                    ]),
+                                );
+
+                                $pendingUrl = route(
+                                    'admin.allotment.report',
+                                    array_merge($commonFilters, [
+                                        'status' => 'pending',
+                                    ]),
+                                );
+
+                                $rejectedUrl = route(
+                                    'admin.allotment.report',
+                                    array_merge($commonFilters, [
+                                        'status' => 'rejected',
+                                    ]),
+                                );
+
+                                $cancelledUrl = route(
+                                    'admin.allotment.report',
+                                    array_merge($commonFilters, [
+                                        'status' => 'cancelled',
+                                    ]),
+                                );
+                            @endphp
+
+                            <tr class="transition-colors hover:bg-blue-50/50">
+
+                                {{-- District --}}
+                                <td class="p-3">
+                                    <a href="{{ $districtUrl }}"
+                                        class="inline-flex items-center gap-2 font-semibold text-blue-700 hover:text-blue-900 hover:underline">
+
+                                        <span class="material-symbols-outlined text-[18px]">
+                                            location_on
+                                        </span>
+
+                                        {{ $d->DistrictName }}
+                                    </a>
                                 </td>
-                                <td class="text-center text-yellow-600 font-semibold">
-                                    {{ number_format($d->ApprovedUnpaid) }}</td>
-                                <td class="text-center text-orange-600 font-semibold">
-                                    {{ number_format($d->PendingApprovalPayment) }}</td>
-                                <td class="text-center text-red-600 font-semibold">{{ number_format($d->Rejected) }}</td>
-                                <td class="text-center text-gray-700 font-semibold">
-                                    {{ number_format($d->AllotmentCancelled) }}</td>
+
+                                {{-- Villages --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $districtUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
+
+                                        {{ number_format($d->VillagesWithPlots) }}
+                                    </a>
+                                </td>
+
+                                {{-- Applicants --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ route(
+                                        'superadmin.applicants.index',
+                                        array_merge($commonFilters, [
+                                            'status' => 'all',
+                                        ]),
+                                    ) }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-cyan-50 px-3 py-1.5 font-semibold text-cyan-700 transition hover:bg-cyan-100 hover:shadow-sm">
+
+                                        {{ number_format($d->RegisteredBeneficiaries) }}
+                                    </a>
+                                </td>
+
+                                {{-- Allotted --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $allottedUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-700 transition hover:bg-blue-100 hover:shadow-sm">
+
+                                        {{ number_format($d->AllottedBeneficiaries) }}
+                                    </a>
+                                </td>
+
+                                {{-- Approved & Paid --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $approvedPaidUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-green-50 px-3 py-1.5 font-semibold text-green-700 transition hover:bg-green-100 hover:shadow-sm">
+
+                                        {{ number_format($d->ApprovedPaid) }}
+                                    </a>
+                                </td>
+
+                                {{-- Approved & Unpaid --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $approvedUnpaidUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-yellow-50 px-3 py-1.5 font-semibold text-yellow-700 transition hover:bg-yellow-100 hover:shadow-sm">
+
+                                        {{ number_format($d->ApprovedUnpaid) }}
+                                    </a>
+                                </td>
+
+                                {{-- Yet to be Approved --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $pendingUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-orange-50 px-3 py-1.5 font-semibold text-orange-700 transition hover:bg-orange-100 hover:shadow-sm">
+
+                                        {{ number_format($d->PendingApprovalPayment) }}
+                                    </a>
+                                </td>
+
+                                {{-- Rejected --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $rejectedUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-red-50 px-3 py-1.5 font-semibold text-red-700 transition hover:bg-red-100 hover:shadow-sm">
+
+                                        {{ number_format($d->Rejected) }}
+                                    </a>
+                                </td>
+
+                                {{-- Cancelled --}}
+                                <td class="p-3 text-center">
+                                    <a href="{{ $cancelledUrl }}"
+                                        class="inline-flex min-w-12 items-center justify-center rounded-lg bg-slate-100 px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-200 hover:shadow-sm">
+
+                                        {{ number_format($d->AllotmentCancelled) }}
+                                    </a>
+                                </td>
                             </tr>
+
                         @empty
                             <tr>
-                                <td colspan="9" class="p-8 text-center text-gray-500">No records found for the selected
-                                    filters.</td>
+                                <td colspan="9" class="p-8 text-center text-gray-500">
+                                    No records found for the selected filters.
+                                </td>
                             </tr>
                         @endforelse
                     </tbody>

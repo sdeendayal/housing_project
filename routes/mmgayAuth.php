@@ -216,6 +216,12 @@ Route::prefix('super-admin')
         Route::get('/registration', [SuperAdminController::class, 'registration'])
             ->name('admin.registration');
 
+        Route::get('/registration/export/excel', [SuperAdminController::class, 'exportRegistrationExcel'])
+            ->name('admin.registration.export.excel');
+
+        Route::get('/registration/export/pdf', [SuperAdminController::class, 'exportRegistrationPdf'])
+            ->name('admin.registration.export.pdf');
+
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');
     });

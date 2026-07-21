@@ -37,6 +37,8 @@ return new class extends Migration
                 $table->integer('BlockId');
                 $table->integer('DistrictId');
                 $table->string('VillageName', 200);
+                $table->integer('plots');
+                $table->integer('phase');
 
                 $table->foreign('BlockId')->references('BlockId')->on('blockmaster');
                 $table->foreign('DistrictId')->references('DistrictId')->on('districtmaster');

@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\DistrictReportExport;
 use App\Exports\VillageReportExport;
 use App\Exports\AllotmentReportExport;
+use App\Exports\RegistrationReportExport;
 
 
 class SuperAdminController extends Controller
@@ -92,28 +93,51 @@ class SuperAdminController extends Controller
 
         // 3. Registration Stats (Duplicate Free)
 
-        $regBaseQuery = DB::table('registary as r')
+        $regBaseQuery = DB::table('dddnew1.registary as r')
             ->whereExists(function ($query) use ($phase, $districtId, $blockId, $villageId) {
-
                 $query->selectRaw(1)
                     ->from('OwnerMaster as o')
-                    ->whereColumn('o.MobileNo', 'r.SecondPartyMobile')
-                    ->when($phase, fn($q) => $q->where('o.Phase', $phase))
-                    ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
-                    ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
-                    ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId));
+                    ->whereColumn(
+                        'o.MobileNo',
+                        'r.SecondPartyMobile'
+                    )
+                    ->when(
+                        filled($phase),
+                        fn($q) => $q->where('o.Phase', $phase)
+                    )
+                    ->when(
+                        filled($districtId),
+                        fn($q) => $q->where(
+                            'o.DistrictId',
+                            $districtId
+                        )
+                    )
+                    ->when(
+                        filled($blockId),
+                        fn($q) => $q->where(
+                            'o.BlockId',
+                            $blockId
+                        )
+                    )
+                    ->when(
+                        filled($villageId),
+                        fn($q) => $q->where(
+                            'o.VillageId',
+                            $villageId
+                        )
+                    );
             });
 
-        $totalRegistration = (clone $regBaseQuery)
-            ->distinct('r.RegistaryNumber')
-            ->count('r.RegistaryNumber');
+        $totalRegistration = DB::table('dddnew1.registary')->count();
 
-        $matched = $totalRegistration;
+        $matched = (clone $regBaseQuery)->count();
+
+        $unMatched = $totalRegistration - $matched;
 
         $registration = (object) [
             'TotalRegistration' => $totalRegistration,
             'Matched' => $matched,
-            'UnMatched' => 0,
+            'UnMatched' => $unMatched,
         ];
 
         // Summary Object
@@ -354,92 +378,230 @@ class SuperAdminController extends Controller
         $phase = $request->phase;
         $districtId = $request->district_id;
 
-        $report = DB::table('DistrictMaster as d')
-            ->leftJoin('VillageMaster as v', function ($join) use ($phase) {
-                $join->on('d.DistrictId', '=', 'v.DistrictId')
-                    ->where('v.plots', '>', 0);
+        /*
+        |--------------------------------------------------------------------------
+        | Step 1: Owner data को पहले Village-wise aggregate करें
+        |--------------------------------------------------------------------------
+        */
+        $ownerStats = DB::table('OwnerMaster as o')
 
-                if ($phase) {
-                    $join->where('v.phase', $phase);
-                }
-            })
-            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
-                $join->on('v.VillageId', '=', 'o.VillageId');
-
-                if ($phase) {
-                    $join->where('o.Phase', $phase);
-                }
-            })
             ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
-            ->select('d.DistrictId', 'd.DistrictName')
-            ->selectRaw("
-        COUNT(DISTINCT v.VillageId) AS VillagesWithPlots,
 
-        COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL THEN o.OwnerId
-        END) AS AllottedBeneficiaries,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL
-             AND o.IsApproved = 1
-             AND o.IsPaid = 1
-             AND o.IsAllotmentCancelled = 0
-            THEN o.OwnerId
-        END) AS ApprovedPaid,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL
-             AND o.IsApproved = 1
-             AND o.IsPaid = 0
-             AND o.IsAllotmentCancelled = 0
-            THEN o.OwnerId
-        END) AS ApprovedUnpaid,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL
-             AND o.IsApproved = 0
-             AND o.IsPaid = 0
-             AND o.IsRejected = 0
-            THEN o.OwnerId
-        END) AS PendingApprovalPayment,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL
-             AND o.IsRejected = 1
-            THEN o.OwnerId
-        END) AS Rejected,
-
-        COUNT(DISTINCT CASE
-            WHEN f.FlatId IS NOT NULL
-             AND o.IsAllotmentCancelled = 1
-            THEN o.OwnerId
-        END) AS AllotmentCancelled
-    ")
-            ->when($districtId, function ($q) use ($districtId) {
-                $q->where('d.DistrictId', $districtId);
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('o.Phase', '=', $phase);
             })
-            ->groupBy('d.DistrictId', 'd.DistrictName')
+
+            ->select('o.VillageId')
+
+            ->selectRaw("
+            COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END) AS AllottedBeneficiaries,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.IsAllotmentCancelled = 0
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 0
+                    AND o.IsAllotmentCancelled = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 0
+                    AND o.IsPaid = 0
+                    AND o.IsRejected = 0
+                THEN o.OwnerId
+            END) AS PendingApprovalPayment,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END) AS AllotmentCancelled
+        ")
+
+            ->groupBy('o.VillageId');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Step 2: Village data को District-wise aggregate करें
+        |--------------------------------------------------------------------------
+        */
+        $districtStats = DB::table('VillageMaster as v')
+
+            ->leftJoinSub($ownerStats, 'os', function ($join) {
+                $join->on('v.VillageId', '=', 'os.VillageId');
+            })
+
+            ->where('v.plots', '>', 0)
+
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.phase', '=', $phase);
+            })
+
+            ->select('v.DistrictId')
+
+            ->selectRaw("
+            COUNT(DISTINCT v.VillageId) AS VillagesWithPlots,
+
+            COALESCE(
+                SUM(os.RegisteredBeneficiaries),
+                0
+            ) AS RegisteredBeneficiaries,
+
+            COALESCE(
+                SUM(os.AllottedBeneficiaries),
+                0
+            ) AS AllottedBeneficiaries,
+
+            COALESCE(
+                SUM(os.ApprovedPaid),
+                0
+            ) AS ApprovedPaid,
+
+            COALESCE(
+                SUM(os.ApprovedUnpaid),
+                0
+            ) AS ApprovedUnpaid,
+
+            COALESCE(
+                SUM(os.PendingApprovalPayment),
+                0
+            ) AS PendingApprovalPayment,
+
+            COALESCE(
+                SUM(os.Rejected),
+                0
+            ) AS Rejected,
+
+            COALESCE(
+                SUM(os.AllotmentCancelled),
+                0
+            ) AS AllotmentCancelled
+        ")
+
+            ->groupBy('v.DistrictId');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Step 3: District Master के साथ final report
+        |--------------------------------------------------------------------------
+        */
+        $report = DB::table('DistrictMaster as d')
+
+            ->leftJoinSub($districtStats, 'ds', function ($join) {
+                $join->on('d.DistrictId', '=', 'ds.DistrictId');
+            })
+
+            ->when($districtId, function ($query) use ($districtId) {
+                $query->where('d.DistrictId', '=', $districtId);
+            })
+
+            ->select([
+                'd.DistrictId',
+                'd.DistrictName',
+            ])
+
+            ->selectRaw("
+            COALESCE(ds.VillagesWithPlots, 0)
+                AS VillagesWithPlots,
+
+            COALESCE(ds.RegisteredBeneficiaries, 0)
+                AS RegisteredBeneficiaries,
+
+            COALESCE(ds.AllottedBeneficiaries, 0)
+                AS AllottedBeneficiaries,
+
+            COALESCE(ds.ApprovedPaid, 0)
+                AS ApprovedPaid,
+
+            COALESCE(ds.ApprovedUnpaid, 0)
+                AS ApprovedUnpaid,
+
+            COALESCE(ds.PendingApprovalPayment, 0)
+                AS PendingApprovalPayment,
+
+            COALESCE(ds.Rejected, 0)
+                AS Rejected,
+
+            COALESCE(ds.AllotmentCancelled, 0)
+                AS AllotmentCancelled
+        ")
+
             ->orderBy('d.DistrictName')
+
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Gross totals
+        |--------------------------------------------------------------------------
+        | District records कम होते हैं, इसलिए collection sum fast रहेगा।
+        */
         $grossTotal = (object) [
-            'VillagesWithPlots' => $report->sum('VillagesWithPlots'),
-            'RegisteredBeneficiaries' => $report->sum('RegisteredBeneficiaries'),
-            'AllottedBeneficiaries' => $report->sum('AllottedBeneficiaries'),
-            'ApprovedPaid' => $report->sum('ApprovedPaid'),
-            'ApprovedUnpaid' => $report->sum('ApprovedUnpaid'),
-            'PendingApprovalPayment' => $report->sum('PendingApprovalPayment'),
-            'Rejected' => $report->sum('Rejected'),
-            'AllotmentCancelled' => $report->sum('AllotmentCancelled'),
+            'VillagesWithPlots' =>
+                $report->sum('VillagesWithPlots'),
+
+            'RegisteredBeneficiaries' =>
+                $report->sum('RegisteredBeneficiaries'),
+
+            'AllottedBeneficiaries' =>
+                $report->sum('AllottedBeneficiaries'),
+
+            'ApprovedPaid' =>
+                $report->sum('ApprovedPaid'),
+
+            'ApprovedUnpaid' =>
+                $report->sum('ApprovedUnpaid'),
+
+            'PendingApprovalPayment' =>
+                $report->sum('PendingApprovalPayment'),
+
+            'Rejected' =>
+                $report->sum('Rejected'),
+
+            'AllotmentCancelled' =>
+                $report->sum('AllotmentCancelled'),
         ];
 
+        /*
+        |--------------------------------------------------------------------------
+        | District dropdown
+        |--------------------------------------------------------------------------
+        */
         $districts = DB::table('DistrictMaster')
             ->orderBy('DistrictName')
-            ->get(['DistrictId', 'DistrictName']);
+            ->get([
+                'DistrictId',
+                'DistrictName',
+            ]);
 
-        return view('mmgay.super-admin.district-report', compact('report', 'grossTotal', 'districts'));
+        return view(
+            'mmgay.super-admin.district-report',
+            compact(
+                'report',
+                'grossTotal',
+                'districts'
+            )
+        );
     }
 
     public function districtReportPdf(Request $request)
@@ -623,7 +785,12 @@ class SuperAdminController extends Controller
         $phase = $request->phase;
         $villageId = $request->village_id;
 
-        $report = DB::table('VillageMaster as v')
+        /*
+        |--------------------------------------------------------------------------
+        | Main grouped query
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = DB::table('VillageMaster as v')
 
             ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
                 $join->on('v.VillageId', '=', 'o.VillageId');
@@ -633,32 +800,24 @@ class SuperAdminController extends Controller
                 }
             })
 
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
 
-            // Sirf wahi villages jinke plots 0 se zyada hain
             ->where('v.plots', '>', 0)
 
-            // Phase filter
             ->when($phase, function ($query) use ($phase) {
                 $query->where('v.phase', '=', $phase);
             })
 
-            // Village filter
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('v.VillageId', '=', $villageId);
             })
 
-            ->select(
+            ->select([
                 'v.VillageId',
                 'v.VillageName',
                 'v.phase as Phase',
-                'v.plots as TotalPlots'
-            )
+                'v.plots as TotalPlots',
+            ])
 
             ->selectRaw("
             COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
@@ -706,54 +865,83 @@ class SuperAdminController extends Controller
             END) AS AllotmentCancelled
         ")
 
-            ->groupBy(
+            ->groupBy([
                 'v.VillageId',
                 'v.VillageName',
                 'v.phase',
-                'v.plots'
-            )
+                'v.plots',
+            ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | Fast pagination count
+        |--------------------------------------------------------------------------
+        | Laravel को grouped query की expensive count query चलाने से रोकता है।
+        */
+        $totalVillages = DB::table('VillageMaster as v')
+            ->where('v.plots', '>', 0)
+
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.phase', '=', $phase);
+            })
+
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', '=', $villageId);
+            })
+
+            ->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gross totals directly from database
+        |--------------------------------------------------------------------------
+        | पूरी collection PHP memory में load नहीं होगी।
+        */
+        $grossTotal = DB::query()
+            ->fromSub(clone $baseQuery, 'village_report')
+            ->selectRaw("
+            COUNT(*) AS TotalVillages,
+            COALESCE(SUM(TotalPlots), 0) AS TotalPlots,
+            COALESCE(SUM(RegisteredBeneficiaries), 0) AS RegisteredBeneficiaries,
+            COALESCE(SUM(AllottedBeneficiaries), 0) AS AllottedBeneficiaries,
+            COALESCE(SUM(ApprovedPaid), 0) AS ApprovedPaid,
+            COALESCE(SUM(ApprovedUnpaid), 0) AS ApprovedUnpaid,
+            COALESCE(SUM(PendingApprovalPayment), 0) AS PendingApprovalPayment,
+            COALESCE(SUM(Rejected), 0) AS Rejected,
+            COALESCE(SUM(AllotmentCancelled), 0) AS AllotmentCancelled
+        ")
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | 50 records per page
+        |--------------------------------------------------------------------------
+        */
+        $report = (clone $baseQuery)
             ->orderBy('v.VillageName')
+            ->paginate(
+                perPage: 50,
+                columns: ['*'],
+                pageName: 'page',
+                page: null,
+                total: $totalVillages
+            )
+            ->withQueryString();
 
-            ->get();
-
-        $grossTotal = (object) [
-            'TotalVillages' => $report->count(),
-
-            'TotalPlots' => $report->sum('TotalPlots'),
-
-            'RegisteredBeneficiaries' =>
-                $report->sum('RegisteredBeneficiaries'),
-
-            'AllottedBeneficiaries' =>
-                $report->sum('AllottedBeneficiaries'),
-
-            'ApprovedPaid' =>
-                $report->sum('ApprovedPaid'),
-
-            'ApprovedUnpaid' =>
-                $report->sum('ApprovedUnpaid'),
-
-            'PendingApprovalPayment' =>
-                $report->sum('PendingApprovalPayment'),
-
-            'Rejected' =>
-                $report->sum('Rejected'),
-
-            'AllotmentCancelled' =>
-                $report->sum('AllotmentCancelled'),
-        ];
-
-        // Dropdown me sirf plots > 0 wale villages
+        /*
+        |--------------------------------------------------------------------------
+        | Village dropdown
+        |--------------------------------------------------------------------------
+        */
         $villages = DB::table('VillageMaster as v')
             ->where('v.plots', '>', 0)
 
-            // Phase select hone par us phase ke villages hi dikhaye
             ->when($phase, function ($query) use ($phase) {
                 $query->where('v.phase', '=', $phase);
             })
 
             ->orderBy('v.VillageName')
+
             ->get([
                 'v.VillageId',
                 'v.VillageName',
@@ -1775,43 +1963,313 @@ class SuperAdminController extends Controller
 
     public function registration(Request $request)
     {
-        $ownerMobileSubQuery = DB::table('OwnerMaster')
-            ->selectRaw('MobileNo, MIN(OwnerId) as OwnerId')
-            ->whereNotNull('MobileNo')
-            ->where('MobileNo', '!=', '')
-            ->groupBy('MobileNo');
+        $phase = $request->input('phase');
+        $districtId = $request->input('district_id');
+        $blockId = $request->input('block_id');
+        $villageId = $request->input('village_id');
+        $search = trim((string) $request->input('search'));
+        $type = $request->input('type', 'all');
 
-        $registrationsQuery = DB::table('dddnew1.registary as r')
-            ->joinSub($ownerMobileSubQuery, 'matched_owner', function ($join) {
-                $join->on(
-                    'matched_owner.MobileNo',
-                    '=',
-                    'r.SecondPartyMobile'
-                );
+        $allowedTypes = [
+            'all',
+            'unique_registry',
+            'duplicate_registry',
+            'blank_registry',
+            'matched',
+            'unmatched',
+            'unique_matched_mobile',
+            'repeated_matched_mobile',
+        ];
+
+        if (!in_array($type, $allowedTypes, true)) {
+            $type = 'all';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Global registry counts
+        |--------------------------------------------------------------------------
+        | These counts do not change with dashboard filters or search.
+        */
+
+        $totalRegistrations = DB::table('dddnew1.registary')->count();
+
+        $blankRegistryNumbers = DB::table('dddnew1.registary as r')
+            ->where(function ($query) {
+                $query
+                    ->whereNull('r.RegistaryNumber')
+                    ->orWhereRaw("TRIM(r.RegistaryNumber) = ''");
             })
-            ->join('OwnerMaster as o', function ($join) {
-                $join->on('o.OwnerId', '=', 'matched_owner.OwnerId');
-            })
+            ->count();
+
+        $uniqueRegistrations = DB::table('dddnew1.registary as r')
+            ->whereNotNull('r.RegistaryNumber')
+            ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+            ->distinct()
+            ->count('r.RegistaryNumber');
+
+        $duplicateRegistrations = max(
+            0,
+            $totalRegistrations
+            - $uniqueRegistrations
+            - $blankRegistryNumbers
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Global matched rows
+        |--------------------------------------------------------------------------
+        | EXISTS prevents duplicate OwnerMaster mobile rows from increasing count.
+        */
+
+        $globalMatchedQuery = DB::table('dddnew1.registary as r')
             ->whereNotNull('r.SecondPartyMobile')
-            ->where('r.SecondPartyMobile', '!=', '');
-
-        $registrationsQuery
-            ->when($request->filled('search'), function ($query) use ($request) {
-                $search = trim($request->search);
-
-                $query->where(function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where('r.SecondPartyMobile', $search)
-                        ->orWhere('r.RegistaryNumber', $search)
-                        ->orWhere('r.Token', $search)
-                        ->orWhere('r.SecondParty', 'like', '%' . $search . '%')
-                        ->orWhere('r.FirstParty', 'like', '%' . $search . '%')
-                        ->orWhere('o.OwnerName', 'like', '%' . $search . '%')
-                        ->orWhere('o.RegistrationNo', $search);
-                });
+            ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
+            ->whereExists(function ($query) {
+                $query
+                    ->selectRaw('1')
+                    ->from('OwnerMaster as o')
+                    ->whereNotNull('o.MobileNo')
+                    ->whereRaw("TRIM(o.MobileNo) != ''")
+                    ->whereColumn(
+                        'o.MobileNo',
+                        'r.SecondPartyMobile'
+                    );
             });
 
-        $totalRegistrations = (clone $registrationsQuery)->count();
+        $matchedRegistrations = (clone $globalMatchedQuery)->count();
+
+        $unmatchedRegistrations = max(
+            0,
+            $totalRegistrations - $matchedRegistrations
+        );
+
+        $uniqueMatchedMobiles = (clone $globalMatchedQuery)
+            ->distinct()
+            ->count('r.SecondPartyMobile');
+
+        $repeatedMatchedMobileRows = max(
+            0,
+            $matchedRegistrations - $uniqueMatchedMobiles
+        );
+
+        $uniqueMatchedRegistrations = (clone $globalMatchedQuery)
+            ->whereNotNull('r.RegistaryNumber')
+            ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+            ->distinct()
+            ->count('r.RegistaryNumber');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registry ranked subquery
+        |--------------------------------------------------------------------------
+        | MySQL 8+ required because ROW_NUMBER() and COUNT() OVER() are used.
+        */
+
+        $registryRankedSubQuery = DB::table('dddnew1.registary as rs')
+            ->select(
+                'rs.District',
+                'rs.TehsilName',
+                'rs.Village',
+                'rs.Token',
+                'rs.Khewat',
+                'rs.FirstParty',
+                'rs.TotalArea',
+                'rs.Bhag',
+                'rs.TransferArea',
+                'rs.SecondParty',
+                'rs.SecondPartyMobile',
+                'rs.RegistaryNumber',
+                'rs.RegistaryDate'
+            )
+            ->selectRaw("
+            ROW_NUMBER() OVER (
+                PARTITION BY NULLIF(TRIM(rs.RegistaryNumber), '')
+                ORDER BY
+                    rs.RegistaryDate DESC,
+                    rs.Token DESC
+            ) AS registry_row_number
+        ")
+            ->selectRaw("
+            COUNT(*) OVER (
+                PARTITION BY NULLIF(TRIM(rs.RegistaryNumber), '')
+            ) AS registry_group_count
+        ")
+            ->selectRaw("
+            ROW_NUMBER() OVER (
+                PARTITION BY NULLIF(TRIM(rs.SecondPartyMobile), '')
+                ORDER BY
+                    rs.RegistaryDate DESC,
+                    rs.Token DESC
+            ) AS mobile_row_number
+        ")
+            ->selectRaw("
+            COUNT(*) OVER (
+                PARTITION BY NULLIF(TRIM(rs.SecondPartyMobile), '')
+            ) AS mobile_group_count
+        ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Owner mobile subquery
+        |--------------------------------------------------------------------------
+        | One OwnerId per mobile.
+        | Dashboard filters are applied before selecting minimum OwnerId.
+        */
+
+        $ownerMobileSubQuery = DB::table('OwnerMaster as om')
+            ->selectRaw('om.MobileNo, MIN(om.OwnerId) AS OwnerId')
+            ->whereNotNull('om.MobileNo')
+            ->whereRaw("TRIM(om.MobileNo) != ''")
+            ->when(filled($phase), function ($query) use ($phase) {
+                $query->where('om.Phase', $phase);
+            })
+            ->when(filled($districtId), function ($query) use ($districtId) {
+                $query->where('om.DistrictId', $districtId);
+            })
+            ->when(filled($blockId), function ($query) use ($blockId) {
+                $query->where('om.BlockId', $blockId);
+            })
+            ->when(filled($villageId), function ($query) use ($villageId) {
+                $query->where('om.VillageId', $villageId);
+            })
+            ->groupBy('om.MobileNo');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Listing query
+        |--------------------------------------------------------------------------
+        | LEFT JOIN is required so unmatched and blank records can also be shown.
+        */
+
+        $registrationsQuery = DB::query()
+            ->fromSub($registryRankedSubQuery, 'r')
+            ->leftJoinSub(
+                $ownerMobileSubQuery,
+                'matched_owner',
+                function ($join) {
+                    $join->on(
+                        'matched_owner.MobileNo',
+                        '=',
+                        'r.SecondPartyMobile'
+                    );
+                }
+            )
+            ->leftJoin(
+                'OwnerMaster as o',
+                'o.OwnerId',
+                '=',
+                'matched_owner.OwnerId'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Card type filter
+        |--------------------------------------------------------------------------
+        */
+
+        switch ($type) {
+            case 'all':
+                // Show all physical registry rows.
+                break;
+
+            case 'unique_registry':
+                $registrationsQuery
+                    ->whereNotNull('r.RegistaryNumber')
+                    ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+                    ->where('r.registry_row_number', 1);
+                break;
+
+            case 'duplicate_registry':
+                $registrationsQuery
+                    ->whereNotNull('r.RegistaryNumber')
+                    ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+                    ->where('r.registry_group_count', '>', 1)
+                    ->where('r.registry_row_number', '>', 1);
+                break;
+
+            case 'blank_registry':
+                $registrationsQuery
+                    ->where(function ($query) {
+                        $query
+                            ->whereNull('r.RegistaryNumber')
+                            ->orWhereRaw("TRIM(r.RegistaryNumber) = ''");
+                    });
+                break;
+
+            case 'unmatched':
+                $registrationsQuery
+                    ->whereNull('matched_owner.OwnerId');
+                break;
+
+            case 'unique_matched_mobile':
+                $registrationsQuery
+                    ->whereNotNull('matched_owner.OwnerId')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
+                    ->where('r.mobile_row_number', 1);
+                break;
+
+            case 'repeated_matched_mobile':
+                $registrationsQuery
+                    ->whereNotNull('matched_owner.OwnerId')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
+                    ->where('r.mobile_row_number', '>', 1);
+                break;
+
+            case 'matched':
+            default:
+                $registrationsQuery
+                    ->whereNotNull('matched_owner.OwnerId');
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($search !== '') {
+            $registrationsQuery->where(function ($query) use ($search) {
+                $query
+                    ->where('r.SecondPartyMobile', $search)
+                    ->orWhere('r.RegistaryNumber', $search)
+                    ->orWhere('r.Token', $search)
+                    ->orWhere(
+                        'r.SecondParty',
+                        'like',
+                        '%' . $search . '%'
+                    )
+                    ->orWhere(
+                        'r.FirstParty',
+                        'like',
+                        '%' . $search . '%'
+                    )
+                    ->orWhere(
+                        'o.OwnerName',
+                        'like',
+                        '%' . $search . '%'
+                    )
+                    ->orWhere('o.RegistrationNo', $search);
+            });
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filtered result count
+        |--------------------------------------------------------------------------
+        */
+
+        $filteredRegistrations = (clone $registrationsQuery)->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Paginated records
+        |--------------------------------------------------------------------------
+        */
 
         $registrations = $registrationsQuery
             ->select(
@@ -1828,6 +2286,10 @@ class SuperAdminController extends Controller
                 'r.SecondPartyMobile',
                 'r.RegistaryNumber',
                 'r.RegistaryDate',
+                'r.registry_row_number',
+                'r.registry_group_count',
+                'r.mobile_row_number',
+                'r.mobile_group_count',
 
                 'o.OwnerId',
                 'o.RegistrationNo',
@@ -1837,9 +2299,13 @@ class SuperAdminController extends Controller
                 'o.PPPId',
                 'o.MemberId',
                 'o.Caste',
-                'o.Phase'
+                'o.Phase',
+                'o.DistrictId',
+                'o.BlockId',
+                'o.VillageId'
             )
             ->orderByDesc('r.RegistaryDate')
+            ->orderByDesc('r.Token')
             ->paginate(25)
             ->withQueryString();
 
@@ -1847,8 +2313,287 @@ class SuperAdminController extends Controller
             'mmgay.super-admin.registration',
             compact(
                 'registrations',
-                'totalRegistrations'
+                'type',
+                'totalRegistrations',
+                'uniqueRegistrations',
+                'duplicateRegistrations',
+                'blankRegistryNumbers',
+                'matchedRegistrations',
+                'unmatchedRegistrations',
+                'uniqueMatchedMobiles',
+                'repeatedMatchedMobileRows',
+                'uniqueMatchedRegistrations',
+                'filteredRegistrations'
             )
+        );
+    }
+
+    public function exportRegistrationExcel(Request $request)
+    {
+        $type = $request->input('type', 'all');
+
+        $allowedTypes = [
+            'all',
+            'unique_registry',
+            'duplicate_registry',
+            'blank_registry',
+            'matched',
+            'unmatched',
+            'unique_matched_mobile',
+            'repeated_matched_mobile',
+        ];
+
+        if (!in_array($type, $allowedTypes, true)) {
+            $type = 'all';
+        }
+
+        $filters = [
+            'type' => $type,
+            'phase' => $request->input('phase'),
+            'district_id' => $request->input('district_id'),
+            'block_id' => $request->input('block_id'),
+            'village_id' => $request->input('village_id'),
+            'search' => $request->input('search'),
+        ];
+
+        $fileName = 'registry-' .
+            $type . '-' .
+            now()->format('Y-m-d-H-i-s') .
+            '.xlsx';
+
+
+
+        return Excel::download(
+            new RegistrationReportExport($filters),
+            $fileName
+        );
+    }
+
+    public function exportRegistrationPdf(Request $request)
+    {
+        $registrations = $this->getRegistrationExportQuery($request)
+            ->orderByDesc('r.RegistaryDate')
+            ->get();
+
+        $typeLabels = [
+            'all' => 'All Registry Records',
+            'unique_registry' => 'Unique Registry Records',
+            'duplicate_registry' => 'Duplicate Registry Records',
+            'blank_registry' => 'Records with Missing Registry Numbers',
+            'matched' => 'Matched Registry Records',
+            'unmatched' => 'Unmatched Registry Records',
+            'unique_matched_mobile' => 'Unique Matched Mobile Records',
+            'repeated_matched_mobile' => 'Repeated Matched-Mobile Records',
+        ];
+
+        $type = $request->input('type', 'matched');
+        $reportTitle = $typeLabels[$type] ?? 'Registry Report';
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.exports.registration-pdf',
+            compact(
+                'registrations',
+                'reportTitle'
+            )
+        )->setPaper('a4', 'landscape');
+
+        return $pdf->download(
+            'registry-report-' . now()->format('Y-m-d-H-i-s') . '.pdf'
+        );
+    }
+
+    private function getRegistrationExportQuery(Request $request)
+    {
+        $phase = $request->input('phase');
+        $districtId = $request->input('district_id');
+        $blockId = $request->input('block_id');
+        $villageId = $request->input('village_id');
+        $search = trim((string) $request->input('search'));
+        $type = $request->input('type', 'matched');
+
+        $allowedTypes = [
+            'all',
+            'unique_registry',
+            'duplicate_registry',
+            'blank_registry',
+            'matched',
+            'unmatched',
+            'unique_matched_mobile',
+            'repeated_matched_mobile',
+        ];
+
+        if (!in_array($type, $allowedTypes, true)) {
+            $type = 'matched';
+        }
+
+        $registryRankedSubQuery = DB::table('dddnew1.registary as rs')
+            ->select(
+                'rs.District',
+                'rs.TehsilName',
+                'rs.Village',
+                'rs.Token',
+                'rs.Khewat',
+                'rs.FirstParty',
+                'rs.TotalArea',
+                'rs.Bhag',
+                'rs.TransferArea',
+                'rs.SecondParty',
+                'rs.SecondPartyMobile',
+                'rs.RegistaryNumber',
+                'rs.RegistaryDate'
+            )
+            ->selectRaw("
+            ROW_NUMBER() OVER (
+                PARTITION BY NULLIF(TRIM(rs.RegistaryNumber), '')
+                ORDER BY rs.RegistaryDate DESC, rs.Token DESC
+            ) AS registry_row_number
+        ")
+            ->selectRaw("
+            COUNT(*) OVER (
+                PARTITION BY NULLIF(TRIM(rs.RegistaryNumber), '')
+            ) AS registry_group_count
+        ")
+            ->selectRaw("
+            ROW_NUMBER() OVER (
+                PARTITION BY NULLIF(TRIM(rs.SecondPartyMobile), '')
+                ORDER BY rs.RegistaryDate DESC, rs.Token DESC
+            ) AS mobile_row_number
+        ")
+            ->selectRaw("
+            COUNT(*) OVER (
+                PARTITION BY NULLIF(TRIM(rs.SecondPartyMobile), '')
+            ) AS mobile_group_count
+        ");
+
+        $ownerMobileSubQuery = DB::table('OwnerMaster as om')
+            ->selectRaw('om.MobileNo, MIN(om.OwnerId) AS OwnerId')
+            ->whereNotNull('om.MobileNo')
+            ->whereRaw("TRIM(om.MobileNo) != ''")
+            ->when(filled($phase), function ($query) use ($phase) {
+                $query->where('om.Phase', $phase);
+            })
+            ->when(filled($districtId), function ($query) use ($districtId) {
+                $query->where('om.DistrictId', $districtId);
+            })
+            ->when(filled($blockId), function ($query) use ($blockId) {
+                $query->where('om.BlockId', $blockId);
+            })
+            ->when(filled($villageId), function ($query) use ($villageId) {
+                $query->where('om.VillageId', $villageId);
+            })
+            ->groupBy('om.MobileNo');
+
+        $query = DB::query()
+            ->fromSub($registryRankedSubQuery, 'r')
+            ->leftJoinSub(
+                $ownerMobileSubQuery,
+                'matched_owner',
+                function ($join) {
+                    $join->on(
+                        'matched_owner.MobileNo',
+                        '=',
+                        'r.SecondPartyMobile'
+                    );
+                }
+            )
+            ->leftJoin(
+                'OwnerMaster as o',
+                'o.OwnerId',
+                '=',
+                'matched_owner.OwnerId'
+            );
+
+        switch ($type) {
+            case 'all':
+                break;
+
+            case 'unique_registry':
+                $query
+                    ->whereNotNull('r.RegistaryNumber')
+                    ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+                    ->where('r.registry_row_number', 1);
+                break;
+
+            case 'duplicate_registry':
+                $query
+                    ->whereNotNull('r.RegistaryNumber')
+                    ->whereRaw("TRIM(r.RegistaryNumber) != ''")
+                    ->where('r.registry_group_count', '>', 1)
+                    ->where('r.registry_row_number', '>', 1);
+                break;
+
+            case 'blank_registry':
+                $query->where(function ($subQuery) {
+                    $subQuery
+                        ->whereNull('r.RegistaryNumber')
+                        ->orWhereRaw("TRIM(r.RegistaryNumber) = ''");
+                });
+                break;
+
+            case 'unmatched':
+                $query->whereNull('matched_owner.OwnerId');
+                break;
+
+            case 'unique_matched_mobile':
+                $query
+                    ->whereNotNull('matched_owner.OwnerId')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
+                    ->where('r.mobile_row_number', 1);
+                break;
+
+            case 'repeated_matched_mobile':
+                $query
+                    ->whereNotNull('matched_owner.OwnerId')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
+                    ->where('r.mobile_row_number', '>', 1);
+                break;
+
+            case 'matched':
+            default:
+                $query->whereNotNull('matched_owner.OwnerId');
+                break;
+        }
+
+        if ($search !== '') {
+            $query->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where('r.SecondPartyMobile', $search)
+                    ->orWhere('r.RegistaryNumber', $search)
+                    ->orWhere('r.Token', $search)
+                    ->orWhere('r.SecondParty', 'like', '%' . $search . '%')
+                    ->orWhere('r.FirstParty', 'like', '%' . $search . '%')
+                    ->orWhere('o.OwnerName', 'like', '%' . $search . '%')
+                    ->orWhere('o.RegistrationNo', $search);
+            });
+        }
+
+        return $query->select(
+            'r.District',
+            'r.TehsilName',
+            'r.Village',
+            'r.Token',
+            'r.Khewat',
+            'r.FirstParty',
+            'r.TotalArea',
+            'r.Bhag',
+            'r.TransferArea',
+            'r.SecondParty',
+            'r.SecondPartyMobile',
+            'r.RegistaryNumber',
+            'r.RegistaryDate',
+            'r.registry_group_count',
+            'r.mobile_group_count',
+            'o.OwnerId',
+            'o.RegistrationNo',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.PPPId',
+            'o.MemberId',
+            'o.Caste',
+            'o.Phase'
         );
     }
 
