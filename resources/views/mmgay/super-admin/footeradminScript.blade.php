@@ -598,6 +598,176 @@
     });
 </script>
 
+{{-- Alloment Pdf Or Excal Code  Start --}}
+
+<script>
+    (() => {
+        // Script layout/page me do baar load ho to dobara bind na ho.
+        if (window.allotmentDownloadHandlerInitialized) {
+            return;
+        }
+
+        window.allotmentDownloadHandlerInitialized = true;
+
+        document.addEventListener('click', async function(event) {
+            const button = event.target.closest('.allotment-download-btn');
+
+            if (!button) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+
+            // Double-click / duplicate execution guard
+            if (button.dataset.downloading === 'true') {
+                return;
+            }
+
+            const modal = document.getElementById('downloadModal');
+            const message = document.getElementById('downloadMessage');
+            const buttons = document.querySelectorAll('.allotment-download-btn');
+
+            const url = button.dataset.downloadUrl;
+            const type = button.dataset.downloadType;
+
+            if (!url || !type) {
+                alert('Download URL ya file type nahi mila.');
+                return;
+            }
+
+            button.dataset.downloading = 'true';
+
+            function showLoader() {
+                message.textContent = type === 'excel' ?
+                    'Excel file prepare ho rahi hai...' :
+                    'PDF file prepare ho rahi hai...';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                buttons.forEach(function(item) {
+                    item.disabled = true;
+                    item.classList.add(
+                        'cursor-not-allowed',
+                        'opacity-60'
+                    );
+                });
+            }
+
+            function hideLoader() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                buttons.forEach(function(item) {
+                    item.disabled = false;
+                    item.classList.remove(
+                        'cursor-not-allowed',
+                        'opacity-60'
+                    );
+                });
+            }
+
+            function getFileName(response) {
+                const disposition =
+                    response.headers.get('Content-Disposition');
+
+                if (disposition) {
+                    const utfMatch = disposition.match(
+                        /filename\*=UTF-8''([^;]+)/i
+                    );
+
+                    if (utfMatch?.[1]) {
+                        return decodeURIComponent(utfMatch[1]);
+                    }
+
+                    const normalMatch = disposition.match(
+                        /filename="?([^";]+)"?/i
+                    );
+
+                    if (normalMatch?.[1]) {
+                        return normalMatch[1].trim();
+                    }
+                }
+
+                return type === 'excel' ?
+                    `allotment-report-${Date.now()}.xlsx` :
+                    `allotment-report-${Date.now()}.pdf`;
+            }
+
+            showLoader();
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    credentials: 'same-origin',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) {
+                    let errorMessage =
+                        'Report generate nahi ho saka.';
+
+                    try {
+                        const errorData = await response.json();
+                        errorMessage =
+                            errorData.message || errorMessage;
+                    } catch (_) {
+                        // Response JSON nahi hai.
+                    }
+
+                    throw new Error(errorMessage);
+                }
+
+                const blob = await response.blob();
+
+                if (blob.size === 0) {
+                    throw new Error('Generated file empty hai.');
+                }
+
+                const objectUrl = URL.createObjectURL(blob);
+                const downloadLink = document.createElement('a');
+
+                downloadLink.href = objectUrl;
+                downloadLink.download = getFileName(response);
+                downloadLink.hidden = true;
+
+                document.body.appendChild(downloadLink);
+
+                // Sirf ek baar browser download trigger
+                downloadLink.dispatchEvent(
+                    new MouseEvent('click', {
+                        bubbles: false,
+                        cancelable: true,
+                        view: window
+                    })
+                );
+
+                downloadLink.remove();
+
+                setTimeout(function() {
+                    URL.revokeObjectURL(objectUrl);
+                }, 2000);
+
+            } catch (error) {
+                console.error(error);
+
+                alert(
+                    error.message ||
+                    'Download ke dauran error aa gaya.'
+                );
+            } finally {
+                button.dataset.downloading = 'false';
+                hideLoader();
+            }
+        }, true);
+    })();
+</script>
+
+{{-- Alloment Pdf Or Excal Code  End --}}
+
 <script>
     $(function() {
 

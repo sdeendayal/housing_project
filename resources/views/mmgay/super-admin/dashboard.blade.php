@@ -267,7 +267,7 @@
                         </h3>
                     </div>
 
-                </a>    
+                </a>
 
             </div>
 
@@ -293,129 +293,190 @@
             <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 p-5">
 
                 {{-- Gross Total --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-blue-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route('admin.allotment.report', request()->only(['phase', 'district_id', 'block_id', 'village_id'])) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-blue-50 to-white border rounded-xl hover:shadow-md hover:border-blue-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">Total</p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->GrossTotal) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Total</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->GrossTotal) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Approved Paid --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route(
+                    'admin.allotment.report',
+                    array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'approved_paid']),
+                ) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
-                            <circle cx="12" cy="12" r="9" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-green-50 to-white border rounded-xl hover:shadow-md hover:border-green-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+                                <circle cx="12" cy="12" r="9" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Approved &amp; Paid
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->ApprovedPaid) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Approved & Paid</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->ApprovedPaid) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Approved Unpaid --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-yellow-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route(
+                    'admin.allotment.report',
+                    array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'approved_unpaid']),
+                ) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <rect x="3" y="6" width="18" height="12" rx="2" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 12h.01" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-yellow-50 to-white border rounded-xl hover:shadow-md hover:border-yellow-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-yellow-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="6" width="18" height="12" rx="2" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 12h.01" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Approved &amp; Unpaid
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->ApprovedUnpaid) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Approved & Unpaid</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->ApprovedUnpaid) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Pending --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-orange-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route(
+                    'admin.allotment.report',
+                    array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'pending']),
+                ) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-orange-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-orange-50 to-white border rounded-xl hover:shadow-md hover:border-orange-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-orange-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 7v5l3 3" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Yet to be Approved
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->PendingApprovalPayment) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Yet to be Approved</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->PendingApprovalPayment) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Rejected --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-red-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route(
+                    'admin.allotment.report',
+                    array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'rejected']),
+                ) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-red-50 to-white border rounded-xl hover:shadow-md hover:border-red-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 9l-6 6M9 9l6 6" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Rejected
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->Rejected) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Rejected</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->Rejected) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
                 {{-- Cancelled --}}
-                <div
-                    class="flex items-center p-4 bg-gradient-to-r from-gray-50 to-white border rounded-xl hover:shadow-md transition">
+                <a href="{{ route(
+                    'admin.allotment.report',
+                    array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'cancelled']),
+                ) }}"
+                    class="block">
 
-                    <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="9" />
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 16l8-8" />
-                        </svg>
+                    <div
+                        class="flex items-center p-4 bg-gradient-to-r from-gray-50 to-white border rounded-xl hover:shadow-md hover:border-gray-300 transition cursor-pointer">
+
+                        <div class="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center mr-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-gray-700" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="9" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 16l8-8" />
+                            </svg>
+                        </div>
+
+                        <div>
+                            <p class="text-xs uppercase text-gray-500">
+                                Cancelled
+                            </p>
+
+                            <h3 class="text-2xl font-bold text-gray-800">
+                                {{ number_format($summary->AllotmentCancelled) }}
+                            </h3>
+                        </div>
+
                     </div>
 
-                    <div>
-                        <p class="text-xs uppercase text-gray-500">Cancelled</p>
-                        <h3 class="text-2xl font-bold text-gray-800">
-                            {{ number_format($summary->AllotmentCancelled) }}
-                        </h3>
-                    </div>
-
-                </div>
+                </a>
 
             </div>
 
@@ -443,7 +504,8 @@
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-5">
 
                 {{-- Total Registration --}}
-                <a href="#" class="block">
+                <a href="{{ route('admin.registration', request()->only(['phase', 'district_id', 'block_id', 'village_id'])) }}"
+                    class="block">
 
                     <div
                         class="flex items-center p-4 bg-gradient-to-r from-violet-50 to-white border rounded-xl hover:shadow-md hover:-translate-y-1 transition cursor-pointer">

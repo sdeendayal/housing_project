@@ -8,22 +8,52 @@
 
         {{-- Page Header --}}
         <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
+                {{-- Heading --}}
                 <div>
-                    <h1 class="text-2xl font-bold text-slate-800">
+                    <h1 class="text-2xl font-bold tracking-tight text-slate-800">
                         Allotment Report
                     </h1>
 
                     <p class="mt-1 text-sm text-slate-500">
-                        View and filter allotment records status-wise.
+                        View, search and export allotment records with filters.
                     </p>
                 </div>
 
-                <a href="{{ route('admin.allotment.report') }}"
-                    class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                    Reset All Filters
-                </a>
+                {{-- Action Buttons --}}
+                <div class="flex flex-wrap items-center gap-3">
+
+                    {{-- Excel --}}
+                    <button type="button"
+                        class="allotment-download-btn inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
+                        data-download-type="excel"
+                        data-download-url="{{ route(
+                            'admin.allotment.export.excel',
+                            request()->only(['phase', 'district_id', 'block_id', 'village_id', 'search', 'status']),
+                        ) }}">
+                        <span class="material-symbols-outlined text-[20px]">
+                            table_view
+                        </span>
+
+                        Download Excel
+                    </button>
+
+                    <button type="button"
+                        class="allotment-download-btn inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
+                        data-download-type="pdf"
+                        data-download-url="{{ route(
+                            'admin.allotment.export.pdf',
+                            request()->only(['phase', 'district_id', 'block_id', 'village_id', 'search', 'status']),
+                        ) }}">
+                        <span class="material-symbols-outlined text-[20px]">
+                            picture_as_pdf
+                        </span>
+
+                        Download PDF
+                    </button>
+
+                </div>
 
             </div>
         </div>
@@ -130,7 +160,12 @@
                     </button>
 
                     <a href="{{ route('admin.allotment.report') }}"
-                        class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+
+                        <span class="material-symbols-outlined text-[20px]">
+                            restart_alt
+                        </span>
+
                         Reset
                     </a>
 
@@ -305,7 +340,6 @@
                     <tbody class="divide-y divide-slate-100">
 
                         @forelse ($allotments as $allotment)
-
                             @php
                                 if ((int) $allotment->IsAllotmentCancelled === 1) {
                                     $statusText = 'Cancelled';
@@ -406,12 +440,47 @@
 
             @if ($allotments->hasPages())
                 <div class="border-t border-slate-200 px-5 py-4">
-                   {{ $allotments->onEachSide(1)->links('pagination::tailwind') }}
+                    {{ $allotments->onEachSide(1)->links('pagination::tailwind') }}
                 </div>
             @endif
 
         </div>
 
     </main>
+    <div id="downloadModal"
+        class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 px-4 backdrop-blur-sm">
 
+        <div class="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-2xl">
+
+            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+                <svg class="h-9 w-9 animate-spin text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                        stroke-width="4">
+                    </circle>
+
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
+                    </path>
+                </svg>
+            </div>
+
+            <h3 class="mt-5 text-lg font-bold text-slate-800">
+                Report Generate Ho Rahi Hai
+            </h3>
+
+            <p id="downloadMessage" class="mt-2 text-sm text-slate-500">
+                Kripya wait karein...
+            </p>
+
+            <div class="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div class="h-full w-2/3 animate-pulse rounded-full bg-blue-600"></div>
+            </div>
+
+            <p class="mt-4 text-xs text-slate-400">
+                Download complete hone tak page close na karein.
+            </p>
+
+        </div>
+    </div>
 @endsection

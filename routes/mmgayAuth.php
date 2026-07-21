@@ -207,6 +207,15 @@ Route::prefix('super-admin')
         Route::get('/allotment-report', [SuperAdminController::class, 'allotmentReport'])
             ->name('admin.allotment.report');
 
+        Route::get('/allotment-report/excel', [SuperAdminController::class, 'exportAllotmentExcel'])
+            ->name('admin.allotment.export.excel');
+
+        Route::get('/allotment-report/pdf', [SuperAdminController::class, 'exportAllotmentPdf'])
+            ->name('admin.allotment.export.pdf');
+
+        Route::get('/registration', [SuperAdminController::class, 'registration'])
+            ->name('admin.registration');
+
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');
     });
