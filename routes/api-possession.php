@@ -75,7 +75,7 @@ Route::prefix('possession')->group(function () {
     Route::post('/department/login/resend-otp', [PpOfficerAuthApiController::class, 'resendOtp']);
     
     // Authenticated Department Officer APIs
-    Route::middleware(['auth:api', 'role:district_officer'])->prefix('officer')->group(function () {
+    Route::middleware(['auth:sanctum', 'role:district_officer'])->prefix('officer')->group(function () {
         Route::post('/logout', [PpOfficerAuthApiController::class, 'logout']);
         
         Route::get('/dashboard', [PpOfficerApiController::class, 'dashboard']);
