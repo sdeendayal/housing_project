@@ -79,12 +79,11 @@
     <!-- Footer / Support -->
     <div class="mt-auto px-md pt-lg border-t border-outline-variant pb-md">
         <div class="mb-4 px-2">
-            <p class="text-xs text-slate-400 font-bold">Block Profile</p>
-            <p class="text-xs font-bold text-[#0058bc] uppercase mt-1">
-                {{ Auth::user()->block_name ?? 'ALL BLOCKS' }}
-                @if(Auth::user()->district_name)
-                    ({{ Auth::user()->district_name }})
-                @endif
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Location</p>
+            <p class="text-[11px] font-bold text-slate-700 uppercase mt-1.5">
+                Dist: <span class="text-primary font-extrabold">{{ Auth::user()->district_name ?? 'N/A' }}</span> 
+                <span class="text-slate-300 mx-1.5">|</span> 
+                Block: <span class="text-primary font-extrabold">{{ Auth::user()->block_name ?? 'ALL' }}</span>
             </p>
         </div>
         <form action="{{ route('mmgay.bdo.logout') }}" method="POST">

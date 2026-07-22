@@ -230,7 +230,7 @@ class MMGAYBdoPossessionController extends Controller
                 'o.MemberId',
                 'o.OwnerAddress'
             )
-            ->paginate(10)
+            ->paginate(50)
             ->withQueryString();
         }
 
@@ -304,7 +304,7 @@ class MMGAYBdoPossessionController extends Controller
             'ppa.application_number',
             'ppa.created_at as app_created_at',
             DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as physical_possession_status")
-        )->paginate(25)->withQueryString();
+        )->paginate(50)->withQueryString();
 
         $activeMenu = 'schedule_pending';
         return view('mmgay.bdo.eligibility', compact('applications', 'search', 'bdo', 'activeMenu'));
@@ -574,7 +574,7 @@ class MMGAYBdoPossessionController extends Controller
                   ->orWhere('mmgay_possession_applications.application_number', 'like', "%{$search}%");
             });
         }
-        $applications = $query->latest('mmgay_possession_applications.created_at')->paginate(25)->withQueryString();
+        $applications = $query->latest('mmgay_possession_applications.created_at')->paginate(50)->withQueryString();
 
         $activeMenu = '';
         if ($status === 'Visit Scheduled') {

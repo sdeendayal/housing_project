@@ -208,7 +208,7 @@
 
                 <!-- Pagination Links -->
                 <div class="mt-4 pt-3 border-t border-slate-100 shrink-0">
-                    {{ $beneficiaries->links('pagination::tailwind') }}
+                    {{ $beneficiaries->links('partials.compact-pagination') }}
                 </div>
             @endif
         </div>

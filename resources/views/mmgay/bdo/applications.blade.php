@@ -127,7 +127,7 @@
 
         <!-- Pagination -->
         <div class="mt-4">
-            {{ $applications->links('pagination::tailwind') }}
+            {{ $applications->links('partials.compact-pagination') }}
         </div>
     </div>
 </main>

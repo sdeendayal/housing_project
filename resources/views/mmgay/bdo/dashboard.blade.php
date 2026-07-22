@@ -295,8 +295,8 @@
                 </div>
 
                 <!-- Pagination Links -->
-                <div class="mt-4 pt-3 border-t border-slate-100 shrink-0 font-bold">
-                    {{ $beneficiaries->links('pagination::tailwind') }}
+                <div class="mt-4 pt-3 border-t border-slate-100 shrink-0">
+                    {{ $beneficiaries->links('partials.compact-pagination') }}
                 </div>
             @endif
         </div>

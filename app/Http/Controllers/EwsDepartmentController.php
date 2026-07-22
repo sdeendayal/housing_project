@@ -63,7 +63,7 @@ class EwsDepartmentController extends Controller
     {
         $user = Auth::user();
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->orderBy('name')->get();
+        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
         
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -146,7 +146,7 @@ class EwsDepartmentController extends Controller
         $user = Auth::user();
         $type = $request->input('type', 'all');
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->orderBy('name')->get();
+        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
 
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
