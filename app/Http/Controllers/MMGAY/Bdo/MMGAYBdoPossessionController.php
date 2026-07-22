@@ -335,6 +335,10 @@ class MMGAYBdoPossessionController extends Controller
             abort(403, 'Unauthorized access to beneficiary in another block.');
         }
 
+        if ($check = $this->restrictBySiteDevelopment($owner)) {
+            return $check;
+        }
+
         if (!\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
             abort(400, 'Physical Possession is only available for beneficiaries verified under HFA land registration.');
         }
@@ -423,6 +427,16 @@ class MMGAYBdoPossessionController extends Controller
 
         if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
+        }
+
+        $owner = DB::table('ownermaster as o')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.OwnerId', $application->owner_id)
+            ->select('o.*', 'v.VillageName')
+            ->first();
+
+        if ($check = $this->restrictBySiteDevelopment($owner)) {
+            return $check;
         }
 
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
@@ -613,6 +627,11 @@ class MMGAYBdoPossessionController extends Controller
             ->where('o.OwnerId', $application->owner_id)
             ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
             ->first();
+
+        if ($check = $this->restrictBySiteDevelopment($owner)) {
+            return $check;
+        }
+
         $logs = MmgayPossessionStatusLog::where('application_id', $application->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -640,6 +659,16 @@ class MMGAYBdoPossessionController extends Controller
 
         if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             abort(403, 'Unauthorized.');
+        }
+
+        $owner = DB::table('ownermaster as o')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.OwnerId', $application->owner_id)
+            ->select('o.*', 'v.VillageName')
+            ->first();
+
+        if ($check = $this->restrictBySiteDevelopment($owner)) {
+            return $check;
         }
 
         $currentStatus = $application->physical_possession_status;
@@ -1312,5 +1341,25 @@ class MMGAYBdoPossessionController extends Controller
         $user->save();
 
         return redirect()->back()->with('success', 'Password updated successfully.');
+    }
+
+    /**
+     * Helper to restrict BDO actions if Site Development is not complete.
+     */
+    private function restrictBySiteDevelopment($owner)
+    {
+        if (!$owner) {
+            return null;
+        }
+
+        $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
+            ->where('village_id', $owner->VillageId)
+            ->first();
+
+        if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
+            return redirect()->back()->with('error', 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के लिए Site Development का विवरण और फोटो अपलोड करें।');
+        }
+
+        return null;
     }
 }
