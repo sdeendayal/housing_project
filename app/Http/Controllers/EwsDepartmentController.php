@@ -351,7 +351,27 @@ class EwsDepartmentController extends Controller
             $query->where('dist_id', $districtId);
         }
 
-        return DataTables::of($query)
+        $datatables = DataTables::of($query);
+
+        if ($type === 'ppt_members' || $type === 'not_in_survey') {
+            $datatables->filterColumn('application_number', function($query, $keyword) {
+                $query->where('ppt_members.familyID', 'like', "%{$keyword}%");
+            });
+            $datatables->filterColumn('full_name', function($query, $keyword) {
+                $query->where('ppt_members.fullName', 'like', "%{$keyword}%");
+            });
+            $datatables->filterColumn('aadhar_no', function($query, $keyword) {
+                $query->where('ppt_members.aadhaarNo', 'like', "%{$keyword}%");
+            });
+            $datatables->filterColumn('mobile_number', function($query, $keyword) {
+                $query->where('ppt_members.mobileNo', 'like', "%{$keyword}%");
+            });
+            $datatables->filterColumn('dist_name', function($query, $keyword) {
+                $query->where('ppt_members.district', 'like', "%{$keyword}%");
+            });
+        }
+
+        return $datatables
             ->addIndexColumn()
             ->addColumn('actions', function ($row) {
                 $secId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
