@@ -1273,4 +1273,44 @@ class MMGAYBdoPossessionController extends Controller
         return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId])
             ->with('success', 'Site Development details updated successfully.');
     }
+
+    /**
+     * Show BDO user profile details and password change option.
+     */
+    public function profile(Request $request)
+    {
+        $bdo = Auth::user();
+        $activeMenu = 'profile';
+        return view('mmgay.bdo.profile', compact('bdo', 'activeMenu'));
+    }
+
+    /**
+     * Handle password change request for BDO officer.
+     */
+    public function changePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required',
+            'new_password' => 'required|string|min:6|different:current_password|confirmed',
+        ], [
+            'new_password.different' => 'The new password must be different from current password.',
+            'new_password.confirmed' => 'The new password confirmation does not match.',
+        ]);
+
+        $bdo = Auth::user();
+
+        if (!\Illuminate\Support\Facades\Hash::check($request->current_password, $bdo->password)) {
+            return redirect()->back()->with('error', 'Your current password does not match our records.');
+        }
+
+        // Update password in database
+        $bdo->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        
+        // Save using Eloquent to update DB
+        $user = \App\Models\User::find($bdo->id);
+        $user->password = $bdo->password;
+        $user->save();
+
+        return redirect()->back()->with('success', 'Password updated successfully.');
+    }
 }

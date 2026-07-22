@@ -68,6 +68,13 @@
             <span class="material-symbols-outlined text-base">engineering</span>
             <span class="font-label-md text-label-md text-xs">Site Development</span>
         </a>
+
+        <!-- 9. Profile -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'profile') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.profile') }}">
+            <span class="material-symbols-outlined text-base">account_circle</span>
+            <span class="font-label-md text-label-md text-xs">Profile</span>
+        </a>
     </nav>
     <!-- Footer / Support -->
     <div class="mt-auto px-md pt-lg border-t border-outline-variant pb-md">
@@ -98,14 +105,14 @@
         <span class="text-xs text-slate-500 font-medium">Mukhyamantri Gramin Awas Yojana</span>
     </div>
     <div class="flex items-center gap-md">
-        <div class="flex items-center gap-sm pl-md">
-            <div class="text-right">
+        <a href="{{ route('mmgay.bdo.profile') }}" class="flex items-center gap-sm pl-md hover:opacity-80 transition-all duration-200">
+            <div class="text-right border-r pr-3 border-outline-variant mr-1">
                 <p class="text-body-md font-body-md font-bold text-on-surface">{{ Auth::user()->name }}</p>
                 <p class="text-[10px] text-on-surface-variant font-semibold">BDPO Officer</p>
             </div>
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 shadow-sm">
                 {{ substr(Auth::user()->name, 0, 2) }}
             </div>
-        </div>
+        </a>
     </div>
 </header>

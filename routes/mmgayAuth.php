@@ -140,6 +140,8 @@ Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->na
     Route::get('/download-certificate/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadCertificate'])->name('download-certificate');
     Route::get('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentForm'])->name('site-development');
     Route::post('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentSave'])->name('site-development.save');
+    Route::get('/profile', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'profile'])->name('profile');
+    Route::post('/profile/change-password', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'changePassword'])->name('profile.change-password');
 });
 
 // Villager Possession Routes
