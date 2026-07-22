@@ -60,6 +60,15 @@
                         <span class="text-[9px] font-mono opacity-80">{{ number_format($registeredCount) }}</span>
                     @endif
                 </a>
+                <a href="{{ route('ews.department.list', ['type' => 'not_in_survey', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'not_in_survey') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">link_off</span>
+                        <span>Rejected in survey app</span>
+                    </div>
+                    @if(isset($notInSurveyCount))
+                        <span class="text-[9px] font-mono opacity-80">{{ number_format($notInSurveyCount) }}</span>
+                    @endif
+                </a>
             </div>
 
             <!-- Group 2: Eligibility Rejections -->

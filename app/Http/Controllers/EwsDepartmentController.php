@@ -122,11 +122,13 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
+        $notInSurveyCount = $totalRegistrationCount - $registeredCount;
 
         return view('ews.department.dashboard', compact(
             'user', 
             'totalRegistrationCount',
             'registeredCount', 
+            'notInSurveyCount',
             'allottedCount', 
             'pendingCount', 
             'rejectedPppCount', 
@@ -210,12 +212,14 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
+        $notInSurveyCount = $totalRegistrationCount - $registeredCount;
 
         return view('ews.department.list', compact(
             'user', 
             'type',
             'totalRegistrationCount',
             'registeredCount', 
+            'notInSurveyCount',
             'allottedCount', 
             'pendingCount', 
             'rejectedPppCount', 
@@ -253,6 +257,25 @@ class EwsDepartmentController extends Controller
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'ppt_members' as type"),
                     DB::raw("'Total registration' as status"),
+                    'district as dist_name',
+                    'district_id as dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('district_id', $districtId));
+        } elseif ($type === 'not_in_survey') {
+            $query = DB::table('ppt_members')
+                ->whereNotIn('familyID', function($q) {
+                    $q->select('application_number')->from('all_ews_data_1')->whereNotNull('application_number');
+                })
+                ->select(
+                    'id as secure_id',
+                    'id',
+                    'familyID as application_number',
+                    'fullName as full_name',
+                    'aadhaarNo as aadhar_no',
+                    'mobileNo as mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'not_in_survey' as type"),
+                    DB::raw("'Not in survey' as status"),
                     'district as dist_name',
                     'district_id as dist_id'
                 )

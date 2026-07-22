@@ -183,7 +183,7 @@
                                 @if($type === 'allotted')
                                     <th>Flat Number</th>
                                 @endif
-                                @if($type !== 'ppt_members')
+                                @if($type !== 'ppt_members' && $type !== 'not_in_survey')
                                     <th>Status</th>
                                 @endif
                                 <th style="text-align: right; width: 15%;">Action</th>
@@ -209,6 +209,7 @@
             let titleText = 'All Beneficiaries List';
             if (currentType === 'ppt_members') titleText = 'Total registration List';
             if (currentType === 'registered') titleText = 'Verify in survey app List';
+            if (currentType === 'not_in_survey') titleText = 'Rejected in survey app List';
             if (currentType === 'allotted') titleText = 'Allotted Beneficiaries List';
             if (currentType === 'pending') titleText = 'Waiting Beneficiaries List';
             if (currentType === 'rejected_ppp') titleText = 'PPP Exclusion (Rejected) List';
@@ -234,7 +235,7 @@
                 columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
             }
 
-            if (currentType !== 'ppt_members') {
+            if (currentType !== 'ppt_members' && currentType !== 'not_in_survey') {
                 columnsConfig.push(
                     { 
                         data: 'status', 

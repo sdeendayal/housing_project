@@ -88,36 +88,42 @@
                     <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Registered Applications & Eligibility Filters</h3>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
-                    <!-- Total registration -->
-                    <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition whitespace-nowrap">Total registration</span>
-                                <h2 class="text-2xl font-black text-blue-600 font-mono mt-1">{{ number_format($totalRegistrationCount) }}</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <!-- Total Registration & Survey App Verification -->
+                    <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
+                        <div>
+                            <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId]) }}" class="flex justify-between items-start cursor-pointer group/header">
+                                <div>
+                                    <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover/header:text-blue-600 transition">Total Registration</span>
+                                    <h2 class="text-2xl font-black text-blue-600 font-mono mt-1 group-hover/header:text-blue-700 transition">{{ number_format($totalRegistrationCount) }}</h2>
+                                </div>
+                                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover/header:bg-blue-600 group-hover/header:text-white transition"><span class="material-symbols-outlined text-sm">groups</span></span>
+                            </a>
+                            
+                            <div class="space-y-1 text-xs font-bold text-slate-700 mt-2 pt-2 border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-blue-50/80 transition cursor-pointer group">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                                        <span class="text-slate-655 group-hover:text-blue-800">Verify in survey app:</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-blue-700 font-extrabold font-mono">{{ number_format($registeredCount) }}</span>
+                                        <span class="text-slate-300 group-hover:text-blue-700 transition flex items-center"><span class="material-symbols-outlined text-[13px]">visibility</span></span>
+                                    </div>
+                                </a>
+                                <a href="{{ route('ews.department.list', ['type' => 'not_in_survey', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                                        <span class="text-slate-655 group-hover:text-rose-800">Rejected in survey app:</span>
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="text-rose-700 font-extrabold font-mono">{{ number_format($notInSurveyCount) }}</span>
+                                        <span class="text-slate-300 group-hover:text-rose-700 transition flex items-center"><span class="material-symbols-outlined text-[13px]">visibility</span></span>
+                                    </div>
+                                </a>
                             </div>
-                            <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">groups</span></span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-blue-600 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
-                            <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-                        </div>
-                    </a>
-
-                    <!-- Total Registered -->
-                    <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition whitespace-nowrap">1. Verify in survey app</span>
-                                <h2 class="text-2xl font-black text-blue-600 font-mono mt-1">{{ number_format($registeredCount) }}</h2>
-                            </div>
-                            <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">list_alt</span></span>
-                        </div>
-                        <div class="flex items-center justify-between text-xs text-blue-600 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
-                            <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
-                        </div>
-                    </a>
+                    </div>
 
                     <!-- PPP Exclusion -->
                     <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
