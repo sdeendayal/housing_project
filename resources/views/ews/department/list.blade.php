@@ -179,7 +179,6 @@
                                 <th>Application Number</th>
                                 <th>Full Name</th>
                                 <th>District</th>
-                                <th>Aadhar Number</th>
                                 <th>Mobile Number</th>
                                 @if($type === 'allotted')
                                     <th>Flat Number</th>
@@ -226,7 +225,6 @@
                 { data: 'application_number', name: 'application_number', class: 'font-mono uppercase font-bold text-slate-500 text-[10px]' },
                 { data: 'full_name', name: 'full_name', class: 'font-bold text-slate-800 uppercase' },
                 { data: 'dist_name', name: 'dist_name', class: 'uppercase font-bold text-slate-600' },
-                { data: 'aadhar_no', name: 'aadhar_no', class: 'font-mono text-slate-500' },
                 { data: 'mobile_number', name: 'mobile_number', class: 'font-mono text-slate-700' }
             ];
 
