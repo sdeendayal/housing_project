@@ -52,13 +52,14 @@
                 <!-- Avatar & Status Header (Compact) -->
                 @php
                     $typeTitle = $beneficiary->type;
-                    if ($typeTitle === 'registered') $typeTitle = 'Verify in survey app';
-                    elseif ($typeTitle === 'pending') $typeTitle = 'Waiting';
-                    elseif ($typeTitle === 'eligible_draw') $typeTitle = 'Eligible for booking';
-                    elseif ($typeTitle === 'booking') $typeTitle = 'Booking Amount Received';
-                    elseif ($typeTitle === 'not_visited') $typeTitle = 'Booking Amount Not Received';
-                    elseif ($typeTitle === 'adc_passed') $typeTitle = 'Eligible';
-                    elseif ($typeTitle === 'adc_failed') $typeTitle = 'Not Eligible';
+                     if ($typeTitle === 'registered') $typeTitle = 'Verify in survey app';
+                     elseif ($typeTitle === 'pending') $typeTitle = 'Waiting';
+                     elseif ($typeTitle === 'eligible_draw') $typeTitle = 'Eligible for booking';
+                     elseif ($typeTitle === 'booking') $typeTitle = 'Booking Amount Received';
+                     elseif ($typeTitle === 'not_visited') $typeTitle = 'Booking Amount Not Received';
+                     elseif ($typeTitle === 'adc_passed') $typeTitle = 'Eligible';
+                     elseif ($typeTitle === 'adc_failed') $typeTitle = 'Not Eligible';
+                     elseif ($typeTitle === 'ppt_members') $typeTitle = 'Total registration';
 
                     $statusClass = 'bg-blue-50 border-blue-200 text-blue-700';
                     $statusDot = 'bg-blue-500';
@@ -134,7 +135,204 @@
                 </div>
 
                 <!-- Dynamic Rich Details (Compact Side-by-Side Grid) -->
-                @if(!empty($beneficiary->address) || !empty($beneficiary->date_of_birth) || !empty($beneficiary->father_name) || !empty($beneficiary->monthly_income))
+                @if($beneficiary->type === 'ppt_members')
+                    <!-- PPT Members Custom Rich Details -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 py-4">
+                        <!-- Left Column -->
+                        <div class="space-y-4">
+                            <!-- SECTION 1: Personal Details & ID -->
+                            <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
+                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-md font-bold">person</span>
+                                    PPT Member Registry Details
+                                </h4>
+                                <div class="grid grid-cols-3 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Family ID</span>
+                                        <span class="text-orange-600 block uppercase font-extrabold">{{ $beneficiary->familyID ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Member ID</span>
+                                        <span class="text-slate-800 block uppercase font-extrabold">{{ $beneficiary->memberID ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Gender</span>
+                                        <span class="uppercase">{{ $beneficiary->gender ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">DOB</span>
+                                        <span>{{ $beneficiary->dob ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Age</span>
+                                        <span>{{ $beneficiary->age ?? 'N/A' }} Years</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Marital Status</span>
+                                        <span class="uppercase">{{ $beneficiary->maritalStatus ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Caste Category</span>
+                                        <span class="uppercase">{{ $beneficiary->casteCategoryName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Caste Description</span>
+                                        <span class="uppercase">{{ $beneficiary->casteDescription ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Living Since Year</span>
+                                        <span>{{ $beneficiary->livingsinceyear ?? 'N/A' }}</span>
+                                    </div>
+                                    <div class="col-span-3 border-t border-slate-200/65 pt-2">
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Full Address</span>
+                                        <span class="uppercase text-[10px] leading-normal mt-0.5 block text-slate-600 font-bold">
+                                            H.No. {{ $beneficiary->houseNo ?? '-' }}, Street {{ $beneficiary->streetNo ?? '-' }}, {{ $beneficiary->address_LandMark ?? '' }}, {{ $beneficiary->wvName ?? '' }}, {{ $beneficiary->btName ?? '' }}, {{ $beneficiary->districtName ?? '' }} - {{ $beneficiary->pinCode ?? '' }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 2: Socio-Economic & Income -->
+                            <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
+                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-md font-bold">payments</span>
+                                    Financial Status & Income (PPP)
+                                </h4>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Total Member Income</span>
+                                        <span class="font-mono text-slate-800 font-extrabold">₹{{ number_format((float)($beneficiary->totalIncome ?? 0)) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Family Income</span>
+                                        <span class="font-mono text-slate-800 font-extrabold">₹{{ number_format((float)($beneficiary->familyIncome ?? 0)) }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Income Status</span>
+                                        <span class="uppercase text-slate-600 font-extrabold">{{ $beneficiary->familyincomestatus ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">BPL Card Status</span>
+                                        <span class="uppercase text-slate-600 font-extrabold">{{ $beneficiary->bpl ?? 'N/A' }} @if(!empty($beneficiary->bplCardNO)) (No. {{ $beneficiary->bplCardNO }}) @endif</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Occupation</span>
+                                        <span class="uppercase text-slate-600">{{ $beneficiary->occupationName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Qualification</span>
+                                        <span class="uppercase text-slate-600">{{ $beneficiary->qualificationName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Income Tax Payee</span>
+                                        <span class="uppercase">{{ $beneficiary->incometaxpayee ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Govt Employee</span>
+                                        <span class="uppercase">{{ $beneficiary->govtEmployee ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="space-y-4">
+                            <!-- SECTION 3: Verification & Details -->
+                            <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
+                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-md font-bold">verified</span>
+                                    PPP Verification Status
+                                </h4>
+                                <div class="grid grid-cols-3 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Income Verified</span>
+                                        <span class="uppercase text-emerald-600 font-extrabold">{{ $beneficiary->isIncomeVerified ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Caste Verified</span>
+                                        <span class="uppercase text-emerald-600 font-extrabold">{{ $beneficiary->isCasteVerified ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Residence Verified</span>
+                                        <span class="uppercase text-emerald-600 font-extrabold">{{ $beneficiary->isResidenceVerified ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Bank Verified</span>
+                                        <span class="uppercase text-emerald-600 font-extrabold">{{ $beneficiary->isBankVerified ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Voter ID Verified</span>
+                                        <span class="uppercase">{{ $beneficiary->isVoterIDVerified ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">PAN Verified</span>
+                                        <span class="uppercase">{{ $beneficiary->isPanVerified ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 4: Family Details -->
+                            <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
+                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-md font-bold">family_restroom</span>
+                                    Parents & Spouse Information
+                                </h4>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Father's Full Name</span>
+                                        <span class="uppercase text-slate-800">{{ $beneficiary->fatherFullName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Father's Name (Hindi)</span>
+                                        <span class="text-slate-800">{{ $beneficiary->fatherFullNameLL ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Mother's Full Name</span>
+                                        <span class="uppercase text-slate-800">{{ $beneficiary->motherFullName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Mother's Name (Hindi)</span>
+                                        <span class="text-slate-800">{{ $beneficiary->motherFullNameLL ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Spouse Full Name</span>
+                                        <span class="uppercase text-slate-800">{{ $beneficiary->spouseFullName ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Spouse Name (Hindi)</span>
+                                        <span class="text-slate-800">{{ $beneficiary->spouseFullNameLL ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- SECTION 5: Bank & Identification Details -->
+                            <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
+                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                    <span class="material-symbols-outlined text-md font-bold">account_balance</span>
+                                    Bank Details & Identification
+                                </h4>
+                                <div class="grid grid-cols-2 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Bank Account No.</span>
+                                        <span class="font-mono text-slate-800 font-extrabold">{{ $beneficiary->bankAccountNumber ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">IFSC Code</span>
+                                        <span class="font-mono text-slate-800 font-extrabold">{{ $beneficiary->ifscCode ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Voter ID No.</span>
+                                        <span class="font-mono uppercase text-slate-800">{{ $beneficiary->voterIDNo ?? 'N/A' }}</span>
+                                    </div>
+                                    <div>
+                                        <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">PAN No.</span>
+                                        <span class="font-mono uppercase text-slate-800">{{ $beneficiary->pan ?? 'N/A' }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @elseif(!empty($beneficiary->address) || !empty($beneficiary->date_of_birth) || !empty($beneficiary->father_name) || !empty($beneficiary->monthly_income))
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 py-4">
                         
                         <!-- Left Column -->

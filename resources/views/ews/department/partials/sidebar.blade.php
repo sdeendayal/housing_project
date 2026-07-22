@@ -42,6 +42,15 @@
             <!-- Group 1: Registration Phase -->
             <div class="space-y-1">
                 <div class="px-2 py-0.5 text-[8px] uppercase font-black tracking-wider text-slate-500">1. Survey App Phase</div>
+                <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'ppt_members') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">groups</span>
+                        <span>Total registration</span>
+                    </div>
+                    @if(isset($totalRegistrationCount))
+                        <span class="text-[9px] font-mono opacity-80">{{ number_format($totalRegistrationCount) }}</span>
+                    @endif
+                </a>
                 <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId ?? '']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($currentType === 'registered') ? 'bg-orange-600 text-white font-bold' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">list_alt</span>

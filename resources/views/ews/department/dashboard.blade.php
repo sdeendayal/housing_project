@@ -88,12 +88,27 @@
                     <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Registered Applications & Eligibility Filters</h3>
                 </div>
 
-                <div class="grid grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
+                    <!-- Total registration -->
+                    <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition whitespace-nowrap">Total registration</span>
+                                <h2 class="text-2xl font-black text-blue-600 font-mono mt-1">{{ number_format($totalRegistrationCount) }}</h2>
+                            </div>
+                            <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">groups</span></span>
+                        </div>
+                        <div class="flex items-center justify-between text-xs text-blue-600 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
+                            <span>View List</span>
+                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                        </div>
+                    </a>
+
                     <!-- Total Registered -->
                     <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition">1. Verify in survey app</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition whitespace-nowrap">1. Verify in survey app</span>
                                 <h2 class="text-2xl font-black text-blue-600 font-mono mt-1">{{ number_format($registeredCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">list_alt</span></span>
@@ -108,7 +123,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-600 transition">2. PPP Exclusion</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-600 transition whitespace-nowrap">2. PPP Exclusion</span>
                                 <h2 class="text-2xl font-black text-rose-600 font-mono mt-1">{{ number_format($rejectedPppCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">cancel</span></span>
@@ -123,7 +138,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">3. Property in India</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">3. Property in India</span>
                                 <h2 class="text-2xl font-black text-rose-700 font-mono mt-1">{{ number_format($rejectedPropertyCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:bg-rose-700 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">domain_disabled</span></span>
@@ -138,7 +153,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">4. House Ownership</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">4. House Ownership</span>
                                 <h2 class="text-2xl font-black text-rose-700 font-mono mt-1">{{ number_format($rejectedOwnershipCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:bg-rose-700 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">home_work</span></span>
@@ -171,7 +186,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow-md hover:border-indigo-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition">5. Eligible for booking</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition whitespace-nowrap">5. Eligible for booking</span>
                                 <h2 class="text-2xl font-black text-indigo-700 font-mono mt-1.5">{{ number_format($eligibleDrawCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-650 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">how_to_reg</span></span>
@@ -185,12 +200,12 @@
                     <!-- Booking amount received -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">6. Booking amount received</span>
+                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">6. Booking amount received</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
                                 <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Booking amount received:</span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Received:</span>
                                         <span class="text-emerald-700 font-extrabold font-mono text-sm">{{ number_format($bookingCount) }}</span>
                                     </div>
                                     <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Booking amount received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
@@ -198,14 +213,14 @@
                                 <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Booking amount not received:</span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not received:</span>
                                         <span class="text-rose-700 font-extrabold font-mono text-sm">{{ number_format($notVisitedCount) }}</span>
                                     </div>
                                     <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Booking amount not received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
                             </div>
                         </div>
-                        <div class="text-[9.5px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1">
+                        <div class="text-[9px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1 font-mono">
                             Sum: {{ number_format($bookingCount + $notVisitedCount) }}
                         </div>
                     </div>
@@ -213,7 +228,7 @@
                     <!-- ADC Verification outcomes -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">7. ADC Eligibility Status</span>
+                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">7. ADC Eligibility Status</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
                                 <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
@@ -233,7 +248,7 @@
                                 </a>
                             </div>
                         </div>
-                        <div class="text-[9.5px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1">
+                        <div class="text-[9px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1 font-mono">
                             Sum: {{ number_format($adcPassedCount + $adcFailedCount) }}
                         </div>
                     </div>
@@ -241,7 +256,7 @@
                     <!-- Final Draw Outcomes -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">8. Allocation Outcomes</span>
+                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">8. Allocation Outcomes</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1">
                                 <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">

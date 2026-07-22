@@ -66,6 +66,10 @@ class EwsDepartmentController extends Controller
         $districtId = $request->input('district_id');
         $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
         
+        $totalRegistrationCount = DB::table('ppt_members')
+            ->when($districtId, fn($q) => $q->where('district_id', $districtId))
+            ->count();
+
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
@@ -121,6 +125,7 @@ class EwsDepartmentController extends Controller
 
         return view('ews.department.dashboard', compact(
             'user', 
+            'totalRegistrationCount',
             'registeredCount', 
             'allottedCount', 
             'pendingCount', 
@@ -148,6 +153,10 @@ class EwsDepartmentController extends Controller
         $type = $request->input('type', 'all');
         $districtId = $request->input('district_id');
         $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
+
+        $totalRegistrationCount = DB::table('ppt_members')
+            ->when($districtId, fn($q) => $q->where('district_id', $districtId))
+            ->count();
 
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -205,6 +214,7 @@ class EwsDepartmentController extends Controller
         return view('ews.department.list', compact(
             'user', 
             'type',
+            'totalRegistrationCount',
             'registeredCount', 
             'allottedCount', 
             'pendingCount', 
@@ -231,7 +241,23 @@ class EwsDepartmentController extends Controller
         $type = $request->input('type', 'all');
         $districtId = $request->input('district_id');
 
-        if ($type === 'registered') {
+        if ($type === 'ppt_members') {
+            $query = DB::table('ppt_members')
+                ->select(
+                    'id as secure_id',
+                    'id',
+                    'familyID as application_number',
+                    'fullName as full_name',
+                    'aadhaarNo as aadhar_no',
+                    'mobileNo as mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'ppt_members' as type"),
+                    DB::raw("'Total registration' as status"),
+                    'district as dist_name',
+                    'district_id as dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('district_id', $districtId));
+        } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Verify in survey app' as status"), 'dist_name');
         } elseif ($type === 'allotted') {
@@ -291,7 +317,7 @@ class EwsDepartmentController extends Controller
             ) as beneficiaries"));
         }
 
-        if ($districtId) {
+        if ($districtId && $type !== 'ppt_members') {
             $query->where('dist_id', $districtId);
         }
 
@@ -320,7 +346,17 @@ class EwsDepartmentController extends Controller
             return DB::table($tableName)->where('secure_id', $secureId)->first();
         };
 
-        if ($type === 'registered') {
+        if ($type === 'ppt_members') {
+            $beneficiary = DB::table('ppt_members')->where('id', $secureId)->first();
+            if ($beneficiary) {
+                $beneficiary->application_number = $beneficiary->familyID;
+                $beneficiary->full_name = $beneficiary->fullName;
+                $beneficiary->aadhar_no = $beneficiary->aadhaarNo;
+                $beneficiary->mobile_number = $beneficiary->mobileNo;
+                $beneficiary->flat_no = 'N/A';
+                $beneficiary->dist_name = $beneficiary->district;
+            }
+        } elseif ($type === 'registered') {
             $beneficiary = $fetchBySecId('all_ews_data_1');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
@@ -406,6 +442,7 @@ class EwsDepartmentController extends Controller
         }
 
         $beneficiary->status = match ($type) {
+            'ppt_members' => 'Total registration',
             'registered' => 'Verify in survey app',
             'allotted' => 'Allotted',
             'pending' => 'Waiting',

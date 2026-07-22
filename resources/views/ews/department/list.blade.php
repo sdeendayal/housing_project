@@ -206,6 +206,7 @@
         $(document).ready(function() {
             // Update title text
             let titleText = 'All Beneficiaries List';
+            if (currentType === 'ppt_members') titleText = 'Total registration List';
             if (currentType === 'registered') titleText = 'Verify in survey app List';
             if (currentType === 'allotted') titleText = 'Allotted Beneficiaries List';
             if (currentType === 'pending') titleText = 'Waiting Beneficiaries List';
