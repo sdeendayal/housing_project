@@ -117,7 +117,7 @@
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3 flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Roads & Connectivity <span class="text-red-500">*</span></label>
+                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Road Connectivity <span class="text-red-500">*</span></label>
                                         <span class="material-symbols-outlined text-slate-400 text-sm">add_road</span>
                                     </div>
                                     <select name="road_status" class="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-700 bg-white mb-2.5">
@@ -144,7 +144,7 @@
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3 flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Water Supply Infrastructure <span class="text-red-500">*</span></label>
+                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Drinking Water Supply (PHED) <span class="text-red-500">*</span></label>
                                         <span class="material-symbols-outlined text-slate-400 text-sm">water_drop</span>
                                     </div>
                                     <select name="water_status" class="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-700 bg-white mb-2.5">
@@ -171,7 +171,7 @@
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3 flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Electricity Grid / Street Lights <span class="text-red-500">*</span></label>
+                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Street Light / Electrical <span class="text-red-500">*</span></label>
                                         <span class="material-symbols-outlined text-slate-400 text-sm">bolt</span>
                                     </div>
                                     <select name="electricity_status" class="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-700 bg-white mb-2.5">
@@ -198,7 +198,7 @@
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3 flex flex-col justify-between">
                                 <div>
                                     <div class="flex items-center justify-between mb-2">
-                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Sewerage & Drainage Network <span class="text-red-500">*</span></label>
+                                        <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Sewerage <span class="text-red-500">*</span></label>
                                         <span class="material-symbols-outlined text-slate-400 text-sm">water</span>
                                     </div>
                                     <select name="sewerage_status" class="w-full text-xs border border-slate-200 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold text-slate-700 bg-white mb-2.5">

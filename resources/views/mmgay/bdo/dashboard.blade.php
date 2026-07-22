@@ -77,7 +77,7 @@
         <!-- E-Possession Pending -->
         <a href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Site Verified']) }}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-amber-200 transition font-semibold">
             <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">E-Possession Pending</p>
+                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Possession Pending</p>
                 <h2 class="text-lg font-extrabold text-amber-700 mt-0.5">{{ $stats['awaiting_bdo_doc'] }}</h2>
             </div>
             <div class="w-8.5 h-8.5 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">

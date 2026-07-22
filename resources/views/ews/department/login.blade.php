@@ -64,7 +64,7 @@
         </div>
 
         <!-- Right Side: Login Form -->
-        <div class="w-full lg:w-[45%] flex items-center justify-center p-8 bg-[#0b0f19] relative">
+        <div class="w-full lg:w-[45%] flex items-center justify-center p-8 bg-[#1e293b] relative">
             
             <!-- Ambient Glow Spotlights -->
             <div class="absolute right-10 top-10 w-72 h-72 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
