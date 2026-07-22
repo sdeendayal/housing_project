@@ -2,6 +2,8 @@
 @section('title', 'Site Development Works')
 @section('page_header', 'Site Development')
 
+<link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
+
 @section('content')
 <main class="ml-[260px] mt-14 min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4">
 
@@ -133,8 +135,11 @@
                                 </div>
                                 
                                 @if(isset($siteDev->road_photo))
+                                    @php $roadPhotoUrl = str_starts_with($siteDev->road_photo, 'uploads/') ? asset($siteDev->road_photo) : asset('storage/' . $siteDev->road_photo); @endphp
                                     <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
-                                        <img src="{{ str_starts_with($siteDev->road_photo, 'uploads/') ? asset($siteDev->road_photo) : asset('storage/' . $siteDev->road_photo) }}" alt="Road Progress" class="w-full h-full object-cover">
+                                        <a href="{{ $roadPhotoUrl }}" data-lightbox="site-development" data-title="Road Connectivity Progress Photo">
+                                            <img src="{{ $roadPhotoUrl }}" alt="Road Progress" class="w-full h-full object-cover cursor-zoom-in">
+                                        </a>
                                         <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">Road Photo</span>
                                     </div>
                                 @endif
@@ -160,8 +165,11 @@
                                 </div>
                                 
                                 @if(isset($siteDev->water_photo))
+                                    @php $waterPhotoUrl = str_starts_with($siteDev->water_photo, 'uploads/') ? asset($siteDev->water_photo) : asset('storage/' . $siteDev->water_photo); @endphp
                                     <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
-                                        <img src="{{ str_starts_with($siteDev->water_photo, 'uploads/') ? asset($siteDev->water_photo) : asset('storage/' . $siteDev->water_photo) }}" alt="Water Progress" class="w-full h-full object-cover">
+                                        <a href="{{ $waterPhotoUrl }}" data-lightbox="site-development" data-title="Drinking Water Supply (PHED) Progress Photo">
+                                            <img src="{{ $waterPhotoUrl }}" alt="Water Progress" class="w-full h-full object-cover cursor-zoom-in">
+                                        </a>
                                         <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">Water Photo</span>
                                     </div>
                                 @endif
@@ -187,8 +195,11 @@
                                 </div>
                                 
                                 @if(isset($siteDev->electricity_photo))
+                                    @php $electricityPhotoUrl = str_starts_with($siteDev->electricity_photo, 'uploads/') ? asset($siteDev->electricity_photo) : asset('storage/' . $siteDev->electricity_photo); @endphp
                                     <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
-                                        <img src="{{ str_starts_with($siteDev->electricity_photo, 'uploads/') ? asset($siteDev->electricity_photo) : asset('storage/' . $siteDev->electricity_photo) }}" alt="Electricity Progress" class="w-full h-full object-cover">
+                                        <a href="{{ $electricityPhotoUrl }}" data-lightbox="site-development" data-title="Street Light / Electrical Progress Photo">
+                                            <img src="{{ $electricityPhotoUrl }}" alt="Electricity Progress" class="w-full h-full object-cover cursor-zoom-in">
+                                        </a>
                                         <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">Electricity Photo</span>
                                     </div>
                                 @endif
@@ -214,8 +225,11 @@
                                 </div>
                                 
                                 @if(isset($siteDev->sewerage_photo))
+                                    @php $seweragePhotoUrl = str_starts_with($siteDev->sewerage_photo, 'uploads/') ? asset($siteDev->sewerage_photo) : asset('storage/' . $siteDev->sewerage_photo); @endphp
                                     <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
-                                        <img src="{{ str_starts_with($siteDev->sewerage_photo, 'uploads/') ? asset($siteDev->sewerage_photo) : asset('storage/' . $siteDev->sewerage_photo) }}" alt="Sewerage Progress" class="w-full h-full object-cover">
+                                        <a href="{{ $seweragePhotoUrl }}" data-lightbox="site-development" data-title="Sewerage Progress Photo">
+                                            <img src="{{ $seweragePhotoUrl }}" alt="Sewerage Progress" class="w-full h-full object-cover cursor-zoom-in">
+                                        </a>
                                         <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">Sewerage Photo</span>
                                     </div>
                                 @endif
@@ -304,8 +318,17 @@
 @endsection
 
 @section('scripts')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
 <script>
     $(document).ready(function() {
+        // Lightbox Configuration
+        lightbox.option({
+            'resizeDuration': 200,
+            'wrapAround': true,
+            'fadeDuration': 200,
+            'imageFadeDuration': 200
+        });
+
         // 1. Preview selected images instantly and validate on selection change
         $('input[type="file"]').on('change', function(e) {
             const file = this.files[0];
@@ -355,15 +378,26 @@
                     // Create the preview container dynamically
                     $previewContainer = $(`
                         <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
-                            <img src="${event.target.result}" alt="Progress Preview" class="w-full h-full object-cover">
+                            <a href="${event.target.result}" data-lightbox="site-development" data-title="${labelText} Preview (Selected)">
+                                <img src="${event.target.result}" alt="Progress Preview" class="w-full h-full object-cover cursor-zoom-in">
+                            </a>
                             <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">${labelText} (Selected)</span>
                         </div>
                     `);
                     $card.append($previewContainer);
                 } else {
-                    // Update existing preview image src
+                    // Update existing preview image src and wrap in lightbox anchor if not wrapped
+                    let $anchor = $previewContainer.find('a');
                     let $img = $previewContainer.find('img');
+                    
+                    if ($anchor.length === 0) {
+                        $img.wrap(`<a href="${event.target.result}" data-lightbox="site-development" data-title="Updated Progress Photo"></a>`);
+                        $img.addClass('cursor-zoom-in');
+                    } else {
+                        $anchor.attr('href', event.target.result);
+                    }
                     $img.attr('src', event.target.result);
+                    
                     // Update badge to indicate selected
                     let $badge = $previewContainer.find('span');
                     if (!$badge.text().includes('(Selected)')) {
