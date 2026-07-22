@@ -122,7 +122,11 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
-        $notInSurveyCount = $totalRegistrationCount - $registeredCount;
+        $notInSurveyCount = DB::table('ppt_members')
+            ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
+            ->whereNull('all_ews_data_1.ppt_member_id')
+            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
+            ->count();
 
         return view('ews.department.dashboard', compact(
             'user', 
@@ -212,7 +216,11 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
-        $notInSurveyCount = $totalRegistrationCount - $registeredCount;
+        $notInSurveyCount = DB::table('ppt_members')
+            ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
+            ->whereNull('all_ews_data_1.ppt_member_id')
+            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
+            ->count();
 
         return view('ews.department.list', compact(
             'user', 
@@ -263,8 +271,8 @@ class EwsDepartmentController extends Controller
                 ->when($districtId, fn($q) => $q->where('district_id', $districtId));
         } elseif ($type === 'not_in_survey') {
             $query = DB::table('ppt_members')
-                ->leftJoin('all_ews_data_1', 'ppt_members.mobileNo', '=', 'all_ews_data_1.mobile_number')
-                ->whereNull('all_ews_data_1.mobile_number')
+                ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
+                ->whereNull('all_ews_data_1.ppt_member_id')
                 ->select(
                     'ppt_members.id as secure_id',
                     'ppt_members.id',

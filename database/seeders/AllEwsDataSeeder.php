@@ -77,6 +77,16 @@ class AllEwsDataSeeder extends Seeder
                 $table->unsignedBigInteger('dist_id')->nullable();
             });
         }
+        if (!Schema::hasColumn('all_ews_data_1', 'member_id')) {
+            Schema::table('all_ews_data_1', function (Blueprint $table) {
+                $table->string('member_id', 50)->nullable()->index();
+            });
+        }
+        if (!Schema::hasColumn('all_ews_data_1', 'ppt_member_id')) {
+            Schema::table('all_ews_data_1', function (Blueprint $table) {
+                $table->unsignedBigInteger('ppt_member_id')->nullable()->index();
+            });
+        }
 
         // Fetch Sonipat ID from EWS master districts table
         $masterDist = DB::table('ews_districts')->where('name', 'SONIPAT')->first();
@@ -136,5 +146,26 @@ class AllEwsDataSeeder extends Seeder
         }
 
         $this->command->info("Successfully seeded {$count} records into the all_ews_data_1 table from 'org data' sheet.");
+
+        $this->command->info("Populating member_id and ppt_member_id columns from ppt_members table...");
+        try {
+            $affectedMemberIds = DB::update("
+                UPDATE all_ews_data_1 
+                JOIN ppt_members ON all_ews_data_1.mobile_number = ppt_members.mobileNo
+                SET all_ews_data_1.member_id = ppt_members.memberID
+            ");
+            $affectedPptMemberIds = DB::update("
+                UPDATE all_ews_data_1
+                JOIN (
+                    SELECT mobileNo, MIN(id) as min_id 
+                    FROM ppt_members 
+                    GROUP BY mobileNo
+                ) as sub ON all_ews_data_1.mobile_number = sub.mobileNo
+                SET all_ews_data_1.ppt_member_id = sub.min_id
+            ");
+            $this->command->info("Successfully populated {$affectedMemberIds} member_id records and {$affectedPptMemberIds} ppt_member_id records.");
+        } catch (\Exception $e) {
+            $this->command->error("Error populating IDs: " . $e->getMessage());
+        }
     }
 }
