@@ -90,7 +90,7 @@
                                         <h3 class="font-extrabold text-slate-800 uppercase tracking-tight text-[10px] leading-snug truncate" title="{{ $file['name'] }}">
                                             {{ $file['name'] }}
                                         </h3>
-                                        <p class="text-[8.5px] font-mono text-slate-500 font-semibold truncate" title="{{ $file['filename'] }}">
+                                        <p class="text-[8.5px] font-mono text-slate-550 font-semibold truncate text-slate-500" title="{{ $file['filename'] }}">
                                             {{ $file['filename'] }}
                                         </p>
                                     </div>
@@ -106,7 +106,7 @@
                                     <span class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Excel Sheets (Tabs):</span>
                                     <div class="flex flex-wrap gap-1">
                                         @foreach(explode(', ', $file['sheets']) as $sheet)
-                                            <span class="px-1 py-0.5 bg-slate-50 text-slate-600 text-[7px] font-extrabold rounded lowercase font-mono border border-slate-200/50">
+                                            <span class="px-1 py-0.5 bg-slate-55 bg-slate-50 text-slate-600 text-[7px] font-extrabold rounded lowercase font-mono border border-slate-200/50">
                                                 {{ $sheet }}
                                             </span>
                                         @endforeach
@@ -128,10 +128,10 @@
                                 </div>
 
                                 @if($file['exists'])
-                                    <a href="{{ route('ews.department.seeder.download', $file['filename']) }}" class="inline-flex px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-250 rounded-lg text-[9px] font-black uppercase tracking-wider transition duration-150 items-center gap-1 shadow-sm">
+                                    <button type="button" onclick="promptPassword('{{ $file['filename'] }}')" class="inline-flex px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-250 rounded-lg text-[9px] font-black uppercase tracking-wider transition duration-150 items-center gap-1 shadow-sm cursor-pointer">
                                         <span class="material-symbols-outlined text-[12px] font-bold">download</span>
                                         <span>Download</span>
-                                    </a>
+                                    </button>
                                 @else
                                     <span class="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[8.5px] font-black uppercase tracking-wider font-mono">
                                         Missing
@@ -145,6 +145,96 @@
 
         </main>
     </div>
+
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-150 max-w-sm w-full p-6 space-y-4 scale-95 opacity-0 transition-all duration-200 transform" id="modal-container">
+            <!-- Header -->
+            <div class="flex items-start justify-between">
+                <div class="space-y-1">
+                    <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-orange-500 text-lg font-bold">lock</span> Secure Download
+                    </h3>
+                    <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider leading-tight">सुरक्षित डाउनलोड</p>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                    <span class="material-symbols-outlined text-lg">close</span>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="space-y-3">
+                <p class="text-[10px] text-slate-500 font-light leading-relaxed">
+                    Set a password to encrypt this spreadsheet directly. When opened in Microsoft Excel or Google Sheets, the viewer will prompt for this password.
+                </p>
+                <div class="space-y-1">
+                    <label class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Set Excel Password (optional):</label>
+                    <div class="relative flex items-center">
+                        <span class="material-symbols-outlined absolute left-3 text-slate-400 text-sm">vpn_key</span>
+                        <input type="text" id="modal-password-input" placeholder="e.g. 123456" class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer / Actions -->
+            <div class="flex flex-col gap-2 pt-2">
+                <button onclick="performDownload(true)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-xs font-bold">lock</span> Download Protected Excel (.xlsx)
+                </button>
+                <button onclick="performDownload(false)" class="w-full py-2 bg-slate-55 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer">
+                    <span class="material-symbols-outlined text-xs">article</span> Download Raw Excel (.xlsx)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFilename = '';
+
+        function promptPassword(filename) {
+            currentFilename = filename;
+            $('#modal-password-input').val('');
+            
+            // Show modal with animation
+            $('#password-modal').removeClass('hidden').addClass('flex');
+            setTimeout(() => {
+                $('#modal-container').removeClass('scale-95 opacity-0').addClass('scale-100 opacity-100');
+            }, 50);
+        }
+
+        function closeModal() {
+            $('#modal-container').removeClass('scale-100 opacity-100').addClass('scale-95 opacity-0');
+            setTimeout(() => {
+                $('#password-modal').removeClass('flex').addClass('hidden');
+            }, 200);
+        }
+
+        function performDownload(isEncrypted) {
+            const password = $('#modal-password-input').val().trim();
+            
+            if (isEncrypted && !password) {
+                alert('Please enter a password to secure the Excel spreadsheet, or click "Download Raw Excel" instead.');
+                return;
+            }
+            
+            let url = "{{ route('ews.department.seeder.download', ':filename') }}";
+            url = url.replace(':filename', currentFilename);
+            
+            if (isEncrypted) {
+                url += "?password=" + encodeURIComponent(password);
+            }
+            
+            window.location.href = url;
+            closeModal();
+        }
+
+        // Close modal when clicking outside container
+        $('#password-modal').click(function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
 
 </body>
 </html>

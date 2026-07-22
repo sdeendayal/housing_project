@@ -1225,7 +1225,7 @@ class EwsDepartmentController extends Controller
         ));
     }
 
-    public function downloadSeederFile($filename)
+    public function downloadSeederFile(Request $request, $filename)
     {
         $allowedFiles = [
             'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
@@ -1244,6 +1244,24 @@ class EwsDepartmentController extends Controller
 
         if (!file_exists($path)) {
             abort(404, 'Requested raw Excel file not found on disk.');
+        }
+
+        $password = $request->input('password');
+
+        if (!empty($password)) {
+            try {
+                $encryptor = new \Nick\SecureSpreadsheet\Encrypt();
+                $tempOutput = tempnam(sys_get_temp_dir(), 'ews_xlsx_') . '.xlsx';
+                
+                $encryptor->input($path)
+                          ->password($password)
+                          ->output($tempOutput);
+                          
+                return response()->download($tempOutput, $filename)->deleteFileAfterSend(true);
+            } catch (\Exception $e) {
+                // Fallback to unencrypted download if encryption library encounters an error
+                return response()->download($path);
+            }
         }
 
         return response()->download($path);
