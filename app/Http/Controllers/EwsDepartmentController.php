@@ -13,6 +13,7 @@ use App\Models\RoleType;
 use App\Models\EwsBuilderFlat;
 use App\Models\EwsDeveloperLog;
 use App\Helpers\EwsHelper;
+use Illuminate\Support\Facades\Schema;
 
 class EwsDepartmentController extends Controller
 {
@@ -1132,5 +1133,148 @@ class EwsDepartmentController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Department Admin profile updated successfully. Logged: ' . $changeSummary);
+    }
+
+    public function seederDataIndex(Request $request)
+    {
+        $user = Auth::user();
+        $districtId = $request->query('district') ?? $request->query('district_id') ?? '';
+
+        // Fetch counts for sidebar
+        $totalCount = DB::table('ews_allotted_8')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count() +
+            DB::table('ews_waiting_list_9')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count();
+            
+        $allottedCount = DB::table('ews_allotted_8')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count();
+        $pendingCount = DB::table('ews_waiting_list_9')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count();
+        
+        $adcPassedCount = DB::table('ews_eligible_6')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count();
+        $drawRemainingCount = $adcPassedCount - ($allottedCount + $pendingCount);
+        
+        $developerCount = User::where('role', 'ews_developer')->count();
+        $developerFlatsCount = DB::table('ews_builder_flats')->count();
+        $developerLogsCount = DB::table('ews_developer_logs')->count();
+        
+        $currentType = 'seeder';
+
+        // EWS Raw Files configuration using exact original filenames
+        $rawFiles = [
+            [
+                'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                'filename' => 'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
+                'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
+                'sheets' => 'registered'
+            ],
+            [
+                'name' => 'Survey Exclusions & Verification Master (2, 3, 4, 7, 8, 9 Stages)',
+                'filename' => 'survey.xlsx',
+                'description' => 'Comprehensive master database containing all EWS funnel tabs: exclusions, property checks, house ownership, draw lists, bookings, allotments, and waiting lists.',
+                'sheets' => 'exclusion, prop, house, draw, eligible, booking, allotted, waiting'
+            ],
+            [
+                'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                'filename' => '794 eligible list with category for sonipat draw.xlsx',
+                'description' => 'Excel registry containing verified candidates qualified for the lottery draw.',
+                'sheets' => 'draw_eligible'
+            ],
+            [
+                'name' => 'Developer Draw Allotments',
+                'filename' => 'final draw sheet fo developeres.xlsx',
+                'description' => 'Official draw list sheet structured developer-wise containing sector alignments, towers, and flat allocations.',
+                'sheets' => 'developer_draw'
+            ],
+            [
+                'name' => 'Master Draw Sonipat',
+                'filename' => 'Master sheet for draw sonipat.xlsx',
+                'description' => 'The raw draw outcome sheets filtered specifically for Sonipat region.',
+                'sheets' => 'master_sonipat'
+            ],
+            [
+                'name' => 'EWS Approved Flat Masters',
+                'filename' => 'booking amount  flat final recevied data from sunit ji.xlsx',
+                'description' => 'Inventory ledger mapping flat IDs, developer codes, sector allocations, and CRID verification keys.',
+                'sheets' => 'flats_crid'
+            ]
+        ];
+
+        // Hydrate files info (size, last modified time)
+        $files = [];
+        foreach ($rawFiles as $file) {
+            $filename = $file['filename'];
+            $path = database_path('seeders/data/' . $filename);
+            
+            if (file_exists($path)) {
+                $bytes = filesize($path);
+                $file['size'] = round($bytes / 1024, 1) . ' KB';
+                if ($bytes >= 1048576) {
+                    $file['size'] = round($bytes / 1048576, 2) . ' MB';
+                }
+                $file['modified'] = date('Y-m-d H:i:s', filemtime($path));
+                $file['exists'] = true;
+            } else {
+                $file['size'] = 'N/A';
+                $file['modified'] = 'N/A';
+                $file['exists'] = false;
+            }
+            $files[] = $file;
+        }
+
+        return view('ews.department.seeder_data', compact(
+            'user', 'files', 'districtId',
+            'totalCount', 'allottedCount', 'pendingCount', 'drawRemainingCount',
+            'developerCount', 'developerFlatsCount', 'developerLogsCount', 'currentType'
+        ));
+    }
+
+    public function downloadSeederFile($filename)
+    {
+        $allowedFiles = [
+            'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
+            'survey.xlsx',
+            '794 eligible list with category for sonipat draw.xlsx',
+            'final draw sheet fo developeres.xlsx',
+            'Master sheet for draw sonipat.xlsx',
+            'booking amount  flat final recevied data from sunit ji.xlsx'
+        ];
+
+        if (!in_array($filename, $allowedFiles)) {
+            abort(403, 'Unauthorized file access.');
+        }
+
+        $path = database_path('seeders/data/' . $filename);
+
+        if (!file_exists($path)) {
+            abort(404, 'Requested raw Excel file not found on disk.');
+        }
+
+        return response()->download($path);
+    }
+
+    private function findDistrictHeaderRowAndCol($sheet)
+    {
+        $highestColumn = $sheet->getHighestColumn();
+        $highestColumnIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestColumn);
+        $searchTerms = ['dist_name', 'districtname', 'district_name', 'district', 'dist', 'dist_id'];
+        
+        // Search first 5 rows
+        for ($row = 1; $row <= 5; $row++) {
+            for ($col = 1; $col <= $highestColumnIndex; $col++) {
+                $cellVal = strtolower(trim($sheet->getCell([$col, $row])->getValue() ?? ''));
+                if (in_array($cellVal, $searchTerms)) {
+                    return ['row' => $row, 'col' => $col];
+                }
+            }
+        }
+        return null;
+    }
+
+    private function isMatchingDistrict($value, $selectedDistrict)
+    {
+        if (empty($value)) return true; // Keep empty or metadata rows intact
+        $v = strtolower(trim($value));
+        $sel = strtolower(trim($selectedDistrict));
+        if ($sel === 'sonipat') {
+            return in_array($v, ['sonipat', 'sonepat', 'snp']);
+        }
+        return $v === $sel;
     }
 }

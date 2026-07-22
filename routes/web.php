@@ -387,6 +387,10 @@ Route::middleware(['auth', 'role:ews_department'])->group(function () {
     Route::get('/ews/department/export/developer-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperFlats'])->name('ews.department.export.developer-flats');
     Route::get('/ews/department/export/developer-logs', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperLogs'])->name('ews.department.export.developer-logs');
 
+    // EWS Seeder Data Download Routes
+    Route::get('/ews/department/seeder-data', [\App\Http\Controllers\EwsDepartmentController::class, 'seederDataIndex'])->name('ews.department.seeder.index');
+    Route::get('/ews/department/seeder-data/download/{filename}', [\App\Http\Controllers\EwsDepartmentController::class, 'downloadSeederFile'])->name('ews.department.seeder.download');
+
     // Department Admin Profile Routes (bound to secure_id)
     Route::get('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showProfile'])->name('ews.department.profile.show');
     Route::put('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateProfile'])->name('ews.department.profile.update');

@@ -229,6 +229,38 @@
             </div>
         </div>
 
+        <!-- 3. EWS Raw Database Files Dropdown Toggle -->
+        @php
+            $isSeederActive = request()->routeIs('ews.department.seeder.*');
+        @endphp
+        <div class="pt-1">
+            <button type="button" onclick="toggleSeederSubmenu()" class="w-full flex items-center justify-between rounded-lg px-4 py-2.5 transition-all text-left font-bold {{ $isSeederActive ? 'bg-slate-800 text-white border-l-2 border-orange-500' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
+                <div class="flex items-center gap-3">
+                    <span class="material-symbols-outlined text-base text-orange-400">database</span>
+                    <span>Raw Database Files</span>
+                </div>
+                <span id="seeder-submenu-arrow" class="material-symbols-outlined text-sm">{{ $isSeederActive ? 'keyboard_arrow_down' : 'keyboard_arrow_right' }}</span>
+            </button>
+
+            <!-- Seeder Submenus Wrapper -->
+            <div id="seeder-submenus" class="{{ $isSeederActive ? '' : 'hidden' }} space-y-1 pl-2 border-l border-slate-700/60 ml-4 transition-all duration-300 mt-1">
+                <!-- Sonipat Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'SONIPAT']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'SONIPAT') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Sonipat</span>
+                    </div>
+                </a>
+                <!-- Gurugram Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'GURUGRAM']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'GURUGRAM') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Gurugram</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+
         <!-- 3. Standalone Primary Item: My Profile -->
         <a href="{{ route('ews.department.profile.show', Auth::user()->secure_id) }}" class="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 transition-all text-left font-bold {{ request()->routeIs('ews.department.profile.*') ? 'bg-orange-600 text-white shadow-md' : 'hover:bg-slate-800 hover:text-white text-slate-300' }}">
             <span class="material-symbols-outlined text-base text-orange-400">account_circle</span>
@@ -276,6 +308,21 @@
             arrow.textContent = 'keyboard_arrow_right';
         }
     }
+
+    function toggleSeederSubmenu() {
+        const container = document.getElementById('seeder-submenus');
+        const arrow = document.getElementById('seeder-submenu-arrow');
+        if (!container || !arrow) return;
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            arrow.textContent = 'keyboard_arrow_down';
+        } else {
+            container.classList.add('hidden');
+            arrow.textContent = 'keyboard_arrow_right';
+        }
+    }
+
+
 
     document.addEventListener('DOMContentLoaded', function() {
         const activeSubmenuItem = document.querySelector('aside nav a.bg-orange-600, aside nav a.bg-amber-600');
