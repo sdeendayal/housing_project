@@ -206,17 +206,17 @@
         $(document).ready(function() {
             // Update title text
             let titleText = 'All Beneficiaries List';
-            if (currentType === 'registered') titleText = 'Registered Applications List';
+            if (currentType === 'registered') titleText = 'Verify in survey app List';
             if (currentType === 'allotted') titleText = 'Allotted Beneficiaries List';
-            if (currentType === 'pending') titleText = 'Pending Beneficiaries List';
+            if (currentType === 'pending') titleText = 'Waiting Beneficiaries List';
             if (currentType === 'rejected_ppp') titleText = 'PPP Exclusion (Rejected) List';
             if (currentType === 'rejected_property') titleText = 'Property in India (Rejected) List';
             if (currentType === 'rejected_ownership') titleText = 'House Ownership (Rejected) List';
-            if (currentType === 'eligible_draw') titleText = 'Eligible for Draw List';
-            if (currentType === 'booking') titleText = 'Verification Completed (Visited) List';
-            if (currentType === 'not_visited') titleText = 'Verification Pending (Not Visited) List';
-            if (currentType === 'adc_passed') titleText = 'ADC Verification (Passed) List';
-            if (currentType === 'adc_failed') titleText = 'ADC Verification (Failed) List';
+            if (currentType === 'eligible_draw') titleText = 'Eligible for booking List';
+            if (currentType === 'booking') titleText = 'Booking amount received List';
+            if (currentType === 'not_visited') titleText = 'Booking amount not received List';
+            if (currentType === 'adc_passed') titleText = 'ADC Eligibility (Eligible) List';
+            if (currentType === 'adc_failed') titleText = 'ADC Eligibility (Not Eligible) List';
             if (currentType === 'draw_remaining') titleText = 'Unallotted Draw (Remaining Eligible) List';
             $('#table-title').text(titleText);
 
@@ -239,25 +239,25 @@
                     name: 'status',
                     render: function (data, type, row) {
                         if (data === 'Allotted') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Allotted</span>';
-                        } else if (data === 'Pending') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-250"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Pending</span>';
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Allotted</span>';
+                        } else if (data === 'Pending' || data === 'Waiting' || data === 'Waiting Beneficiaries') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-250 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Waiting</span>';
                         } else if (data === 'Rejected') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Rejected</span>';
-                        } else if (data === 'Eligible') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-[9px] font-black uppercase text-indigo-700 tracking-wide border border-indigo-200"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Eligible</span>';
-                        } else if (data === 'Visited') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Visited</span>';
-                        } else if (data === 'Not Visited') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-200"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Not Visited</span>';
-                        } else if (data === 'Passed') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Passed</span>';
-                        } else if (data === 'Failed') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Failed</span>';
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Rejected</span>';
+                        } else if (data === 'Eligible' || data === 'Eligible for booking') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-[9px] font-black uppercase text-indigo-700 tracking-wide border border-indigo-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Eligible for booking</span>';
+                        } else if (data === 'Visited' || data === 'Booking Amount Received') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Booking amount received</span>';
+                        } else if (data === 'Not Visited' || data === 'Booking Amount Not Received') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 text-[9px] font-black uppercase text-amber-700 tracking-wide border border-amber-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Booking amount not received</span>';
+                        } else if (data === 'Passed' || data === 'Eligible') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 text-[9px] font-black uppercase text-emerald-700 tracking-wide border border-emerald-100 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Eligible</span>';
+                        } else if (data === 'Failed' || data === 'Not Eligible') {
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-50 text-[9px] font-black uppercase text-rose-700 tracking-wide border border-rose-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Not Eligible</span>';
                         } else if (data === 'Unallotted') {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-[9px] font-black uppercase text-slate-700 tracking-wide border border-slate-200"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Unallotted</span>';
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-50 text-[9px] font-black uppercase text-slate-700 tracking-wide border border-slate-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>Unallotted</span>';
                         } else {
-                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-[9px] font-black uppercase text-blue-700 tracking-wide border border-blue-200"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Registered</span>';
+                            return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-[9px] font-black uppercase text-blue-700 tracking-wide border border-blue-200 whitespace-nowrap"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Verify in survey app</span>';
                         }
                     }
                 },

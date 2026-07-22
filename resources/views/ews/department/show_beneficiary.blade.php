@@ -50,6 +50,37 @@
             <div class="w-full max-w-5xl bg-white rounded-xl border border-slate-200 shadow-lg p-5 flex flex-col my-2">
                 
                 <!-- Avatar & Status Header (Compact) -->
+                @php
+                    $typeTitle = $beneficiary->type;
+                    if ($typeTitle === 'registered') $typeTitle = 'Verify in survey app';
+                    elseif ($typeTitle === 'pending') $typeTitle = 'Waiting';
+                    elseif ($typeTitle === 'eligible_draw') $typeTitle = 'Eligible for booking';
+                    elseif ($typeTitle === 'booking') $typeTitle = 'Booking Amount Received';
+                    elseif ($typeTitle === 'not_visited') $typeTitle = 'Booking Amount Not Received';
+                    elseif ($typeTitle === 'adc_passed') $typeTitle = 'Eligible';
+                    elseif ($typeTitle === 'adc_failed') $typeTitle = 'Not Eligible';
+
+                    $statusClass = 'bg-blue-50 border-blue-200 text-blue-700';
+                    $statusDot = 'bg-blue-500';
+                    $statusLower = strtolower($beneficiary->status);
+                    
+                    if (str_contains($statusLower, 'allotted')) {
+                        $statusClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                        $statusDot = 'bg-emerald-500';
+                    } elseif (str_contains($statusLower, 'waiting') || str_contains($statusLower, 'pending')) {
+                        $statusClass = 'bg-amber-50 border-amber-200 text-amber-700';
+                        $statusDot = 'bg-amber-500';
+                    } elseif (str_contains($statusLower, 'not received') || str_contains($statusLower, 'not eligible') || str_contains($statusLower, 'rejected') || str_contains($statusLower, 'failed')) {
+                        $statusClass = 'bg-rose-50 border-rose-200 text-rose-700';
+                        $statusDot = 'bg-rose-500';
+                    } elseif (str_contains($statusLower, 'received') || str_contains($statusLower, 'eligible') || str_contains($statusLower, 'passed')) {
+                        $statusClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                        $statusDot = 'bg-emerald-500';
+                    } elseif (str_contains($statusLower, 'unallotted')) {
+                        $statusClass = 'bg-slate-50 border-slate-200 text-slate-700';
+                        $statusDot = 'bg-slate-500';
+                    }
+                @endphp
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
                     <div class="flex items-center gap-3">
                         <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center font-black text-xl uppercase shadow-md shadow-orange-500/10">
@@ -57,26 +88,14 @@
                         </div>
                         <div>
                             <h2 class="text-md font-black text-slate-800 leading-tight uppercase">{{ $beneficiary->full_name }}</h2>
-                            <p class="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Beneficiary Application Record ({{ $beneficiary->type }})</p>
+                            <p class="text-[8px] uppercase tracking-wider text-slate-400 mt-0.5">Beneficiary Application Record ({{ strtoupper($typeTitle) }})</p>
                         </div>
                     </div>
                     
-                    @if($beneficiary->status === 'Allotted')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-250 text-[9px] font-black text-emerald-700 uppercase tracking-wide">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Allotted
-                        </span>
-                    @elseif($beneficiary->status === 'Pending')
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-55/15 border border-amber-300 text-[9px] font-black text-amber-700 uppercase tracking-wide">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            Pending
-                        </span>
-                    @else
-                        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 border border-blue-200 text-[9px] font-black text-blue-700 uppercase tracking-wide">
-                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                            Registered
-                        </span>
-                    @endif
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border {{ $statusClass }} text-[9px] font-black uppercase tracking-wide whitespace-nowrap">
+                        <span class="w-1.5 h-1.5 rounded-full {{ $statusDot }}"></span>
+                        {{ $beneficiary->status }}
+                    </span>
                 </div>
 
                 <!-- Basic Fields Grid (Compact) -->

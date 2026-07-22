@@ -232,13 +232,13 @@ class EwsDepartmentController extends Controller
 
         if ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Registered' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Verify in survey app' as status"), 'dist_name');
         } elseif ($type === 'allotted') {
             $query = DB::table('ews_allotted_8')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), 'dist_name');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Pending' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
@@ -250,27 +250,27 @@ class EwsDepartmentController extends Controller
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ownership' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'eligible_draw') {
             $query = DB::table('ews_eligible_draw_list_5')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible for booking' as status"), 'dist_name');
         } elseif ($type === 'booking') {
             $query = DB::table('ews_bookings_7')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'booking' as type"), DB::raw("'Visited' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'booking' as type"), DB::raw("'Booking Amount Received' as status"), 'dist_name');
         } elseif ($type === 'not_visited') {
             $query = DB::table('ews_eligible_draw_list_5')
                 ->whereNotIn('mobile_number', function($q) use ($districtId) {
                     $q->select('mobile_number')->from('ews_bookings_7')->whereNotNull('mobile_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'not_visited' as type"), DB::raw("'Not Visited' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'not_visited' as type"), DB::raw("'Booking Amount Not Received' as status"), 'dist_name');
         } elseif ($type === 'adc_passed') {
             $query = DB::table('ews_eligible_6')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Passed' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Eligible' as status"), 'dist_name');
         } elseif ($type === 'adc_failed') {
             $query = DB::table('ews_bookings_7')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
                     $q->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_failed' as type"), DB::raw("'Failed' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_failed' as type"), DB::raw("'Not Eligible' as status"), 'dist_name');
         } elseif ($type === 'draw_remaining') {
             $query = DB::table('ews_eligible_6')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
@@ -286,7 +286,7 @@ class EwsDepartmentController extends Controller
             $query = DB::table(DB::raw("(
                 SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'allotted' as type, 'Allotted' as status, dist_name, dist_id FROM ews_allotted_8
                 UNION ALL
-                SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Pending' as status, dist_name, dist_id FROM ews_waiting_list_9
+                SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Waiting' as status, dist_name, dist_id FROM ews_waiting_list_9
             ) as beneficiaries"));
         }
 
@@ -405,17 +405,17 @@ class EwsDepartmentController extends Controller
         }
 
         $beneficiary->status = match ($type) {
-            'registered' => 'Registered',
+            'registered' => 'Verify in survey app',
             'allotted' => 'Allotted',
-            'pending' => 'Pending',
+            'pending' => 'Waiting',
             'rejected_ppp' => 'Rejected',
             'rejected_property' => 'Rejected',
             'rejected_ownership' => 'Rejected',
-            'eligible_draw' => 'Eligible',
-            'booking' => 'Visited',
-            'not_visited' => 'Not Visited',
-            'adc_passed' => 'Passed',
-            'adc_failed' => 'Failed',
+            'eligible_draw' => 'Eligible for booking',
+            'booking' => 'Booking Amount Received',
+            'not_visited' => 'Booking Amount Not Received',
+            'adc_passed' => 'Eligible',
+            'adc_failed' => 'Not Eligible',
             'draw_remaining' => 'Unallotted',
         };
         $beneficiary->type = $type;
@@ -721,13 +721,13 @@ class EwsDepartmentController extends Controller
 
         if ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Registered' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Verify in survey app' as status"), 'dist_name');
         } elseif ($type === 'allotted') {
             $query = DB::table('ews_allotted_8')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Allotted' as status"), 'dist_name');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Pending' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
@@ -739,27 +739,27 @@ class EwsDepartmentController extends Controller
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'eligible_draw') {
             $query = DB::table('ews_eligible_draw_list_5')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Eligible' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Eligible for booking' as status"), 'dist_name');
         } elseif ($type === 'booking') {
             $query = DB::table('ews_bookings_7')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Visited' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Booking Amount Received' as status"), 'dist_name');
         } elseif ($type === 'not_visited') {
             $query = DB::table('ews_eligible_draw_list_5')
                 ->whereNotIn('mobile_number', function($q) use ($districtId) {
                     $q->select('mobile_number')->from('ews_bookings_7')->whereNotNull('mobile_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Not Visited' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Booking Amount Not Received' as status"), 'dist_name');
         } elseif ($type === 'adc_passed') {
             $query = DB::table('ews_eligible_6')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Passed' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Eligible' as status"), 'dist_name');
         } elseif ($type === 'adc_failed') {
             $query = DB::table('ews_bookings_7')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
                     $q->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
                         ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Failed' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Not Eligible' as status"), 'dist_name');
         } elseif ($type === 'draw_remaining') {
             $query = DB::table('ews_eligible_6')
                 ->whereNotIn('application_number', function($q) use ($districtId) {
@@ -775,7 +775,7 @@ class EwsDepartmentController extends Controller
             $query = DB::table(DB::raw("(
                 SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'allotted' as type, 'Allotted' as status, dist_name, dist_id FROM ews_allotted_8
                 UNION ALL
-                SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Pending' as status, dist_name, dist_id FROM ews_waiting_list_9
+                SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Waiting' as status, dist_name, dist_id FROM ews_waiting_list_9
             ) as beneficiaries"));
         }
 
@@ -818,11 +818,21 @@ class EwsDepartmentController extends Controller
             return $item;
         });
 
+        $typeTitle = $type;
+        if ($type === 'registered') $typeTitle = 'Verify in survey app';
+        elseif ($type === 'pending') $typeTitle = 'Waiting';
+        elseif ($type === 'eligible_draw') $typeTitle = 'Eligible for booking';
+        elseif ($type === 'booking') $typeTitle = 'Booking Amount Received';
+        elseif ($type === 'not_visited') $typeTitle = 'Booking Amount Not Received';
+        elseif ($type === 'adc_passed') $typeTitle = 'Eligible';
+        elseif ($type === 'adc_failed') $typeTitle = 'Not Eligible';
+
         if ($format === 'pdf') {
-            return $this->renderPrintPdfResponse("EWS BENEFICIARIES REGISTRY - " . strtoupper($type), $headers, $mappedData);
+            return $this->renderPrintPdfResponse("EWS BENEFICIARIES REGISTRY - " . strtoupper($typeTitle), $headers, $mappedData);
         }
 
-        return $this->streamCsvResponse($filename, $headers, $mappedData);
+        $exportFilename = "ews_beneficiaries_" . str_replace(' ', '_', strtolower($typeTitle)) . "_" . date('Y-m-d_H-i') . ".csv";
+        return $this->streamCsvResponse($exportFilename, $headers, $mappedData);
     }
 
     public function exportDevelopers(Request $request)

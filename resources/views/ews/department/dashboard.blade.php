@@ -93,7 +93,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-blue-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition">1. Registered</span>
+                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-blue-600 transition">1. Verify in survey app</span>
                                 <h2 class="text-2xl font-black text-blue-600 font-mono mt-1">{{ number_format($registeredCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">list_alt</span></span>
@@ -123,7 +123,7 @@
                     <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">3. Prop in India</span>
+                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">3. Property in India</span>
                                 <h2 class="text-2xl font-black text-rose-700 font-mono mt-1">{{ number_format($rejectedPropertyCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:bg-rose-700 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">domain_disabled</span></span>
@@ -154,7 +154,7 @@
                 <div class="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-650 flex items-center gap-2 shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
                     <span>
-                        Filtration: Registered ({{ number_format($registeredCount) }}) - Rejections ({{ number_format($rejectedPppCount) }} PPP + {{ number_format($rejectedPropertyCount) }} Prop + {{ number_format($rejectedOwnershipCount) }} House) = Eligible for Draw ({{ number_format($eligibleDrawCount) }})
+                        Filtration: Verify in survey app ({{ number_format($registeredCount) }}) - Rejections ({{ number_format($rejectedPppCount) }} PPP + {{ number_format($rejectedPropertyCount) }} Prop + {{ number_format($rejectedOwnershipCount) }} House) = Eligible for booking ({{ number_format($eligibleDrawCount) }})
                     </span>
                 </div>
             </div>
@@ -167,11 +167,11 @@
                 </div>
 
                 <div class="grid grid-cols-4 gap-3">
-                    <!-- Eligible for Draw -->
+                    <!-- Eligible for booking -->
                     <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow-md hover:border-indigo-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition">5. Eligible for Draw</span>
+                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition">5. Eligible for booking</span>
                                 <h2 class="text-2xl font-black text-indigo-700 font-mono mt-1.5">{{ number_format($eligibleDrawCount) }}</h2>
                             </div>
                             <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-650 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">how_to_reg</span></span>
@@ -182,26 +182,26 @@
                         </div>
                     </a>
 
-                    <!-- Verification Visited / Absent -->
+                    <!-- Booking amount received -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">6. Verification Visits</span>
+                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">6. Booking amount received</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
                                 <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Visited:</span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Booking amount received:</span>
                                         <span class="text-emerald-700 font-extrabold font-mono text-sm">{{ number_format($bookingCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Visited List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Booking amount received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
                                 <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Absent:</span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Booking amount not received:</span>
                                         <span class="text-rose-700 font-extrabold font-mono text-sm">{{ number_format($notVisitedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Absent List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Booking amount not received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
                             </div>
                         </div>
@@ -213,23 +213,23 @@
                     <!-- ADC Verification outcomes -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">7. ADC Verification Status</span>
+                            <span class="text-[10.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">7. ADC Eligibility Status</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
                                 <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Passed:</span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Eligible:</span>
                                         <span class="text-emerald-700 font-extrabold font-mono text-sm">{{ number_format($adcPassedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Passed List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Eligible List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
                                 <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Failed:</span>
+                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not Eligible:</span>
                                         <span class="text-rose-700 font-extrabold font-mono text-sm">{{ number_format($adcFailedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Failed List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Not Eligible List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
                             </div>
                         </div>
@@ -245,7 +245,7 @@
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1">
                                 <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                                         <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-emerald-800">Allotted:</span>
                                         <span class="text-emerald-700 font-extrabold font-mono text-xs">{{ number_format($allottedCount) }}</span>
                                     </div>
@@ -253,15 +253,15 @@
                                 </a>
                                 <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-amber-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
-                                        <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-amber-800">Pending:</span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-amber-800">Waiting:</span>
                                         <span class="text-amber-700 font-extrabold font-mono text-xs">{{ number_format($pendingCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-amber-700 transition flex items-center p-0.5" title="View Pending List"><span class="material-symbols-outlined text-xs">visibility</span></span>
+                                    <span class="text-slate-400 group-hover:text-amber-700 transition flex items-center p-0.5" title="View Waiting List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
                                 <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-slate-400 shrink-0"></span>
+                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
                                         <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-slate-900">Unallotted:</span>
                                         <span class="text-slate-650 font-extrabold font-mono text-xs">{{ number_format($drawRemainingCount) }}</span>
                                     </div>
@@ -279,7 +279,7 @@
                 <div class="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-650 flex items-center gap-2 shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
                     <span>
-                        Outcomes: Visited ({{ number_format($bookingCount) }}) -> Passed ({{ number_format($adcPassedCount) }}) [Allotted: {{ $allottedCount }} + Pending: {{ $pendingCount }} + Unallotted: {{ $drawRemainingCount }}] & Failed ({{ number_format($adcFailedCount) }})
+                        Outcomes: Booking Amount Received ({{ number_format($bookingCount) }}) -> Eligible ({{ number_format($adcPassedCount) }}) [Allotted: {{ $allottedCount }} + Waiting: {{ $pendingCount }} + Unallotted: {{ $drawRemainingCount }}] & Not Eligible ({{ number_format($adcFailedCount) }})
                     </span>
                 </div>
             </div>
