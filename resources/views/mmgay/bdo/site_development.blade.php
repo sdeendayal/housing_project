@@ -302,3 +302,146 @@
     </div>
 </main>
 @endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        // 1. Preview selected images instantly and validate on selection change
+        $('input[type="file"]').on('change', function(e) {
+            const file = this.files[0];
+            if (!file) return;
+
+            // Verify it is an image
+            if (!file.type.startsWith('image/')) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File',
+                    text: 'Please select a valid image file (JPG, JPEG, PNG).',
+                    confirmButtonColor: '#ba1a1a'
+                });
+                this.value = '';
+                return;
+            }
+
+            // Verify size (max 500KB)
+            if (file.size > 500 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'Image size must be less than 500 KB.',
+                    confirmButtonColor: '#ba1a1a'
+                });
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            const $input = $(this);
+            const $card = $input.closest('.bg-slate-50');
+            
+            // Find existing preview container
+            let $previewContainer = $card.find('.aspect-\\[16\\/9\\]');
+            
+            reader.onload = function(event) {
+                if ($previewContainer.length === 0) {
+                    // Determine label name based on input name
+                    const inputName = $input.attr('name');
+                    let labelText = "Photo Preview";
+                    if (inputName === 'road_photo') labelText = "Road Photo";
+                    else if (inputName === 'water_photo') labelText = "Water Photo";
+                    else if (inputName === 'electricity_photo') labelText = "Electricity Photo";
+                    else if (inputName === 'sewerage_photo') labelText = "Sewerage Photo";
+
+                    // Create the preview container dynamically
+                    $previewContainer = $(`
+                        <div class="mt-3 relative rounded-lg overflow-hidden border border-slate-200 aspect-[16/9] bg-black">
+                            <img src="${event.target.result}" alt="Progress Preview" class="w-full h-full object-cover">
+                            <span class="absolute top-1.5 left-1.5 bg-black/65 text-white text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wide">${labelText} (Selected)</span>
+                        </div>
+                    `);
+                    $card.append($previewContainer);
+                } else {
+                    // Update existing preview image src
+                    let $img = $previewContainer.find('img');
+                    $img.attr('src', event.target.result);
+                    // Update badge to indicate selected
+                    let $badge = $previewContainer.find('span');
+                    if (!$badge.text().includes('(Selected)')) {
+                        $badge.text($badge.text().trim() + ' (Selected)');
+                    }
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        });
+
+        // 2. Validate all photo change rules and fields upon form submission
+        $('form').on('submit', function(e) {
+            const categories = [
+                { name: 'road_status', label: 'Road Connectivity Status', file: 'road_photo', title: 'Road Connectivity' },
+                { name: 'water_status', label: 'Drinking Water Supply Status', file: 'water_photo', title: 'Drinking Water Supply (PHED)' },
+                { name: 'electricity_status', label: 'Street Light / Electrical Status', file: 'electricity_photo', title: 'Street Light / Electrical' },
+                { name: 'sewerage_status', label: 'Sewerage Status', file: 'sewerage_photo', title: 'Sewerage' }
+            ];
+
+            // Validate status select boxes
+            for (let cat of categories) {
+                const $select = $(`select[name="${cat.name}"]`);
+                if ($select.val() === '') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Required Field',
+                        text: `Please select the status for ${cat.title}.`,
+                        confirmButtonColor: '#ba1a1a'
+                    });
+                    $select.focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Validate required photo files (must either exist in database or be chosen now)
+            for (let cat of categories) {
+                const $input = $(`input[name="${cat.file}"]`);
+                const $card = $input.closest('.bg-slate-50');
+                const hasExistingPhoto = $card.find('.aspect-\\[16\\/9\\]').length > 0;
+                const hasSelectedPhoto = $input[0].files && $input[0].files.length > 0;
+
+                if (!hasExistingPhoto && !hasSelectedPhoto) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Required Photo',
+                        text: `Please upload a progress photo for ${cat.title}.`,
+                        confirmButtonColor: '#ba1a1a'
+                    });
+                    $input.focus();
+                    e.preventDefault();
+                    return false;
+                }
+            }
+
+            // Validate remarks
+            const $remarks = $('textarea[name="remarks"]');
+            if ($remarks.val().trim() === '') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Required Field',
+                    text: 'Please enter remarks / overall progress description.',
+                    confirmButtonColor: '#ba1a1a'
+                });
+                $remarks.focus();
+                e.preventDefault();
+                return false;
+            }
+
+            // Disable submit button and show loading spinner to prevent double submission
+            const $btn = $(this).find('button[type="submit"]');
+            if ($btn.length) {
+                $btn.prop('disabled', true);
+                $btn.html('<span class="animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></span> Updating Site Progress...');
+            }
+        });
+    });
+</script>
+@endsection
+
