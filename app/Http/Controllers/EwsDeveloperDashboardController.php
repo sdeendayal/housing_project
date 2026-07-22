@@ -191,6 +191,133 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
+        // Bulk Mode Generation
+        if ($request->input('bulk_mode') == '1') {
+            $validated = $request->validate([
+                'district_id' => 'required|exists:ews_districts,id',
+                'town_name' => 'required|string|max:255',
+                'project_name' => 'required|string|max:255',
+                'block_tower_number' => 'required|string|max:255',
+                'from_floor' => 'required|integer|min:0|max:100',
+                'to_floor' => 'required|integer|min:0|max:100|gte:from_floor',
+                'flat_number_type' => 'required|in:range,custom',
+                'from_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1',
+                'to_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1|gte:from_flat',
+                'custom_flat_numbers' => 'required_if:flat_number_type,custom|nullable|string',
+            ]);
+
+            if ($request->flat_number_type === 'custom') {
+                if ($request->filled('from_flat') || $request->filled('to_flat')) {
+                    return back()->withInput()->with('error', "Validation Error: Range fields must be empty when selecting Custom List.");
+                }
+            } else {
+                if ($request->filled('custom_flat_numbers')) {
+                    return back()->withInput()->with('error', "Validation Error: Custom list field must be empty when selecting Numerical Range.");
+                }
+            }
+
+            $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
+            if (!empty($user->district_name)) {
+                $userDist = strtoupper(trim($user->district_name));
+                $selectedDist = strtoupper(trim($district->name));
+                if ($userDist !== $selectedDist && $user->district_id != $district->id) {
+                    return back()->withInput()->with('error', "Unauthorized: You can only register flats for {$user->district_name}.");
+                }
+            }
+
+            $fromFloor = (int)$request->from_floor;
+            $toFloor = (int)$request->to_floor;
+            
+            $flatNumbers = [];
+            if ($request->flat_number_type === 'custom') {
+                $raw = $request->custom_flat_numbers;
+                $parts = explode(',', $raw);
+                foreach ($parts as $part) {
+                    $num = trim($part);
+                    if ($num !== '') {
+                        $flatNumbers[] = $num;
+                    }
+                }
+            } else {
+                $fromFlat = (int)$request->from_flat;
+                $toFlat = (int)$request->to_flat;
+                for ($i = $fromFlat; $i <= $toFlat; $i++) {
+                    $flatNumbers[] = $i;
+                }
+            }
+
+            if (empty($flatNumbers)) {
+                return back()->withInput()->with('error', "Invalid flats configuration. Please provide a valid flat range or custom list.");
+            }
+
+            $createdCount = 0;
+            DB::beginTransaction();
+            try {
+                for ($floorNum = $fromFloor; $floorNum <= $toFloor; $floorNum++) {
+                    if ($floorNum === 0) {
+                        $floorLabel = "Ground Floor";
+                    } elseif ($floorNum === 1) {
+                        $floorLabel = "First Floor";
+                    } elseif ($floorNum === 2) {
+                        $floorLabel = "Second Floor";
+                    } elseif ($floorNum === 3) {
+                        $floorLabel = "Third Floor";
+                    } else {
+                        $floorLabel = "{$floorNum}th Floor";
+                    }
+
+                    foreach ($flatNumbers as $flatSeq) {
+                        if ($request->input('floor_prefix_enabled') == '1') {
+                            if ($floorNum === 0) {
+                                $flatNumberStr = str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
+                            } else {
+                                $flatNumberStr = $floorNum . str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
+                            }
+                        } else {
+                            $flatNumberStr = (string)$flatSeq;
+                        }
+
+                        $flatData = [
+                            'district_id' => $district->id,
+                            'district_name' => $district->name,
+                            'town_name' => $request->town_name,
+                            'project_name' => $request->project_name,
+                            'block_tower_number' => $request->block_tower_number,
+                            'floor' => $floorLabel,
+                            'flat_number' => $flatNumberStr,
+                            'created_by' => $user->id,
+                            'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
+                            'flat_code' => EwsHelper::generateFlatCode(
+                                $request->town_name,
+                                $user->name,
+                                $floorLabel,
+                                $request->block_tower_number,
+                                $flatNumberStr
+                            )
+                        ];
+
+                        EwsBuilderFlat::create($flatData);
+                        $createdCount++;
+                    }
+                }
+
+                EwsDeveloperLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'CREATED_BULK',
+                    'details' => "Bulk Registered {$createdCount} EWS Flats under Tower: {$request->block_tower_number}, Project: '{$request->project_name}' in {$request->town_name} (Floors: {$fromFloor} to {$toFloor})",
+                    'ip_address' => $request->ip(),
+                ]);
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->withInput()->with('error', "Database error during bulk generation: " . $e->getMessage());
+            }
+
+            return redirect()->route('ews.developer.dashboard')->with('success', "Bulk Registry successfully generated and added {$createdCount} EWS flats.");
+        }
+
+        // Single Mode Generation
         $validated = $request->validate([
             'district_id' => 'required|exists:ews_districts,id',
             'town_name' => 'required|string|max:255',
@@ -202,7 +329,6 @@ class EwsDeveloperDashboardController extends Controller
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
 
-        // Enforce District-wise lock: Developers can ONLY register flats for their assigned district!
         if (!empty($user->district_name)) {
             $userDist = strtoupper(trim($user->district_name));
             $selectedDist = strtoupper(trim($district->name));
@@ -215,6 +341,13 @@ class EwsDeveloperDashboardController extends Controller
         $validated['district_name'] = $district->name;
         $validated['created_by'] = $user->id;
         $validated['secure_id'] = md5(uniqid("flat_" . microtime() . rand(), true));
+        $validated['flat_code'] = EwsHelper::generateFlatCode(
+            $validated['town_name'],
+            $user->name,
+            $validated['floor'],
+            $validated['block_tower_number'],
+            $validated['flat_number']
+        );
 
         $flat = EwsBuilderFlat::create($validated);
 
@@ -303,6 +436,13 @@ class EwsDeveloperDashboardController extends Controller
 
         $validated['district_id'] = $district->id;
         $validated['district_name'] = $district->name;
+        $validated['flat_code'] = EwsHelper::generateFlatCode(
+            $validated['town_name'],
+            $user->name,
+            $validated['floor'],
+            $validated['block_tower_number'],
+            $validated['flat_number']
+        );
 
         $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
 

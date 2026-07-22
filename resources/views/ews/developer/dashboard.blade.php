@@ -450,6 +450,7 @@
                                 <th>Block / Tower No.</th>
                                 <th>Floor Details</th>
                                 <th>Flat No.</th>
+                                <th>Unique Flat Code</th>
                                 <th>Ownership</th>
                                 <th style="text-align: right; width: 15%;">Actions</th>
                             </tr>
@@ -562,7 +563,8 @@
                     { data: 'project_name', name: 'project_name', class: 'text-slate-500' },
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold' },
                     { data: 'floor', name: 'floor' },
-                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-650 font-black font-mono' },
+                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono' },
+                    { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono' },
                     { data: 'added_by', name: 'added_by', orderable: false, searchable: false },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
                 ],

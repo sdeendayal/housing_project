@@ -106,6 +106,7 @@
                                 <th>Block / Tower</th>
                                 <th>Floor</th>
                                 <th>Flat Number</th>
+                                <th>Unique Flat Code</th>
                                 <th>Submitted By Developer</th>
                             </tr>
                         </thead>
@@ -152,6 +153,7 @@
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'font-mono text-slate-600 font-bold' },
                     { data: 'floor', name: 'floor', class: 'font-bold text-slate-700' },
                     { data: 'flat_number', name: 'flat_number', class: 'font-mono font-bold text-amber-700' },
+                    { data: 'flat_code', name: 'flat_code', class: 'font-mono font-bold text-emerald-700' },
                     { data: 'created_by_info', name: 'created_by_info', orderable: false, searchable: false }
                 ],
                 language: {

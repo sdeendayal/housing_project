@@ -263,23 +263,22 @@ class EwsDepartmentController extends Controller
                 ->when($districtId, fn($q) => $q->where('district_id', $districtId));
         } elseif ($type === 'not_in_survey') {
             $query = DB::table('ppt_members')
-                ->whereNotIn('familyID', function($q) {
-                    $q->select('application_number')->from('all_ews_data_1')->whereNotNull('application_number');
-                })
+                ->leftJoin('all_ews_data_1', 'ppt_members.mobileNo', '=', 'all_ews_data_1.mobile_number')
+                ->whereNull('all_ews_data_1.mobile_number')
                 ->select(
-                    'id as secure_id',
-                    'id',
-                    'familyID as application_number',
-                    'fullName as full_name',
-                    'aadhaarNo as aadhar_no',
-                    'mobileNo as mobile_number',
+                    'ppt_members.id as secure_id',
+                    'ppt_members.id',
+                    'ppt_members.familyID as application_number',
+                    'ppt_members.fullName as full_name',
+                    'ppt_members.aadhaarNo as aadhar_no',
+                    'ppt_members.mobileNo as mobile_number',
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'not_in_survey' as type"),
                     DB::raw("'Not in survey' as status"),
-                    'district as dist_name',
-                    'district_id as dist_id'
+                    'ppt_members.district as dist_name',
+                    'ppt_members.district_id as dist_id'
                 )
-                ->when($districtId, fn($q) => $q->where('district_id', $districtId));
+                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId));
         } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Verify in survey app' as status"), 'dist_name');

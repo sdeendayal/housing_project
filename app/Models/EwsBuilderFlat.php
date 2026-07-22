@@ -17,6 +17,7 @@ class EwsBuilderFlat extends Model
         'block_tower_number',
         'floor',
         'flat_number',
+        'flat_code',
         'created_by',
         'secure_id',
     ];

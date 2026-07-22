@@ -107,15 +107,25 @@
                 
                 <!-- Left Column: Form Card (lg:col-span-7) -->
                 <div class="lg:col-span-7 bg-white border border-slate-200 rounded-xl shadow-sm dev-shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
+                    <div class="px-6 py-4 border-b border-slate-150 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                         <div>
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                                 <i class="bi bi-plus-circle text-sky-500 text-sm"></i>
-                                New Flat Registry Form
+                                Flat Registry Form
                             </h3>
                             <p class="text-[8px] text-slate-400 font-mono mt-0.5 uppercase">Allotment record builder inputs</p>
                         </div>
-                        <span class="text-[8px] text-slate-400 font-mono">POLICY: 23.10.2025</span>
+                        
+                        <div class="inline-flex p-0.5 bg-slate-200/80 rounded-lg text-[9px] font-black uppercase tracking-wider">
+                            <button type="button" id="tab-single" onclick="switchMode('single')"
+                                class="px-3 py-1 bg-white text-sky-700 shadow-sm rounded-md transition-all font-black">
+                                <i class="bi bi-file-earmark-plus me-0.5"></i> Single Flat
+                            </button>
+                            <button type="button" id="tab-bulk" onclick="switchMode('bulk')"
+                                class="px-3 py-1 text-slate-600 hover:text-slate-800 rounded-md transition-all">
+                                <i class="bi bi-grid-3x3-gap-fill me-0.5"></i> Bulk Generation
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Form Content -->
@@ -154,26 +164,107 @@
                                 class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Block / Tower -->
-                            <div class="space-y-1 md:col-span-1">
-                                <label for="block_tower_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No.</label>
-                                <input type="text" id="block_tower_number" name="block_tower_number" placeholder="e.g. T-02" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                        <input type="hidden" name="bulk_mode" id="bulk_mode" value="0">
+
+                        <!-- Block / Tower No (Common to both modes) -->
+                        <div class="space-y-1">
+                            <label for="block_tower_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No.</label>
+                            <input type="text" id="block_tower_number" name="block_tower_number" placeholder="e.g. T-02" required
+                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                         </div>
 
-                            <!-- Floor -->
-                            <div class="space-y-1 md:col-span-1">
+                        <!-- Single Flat Fields -->
+                        <div id="single-fields-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Floor Details -->
+                            <div class="space-y-1">
                                 <label for="floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor Details</label>
                                 <input type="text" id="floor" name="floor" placeholder="e.g. Ground floor" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                             </div>
 
                             <!-- Flat Number -->
-                            <div class="space-y-1 md:col-span-1">
+                            <div class="space-y-1">
                                 <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Flat Number</label>
                                 <input type="text" id="flat_number" name="flat_number" placeholder="e.g. B-101" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                            </div>
+                        </div>
+
+                        <!-- Bulk Generation Fields (Hidden by default) -->
+                        <div id="bulk-fields-container" class="hidden space-y-4 border-t border-slate-100 pt-3">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- From Floor -->
+                                <div class="space-y-1">
+                                    <label for="from_floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">From Floor (Number)</label>
+                                    <select id="from_floor" name="from_floor"
+                                        class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
+                                        <option value="0" selected>Ground Floor (0)</option>
+                                        @for($f = 1; $f <= 25; $f++)
+                                            <option value="{{ $f }}">Floor {{ $f }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                                
+                                <!-- To Floor -->
+                                <div class="space-y-1">
+                                    <label for="to_floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">To Floor (Number)</label>
+                                    <select id="to_floor" name="to_floor"
+                                        class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
+                                        @for($f = 0; $f <= 25; $f++)
+                                            <option value="{{ $f }}" {{ $f === 6 ? 'selected' : '' }}>Floor {{ $f }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-3 bg-slate-50/50 p-4 border border-slate-200 rounded-lg">
+                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                    <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Flat Numbering Pattern</label>
+                                    
+                                    <div class="flex items-center gap-4 text-xs font-bold">
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="flat_number_type" value="range" checked onchange="toggleFlatInputType('range')"
+                                                class="text-sky-600 focus:ring-sky-500">
+                                            <span>Numerical Range</span>
+                                        </label>
+                                        <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                                            <input type="radio" name="flat_number_type" value="custom" onchange="toggleFlatInputType('custom')"
+                                                class="text-sky-600 focus:ring-sky-500">
+                                            <span>Custom List</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Numerical Range inputs -->
+                                <div id="bulk-range-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                                    <div class="space-y-1">
+                                        <label for="from_flat" class="block text-[9px] font-black uppercase text-slate-400 tracking-wider">From Flat (Sequence)</label>
+                                        <input type="number" id="from_flat" name="from_flat" min="1" placeholder="e.g. 1" value="1"
+                                            class="w-full bg-white border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <label for="to_flat" class="block text-[9px] font-black uppercase text-slate-400 tracking-wider">To Flat (Sequence)</label>
+                                        <input type="number" id="to_flat" name="to_flat" min="1" placeholder="e.g. 24" value="24"
+                                            class="w-full bg-white border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                                    </div>
+                                </div>
+
+                                <!-- Custom List inputs -->
+                                <div id="bulk-custom-container" class="hidden space-y-1 pt-1">
+                                    <label for="custom_flat_numbers" class="block text-[9px] font-black uppercase text-slate-400 tracking-wider">Comma Separated Flat Numbers</label>
+                                    <input type="text" id="custom_flat_numbers" name="custom_flat_numbers" placeholder="e.g. 6, 8, 10, 12, 14, 16, 24"
+                                        class="w-full bg-white border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-medium">
+                                    <p class="text-[8.5px] text-slate-400 font-medium">Specify individual flat sequence numbers separated by commas.</p>
+                                </div>
+                            </div>
+
+                            <!-- Prefix Option -->
+                            <div class="flex items-center gap-2 p-1.5 bg-sky-50/50 border border-sky-100 rounded-lg px-3">
+                                <input type="checkbox" id="floor_prefix_enabled" name="floor_prefix_enabled" value="1" checked
+                                    class="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 cursor-pointer">
+                                <label for="floor_prefix_enabled" class="text-[10px] font-bold text-sky-900 cursor-pointer leading-tight">
+                                    Include Floor Prefix in Flat Numbers (e.g. Floor 2 flat 4 becomes "204", Floor 0 flat 1 becomes "01")
+                                </label>
                             </div>
                         </div>
 
@@ -252,6 +343,94 @@
     </div>
 
     <script>
+        function switchMode(mode) {
+            const bulkModeInput = document.getElementById('bulk_mode');
+            const tabSingle = document.getElementById('tab-single');
+            const tabBulk = document.getElementById('tab-bulk');
+            
+            const singleFields = document.getElementById('single-fields-container');
+            const bulkFields = document.getElementById('bulk-fields-container');
+            
+            const floorInput = document.getElementById('floor');
+            const flatNumInput = document.getElementById('flat_number');
+            
+            const fromFloor = document.getElementById('from_floor');
+            const toFloor = document.getElementById('to_floor');
+            const fromFlat = document.getElementById('from_flat');
+            const toFlat = document.getElementById('to_flat');
+            const customFlats = document.getElementById('custom_flat_numbers');
+
+            if (mode === 'bulk') {
+                bulkModeInput.value = '1';
+                tabBulk.className = "px-3 py-1 bg-white text-sky-700 shadow-sm rounded-md transition-all font-black";
+                tabSingle.className = "px-3 py-1 text-slate-600 hover:text-slate-800 rounded-md transition-all";
+                
+                singleFields.classList.add('hidden');
+                bulkFields.classList.remove('hidden');
+                
+                floorInput.required = false;
+                flatNumInput.required = false;
+                
+                fromFloor.required = true;
+                toFloor.required = true;
+                
+                toggleFlatInputType(document.querySelector('input[name="flat_number_type"]:checked').value);
+            } else {
+                bulkModeInput.value = '0';
+                tabSingle.className = "px-3 py-1 bg-white text-sky-700 shadow-sm rounded-md transition-all font-black";
+                tabBulk.className = "px-3 py-1 text-slate-600 hover:text-slate-800 rounded-md transition-all";
+                
+                singleFields.classList.remove('hidden');
+                bulkFields.classList.add('hidden');
+                
+                floorInput.required = true;
+                flatNumInput.required = true;
+                
+                fromFloor.required = false;
+                toFloor.required = false;
+                fromFlat.required = false;
+                toFlat.required = false;
+                customFlats.required = false;
+            }
+        }
+
+        function toggleFlatInputType(type) {
+            const rangeContainer = document.getElementById('bulk-range-container');
+            const customContainer = document.getElementById('bulk-custom-container');
+            const fromFlat = document.getElementById('from_flat');
+            const toFlat = document.getElementById('to_flat');
+            const customFlats = document.getElementById('custom_flat_numbers');
+            
+            const isBulk = document.getElementById('bulk_mode').value === '1';
+
+            if (type === 'custom') {
+                rangeContainer.classList.add('hidden');
+                customContainer.classList.remove('hidden');
+                
+                // Clear numerical range inputs
+                fromFlat.value = '';
+                toFlat.value = '';
+                
+                if (isBulk) {
+                    fromFlat.required = false;
+                    toFlat.required = false;
+                    customFlats.required = true;
+                }
+            } else {
+                rangeContainer.classList.remove('hidden');
+                customContainer.classList.add('hidden');
+                
+                // Clear custom list input
+                customFlats.value = '';
+                
+                if (isBulk) {
+                    fromFlat.required = true;
+                    toFlat.required = true;
+                    customFlats.required = false;
+                }
+            }
+        }
+
         document.getElementById('devCreateForm').addEventListener('submit', function (e) {
             const btn = this.querySelector('button[type="submit"]');
             if (btn) {
