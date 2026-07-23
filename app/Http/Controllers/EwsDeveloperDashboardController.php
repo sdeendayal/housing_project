@@ -64,7 +64,14 @@ class EwsDeveloperDashboardController extends Controller
 
         $currentView = $request->query('view', 'dashboard');
 
-        return view('ews.developer.dashboard', compact('user', 'stats', 'projectBreakdown', 'recentLogs', 'currentView'));
+        $projectsList = !empty($user->district_id) 
+            ? EwsProject::where('district_id', $user->district_id)->orderBy('name')->get()
+            : EwsProject::orderBy('name')->get();
+        $townsList = !empty($user->district_id) 
+            ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get()
+            : EwsTown::orderBy('name')->get();
+
+        return view('ews.developer.dashboard', compact('user', 'stats', 'projectBreakdown', 'recentLogs', 'currentView', 'projectsList', 'townsList'));
     }
 
     /**

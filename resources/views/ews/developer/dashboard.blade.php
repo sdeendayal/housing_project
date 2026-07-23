@@ -282,32 +282,32 @@
                     </a>
 
                     <!-- Stat 3: Active Projects -->
-                    <div class="bg-white border border-indigo-200/80 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between">
+                    <a href="javascript:void(0)" onclick="openProjectsModal(event)" class="bg-white border border-indigo-200/80 hover:border-indigo-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-wider text-indigo-600">District Projects</span>
                             <h4 class="text-xl font-black text-indigo-600 font-mono mt-0.5">{{ $stats['total_projects'] }}</h4>
                             <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Active Projects</span>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-diagram-3-fill text-lg"></i>
                         </div>
-                    </div>
+                    </a>
 
                     <!-- Stat 4: Coverage Towns -->
-                    <div class="bg-white border border-violet-200/80 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between">
+                    <a href="javascript:void(0)" onclick="openTownsModal(event)" class="bg-white border border-violet-200/80 hover:border-violet-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-wider text-violet-600">Coverage Towns</span>
                             <h4 class="text-xl font-black text-violet-600 font-mono mt-0.5">{{ $stats['total_towns'] }}</h4>
                             <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Mapped Towns</span>
                         </div>
-                        <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100">
+                        <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-pin-map-fill text-lg"></i>
                         </div>
-                    </div>
+                    </a>
                 </div>
 
                 <!-- District Project Breakdown Cards Grid -->
-                <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-4">
+                <div id="project-breakdown-section" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-150 pb-3">
                         <div class="flex items-center gap-2">
                             <i class="bi bi-buildings-fill text-sky-500 text-base"></i>
@@ -395,7 +395,7 @@
                         <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-[10px] font-bold">
                             <button type="button" id="btn-scope-all" onclick="setOwnershipFilter('all')"
                                 class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'text-slate-600 font-bold' : 'bg-white text-sky-700 shadow-sm font-black' }}">
-                                <i class="bi bi-building me-1"></i> All District Records
+                                <i class="bi bi-building me-1"></i> All {{ $user->district_name ?? 'District' }} Records
                             </button>
                             <button type="button" id="btn-scope-my" onclick="setOwnershipFilter('my_flats')"
                                 class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'bg-white text-emerald-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">
@@ -465,9 +465,125 @@
         </div>
     </div>
 
+    <!-- Projects Modal -->
+    <div id="projects-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col max-h-[80vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="projects-modal-content">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-2 text-indigo-700">
+                    <i class="bi bi-diagram-3-fill text-lg"></i>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Projects in {{ strtoupper($user->district_name ?? 'District') }}</h3>
+                </div>
+                <button onclick="closeProjectsModal()" class="w-6 h-6 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
+                @forelse($projectsList as $index => $proj)
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                        <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($proj->name) }}</span>
+                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded text-[9px] font-mono font-bold uppercase">
+                            {{ DB::table('ews_builder_flats')->where('project_id', $proj->id)->count() }} Flats
+                        </span>
+                    </div>
+                @empty
+                    <div class="text-center py-6 text-slate-400 text-xs font-medium">No projects registered in {{ $user->district_name }}.</div>
+                @endforelse
+            </div>
+            <!-- Footer -->
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 text-right">
+                <button onclick="closeProjectsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-750 font-bold uppercase rounded-lg text-[9.5px] transition-all">
+                    Close View
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Towns Modal -->
+    <div id="towns-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col max-h-[80vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="towns-modal-content">
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50">
+                <div class="flex items-center gap-2 text-violet-750">
+                    <i class="bi bi-pin-map-fill text-lg"></i>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Towns in {{ strtoupper($user->district_name ?? 'District') }}</h3>
+                </div>
+                <button onclick="closeTownsModal()" class="w-6 h-6 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+            <!-- Body -->
+            <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
+                @forelse($townsList as $index => $town)
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                        <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($town->name) }}</span>
+                        <span class="px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-150 rounded text-[9px] font-mono font-bold uppercase">
+                            {{ DB::table('ews_builder_flats')->where('town_id', $town->id)->count() }} Flats
+                        </span>
+                    </div>
+                @empty
+                    <div class="text-center py-6 text-slate-400 text-xs font-medium">No towns mapped in {{ $user->district_name }}.</div>
+                @endforelse
+            </div>
+            <!-- Footer -->
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 text-right">
+                <button onclick="closeTownsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-750 font-bold uppercase rounded-lg text-[9.5px] transition-all">
+                    Close View
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Alert / Toast Messages via SweetAlert -->
     <script>
         let table;
+
+        function openProjectsModal(e) {
+            if (e) e.preventDefault();
+            const modal = document.getElementById('projects-modal');
+            const content = document.getElementById('projects-modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeProjectsModal() {
+            const modal = document.getElementById('projects-modal');
+            const content = document.getElementById('projects-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openTownsModal(e) {
+            if (e) e.preventDefault();
+            const modal = document.getElementById('towns-modal');
+            const content = document.getElementById('towns-modal-content');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeTownsModal() {
+            const modal = document.getElementById('towns-modal');
+            const content = document.getElementById('towns-modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.remove('flex');
+                modal.classList.add('hidden');
+            }, 300);
+        }
 
         function triggerExport(type) {
             const scope = $('#filter-ownership').val();
