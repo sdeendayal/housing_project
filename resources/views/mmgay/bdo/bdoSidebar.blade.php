@@ -45,7 +45,7 @@
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'epossession_pending') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Site Verified']) }}">
             <span class="material-symbols-outlined text-base">description</span>
-            <span class="font-label-md text-label-md text-xs">E-Possession Pending</span>
+            <span class="font-label-md text-label-md text-xs">Possession Pending</span>
         </a>
 
         <!-- 6. Verified -->
@@ -54,16 +54,43 @@
             <span class="material-symbols-outlined text-base">verified</span>
             <span class="font-label-md text-label-md text-xs">Verified / Completed</span>
         </a>
+
+        <!-- 7. Phase Analytics -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'phase_report') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.phase-report') }}">
+            <span class="material-symbols-outlined text-base">analytics</span>
+            <span class="font-label-md text-label-md text-xs">Phase Analytics</span>
+        </a>
+
+        <!-- 8. Site Development -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'site_development') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.site-development') }}">
+            <span class="material-symbols-outlined text-base">engineering</span>
+            <span class="font-label-md text-label-md text-xs">Site Development</span>
+        </a>
+
+        <!-- HFA API Test Tool -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'hfa_api_test') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.hfa-api-test') }}">
+            <span class="material-symbols-outlined text-base">api</span>
+            <span class="font-label-md text-label-md text-xs">HFA API Test Tool</span>
+        </a>
+
+        <!-- 9. Profile -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'profile') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.profile') }}">
+            <span class="material-symbols-outlined text-base">account_circle</span>
+            <span class="font-label-md text-label-md text-xs">Profile</span>
+        </a>
     </nav>
     <!-- Footer / Support -->
     <div class="mt-auto px-md pt-lg border-t border-outline-variant pb-md">
         <div class="mb-4 px-2">
-            <p class="text-xs text-slate-400 font-bold">Block Profile</p>
-            <p class="text-xs font-bold text-[#0058bc] uppercase mt-1">
-                {{ Auth::user()->block_name ?? 'ALL BLOCKS' }}
-                @if(Auth::user()->district_name)
-                    ({{ Auth::user()->district_name }})
-                @endif
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Active Location</p>
+            <p class="text-[11px] font-bold text-slate-700 uppercase mt-1.5">
+                Dist: <span class="text-primary font-extrabold">{{ Auth::user()->district_name ?? 'N/A' }}</span> 
+                <span class="text-slate-300 mx-1.5">|</span> 
+                Block: <span class="text-primary font-extrabold">{{ Auth::user()->block_name ?? 'ALL' }}</span>
             </p>
         </div>
         <form action="{{ route('mmgay.bdo.logout') }}" method="POST">
@@ -84,14 +111,14 @@
         <span class="text-xs text-slate-500 font-medium">Mukhyamantri Gramin Awas Yojana</span>
     </div>
     <div class="flex items-center gap-md">
-        <div class="flex items-center gap-sm pl-md">
-            <div class="text-right">
+        <a href="{{ route('mmgay.bdo.profile') }}" class="flex items-center gap-sm pl-md hover:opacity-80 transition-all duration-200">
+            <div class="text-right border-r pr-3 border-outline-variant mr-1">
                 <p class="text-body-md font-body-md font-bold text-on-surface">{{ Auth::user()->name }}</p>
                 <p class="text-[10px] text-on-surface-variant font-semibold">BDPO Officer</p>
             </div>
-            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold border border-blue-200 shadow-sm">
                 {{ substr(Auth::user()->name, 0, 2) }}
             </div>
-        </div>
+        </a>
     </div>
 </header>

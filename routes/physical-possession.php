@@ -79,8 +79,8 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::post('/submit-possession', [PhysicalPossessionWorkflowController::class, 'citizenSubmit'])->name('citizen.submit.post');
     });
 
-    // Department officer PP panel (district_officer role)
-    Route::middleware(['auth', 'role:district_officer'])->prefix('officer')->name('officer.')->group(function () {
+    // Department officer PP panel (district_officer / department role)
+    Route::middleware(['auth', 'role:district_officer,department'])->prefix('officer')->name('officer.')->group(function () {
         Route::get('/dashboard', [PpOfficerController::class, 'dashboard'])->name('dashboard');
         Route::get('/slots/capacity', [PpOfficerController::class, 'getSlotCapacity'])->name('slots.capacity');
         Route::get('/users', [PpOfficerController::class, 'users'])->name('users');

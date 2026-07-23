@@ -4,6 +4,8 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
@@ -14,6 +16,7 @@ class EwsWaitingListSeeder extends Seeder
      */
     public function run(): void
     {
+        ini_set('memory_limit', '-1');
         $filePath = database_path('seeders/data/final_draw_developers.xlsx');
 
         if (!file_exists($filePath)) {
@@ -56,6 +59,40 @@ class EwsWaitingListSeeder extends Seeder
 
         $this->command->info("Seeding data into ews_waiting_list_9 table (starting from row 4)...");
 
+        // Ensure ews_districts table exists
+        if (!Schema::hasTable('ews_districts')) {
+            Schema::create('ews_districts', function (Blueprint $table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
+        // Ensure ews_waiting_list_9 has the columns
+        if (!Schema::hasColumn('ews_waiting_list_9', 'secure_id')) {
+            Schema::table('ews_waiting_list_9', function (Blueprint $table) {
+                $table->string('secure_id', 32)->nullable()->unique();
+                $table->string('dist_name')->nullable();
+                $table->unsignedBigInteger('dist_id')->nullable();
+            });
+        }
+
+        // Fetch Sonipat ID from EWS master districts table
+        $masterDist = DB::table('ews_districts')->where('name', 'SONIPAT')->first();
+        $districtId = $masterDist ? $masterDist->id : 22;
+        $districtName = $masterDist ? $masterDist->name : 'SONIPAT';
+
+        // Ensure Sonipat is seeded in ews_districts and fetch the ID
+        $district = DB::table('ews_districts')->where('id', $districtId)->first();
+        if (!$district) {
+            DB::table('ews_districts')->insert([
+                'id' => $districtId,
+                'name' => $districtName,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
         for ($row = 4; $row <= $highestRow; $row++) {
             $rowData = [];
             for ($col = 1; $col <= $highestColumnIndex; $col++) {
@@ -78,6 +115,9 @@ class EwsWaitingListSeeder extends Seeder
                 'aadhar_no' => $data['aadhar_no'] ?? null,
                 'mobile_number' => $data['mobile_number'] ?? null,
                 'flat_no' => $data['flat no.'] ?? null,
+                'secure_id' => $data['secure_id'] ?? \Illuminate\Support\Str::random(32),
+                'dist_name' => $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT',
+                'dist_id' => $data['dist_id'] ?? $data['DistrictId'] ?? $districtId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

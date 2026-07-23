@@ -98,6 +98,67 @@ Route::middleware(['auth', 'role:ews_user'])->group(function () {
         ->name('ews.logout');
 });
 
+// ─── EWS Developer Login (OTP — shared OtpAuthController) ─────────────────────────
+Route::middleware('')->group(function () {
+    Route::get('/ews/developer/login', [OtpAuthController::class, 'showLogin'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login');
+
+    Route::post('/ews/developer/login/send-otp', [OtpAuthController::class, 'sendOtp'])
+        ->defaults('context', 'ews_developer')
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.login.send-otp');
+
+    Route::get('/ews/developer/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login.verify-page');
+
+    Route::post('/ews/developer/login/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->defaults('context', 'ews_developer')
+        ->name('ews.developer.login.verify');
+
+    Route::post('/ews/developer/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+        ->defaults('context', 'ews_developer')
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.login.resend-otp');
+});
+
+// EWS Developer Protected Routes
+Route::middleware(['auth', 'role:ews_developer'])->group(function () {
+    Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
+        ->name('ews.developer.dashboard');
+    Route::get('/ews/developer/flats/data', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getFlatsData'])
+        ->name('ews.developer.flats.data');
+    Route::get('/ews/developer/flats/create', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'create'])
+        ->name('ews.developer.flats.create');
+    Route::post('/ews/developer/flats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'store'])
+        ->name('ews.developer.flats.store');
+    Route::get('/ews/developer/flats/{secure_id}/edit', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'edit'])
+        ->name('ews.developer.flats.edit');
+    Route::put('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'update'])
+        ->name('ews.developer.flats.update');
+    Route::delete('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
+        ->name('ews.developer.flats.destroy');
+    Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])
+        ->name('ews.developer.flats.export.csv');
+    Route::get('/ews/developer/flats/export/excel', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportExcel'])
+        ->name('ews.developer.flats.export.excel');
+    Route::get('/ews/developer/flats/export/pdf', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportPdf'])
+        ->name('ews.developer.flats.export.pdf');
+    Route::get('/ews/developer/logs', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'logs'])
+        ->name('ews.developer.logs');
+    Route::get('/ews/developer/districts-stats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'districtStats'])
+        ->name('ews.developer.districts-stats');
+    Route::get('/ews/developer/projects', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getProjects'])
+        ->name('ews.developer.projects');
+    Route::get('/ews/developer/blocks', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getBlocks'])
+        ->name('ews.developer.blocks');
+    Route::get('/ews/developer/towns', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getTowns'])
+        ->name('ews.developer.towns');
+    Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
+        ->name('ews.developer.logout');
+});
+
 // Citizen protected routes
 Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay/citizen/dashboard', [CitizenAuthController::class, 'dashboard'])
@@ -302,5 +363,45 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 });
 
 Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// ─── EWS Department Login & Dashboard ─────────────────────────
+Route::get('/ews/department/login', [\App\Http\Controllers\EwsDepartmentController::class, 'showLogin'])->name('ews.department.login');
+Route::post('/ews/department/login', [\App\Http\Controllers\EwsDepartmentController::class, 'login'])->name('ews.department.login.submit');
+
+Route::middleware(['auth', 'role:ews_department'])->group(function () {
+    Route::get('/ews/department/dashboard', [\App\Http\Controllers\EwsDepartmentController::class, 'dashboard'])->name('ews.department.dashboard');
+    Route::get('/ews/department/list', [\App\Http\Controllers\EwsDepartmentController::class, 'list'])->name('ews.department.list');
+    Route::get('/ews/department/beneficiary/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getBeneficiaryData'])->name('ews.department.beneficiary.data');
+    Route::get('/ews/department/beneficiary/{type}/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showBeneficiary'])->name('ews.department.beneficiary.show');
+
+    // ─── EWS Developer Management Routes for Department Panel ─────────
+    Route::get('/ews/department/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'developersIndex'])->name('ews.department.developers.index');
+    Route::get('/ews/department/developers/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getDevelopersData'])->name('ews.department.developers.data');
+    Route::post('/ews/department/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'storeDeveloper'])->name('ews.department.developers.store');
+    Route::put('/ews/department/developers/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateDeveloper'])->name('ews.department.developers.update');
+    Route::delete('/ews/department/developers/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'destroyDeveloper'])->name('ews.department.developers.destroy');
+
+    Route::get('/ews/department/developer-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'developerFlatsIndex'])->name('ews.department.developer-flats.index');
+    Route::get('/ews/department/developer-flats/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getDeveloperFlatsData'])->name('ews.department.developer-flats.data');
+
+    Route::get('/ews/department/developer-logs', [\App\Http\Controllers\EwsDepartmentController::class, 'developerLogsIndex'])->name('ews.department.developer-logs.index');
+    Route::get('/ews/department/developer-logs/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getDeveloperLogsData'])->name('ews.department.developer-logs.data');
+
+    // Export Routes (CSV, Excel, PDF)
+    Route::get('/ews/department/export/beneficiaries', [\App\Http\Controllers\EwsDepartmentController::class, 'exportBeneficiaries'])->name('ews.department.export.beneficiaries');
+    Route::get('/ews/department/export/developers', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDevelopers'])->name('ews.department.export.developers');
+    Route::get('/ews/department/export/developer-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperFlats'])->name('ews.department.export.developer-flats');
+    Route::get('/ews/department/export/developer-logs', [\App\Http\Controllers\EwsDepartmentController::class, 'exportDeveloperLogs'])->name('ews.department.export.developer-logs');
+
+    // EWS Seeder Data Download Routes
+    Route::get('/ews/department/seeder-data', [\App\Http\Controllers\EwsDepartmentController::class, 'seederDataIndex'])->name('ews.department.seeder.index');
+    Route::get('/ews/department/seeder-data/download/{filename}', [\App\Http\Controllers\EwsDepartmentController::class, 'downloadSeederFile'])->name('ews.department.seeder.download');
+
+    // Department Admin Profile Routes (bound to secure_id)
+    Route::get('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showProfile'])->name('ews.department.profile.show');
+    Route::put('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateProfile'])->name('ews.department.profile.update');
+
+    Route::get('/ews/department/logout', [\App\Http\Controllers\EwsDepartmentController::class, 'logout'])->name('ews.department.logout');
+});
 
 

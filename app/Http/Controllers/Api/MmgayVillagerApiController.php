@@ -86,8 +86,8 @@ class MmgayVillagerApiController extends Controller
         }
 
         $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
-        if (!$owner || $owner->IsPaid != 1) {
-            return response()->json(['success' => false, 'message' => 'Physical Possession is only available after completing payment.'], 400);
+        if (!$owner || !\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            return response()->json(['success' => false, 'message' => 'Physical Possession is only available for verified HFA land registration entries.'], 400);
         }
 
         $logs = MmgayPossessionStatusLog::where('application_id', $application->id)
@@ -119,8 +119,8 @@ class MmgayVillagerApiController extends Controller
         }
 
         $owner = DB::table('ownermaster')->where('OwnerId', $application->owner_id)->first();
-        if (!$owner || $owner->IsPaid != 1) {
-            return response()->json(['success' => false, 'message' => 'Physical Possession is only available after completing payment.'], 400);
+        if (!$owner || !\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            return response()->json(['success' => false, 'message' => 'Physical Possession is only available for verified HFA land registration entries.'], 400);
         }
 
         $request->validate([

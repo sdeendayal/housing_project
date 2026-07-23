@@ -85,6 +85,9 @@ return new class extends Migration
             $table->text('MaritalStatus')->nullable();
             $table->text('caste')->nullable();
             $table->text('paid')->nullable();
+            $table->string('secure_id', 32)->nullable()->unique();
+            $table->string('dist_name')->nullable();
+            $table->unsignedBigInteger('dist_id')->nullable();
             $table->timestamps();
         });
     }

@@ -5,7 +5,7 @@
         Eligible beneficiaries can now submit applications online for physical possession of allotted plots.
         <a href="{{ route('citizen.login') }}" class="underline font-bold text-yellow-300 mx-1 hover:text-white">User Login</a>
         |
-        <a href="{{ route('pp.department.login') }}" class="underline font-bold text-yellow-300 mx-1 hover:text-white">Officer Login</a>
+        <a href="{{ route('pp.department.login') }}" class="underline font-bold text-yellow-300 mx-1 hover:text-white">Site Engg Login</a>
         &nbsp;&nbsp;&nbsp;●&nbsp;&nbsp;&nbsp;
         <span class="bg-red-500 text-white px-1 py-0.5 rounded text-xs mr-2 animate-pulse">NEW</span>
         Immediate action required for MMSAY applications submitted before Q3. Final list for MMGAY phase 2 is now

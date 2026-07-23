@@ -86,8 +86,44 @@ class MmgayPossessionApplication extends Model
         return $this->belongsTo(District::class, 'district_id', 'DistrictId');
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'secure_id';
+    }
+
     public static function generateSecureId(): string
     {
         return md5(uniqid(rand(), true));
+    }
+
+    public static function isWhitelistedForPossession($registrationNo)
+    {
+        if (empty($registrationNo)) {
+            return false;
+        }
+
+        // Environment-driven bypass for testing
+        if (env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'))) {
+            return true;
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(10)
+                ->withHeaders([
+                    'X-API-KEY' => 'HFA26@hry#',
+                ])
+                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland', [
+                    'RegistrationNo' => $registrationNo,
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return !empty($data);
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("HFA Land Registration API Error for " . $registrationNo . ": " . $e->getMessage());
+        }
+
+        return false;
     }
 }

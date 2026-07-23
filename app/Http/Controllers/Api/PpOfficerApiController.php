@@ -775,8 +775,9 @@ class PpOfficerApiController extends Controller
     /**
      * Save meeting schedule and mark as "Visit Scheduled".
      */
-    public function scheduleSave(Request $request, PhysicalPossessionApplication $application)
+    public function scheduleSave(Request $request, $secure_id)
     {
+        $application = PhysicalPossessionApplication::where('secure_id', $secure_id)->firstOrFail();
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return response()->json([
                 'success' => false,
@@ -793,6 +794,7 @@ class PpOfficerApiController extends Controller
             'slot_time_3' => 'required|string',
             'visit_instructions' => 'nullable|string|max:1000',
         ]);
+
 
         $purchaserId = $application->private_purchaser_id;
 
@@ -913,7 +915,7 @@ class PpOfficerApiController extends Controller
             'balance_amount' => $purchaser->BalanceAmount,
             
             'possession_date' => $request->slot_date_1,
-            'meeting_slot' => $dateTime1->format('Y-m-d H:i:s') . ' | ' . $dateTime2->format('Y-m-d H:i:s') . ' | ' . $dateTime3->format('Y-m-d H:i:s'),
+            'meeting_slot' => $dateTime1->format('Y-m-d h:i A') . ' | ' . $dateTime2->format('Y-m-d h:i A') . ' | ' . $dateTime3->format('Y-m-d h:i A'),
             
             'citizen_visit_date' => $dateTime1,
             'visit_slot_1' => $dateTime1,

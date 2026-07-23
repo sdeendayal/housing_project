@@ -24,33 +24,41 @@ class MmgayBdoApiController extends Controller
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
-        // 1. Total Eligible (All owners in BDO block who have paid)
-        $totalEligibleQuery = DB::table('ownermaster')->where('IsPaid', 1);
-        if ($blockMasterId) {
-            $totalEligibleQuery->where('BlockId', $blockMasterId);
-        }
-        $totalEligibleCount = $totalEligibleQuery->count();
-
-        // 2. Not Scheduled (No app or status is Eligible for Physical Possession)
-        $notScheduledQuery = DB::table('ownermaster as o')
-            ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
-                $join->on('o.OwnerId', '=', 'ppa.owner_id');
-            })
-            ->where('o.IsPaid', 1)
-            ->where(function($q) {
-                $q->whereNull('ppa.id')
-                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
-            });
-        if ($blockMasterId) {
-            $notScheduledQuery->where('o.BlockId', $blockMasterId);
-        }
-        $notScheduledCount = $notScheduledQuery->count();
-
-        // Base query for physical possession applications
         $ppaQuery = DB::table('mmgay_possession_applications');
         if ($blockMasterId) {
             $ppaQuery->where('block_id', $blockMasterId);
         }
+
+        $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
+
+        if ($bypassApi) {
+            // 1. Total Eligible (All registered owners in BDO block)
+            $totalEligibleQuery = DB::table('ownermaster');
+            if ($blockMasterId) {
+                $totalEligibleQuery->where('BlockId', $blockMasterId);
+            }
+            $totalEligibleCount = $totalEligibleQuery->count();
+
+            // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
+            $notScheduledQuery = DB::table('ownermaster as o')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id');
+            if ($blockMasterId) {
+                $notScheduledQuery->where('o.BlockId', $blockMasterId);
+            }
+            $notScheduledQuery->where(function($q) {
+                $q->whereNull('ppa.id')
+                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+            });
+            $notScheduledCount = $notScheduledQuery->count();
+        } else {
+            // 1. Total Eligible (All owners verified/synced from HFA API in BDO block)
+            $totalEligibleCount = (clone $ppaQuery)->count();
+
+            // 2. Not Scheduled (Synced owners whose schedule is pending)
+            $notScheduledCount = (clone $ppaQuery)->where('physical_possession_status', 'Eligible for Physical Possession')->count();
+        }
+
+
 
         $stats = [
             'total_eligible' => $totalEligibleCount,
@@ -90,10 +98,27 @@ class MmgayBdoApiController extends Controller
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
-            })
-            ->where('o.IsPaid', 1);
+            });
 
-        if (!$request->has('all')) {
+        $status = $request->input('status');
+        if ($status) {
+            $mappedStatus = match ($status) {
+                'awaiting_citizen' => 'Visit Scheduled',
+                'awaiting_coordinates' => 'Slot Selected',
+                'awaiting_bdo_doc' => 'Site Verified',
+                'verified' => 'Verified',
+                default => $status
+            };
+
+            if ($mappedStatus === 'Eligible for Physical Possession') {
+                $query->where(function($q) {
+                    $q->whereNull('ppa.id')
+                      ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+                });
+            } else {
+                $query->where('ppa.physical_possession_status', $mappedStatus);
+            }
+        } elseif (!$request->has('all')) {
             $query->where(function($q) {
                 $q->whereNull('ppa.id')
                   ->orWhereIn('ppa.physical_possession_status', ['Eligible for Physical Possession', 'Visit Scheduled']);
@@ -156,8 +181,8 @@ class MmgayBdoApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access to beneficiary in another block.'], 403);
         }
 
-        if ($owner->IsPaid != 1) {
-            return response()->json(['success' => false, 'message' => 'Physical Possession is only available for beneficiaries who have completed their payment.'], 400);
+        if (!\App\Models\MmgayPossessionApplication::isWhitelistedForPossession($owner->RegistrationNo)) {
+            return response()->json(['success' => false, 'message' => 'Physical Possession is only available for beneficiaries verified under HFA land registration.'], 400);
         }
 
         // 2. Find or dynamically create the physical possession application row
@@ -331,7 +356,7 @@ class MmgayBdoApiController extends Controller
 
         $application->update([
             'possession_date' => $request->slot_date_1,
-            'meeting_slot' => $dateTime1->format('Y-m-d H:i:s') . ' | ' . $dateTime2->format('Y-m-d H:i:s') . ' | ' . $dateTime3->format('Y-m-d H:i:s'),
+            'meeting_slot' => $dateTime1->format('Y-m-d h:i A') . ' | ' . $dateTime2->format('Y-m-d h:i A') . ' | ' . $dateTime3->format('Y-m-d h:i A'),
             'citizen_visit_date' => $dateTime1,
             'visit_slot_1' => $dateTime1,
             'visit_slot_2' => $dateTime2,

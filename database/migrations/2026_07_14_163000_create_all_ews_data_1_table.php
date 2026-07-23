@@ -83,6 +83,11 @@ return new class extends Migration
             $table->text('IncomeVerified')->nullable();
             $table->text('MaritalStatus')->nullable();
             $table->text('caste')->nullable();
+            $table->string('secure_id', 32)->nullable()->unique();
+            $table->string('dist_name')->nullable();
+            $table->unsignedBigInteger('dist_id')->nullable();
+            $table->string('member_id', 50)->nullable()->index();
+            $table->unsignedBigInteger('ppt_member_id')->nullable()->index();
             $table->timestamps();
         });
     }

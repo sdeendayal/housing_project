@@ -24,7 +24,7 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required|string',
             'password' => 'required',
             'captcha' => 'required'
         ]);
@@ -34,8 +34,10 @@ class AuthController extends Controller
             return back()->with('error', '❌ Invalid CAPTCHA');
         }
         
-        // USER CHECK (EXISTS OR NOT)
-        $user = \App\Models\User::where('email', $request->email)->first();
+        // USER CHECK (EXISTS OR NOT BY EMAIL OR MOBILE)
+        $user = \App\Models\User::where('email', $request->email)
+            ->orWhere('mobile', $request->email)
+            ->first();
 
         if (!$user) {
             return back()->with('error', '❌ User does not exist');

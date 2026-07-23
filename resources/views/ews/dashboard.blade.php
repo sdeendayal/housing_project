@@ -381,10 +381,20 @@
                                 <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
                                     @if($pppExclusion)
                                         <strong class="text-red-600 font-bold block mb-1">Status: Rejected Application</strong>
-                                        "PPP (Parivar Pehchan Patra) exclusion is active, hence your application has been rejected and you will not get a flat." (ppp ka exclusion laga h, esliye reject ho gyi apki application or flat nahi milega)
+                                        
+                                        @if(!empty($ewsData->exclusion))
+                                            <div class="mt-1.5 p-2 bg-red-50 border border-red-100 rounded-lg text-[10px] text-slate-700">
+                                                <div class="font-extrabold text-red-700 uppercase text-[9px] mb-1 tracking-wider flex items-center gap-1">
+                                                    <i class="bi bi-info-circle-fill"></i> Exclusion Trigger (अस्वीकृति कारण):
+                                                </div>
+                                                <div class="font-bold uppercase">
+                                                    {{ $ewsData->exclusion }}
+                                                </div>
+                                            </div>
+                                        @endif
                                     @else
                                         <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
-                                        No Parivar Pehchan Patra (PPP) income or property limits exclusion matched for this user.
+                                        Congratulation! Your application satisfies PPP eligibility criteria. (बधाई हो! आपका आवेदन परिवार पहचान पत्र (PPP) के पात्रता मानदंडों को पूरा करता है।)
                                     @endif
                                 </div>
                             </div>
@@ -408,7 +418,7 @@
                                         "Application rejected because citizen owns registered property or land across India." (enke nam ind me koi property h)
                                     @else
                                         <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
-                                        Citizen does not own any registered commercial/residential properties in other states/districts.
+                                        No registered property found across India. (भारत में आपके नाम पर कोई अन्य पंजीकृत संपत्ति नहीं पाई गई है।)
                                     @endif
                                 </div>
                             </div>
@@ -433,7 +443,7 @@
                                         "Application rejected because citizen already owns a residential house." (enke nam koi phle se ghar h)
                                     @else
                                         <strong class="text-emerald-600 font-bold block mb-1">Status: Passed</strong>
-                                        No registered house ownership records detected under this citizen's credentials.
+                                        No registered residential house found. (आपके नाम पर कोई पहले से पंजीकृत पक्का मकान नहीं पाया गया है।)
                                     @endif
                                 </div>
                             </div>
@@ -561,7 +571,7 @@
                     </div>
 
                     <!-- Details Matrix -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 {{ $allotted ? '' : 'md:grid-cols-2' }} gap-3">
                         
                         <!-- Final Allotment Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
@@ -591,6 +601,7 @@
                             </div>
                         </div>
 
+                        @if(!$allotted)
                         <!-- Waiting / Pending List Card -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
                             <div class="space-y-1">
@@ -613,6 +624,7 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
                 </div>

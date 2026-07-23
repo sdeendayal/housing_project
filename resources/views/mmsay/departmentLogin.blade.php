@@ -131,14 +131,14 @@
                             <form id="loginForm" action="{{ route('mmsay.login') }}" method="POST">
                                 @csrf
 
-                                <!-- EMAIL -->
+                                <!-- EMAIL OR MOBILE -->
                                 <div class="mb-3">
                                     <label class="form-label">
-                                        Email Address
+                                        Email Address / Mobile Number
                                     </label>
                                     <div class="input-group-custom d-flex">
-                                        <input type="email" class="form-control premium-input" name="email"
-                                            placeholder="Enter Official Email" required>
+                                        <input type="text" class="form-control premium-input" name="email"
+                                            placeholder="Enter Official Email or Mobile Number" required>
                                     </div>
                                 </div>
 

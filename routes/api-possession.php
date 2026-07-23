@@ -91,7 +91,7 @@ Route::prefix('possession')->group(function () {
         Route::get('/schedule/capacity/check', [PpOfficerApiController::class, 'getSlotCapacityCheck']);
         
         Route::get('/schedule/{application}', [PpOfficerApiController::class, 'scheduleForm'])->where('application', '[a-f0-9]{32}');
-        Route::post('/schedule/{application}', [PpOfficerApiController::class, 'scheduleSave'])->where('application', '[a-f0-9]{32}');
+        Route::post('/schedule/{secure_id}', [PpOfficerApiController::class, 'scheduleSave'])->where('secure_id', '[a-f0-9]{32}');
 
         Route::get('/possession-applications', [PpOfficerApiController::class, 'applications']);
         Route::get('/verify/{application}', [PpOfficerApiController::class, 'verifyForm'])->where('application', '[a-f0-9]{32}');

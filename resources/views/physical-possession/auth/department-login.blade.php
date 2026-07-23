@@ -14,7 +14,7 @@
         <div class="input-group">
             <span class="input-group-text">+91</span>
             <input type="text" name="mobile" id="ppDepartmentMobileInput" class="form-control @error('mobile') is-invalid @enderror"
-                   value="{{ old('mobile') }}" placeholder="Enter 10-digit mobile" maxlength="10"
+                   value="{{ old('mobile', '9999900278') }}" placeholder="Enter 10-digit mobile" maxlength="10"
                    inputmode="numeric" autocomplete="tel">
         </div>
         @error('mobile')<div class="text-danger small mt-1">{{ $message }}</div>@enderror
