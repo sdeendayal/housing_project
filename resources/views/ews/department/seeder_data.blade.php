@@ -12,6 +12,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
         body {
@@ -168,7 +170,7 @@
                     Set a password to encrypt this spreadsheet directly. When opened in Microsoft Excel or Google Sheets, the viewer will prompt for this password.
                 </p>
                 <div class="space-y-1">
-                    <label class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Set Excel Password (optional):</label>
+                    <label class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Set Excel Password (required):</label>
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3 text-slate-400 text-sm">vpn_key</span>
                         <input type="text" id="modal-password-input" placeholder="e.g. 123456" class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-500">
@@ -178,11 +180,8 @@
 
             <!-- Footer / Actions -->
             <div class="flex flex-col gap-2 pt-2">
-                <button onclick="performDownload(true)" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                <button onclick="performDownload()" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
                     <span class="material-symbols-outlined text-xs font-bold">lock</span> Download Protected Excel (.xlsx)
-                </button>
-                <button onclick="performDownload(false)" class="w-full py-2 bg-slate-55 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition flex items-center justify-center gap-1.5 cursor-pointer">
-                    <span class="material-symbols-outlined text-xs">article</span> Download Raw Excel (.xlsx)
                 </button>
             </div>
         </div>
@@ -209,20 +208,23 @@
             }, 200);
         }
 
-        function performDownload(isEncrypted) {
+        function performDownload() {
             const password = $('#modal-password-input').val().trim();
             
-            if (isEncrypted && !password) {
-                alert('Please enter a password to secure the Excel spreadsheet, or click "Download Raw Excel" instead.');
+            if (!password) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Password Required',
+                    text: 'Please enter a password to secure the Excel spreadsheet.',
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#10b981' // Tailwind emerald-500
+                });
                 return;
             }
             
             let url = "{{ route('ews.department.seeder.download', ':filename') }}";
             url = url.replace(':filename', currentFilename);
-            
-            if (isEncrypted) {
-                url += "?password=" + encodeURIComponent(password);
-            }
+            url += "?password=" + encodeURIComponent(password);
             
             window.location.href = url;
             closeModal();

@@ -1341,23 +1341,22 @@ class EwsDepartmentController extends Controller
 
         $password = $request->input('password');
 
-        if (!empty($password)) {
-            try {
-                $encryptor = new \Nick\SecureSpreadsheet\Encrypt();
-                $tempOutput = tempnam(sys_get_temp_dir(), 'ews_xlsx_') . '.xlsx';
-                
-                $encryptor->input($path)
-                          ->password($password)
-                          ->output($tempOutput);
-                          
-                return response()->download($tempOutput, $filename)->deleteFileAfterSend(true);
-            } catch (\Exception $e) {
-                // Fallback to unencrypted download if encryption library encounters an error
-                return response()->download($path);
-            }
+        if (empty($password)) {
+            abort(400, 'Password is required to download this secured Excel file.');
         }
 
-        return response()->download($path);
+        try {
+            $encryptor = new \Nick\SecureSpreadsheet\Encrypt();
+            $tempOutput = tempnam(sys_get_temp_dir(), 'ews_xlsx_') . '.xlsx';
+            
+            $encryptor->input($path)
+                      ->password($password)
+                      ->output($tempOutput);
+                      
+            return response()->download($tempOutput, $filename)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            abort(500, 'Encryption failed: ' . $e->getMessage());
+        }
     }
 
     private function findDistrictHeaderRowAndCol($sheet)
