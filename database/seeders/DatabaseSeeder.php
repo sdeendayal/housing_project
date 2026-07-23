@@ -41,6 +41,7 @@ class DatabaseSeeder extends Seeder
             EwsDepartmentSeeder::class,
             EwsMasterDistSeeder::class,
             PptMembersSeeder::class,
+            PptGurugramSeeder::class,
             AllEwsDataSeeder::class,
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
