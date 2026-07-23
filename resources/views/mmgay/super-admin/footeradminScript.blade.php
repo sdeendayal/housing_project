@@ -119,7 +119,7 @@
             } catch (error) {
                 console.error(error);
 
-                alert('Excel file download nahi ho saki. Please try again.');
+                alert('The Excel file could not be downloaded. Please try again.');
 
             } finally {
                 popup.classList.remove('flex');
@@ -198,7 +198,7 @@
                     console.error(errorText);
 
                     throw new Error(
-                        'PDF generate nahi ho saki.'
+                        'The PDF could not be generated. Please try again.'
                     );
                 }
 
@@ -214,14 +214,14 @@
                     );
 
                     throw new Error(
-                        'Server ne valid PDF return nahi ki.'
+                        'The server did not return a valid PDF.'
                     );
                 }
 
                 const blob = await response.blob();
 
                 if (blob.size === 0) {
-                    throw new Error('PDF file empty hai.');
+                    throw new Error('The PDF file is empty.');
                 }
 
                 let fileName = 'Village_Report.pdf';
@@ -272,7 +272,7 @@
 
                 alert(
                     error.message ||
-                    'PDF download nahi ho saki.'
+                    'The PDF file could not be downloaded. Please try again.'
                 );
 
                 hideLoader();
@@ -322,13 +322,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('Excel download failed');
+                    throw new Error('The Excel file could not be downloaded. Please try again.');
                 }
 
                 const blob = await response.blob();
 
                 if (blob.size === 0) {
-                    throw new Error('Excel file empty hai.');
+                    throw new Error('The Excel file is empty.');
                 }
 
                 const url = window.URL.createObjectURL(blob);
@@ -349,7 +349,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Excel download failed.');
+                alert('The Excel file could not be downloaded. Please try again.');
             } finally {
                 if (popup) {
                     popup.classList.remove('flex');
@@ -431,13 +431,13 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('PDF download failed.');
+                    throw new Error('The PDF file could not be downloaded. Please try again.');
                 }
 
                 const blob = await response.blob();
 
                 if (blob.size === 0) {
-                    throw new Error('PDF file empty hai.');
+                    throw new Error('The PDF file is empty.');
                 }
 
                 let fileName = 'District_Report.pdf';
@@ -493,8 +493,8 @@
         function showLoader(type) {
             message.textContent =
                 type === 'excel' ?
-                'Excel file prepare ho rahi hai...' :
-                'PDF file prepare ho rahi hai...';
+                'Preparing the Excel file...' :
+                'Preparing the PDF file...';
 
             modal.classList.remove('hidden');
             modal.classList.add('flex');
@@ -554,7 +554,7 @@
                     });
 
                     if (!response.ok) {
-                        let errorMessage = 'Download generate nahi ho saka.';
+                        let errorMessage = 'The download could not be generated.';
 
                         try {
                             const errorData = await response.json();
@@ -588,7 +588,7 @@
 
                     alert(
                         error.message ||
-                        'Download ke dauran error aa gaya. Kripya dobara try karein.'
+                        'An error occurred during the download. Please try again.'
                     );
                 } finally {
                     hideLoader();
@@ -632,7 +632,7 @@
             const type = button.dataset.downloadType;
 
             if (!url || !type) {
-                alert('Download URL ya file type nahi mila.');
+                alert('The download URL or file type was not found.');
                 return;
             }
 
@@ -640,8 +640,8 @@
 
             function showLoader() {
                 message.textContent = type === 'excel' ?
-                    'Excel file prepare ho rahi hai...' :
-                    'PDF file prepare ho rahi hai...';
+                    'Preparing the Excel file...' :
+                    'Preparing the PDF file...';
 
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
@@ -708,7 +708,7 @@
 
                 if (!response.ok) {
                     let errorMessage =
-                        'Report generate nahi ho saka.';
+                        'The report could not be generated.';
 
                     try {
                         const errorData = await response.json();
@@ -724,7 +724,7 @@
                 const blob = await response.blob();
 
                 if (blob.size === 0) {
-                    throw new Error('Generated file empty hai.');
+                    throw new Error('The generated file is empty.');
                 }
 
                 const objectUrl = URL.createObjectURL(blob);
@@ -756,7 +756,7 @@
 
                 alert(
                     error.message ||
-                    'Download ke dauran error aa gaya.'
+                    'An error occurred during the download.'
                 );
             } finally {
                 button.dataset.downloading = 'false';

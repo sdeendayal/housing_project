@@ -30,22 +30,33 @@ class SuperAdminController extends Controller
             ->where('v.plots', '>', 0)
             ->when($phase, fn($q) => $q->where('v.Phase', $phase))
             ->select('d.DistrictId', 'd.DistrictName')
-            ->distinct()->orderBy('d.DistrictName')->get();
+            ->distinct()
+            ->orderBy('d.DistrictName')
+            ->get();
 
-        $blocks = $districtId ? DB::table('BlockMaster as b')
-            ->join('VillageMaster as v', 'v.BlockId', '=', 'b.BlockId')
-            ->where('b.DistrictId', $districtId)
-            ->when($phase, fn($q) => $q->where('v.Phase', $phase))
-            ->where('v.plots', '>', 0)
-            ->select('b.BlockId', 'b.BlockName')
-            ->distinct()->orderBy('b.BlockName')->get() : collect();
+        $blocks = $districtId
+            ? DB::table('BlockMaster as b')
+                ->join('VillageMaster as v', 'v.BlockId', '=', 'b.BlockId')
+                ->where('b.DistrictId', $districtId)
+                ->when($phase, fn($q) => $q->where('v.Phase', $phase))
+                ->where('v.plots', '>', 0)
+                ->select('b.BlockId', 'b.BlockName')
+                ->distinct()
+                ->orderBy('b.BlockName')
+                ->get()
+            : collect();
 
-        $villages = $blockId ? DB::table('VillageMaster')
-            ->where('BlockId', $blockId)
-            ->when($phase, fn($q) => $q->where('Phase', $phase))
-            ->where('plots', '>', 0)
-            ->orderBy('VillageName')
-            ->get(['VillageId', 'VillageName']) : collect();
+        $villages = $blockId
+            ? DB::table('VillageMaster')
+                ->where('BlockId', $blockId)
+                ->when($phase, fn($q) => $q->where('Phase', $phase))
+                ->where('plots', '>', 0)
+                ->orderBy('VillageName')
+                ->get([
+                    'VillageId',
+                    'VillageName',
+                ])
+            : collect();
 
         // 2. Main Stats (Districts, Villages, Beneficiaries)
         $totalDistricts = ($phase || $districtId)
@@ -53,86 +64,177 @@ class SuperAdminController extends Controller
                 ->join('VillageMaster as v', 'v.DistrictId', '=', 'd.DistrictId')
                 ->where('v.plots', '>', 0)
                 ->when($phase, fn($q) => $q->where('v.Phase', $phase))
-                ->when($districtId, fn($q) => $q->where('d.DistrictId', $districtId))
-                ->distinct('d.DistrictId')->count('d.DistrictId')
+                ->when(
+                    $districtId,
+                    fn($q) => $q->where('d.DistrictId', $districtId)
+                )
+                ->distinct('d.DistrictId')
+                ->count('d.DistrictId')
             : 22;
 
         $totalVillages = DB::table('VillageMaster')
             ->where('plots', '>', 0)
             ->when($phase, fn($q) => $q->where('Phase', $phase))
-            ->when($districtId, fn($q) => $q->where('DistrictId', $districtId))
-            ->when($blockId, fn($q) => $q->where('BlockId', $blockId))
-            ->when($villageId, fn($q) => $q->where('VillageId', $villageId))
+            ->when(
+                $districtId,
+                fn($q) => $q->where('DistrictId', $districtId)
+            )
+            ->when(
+                $blockId,
+                fn($q) => $q->where('BlockId', $blockId)
+            )
+            ->when(
+                $villageId,
+                fn($q) => $q->where('VillageId', $villageId)
+            )
             ->count();
 
         $registeredBeneficiaries = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->where('v.plots', '>', 0)
             ->when($phase, fn($q) => $q->where('o.Phase', $phase))
-            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
-            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
-            ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId))
+            ->when(
+                $districtId,
+                fn($q) => $q->where('o.DistrictId', $districtId)
+            )
+            ->when(
+                $blockId,
+                fn($q) => $q->where('o.BlockId', $blockId)
+            )
+            ->when(
+                $villageId,
+                fn($q) => $q->where('o.VillageId', $villageId)
+            )
             ->count();
 
         // Allotment Stats (Single Query)
         $stats = DB::table('OwnerMaster as o')
             ->join('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
             ->when($phase, fn($q) => $q->where('o.Phase', $phase))
-            ->when($districtId, fn($q) => $q->where('o.DistrictId', $districtId))
-            ->when($blockId, fn($q) => $q->where('o.BlockId', $blockId))
-            ->when($villageId, fn($q) => $q->where('o.VillageId', $villageId))
+            ->when(
+                $districtId,
+                fn($q) => $q->where('o.DistrictId', $districtId)
+            )
+            ->when(
+                $blockId,
+                fn($q) => $q->where('o.BlockId', $blockId)
+            )
+            ->when(
+                $villageId,
+                fn($q) => $q->where('o.VillageId', $villageId)
+            )
             ->selectRaw("
             COUNT(*) as GrossTotal,
-            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsAllotmentCancelled = 0 THEN 1 ELSE 0 END) as ApprovedPaid,
-            SUM(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsAllotmentCancelled = 0 THEN 1 ELSE 0 END) as ApprovedUnpaid,
-            SUM(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 THEN 1 ELSE 0 END) as PendingApprovalPayment,
-            SUM(CASE WHEN o.IsRejected = 1 THEN 1 ELSE 0 END) as Rejected,
-            SUM(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 ELSE 0 END) as AllotmentCancelled
+
+            SUM(
+                CASE
+                    WHEN o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.IsAllotmentCancelled = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) as ApprovedPaid,
+
+            SUM(
+                CASE
+                    WHEN o.IsApproved = 1
+                    AND o.IsPaid = 0
+                    AND o.IsAllotmentCancelled = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) as ApprovedUnpaid,
+
+            SUM(
+                CASE
+                    WHEN o.IsApproved = 0
+                    AND o.IsPaid = 0
+                    AND o.IsRejected = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) as PendingApprovalPayment,
+
+            SUM(
+                CASE
+                    WHEN o.IsRejected = 1
+                    THEN 1
+                    ELSE 0
+                END
+            ) as Rejected,
+
+            SUM(
+                CASE
+                    WHEN o.IsAllotmentCancelled = 1
+                    THEN 1
+                    ELSE 0
+                END
+            ) as AllotmentCancelled
         ")
             ->first();
 
-        // 3. Registration Stats (Duplicate Free)
+        /*
+        |--------------------------------------------------------------------------
+        | 3. Registration Stats
+        |--------------------------------------------------------------------------
+        | OwnerMaster के filtered unique mobile numbers पहले निकाले जाते हैं।
+        | Registry के साथ direct join होने के बाद matched mobile का DISTINCT count
+        | लिया जाता है। इससे duplicate registry records एक बार ही count होंगे।
+        |--------------------------------------------------------------------------
+        */
 
-        $regBaseQuery = DB::table('dddnew1.registary as r')
-            ->whereExists(function ($query) use ($phase, $districtId, $blockId, $villageId) {
-                $query->selectRaw(1)
-                    ->from('OwnerMaster as o')
-                    ->whereColumn(
-                        'o.MobileNo',
+        $filteredOwnerMobiles = DB::table('OwnerMaster as o')
+            ->select('o.MobileNo')
+            ->whereNotNull('o.MobileNo')
+            ->where('o.MobileNo', '<>', '')
+            ->when($phase, fn($q) => $q->where('o.Phase', $phase))
+            ->when(
+                $districtId,
+                fn($q) => $q->where('o.DistrictId', $districtId)
+            )
+            ->when(
+                $blockId,
+                fn($q) => $q->where('o.BlockId', $blockId)
+            )
+            ->when(
+                $villageId,
+                fn($q) => $q->where('o.VillageId', $villageId)
+            )
+            ->distinct();
+
+        /*
+         * पहले की तरह total registry rows का count रखा गया है।
+         * इसमें कोई dashboard logic change नहीं किया गया।
+         */
+        $totalRegistration = DB::table('dddnew1.registary')
+            ->count();
+
+        /*
+         * केवल matched mobile numbers unique count होंगे।
+         * एक mobile registry में कई बार होने पर भी count 1 आएगा।
+         */
+        $matched = DB::table('dddnew1.registary as r')
+            ->joinSub(
+                $filteredOwnerMobiles,
+                'filtered_owners',
+                function ($join) {
+                    $join->on(
+                        'filtered_owners.MobileNo',
+                        '=',
                         'r.SecondPartyMobile'
-                    )
-                    ->when(
-                        filled($phase),
-                        fn($q) => $q->where('o.Phase', $phase)
-                    )
-                    ->when(
-                        filled($districtId),
-                        fn($q) => $q->where(
-                            'o.DistrictId',
-                            $districtId
-                        )
-                    )
-                    ->when(
-                        filled($blockId),
-                        fn($q) => $q->where(
-                            'o.BlockId',
-                            $blockId
-                        )
-                    )
-                    ->when(
-                        filled($villageId),
-                        fn($q) => $q->where(
-                            'o.VillageId',
-                            $villageId
-                        )
                     );
-            });
+                }
+            )
+            ->whereNotNull('r.SecondPartyMobile')
+            ->where('r.SecondPartyMobile', '<>', '')
+            ->distinct()
+            ->count('r.SecondPartyMobile');
 
-        $totalRegistration = DB::table('dddnew1.registary')->count();
-
-        $matched = (clone $regBaseQuery)->count();
-
-        $unMatched = $totalRegistration - $matched;
+        $unMatched = max(
+            0,
+            $totalRegistration - $matched
+        );
 
         $registration = (object) [
             'TotalRegistration' => $totalRegistration,
@@ -145,16 +247,31 @@ class SuperAdminController extends Controller
             'TotalDistricts' => $totalDistricts,
             'TotalVillages' => $totalVillages,
             'RegisteredBeneficiaries' => $registeredBeneficiaries,
-            'AllottedBeneficiaries' => $stats->GrossTotal ?? 0, // Design ke Allotted card ke liye
-            'GrossTotal' => $stats->GrossTotal ?? 0, // Allotment Status cards ke liye
+
+            // Design के Allotted card के लिए
+            'AllottedBeneficiaries' => $stats->GrossTotal ?? 0,
+
+            // Allotment Status cards के लिए
+            'GrossTotal' => $stats->GrossTotal ?? 0,
             'ApprovedPaid' => $stats->ApprovedPaid ?? 0,
             'ApprovedUnpaid' => $stats->ApprovedUnpaid ?? 0,
-            'PendingApprovalPayment' => $stats->PendingApprovalPayment ?? 0,
+            'PendingApprovalPayment' =>
+                $stats->PendingApprovalPayment ?? 0,
             'Rejected' => $stats->Rejected ?? 0,
-            'AllotmentCancelled' => $stats->AllotmentCancelled ?? 0,
+            'AllotmentCancelled' =>
+                $stats->AllotmentCancelled ?? 0,
         ];
 
-        return view('mmgay.super-admin.dashboard', compact('summary', 'registration', 'districts', 'blocks', 'villages'));
+        return view(
+            'mmgay.super-admin.dashboard',
+            compact(
+                'summary',
+                'registration',
+                'districts',
+                'blocks',
+                'villages'
+            )
+        );
     }
     public function getDistricts($phase = null)
     {
