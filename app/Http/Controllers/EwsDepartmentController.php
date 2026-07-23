@@ -68,7 +68,8 @@ class EwsDepartmentController extends Controller
         
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))
-            ->count();
+            ->distinct('memberID')
+            ->count('memberID');
 
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -126,7 +127,8 @@ class EwsDepartmentController extends Controller
             ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
             ->whereNull('all_ews_data_1.member_id')
             ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->count();
+            ->distinct('ppt_members.memberID')
+            ->count('ppt_members.memberID');
 
         return view('ews.department.dashboard', compact(
             'user', 
@@ -162,7 +164,8 @@ class EwsDepartmentController extends Controller
 
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))
-            ->count();
+            ->distinct('memberID')
+            ->count('memberID');
 
         $registeredCount = DB::table('all_ews_data_1')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -220,7 +223,8 @@ class EwsDepartmentController extends Controller
             ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
             ->whereNull('all_ews_data_1.member_id')
             ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->count();
+            ->distinct('ppt_members.memberID')
+            ->count('ppt_members.memberID');
 
         return view('ews.department.list', compact(
             'user', 
@@ -256,37 +260,39 @@ class EwsDepartmentController extends Controller
         if ($type === 'ppt_members') {
             $query = DB::table('ppt_members')
                 ->select(
-                    'id as secure_id',
-                    'id',
-                    'familyID as application_number',
-                    'fullName as full_name',
-                    'aadhaarNo as aadhar_no',
-                    'mobileNo as mobile_number',
+                    DB::raw('MIN(id) as secure_id'),
+                    DB::raw('MIN(id) as id'),
+                    DB::raw('MIN(familyID) as application_number'),
+                    DB::raw('MIN(fullName) as full_name'),
+                    DB::raw('MIN(aadhaarNo) as aadhar_no'),
+                    DB::raw('MIN(mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'ppt_members' as type"),
                     DB::raw("'Total registration' as status"),
-                    'district as dist_name',
-                    'district_id as dist_id'
+                    DB::raw('MIN(district) as dist_name'),
+                    DB::raw('MIN(district_id) as dist_id')
                 )
-                ->when($districtId, fn($q) => $q->where('district_id', $districtId));
+                ->when($districtId, fn($q) => $q->where('district_id', $districtId))
+                ->groupBy('memberID');
         } elseif ($type === 'not_in_survey') {
             $query = DB::table('ppt_members')
                 ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
                 ->whereNull('all_ews_data_1.member_id')
                 ->select(
-                    'ppt_members.id as secure_id',
-                    'ppt_members.id',
-                    'ppt_members.familyID as application_number',
-                    'ppt_members.fullName as full_name',
-                    'ppt_members.aadhaarNo as aadhar_no',
-                    'ppt_members.mobileNo as mobile_number',
+                    DB::raw('MIN(ppt_members.id) as secure_id'),
+                    DB::raw('MIN(ppt_members.id) as id'),
+                    DB::raw('MIN(ppt_members.familyID) as application_number'),
+                    DB::raw('MIN(ppt_members.fullName) as full_name'),
+                    DB::raw('MIN(ppt_members.aadhaarNo) as aadhar_no'),
+                    DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'not_in_survey' as type"),
                     DB::raw("'Not in survey' as status"),
-                    'ppt_members.district as dist_name',
-                    'ppt_members.district_id as dist_id'
+                    DB::raw('MIN(ppt_members.district) as dist_name'),
+                    DB::raw('MIN(ppt_members.district_id) as dist_id')
                 )
-                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId));
+                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
+                ->groupBy('ppt_members.memberID');
         } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Verify in survey app' as status"), 'dist_name');
@@ -347,7 +353,7 @@ class EwsDepartmentController extends Controller
             ) as beneficiaries"));
         }
 
-        if ($districtId && $type !== 'ppt_members') {
+        if ($districtId && $type !== 'ppt_members' && $type !== 'not_in_survey') {
             $query->where('dist_id', $districtId);
         }
 

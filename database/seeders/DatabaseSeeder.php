@@ -40,6 +40,7 @@ class DatabaseSeeder extends Seeder
             MmgayBdoSeeder::class,
             EwsDepartmentSeeder::class,
             EwsMasterDistSeeder::class,
+            PptMembersSeeder::class,
             AllEwsDataSeeder::class,
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
@@ -52,7 +53,6 @@ class DatabaseSeeder extends Seeder
             EwsAllottedSeeder::class,
             EwsWaitingListSeeder::class,
             EwsDeveloperSeeder::class,
-            PptMembersSeeder::class,
         ]);
 
         // Sync MMGAY citizen owners into users table
