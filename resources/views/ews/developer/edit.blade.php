@@ -10,6 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- Select2 CSS & JS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -19,6 +26,54 @@
         }
         .dev-shadow {
             box-shadow: 0 10px 30px -15px rgba(59, 130, 246, 0.08);
+        }
+        /* Custom Select2 Tailwind Styling */
+        .select2-container {
+            width: 100% !important;
+        }
+        .select2-container--default .select2-selection--single {
+            background-color: #f8fafc !important; /* bg-slate-50 */
+            border: 1px solid #cbd5e1 !important; /* border-slate-250 */
+            border-radius: 0.5rem !important; /* rounded-lg */
+            height: 38px !important;
+            padding: 5px 12px !important;
+            display: flex;
+            align-items: center;
+            outline: none !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            color: #1e293b !important; /* text-slate-800 */
+            font-size: 0.75rem !important; /* text-xs */
+            font-weight: 700 !important;
+            padding-left: 0 !important;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px !important;
+            right: 8px !important;
+        }
+        .select2-container--default.select2-container--open .select2-selection--single {
+            border-color: #3b82f6 !important; /* focus:border-sky-500 */
+            box-shadow: 0 0 0 1px #3b82f6 !important;
+        }
+        .select2-dropdown {
+            background-color: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+            overflow: hidden;
+            z-index: 9999;
+        }
+        .select2-container--default .select2-results__option--highlighted[aria-selected] {
+            background-color: #3b82f6 !important; /* bg-sky-500 */
+        }
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.375rem !important;
+            padding: 6px 10px !important;
+            font-size: 0.75rem !important;
+            outline: none !important;
         }
     </style>
 </head>
@@ -123,10 +178,11 @@
                         @csrf
                         @method('PUT')
 
+                        <!-- Session Alert Notifications -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- District -->
                             <div class="space-y-1">
-                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Select District</label>
+                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Select District <span class="text-red-500">*</span></label>
                                 <select id="district_id" name="district_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     @if(count($districts) > 1)
@@ -142,37 +198,79 @@
 
                             <!-- Town -->
                             <div class="space-y-1">
-                                <label for="town_name" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Name of Town</label>
-                                <input type="text" id="town_name" name="town_name" value="{{ $flat->town_name }}" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                <label for="town_id" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Name of Town <span class="text-red-500">*</span></label>
+                                <select id="town_id" name="town_id" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled>Choose a town...</option>
+                                    @foreach($towns as $town)
+                                        <option value="{{ $town->id }}" {{ $flat->town_id == $town->id ? 'selected' : '' }}>
+                                            {{ strtoupper($town->name) }}
+                                        </option>
+                                    @endforeach
+                                    <option value="new">+ Add New Town</option>
+                                </select>
+                                
+                                <!-- New Town Input -->
+                                <div id="new_town_container" class="hidden mt-2">
+                                    <input type="text" id="new_town_name" name="new_town_name" placeholder="Enter new town name (e.g. Kundli)"
+                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Project Name -->
+                        <!-- Project Selection -->
                         <div class="space-y-1">
-                            <label for="project_name" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project</label>
-                            <input type="text" id="project_name" name="project_name" value="{{ $flat->project_name }}" required
-                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                            <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
+                            <select id="project_id" name="project_id" required
+                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                <option value="" disabled>Choose a project...</option>
+                                @foreach($projects as $proj)
+                                    <option value="{{ $proj->id }}" {{ $flat->project_id == $proj->id ? 'selected' : '' }}>
+                                        {{ strtoupper($proj->name) }}
+                                    </option>
+                                @endforeach
+                                <option value="new">+ Add New Project</option>
+                            </select>
+                            
+                            <!-- New Project Input -->
+                            <div id="new_project_container" class="hidden mt-2">
+                                <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
+                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                            </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <!-- Block / Tower -->
-                            <div class="space-y-1 md:col-span-1">
-                                <label for="block_tower_number" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Block / Tower No.</label>
-                                <input type="text" id="block_tower_number" name="block_tower_number" value="{{ $flat->block_tower_number }}" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                        <!-- Block / Tower No. Selection -->
+                        <div class="space-y-1">
+                            <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
+                            <select id="block_id" name="block_id" required
+                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                <option value="" disabled>Choose a block/tower...</option>
+                                @foreach($blocks as $blk)
+                                    <option value="{{ $blk->id }}" {{ $flat->block_id == $blk->id ? 'selected' : '' }}>
+                                        {{ strtoupper($blk->name) }}
+                                    </option>
+                                @endforeach
+                                <option value="new">+ Add New Block/Tower</option>
+                            </select>
+                            
+                            <!-- New Block Input -->
+                            <div id="new_block_container" class="hidden mt-2">
+                                <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
+                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                             </div>
+                        </div>
 
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Floor -->
-                            <div class="space-y-1 md:col-span-1">
-                                <label for="floor" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Floor Details</label>
+                            <div class="space-y-1">
+                                <label for="floor" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Floor Details <span class="text-red-500">*</span></label>
                                 <input type="text" id="floor" name="floor" value="{{ $flat->floor }}" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                             </div>
 
                             <!-- Flat Number -->
-                            <div class="space-y-1 md:col-span-1">
-                                <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Flat Number</label>
+                            <div class="space-y-1">
+                                <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Flat Number <span class="text-red-500">*</span></label>
                                 <input type="text" id="flat_number" name="flat_number" value="{{ $flat->flat_number }}" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                             </div>
@@ -249,6 +347,272 @@
     </div>
 
     <script>
+        // AJAX and Dynamic Fields Logic for Towns, Projects, and Blocks
+        const districtSelect = document.getElementById('district_id');
+        
+        const townSelect = document.getElementById('town_id');
+        const newTownContainer = document.getElementById('new_town_container');
+        const newTownInput = document.getElementById('new_town_name');
+
+        const projectSelect = document.getElementById('project_id');
+        const newProjectContainer = document.getElementById('new_project_container');
+        const newProjectInput = document.getElementById('new_project_name');
+        
+        const blockSelect = document.getElementById('block_id');
+        const newBlockContainer = document.getElementById('new_block_container');
+        const newBlockInput = document.getElementById('new_block_name');
+
+        $(document).ready(function() {
+            // Initialize Select2 search elements
+            $('#district_id').select2();
+            $('#town_id').select2();
+            $('#project_id').select2();
+            $('#block_id').select2();
+
+            // Sync Select2 select/clear triggers with our vanilla events
+            $('#district_id').on('select2:select select2:unselect', function() {
+                districtSelect.dispatchEvent(new Event('change'));
+            });
+            $('#town_id').on('select2:select select2:unselect', function() {
+                townSelect.dispatchEvent(new Event('change'));
+            });
+            $('#project_id').on('select2:select select2:unselect', function() {
+                projectSelect.dispatchEvent(new Event('change'));
+            });
+            $('#block_id').on('select2:select select2:unselect', function() {
+                blockSelect.dispatchEvent(new Event('change'));
+            });
+
+            // SweetAlert2 notifications
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: {!! json_encode(session('success')) !!},
+                    confirmButtonColor: '#3b82f6'
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: {!! json_encode(session('error')) !!},
+                    confirmButtonColor: '#3b82f6'
+                });
+            @endif
+
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Errors',
+                    html: `<ul class="text-left list-disc list-inside text-xs space-y-1">
+                        @foreach($errors->all() as $error)
+                            <li>{!! $error !!}</li>
+                        @endforeach
+                    </ul>`,
+                    confirmButtonColor: '#3b82f6'
+                });
+            @endif
+        });
+
+        function fetchTowns(districtId, selectedTownId = null) {
+            if (!districtId) {
+                townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
+                $(townSelect).trigger('change.select2');
+                return;
+            }
+            
+            townSelect.innerHTML = '<option value="" disabled selected>Loading towns...</option>';
+            $(townSelect).trigger('change.select2');
+            
+            fetch(`/ews/developer/towns?district_id=${districtId}`)
+                .then(res => res.json())
+                .then(data => {
+                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
+                    data.forEach(t => {
+                        const isSel = selectedTownId && selectedTownId == t.id ? 'selected' : '';
+                        townSelect.innerHTML += `<option value="${t.id}" ${isSel}>${t.name.toUpperCase()}</option>`;
+                    });
+                    townSelect.innerHTML += '<option value="new">+ Add New Town</option>';
+                    
+                    $(townSelect).trigger('change.select2');
+                    
+                    if (selectedTownId) {
+                        $(townSelect).val(selectedTownId).trigger('change.select2');
+                        townSelect.dispatchEvent(new Event('change'));
+                    } else {
+                        handleTownChange();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching towns:', err);
+                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
+                    $(townSelect).trigger('change.select2');
+                });
+        }
+
+        function fetchProjects(districtId, selectedProjectId = null) {
+            if (!districtId) {
+                projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
+                $(projectSelect).trigger('change.select2');
+                clearBlocks();
+                return;
+            }
+            
+            projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
+            $(projectSelect).trigger('change.select2');
+            
+            fetch(`/ews/developer/projects?district_id=${districtId}`)
+                .then(res => res.json())
+                .then(data => {
+                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
+                    data.forEach(proj => {
+                        const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
+                        projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}</option>`;
+                    });
+                    projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
+                    
+                    $(projectSelect).trigger('change.select2');
+                    
+                    if (selectedProjectId) {
+                        $(projectSelect).val(selectedProjectId).trigger('change.select2');
+                        projectSelect.dispatchEvent(new Event('change'));
+                    } else {
+                        handleProjectChange();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching projects:', err);
+                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
+                    $(projectSelect).trigger('change.select2');
+                });
+        }
+
+        function fetchBlocks(projectId, selectedBlockId = null) {
+            if (!projectId || projectId === 'new') {
+                blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
+                $(blockSelect).trigger('change.select2');
+                handleBlockChange();
+                return;
+            }
+            
+            blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
+            $(blockSelect).trigger('change.select2');
+            
+            fetch(`/ews/developer/blocks?project_id=${projectId}`)
+                .then(res => res.json())
+                .then(data => {
+                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
+                    data.forEach(blk => {
+                        const isSel = selectedBlockId && selectedBlockId == blk.id ? 'selected' : '';
+                        blockSelect.innerHTML += `<option value="${blk.id}" ${isSel}>${blk.name.toUpperCase()}</option>`;
+                    });
+                    blockSelect.innerHTML += '<option value="new">+ Add New Block/Tower</option>';
+                    
+                    $(blockSelect).trigger('change.select2');
+                    
+                    if (selectedBlockId) {
+                        $(blockSelect).val(selectedBlockId).trigger('change.select2');
+                        blockSelect.dispatchEvent(new Event('change'));
+                    } else {
+                        handleBlockChange();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching blocks:', err);
+                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
+                    $(blockSelect).trigger('change.select2');
+                });
+        }
+
+        function clearBlocks() {
+            blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
+            $(blockSelect).val('').trigger('change.select2');
+            handleBlockChange();
+        }
+
+        function handleTownChange() {
+            const val = townSelect.value;
+            if (val === 'new') {
+                newTownContainer.classList.remove('hidden');
+                newTownInput.required = true;
+            } else {
+                newTownContainer.classList.add('hidden');
+                newTownInput.required = false;
+                newTownInput.value = '';
+            }
+        }
+
+        function handleProjectChange() {
+            const val = projectSelect.value;
+            if (val === 'new') {
+                newProjectContainer.classList.remove('hidden');
+                newProjectInput.required = true;
+                
+                $(blockSelect).val('new').trigger('change.select2');
+                blockSelect.dispatchEvent(new Event('change'));
+            } else {
+                newProjectContainer.classList.add('hidden');
+                newProjectInput.required = false;
+                newProjectInput.value = '';
+            }
+        }
+
+        function handleBlockChange() {
+            const val = blockSelect.value;
+            if (val === 'new') {
+                newBlockContainer.classList.remove('hidden');
+                newBlockInput.required = true;
+            } else {
+                newBlockContainer.classList.add('hidden');
+                newBlockInput.required = false;
+                newBlockInput.value = '';
+            }
+        }
+
+        districtSelect.addEventListener('change', function() {
+            fetchTowns(this.value);
+            fetchProjects(this.value);
+        });
+
+        townSelect.addEventListener('change', handleTownChange);
+        
+        projectSelect.addEventListener('change', function() {
+            const val = projectSelect.value;
+            if (val === 'new') {
+                newProjectContainer.classList.remove('hidden');
+                newProjectInput.required = true;
+                $(blockSelect).val('new').trigger('change.select2');
+                blockSelect.dispatchEvent(new Event('change'));
+            } else {
+                newProjectContainer.classList.add('hidden');
+                newProjectInput.required = false;
+                newProjectInput.value = '';
+                if (val) {
+                    fetchBlocks(val);
+                } else {
+                    clearBlocks();
+                }
+            }
+        });
+        
+        blockSelect.addEventListener('change', handleBlockChange);
+
+        // Pre-run visibility setup for 'new' selection if already selected
+        if (townSelect.value === 'new') {
+            newTownContainer.classList.remove('hidden');
+            newTownInput.required = true;
+        }
+        if (projectSelect.value === 'new') {
+            newProjectContainer.classList.remove('hidden');
+            newProjectInput.required = true;
+        }
+        if (blockSelect.value === 'new') {
+            newBlockContainer.classList.remove('hidden');
+            newBlockInput.required = true;
+        }
+
         document.getElementById('devEditForm').addEventListener('submit', function (e) {
             const btn = this.querySelector('button[type="submit"]');
             if (btn) {

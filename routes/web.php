@@ -149,6 +149,12 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.logs');
     Route::get('/ews/developer/districts-stats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'districtStats'])
         ->name('ews.developer.districts-stats');
+    Route::get('/ews/developer/projects', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getProjects'])
+        ->name('ews.developer.projects');
+    Route::get('/ews/developer/blocks', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getBlocks'])
+        ->name('ews.developer.blocks');
+    Route::get('/ews/developer/towns', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getTowns'])
+        ->name('ews.developer.towns');
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });

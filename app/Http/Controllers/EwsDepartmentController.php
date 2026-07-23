@@ -123,8 +123,8 @@ class EwsDepartmentController extends Controller
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
         $notInSurveyCount = DB::table('ppt_members')
-            ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
-            ->whereNull('all_ews_data_1.ppt_member_id')
+            ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
+            ->whereNull('all_ews_data_1.member_id')
             ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
             ->count();
 
@@ -217,8 +217,8 @@ class EwsDepartmentController extends Controller
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
         $notInSurveyCount = DB::table('ppt_members')
-            ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
-            ->whereNull('all_ews_data_1.ppt_member_id')
+            ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
+            ->whereNull('all_ews_data_1.member_id')
             ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
             ->count();
 
@@ -271,8 +271,8 @@ class EwsDepartmentController extends Controller
                 ->when($districtId, fn($q) => $q->where('district_id', $districtId));
         } elseif ($type === 'not_in_survey') {
             $query = DB::table('ppt_members')
-                ->leftJoin('all_ews_data_1', 'ppt_members.id', '=', 'all_ews_data_1.ppt_member_id')
-                ->whereNull('all_ews_data_1.ppt_member_id')
+                ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
+                ->whereNull('all_ews_data_1.member_id')
                 ->select(
                     'ppt_members.id as secure_id',
                     'ppt_members.id',

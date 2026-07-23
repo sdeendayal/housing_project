@@ -13,8 +13,11 @@ class EwsBuilderFlat extends Model
         'district_id',
         'district_name',
         'town_name',
+        'town_id',
         'project_name',
+        'project_id',
         'block_tower_number',
+        'block_id',
         'floor',
         'flat_number',
         'flat_code',
@@ -34,5 +37,25 @@ class EwsBuilderFlat extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function district(): BelongsTo
+    {
+        return $this->belongsTo(EwsDistrict::class, 'district_id');
+    }
+
+    public function town(): BelongsTo
+    {
+        return $this->belongsTo(EwsTown::class, 'town_id');
+    }
+
+    public function project(): BelongsTo
+    {
+        return $this->belongsTo(EwsProject::class, 'project_id');
+    }
+
+    public function block(): BelongsTo
+    {
+        return $this->belongsTo(EwsBlock::class, 'block_id');
     }
 }
