@@ -100,7 +100,25 @@ class MmgayBdoApiController extends Controller
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             });
 
-        if (!$request->has('all')) {
+        $status = $request->input('status');
+        if ($status) {
+            $mappedStatus = match ($status) {
+                'awaiting_citizen' => 'Visit Scheduled',
+                'awaiting_coordinates' => 'Slot Selected',
+                'awaiting_bdo_doc' => 'Site Verified',
+                'verified' => 'Verified',
+                default => $status
+            };
+
+            if ($mappedStatus === 'Eligible for Physical Possession') {
+                $query->where(function($q) {
+                    $q->whereNull('ppa.id')
+                      ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+                });
+            } else {
+                $query->where('ppa.physical_possession_status', $mappedStatus);
+            }
+        } elseif (!$request->has('all')) {
             $query->where(function($q) {
                 $q->whereNull('ppa.id')
                   ->orWhereIn('ppa.physical_possession_status', ['Eligible for Physical Possession', 'Visit Scheduled']);
