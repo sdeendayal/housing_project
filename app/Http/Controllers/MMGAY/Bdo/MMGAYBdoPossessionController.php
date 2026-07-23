@@ -1344,6 +1344,83 @@ class MMGAYBdoPossessionController extends Controller
     }
 
     /**
+     * Show HFA API testing tool page.
+     */
+    public function hfaApiTestForm(Request $request)
+    {
+        $bdo = Auth::user();
+        $activeMenu = 'hfa_api_test';
+        return view('mmgay.bdo.hfa_test_api', compact('bdo', 'activeMenu'));
+    }
+
+    /**
+     * Handle submission and hit HFA API from the server.
+     */
+    public function hfaApiTestSubmit(Request $request)
+    {
+        $request->validate([
+            'registration_no' => 'required_without_all:from_date,to_date|nullable|string',
+            'from_date' => 'required_without:registration_no|required_with:to_date|nullable|date',
+            'to_date' => 'required_without:registration_no|required_with:from_date|nullable|date',
+        ]);
+
+        $regNo = $request->input('registration_no');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+
+        $apiUrl = 'https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland';
+        $headers = [
+            'X-API-KEY' => 'HFA26@hry#',
+            'Accept' => 'application/json',
+        ];
+
+        $queryParams = [];
+        if (!empty($regNo)) {
+            $queryParams['RegistrationNo'] = trim($regNo);
+        } else {
+            $queryParams['RegFromDate'] = $fromDate;
+            $queryParams['RegToDate'] = $toDate;
+        }
+
+        $startTime = microtime(true);
+        $statusCode = null;
+        $responseBody = null;
+        $responseHeaders = [];
+        $errorMessage = null;
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(30)
+                ->withHeaders($headers)
+                ->get($apiUrl, $queryParams);
+
+            $statusCode = $response->status();
+            $responseBody = $response->body();
+            $responseHeaders = $response->headers();
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+        }
+
+        $responseTime = round((microtime(true) - $startTime) * 1000, 2); // in ms
+
+        // Try to decode json for pretty printing
+        $decodedJson = null;
+        if ($responseBody) {
+            $decodedJson = json_decode($responseBody, true);
+        }
+
+        return redirect()->back()->withInput()->with('api_result', [
+            'url' => $apiUrl . '?' . http_build_query($queryParams),
+            'headers_sent' => $headers,
+            'status' => $statusCode,
+            'time_ms' => $responseTime,
+            'error' => $errorMessage,
+            'response_headers' => $responseHeaders,
+            'raw_body' => $responseBody,
+            'decoded_json' => $decodedJson,
+        ]);
+    }
+
+    /**
      * Helper to restrict BDO actions if Site Development is not complete.
      */
     private function restrictBySiteDevelopment($owner)
