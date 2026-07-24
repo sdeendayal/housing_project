@@ -100,7 +100,50 @@
                     </div>
 
                     {{-- Export Buttons --}}
-                    <div class="flex flex-wrap gap-2 print:hidden">
+                    <div class="flex flex-wrap items-center gap-3">
+
+                        <a href="{{ route('district.dashboard.applicants.excel', request()->query()) }}"
+                            class="download-export-link inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:shadow-sm">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                description
+                            </span>
+
+                            <span>Excel</span>
+                        </a>
+
+                        <a href="{{ route('district.dashboard.applicants.csv', request()->query()) }}"
+                            class="download-export-link inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 hover:shadow-sm">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                table_view
+                            </span>
+
+                            <span>CSV</span>
+                        </a>
+
+
+
+                        <div id="exportLoader"
+                            class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm">
+
+                            <div class="flex min-w-[300px] flex-col items-center rounded-2xl bg-white px-8 py-7 shadow-2xl">
+
+                                <div
+                                    class="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-indigo-600">
+                                </div>
+
+                                <h3 class="mt-4 text-base font-bold text-slate-800">
+                                    Preparing Download
+                                </h3>
+
+                                <p class="mt-1 text-center text-sm text-slate-500">
+                                    Please wait while your report is being generated.
+                                </p>
+
+                            </div>
+                        </div>
+
 
                         <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'pdf'])) }}"
                             class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100">
@@ -110,26 +153,6 @@
                             </span>
 
                             PDF
-                        </a>
-
-                        <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'excel'])) }}"
-                            class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
-
-                            <span class="material-symbols-outlined text-[19px]">
-                                table_view
-                            </span>
-
-                            Excel
-                        </a>
-
-                        <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'csv'])) }}"
-                            class="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
-
-                            <span class="material-symbols-outlined text-[19px]">
-                                csv
-                            </span>
-
-                            CSV
                         </a>
 
                         <a href="{{ route('district.dashboard.applicants.print', $exportFilters) }}" target="_blank"

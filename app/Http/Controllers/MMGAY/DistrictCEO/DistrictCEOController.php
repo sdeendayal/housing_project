@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use App\Exports\DistrictVillageSummaryExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\ApplicantReportExport;
 
 class DistrictCEOController extends Controller
 {
@@ -858,15 +860,16 @@ END) AS RegistryUnmatchedWithoutMobile,
 
     private function getVillageSummaryData(
         int $districtId,
-        int $phase,
+        int|string $phase,
         ?int $villageId = null
     ) {
         return DB::table('OwnerMaster as o')
             ->join(
                 'VillageMaster as v',
-                'o.VillageId',
-                '=',
-                'v.VillageId'
+                function ($join) {
+                    $join->on('o.VillageId', '=', 'v.VillageId')
+                        ->on('o.DistrictId', '=', 'v.DistrictId');
+                }
             )
             ->join(
                 'DistrictMaster as d',
@@ -881,17 +884,30 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'f.FlatId'
             )
             ->where('o.DistrictId', $districtId)
-            ->where('o.Phase', $phase)
             ->where('v.DistrictId', $districtId)
-            ->where('v.phase', $phase)
             ->where('v.plots', '>', 0)
+
+            ->when(
+                $phase === 'all',
+                function ($query) {
+                    $query->whereColumn('o.Phase', 'v.phase');
+                },
+                function ($query) use ($phase) {
+                    $query
+                        ->where('o.Phase', (int) $phase)
+                        ->where('v.phase', (int) $phase);
+                }
+            )
+
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('v.VillageId', $villageId);
             })
+
             ->selectRaw("
             d.DistrictName,
             v.VillageId,
             v.VillageName,
+            v.phase AS Phase,
             v.plots AS TotalPlots,
 
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
@@ -974,31 +990,39 @@ END) AS RegistryUnmatchedWithoutMobile,
                 THEN o.OwnerId
             END) AS Others
         ")
+
             ->groupBy(
                 'd.DistrictName',
                 'v.VillageId',
                 'v.VillageName',
+                'v.phase',
                 'v.plots'
             )
+
+            ->orderBy('v.phase')
             ->orderBy('v.VillageName')
             ->get();
     }
 
-    public function exportVillageSummaryPdf(Request $request, $phase = 1)
+    public function exportVillageSummaryPdf(Request $request, $phase = 'all')
     {
         $user = auth()->user();
+
+        abort_unless($user, 401);
 
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
-        if (!$districtId) {
-            abort(404, 'District not found.');
-        }
+        abort_unless($districtId, 404, 'District not found.');
 
-        $phase = in_array((int) $phase, [1, 2, 3], true)
-            ? (int) $phase
-            : 1;
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 1;
+            }
+        }
 
         $villageId = $request->filled('village_id')
             ? (int) $request->village_id
@@ -1033,26 +1057,34 @@ END) AS RegistryUnmatchedWithoutMobile,
             )
         )->setPaper('a4', 'landscape');
 
+        $phaseLabel = $phase === 'all'
+            ? 'all-phases'
+            : 'phase-' . $phase;
+
         return $pdf->download(
-            'village-summary-phase-' . $phase . '.pdf'
+            'village-summary-' . $phaseLabel . '.pdf'
         );
     }
 
-    public function exportVillageSummaryExcel(Request $request, $phase = 1)
+    public function exportVillageSummaryExcel(Request $request, $phase = 'all')
     {
         $user = auth()->user();
+
+        abort_unless($user, 401);
 
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
-        if (!$districtId) {
-            abort(404, 'District not found.');
-        }
+        abort_unless($districtId, 404, 'District not found.');
 
-        $phase = in_array((int) $phase, [1, 2, 3], true)
-            ? (int) $phase
-            : 1;
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 1;
+            }
+        }
 
         $villageId = $request->filled('village_id')
             ? (int) $request->village_id
@@ -1064,9 +1096,13 @@ END) AS RegistryUnmatchedWithoutMobile,
             $villageId
         );
 
+        $phaseLabel = $phase === 'all'
+            ? 'all-phases'
+            : 'phase-' . $phase;
+
         return Excel::download(
             new DistrictVillageSummaryExport($villageData),
-            'village-summary-phase-' . $phase . '.xlsx'
+            'village-summary-' . $phaseLabel . '.xlsx'
         );
     }
 
@@ -2576,5 +2612,53 @@ END) AS RegistryUnmatchedWithoutMobile,
         ");
     }
 
+    public function exportApplicantReportExcel(Request $request)
+    {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        return Excel::download(
+            new ApplicantReportExport(
+                $districtId,
+                $request->query('status', 'all_applicants'),
+                $request->query('phase', 'all'),
+                $request->query('village_id'),
+                $request->query('search')
+            ),
+            'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.xlsx'
+        );
+    }
+
+    public function exportApplicantReportCsv(Request $request)
+    {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        return Excel::download(
+            new ApplicantReportExport(
+                $districtId,
+                $request->query('status', 'all_applicants'),
+                $request->query('phase', 'all'),
+                $request->query('village_id'),
+                $request->query('search')
+            ),
+            'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.csv',
+            ExcelFormat::CSV
+        );
+    }
 
 }
