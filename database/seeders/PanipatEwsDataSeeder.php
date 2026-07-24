@@ -8,15 +8,14 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Support\Str;
 
-class GurugramEwsDataSeeder extends Seeder
+class PanipatEwsDataSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        ini_set('memory_limit', '-1');
-        $filePath = database_path('seeders/data/GURGAON_Completed_24-01-2026.xlsx');
+        $filePath = database_path('seeders/data/PANIPAT_MC_Completed_22-01-2026 (2).xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
@@ -25,10 +24,11 @@ class GurugramEwsDataSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
+        ini_set('memory_limit', '-1');
         $spreadsheet = IOFactory::load($filePath);
         
-        // Select the sheet by name 'GURGAON_Completed_24-01-2026'
-        $sheet = $spreadsheet->getSheetByName('GURGAON_Completed_24-01-2026');
+        // Select the sheet by name 'PANIPAT_MC_Completed_22-01-2026'
+        $sheet = $spreadsheet->getSheetByName('PANIPAT_MC_Completed_22-01-2026');
         if (!$sheet) {
             $sheet = $spreadsheet->getActiveSheet();
         }
@@ -54,10 +54,10 @@ class GurugramEwsDataSeeder extends Seeder
         $batchSize = 250; // Batch size to optimize database inserts
         $count = 0;
 
-        $this->command->info("Clearing existing Gurugram records (dist_id = 6) from all_ews_data_1 table...");
-        DB::table('all_ews_data_1')->where('dist_id', 6)->delete();
+        $this->command->info("Clearing existing Panipat records (dist_id = 18) from all_ews_data_1 table...");
+        DB::table('all_ews_data_1')->where('dist_id', 18)->delete();
 
-        $this->command->info("Seeding data into all_ews_data_1 table for GURUGRAM...");
+        $this->command->info("Seeding data into all_ews_data_1 table for PANIPAT...");
 
         for ($row = 2; $row <= $highestRow; $row++) {
             $rowData = [];
@@ -87,8 +87,8 @@ class GurugramEwsDataSeeder extends Seeder
             }
             
             $rowInsert['secure_id'] = Str::random(32);
-            $rowInsert['dist_name'] = 'GURUGRAM';
-            $rowInsert['dist_id'] = 6;
+            $rowInsert['dist_name'] = 'PANIPAT';
+            $rowInsert['dist_id'] = 18;
             $rowInsert['created_at'] = now();
             $rowInsert['updated_at'] = now();
 
@@ -106,15 +106,15 @@ class GurugramEwsDataSeeder extends Seeder
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} Gurugram records into the all_ews_data_1 table.");
+        $this->command->info("Successfully seeded {$count} Panipat records into the all_ews_data_1 table.");
 
-        $this->command->info("Populating member_id and ppt_member_id columns from ppt_members table for Gurugram...");
+        $this->command->info("Populating member_id and ppt_member_id columns from ppt_members table for Panipat...");
         try {
             $affectedMemberIds = DB::update("
                 UPDATE all_ews_data_1 
                 JOIN ppt_members ON all_ews_data_1.mobile_number = ppt_members.mobileNo
                 SET all_ews_data_1.member_id = ppt_members.memberID
-                WHERE all_ews_data_1.dist_id = 6
+                WHERE all_ews_data_1.dist_id = 18
             ");
             $affectedPptMemberIds = DB::update("
                 UPDATE all_ews_data_1
@@ -124,9 +124,9 @@ class GurugramEwsDataSeeder extends Seeder
                     GROUP BY mobileNo
                 ) as sub ON all_ews_data_1.mobile_number = sub.mobileNo
                 SET all_ews_data_1.ppt_member_id = sub.min_id
-                WHERE all_ews_data_1.dist_id = 6
+                WHERE all_ews_data_1.dist_id = 18
             ");
-            $this->command->info("Successfully populated {$affectedMemberIds} member_id records and {$affectedPptMemberIds} ppt_member_id records for Gurugram.");
+            $this->command->info("Successfully populated {$affectedMemberIds} member_id records and {$affectedPptMemberIds} ppt_member_id records for Panipat.");
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
