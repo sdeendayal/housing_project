@@ -48,8 +48,63 @@ Route::redirect('/mmgav-citizen-login/verify', '/mmgav/login/verify');
 // MMGAY Officer Protected Routes
 Route::middleware(['auth', 'mmgay'])->group(function () {
 
-    Route::get('/district-ceo/dashboard/{phase?}', [DistrictCEOController::class, 'dashboard'])
+    Route::get(
+        '/district-ceo/dashboard/{phase?}',
+        [DistrictCEOController::class, 'dashboard']
+    )
+        ->where('phase', 'all|1|2|3')
         ->name('district.dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | District CEO Reports
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/district-ceo/dashboard/report/{type}',
+        [DistrictCEOController::class, 'report']
+    )->name('district.dashboard.report');
+
+    Route::get(
+        '/report/applicants',
+        [DistrictCeoController::class, 'applicantReport']
+    )->name('district.dashboard.applicants');
+
+    Route::get(
+        '/report/applicants/print',
+        [DistrictCeoController::class, 'printApplicantReport']
+    )->name('district.dashboard.applicants.print');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Wise Summary
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/district-ceo/dashboard/village-summary',
+        [DistrictCEOController::class, 'villageSummary']
+    )->name('district.dashboard.village-summary');
+
+    Route::get(
+        '/district-ceo/dashboard/village-summary/pdf/{phase?}',
+        [DistrictCEOController::class, 'exportVillageSummaryPdf']
+    )->name('district.dashboard.village-summary.pdf');
+
+    Route::get(
+        '/district-ceo/dashboard/village-summary/excel/{phase?}',
+        [DistrictCEOController::class, 'exportVillageSummaryExcel']
+    )->name('district.dashboard.village-summary.excel');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | District CEO Dashboard
+    |--------------------------------------------------------------------------
+    | Dynamic optional phase route हमेशा fixed routes के बाद रखें।
+    */
 
     Route::get('/district-ceo/list/{phase}/{status}', [DistrictCEOController::class, 'list'])
         ->name('district.list');
@@ -224,6 +279,12 @@ Route::prefix('super-admin')
 
         Route::get('/registration', [SuperAdminController::class, 'registration'])
             ->name('admin.registration');
+
+        Route::get('/registration/export/excel', [SuperAdminController::class, 'exportRegistrationExcel'])
+            ->name('admin.registration.export.excel');
+
+        Route::get('/registration/export/pdf', [SuperAdminController::class, 'exportRegistrationPdf'])
+            ->name('admin.registration.export.pdf');
 
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');

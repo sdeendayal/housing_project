@@ -5,13 +5,21 @@ namespace App\Http\Controllers\MMGAY\DistrictCEO;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DistrictVillageSummaryExport;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class DistrictCEOController extends Controller
 {
-    public function dashboard(Request $request, $phase = 1)
+    public function dashboard(Request $request, $phase = 'all')
     {
         $user = auth()->user();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Logged-in User District
+        |--------------------------------------------------------------------------
+        */
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
@@ -20,150 +28,452 @@ class DistrictCEOController extends Controller
             abort(404, 'District not found.');
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Phase Filter
+        |--------------------------------------------------------------------------
+        */
+        $phase = (string) $phase;
 
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
 
-        // Phase Wise Plot Column
-        switch ($phase) {
-            case 2:
-                $plotColumn = 'v.totalPlotsPhase2';
-                break;
-
-            case 3:
-                $plotColumn = 'v.totalPlotsPhase3';
-                break;
-
-            default:
-                $plotColumn = 'v.TotalPlots';
-                break;
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 1;
+            }
         }
 
+        $isAllPhase = $phase === 'all';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village Filter
+        |--------------------------------------------------------------------------
+        */
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phase-wise / All Phase Village Dropdown
+        |--------------------------------------------------------------------------
+        */
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('v.phase', $phase);
+            })
+            ->select(
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase'
+            )
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Selected Village
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $villageId &&
+            !$villages->contains(function ($village) use ($villageId) {
+                return (int) $village->VillageId === $villageId;
+            })
+        ) {
+            $villageId = null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Main Dashboard Query
+        |--------------------------------------------------------------------------
+        */
         $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->join('DistrictMaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('FlatMaster as f', 'o.FlatId', '=', 'f.FlatId')
-
+            ->join('VillageMaster as v', function ($join) {
+                $join->on('o.VillageId', '=', 'v.VillageId')
+                    ->on('o.DistrictId', '=', 'v.DistrictId');
+            })
+            ->join(
+                'DistrictMaster as d',
+                'o.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+            ->leftJoin(
+                'registary as r',
+                'o.MobileNo',
+                '=',
+                'r.SecondPartyMobile'
+            )
             ->where('o.DistrictId', $districtId)
-            ->where('o.Phase', $phase);
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
 
-        // NULL Plot wale villages hide
-        if ($phase == 1) {
-            $query->whereNotNull('v.TotalPlots');
-        } elseif ($phase == 2) {
-            $query->whereNotNull('v.totalPlotsPhase2');
-        } else {
-            $query->whereNotNull('v.totalPlotsPhase3');
-        }
+            /*
+            |--------------------------------------------------------------------------
+            | Apply Phase Filter Only When Specific Phase is Selected
+            |--------------------------------------------------------------------------
+            */
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase)
+                    ->where('v.phase', $phase);
+            })
 
+            /*
+            |--------------------------------------------------------------------------
+            | Ensure Owner and Village Phase Match in All Phase Mode
+            |--------------------------------------------------------------------------
+            */
+            ->when($isAllPhase, function ($query) {
+                $query->whereColumn('o.Phase', 'v.phase');
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Apply Village Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village-wise Dashboard Data
+        |--------------------------------------------------------------------------
+        */
         $villageData = $query
+            ->selectRaw("
+            d.DistrictName,
+            v.VillageId,
+            v.VillageName,
+            v.phase AS Phase,
+            v.plots AS TotalPlots,
+
+            COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END) AS TotalAllotment,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND COALESCE(o.IsApproved, 0) = 0
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS PendingApproval,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END) AS Cancelled,
+
+            COUNT(DISTINCT CASE
+    WHEN f.FlatId IS NOT NULL
+        AND o.IsApproved = 1
+        AND o.IsPaid = 1
+        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+        AND o.MobileNo IS NOT NULL
+        AND o.MobileNo <> ''
+        AND r.SecondPartyMobile IS NOT NULL
+    THEN o.OwnerId
+END) AS RegistryMatched,
+
+COUNT(DISTINCT CASE
+    WHEN f.FlatId IS NOT NULL
+        AND o.IsApproved = 1
+        AND o.IsPaid = 1
+        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+        AND o.MobileNo IS NOT NULL
+        AND o.MobileNo <> ''
+        AND r.SecondPartyMobile IS NULL
+    THEN o.OwnerId
+END) AS RegistryUnmatchedWithMobile,
+
+COUNT(DISTINCT CASE
+    WHEN f.FlatId IS NOT NULL
+        AND o.IsApproved = 1
+        AND o.IsPaid = 1
+        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+        AND (
+            o.MobileNo IS NULL
+            OR o.MobileNo = ''
+        )
+    THEN o.OwnerId
+END) AS RegistryUnmatchedWithoutMobile,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'SC'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS SC,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Ghumantu'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Ghumantu,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Widow'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Widow,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste IN ('General', 'Others')
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Others
+        ")
             ->groupBy(
                 'd.DistrictName',
                 'v.VillageId',
                 'v.VillageName',
-                DB::raw($plotColumn)
+                'v.phase',
+                'v.plots'
             )
-
+            ->orderBy('v.phase')
             ->orderBy('v.VillageName')
-
-            ->selectRaw("
-    d.DistrictName,
-    v.VillageId,
-    v.VillageName,
-
-    $plotColumn AS TotalPlots,
-
-    COUNT(o.OwnerId) AS TotalApplicants,
-
-    SUM(
-        CASE
-            WHEN o.IsApproved = 1
-             AND o.IsPaid = 1
-            THEN 1 ELSE 0
-        END
-    ) AS Paid,
-
-    SUM(
-        CASE
-            WHEN o.IsApproved = 1
-             AND o.IsPaid = 1
-             AND o.Caste = 'SC'
-            THEN 1 ELSE 0
-        END
-    ) AS SC,
-
-    SUM(
-        CASE
-            WHEN o.IsApproved = 1
-             AND o.IsPaid = 1
-             AND o.Caste = 'Ghumantu'
-            THEN 1 ELSE 0
-        END
-    ) AS Ghumantu,
-
-    SUM(
-        CASE
-            WHEN o.IsApproved = 1
-             AND o.IsPaid = 1
-             AND o.Caste = 'Widow'
-            THEN 1 ELSE 0
-        END
-    ) AS Widow,
-
-    SUM(
-        CASE
-            WHEN o.IsApproved = 1
-             AND o.IsPaid = 1
-             AND (o.Caste = 'General' OR o.Caste = 'Others')
-            THEN 1 ELSE 0
-        END
-    ) AS Others,
-
-    (
-    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='SC' THEN 1 ELSE 0 END)
-    +
-    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='Ghumantu' THEN 1 ELSE 0 END)
-    +
-    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1 AND o.Caste='Widow' THEN 1 ELSE 0 END)
-    +
-    SUM(CASE WHEN o.IsApproved=1 AND o.IsPaid=1
-        AND (o.Caste='General' OR o.Caste='Others')
-        THEN 1 ELSE 0 END)
-) AS TotalAllotment,
-
-    SUM(
-        CASE
-            WHEN o.IsPaymentApproved = 1
-            THEN 1 ELSE 0
-        END
-    ) AS Possession
-")
             ->get();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Master Data Totals
+        |--------------------------------------------------------------------------
+        */
+        $totalVillages = $villageData
+            ->unique(function ($row) {
+                return $row->Phase . '-' . $row->VillageId;
+            })
+            ->count();
+
+        $totalPlots = (int) $villageData->sum('TotalPlots');
+
+        $totalApplicants = (int) $villageData->sum(
+            'TotalApplicants'
+        );
+
+        $totalAllotment = (int) $villageData->sum(
+            'TotalAllotment'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Allotment Status Totals
+        |--------------------------------------------------------------------------
+        */
+        $totalPaid = (int) $villageData->sum(
+            'ApprovedPaid'
+        );
+
+        $totalApprovedUnpaid = (int) $villageData->sum(
+            'ApprovedUnpaid'
+        );
+
+        $totalPending = (int) $villageData->sum(
+            'PendingApproval'
+        );
+
+        $totalRejected = (int) $villageData->sum(
+            'Rejected'
+        );
+
+        $totalCancelled = (int) $villageData->sum(
+            'Cancelled'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registration Totals
+        |--------------------------------------------------------------------------
+        */
+        $totalRegistryAllotted = $totalPaid;
+
+        $totalRegistryMatched = (int) $villageData->sum(
+            'RegistryMatched'
+        );
+
+        $totalRegistryUnmatched = (int) (
+            $villageData->sum('RegistryUnmatchedWithMobile') +
+            $villageData->sum('RegistryUnmatchedWithoutMobile')
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Category Totals
+        |--------------------------------------------------------------------------
+        */
+        $totalSC = (int) $villageData->sum('SC');
+
+        $totalGhumantu = (int) $villageData->sum(
+            'Ghumantu'
+        );
+
+        $totalWidow = (int) $villageData->sum(
+            'Widow'
+        );
+
+        $totalOthers = (int) $villageData->sum(
+            'Others'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard Totals
+        |--------------------------------------------------------------------------
+        */
         $totals = [
-            'totalVillages' => $villageData->count(),
-            'totalPlots' => $villageData->sum('TotalPlots'),
-            'totalApplicants' => $villageData->sum('TotalApplicants'),
-            'totalPaid' => $villageData->sum('Paid'),
-            'totalAllotment' => $villageData->sum('TotalAllotment'),
-            'totalPossession' => $villageData->sum('Possession'),
-            'totalSC' => $villageData->sum('SC'),
-            'totalGhumantu' => $villageData->sum('Ghumantu'),
-            'totalWidow' => $villageData->sum('Widow'),
-            'totalOthers' => $villageData->sum('Others'),
+            /*
+            |----------------------------------------------------------------------
+            | Master Data
+            |----------------------------------------------------------------------
+            */
+            'totalVillages' => $totalVillages,
+            'totalPlots' => $totalPlots,
+            'totalApplicants' => $totalApplicants,
+            'totalAllotment' => $totalAllotment,
+
+            /*
+            |----------------------------------------------------------------------
+            | Allotment Status
+            |----------------------------------------------------------------------
+            */
+            'totalPaid' => $totalPaid,
+            'totalApprovedUnpaid' => $totalApprovedUnpaid,
+            'totalPending' => $totalPending,
+            'totalRejected' => $totalRejected,
+            'totalCancelled' => $totalCancelled,
+
+            /*
+            |----------------------------------------------------------------------
+            | Registration Statistics
+            |----------------------------------------------------------------------
+            */
+            'totalRegistryAllotted' => $totalRegistryAllotted,
+            'totalRegistryMatched' => $totalRegistryMatched,
+            'totalRegistryUnmatched' => $totalRegistryUnmatched,
+
+            /*
+            |----------------------------------------------------------------------
+            | Possession
+            |----------------------------------------------------------------------
+            */
+            'totalRegisteredBeneficiaries' => $totalRegistryMatched,
+            'totalPossessionGiven' => null,
+            'totalPossessionPending' => null,
+
+            /*
+            |----------------------------------------------------------------------
+            | Category Totals
+            |----------------------------------------------------------------------
+            */
+            'totalSC' => $totalSC,
+            'totalGhumantu' => $totalGhumantu,
+            'totalWidow' => $totalWidow,
+            'totalOthers' => $totalOthers,
         ];
 
+        /*
+        |--------------------------------------------------------------------------
+        | AJAX Response
+        |--------------------------------------------------------------------------
+        */
         if ($request->ajax()) {
             return response()->json([
+                'success' => true,
+
                 'phase' => $phase,
+
+                'phase_label' => $isAllPhase
+                    ? 'All Phases'
+                    : 'Phase ' . $phase,
+
+                'filters' => [
+                    'village_id' => $villageId,
+                ],
+
                 'totals' => $totals,
-                'villageData' => $villageData
+
+                'villageData' => $villageData,
+
+                'villages' => $villages,
             ]);
         }
 
-        return view('mmgay.district-ceo.dashboard', compact(
-            'phase',
-            'totals',
-            'villageData'
-        ));
+        $reportParams = [
+            'phase' => $phase,
+        ];
+
+        if ($villageId) {
+            $reportParams['village_id'] = $villageId;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dashboard View
+        |--------------------------------------------------------------------------
+        */
+        return view(
+            'mmgay.district-ceo.dashboard',
+            compact(
+                'phase',
+                'totals',
+                'villageData',
+                'villages',
+                'villageId',
+                'reportParams'
+            )
+        );
     }
 
     public function list($phase, $status)
@@ -323,9 +633,6 @@ class DistrictCEOController extends Controller
 
         return view('mmgay.district-ceo.owner-view', compact('owner'));
     }
-
-
-
     public function submitGrievance(Request $request, $id)
     {
         $request->validate([
@@ -548,4 +855,1726 @@ class DistrictCEOController extends Controller
             compact('application', 'timeline')
         );
     }
+
+    private function getVillageSummaryData(
+        int $districtId,
+        int $phase,
+        ?int $villageId = null
+    ) {
+        return DB::table('OwnerMaster as o')
+            ->join(
+                'VillageMaster as v',
+                'o.VillageId',
+                '=',
+                'v.VillageId'
+            )
+            ->join(
+                'DistrictMaster as d',
+                'o.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+            ->where('o.DistrictId', $districtId)
+            ->where('o.Phase', $phase)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.phase', $phase)
+            ->where('v.plots', '>', 0)
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            })
+            ->selectRaw("
+            d.DistrictName,
+            v.VillageId,
+            v.VillageName,
+            v.plots AS TotalPlots,
+
+            COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END) AS TotalAllotment,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND COALESCE(o.IsApproved, 0) = 0
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS PendingApproval,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END) AS Cancelled,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'SC'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS SC,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Ghumantu'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Ghumantu,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Widow'
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Widow,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste IN ('General', 'Others')
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END) AS Others
+        ")
+            ->groupBy(
+                'd.DistrictName',
+                'v.VillageId',
+                'v.VillageName',
+                'v.plots'
+            )
+            ->orderBy('v.VillageName')
+            ->get();
+    }
+
+    public function exportVillageSummaryPdf(Request $request, $phase = 1)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        if (!$districtId) {
+            abort(404, 'District not found.');
+        }
+
+        $phase = in_array((int) $phase, [1, 2, 3], true)
+            ? (int) $phase
+            : 1;
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        $villageData = $this->getVillageSummaryData(
+            $districtId,
+            $phase,
+            $villageId
+        );
+
+        $totals = [
+            'totalPlots' => (int) $villageData->sum('TotalPlots'),
+            'totalApplicants' => (int) $villageData->sum('TotalApplicants'),
+            'totalPaid' => (int) $villageData->sum('ApprovedPaid'),
+            'totalSC' => (int) $villageData->sum('SC'),
+            'totalGhumantu' => (int) $villageData->sum('Ghumantu'),
+            'totalWidow' => (int) $villageData->sum('Widow'),
+            'totalOthers' => (int) $villageData->sum('Others'),
+            'totalAllotment' => (int) $villageData->sum('TotalAllotment'),
+        ];
+
+        $districtName = $user->district_name;
+
+        $pdf = Pdf::loadView(
+            'mmgay.district-ceo.exports.village-summary-pdf',
+            compact(
+                'phase',
+                'villageData',
+                'totals',
+                'districtName'
+            )
+        )->setPaper('a4', 'landscape');
+
+        return $pdf->download(
+            'village-summary-phase-' . $phase . '.pdf'
+        );
+    }
+
+    public function exportVillageSummaryExcel(Request $request, $phase = 1)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        if (!$districtId) {
+            abort(404, 'District not found.');
+        }
+
+        $phase = in_array((int) $phase, [1, 2, 3], true)
+            ? (int) $phase
+            : 1;
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        $villageData = $this->getVillageSummaryData(
+            $districtId,
+            $phase,
+            $villageId
+        );
+
+        return Excel::download(
+            new DistrictVillageSummaryExport($villageData),
+            'village-summary-phase-' . $phase . '.xlsx'
+        );
+    }
+
+    public function report(Request $request, string $type)
+    {
+
+
+        $allowedTypes = [
+            'villages',
+            'plots',
+            'applicants',
+            'allotments',
+        ];
+
+        abort_unless(
+            in_array($type, $allowedTypes, true),
+            404
+        );
+
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('mmgay.login');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | District
+        |--------------------------------------------------------------------------
+        */
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        if (!$districtId) {
+            abort(404, 'District not found.');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phase Filter
+        |--------------------------------------------------------------------------
+        */
+        $phaseInput = strtolower(
+            trim((string) $request->query('phase', 'all'))
+        );
+
+        if ($phaseInput === 'all') {
+            $phase = 'all';
+        } else {
+            $phase = (int) $phaseInput;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 'all';
+            }
+        }
+
+        $isAllPhase = $phase === 'all';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Other Filters
+        |--------------------------------------------------------------------------
+        |
+        | Dashboard se village filter alag naming ke saath aa sakta hai.
+        | Isliye village_id, villageId aur village tino support kiye gaye hain.
+        |
+        */
+        $villageInput = $request->query(
+            'village_id',
+            $request->query(
+                'villageId',
+                $request->query('village')
+            )
+        );
+
+        $villageId = filled($villageInput)
+            ? (int) $villageInput
+            : null;
+
+        $status = $request->query('status');
+
+        $allowedStatuses = [
+            'approved_paid',
+            'approved_unpaid',
+            'pending',
+            'rejected',
+            'cancelled',
+            'registry_done',
+            'registry_pending',
+        ];
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            $status = null;
+        }
+
+        $caste = $request->query('caste');
+
+        $allowedCastes = [
+            'SC',
+            'Ghumantu',
+            'Widow',
+            'General',
+            'Others',
+        ];
+
+        if (!in_array($caste, $allowedCastes, true)) {
+            $caste = null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village Dropdown
+        |--------------------------------------------------------------------------
+        */
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('v.phase', $phase);
+            })
+            ->select(
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase'
+            )
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Village
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $villageId &&
+            !$villages->contains(function ($village) use ($villageId) {
+                return (int) $village->VillageId === $villageId;
+            })
+        ) {
+            $villageId = null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Main Report Query
+        |--------------------------------------------------------------------------
+        */
+        $query = DB::table('OwnerMaster as o')
+
+            ->join('VillageMaster as v', function ($join) {
+                $join->on(
+                    'o.VillageId',
+                    '=',
+                    'v.VillageId'
+                )
+                    ->on(
+                        'o.DistrictId',
+                        '=',
+                        'v.DistrictId'
+                    )
+                    ->on(
+                        'o.Phase',
+                        '=',
+                        'v.phase'
+                    );
+            })
+
+            ->join(
+                'DistrictMaster as d',
+                'o.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+
+            ->leftJoin(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+
+            ->leftJoin(
+                'registary as r',
+                'o.MobileNo',
+                '=',
+                'r.SecondPartyMobile'
+            )
+
+            ->where('o.DistrictId', $districtId)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+
+            /*
+            |--------------------------------------------------------------------------
+            | Phase
+            |--------------------------------------------------------------------------
+            */
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase)
+                    ->where('v.phase', $phase);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Village
+            |--------------------------------------------------------------------------
+            */
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Caste
+            |--------------------------------------------------------------------------
+            */
+            ->when($caste, function ($query) use ($caste) {
+                $query->where('o.Caste', $caste);
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+        switch ($status) {
+            case 'approved_paid':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'approved_unpaid':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'pending':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereRaw('COALESCE(o.IsApproved, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'rejected':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsRejected', 1);
+                break;
+
+            case 'cancelled':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsAllotmentCancelled', 1);
+                break;
+
+            case 'registry_done':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('o.MobileNo')
+                    ->where('o.MobileNo', '<>', '')
+                    ->whereNotNull('r.SecondPartyMobile');
+                break;
+
+            case 'registry_pending':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where(function ($query) {
+                        $query
+                            ->whereNull('o.MobileNo')
+                            ->orWhere('o.MobileNo', '')
+                            ->orWhereNull('r.SecondPartyMobile');
+                    });
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village-wise Count Data
+        |--------------------------------------------------------------------------
+        */
+        $reportData = $query
+            ->selectRaw("
+            d.DistrictName,
+            v.VillageId,
+            v.VillageName,
+            v.phase AS Phase,
+            v.plots AS TotalPlots,
+
+            COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END) AS TotalAllotment,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS ApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS ApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND COALESCE(o.IsApproved, 0) = 0
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS PendingApproval,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END) AS Rejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END) AS Cancelled,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.MobileNo IS NOT NULL
+                    AND o.MobileNo <> ''
+                    AND r.SecondPartyMobile IS NOT NULL
+                THEN o.OwnerId
+            END) AS RegistryDone,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND (
+                        o.MobileNo IS NULL
+                        OR o.MobileNo = ''
+                        OR r.SecondPartyMobile IS NULL
+                    )
+                THEN o.OwnerId
+            END) AS RegistryPending,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'SC'
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS SC,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Ghumantu'
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS Ghumantu,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste = 'Widow'
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS Widow,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND o.Caste IN (
+                        'General',
+                        'Others'
+                    )
+                    AND COALESCE(
+                        o.IsAllotmentCancelled,
+                        0
+                    ) = 0
+                THEN o.OwnerId
+            END) AS Others,
+
+            COUNT(DISTINCT CASE
+                WHEN o.IsPaymentApproved = 1
+                THEN o.OwnerId
+            END) AS Possession
+        ")
+            ->groupBy(
+                'd.DistrictName',
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase',
+                'v.plots'
+            )
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Grand Totals
+        |--------------------------------------------------------------------------
+        */
+        $totals = [
+            'totalVillages' => $reportData->count(),
+
+            'totalPlots' => (int) $reportData->sum(
+                'TotalPlots'
+            ),
+
+            'totalApplicants' => (int) $reportData->sum(
+                'TotalApplicants'
+            ),
+
+            'totalAllotment' => (int) $reportData->sum(
+                'TotalAllotment'
+            ),
+
+            'approvedPaid' => (int) $reportData->sum(
+                'ApprovedPaid'
+            ),
+
+            'approvedUnpaid' => (int) $reportData->sum(
+                'ApprovedUnpaid'
+            ),
+
+            'pending' => (int) $reportData->sum(
+                'PendingApproval'
+            ),
+
+            'rejected' => (int) $reportData->sum(
+                'Rejected'
+            ),
+
+            'cancelled' => (int) $reportData->sum(
+                'Cancelled'
+            ),
+
+            'registryDone' => (int) $reportData->sum(
+                'RegistryDone'
+            ),
+
+            'registryPending' => (int) $reportData->sum(
+                'RegistryPending'
+            ),
+
+            'sc' => (int) $reportData->sum('SC'),
+
+            'ghumantu' => (int) $reportData->sum(
+                'Ghumantu'
+            ),
+
+            'widow' => (int) $reportData->sum(
+                'Widow'
+            ),
+
+            'others' => (int) $reportData->sum(
+                'Others'
+            ),
+
+            'totalPossession' => (int) $reportData->sum(
+                'Possession'
+            ),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Preserve Active Filters
+        |--------------------------------------------------------------------------
+        */
+        $reportParams = array_filter(
+            [
+                'phase' => $phase,
+                'village_id' => $villageId,
+                'status' => $status,
+                'caste' => $caste,
+            ],
+            static fn($value) => $value !== null && $value !== ''
+        );
+
+        return view(
+            'mmgay.district-ceo.report',
+            compact(
+                'type',
+                'phase',
+                'isAllPhase',
+                'villageId',
+                'status',
+                'caste',
+                'villages',
+                'reportData',
+                'totals',
+                'reportParams'
+            )
+        );
+    }
+
+    public function applicantReport(Request $request)
+    {
+        $user = auth()->user();
+
+        if (!$user) {
+            return redirect()->route('mmgay.login');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | District
+        |--------------------------------------------------------------------------
+        */
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filters
+        |--------------------------------------------------------------------------
+        */
+        $phase = (string) $request->query('phase', 'all');
+
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 'all';
+            }
+        }
+
+        $isAllPhase = $phase === 'all';
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->query('village_id')
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status
+        |--------------------------------------------------------------------------
+        |
+        | Applicants card = all_applicants
+        | बाकी सभी cards actual allotted applicants (FlatMaster matched) पर हैं।
+        |--------------------------------------------------------------------------
+        */
+        $status = trim(
+            (string) $request->query('status', 'all_applicants')
+        );
+
+        $allowedStatuses = [
+            'all_applicants',
+            'allotted',
+            'approved_paid',
+            'approved_unpaid',
+            'pending',
+            'rejected',
+            'cancelled',
+            'registry_allotted',
+            'registry_done',
+            'registry_pending',
+        ];
+
+        if (!in_array($status, $allowedStatuses, true)) {
+            $status = 'all_applicants';
+        }
+
+        $caste = trim(
+            (string) $request->query('caste', '')
+        );
+
+        $allowedCastes = [
+            'SC',
+            'Ghumantu',
+            'Widow',
+            'General',
+            'Others',
+        ];
+
+        if (!in_array($caste, $allowedCastes, true)) {
+            $caste = null;
+        }
+
+        $search = trim(
+            (string) $request->query('search', '')
+        );
+
+        $perPage = (int) $request->query('per_page', 50);
+
+        if (!in_array($perPage, [25, 50, 100, 200], true)) {
+            $perPage = 50;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Villages Dropdown
+        |--------------------------------------------------------------------------
+        */
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('v.phase', $phase);
+            })
+            ->select(
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase'
+            )
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Validate Village
+        |--------------------------------------------------------------------------
+        */
+        if (
+            $villageId &&
+            !$villages->contains(function ($village) use ($villageId) {
+                return (int) $village->VillageId === $villageId;
+            })
+        ) {
+            $villageId = null;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base Query — Same Logic As Dashboard
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', function ($join) {
+                $join->on('o.VillageId', '=', 'v.VillageId')
+                    ->on('o.DistrictId', '=', 'v.DistrictId');
+            })
+            ->join(
+                'DistrictMaster as d',
+                'o.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+            ->where('o.DistrictId', $districtId)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+
+            /*
+            |--------------------------------------------------------------------------
+            | Phase Filter — Same As Dashboard
+            |--------------------------------------------------------------------------
+            */
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase)
+                    ->where('v.phase', $phase);
+            })
+            ->when($isAllPhase, function ($query) {
+                $query->whereColumn('o.Phase', 'v.phase');
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Village Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Caste Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($caste, function ($query) use ($caste) {
+                if ($caste === 'Others') {
+                    $query->where(function ($query) {
+                        $query
+                            ->whereNull('o.Caste')
+                            ->orWhereNotIn('o.Caste', [
+                                'SC',
+                                'Ghumantu',
+                                'Widow',
+                                'General',
+                            ]);
+                    });
+
+                    return;
+                }
+
+                $query->where('o.Caste', $caste);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Search Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($query) use ($search) {
+                    $query
+                        ->where('o.OwnerName', 'like', "%{$search}%")
+                        ->orWhere(
+                            'o.FatherHusbandName',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.RegistrationNo',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.MobileNo',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.PPPId',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.MemberId',
+                            'like',
+                            "%{$search}%"
+                        );
+                });
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Card Counts — Exact Dashboard Conditions
+        |--------------------------------------------------------------------------
+        */
+        $statusCounts = (clone $baseQuery)
+            ->selectRaw("
+            COUNT(DISTINCT o.OwnerId)
+                AS totalApplicants,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                THEN o.OwnerId
+            END)
+                AS totalAllotted,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END)
+                AS totalApprovedPaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END)
+                AS totalApprovedUnpaid,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND COALESCE(o.IsApproved, 0) = 0
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END)
+                AS totalPending,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsRejected = 1
+                THEN o.OwnerId
+            END)
+                AS totalRejected,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsAllotmentCancelled = 1
+                THEN o.OwnerId
+            END)
+                AS totalCancelled,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                THEN o.OwnerId
+            END)
+                AS totalRegistryAllotted,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND o.MobileNo IS NOT NULL
+                    AND o.MobileNo <> ''
+                    AND EXISTS (
+                        SELECT 1
+                        FROM registary AS registry_done
+                        WHERE registry_done.SecondPartyMobile = o.MobileNo
+                    )
+                THEN o.OwnerId
+            END)
+                AS totalRegistryDone,
+
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND (
+                        o.MobileNo IS NULL
+                        OR o.MobileNo = ''
+                        OR NOT EXISTS (
+                            SELECT 1
+                            FROM registary AS registry_pending
+                            WHERE registry_pending.SecondPartyMobile = o.MobileNo
+                        )
+                    )
+                THEN o.OwnerId
+            END)
+                AS totalRegistryPending
+        ")
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Report Query
+        |--------------------------------------------------------------------------
+        */
+        $query = clone $baseQuery;
+
+        switch ($status) {
+            case 'all_applicants':
+                /*
+                 * सभी filtered applicants.
+                 */
+                break;
+
+            case 'allotted':
+                $query->whereNotNull('f.FlatId');
+                break;
+
+            case 'approved_paid':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'approved_unpaid':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'pending':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereRaw('COALESCE(o.IsApproved, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'rejected':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsRejected', 1);
+                break;
+
+            case 'cancelled':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsAllotmentCancelled', 1);
+                break;
+
+            case 'registry_allotted':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    );
+                break;
+
+            case 'registry_done':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    )
+                    ->whereNotNull('o.MobileNo')
+                    ->where('o.MobileNo', '<>', '')
+                    ->whereExists(function ($subQuery) {
+                        $subQuery
+                            ->selectRaw('1')
+                            ->from('registary as r')
+                            ->whereColumn(
+                                'r.SecondPartyMobile',
+                                'o.MobileNo'
+                            );
+                    });
+                break;
+
+            case 'registry_pending':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw(
+                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                    )
+                    ->where(function ($query) {
+                        $query
+                            ->whereNull('o.MobileNo')
+                            ->orWhere('o.MobileNo', '')
+                            ->orWhereNotExists(function ($subQuery) {
+                                $subQuery
+                                    ->selectRaw('1')
+                                    ->from('registary as r')
+                                    ->whereColumn(
+                                        'r.SecondPartyMobile',
+                                        'o.MobileNo'
+                                    );
+                            });
+                    });
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Applicants
+        |--------------------------------------------------------------------------
+        */
+        $applicants = $query
+            ->select([
+                'o.OwnerId',
+                'o.secure_id',
+                'o.RegistrationNo',
+                'o.OwnerName',
+                'o.Relation',
+                'o.FatherHusbandName',
+                'o.Gender',
+                'o.OwnerAddress',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Caste',
+                'o.MobileNo',
+                'o.Phase',
+                'o.FlatId',
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
+                'o.Remarks',
+                'o.DCRemarks',
+                'o.CreatedDate',
+                'v.VillageName',
+                'f.FlatNo',
+            ])
+            ->selectRaw("
+            CASE
+                WHEN o.IsAllotmentCancelled = 1
+                    THEN 'Cancelled'
+
+                WHEN o.IsRejected = 1
+                    THEN 'Rejected'
+
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 'Approved & Paid'
+
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 'Approved & Unpaid'
+
+                ELSE 'Yet to be Approved'
+            END AS ApplicantStatus
+        ")
+            ->selectRaw("
+            CASE
+                WHEN f.FlatId IS NOT NULL
+                    THEN 'Allotted'
+
+                ELSE 'Not Allotted'
+            END AS AllotmentStatus
+        ")
+            ->selectRaw("
+            CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND o.MobileNo IS NOT NULL
+                    AND o.MobileNo <> ''
+                    AND EXISTS (
+                        SELECT 1
+                        FROM registary AS registry_status
+                        WHERE registry_status.SecondPartyMobile = o.MobileNo
+                    )
+                    THEN 'Registry Done'
+
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 'Registry Pending'
+
+                ELSE 'Not Applicable'
+            END AS RegistryStatus
+        ")
+            ->selectRaw("
+            CASE
+                WHEN o.IsAllotmentCancelled = 1
+                    THEN 'Allotment Cancelled'
+
+                WHEN o.IsRejected = 1
+                    THEN COALESCE(
+                        NULLIF(o.DCRemarks, ''),
+                        NULLIF(o.Remarks, ''),
+                        'Application Rejected'
+                    )
+
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 'Application approved and payment completed'
+
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 'Application approved, payment pending'
+
+                ELSE COALESCE(
+                    NULLIF(o.DCRemarks, ''),
+                    NULLIF(o.Remarks, ''),
+                    'Approval pending'
+                )
+            END AS StatusRemark
+        ")
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerId')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view(
+            'mmgay.district-ceo.reports.applicants',
+            compact(
+                'phase',
+                'villageId',
+                'status',
+                'caste',
+                'search',
+                'perPage',
+                'villages',
+                'applicants',
+                'statusCounts'
+            )
+        );
+    }
+
+    public function printApplicantReport(Request $request)
+    {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        $phase = in_array(
+            (string) $request->query('phase', 'all'),
+            ['all', '1', '2', '3'],
+            true
+        )
+            ? (string) $request->query('phase', 'all')
+            : 'all';
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->query('village_id')
+            : null;
+
+        $status = $request->filled('status')
+            ? trim((string) $request->query('status'))
+            : null;
+
+        $caste = $request->filled('caste')
+            ? trim((string) $request->query('caste'))
+            : null;
+
+        $search = trim((string) $request->query('search', ''));
+
+        $perPage = 3000;
+
+        $query = $this->applicantReportQuery(
+            districtId: (int) $districtId,
+            phase: $phase,
+            villageId: $villageId,
+            status: $status,
+            caste: $caste,
+            search: $search
+        );
+
+        $applicants = $query
+            ->orderBy('o.OwnerId')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return view(
+            'mmgay.district-ceo.reports.applicants-print',
+            [
+                'applicants' => $applicants,
+                'districtName' => $user->district_name,
+                'phase' => $phase,
+                'villageId' => $villageId,
+                'status' => $status,
+                'caste' => $caste,
+                'search' => $search,
+            ]
+        );
+    }
+
+    private function applicantReportQuery(
+        int $districtId,
+        string|int $phase = 'all',
+        ?int $villageId = null,
+        ?string $status = null,
+        ?string $caste = null,
+        string $search = ''
+    ) {
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', function ($join) {
+                $join->on('o.VillageId', '=', 'v.VillageId')
+                    ->on('o.DistrictId', '=', 'v.DistrictId');
+            })
+            ->leftJoin('FlatMaster as f', function ($join) {
+                $join->on('o.FlatId', '=', 'f.FlatId')
+                    ->on('o.VillageId', '=', 'f.VillageId');
+            })
+            ->where('o.DistrictId', $districtId)
+            ->where('v.DistrictId', $districtId)
+
+            /*
+            |--------------------------------------------------------------------------
+            | Phase Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when(
+                $phase !== 'all',
+                function ($query) use ($phase) {
+                    $query
+                        ->where('o.Phase', (int) $phase)
+                        ->where('v.phase', (int) $phase);
+                },
+                function ($query) {
+                    $query->whereColumn('o.Phase', 'v.phase');
+                }
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Village Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('o.VillageId', $villageId);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Caste Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($caste, function ($query) use ($caste) {
+                if ($caste === 'Others') {
+                    $query->where(function ($subQuery) {
+                        $subQuery
+                            ->whereNull('o.Caste')
+                            ->orWhere('o.Caste', '')
+                            ->orWhereNotIn('o.Caste', [
+                                'SC',
+                                'Ghumantu',
+                                'Widow',
+                            ]);
+                    });
+
+                    return;
+                }
+
+                $query->where('o.Caste', $caste);
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Search Filter
+            |--------------------------------------------------------------------------
+            */
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery
+                        ->where('o.OwnerName', 'like', "%{$search}%")
+                        ->orWhere(
+                            'o.FatherHusbandName',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.RegistrationNo',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.MobileNo',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.PPPId',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'v.VillageName',
+                            'like',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'f.FlatNo',
+                            'like',
+                            "%{$search}%"
+                        );
+                });
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | Status Filter
+        |--------------------------------------------------------------------------
+        */
+        switch ($status) {
+            case 'allotted':
+                $query
+                    ->whereNotNull('o.FlatId')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'approved_paid':
+                $query
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'approved_unpaid':
+                $query
+                    ->where('o.IsApproved', 1)
+                    ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'pending':
+                $query
+                    ->whereRaw('COALESCE(o.IsApproved, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'rejected':
+                $query->where('o.IsRejected', 1);
+                break;
+
+            case 'cancelled':
+                $query->where('o.IsAllotmentCancelled', 1);
+                break;
+
+            case 'registry_done':
+                $query
+                    ->whereNotNull('o.MobileNo')
+                    ->where('o.MobileNo', '<>', '')
+                    ->whereExists(function ($registryQuery) {
+                        $registryQuery
+                            ->selectRaw('1')
+                            ->from('registary as r')
+                            ->whereColumn(
+                                'r.SecondPartyMobile',
+                                'o.MobileNo'
+                            );
+                    });
+                break;
+
+            case 'registry_pending':
+                $query
+                    ->whereNotNull('o.FlatId')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
+                    ->where(function ($registryQuery) {
+                        $registryQuery
+                            ->whereNull('o.MobileNo')
+                            ->orWhere('o.MobileNo', '')
+                            ->orWhereNotExists(function ($subQuery) {
+                                $subQuery
+                                    ->selectRaw('1')
+                                    ->from('registary as r')
+                                    ->whereColumn(
+                                        'r.SecondPartyMobile',
+                                        'o.MobileNo'
+                                    );
+                            });
+                    });
+                break;
+        }
+
+        return $query
+            ->select([
+                'o.OwnerId',
+                'o.RegistrationNo',
+                'o.OwnerName',
+                'o.Relation',
+                'o.FatherHusbandName',
+                'o.Gender',
+                'o.Caste',
+                'o.MobileNo',
+                'o.PPPId',
+                'o.Phase',
+                'o.OwnerAddress',
+                'o.FlatId',
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
+                'o.Remarks',
+                'o.DCRemarks',
+                'v.VillageName',
+                'f.FlatNo',
+            ])
+
+            /*
+            |--------------------------------------------------------------------------
+            | Allotment Status
+            |--------------------------------------------------------------------------
+            */
+            ->selectRaw("
+            CASE
+                WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
+                    THEN 'Cancelled'
+
+                WHEN o.FlatId IS NOT NULL
+                    THEN 'Allotted'
+
+                ELSE 'Not Allotted'
+            END AS AllotmentStatus
+        ")
+
+            /*
+            |--------------------------------------------------------------------------
+            | Applicant Status
+            |--------------------------------------------------------------------------
+            */
+            ->selectRaw("
+            CASE
+                WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
+                    THEN 'Cancelled'
+
+                WHEN COALESCE(o.IsRejected, 0) = 1
+                    THEN 'Rejected'
+
+                WHEN COALESCE(o.IsApproved, 0) = 1
+                    AND COALESCE(o.IsPaid, 0) = 1
+                    THEN 'Approved & Paid'
+
+                WHEN COALESCE(o.IsApproved, 0) = 1
+                    AND COALESCE(o.IsPaid, 0) = 0
+                    THEN 'Approved & Unpaid'
+
+                ELSE 'Yet to be Approved'
+            END AS ApplicantStatus
+        ")
+
+            /*
+            |--------------------------------------------------------------------------
+            | Payment Status
+            |--------------------------------------------------------------------------
+            */
+            ->selectRaw("
+            CASE
+                WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
+                    THEN 'Not Applicable'
+
+                WHEN COALESCE(o.IsPaid, 0) = 1
+                    THEN 'Paid'
+
+                WHEN COALESCE(o.IsApproved, 0) = 1
+                    THEN 'Unpaid'
+
+                ELSE 'Not Applicable'
+            END AS PaymentStatus
+        ")
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registry Status
+            |--------------------------------------------------------------------------
+            */
+            ->selectRaw("
+            CASE
+                WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
+                    THEN 'Not Applicable'
+
+                WHEN o.MobileNo IS NOT NULL
+                    AND o.MobileNo <> ''
+                    AND EXISTS (
+                        SELECT 1
+                        FROM registary AS r
+                        WHERE r.SecondPartyMobile = o.MobileNo
+                    )
+                    THEN 'Registry Done'
+
+                WHEN o.FlatId IS NOT NULL
+                    THEN 'Registry Pending'
+
+                ELSE 'Not Applicable'
+            END AS RegistryStatus
+        ");
+    }
+
+
 }

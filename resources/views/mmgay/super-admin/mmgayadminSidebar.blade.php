@@ -104,15 +104,16 @@
             </p>
         </div>
 
+        {{-- Allotment Report --}}
         <a href="{{ route('admin.allotment.report') }}"
             class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
-    {{ request()->routeIs('admin.allotment.report')
+    {{ request()->routeIs('admin.allotment.report') && !request('status')
         ? 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm'
         : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
 
             <span
                 class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
-        {{ request()->routeIs('admin.allotment.report')
+        {{ request()->routeIs('admin.allotment.report') && !request('status')
             ? 'bg-indigo-600 text-white'
             : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
                 home_work
@@ -122,10 +123,238 @@
                 Allotment Report
             </span>
 
-            @if (request()->routeIs('admin.allotment.report'))
+            @if (request()->routeIs('admin.allotment.report') && !request('status'))
                 <span class="h-2 w-2 rounded-full bg-indigo-600"></span>
             @endif
+        </a>
 
+
+        {{-- Approved & Paid --}}
+        <a href="{{ route(
+            'admin.allotment.report',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'approved_paid']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report') && request('status') === 'approved_paid'
+        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report') && request('status') === 'approved_paid'
+            ? 'bg-green-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                verified
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Approved &amp; Paid
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report') && request('status') === 'approved_paid')
+                <span class="h-2 w-2 rounded-full bg-green-600"></span>
+            @endif
+        </a>
+
+
+        {{-- Approved & Unpaid --}}
+        <a href="{{ route(
+            'admin.allotment.report',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'approved_unpaid']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report') && request('status') === 'approved_unpaid'
+        ? 'bg-yellow-50 text-yellow-700 ring-1 ring-inset ring-yellow-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report') && request('status') === 'approved_unpaid'
+            ? 'bg-yellow-500 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                payments
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Approved &amp; Unpaid
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report') && request('status') === 'approved_unpaid')
+                <span class="h-2 w-2 rounded-full bg-yellow-500"></span>
+            @endif
+        </a>
+
+
+        {{-- Yet to be Approved --}}
+        <a href="{{ route(
+            'admin.allotment.report',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'pending']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report') && request('status') === 'pending'
+        ? 'bg-orange-50 text-orange-700 ring-1 ring-inset ring-orange-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report') && request('status') === 'pending'
+            ? 'bg-orange-500 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                pending_actions
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Yet to be Approved
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report') && request('status') === 'pending')
+                <span class="h-2 w-2 rounded-full bg-orange-500"></span>
+            @endif
+        </a>
+
+
+        {{-- Rejected --}}
+        <a href="{{ route(
+            'admin.allotment.report',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'rejected']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report') && request('status') === 'rejected'
+        ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report') && request('status') === 'rejected'
+            ? 'bg-red-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                cancel
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Rejected
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report') && request('status') === 'rejected')
+                <span class="h-2 w-2 rounded-full bg-red-600"></span>
+            @endif
+        </a>
+
+
+        {{-- Cancelled --}}
+        <a href="{{ route(
+            'admin.allotment.report',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['status' => 'cancelled']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.allotment.report') && request('status') === 'cancelled'
+        ? 'bg-slate-100 text-slate-800 ring-1 ring-inset ring-slate-200 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.allotment.report') && request('status') === 'cancelled'
+            ? 'bg-slate-700 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                block
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Cancelled
+            </span>
+
+            @if (request()->routeIs('admin.allotment.report') && request('status') === 'cancelled')
+                <span class="h-2 w-2 rounded-full bg-slate-700"></span>
+            @endif
+        </a>
+
+        <div class="px-3 pt-4 pb-1">
+            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
+                Registration
+            </p>
+        </div>
+
+        {{-- Total Registration --}}
+        <a href="{{ route(
+            'admin.registration',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['type' => 'all']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.registration') && request('type', 'all') == 'all'
+        ? 'bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.registration') && request('type', 'all') == 'all'
+            ? 'bg-violet-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                description
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Total Registration
+            </span>
+
+            @if (request()->routeIs('admin.registration') && request('type', 'all') == 'all')
+                <span class="h-2 w-2 rounded-full bg-violet-600"></span>
+            @endif
+        </a>
+
+
+        {{-- Matched --}}
+        <a href="{{ route(
+            'admin.registration',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['type' => 'matched']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.registration') && request('type') == 'matched'
+        ? 'bg-green-50 text-green-700 ring-1 ring-inset ring-green-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.registration') && request('type') == 'matched'
+            ? 'bg-green-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                verified
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Matched
+            </span>
+
+            @if (request()->routeIs('admin.registration') && request('type') == 'matched')
+                <span class="h-2 w-2 rounded-full bg-green-600"></span>
+            @endif
+        </a>
+
+
+        {{-- Unmatched --}}
+        <a href="{{ route(
+            'admin.registration',
+            array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['type' => 'unmatched']),
+        ) }}"
+            class="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+    {{ request()->routeIs('admin.registration') && request('type') == 'unmatched'
+        ? 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-100 shadow-sm'
+        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+        {{ request()->routeIs('admin.registration') && request('type') == 'unmatched'
+            ? 'bg-red-600 text-white'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200' }}">
+                cancel
+            </span>
+
+            <span class="flex-1 truncate font-medium">
+                Unmatched
+            </span>
+
+            @if (request()->routeIs('admin.registration') && request('type') == 'unmatched')
+                <span class="h-2 w-2 rounded-full bg-red-600"></span>
+            @endif
         </a>
 
         {{-- <a href="{{ route('superadmin.possession.dashboard') }}"
@@ -135,75 +364,7 @@
             <span class="material-symbols-outlined text-[20px]">real_estate_agent</span>
             <span class="text-[13px] font-medium">Physical Possession</span>
 
-        </a>
-
-        
-
-        
-
-        {{-- Beneficiary --}}
-        {{--
-
-        <a href="{{ route('superadmin.paid.beneficiaries') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.paid.beneficiaries') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px] text-green-600">check_circle</span>
-            <span class="text-[13px] font-medium">Paid Beneficiaries</span>
-
-        </a>
-
-        <a href="{{ route('superadmin.allotment.index') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.allotment.*') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px]">assignment</span>
-            <span class="text-[13px] font-medium">Allotments</span>
-
-        </a>
-
-        <a href="{{ route('superadmin.assigned.flats') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.assigned.flats') ? 'bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px]">vpn_key</span>
-            <span class="text-[13px] font-medium">Assigned Flats</span>
-
-        </a>
-
-        {{-- Registration --}}
-        {{-- <div class="px-3 pt-4 pb-1">
-            <p class="text-[10px] uppercase tracking-[2px] text-slate-400 font-bold">
-                Registration
-            </p>
-        </div>
-
-        <a href="{{ route('superadmin.total.registration') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.total.registration') ? 'bg-blue-50 border-l-4 border-blue-600 text-blue-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px] text-blue-600">description</span>
-            <span class="text-[13px] font-medium">Total Registration</span>
-
-        </a>
-
-        <a href="{{ route('superadmin.matched.registration') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.matched.registration') ? 'bg-green-50 border-l-4 border-green-600 text-green-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px] text-green-600">task_alt</span>
-            <span class="text-[13px] font-medium">Matched Registration</span>
-
-        </a>
-
-        <a href="{{ route('superadmin.unmatched.registration') }}"
-            class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
-        {{ request()->routeIs('superadmin.unmatched.registration') ? 'bg-red-50 border-l-4 border-red-600 text-red-700 shadow-sm font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:pl-4' }}">
-
-            <span class="material-symbols-outlined text-[20px] text-red-600">highlight_off</span>
-            <span class="text-[13px] font-medium">Unmatched Registration</span>
-
-        </a> --}}
+        </a>--}}  
 
     </nav>
 

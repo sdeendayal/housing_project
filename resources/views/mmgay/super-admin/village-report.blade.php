@@ -411,51 +411,130 @@
                         <tbody class="divide-y divide-slate-100 bg-white">
 
                             @forelse ($report as $index => $row)
+                                @php
+                                    $commonFilters = [
+                                        'phase' => $row->Phase ?? request('phase'),
+                                        'village_id' => $row->VillageId,
+                                    ];
+                                @endphp
+
                                 <tr class="transition hover:bg-slate-50">
 
+                                    {{-- Serial Number --}}
                                     <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                                        {{ $index + 1 }}
+                                        {{ $report->firstItem() + $index }}
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold text-indigo-700">
-                                        {{ $row->VillageName }}
+                                    {{-- Village Name --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold">
+                                        <a href="{{ route('superadmin.applicants.index', $commonFilters) }}"
+                                            class="inline-flex items-center gap-1 text-indigo-700 transition hover:text-indigo-900 hover:underline">
+
+                                            {{ $row->VillageName }}
+
+                                            <span class="material-symbols-outlined text-[16px]">
+                                                open_in_new
+                                            </span>
+                                        </a>
                                     </td>
 
+                                    {{-- Phase --}}
                                     <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
                                         {{ $row->Phase ?? '-' }}
                                     </td>
 
+                                    {{-- Total Plots --}}
                                     <td
                                         class="whitespace-nowrap px-4 py-3 text-center text-sm font-semibold text-slate-700">
                                         {{ number_format($row->TotalPlots ?? 0) }}
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
-                                        {{ number_format($row->RegisteredBeneficiaries ?? 0) }}
+                                    {{-- Applicants --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route('superadmin.applicants.index', $commonFilters) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-indigo-50 px-3 py-1.5 font-semibold text-indigo-700 transition hover:bg-indigo-100 hover:shadow-sm">
+
+                                            {{ number_format($row->RegisteredBeneficiaries ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
-                                        {{ number_format($row->AllottedBeneficiaries ?? 0) }}
+                                    {{-- Allotted --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route('admin.allotment.report', $commonFilters) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
+
+                                            {{ number_format($row->AllottedBeneficiaries ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-emerald-700">
-                                        {{ number_format($row->ApprovedPaid ?? 0) }}
+                                    {{-- Approved Paid --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route(
+                                            'admin.allotment.report',
+                                            array_merge($commonFilters, [
+                                                'status' => 'approved_paid',
+                                            ]),
+                                        ) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:shadow-sm">
+
+                                            {{ number_format($row->ApprovedPaid ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-amber-700">
-                                        {{ number_format($row->ApprovedUnpaid ?? 0) }}
+                                    {{-- Approved Unpaid --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route(
+                                            'admin.allotment.report',
+                                            array_merge($commonFilters, [
+                                                'status' => 'approved_unpaid',
+                                            ]),
+                                        ) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-amber-50 px-3 py-1.5 font-semibold text-amber-700 transition hover:bg-amber-100 hover:shadow-sm">
+
+                                            {{ number_format($row->ApprovedUnpaid ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-blue-700">
-                                        {{ number_format($row->PendingApprovalPayment ?? 0) }}
+                                    {{-- Yet to be Approved --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route(
+                                            'admin.allotment.report',
+                                            array_merge($commonFilters, [
+                                                'status' => 'pending',
+                                            ]),
+                                        ) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-700 transition hover:bg-blue-100 hover:shadow-sm">
+
+                                            {{ number_format($row->PendingApprovalPayment ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-rose-700">
-                                        {{ number_format($row->Rejected ?? 0) }}
+                                    {{-- Rejected --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route(
+                                            'admin.allotment.report',
+                                            array_merge($commonFilters, [
+                                                'status' => 'rejected',
+                                            ]),
+                                        ) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-rose-50 px-3 py-1.5 font-semibold text-rose-700 transition hover:bg-rose-100 hover:shadow-sm">
+
+                                            {{ number_format($row->Rejected ?? 0) }}
+                                        </a>
                                     </td>
 
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
-                                        {{ number_format($row->AllotmentCancelled ?? 0) }}
+                                    {{-- Cancelled --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route(
+                                            'admin.allotment.report',
+                                            array_merge($commonFilters, [
+                                                'status' => 'cancelled',
+                                            ]),
+                                        ) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-slate-100 px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-200 hover:shadow-sm">
+
+                                            {{ number_format($row->AllotmentCancelled ?? 0) }}
+                                        </a>
                                     </td>
 
                                 </tr>
@@ -540,6 +619,11 @@
                     </table>
 
                 </div>
+                @if ($report->hasPages())
+                    <div class="border-t border-slate-200 px-4 py-3">
+                        {{ $report->onEachSide(1)->links('pagination::tailwind') }}
+                    </div>
+                @endif
 
             </div>
 
