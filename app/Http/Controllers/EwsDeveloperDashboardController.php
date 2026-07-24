@@ -296,8 +296,7 @@ class EwsDeveloperDashboardController extends Controller
         // Bulk Mode Generation
         if ($request->input('bulk_mode') == '1') {
             $request->validate([
-                'from_floor' => 'required|integer|min:0|max:100',
-                'to_floor' => 'required|integer|min:0|max:100|gte:from_floor',
+                'floor_number' => 'required|integer|min:0|max:100',
                 'flat_number_type' => 'required|in:range,custom',
                 'from_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1',
                 'to_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1|gte:from_flat',
@@ -314,8 +313,7 @@ class EwsDeveloperDashboardController extends Controller
                 }
             }
 
-            $fromFloor = (int)$request->from_floor;
-            $toFloor = (int)$request->to_floor;
+            $floorNum = (int)$request->floor_number;
             
             $flatNumbers = [];
             if ($request->flat_number_type === 'custom') {
@@ -354,66 +352,64 @@ class EwsDeveloperDashboardController extends Controller
             $createdCount = 0;
             DB::beginTransaction();
             try {
-                for ($floorNum = $fromFloor; $floorNum <= $toFloor; $floorNum++) {
-                    if ($floorNum === 0) {
-                        $floorLabel = "Ground Floor";
-                    } elseif ($floorNum === 1) {
-                        $floorLabel = "First Floor";
-                    } elseif ($floorNum === 2) {
-                        $floorLabel = "Second Floor";
-                    } elseif ($floorNum === 3) {
-                        $floorLabel = "Third Floor";
-                    } else {
-                        $floorLabel = "{$floorNum}th Floor";
-                    }
+                if ($floorNum === 0) {
+                    $floorLabel = "Ground Floor";
+                } elseif ($floorNum === 1) {
+                    $floorLabel = "First Floor";
+                } elseif ($floorNum === 2) {
+                    $floorLabel = "Second Floor";
+                } elseif ($floorNum === 3) {
+                    $floorLabel = "Third Floor";
+                } else {
+                    $floorLabel = "{$floorNum}th Floor";
+                }
 
-                    foreach ($flatNumbers as $flatSeq) {
-                        if ($request->input('floor_prefix_enabled') == '1') {
-                            if ($floorNum === 0) {
-                                $flatNumberStr = str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
-                            } else {
-                                $flatNumberStr = $floorNum . str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
-                            }
+                foreach ($flatNumbers as $flatSeq) {
+                    if ($request->input('floor_prefix_enabled') == '1') {
+                        if ($floorNum === 0) {
+                            $flatNumberStr = str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
                         } else {
-                            $flatNumberStr = (string)$flatSeq;
+                            $flatNumberStr = $floorNum . str_pad($flatSeq, 2, '0', STR_PAD_LEFT);
                         }
-
-                        // Check if already registered
-                        if (isset($existingFlats[$floorLabel]) && in_array($flatNumberStr, $existingFlats[$floorLabel])) {
-                            throw new \Exception("Flat '{$flatNumberStr}' on '{$floorLabel}' is already registered under Project '{$projectName}' Block '{$blockName}'.");
-                        }
-
-                        $flatData = [
-                            'district_id' => $district->id,
-                            'district_name' => $district->name,
-                            'town_name' => $townName,
-                            'town_id' => $townId,
-                            'project_name' => $projectName,
-                            'project_id' => $projectId,
-                            'block_tower_number' => $blockName,
-                            'block_id' => $blockId,
-                            'floor' => $floorLabel,
-                            'flat_number' => $flatNumberStr,
-                            'created_by' => $user->id,
-                            'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
-                            'flat_code' => EwsHelper::generateFlatCode(
-                                $townName,
-                                $user->name,
-                                $floorLabel,
-                                $blockName,
-                                $flatNumberStr
-                            )
-                        ];
-
-                        EwsBuilderFlat::create($flatData);
-                        $createdCount++;
+                    } else {
+                        $flatNumberStr = (string)$flatSeq;
                     }
+
+                    // Check if already registered
+                    if (isset($existingFlats[$floorLabel]) && in_array($flatNumberStr, $existingFlats[$floorLabel])) {
+                        throw new \Exception("Flat '{$flatNumberStr}' on '{$floorLabel}' is already registered under Project '{$projectName}' Block '{$blockName}'.");
+                    }
+
+                    $flatData = [
+                        'district_id' => $district->id,
+                        'district_name' => $district->name,
+                        'town_name' => $townName,
+                        'town_id' => $townId,
+                        'project_name' => $projectName,
+                        'project_id' => $projectId,
+                        'block_tower_number' => $blockName,
+                        'block_id' => $blockId,
+                        'floor' => $floorLabel,
+                        'flat_number' => $flatNumberStr,
+                        'created_by' => $user->id,
+                        'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
+                        'flat_code' => EwsHelper::generateFlatCode(
+                            $townName,
+                            $user->name,
+                            $floorLabel,
+                            $blockName,
+                            $flatNumberStr
+                        )
+                    ];
+
+                    EwsBuilderFlat::create($flatData);
+                    $createdCount++;
                 }
 
                 EwsDeveloperLog::create([
                     'user_id' => $user->id,
                     'action' => 'CREATED_BULK',
-                    'details' => "Bulk Registered {$createdCount} EWS Flats under Tower: {$blockName}, Project: '{$projectName}' in {$townName} (Floors: {$fromFloor} to {$toFloor})",
+                    'details' => "Bulk Registered {$createdCount} EWS Flats under Tower: {$blockName}, Project: '{$projectName}' in {$townName} (Floor: {$floorLabel})",
                     'ip_address' => $request->ip(),
                 ]);
 
@@ -428,21 +424,34 @@ class EwsDeveloperDashboardController extends Controller
 
         // Single Mode Generation
         $request->validate([
-            'floor' => 'required|string|max:255',
+            'floor_number' => 'required|integer|min:0|max:100',
             'flat_number' => 'required|string|max:255',
         ]);
+
+        $floorNum = (int)$request->floor_number;
+        if ($floorNum === 0) {
+            $floorLabel = "Ground Floor";
+        } elseif ($floorNum === 1) {
+            $floorLabel = "First Floor";
+        } elseif ($floorNum === 2) {
+            $floorLabel = "Second Floor";
+        } elseif ($floorNum === 3) {
+            $floorLabel = "Third Floor";
+        } else {
+            $floorLabel = "{$floorNum}th Floor";
+        }
 
         // Check if flat is already registered (Single Mode)
         $existsSingle = EwsBuilderFlat::where('district_id', $district->id)
             ->where('town_name', $townName)
             ->where('project_name', $projectName)
             ->where('block_tower_number', $blockName)
-            ->where('floor', $request->floor)
+            ->where('floor', $floorLabel)
             ->where('flat_number', $request->flat_number)
             ->exists();
 
         if ($existsSingle) {
-            return back()->withInput()->with('error', "Validation Error: EWS Flat '{$request->flat_number}' on Floor '{$request->floor}' in Block '{$blockName}' of Project '{$projectName}' is already registered.");
+            return back()->withInput()->with('error', "Validation Error: EWS Flat '{$request->flat_number}' on Floor '{$floorLabel}' in Block '{$blockName}' of Project '{$projectName}' is already registered.");
         }
 
         $flat = EwsBuilderFlat::create([
@@ -454,14 +463,14 @@ class EwsDeveloperDashboardController extends Controller
             'project_id' => $projectId,
             'block_tower_number' => $blockName,
             'block_id' => $blockId,
-            'floor' => $request->floor,
+            'floor' => $floorLabel,
             'flat_number' => $request->flat_number,
             'created_by' => $user->id,
             'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
             'flat_code' => EwsHelper::generateFlatCode(
                 $townName,
                 $user->name,
-                $request->floor,
+                $floorLabel,
                 $blockName,
                 $request->flat_number
             )
@@ -557,7 +566,7 @@ class EwsDeveloperDashboardController extends Controller
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
             'block_id' => 'required',
             'new_block_name' => 'required_if:block_id,new|nullable|string|max:255',
-            'floor' => 'required|string|max:255',
+            'floor_number' => 'required|integer|min:0|max:100',
             'flat_number' => 'required|string|max:255',
         ]);
 
@@ -634,18 +643,31 @@ class EwsDeveloperDashboardController extends Controller
             $blockName = $block->name;
         }
 
+        $floorNum = (int)$request->floor_number;
+        if ($floorNum === 0) {
+            $floorLabel = "Ground Floor";
+        } elseif ($floorNum === 1) {
+            $floorLabel = "First Floor";
+        } elseif ($floorNum === 2) {
+            $floorLabel = "Second Floor";
+        } elseif ($floorNum === 3) {
+            $floorLabel = "Third Floor";
+        } else {
+            $floorLabel = "{$floorNum}th Floor";
+        }
+
         // Check if flat is already registered (excluding this record)
         $existsUpdate = EwsBuilderFlat::where('id', '!=', $flat->id)
             ->where('district_id', $district->id)
             ->where('town_name', $townName)
             ->where('project_name', $projectName)
             ->where('block_tower_number', $blockName)
-            ->where('floor', $request->floor)
+            ->where('floor', $floorLabel)
             ->where('flat_number', $request->flat_number)
             ->exists();
 
         if ($existsUpdate) {
-            return back()->withInput()->with('error', "Validation Error: Another EWS Flat with the same details ('{$request->flat_number}', Floor '{$request->floor}', Block '{$blockName}') is already registered.");
+            return back()->withInput()->with('error', "Validation Error: Another EWS Flat with the same details ('{$request->flat_number}', Floor '{$floorLabel}', Block '{$blockName}') is already registered.");
         }
 
         $validatedData = [
@@ -657,12 +679,12 @@ class EwsDeveloperDashboardController extends Controller
             'project_id' => $projectId,
             'block_tower_number' => $blockName,
             'block_id' => $blockId,
-            'floor' => $request->floor,
+            'floor' => $floorLabel,
             'flat_number' => $request->flat_number,
             'flat_code' => EwsHelper::generateFlatCode(
                 $townName,
                 $user->name,
-                $request->floor,
+                $floorLabel,
                 $blockName,
                 $request->flat_number
             )

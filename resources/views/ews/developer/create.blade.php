@@ -227,47 +227,54 @@
                             </div>
                         </div>
 
-                        <!-- Project Selection -->
-                        <div class="space-y-1">
-                            <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
-                            <select id="project_id" name="project_id" required
-                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                <option value="" disabled selected>Choose a project...</option>
-                                <option value="new">+ Add New Project</option>
-                            </select>
-                            
-                            <!-- New Project Input -->
-                            <div id="new_project_container" class="hidden mt-2">
-                                <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
-                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Project Selection -->
+                            <div class="space-y-1">
+                                <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
+                                <select id="project_id" name="project_id" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled selected>Choose a project...</option>
+                                    <option value="new">+ Add New Project</option>
+                                </select>
+                                
+                                <!-- New Project Input -->
+                                <div id="new_project_container" class="hidden mt-2">
+                                    <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
+                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                </div>
+                            </div>
+
+                            <!-- Block / Tower No. Selection -->
+                            <div class="space-y-1">
+                                <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
+                                <select id="block_id" name="block_id" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled selected>Choose a block/tower...</option>
+                                    <option value="new">+ Add New Block/Tower</option>
+                                </select>
+                                
+                                <!-- New Block Input -->
+                                <div id="new_block_container" class="hidden mt-2">
+                                    <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
+                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                </div>
                             </div>
                         </div>
 
                         <input type="hidden" name="bulk_mode" id="bulk_mode" value="0">
 
-                        <!-- Block / Tower No. Selection -->
-                        <div class="space-y-1">
-                            <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
-                            <select id="block_id" name="block_id" required
-                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                <option value="" disabled selected>Choose a block/tower...</option>
-                                <option value="new">+ Add New Block/Tower</option>
-                            </select>
-                            
-                            <!-- New Block Input -->
-                            <div id="new_block_container" class="hidden mt-2">
-                                <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
-                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
-                            </div>
-                        </div>
-
                         <!-- Single Flat Fields -->
                         <div id="single-fields-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Floor Details -->
                             <div class="space-y-1">
-                                <label for="floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor Details <span class="text-red-500">*</span></label>
-                                <input type="text" id="floor" name="floor" placeholder="e.g. Ground floor" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                <label for="floor_number_single" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor (Number) <span class="text-red-500">*</span></label>
+                                <select id="floor_number_single" name="floor_number" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
+                                    <option value="0" selected>Ground Floor (0)</option>
+                                    @for($f = 1; $f <= 100; $f++)
+                                        <option value="{{ $f }}">Floor {{ $f }}</option>
+                                    @endfor
+                                </select>
                             </div>
 
                             <!-- Flat Number -->
@@ -281,35 +288,22 @@
                         <!-- Bulk Generation Fields (Hidden by default) -->
                         <div id="bulk-fields-container" class="hidden space-y-4 border-t border-slate-100 pt-3">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- From Floor -->
+                                <!-- Floor (Number) -->
                                 <div class="space-y-1">
-                                    <label for="from_floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">From Floor (Number) <span class="text-red-500">*</span></label>
-                                    <select id="from_floor" name="from_floor"
+                                    <label for="floor_number_bulk" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor (Number) <span class="text-red-500">*</span></label>
+                                    <select id="floor_number_bulk" name="floor_number"
                                         class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
                                         <option value="0" selected>Ground Floor (0)</option>
-                                        @for($f = 1; $f <= 25; $f++)
+                                        @for($f = 1; $f <= 100; $f++)
                                             <option value="{{ $f }}">Floor {{ $f }}</option>
                                         @endfor
                                     </select>
                                 </div>
-                                
-                                <!-- To Floor -->
+
+                                <!-- Flat Numbering Pattern -->
                                 <div class="space-y-1">
-                                    <label for="to_floor" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">To Floor (Number) <span class="text-red-500">*</span></label>
-                                    <select id="to_floor" name="to_floor"
-                                        class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
-                                        @for($f = 0; $f <= 25; $f++)
-                                            <option value="{{ $f }}" {{ $f === 6 ? 'selected' : '' }}>Floor {{ $f }}</option>
-                                        @endfor
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="space-y-3 bg-slate-50/50 p-4 border border-slate-200 rounded-lg">
-                                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                     <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Flat Numbering Pattern <span class="text-red-500">*</span></label>
-                                    
-                                    <div class="flex items-center gap-4 text-xs font-bold">
+                                    <div class="flex items-center gap-4 py-2 text-xs font-bold">
                                         <label class="inline-flex items-center gap-1.5 cursor-pointer">
                                             <input type="radio" name="flat_number_type" value="range" checked onchange="toggleFlatInputType('range')"
                                                 class="text-sky-600 focus:ring-sky-500">
@@ -320,9 +314,11 @@
                                                 class="text-sky-600 focus:ring-sky-500">
                                             <span>Custom List</span>
                                         </label>
-                                    </div>
                                 </div>
+                            </div>
+                        </div>
 
+                        <div class="space-y-3 bg-slate-50/50 p-4 border border-slate-200 rounded-lg">
                                 <!-- Numerical Range inputs -->
                                 <div id="bulk-range-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                                     <div class="space-y-1">
@@ -439,11 +435,10 @@
             const singleFields = document.getElementById('single-fields-container');
             const bulkFields = document.getElementById('bulk-fields-container');
             
-            const floorInput = document.getElementById('floor');
+            const floorSingle = document.getElementById('floor_number_single');
             const flatNumInput = document.getElementById('flat_number');
             
-            const fromFloor = document.getElementById('from_floor');
-            const toFloor = document.getElementById('to_floor');
+            const floorBulk = document.getElementById('floor_number_bulk');
             const fromFlat = document.getElementById('from_flat');
             const toFlat = document.getElementById('to_flat');
             const customFlats = document.getElementById('custom_flat_numbers');
@@ -456,11 +451,13 @@
                 singleFields.classList.add('hidden');
                 bulkFields.classList.remove('hidden');
                 
-                floorInput.required = false;
+                floorSingle.required = false;
+                floorSingle.disabled = true;
                 flatNumInput.required = false;
+                flatNumInput.disabled = true;
                 
-                fromFloor.required = true;
-                toFloor.required = true;
+                floorBulk.required = true;
+                floorBulk.disabled = false;
                 
                 toggleFlatInputType(document.querySelector('input[name="flat_number_type"]:checked').value);
             } else {
@@ -471,11 +468,13 @@
                 singleFields.classList.remove('hidden');
                 bulkFields.classList.add('hidden');
                 
-                floorInput.required = true;
+                floorSingle.required = true;
+                floorSingle.disabled = false;
                 flatNumInput.required = true;
+                flatNumInput.disabled = false;
                 
-                fromFloor.required = false;
-                toFloor.required = false;
+                floorBulk.required = false;
+                floorBulk.disabled = true;
                 fromFlat.required = false;
                 toFlat.required = false;
                 customFlats.required = false;
@@ -586,6 +585,8 @@
                     confirmButtonColor: '#3b82f6'
                 });
             @endif
+            // Initialize form mode
+            switchMode('single');
         });
 
         function fetchTowns(districtId, selectedTownId = null) {

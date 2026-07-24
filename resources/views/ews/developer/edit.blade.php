@@ -218,54 +218,76 @@
                             </div>
                         </div>
 
-                        <!-- Project Selection -->
-                        <div class="space-y-1">
-                            <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
-                            <select id="project_id" name="project_id" required
-                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                <option value="" disabled>Choose a project...</option>
-                                @foreach($projects as $proj)
-                                    <option value="{{ $proj->id }}" {{ $flat->project_id == $proj->id ? 'selected' : '' }}>
-                                        {{ strtoupper($proj->name) }}
-                                    </option>
-                                @endforeach
-                                <option value="new">+ Add New Project</option>
-                            </select>
-                            
-                            <!-- New Project Input -->
-                            <div id="new_project_container" class="hidden mt-2">
-                                <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
-                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Project Selection -->
+                            <div class="space-y-1">
+                                <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
+                                <select id="project_id" name="project_id" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled>Choose a project...</option>
+                                    @foreach($projects as $proj)
+                                        <option value="{{ $proj->id }}" {{ $flat->project_id == $proj->id ? 'selected' : '' }}>
+                                            {{ strtoupper($proj->name) }}
+                                        </option>
+                                    @endforeach
+                                    <option value="new">+ Add New Project</option>
+                                </select>
+                                
+                                <!-- New Project Input -->
+                                <div id="new_project_container" class="hidden mt-2">
+                                    <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
+                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                </div>
                             </div>
-                        </div>
 
-                        <!-- Block / Tower No. Selection -->
-                        <div class="space-y-1">
-                            <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
-                            <select id="block_id" name="block_id" required
-                                class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                <option value="" disabled>Choose a block/tower...</option>
-                                @foreach($blocks as $blk)
-                                    <option value="{{ $blk->id }}" {{ $flat->block_id == $blk->id ? 'selected' : '' }}>
-                                        {{ strtoupper($blk->name) }}
-                                    </option>
-                                @endforeach
-                                <option value="new">+ Add New Block/Tower</option>
-                            </select>
-                            
-                            <!-- New Block Input -->
-                            <div id="new_block_container" class="hidden mt-2">
-                                <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
-                                    class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                            <!-- Block / Tower No. Selection -->
+                            <div class="space-y-1">
+                                <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
+                                <select id="block_id" name="block_id" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled>Choose a block/tower...</option>
+                                    @foreach($blocks as $blk)
+                                        <option value="{{ $blk->id }}" {{ $flat->block_id == $blk->id ? 'selected' : '' }}>
+                                            {{ strtoupper($blk->name) }}
+                                        </option>
+                                    @endforeach
+                                    <option value="new">+ Add New Block/Tower</option>
+                                </select>
+                                
+                                <!-- New Block Input -->
+                                <div id="new_block_container" class="hidden mt-2">
+                                    <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
+                                        class="w-full bg-white border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                </div>
                             </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Floor -->
+                            <!-- Floor (Number) -->
                             <div class="space-y-1">
-                                <label for="floor" class="block text-[10px] font-black uppercase text-slate-505 tracking-wider">Floor Details <span class="text-red-500">*</span></label>
-                                <input type="text" id="floor" name="floor" value="{{ $flat->floor }}" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                <label for="floor_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor (Number) <span class="text-red-500">*</span></label>
+                                <select id="floor_number" name="floor_number" required
+                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
+                                    @php
+                                        $floorStr = strtolower(trim($flat->floor));
+                                        $selectedFloor = 0;
+                                        if ($floorStr === 'ground floor' || $floorStr === 'ground' || $floorStr === '0') {
+                                            $selectedFloor = 0;
+                                        } elseif ($floorStr === 'first floor' || $floorStr === 'first' || $floorStr === '1') {
+                                            $selectedFloor = 1;
+                                        } elseif ($floorStr === 'second floor' || $floorStr === 'second' || $floorStr === '2') {
+                                            $selectedFloor = 2;
+                                        } elseif ($floorStr === 'third floor' || $floorStr === 'third' || $floorStr === '3') {
+                                            $selectedFloor = 3;
+                                        } elseif (preg_match('/(\d+)/', $floorStr, $matches)) {
+                                            $selectedFloor = (int)$matches[1];
+                                        }
+                                    @endphp
+                                    <option value="0" {{ $selectedFloor === 0 ? 'selected' : '' }}>Ground Floor (0)</option>
+                                    @for($f = 1; $f <= 100; $f++)
+                                        <option value="{{ $f }}" {{ $selectedFloor === $f ? 'selected' : '' }}>Floor {{ $f }}</option>
+                                    @endfor
+                                </select>
                             </div>
 
                             <!-- Flat Number -->
