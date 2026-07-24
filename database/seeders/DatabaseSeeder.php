@@ -43,6 +43,7 @@ class DatabaseSeeder extends Seeder
             PptMembersSeeder::class,
             PptGurugramSeeder::class,
             AllEwsDataSeeder::class,
+            GurugramEwsDataSeeder::class,
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
             EwsPppExclusionSeeder::class,
