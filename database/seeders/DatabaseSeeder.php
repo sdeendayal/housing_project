@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             EwsUserSeeder::class,
             AwsFlatsCridSeeder::class,
             EwsPppExclusionSeeder::class,
+            PppExclusion1stStageSeeder::class,
             EwsPropertyInIndiaSeeder::class,
             FaridabadPropertyRejectSeeder::class,
             GurugramPropertyRejectSeeder::class,
