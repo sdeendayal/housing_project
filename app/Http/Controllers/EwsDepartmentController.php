@@ -264,7 +264,7 @@ class EwsDepartmentController extends Controller
                     DB::raw('MIN(id) as id'),
                     DB::raw('MIN(familyID) as application_number'),
                     DB::raw('MIN(fullName) as full_name'),
-                    DB::raw('MIN(aadhaarNo) as aadhar_no'),
+                    DB::raw('NULL as aadhar_no'),
                     DB::raw('MIN(mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'ppt_members' as type"),
@@ -283,7 +283,7 @@ class EwsDepartmentController extends Controller
                     DB::raw('MIN(ppt_members.id) as id'),
                     DB::raw('MIN(ppt_members.familyID) as application_number'),
                     DB::raw('MIN(ppt_members.fullName) as full_name'),
-                    DB::raw('MIN(ppt_members.aadhaarNo) as aadhar_no'),
+                    DB::raw('NULL as aadhar_no'),
                     DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'not_in_survey' as type"),
@@ -367,7 +367,7 @@ class EwsDepartmentController extends Controller
                 $query->where('ppt_members.fullName', 'like', "%{$keyword}%");
             });
             $datatables->filterColumn('aadhar_no', function($query, $keyword) {
-                $query->where('ppt_members.aadhaarNo', 'like', "%{$keyword}%");
+                $query->whereRaw('1=0');
             });
             $datatables->filterColumn('mobile_number', function($query, $keyword) {
                 $query->where('ppt_members.mobileNo', 'like', "%{$keyword}%");
@@ -407,7 +407,7 @@ class EwsDepartmentController extends Controller
             if ($beneficiary) {
                 $beneficiary->application_number = $beneficiary->familyID;
                 $beneficiary->full_name = $beneficiary->fullName;
-                $beneficiary->aadhar_no = $beneficiary->aadhaarNo;
+                $beneficiary->aadhar_no = 'N/A';
                 $beneficiary->mobile_number = $beneficiary->mobileNo;
                 $beneficiary->flat_no = 'N/A';
                 $beneficiary->dist_name = $beneficiary->district;

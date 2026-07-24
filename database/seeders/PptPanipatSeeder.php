@@ -5,18 +5,18 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class PptGurugramSeeder extends Seeder
+class PptPanipatSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        // 1. Delete existing Gurugram records to make this seeder re-runnable
-        $this->command->info("Clearing existing Gurugram records (district_id = 6) from ppt_members table...");
-        DB::table('ppt_members')->where('district_id', 6)->delete();
+        // 1. Delete existing Panipat records to make this seeder re-runnable
+        $this->command->info("Clearing existing Panipat records (district_id = 18) from ppt_members table...");
+        DB::table('ppt_members')->where('district_id', 18)->delete();
 
-        $csvPath = database_path('seeders/data/gurgram.csv');
+        $csvPath = database_path('seeders/data/panipat.csv');
         if (!file_exists($csvPath)) {
             $this->command->error("CSV file not found at: {$csvPath}");
             return;
@@ -45,9 +45,9 @@ class PptGurugramSeeder extends Seeder
                 continue;
             }
 
-            // Inject district GURUGRAM and district_id = 6
-            $data['district'] = 'GURUGRAM';
-            $data['district_id'] = 6;
+            // Inject district PANIPAT and district_id = 18
+            $data['district'] = 'PANIPAT';
+            $data['district_id'] = 18;
 
             // Ensure valid created_at and updated_at timestamps
             if (empty($data['created_at'])) {
@@ -73,6 +73,6 @@ class PptGurugramSeeder extends Seeder
 
         fclose($handle);
         $duration = round(microtime(true) - $startTime, 2);
-        $this->command->info("Successfully imported {$count} Gurugram members into ppt_members table in {$duration} seconds.");
+        $this->command->info("Successfully imported {$count} Panipat members into ppt_members table in {$duration} seconds.");
     }
 }
