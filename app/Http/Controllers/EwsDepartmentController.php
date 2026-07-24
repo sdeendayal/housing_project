@@ -64,7 +64,10 @@ class EwsDepartmentController extends Controller
     {
         $user = Auth::user();
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
+        $districts = DB::table('ews_districts')
+            ->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'faridabad', 'panipat', 'rohtak', 'rewari', 'sonepat'])
+            ->orderBy('name')
+            ->get();
         
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))
@@ -162,7 +165,10 @@ class EwsDepartmentController extends Controller
         $user = Auth::user();
         $type = $request->input('type', 'all');
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
+        $districts = DB::table('ews_districts')
+            ->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'faridabad', 'panipat', 'rohtak', 'rewari', 'sonepat'])
+            ->orderBy('name')
+            ->get();
 
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))

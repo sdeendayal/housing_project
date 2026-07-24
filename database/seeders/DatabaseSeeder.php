@@ -65,6 +65,7 @@ class DatabaseSeeder extends Seeder
             EwsHouseOwnershipRejectSeeder::class,
             DistHouseOwnershipRejectSeeder::class,
             EwsEligibleDrawListSeeder::class,
+            DistEligibleDrawListSeeder::class,
             EwsBookingsSeeder::class,
             EwsEligibleSeeder::class,
             EwsAllottedSeeder::class,
