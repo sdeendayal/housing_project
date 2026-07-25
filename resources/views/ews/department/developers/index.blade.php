@@ -302,39 +302,23 @@
             }
 
             Swal.fire({
-                title: 'Generating ' + format.toUpperCase() + ' Export...',
-                html: '<div class="text-xs text-slate-500 font-medium">Please wait while developer records are prepared for download.</div>',
-                allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                icon: 'info',
+                title: 'Export Started',
+                text: 'Your ' + format.toUpperCase() + ' download is starting natively in the background.',
+                timer: 3500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end',
+                customClass: { popup: 'rounded-xl font-sans' }
             });
 
-            fetch(url.toString())
-                .then(response => {
-                    if (!response.ok) throw new Error('Export failed.');
-                    return response.blob();
-                })
-                .then(blob => {
-                    const downloadUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = downloadUrl;
-                    a.download = 'ews_developers_' + (format === 'excel' ? 'excel.csv' : 'csv');
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(downloadUrl);
-                    Swal.close();
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Export Downloaded!',
-                        text: 'Developer list saved successfully.',
-                        timer: 2500,
-                        showConfirmButton: false
-                    });
-                })
-                .catch(error => {
-                    Swal.close();
-                    Swal.fire({ icon: 'error', title: 'Export Failed', text: 'Error generating file.', confirmButtonColor: '#ef4444' });
-                });
+            // Trigger direct native browser download
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url.toString();
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }
 
         function openAddModal() {
