@@ -74,11 +74,9 @@ class EwsDepartmentController extends Controller
             ->distinct('memberID')
             ->count('memberID');
 
-        $registeredCount = DB::table('ppt_members')
-            ->join('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->distinct('ppt_members.memberID')
-            ->count('ppt_members.memberID');
+        $registeredCount = DB::table('all_ews_data_1')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
         $allottedCount = DB::table('ews_allotted_8')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
@@ -181,11 +179,9 @@ class EwsDepartmentController extends Controller
             ->distinct('memberID')
             ->count('memberID');
 
-        $registeredCount = DB::table('ppt_members')
-            ->join('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->distinct('ppt_members.memberID')
-            ->count('ppt_members.memberID');
+        $registeredCount = DB::table('all_ews_data_1')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
         $allottedCount = DB::table('ews_allotted_8')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
@@ -316,22 +312,21 @@ class EwsDepartmentController extends Controller
                 ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
                 ->groupBy('ppt_members.memberID');
         } elseif ($type === 'registered') {
-            $query = DB::table('ppt_members')
-                ->join('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
+            $query = DB::table('all_ews_data_1')
                 ->select(
-                    DB::raw('MIN(all_ews_data_1.secure_id) as secure_id'),
-                    DB::raw('MIN(all_ews_data_1.id) as id'),
-                    DB::raw('MIN(all_ews_data_1.application_number) as application_number'),
-                    DB::raw('MIN(all_ews_data_1.full_name) as full_name'),
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
                     DB::raw('NULL as aadhar_no'),
-                    DB::raw('MIN(all_ews_data_1.mobile_number) as mobile_number'),
+                    'mobile_number',
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'registered' as type"),
                     DB::raw("'Verify in survey app' as status"),
-                    DB::raw('MIN(all_ews_data_1.dist_name) as dist_name')
+                    'dist_name',
+                    'dist_id'
                 )
-                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-                ->groupBy('ppt_members.memberID');
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'allotted') {
             $query = DB::table('ews_allotted_8')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), 'dist_name');
