@@ -937,7 +937,6 @@ class EwsDepartmentController extends Controller
         if ($type === 'allotted') {
             $headers[] = 'Flat Number';
         }
-        $headers[] = 'Status';
 
         $mappedData = $records->map(function($row, $i) use ($type) {
             $item = [
@@ -951,7 +950,6 @@ class EwsDepartmentController extends Controller
             if ($type === 'allotted') {
                 $item[] = $row->flat_no ?? 'N/A';
             }
-            $item[] = $row->status ?? 'N/A';
             return $item;
         });
 
@@ -994,7 +992,7 @@ class EwsDepartmentController extends Controller
 
         if ($format === 'pdf') {
             return $this->renderPrintPdfResponse("EWS DEVELOPER ACCOUNTS REPORT", [
-                'S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions', 'Status'
+                'S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions'
             ], $records->map(function($row, $i) {
                 $flatsCount = DB::table('ews_builder_flats')->where('created_by', $row->id)->count();
                 return [
@@ -1004,12 +1002,11 @@ class EwsDepartmentController extends Controller
                     $row->email,
                     strtoupper($row->district_name ?? 'N/A'),
                     $flatsCount,
-                    $row->Is_Active ? 'Active' : 'Inactive',
                 ];
             }));
         }
 
-        return $this->streamCsvResponse($filename, ['S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions', 'Status'], $records->map(function($row, $i) {
+        return $this->streamCsvResponse($filename, ['S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions'], $records->map(function($row, $i) {
             $flatsCount = DB::table('ews_builder_flats')->where('created_by', $row->id)->count();
             return [
                 $i + 1,
@@ -1018,7 +1015,6 @@ class EwsDepartmentController extends Controller
                 $row->email,
                 strtoupper($row->district_name ?? 'N/A'),
                 $flatsCount,
-                $row->Is_Active ? 'Active' : 'Inactive',
             ];
         }));
     }
