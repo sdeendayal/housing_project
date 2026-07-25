@@ -109,6 +109,14 @@ class EwsEligibleSeeder extends Seeder
                 }
             }
 
+            $distName = $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT';
+            $distId = $data['dist_id'] ?? $data['DistrictId'] ?? $districtId;
+
+            // Only import Sonipat data
+            if (strtoupper($distName) !== 'SONIPAT' && $distId != 22) {
+                continue;
+            }
+
             $batch[] = [
                 'application_number' => $data['Application no'] ?? null,
                 'full_name' => $data['full_name'] ?? null,
@@ -118,8 +126,8 @@ class EwsEligibleSeeder extends Seeder
                 'priority' => $data['Priority'] ?? null,
                 'category' => $data['category'] ?? null,
                 'secure_id' => $data['secure_id'] ?? \Illuminate\Support\Str::random(32),
-                'dist_name' => $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT',
-                'dist_id' => $data['dist_id'] ?? $data['DistrictId'] ?? $districtId,
+                'dist_name' => $distName,
+                'dist_id' => $distId,
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

@@ -86,7 +86,13 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                  ->from('ews_reject_ppp_exclusion_2')
+                  ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy('all_ews_data_1.member_id');
+            })
+            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
         $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -187,7 +193,13 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                  ->from('ews_reject_ppp_exclusion_2')
+                  ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy('all_ews_data_1.member_id');
+            })
+            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
         $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -328,6 +340,12 @@ class EwsDepartmentController extends Controller
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
+                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                      ->from('ews_reject_ppp_exclusion_2')
+                      ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy('all_ews_data_1.member_id');
+                })
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
             $query = DB::table('ews_reject_property_in_india_3')
@@ -848,6 +866,12 @@ class EwsDepartmentController extends Controller
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
+                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                      ->from('ews_reject_ppp_exclusion_2')
+                      ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy('all_ews_data_1.member_id');
+                })
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
             $query = DB::table('ews_reject_property_in_india_3')

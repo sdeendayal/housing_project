@@ -131,6 +131,11 @@ class AllEwsDataSeeder extends Seeder
             $rowInsert['created_at'] = now();
             $rowInsert['updated_at'] = now();
 
+            // Only import Sonipat data
+            if (strtoupper($rowInsert['dist_name']) !== 'SONIPAT' && $rowInsert['dist_id'] != 22) {
+                continue;
+            }
+
             $batch[] = $rowInsert;
 
             if (count($batch) >= $batchSize) {
