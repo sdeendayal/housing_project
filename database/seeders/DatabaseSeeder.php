@@ -55,6 +55,7 @@ class DatabaseSeeder extends Seeder
             FaridabadPropertyRejectSeeder::class,
             PanipatPropertyRejectSeeder::class,
             RewariPropertyRejectSeeder::class,
+            RohtakPropertyRejectSeeder::class,
             EwsHouseOwnershipRejectSeeder::class,
             EwsEligibleDrawListSeeder::class,
             EwsBookingsSeeder::class,
