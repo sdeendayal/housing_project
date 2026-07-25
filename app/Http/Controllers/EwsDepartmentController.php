@@ -89,8 +89,8 @@ class EwsDepartmentController extends Controller
             ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
                 $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
                   ->from('ews_reject_ppp_exclusion_2')
-                  ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                  ->groupBy('all_ews_data_1.member_id');
+                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
             })
             ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
@@ -196,8 +196,8 @@ class EwsDepartmentController extends Controller
             ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
                 $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
                   ->from('ews_reject_ppp_exclusion_2')
-                  ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                  ->groupBy('all_ews_data_1.member_id');
+                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
             })
             ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
@@ -343,8 +343,8 @@ class EwsDepartmentController extends Controller
                 ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
                     $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
                       ->from('ews_reject_ppp_exclusion_2')
-                      ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                      ->groupBy('all_ews_data_1.member_id');
+                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
                 })
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
@@ -869,8 +869,8 @@ class EwsDepartmentController extends Controller
                 ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
                     $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
                       ->from('ews_reject_ppp_exclusion_2')
-                      ->join('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                      ->groupBy('all_ews_data_1.member_id');
+                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
                 })
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
