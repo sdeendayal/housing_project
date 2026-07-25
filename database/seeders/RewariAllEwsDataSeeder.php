@@ -17,22 +17,22 @@ class RewariAllEwsDataSeeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '2G');
-        $filePath = database_path('seeders/data/REWARI_Completed_25-01-2026 (3).xlsx');
+        $filePath = database_path('seeders/data/REWARI_Completed_25-01-2026.xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
             return;
         }
 
-        $this->command->info("Loading Excel file from {$filePath} (Eligible sheet only)...");
+        $this->command->info("Loading Excel file from {$filePath} (REWARI_Completed_25-01-2026 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setLoadSheetsOnly(['Eligible']);
+        $reader->setLoadSheetsOnly(['REWARI_Completed_25-01-2026']);
         $spreadsheet = $reader->load($filePath);
-        $sheet = $spreadsheet->getSheetByName('Eligible');
+        $sheet = $spreadsheet->getSheetByName('REWARI_Completed_25-01-2026');
         
         if (!$sheet) {
-            $this->command->error("Sheet 'Eligible' not found in Excel file.");
+            $this->command->error("Sheet 'REWARI_Completed_25-01-2026' not found in Excel file.");
             return;
         }
         

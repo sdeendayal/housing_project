@@ -17,22 +17,22 @@ class RohtakAllEwsDataSeeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '2G');
-        $filePath = database_path('seeders/data/Rohtak_completed (2) (3).xlsx');
+        $filePath = database_path('seeders/data/Rohtak_completed (3).xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
             return;
         }
 
-        $this->command->info("Loading Excel file from {$filePath} (Eligible sheet only)...");
+        $this->command->info("Loading Excel file from {$filePath} (Rohtak_MC_Complted_09.01.26 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setLoadSheetsOnly(['Eligible']);
+        $reader->setLoadSheetsOnly(['Rohtak_MC_Complted_09.01.26']);
         $spreadsheet = $reader->load($filePath);
-        $sheet = $spreadsheet->getSheetByName('Eligible');
+        $sheet = $spreadsheet->getSheetByName('Rohtak_MC_Complted_09.01.26');
         
         if (!$sheet) {
-            $this->command->error("Sheet 'Eligible' not found in Excel file.");
+            $this->command->error("Sheet 'Rohtak_MC_Complted_09.01.26' not found in Excel file.");
             return;
         }
         

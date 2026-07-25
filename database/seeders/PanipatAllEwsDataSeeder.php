@@ -17,22 +17,22 @@ class PanipatAllEwsDataSeeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '2G');
-        $filePath = database_path('seeders/data/PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx');
+        $filePath = database_path('seeders/data/PANIPAT_MC_Completed_22-01-2026 (2).xlsx');
 
         if (!file_exists($filePath)) {
             $this->command->error("Excel file not found at: {$filePath}");
             return;
         }
 
-        $this->command->info("Loading Excel file from {$filePath} (Eligible sheet only)...");
+        $this->command->info("Loading Excel file from {$filePath} (PANIPAT_MC_Completed_22-01-2026 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setLoadSheetsOnly(['Eligible']);
+        $reader->setLoadSheetsOnly(['PANIPAT_MC_Completed_22-01-2026']);
         $spreadsheet = $reader->load($filePath);
-        $sheet = $spreadsheet->getSheetByName('Eligible');
+        $sheet = $spreadsheet->getSheetByName('PANIPAT_MC_Completed_22-01-2026');
         
         if (!$sheet) {
-            $this->command->error("Sheet 'Eligible' not found in Excel file.");
+            $this->command->error("Sheet 'PANIPAT_MC_Completed_22-01-2026' not found in Excel file.");
             return;
         }
         
