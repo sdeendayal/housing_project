@@ -1274,7 +1274,17 @@ class EwsDepartmentController extends Controller
     public function seederDataIndex(Request $request)
     {
         $user = Auth::user();
-        $districtId = $request->query('district') ?? $request->query('district_id') ?? '';
+        $districtName = strtoupper(trim($request->query('district') ?? $request->query('district_id') ?? 'SONIPAT'));
+        $districtMap = [
+            'FARIDABAD' => 4,
+            'GURUGRAM' => 6,
+            'PANIPAT' => 18,
+            'REWARI' => 19,
+            'ROHTAK' => 20,
+            'SONIPAT' => 22,
+            'OTHER' => 0
+        ];
+        $districtId = $districtMap[$districtName] ?? 22;
 
         // Fetch counts for sidebar
         $totalCount = DB::table('ews_allotted_8')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count() +
@@ -1292,45 +1302,131 @@ class EwsDepartmentController extends Controller
         
         $currentType = 'seeder';
 
-        // EWS Raw Files configuration using exact original filenames
-        $rawFiles = [
-            [
-                'name' => 'Registered Applicants Master (1. Verify in survey app)',
-                'filename' => 'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
-                'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
-                'sheets' => 'registered'
-            ],
-            [
-                'name' => 'Survey Exclusions & Verification Master (2, 3, 4, 7, 8, 9 Stages)',
-                'filename' => 'survey.xlsx',
-                'description' => 'Comprehensive master database containing all EWS funnel tabs: exclusions, property checks, house ownership, draw lists, bookings, allotments, and waiting lists.',
-                'sheets' => 'exclusion, prop, house, draw, eligible, booking, allotted, waiting'
-            ],
-            [
-                'name' => 'Eligible Draw List Database (5. Eligible for booking)',
-                'filename' => '794 eligible list with category for sonipat draw.xlsx',
-                'description' => 'Excel registry containing verified candidates qualified for the lottery draw.',
-                'sheets' => 'draw_eligible'
-            ],
-            [
-                'name' => 'Developer Draw Allotments',
-                'filename' => 'final draw sheet fo developeres.xlsx',
-                'description' => 'Official draw list sheet structured developer-wise containing sector alignments, towers, and flat allocations.',
-                'sheets' => 'developer_draw'
-            ],
-            [
-                'name' => 'Master Draw Sonipat',
-                'filename' => 'Master sheet for draw sonipat.xlsx',
-                'description' => 'The raw draw outcome sheets filtered specifically for Sonipat region.',
-                'sheets' => 'master_sonipat'
-            ],
-            [
-                'name' => 'EWS Approved Flat Masters',
-                'filename' => 'booking amount  flat final recevied data from sunit ji.xlsx',
-                'description' => 'Inventory ledger mapping flat IDs, developer codes, sector allocations, and CRID verification keys.',
-                'sheets' => 'flats_crid'
-            ]
-        ];
+        // EWS Raw Files configuration dynamically defined district-wise
+        $rawFiles = [];
+        if ($districtName === 'SONIPAT') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
+                    'sheets' => 'registered',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Survey Exclusions & Verification Master (2, 3, 4, 7, 8, 9 Stages)',
+                    'filename' => 'survey.xlsx',
+                    'description' => 'Comprehensive master database containing all EWS funnel tabs: exclusions, property checks, house ownership, draw lists, bookings, allotments, and waiting lists.',
+                    'sheets' => 'exclusion, prop, house, draw, eligible, booking, allotted, waiting',
+                    'category' => 'Exclusion data from PPP / Master'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => '794 eligible list with category for sonipat draw.xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the lottery draw.',
+                    'sheets' => 'draw_eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'Developer Draw Allotments',
+                    'filename' => 'final draw sheet fo developeres.xlsx',
+                    'description' => 'Official draw list sheet structured developer-wise containing sector alignments, towers, and flat allocations.',
+                    'sheets' => 'developer_draw',
+                    'category' => 'developer draw'
+                ],
+                [
+                    'name' => 'Master Draw Sonipat',
+                    'filename' => 'Master sheet for draw sonipat.xlsx',
+                    'description' => 'The raw draw outcome sheets filtered specifically for Sonipat region.',
+                    'sheets' => 'master_sonipat',
+                    'category' => 'master draw'
+                ],
+                [
+                    'name' => 'EWS Approved Flat Masters',
+                    'filename' => 'booking amount  flat final recevied data from sunit ji.xlsx',
+                    'description' => 'Inventory ledger mapping flat IDs, developer codes, sector allocations, and CRID verification keys.',
+                    'sheets' => 'flats_crid',
+                    'category' => 'approved flats'
+                ]
+            ];
+        } elseif ($districtName === 'OTHER') {
+            $rawFiles = [
+                [
+                    'name' => 'PPP Exclusion Data 1st Stage',
+                    'filename' => 'PPP ecclusion data ist stage.xlsx',
+                    'description' => 'Comprehensive first stage Family Information Depot (PPP) exclusion database.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'amanshareddata'
+                ],
+                [
+                    'name' => 'PPP Exclusion Data 1st Stage 1',
+                    'filename' => 'PPP ecclusion data ist stage1.xlsx',
+                    'description' => 'Comprehensive first stage Family Information Depot (PPP) exclusion database version 1.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'amanshareddata'
+                ]
+            ];
+        } else {
+            $filesMap = [
+                'FARIDABAD' => [
+                    'raw' => 'FARIDABAD_Completed_MC_22-01-2026 (2).xlsx',
+                    'raw_sheet' => 'FARIDABAD_Completed_MC_22-01-20',
+                    'draw' => 'FARIDABAD_Completed_MC_22-01-2026 (2) (3).xlsx',
+                    'ppp' => 'faridabad_mc.xlsx'
+                ],
+                'GURUGRAM' => [
+                    'raw' => 'GURGAON_Completed_24-01-2026.xlsx',
+                    'raw_sheet' => 'GURGAON_Completed_24-01-2026',
+                    'draw' => 'GURGAON_Completed_24-01-2026 (3).xlsx',
+                    'ppp' => 'gurgaon_mc.xlsx'
+                ],
+                'PANIPAT' => [
+                    'raw' => 'PANIPAT_MC_Completed_22-01-2026 (2).xlsx',
+                    'raw_sheet' => 'PANIPAT_MC_Completed_22-01-2026',
+                    'draw' => 'PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx',
+                    'ppp' => 'panipat_mc.xlsx'
+                ],
+                'REWARI' => [
+                    'raw' => 'REWARI_Completed_25-01-2026.xlsx',
+                    'raw_sheet' => 'REWARI_Completed_25-01-2026',
+                    'draw' => 'REWARI_Completed_25-01-2026 (3).xlsx',
+                    'ppp' => 'RewariData.xlsx'
+                ],
+                'ROHTAK' => [
+                    'raw' => 'Rohtak_completed (3).xlsx',
+                    'raw_sheet' => 'Rohtak_MC_Complted_09.01.26',
+                    'draw' => 'Rohtak_completed (2) (3).xlsx',
+                    'ppp' => 'Rohtakcompleterevised_Final (1).xlsx'
+                ]
+            ];
+            
+            $config = $filesMap[$districtName] ?? null;
+            if ($config) {
+                $rawFiles = [
+                    [
+                        'name' => "Registered Applicants Master (1. Verify in survey app)",
+                        'filename' => $config['raw'],
+                        'description' => "Original master Excel file containing all citizen housing registrations, full applicant details, demographics, exclusions, and assets data for {$districtName}.",
+                        'sheets' => $config['raw_sheet'],
+                        'category' => 'survey data frm meet monk'
+                    ],
+                    [
+                        'name' => "Eligible Draw List Database (5. Eligible for booking)",
+                        'filename' => $config['draw'],
+                        'description' => "Excel registry containing verified candidates qualified for the {$districtName} lottery draw.",
+                        'sheets' => 'Eligible',
+                        'category' => 'eligiblity data from sunit'
+                    ],
+                    [
+                        'name' => "PPP Exclusions & Verification Master (2. PPP Exclusion)",
+                        'filename' => $config['ppp'],
+                        'description' => "Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry for {$districtName}.",
+                        'sheets' => 'Sheet1',
+                        'category' => 'Exclusion data from PPP'
+                    ]
+                ];
+            }
+        }
 
         // Hydrate files info (size, last modified time)
         $files = [];
@@ -1354,6 +1450,8 @@ class EwsDepartmentController extends Controller
             $files[] = $file;
         }
 
+        $districtId = $districtName;
+
         return view('ews.department.seeder_data', compact(
             'user', 'files', 'districtId',
             'totalCount', 'allottedCount', 'pendingCount', 'drawRemainingCount',
@@ -1369,7 +1467,17 @@ class EwsDepartmentController extends Controller
             '794 eligible list with category for sonipat draw.xlsx',
             'final draw sheet fo developeres.xlsx',
             'Master sheet for draw sonipat.xlsx',
-            'booking amount  flat final recevied data from sunit ji.xlsx'
+            'booking amount  flat final recevied data from sunit ji.xlsx',
+            'FARIDABAD_Completed_MC_22-01-2026 (2).xlsx',
+            'FARIDABAD_Completed_MC_22-01-2026 (2) (3).xlsx',
+            'GURGAON_Completed_24-01-2026.xlsx',
+            'GURGAON_Completed_24-01-2026 (3).xlsx',
+            'PANIPAT_MC_Completed_22-01-2026 (2).xlsx',
+            'PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx',
+            'REWARI_Completed_25-01-2026.xlsx',
+            'REWARI_Completed_25-01-2026 (3).xlsx',
+            'Rohtak_completed (3).xlsx',
+            'Rohtak_completed (2) (3).xlsx'
         ];
 
         if (!in_array($filename, $allowedFiles)) {

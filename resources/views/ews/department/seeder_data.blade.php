@@ -58,92 +58,88 @@
             <!-- Banner Card -->
             <div class="bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl p-3 text-white shadow-sm flex justify-between items-center">
                 <div class="space-y-0.5">
-                    <span class="text-[7px] font-black uppercase bg-white/20 px-1.5 py-0.5 rounded tracking-widest">Excel Repository</span>
+                    <span class="text-[7px] font-black uppercase bg-white/20 px-1.5 py-0.5 rounded tracking-widest">Excel Repository - {{ $districtId }}</span>
                     <h2 class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="bi bi-file-earmark-arrow-down-fill"></i> Original EWS Database Files
+                        <i class="bi bi-file-earmark-arrow-down-fill"></i> Original EWS Database Files ({{ $districtId }})
                     </h2>
-                    <p class="text-[9px] text-orange-50/90 font-light">Download original EWS Excel files directly from the directory catalog.</p>
+                    <p class="text-[9px] text-orange-50/90 font-light">Download original EWS Excel files directly from the directory catalog for {{ $districtId }}.</p>
                 </div>
             </div>
 
-            @if($districtId === 'GURUGRAM')
-                <!-- Gurugram Empty State -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-150 p-8 flex flex-col items-center justify-center text-center space-y-3 min-h-[320px]">
-                    <div class="w-12 h-12 bg-amber-50 rounded-full flex items-center justify-center text-amber-600 shadow-inner">
-                        <span class="material-symbols-outlined text-2xl font-bold">folder_off</span>
-                    </div>
-                    <div class="space-y-1">
-                        <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest">Gurugram Data</h3>
-                        <p class="text-[11px] text-rose-600 font-bold uppercase tracking-wider">abhi data uplabdh nahi h</p>
-                    </div>
-                </div>
-            @else
-                <!-- Grid of Compact Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($files as $file)
-                        <div class="bg-white rounded-xl shadow-sm border border-slate-150 p-4 flex flex-col justify-between hover:shadow-md transition">
-                            <div class="space-y-3">
-                                <!-- Top Row: Icon & File Info -->
-                                <div class="flex items-start gap-3">
-                                    <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 flex-shrink-0">
-                                        <i class="bi bi-file-earmark-spreadsheet text-xl"></i>
-                                    </div>
-                                    <div class="space-y-0.5 min-w-0">
-                                        <h3 class="font-extrabold text-slate-800 uppercase tracking-tight text-[10px] leading-snug truncate" title="{{ $file['name'] }}">
-                                            {{ $file['name'] }}
-                                        </h3>
-                                        <p class="text-[8.5px] font-mono text-slate-550 font-semibold truncate text-slate-500" title="{{ $file['filename'] }}">
-                                            {{ $file['filename'] }}
-                                        </p>
-                                    </div>
+            <!-- Grid of Compact Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                @foreach($files as $file)
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-150 p-4 flex flex-col justify-between hover:shadow-md transition">
+                        <div class="space-y-3">
+                            <!-- Top Row: Icon & File Info -->
+                            <div class="flex items-start gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 flex-shrink-0">
+                                    <i class="bi bi-file-earmark-spreadsheet text-xl"></i>
                                 </div>
-                                
-                                <!-- File Description -->
-                                <p class="text-[9.5px] text-slate-500 font-light leading-relaxed line-clamp-2">
-                                    {{ $file['description'] }}
-                                </p>
-                                
-                                <!-- Sheets / Tabs -->
-                                <div class="space-y-1">
-                                    <span class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Excel Sheets (Tabs):</span>
-                                    <div class="flex flex-wrap gap-1">
-                                        @foreach(explode(', ', $file['sheets']) as $sheet)
-                                            <span class="px-1 py-0.5 bg-slate-55 bg-slate-50 text-slate-600 text-[7px] font-extrabold rounded lowercase font-mono border border-slate-200/50">
-                                                {{ $sheet }}
-                                            </span>
-                                        @endforeach
-                                    </div>
+                                <div class="space-y-0.5 min-w-0">
+                                    <h3 class="font-extrabold text-slate-800 uppercase tracking-tight text-[10px] leading-snug truncate" title="{{ $file['name'] }}">
+                                        {{ $file['name'] }}
+                                    </h3>
+                                    <p class="text-[8.5px] font-mono text-slate-550 font-semibold truncate text-slate-500" title="{{ $file['filename'] }}">
+                                        {{ $file['filename'] }}
+                                    </p>
                                 </div>
                             </div>
 
-                            <!-- Footer Row: Stats & Action -->
-                            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                                <div class="space-y-0.5">
-                                    <div class="flex items-center gap-1 text-[8.5px] font-mono text-slate-500">
-                                        <span class="material-symbols-outlined text-[10px]">sd_card</span>
-                                        <span>{{ $file['size'] }}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1 text-[8.5px] font-mono text-slate-500">
-                                        <span class="material-symbols-outlined text-[10px]">schedule</span>
-                                        <span class="truncate max-w-[90px]">{{ date('d M Y', strtotime($file['modified'])) }}</span>
-                                    </div>
-                                </div>
-
-                                @if($file['exists'])
-                                    <button type="button" onclick="promptPassword('{{ $file['filename'] }}')" class="inline-flex px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-250 rounded-lg text-[9px] font-black uppercase tracking-wider transition duration-150 items-center gap-1 shadow-sm cursor-pointer">
-                                        <span class="material-symbols-outlined text-[12px] font-bold">download</span>
-                                        <span>Download</span>
-                                    </button>
-                                @else
-                                    <span class="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[8.5px] font-black uppercase tracking-wider font-mono">
-                                        Missing
+                            <!-- Category / Folder Source -->
+                            @if(isset($file['category']))
+                                <div class="inline-flex">
+                                    <span class="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase bg-orange-50 text-orange-700 border border-orange-100 tracking-wider">
+                                        📁 {{ $file['category'] }}
                                     </span>
-                                @endif
+                                </div>
+                            @endif
+                            
+                            <!-- File Description -->
+                            <p class="text-[9.5px] text-slate-500 font-light leading-relaxed line-clamp-2">
+                                {{ $file['description'] }}
+                            </p>
+                            
+                            <!-- Sheets / Tabs -->
+                            <div class="space-y-1">
+                                <span class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Excel Sheets (Tabs):</span>
+                                <div class="flex flex-wrap gap-1">
+                                    @foreach(explode(', ', $file['sheets']) as $sheet)
+                                        <span class="px-1 py-0.5 bg-slate-55 bg-slate-50 text-slate-600 text-[7px] font-extrabold rounded lowercase font-mono border border-slate-200/50">
+                                            {{ $sheet }}
+                                        </span>
+                                    @endforeach
+                                </div>
                             </div>
                         </div>
-                    @endforeach
-                </div>
-            @endif
+
+                        <!-- Footer Row: Stats & Action -->
+                        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                            <div class="space-y-0.5">
+                                <div class="flex items-center gap-1 text-[8.5px] font-mono text-slate-500">
+                                    <span class="material-symbols-outlined text-[10px]">sd_card</span>
+                                    <span>{{ $file['size'] }}</span>
+                                </div>
+                                <div class="flex items-center gap-1 text-[8.5px] font-mono text-slate-500">
+                                    <span class="material-symbols-outlined text-[10px]">schedule</span>
+                                    <span class="truncate max-w-[90px]">{{ date('d M Y', strtotime($file['modified'])) }}</span>
+                                </div>
+                            </div>
+
+                            @if($file['exists'])
+                                <button type="button" onclick="promptPassword('{{ $file['filename'] }}')" class="inline-flex px-3 py-1.5 bg-emerald-50 hover:bg-emerald-600 text-emerald-700 hover:text-white border border-emerald-250 rounded-lg text-[9px] font-black uppercase tracking-wider transition duration-150 items-center gap-1 shadow-sm cursor-pointer">
+                                    <span class="material-symbols-outlined text-[12px] font-bold">download</span>
+                                    <span>Download</span>
+                                </button>
+                            @else
+                                <span class="px-2 py-1 bg-rose-50 text-rose-700 border border-rose-100 rounded text-[8.5px] font-black uppercase tracking-wider font-mono">
+                                    Missing
+                                </span>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
 
         </main>
     </div>
