@@ -515,79 +515,111 @@
                         <div class="glass-card p-6 rounded-2xl">
                             <h3 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Application Lifecycle Tracker</h3>
                             
-                            <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 mt-2 pl-4 md:pl-0">
-                                <!-- Connecting Line -->
-                                <div class="absolute left-[20px] top-4 md:left-[12.5%] md:right-[12.5%] md:top-5 h-[90%] md:h-[2px] w-[2px] md:w-auto bg-slate-100 z-0"></div>
+                            @php
+                                $isCancelled = ($ownerInfo->IsAllotmentCancelled == 1);
+                                $isRejected = ($ownerInfo->IsRejected == 1);
+                                $isApproved = ($ownerInfo->IsApproved == 1);
                                 
-                                <!-- Step 1 -->
-                                <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                    <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                                        <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">check</span>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-slate-800">Registered</h4>
-                                        <p class="text-[9px] text-slate-400">Profile matches master records</p>
-                                    </div>
-                                </div>
+                                // Determine active lifecycle step index (1-4)
+                                if ($isApproved || $isRejected || $isCancelled) {
+                                    $lifecycleStep = 4;
+                                    $progressPercent = 100;
+                                } else {
+                                    $lifecycleStep = 2; // Pending verification
+                                    $progressPercent = 33.33; // 4 steps = 3 segments. 1st segment completed (Step 1 to 2)
+                                }
+                                
+                                $lifecycleSteps = [
+                                    [
+                                        'index' => 1,
+                                        'title' => 'Registered',
+                                        'subtitle' => 'Profile matches master records',
+                                        'default_icon' => 'how_to_reg',
+                                    ],
+                                    [
+                                        'index' => 2,
+                                        'title' => 'Under Review',
+                                        'subtitle' => 'Documents verified by cell',
+                                        'default_icon' => 'rate_review',
+                                    ],
+                                    [
+                                        'index' => 3,
+                                        'title' => 'District Audit',
+                                        'subtitle' => 'Block & village verified',
+                                        'default_icon' => 'fact_check',
+                                    ],
+                                    [
+                                        'index' => 4,
+                                        'title' => $isCancelled ? 'Allotment Cancelled' : ($isRejected ? 'Rejected / Ineligible' : ($isApproved ? 'Approved' : 'Pending Decision')),
+                                        'subtitle' => $isCancelled ? 'Cancelled by DC Office' : ($isRejected ? ($ownerInfo->Remarks ?? 'Not eligible') : ($isApproved ? 'Profile verification success' : 'Awaiting board approval')),
+                                        'default_icon' => $isCancelled || $isRejected ? 'close' : ($isApproved ? 'done_all' : 'hourglass_top'),
+                                    ]
+                                ];
+                            @endphp
 
-                                <!-- Step 2 -->
-                                <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                    <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                                        <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">check</span>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-slate-800">Under Review</h4>
-                                        <p class="text-[9px] text-slate-400">Documents verified by cell</p>
-                                    </div>
+                            <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 mt-4 pl-4 md:pl-0">
+                                <!-- Connecting Line Background -->
+                                <div class="absolute left-[20px] top-4 md:left-[12.5%] md:right-[12.5%] md:top-5 h-[90%] md:h-[2px] w-[2px] md:w-auto bg-slate-200/60 z-0 rounded-full">
+                                    <!-- Active Line Fill for Mobile -->
+                                    <div class="md:hidden bg-gradient-to-b from-emerald-500 to-indigo-600 w-full transition-all duration-500 rounded-full" style="height: {{ $progressPercent }}%"></div>
+                                    <!-- Active Line Fill for Desktop -->
+                                    <div class="hidden md:block bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 h-full transition-all duration-500 rounded-full" style="width: {{ $progressPercent }}%"></div>
                                 </div>
-
-                                <!-- Step 3 -->
-                                <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                    <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25">
-                                        <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">check</span>
+                                
+                                @foreach($lifecycleSteps as $s)
+                                    @php
+                                        $idx = $s['index'];
+                                        $isCompletedStep = ($idx < $lifecycleStep) || ($isApproved && $idx === 4);
+                                        $isCurrentStep = ($idx === $lifecycleStep) && !$isApproved && !$isRejected && !$isCancelled;
+                                        $isPendingStep = ($idx > $lifecycleStep);
+                                        
+                                        $circleClass = '';
+                                        $iconName = $s['default_icon'];
+                                        $titleClass = '';
+                                        $subtitleClass = '';
+                                        $badgeText = '';
+                                        
+                                        if ($idx === 4 && ($isCancelled || $isRejected)) {
+                                            // Special style for Step 4 rejection
+                                            $circleClass = 'bg-rose-500 text-white shadow-lg shadow-rose-500/25 border-2 border-rose-500 ring-4 ring-rose-50';
+                                            $iconName = 'close';
+                                            $titleClass = 'text-rose-600 font-bold';
+                                            $subtitleClass = 'text-rose-400 font-semibold';
+                                            $badgeText = $isCancelled ? 'Cancelled' : 'Rejected';
+                                        } elseif ($isCompletedStep) {
+                                            $circleClass = 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 border-2 border-emerald-500';
+                                            $iconName = ($idx === 4) ? 'done_all' : 'check';
+                                            $titleClass = 'text-slate-800 font-semibold';
+                                            $subtitleClass = 'text-slate-400';
+                                        } elseif ($isCurrentStep) {
+                                            $circleClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border-2 border-indigo-600 ring-4 ring-indigo-50 animate-pulse-subtle';
+                                            $titleClass = 'text-indigo-600 font-extrabold';
+                                            $subtitleClass = 'text-indigo-400 font-semibold';
+                                            $badgeText = 'Active';
+                                        } else {
+                                            $circleClass = 'bg-slate-50 text-slate-400 border border-slate-200';
+                                            $titleClass = 'text-slate-400 font-medium';
+                                            $subtitleClass = 'text-slate-300';
+                                        }
+                                    @endphp
+                                    
+                                    <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2.5 z-10 md:w-1/4 group transition duration-300">
+                                        <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition duration-300 {{ $circleClass }}">
+                                            <span class="material-symbols-outlined text-[15px] md:text-[18px] font-bold">{{ $iconName }}</span>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-1.5 justify-center">
+                                                <h4 class="text-xs {{ $titleClass }}">{{ $s['title'] }}</h4>
+                                                @if($badgeText)
+                                                    <span class="text-[7px] font-extrabold uppercase px-1 py-0.5 rounded leading-none {{ ($badgeText === 'Rejected' || $badgeText === 'Cancelled') ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700' }}">
+                                                        {{ $badgeText }}
+                                                    </span>
+                                                @endif
+                                            </div>
+                                            <p class="text-[9px] {{ $subtitleClass }} mt-0.5">{{ $s['subtitle'] }}</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <h4 class="text-xs font-bold text-slate-800">District Audit</h4>
-                                        <p class="text-[9px] text-slate-400">Block & village verified</p>
-                                    </div>
-                                </div>
-
-                                <!-- Step 4 -->
-                                <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                    @if($ownerInfo->IsAllotmentCancelled == 1)
-                                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/25 animate-pulse">
-                                            <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">close</span>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-rose-600">Allotment Cancelled</h4>
-                                            <p class="text-[9px] text-rose-400">Cancelled by DC Office</p>
-                                        </div>
-                                    @elseif($ownerInfo->IsRejected == 1)
-                                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-lg shadow-rose-500/25 animate-pulse">
-                                            <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">close</span>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-rose-600">Rejected / Ineligible</h4>
-                                            <p class="text-[9px] text-rose-400">{{ $ownerInfo->Remarks ?? 'Not eligible' }}</p>
-                                        </div>
-                                    @elseif($ownerInfo->IsApproved == 1)
-                                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/25 animate-pulse">
-                                            <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">done_all</span>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-emerald-600">Approved</h4>
-                                            <p class="text-[9px] text-emerald-400">Profile verification success</p>
-                                        </div>
-                                    @else
-                                        <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 animate-pulse">
-                                            <span class="material-symbols-outlined text-[16px] md:text-[18px]">hourglass_top</span>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-xs font-bold text-blue-600">Pending Decision</h4>
-                                            <p class="text-[9px] text-blue-400">Awaiting board approval</p>
-                                        </div>
-                                    @endif
-                                </div>
+                                @endforeach
                             </div>
                         </div>
 
