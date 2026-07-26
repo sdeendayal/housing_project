@@ -130,6 +130,19 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        @keyframes pulse-subtle {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2), 0 0 0 0 rgba(79, 70, 229, 0.25);
+            }
+            50% {
+                transform: scale(1.04);
+                box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35), 0 0 0 6px rgba(79, 70, 229, 0);
+            }
+        }
+        .animate-pulse-subtle {
+            animation: pulse-subtle 2s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="h-full flex flex-col overflow-hidden select-none">
@@ -303,7 +316,37 @@
 
                     <!-- Physical Possession Status Banner -->
                     @if($possessionApplication)
-                        @if($possessionApplication->physical_possession_status === 'Visit Scheduled' || $possessionApplication->physical_possession_status === 'Rejected')
+                        @if($possessionApplication->physical_possession_status === 'Eligible for Physical Possession')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-blue-500 bg-blue-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 text-white flex items-center justify-center shadow-md shadow-blue-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">hourglass_empty</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-blue-800 leading-snug">Physical Possession: Eligible</h4>
+                                        <p class="text-[10px] text-blue-600 mt-0.5 font-medium">You are eligible for physical possession. Awaiting the Block Development Officer (BDPO) to schedule visit slots.</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="bg-blue-100 text-blue-800 text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-lg">Awaiting Schedule</span>
+                                </div>
+                            </div>
+                        @elseif($possessionApplication->physical_possession_status === 'Rejected')
+                            <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-rose-500 bg-rose-50/20">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-rose-500 to-red-500 text-white flex items-center justify-center shadow-md shadow-rose-500/15">
+                                        <span class="material-symbols-outlined text-[18px] font-bold">error</span>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-bold text-rose-800 leading-snug">Physical Possession: Reschedule Required</h4>
+                                        <p class="text-[10px] text-rose-600 mt-0.5 font-medium">Your physical possession verification was rejected. Remarks: <strong class="text-rose-850">{{ $possessionApplication->remarks ?? 'N/A' }}</strong>. Please select a new slot for rescheduling.</p>
+                                    </div>
+                                </div>
+                                <button type="button" onclick="openSlotSelectionModal()" class="bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-extrabold uppercase px-3.5 py-2 rounded-xl transition shadow shadow-rose-500/10 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">touch_app</span> Reschedule Slot
+                                </button>
+                            </div>
+                        @elseif($possessionApplication->physical_possession_status === 'Visit Scheduled')
                             <div class="glass-card p-4 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-l-[4px] border-l-amber-500 bg-amber-50/20">
                                 <div class="flex items-center gap-3">
                                     <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center shadow-md shadow-amber-500/15">
@@ -803,60 +846,123 @@
                                 <!-- Stepper status tracker -->
                                 <div>
                                     <h4 class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider mb-4 leading-none">Possession Milestone Tracker</h4>
-                                    <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 mt-2 pl-4 md:pl-0">
-                                        <!-- Line -->
-                                        <div class="absolute left-[20px] top-4 md:left-[12.5%] md:right-[12.5%] md:top-5 h-[90%] md:h-[2px] w-[2px] md:w-auto bg-slate-100 z-0"></div>
+                                    
+                                    @php
+                                        $status = $possessionApplication->physical_possession_status;
                                         
-                                        <!-- Step 1: Visit Scheduled -->
-                                        @php
-                                            $status = $possessionApplication->physical_possession_status;
-                                            $isScheduled = in_array($status, ['Visit Scheduled', 'Slot Selected', 'Site Verified', 'Verified']);
-                                            $isSelected = in_array($status, ['Slot Selected', 'Site Verified', 'Verified']);
-                                            $isVerified = in_array($status, ['Site Verified', 'Verified']);
-                                            $isCompleted = ($status === 'Verified');
-                                        @endphp
-                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isScheduled ? 'bg-amber-500 text-white' : '' }}">
-                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">calendar_today</span>
-                                            </div>
-                                            <div>
-                                                <h4 class="text-xs font-bold text-slate-800">Visit Scheduled</h4>
-                                                <p class="text-[9px] text-slate-400">BDPO offered slots</p>
-                                            </div>
-                                        </div>
+                                        // Status order mapping for 5-step milestone tracker
+                                        $statusOrder = [
+                                            'Eligible for Physical Possession' => 1,
+                                            'Visit Scheduled' => 2,
+                                            'Slot Selected' => 3,
+                                            'Site Verified' => 4,
+                                            'Verified' => 5,
+                                            'Rejected' => 4 // Highlight verification step on rejection
+                                        ];
+                                        
+                                        $currentStep = $statusOrder[$status] ?? 1;
+                                        
+                                        // 5 steps = 4 segments. Calculate segment progress percent.
+                                        $progressPercent = ($currentStep - 1) * 25;
+                                        
+                                        $steps = [
+                                            [
+                                                'index' => 1,
+                                                'title' => 'Eligible',
+                                                'subtitle' => 'Possession Eligible',
+                                                'icon' => 'assignment_turned_in',
+                                            ],
+                                            [
+                                                'index' => 2,
+                                                'title' => 'Visit Scheduled',
+                                                'subtitle' => 'BDPO offered slots',
+                                                'icon' => 'calendar_today',
+                                            ],
+                                            [
+                                                'index' => 3,
+                                                'title' => 'Slot Selected',
+                                                'subtitle' => 'Citizen confirmed date',
+                                                'icon' => 'how_to_reg',
+                                            ],
+                                            [
+                                                'index' => 4,
+                                                'title' => 'Site Verified',
+                                                'subtitle' => 'GPS & Photo captured',
+                                                'icon' => 'pin_drop',
+                                            ],
+                                            [
+                                                'index' => 5,
+                                                'title' => 'Verified & Approved',
+                                                'subtitle' => 'Report & Letter uploaded',
+                                                'icon' => 'verified_user',
+                                            ]
+                                        ];
+                                    @endphp
 
-                                        <!-- Step 2: Slot Selected -->
-                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isSelected ? 'bg-indigo-500 text-white' : '' }}">
-                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">how_to_reg</span>
-                                            </div>
-                                            <div>
-                                                <h4 class="text-xs font-bold text-slate-800">Slot Selected</h4>
-                                                <p class="text-[9px] text-slate-400">Citizen confirmed date</p>
-                                            </div>
+                                    <div class="relative flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-0 mt-4 pl-4 md:pl-0">
+                                        <!-- Line Background -->
+                                        <div class="absolute left-[20px] top-4 md:left-[10%] md:right-[10%] md:top-5 h-[90%] md:h-[2px] w-[2px] md:w-auto bg-slate-200/60 z-0 rounded-full">
+                                            <!-- Active Line Fill for Mobile -->
+                                            <div class="md:hidden bg-gradient-to-b from-emerald-500 to-indigo-600 w-full transition-all duration-500 rounded-full" style="height: {{ $progressPercent }}%"></div>
+                                            <!-- Active Line Fill for Desktop -->
+                                            <div class="hidden md:block bg-gradient-to-r from-emerald-500 via-blue-500 to-indigo-600 h-full transition-all duration-500 rounded-full" style="width: {{ $progressPercent }}%"></div>
                                         </div>
+                                        
+                                        @foreach($steps as $s)
+                                            @php
+                                                $idx = $s['index'];
+                                                $isCompletedStep = ($idx < $currentStep) || ($status === 'Verified');
+                                                $isCurrentStep = ($idx === $currentStep) && ($status !== 'Verified');
+                                                $isPendingStep = ($idx > $currentStep);
+                                                
+                                                // Default classes
+                                                $circleClass = '';
+                                                $iconName = $s['icon'];
+                                                $titleClass = '';
+                                                $subtitleClass = '';
+                                                $badgeText = '';
+                                                
+                                                if ($status === 'Rejected' && $idx === 4) {
+                                                    // Special styling for rejection at the verification step
+                                                    $circleClass = 'bg-rose-500 text-white shadow-lg shadow-rose-500/20 border-2 border-rose-500 ring-4 ring-rose-50';
+                                                    $iconName = 'cancel';
+                                                    $titleClass = 'text-rose-600 font-bold';
+                                                    $subtitleClass = 'text-rose-400 font-semibold';
+                                                    $badgeText = 'Rejected';
+                                                } elseif ($isCompletedStep) {
+                                                    $circleClass = 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 border-2 border-emerald-500';
+                                                    $iconName = 'check';
+                                                    $titleClass = 'text-slate-800 font-semibold';
+                                                    $subtitleClass = 'text-slate-400';
+                                                } elseif ($isCurrentStep) {
+                                                    $circleClass = 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border-2 border-indigo-600 ring-4 ring-indigo-50 animate-pulse-subtle';
+                                                    $titleClass = 'text-indigo-600 font-extrabold';
+                                                    $subtitleClass = 'text-indigo-400 font-semibold';
+                                                    $badgeText = 'Current';
+                                                } else {
+                                                    $circleClass = 'bg-slate-50 text-slate-400 border border-slate-200';
+                                                    $titleClass = 'text-slate-400 font-medium';
+                                                    $subtitleClass = 'text-slate-300';
+                                                }
+                                            @endphp
 
-                                        <!-- Step 3: Site Verified -->
-                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isVerified ? 'bg-blue-500 text-white' : '' }}">
-                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">pin_drop</span>
+                                            <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2.5 z-10 md:w-1/5 group transition duration-300">
+                                                <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center transition duration-300 {{ $circleClass }}">
+                                                    <span class="material-symbols-outlined text-[15px] md:text-[18px] font-bold">{{ $iconName }}</span>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center gap-1.5 justify-center">
+                                                        <h4 class="text-xs {{ $titleClass }}">{{ $s['title'] }}</h4>
+                                                        @if($badgeText)
+                                                            <span class="text-[7px] font-extrabold uppercase px-1 py-0.5 rounded leading-none {{ $badgeText === 'Rejected' ? 'bg-rose-100 text-rose-700' : 'bg-indigo-100 text-indigo-700' }}">
+                                                                {{ $badgeText }}
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <p class="text-[9px] {{ $subtitleClass }} mt-0.5">{{ $s['subtitle'] }}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h4 class="text-xs font-bold text-slate-800">Site Verified</h4>
-                                                <p class="text-[9px] text-slate-400">GPS & Photo captured</p>
-                                            </div>
-                                        </div>
-
-                                        <!-- Step 4: Completed -->
-                                        <div class="relative flex md:flex-col items-center md:text-center gap-3.5 md:gap-2 z-10 md:w-1/4">
-                                            <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center shadow-lg {{ $isCompleted ? 'bg-emerald-500 text-white' : '' }}">
-                                                <span class="material-symbols-outlined text-[16px] md:text-[18px] font-bold">check_circle</span>
-                                            </div>
-                                            <div>
-                                                <h4 class="text-xs font-bold text-slate-800">Verified & Approved</h4>
-                                                <p class="text-[9px] text-slate-400">E-Possession report uploaded</p>
-                                            </div>
-                                        </div>
+                                        @endforeach
                                     </div>
                                 </div>
 
