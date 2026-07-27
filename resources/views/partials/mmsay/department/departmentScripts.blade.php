@@ -2,36 +2,61 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('dashboardFilterForm');
+        const district = document.getElementById('district_id');
+        const city = document.getElementById('city_id');
+        const sector = document.getElementById('sector_id');
 
-    const imageInput = document.getElementById('bannerImage');
-    const previewImage = document.getElementById('previewImage');
-    const placeholder = document.getElementById('previewPlaceholder');
+        district.addEventListener('change', function() {
+            city.value = '';
+            city.disabled = false;
 
-    imageInput.addEventListener('change', function (e) {
+            sector.value = '';
+            sector.disabled = true;
 
-        const file = e.target.files[0];
+            filterForm.submit();
+        });
 
-        if (!file) {
-            previewImage.classList.add('hidden');
-            placeholder.classList.remove('hidden');
-            return;
-        }
+        city.addEventListener('change', function() {
+            sector.value = '';
+            sector.disabled = false;
 
-        const reader = new FileReader();
-
-        reader.onload = function (event) {
-
-            previewImage.src = event.target.result;
-            previewImage.classList.remove('hidden');
-
-            placeholder.classList.add('hidden');
-        };
-
-        reader.readAsDataURL(file);
+            filterForm.submit();
+        });
     });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
 
-});
+        const imageInput = document.getElementById('bannerImage');
+        const previewImage = document.getElementById('previewImage');
+        const placeholder = document.getElementById('previewPlaceholder');
+
+        imageInput.addEventListener('change', function(e) {
+
+            const file = e.target.files[0];
+
+            if (!file) {
+                previewImage.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            reader.onload = function(event) {
+
+                previewImage.src = event.target.result;
+                previewImage.classList.remove('hidden');
+
+                placeholder.classList.add('hidden');
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+    });
 </script>
 <script>
     // Simple micro-interaction for toggle

@@ -17,6 +17,8 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
+
+
         /*
         |--------------------------------------------------------------------------
         | Logged-in User District
@@ -29,6 +31,8 @@ class DistrictCEOController extends Controller
         if (!$districtId) {
             abort(404, 'District not found.');
         }
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -2427,12 +2431,17 @@ END) AS RegistryUnmatchedWithoutMobile,
         switch ($status) {
             case 'allotted':
                 $query
-                    ->whereNotNull('o.FlatId')
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
                 break;
 
             case 'approved_paid':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->where('o.IsApproved', 1)
                     ->where('o.IsPaid', 1)
                     ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
@@ -2441,6 +2450,9 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'approved_unpaid':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->where('o.IsApproved', 1)
                     ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
                     ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
@@ -2464,8 +2476,12 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'registry_done':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereNotNull('o.MobileNo')
                     ->where('o.MobileNo', '<>', '')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereExists(function ($registryQuery) {
                         $registryQuery
                             ->selectRaw('1')
@@ -2479,7 +2495,9 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'registry_pending':
                 $query
-                    ->whereNotNull('o.FlatId')
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->where(function ($registryQuery) {
                         $registryQuery
@@ -2495,6 +2513,50 @@ END) AS RegistryUnmatchedWithoutMobile,
                                     );
                             });
                     });
+                break;
+
+            case 'sc':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'SC')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'ghumantu':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'Ghumantu')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'widow':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'Widow')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'others':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->whereIn('o.Caste', ['General', 'Others'])
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
                 break;
         }
 
@@ -2533,7 +2595,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
                     THEN 'Cancelled'
 
-                WHEN o.FlatId IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
                     THEN 'Allotted'
 
                 ELSE 'Not Allotted'
@@ -2595,7 +2659,10 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
                     THEN 'Not Applicable'
 
-                WHEN o.MobileNo IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
+                    AND o.MobileNo IS NOT NULL
                     AND o.MobileNo <> ''
                     AND EXISTS (
                         SELECT 1
@@ -2604,7 +2671,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                     )
                     THEN 'Registry Done'
 
-                WHEN o.FlatId IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
                     THEN 'Registry Pending'
 
                 ELSE 'Not Applicable'

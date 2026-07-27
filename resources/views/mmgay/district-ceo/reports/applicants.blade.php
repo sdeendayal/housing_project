@@ -145,7 +145,7 @@
                         </div>
 
 
-                        <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'pdf'])) }}"
+                        {{-- <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'pdf'])) }}"
                             class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100">
 
                             <span class="material-symbols-outlined text-[19px]">
@@ -153,16 +153,16 @@
                             </span>
 
                             PDF
-                        </a>
+                        </a> --}}
 
                         <a href="{{ route('district.dashboard.applicants.print', $exportFilters) }}" target="_blank"
-                            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
+                            class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100">
 
                             <span class="material-symbols-outlined text-[19px]">
-                                print
+                                picture_as_pdf
                             </span>
 
-                            Print
+                            PDF
                         </a>
 
                     </div>

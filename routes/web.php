@@ -244,7 +244,46 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'dashboard']
     )->name('mmsay.dashboard');
 
-    Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
+    Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'propertyRegistration']);
+
+    // Total filtered records print
+    Route::get(
+        '/mmsay-department-property-registration/print-records',
+        [PropertyManagementController::class, 'printPropertyRecords']
+    )->name('properties.records.print');
+
+    // Excel export
+    Route::get(
+        '/mmsay-department-property-registration/export/excel',
+        [PropertyManagementController::class, 'exportPropertiesExcel']
+    )->name('properties.export.excel');
+
+    // Individual property details
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}',
+        [PropertyManagementController::class, 'propertyDetails']
+    )
+        ->whereNumber('assetId')
+        ->name('properties.show');
+
+    // Individual print
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}/print',
+        [PropertyManagementController::class, 'propertyPrint']
+    )
+        ->whereNumber('assetId')
+        ->name('properties.print');
+
+    Route::get(
+        '/mmsay-department-property-registration/export/csv',
+        [PropertyManagementController::class, 'exportPropertiesCsv']
+    )->name('properties.export.csv');
+
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}/pdf',
+        [PropertyManagementController::class, 'propertyPdf']
+    )->name('properties.pdf');
+
 
     Route::get('/get-districts/{name}', [PropertyManagementController::class, 'getDistricts']);
     Route::get('/get-cities/{name}', [PropertyManagementController::class, 'getCities']);

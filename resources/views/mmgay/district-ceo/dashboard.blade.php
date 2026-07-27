@@ -546,26 +546,26 @@
                         ) }}"
                         class="applicant-report-link group block rounded-xl border border-slate-200 border-l-4 border-l-blue-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
 
-                        
-                            <div class="flex items-center justify-between gap-3">
 
-                                <div>
-                                    <p class="text-xs font-semibold text-slate-500">
-                                        Registry to be done
-                                    </p>
+                        <div class="flex items-center justify-between gap-3">
 
-                                    <h3 id="registrationAllotted" class="mt-1 text-2xl font-bold text-blue-700">
-                                        {{ number_format($totals['totalRegistryAllotted'] ?? 0) }}
-                                    </h3>
-                                </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500">
+                                    Registry to be done
+                                </p>
 
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-                                    <span class="material-symbols-outlined text-[23px] text-blue-600">
-                                        home_work
-                                    </span>
-                                </div>
+                                <h3 id="registrationAllotted" class="mt-1 text-2xl font-bold text-blue-700">
+                                    {{ number_format($totals['totalRegistryAllotted'] ?? 0) }}
+                                </h3>
+                            </div>
 
-                            
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
+                                <span class="material-symbols-outlined text-[23px] text-blue-600">
+                                    home_work
+                                </span>
+                            </div>
+
+
 
                         </div>
                     </a>
@@ -579,29 +579,29 @@
                         ) }}"
                         class="applicant-report-link group block rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
 
-                        
 
-                            <div class="flex items-center justify-between gap-3">
 
-                                <div>
-                                    <p class="text-xs font-semibold text-slate-500">
-                                        Registry Done
-                                    </p>
+                        <div class="flex items-center justify-between gap-3">
 
-                                    <h3 id="registryMatched" class="mt-1 text-2xl font-bold text-emerald-700">
-                                        {{ number_format($totals['totalRegistryMatched'] ?? 0) }}
-                                    </h3>
-                                </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500">
+                                    Registry Done
+                                </p>
 
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                                    <span class="material-symbols-outlined text-[23px] text-emerald-600">
-                                        task_alt
-                                    </span>
-                                </div>
-
+                                <h3 id="registryMatched" class="mt-1 text-2xl font-bold text-emerald-700">
+                                    {{ number_format($totals['totalRegistryMatched'] ?? 0) }}
+                                </h3>
                             </div>
 
-                       
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
+                                <span class="material-symbols-outlined text-[23px] text-emerald-600">
+                                    task_alt
+                                </span>
+                            </div>
+
+                        </div>
+
+
 
                     </a>
 
@@ -615,29 +615,29 @@
                         ) }}"
                         class="applicant-report-link group block rounded-xl border border-slate-200 border-l-4 border-l-orange-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
 
-                        
 
-                            <div class="flex items-center justify-between gap-3">
 
-                                <div>
-                                    <p class="text-xs font-semibold text-slate-500">
-                                        Registry yet to be done
-                                    </p>
+                        <div class="flex items-center justify-between gap-3">
 
-                                    <h3 id="registryUnmatched" class="mt-1 text-2xl font-bold text-orange-700">
-                                        {{ number_format($totals['totalRegistryUnmatched'] ?? 0) }}
-                                    </h3>
-                                </div>
+                            <div>
+                                <p class="text-xs font-semibold text-slate-500">
+                                    Registry yet to be done
+                                </p>
 
-                                <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
-                                    <span class="material-symbols-outlined text-[23px] text-orange-600">
-                                        link_off
-                                    </span>
-                                </div>
-
+                                <h3 id="registryUnmatched" class="mt-1 text-2xl font-bold text-orange-700">
+                                    {{ number_format($totals['totalRegistryUnmatched'] ?? 0) }}
+                                </h3>
                             </div>
 
-                        
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50">
+                                <span class="material-symbols-outlined text-[23px] text-orange-600">
+                                    link_off
+                                </span>
+                            </div>
+
+                        </div>
+
+
                     </a>
 
                 </div>
@@ -898,40 +898,105 @@
                                     {{ $loop->iteration }}
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-800">
-                                    {{ $row->VillageName ?? '-' }}
+                                {{-- Village --}}
+                                <td class="whitespace-nowrap px-4 py-3">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                    ]) }}"
+                                        class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md">
+                                        {{ $row->VillageName ?? '-' }}
+                                    </a>
                                 </td>
 
+                                {{-- Total Plots (Not Clickable) --}}
                                 <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
                                     {{ number_format($row->TotalPlots ?? 0) }}
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
-                                    {{ number_format($row->TotalApplicants ?? 0) }}
+                                {{-- Applicants --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-blue-50 px-2 py-1 font-semibold text-blue-600 transition-all duration-200 hover:bg-blue-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->TotalApplicants ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center font-semibold text-emerald-600">
-                                    {{ number_format($row->ApprovedPaid ?? 0) }}
+                                {{-- Approved Paid --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'approved_paid',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-emerald-50 px-2 py-1 font-semibold text-emerald-600 transition-all duration-200 hover:bg-emerald-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->ApprovedPaid ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
-                                    {{ number_format($row->SC ?? 0) }}
+                                {{-- SC --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'sc',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-indigo-50 px-2 py-1 font-semibold text-indigo-600 transition-all duration-200 hover:bg-indigo-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->SC ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
-                                    {{ number_format($row->Ghumantu ?? 0) }}
+                                {{-- Ghumantu --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'ghumantu',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-violet-50 px-2 py-1 font-semibold text-violet-600 transition-all duration-200 hover:bg-violet-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->Ghumantu ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
-                                    {{ number_format($row->Widow ?? 0) }}
+                                {{-- Widow --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'widow',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-pink-50 px-2 py-1 font-semibold text-pink-600 transition-all duration-200 hover:bg-pink-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->Widow ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center text-slate-700">
-                                    {{ number_format($row->Others ?? 0) }}
+                                {{-- Others --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'others',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-amber-50 px-2 py-1 font-semibold text-amber-700 transition-all duration-200 hover:bg-amber-600 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->Others ?? 0) }}
+                                    </a>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-3 text-center font-bold text-blue-600">
-                                    {{ number_format($row->TotalAllotment ?? 0) }}
+                                {{-- Allotted --}}
+                                <td class="whitespace-nowrap px-4 py-3 text-center">
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $phase,
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'allotted',
+                                    ]) }}"
+                                        class="inline-flex min-w-[60px] justify-center rounded-md bg-cyan-50 px-2 py-1 font-bold text-cyan-700 transition-all duration-200 hover:bg-cyan-700 hover:text-white hover:shadow-md">
+                                        {{ number_format($row->TotalAllotment ?? 0) }}
+                                    </a>
                                 </td>
 
                             </tr>
@@ -946,9 +1011,7 @@
                                             search_off
                                         </span>
 
-                                        <span>
-                                            No village records found.
-                                        </span>
+                                        <span>No village records found.</span>
 
                                     </div>
                                 </td>
@@ -1009,4 +1072,3 @@
     </main>
 
 @endsection
-

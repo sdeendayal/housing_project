@@ -1,198 +1,256 @@
+@php
+    $isActive = fn(array|string $patterns) => collect((array) $patterns)->contains(
+        fn($pattern) => request()->is($pattern),
+    );
+
+    $menuClass = function (array|string $patterns) use ($isActive) {
+        return $isActive($patterns)
+            ? 'border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm'
+            : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900';
+    };
+
+    $iconClass = function (array|string $patterns) use ($isActive) {
+        return $isActive($patterns)
+            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600';
+    };
+
+    $cmsRoutes = [
+        'mmsay-department-add-banner*',
+        'mmsay-department-add-news*',
+        'add-news*',
+        'upload-notice*',
+        'manage-notice*',
+        'upload-tender*',
+        'manage-tender*',
+    ];
+
+    $cmsIsActive = $isActive($cmsRoutes);
+@endphp
+
 <aside
-    class="h-screen w-52 fixed left-0 top-0 bg-surface-container-low dark:bg-inverse-surface shadow-sm border-r border-outline-variant dark:border-outline flex flex-col z-50">
+    class="fixed inset-y-0 left-0 z-50 flex w-52 flex-col border-r border-slate-200 bg-white shadow-[4px_0_20px_rgba(15,23,42,0.04)]">
 
-    <!-- Brand Header -->
-    <div class="px-4 pt-4 pb-4 flex items-center gap-2 border-b border-outline-variant">
+    {{-- Brand --}}
+    <div class="flex h-20 shrink-0 items-center gap-3 border-b border-slate-100 px-4">
 
-        <img alt="Haryana State Emblem" class="w-8 h-8 object-contain" src="/Haryana_emblem.png" />
+        <div
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-200">
 
-        <div>
-            <h1 class="text-sm font-semibold leading-tight text-primary">
-                Department of Housing For All
+            <img src="/Haryana_emblem.png" alt="Haryana State Emblem" class="h-7 w-7 object-contain brightness-0 invert" />
+        </div>
+
+        <div class="min-w-0 leading-tight">
+            <h1 class="text-[13px] font-bold text-slate-800">
+                Housing For All
             </h1>
 
-            <p class="text-[11px] text-on-surface-variant">
-                Government of Haryana
+            <p class="mt-1 text-[9px] font-bold uppercase tracking-wider text-indigo-600">
+                Department Portal
             </p>
         </div>
     </div>
 
-    <!-- Navigation Scroll Area -->
-    <nav class="flex-1 overflow-y-auto sidebar-scroll px-2 py-2 space-y-1">
+    {{-- Navigation --}}
+    <nav class="sidebar-scroll flex-1 overflow-y-auto px-3 py-4">
 
+        <p class="mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Overview
+        </p>
 
-        @php
-            function activeMenu($route)
-            {
-                return request()->is($route . '*')
-                    ? 'bg-secondary-container text-on-secondary-container font-semibold'
-                    : 'text-on-surface-variant hover:bg-surface-container-high';
-            }
-
-            function cmsActive()
-            {
-                return request()->is('mmsay-department-add-banner*') ||
-                    request()->is('add-news*') ||
-                    request()->is('upload-notice*') ||
-                    request()->is('manage-notice*') ||
-                    request()->is('upload-tender*') ||
-                    request()->is('manage-tender*');
-            }
-        @endphp
-
-
+        {{-- Dashboard --}}
         <a href="{{ url('mmsay-department-dashboard') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] transition-all duration-200 {{ activeMenu('mmsay-department-dashboard') }}">
-            <span class="material-symbols-outlined text-[18px]">dashboard</span>
-            <span>Dashboard</span>
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-dashboard*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-dashboard*') }}">
+                dashboard
+            </span>
+
+            <span class="min-w-0 flex-1 truncate">
+                Dashboard
+            </span>
+
+            @if ($isActive('mmsay-department-dashboard*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
         </a>
 
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Property
+        </p>
+
+        {{-- Property Registration --}}
         <a href="{{ url('mmsay-department-property-registration') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-property-registration') }}">
-            <span class="material-symbols-outlined text-[18px]">app_registration</span>
-            <span>Property Registration</span>
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-property-registration*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-property-registration*') }}">
+                app_registration
+            </span>
+
+            <span class="min-w-0 flex-1 truncate">
+                Property Registration
+            </span>
+
+            @if ($isActive('mmsay-department-property-registration*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
         </a>
 
+        {{-- Allotted Properties --}}
         <a href="{{ url('mmsay-department-allotted-properties') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-allotted-properties') }}">
-            <span class="material-symbols-outlined text-[18px]">location_city</span>
-            <span>Allotted Properties</span>
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-allotted-properties*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-allotted-properties*') }}">
+                location_city
+            </span>
+
+            <span class="min-w-0 flex-1 truncate">
+                Allotted Properties
+            </span>
+
+            @if ($isActive('mmsay-department-allotted-properties*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
         </a>
 
-        {{-- <a href="{{ url('mmsay-department-cash-receipt') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-cash-receipt') }}">
-            <span class="material-symbols-outlined text-[18px]">receipt_long</span>
-            <span>Cash Receipt</span>
-        </a> --}}
-
+        {{-- EMI Calculation --}}
         <a href="{{ url('mmsay-department-property-emi-calculation') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-property-emi-calculation') }}">
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-property-emi-calculation*') }}">
 
-            <span class="material-symbols-outlined text-[18px]">calculate</span>
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-property-emi-calculation*') }}">
+                calculate
+            </span>
 
-            <span>Property EMI Calculation</span>
+            <span class="min-w-0 flex-1 leading-tight">
+                EMI Calculation
+            </span>
+
+            @if ($isActive('mmsay-department-property-emi-calculation*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
         </a>
 
+        {{-- Site Engineer --}}
         <a href="{{ url('mmsay-department-add-district-officer') }}"
-            class="flex items-center gap-2 px-3 py-2 rounded-md text-[13px] {{ activeMenu('mmsay-department-add-district-officer') }}">
-            <span class="material-symbols-outlined text-[18px]">person_add</span>
-            <span>Add Site Engineer</span>
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-add-district-officer*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-add-district-officer*') }}">
+                engineering
+            </span>
+
+            <span class="min-w-0 flex-1 truncate">
+                Site Engineer
+            </span>
+
+            @if ($isActive('mmsay-department-add-district-officer*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
         </a>
 
-        <hr class="my-2">
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Management
+        </p>
 
-        <!-- CMS Menu -->
-        <div x-data="{ cmsOpen: {{ cmsActive() ? 'true' : 'false' }} }">
+        {{-- CMS Management --}}
+        <div x-data="{ cmsOpen: {{ $cmsIsActive ? 'true' : 'false' }} }">
 
-            <button @click="cmsOpen = !cmsOpen"
-                class="w-full flex items-center justify-between px-2 py-2 rounded-md text-[13px] transition-all
-    {{ cmsActive()
-        ? 'bg-secondary-container text-on-secondary-container font-semibold'
-        : 'text-on-surface-variant hover:bg-surface-container-high' }}">
+            <button type="button" @click="cmsOpen = !cmsOpen"
+                class="group flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-[12px] font-medium transition-all duration-200
+                       {{ $cmsIsActive
+                           ? 'border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm'
+                           : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">
 
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]">edit_square</span>
-                    <span>CMS Management</span>
-                </div>
+                <span
+                    class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                           {{ $cmsIsActive
+                               ? 'bg-indigo-600 text-white'
+                               : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600' }}">
+                    edit_square
+                </span>
 
-                <span class="material-symbols-outlined text-[18px] transition-transform"
+                <span class="min-w-0 flex-1 truncate">
+                    CMS Management
+                </span>
+
+                <span class="material-symbols-outlined text-[17px] transition-transform duration-200"
                     :class="{ 'rotate-180': cmsOpen }">
                     expand_more
                 </span>
             </button>
 
-            <!-- CMS Sub Menu -->
-            <div x-show="cmsOpen" x-transition class="ml-2 mt-1 space-y-1">
+            {{-- CMS submenu --}}
+            <div x-cloak x-show="cmsOpen" x-collapse class="ml-4 mt-1.5 border-l border-slate-200 pl-3">
 
                 <a href="{{ url('mmsay-department-add-banner') }}"
-                    class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('add-banner') }}">
+                    class="mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition
+                           {{ $isActive('mmsay-department-add-banner*')
+                               ? 'bg-indigo-50 text-indigo-600'
+                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800' }}">
+
+                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
                     Add Banner
                 </a>
 
                 <a href="{{ url('mmsay-department-add-news') }}"
-                    class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('add-news') }}">
+                    class="mb-1 flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition
+                           {{ $isActive(['mmsay-department-add-news*', 'add-news*'])
+                               ? 'bg-indigo-50 text-indigo-600'
+                               : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800' }}">
+
+                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
                     Add News
                 </a>
+            </div>
+        </div>
+    </nav>
 
-                <!-- Notice Management -->
-                {{-- <div x-data="{ noticeOpen: {{ request()->is('upload-notice*') || request()->is('manage-notice*') ? 'true' : 'false' }} }">
+    {{-- Footer --}}
+    <div class="shrink-0 border-t border-slate-100 bg-slate-50/60 p-3">
 
-                    <button @click="noticeOpen = !noticeOpen"
-                        class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-[13px]
-                {{ request()->is('upload-notice*') || request()->is('manage-notice*')
-                    ? 'bg-secondary-container text-on-secondary-container font-semibold'
-                    : 'hover:bg-surface-container-high' }}">
+        {{-- User --}}
+        <div class="mb-3 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-2.5 shadow-sm">
 
-                        <span>Notice Management</span>
+            <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 text-xs font-bold text-white shadow-sm">
 
-                        <span class="material-symbols-outlined text-[16px] transition-transform"
-                            :class="{ 'rotate-180': noticeOpen }">
-                            expand_more
-                        </span>
-                    </button>
+                {{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}
+            </div>
 
-                    <div x-show="noticeOpen" x-transition class="ml-2 mt-1 space-y-1">
+            <div class="min-w-0 leading-tight">
+                <p class="truncate text-xs font-semibold text-slate-800">
+                    {{ auth()->user()->name ?? 'Department Admin' }}
+                </p>
 
-                        <a href="{{ url('upload-notice') }}"
-                            class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('upload-notice') }}">
-                            Upload Notice
-                        </a>
-
-                        <a href="{{ url('manage-notice') }}"
-                            class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('manage-notice') }}">
-                            Manage Notice
-                        </a>
-
-                    </div>
-                </div> --}}
-
-                <!-- Tender Management -->
-                {{-- <div x-data="{ tenderOpen: {{ request()->is('upload-tender*') || request()->is('manage-tender*') ? 'true' : 'false' }} }">
-
-                    <button @click="tenderOpen = !tenderOpen"
-                        class="w-full flex items-center justify-between px-2 py-1.5 rounded-md text-[13px]
-                {{ request()->is('upload-tender*') || request()->is('manage-tender*')
-                    ? 'bg-secondary-container text-on-secondary-container font-semibold'
-                    : 'hover:bg-surface-container-high' }}">
-
-                        <span>Tender Management</span>
-
-                        <span class="material-symbols-outlined text-[16px] transition-transform"
-                            :class="{ 'rotate-180': tenderOpen }">
-                            expand_more
-                        </span>
-                    </button>
-
-                    <div x-show="tenderOpen" x-transition class="ml-2 mt-1 space-y-1">
-
-                        <a href="{{ url('upload-tender') }}"
-                            class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('upload-tender') }}">
-                            Upload Tender
-                        </a>
-
-                        <a href="{{ url('manage-tender') }}"
-                            class="block px-2 py-1.5 rounded-md text-[13px] {{ activeMenu('manage-tender') }}">
-                            Manage Tender
-                        </a>
-
-                    </div>
-                </div> --}}
-
+                <p class="mt-0.5 truncate text-[9px] text-slate-500">
+                    MMSAY Management Portal
+                </p>
             </div>
         </div>
 
-    </nav>
-
-    <!-- Sidebar Footer -->
-    <div class="p-2 border-t border-outline-variant">
-
+        {{-- Logout --}}
         <a href="{{ route('logout') }}"
-            class="flex items-center gap-2 px-3 py-2 text-[13px] text-red-600 hover:bg-red-50 transition-colors rounded-md cursor-pointer">
+            class="flex h-10 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 text-xs font-semibold text-red-600 transition hover:border-red-300 hover:bg-red-100">
 
-            <span class="material-symbols-outlined text-[18px]">logout</span>
-            <span>Logout</span>
+            <span class="material-symbols-outlined text-[18px]">
+                logout
+            </span>
 
+            Logout
         </a>
-
     </div>
 </aside>
