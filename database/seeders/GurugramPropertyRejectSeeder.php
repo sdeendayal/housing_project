@@ -28,6 +28,7 @@ class GurugramPropertyRejectSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (Other_property_in_india sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['Other_property_in_india']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('Other_property_in_india');
@@ -118,5 +119,10 @@ class GurugramPropertyRejectSeeder extends Seeder
 
         $duration = round(microtime(true) - $startTime, 2);
         $this->command->info("Successfully seeded {$count} Gurugram records into the ews_reject_property_in_india_3 table in {$duration} seconds.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

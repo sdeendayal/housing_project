@@ -25,7 +25,9 @@ class AllEwsDataSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
         
         // Select the 'org data' sheet
         $sheet = $spreadsheet->getSheetByName('org data');
@@ -172,5 +174,10 @@ class AllEwsDataSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

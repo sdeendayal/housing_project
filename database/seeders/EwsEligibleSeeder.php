@@ -26,7 +26,9 @@ class EwsEligibleSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('Sheet1');
         if (!$sheet) {
             $this->command->error("Sheet 'Sheet1' not found in Excel file.");
@@ -145,5 +147,10 @@ class EwsEligibleSeeder extends Seeder
         }
 
         $this->command->info("Successfully seeded {$count} records into the ews_eligible_6 table.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

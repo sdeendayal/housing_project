@@ -27,6 +27,7 @@ class FaridabadAllEwsDataSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (FARIDABAD_Completed_MC_22-01-20 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['FARIDABAD_Completed_MC_22-01-20']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('FARIDABAD_Completed_MC_22-01-20');
@@ -145,5 +146,10 @@ class FaridabadAllEwsDataSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

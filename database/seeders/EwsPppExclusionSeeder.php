@@ -25,7 +25,9 @@ class EwsPppExclusionSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('exclusion');
         if (!$sheet) {
             $this->command->error("Sheet 'exclusion' not found in Excel file.");
@@ -141,5 +143,10 @@ class EwsPppExclusionSeeder extends Seeder
         }
 
         $this->command->info("Successfully seeded {$count} records into the ews_reject_ppp_exclusion_2 table.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

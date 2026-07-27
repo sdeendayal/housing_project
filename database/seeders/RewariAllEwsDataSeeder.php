@@ -27,6 +27,7 @@ class RewariAllEwsDataSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (REWARI_Completed_25-01-2026 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['REWARI_Completed_25-01-2026']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('REWARI_Completed_25-01-2026');
@@ -145,5 +146,10 @@ class RewariAllEwsDataSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

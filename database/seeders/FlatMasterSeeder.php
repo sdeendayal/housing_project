@@ -95,5 +95,10 @@ class FlatMasterSeeder extends Seeder
         } catch (\Exception) {
             return null;
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }
