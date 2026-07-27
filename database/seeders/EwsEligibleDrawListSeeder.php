@@ -25,7 +25,9 @@ class EwsEligibleDrawListSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('1461');
         if (!$sheet) {
             $this->command->error("Sheet '1461' not found in Excel file.");
@@ -141,5 +143,10 @@ class EwsEligibleDrawListSeeder extends Seeder
         }
 
         $this->command->info("Successfully seeded {$count} records into the ews_eligible_draw_list_5 table.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

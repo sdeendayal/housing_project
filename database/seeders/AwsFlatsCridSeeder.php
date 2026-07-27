@@ -23,7 +23,9 @@ class AwsFlatsCridSeeder extends Seeder
 
         $this->command->info("Loading Excel file from {$filePath}...");
         
-        $spreadsheet = IOFactory::load($filePath);
+        $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getActiveSheet();
         
         $highestRow = $sheet->getHighestRow();
@@ -125,5 +127,10 @@ class AwsFlatsCridSeeder extends Seeder
         }
 
         $this->command->info("Successfully seeded {$count} records into the aws_flats_crid table.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

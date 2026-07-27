@@ -27,6 +27,7 @@ class GurugramAllEwsDataSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (GURGAON_Completed_24-01-2026 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['GURGAON_Completed_24-01-2026']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('GURGAON_Completed_24-01-2026');
@@ -145,5 +146,10 @@ class GurugramAllEwsDataSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

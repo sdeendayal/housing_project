@@ -28,6 +28,7 @@ class GurugramPppExclusionSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (exclusion sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['exclusion']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('exclusion');
@@ -118,5 +119,10 @@ class GurugramPppExclusionSeeder extends Seeder
 
         $duration = round(microtime(true) - $startTime, 2);
         $this->command->info("Successfully seeded {$count} Gurugram records into the ews_reject_ppp_exclusion_2 table in {$duration} seconds.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

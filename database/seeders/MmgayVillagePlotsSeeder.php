@@ -26,6 +26,7 @@ class MmgayVillagePlotsSeeder extends Seeder
         }
 
         $reader = IOFactory::createReaderForFile($path);
+        $reader->setReadDataOnly(true);
         $spreadsheet = $reader->load($path);
         $sheet = $spreadsheet->getSheet(0);
         $rows = $sheet->toArray(null, true, true, true);
@@ -65,5 +66,10 @@ class MmgayVillagePlotsSeeder extends Seeder
 
         $count = count($insertData);
         $this->command->info("Successfully seeded {$count} village plot rows from Excel.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

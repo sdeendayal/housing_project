@@ -27,6 +27,7 @@ class RohtakAllEwsDataSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (Rohtak_MC_Complted_09.01.26 sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['Rohtak_MC_Complted_09.01.26']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('Rohtak_MC_Complted_09.01.26');
@@ -145,5 +146,10 @@ class RohtakAllEwsDataSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error populating IDs: " . $e->getMessage());
         }
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

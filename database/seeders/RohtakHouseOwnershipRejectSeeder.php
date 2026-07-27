@@ -28,6 +28,7 @@ class RohtakHouseOwnershipRejectSeeder extends Seeder
         $this->command->info("Loading Excel file from {$filePath} (House_ownership sheet only)...");
         
         $reader = IOFactory::createReaderForFile($filePath);
+        $reader->setReadDataOnly(true);
         $reader->setLoadSheetsOnly(['House_ownership']);
         $spreadsheet = $reader->load($filePath);
         $sheet = $spreadsheet->getSheetByName('House_ownership');
@@ -118,5 +119,10 @@ class RohtakHouseOwnershipRejectSeeder extends Seeder
 
         $duration = round(microtime(true) - $startTime, 2);
         $this->command->info("Successfully seeded {$count} Rohtak records into the ews_house_ownership_reject_4 table in {$duration} seconds.");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }
