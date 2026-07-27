@@ -88,6 +88,18 @@ class MmgayBdoSeeder extends Seeder
                 'block_name' => 'Bhiwani',
             ],
             [
+                'email' => 'bdpo.charkhidadri@hry.gov.in',
+                'district_id' => 17,
+                'district_name' => 'CHARKHI DADRI',
+                'block_name' => 'DADRI',
+            ],
+            [
+                'email' => 'bdpocharkhidadri@gmail.com',
+                'district_id' => 17,
+                'district_name' => 'CHARKHI DADRI',
+                'block_name' => 'DADRI',
+            ],
+            [
                 'email' => 'bdpofaridabad@gmail.com',
                 'district_id' => 22,
                 'district_name' => 'FARIDABAD',
