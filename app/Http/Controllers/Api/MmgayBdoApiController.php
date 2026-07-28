@@ -811,6 +811,18 @@ class MmgayBdoApiController extends Controller
             ->orderBy('VillageName', 'asc')
             ->get();
 
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase');
+        if (!$selectedPhase && $phases->isNotEmpty()) {
+            $selectedPhase = $phases->first();
+        }
+
         $selectedVillageId = $request->input('village_id');
         
         // Auto-select the first village of the block by default if none is selected
@@ -828,6 +840,7 @@ class MmgayBdoApiController extends Controller
 
             $siteDevRecord = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
                 ->where('village_id', $selectedVillageId)
+                ->where('phase', $selectedPhase)
                 ->first();
 
             if ($siteDevRecord) {
@@ -836,6 +849,7 @@ class MmgayBdoApiController extends Controller
                     'district_id' => $siteDevRecord->district_id,
                     'block_id' => $siteDevRecord->block_id,
                     'village_id' => $siteDevRecord->village_id,
+                    'phase' => $siteDevRecord->phase,
                     'road_status' => $siteDevRecord->road_status,
                     'water_status' => $siteDevRecord->water_status,
                     'electricity_status' => $siteDevRecord->electricity_status,
@@ -875,6 +889,8 @@ class MmgayBdoApiController extends Controller
                 'block_name' => $bdo->block_name,
             ],
             'villages' => $villages,
+            'phases' => $phases,
+            'selected_phase' => $selectedPhase,
             'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
             'selected_village_name' => $selectedVillageName,
             'site_development' => $siteDev,
@@ -902,6 +918,14 @@ class MmgayBdoApiController extends Controller
             ], 422);
         }
 
+        $phase = $request->input('phase');
+        if (!$phase) {
+            return response()->json([
+                'success' => false,
+                'message' => 'phase is required.'
+            ], 422);
+        }
+
         // Verify if the village belongs to the BDO block and retrieve name
         $villageRecord = DB::table('villagemaster')
             ->where('VillageId', $villageId)
@@ -919,11 +943,13 @@ class MmgayBdoApiController extends Controller
 
         $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
             ->where('village_id', $villageId)
+            ->where('phase', $phase)
             ->first();
 
         // Validation
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'village_id' => 'required|integer',
+            'phase' => 'required|string',
             'road_status' => 'required|string',
             'water_status' => 'required|string',
             'electricity_status' => 'required|string',
@@ -953,6 +979,7 @@ class MmgayBdoApiController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $request->input('road_status'),
             'water_status' => $request->input('water_status'),
             'electricity_status' => $request->input('electricity_status'),
@@ -982,6 +1009,7 @@ class MmgayBdoApiController extends Controller
                 'district_id' => $districtId,
                 'block_id' => $blockMasterId,
                 'village_id' => $villageId,
+                'phase' => $phase,
             ],
             $updateData
         );
@@ -992,6 +1020,7 @@ class MmgayBdoApiController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $siteDev->road_status,
             'water_status' => $siteDev->water_status,
             'electricity_status' => $siteDev->electricity_status,
@@ -1009,6 +1038,7 @@ class MmgayBdoApiController extends Controller
                 'district_id' => $siteDev->district_id,
                 'block_id' => $siteDev->block_id,
                 'village_id' => $siteDev->village_id,
+                'phase' => $siteDev->phase,
                 'road_status' => $siteDev->road_status,
                 'water_status' => $siteDev->water_status,
                 'electricity_status' => $siteDev->electricity_status,
@@ -1130,12 +1160,13 @@ class MmgayBdoApiController extends Controller
 
         $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
             ->where('village_id', $owner->VillageId)
+            ->where('phase', $owner->Phase)
             ->first();
 
         if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
             return response()->json([
                 'success' => false,
-                'message' => 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के लिए Site Development का विवरण और फोटो अपलोड करें।'
+                'message' => 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' (Phase ' . ($owner->Phase ?? 'N/A') . ') | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के Phase ' . ($owner->Phase ?? 'N/A') . ' के लिए Site Development का विवरण और फोटो अपलोड करें।'
             ], 403);
         }
 

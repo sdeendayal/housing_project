@@ -1165,6 +1165,18 @@ class MMGAYBdoPossessionController extends Controller
             ->orderBy('VillageName', 'asc')
             ->get();
 
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase');
+        if (!$selectedPhase && $phases->isNotEmpty()) {
+            $selectedPhase = $phases->first();
+        }
+
         $selectedVillageId = $request->input('village_id');
         
         // Auto-select the first village of the block by default if none is selected
@@ -1183,6 +1195,7 @@ class MMGAYBdoPossessionController extends Controller
 
             $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
                 ->where('village_id', $selectedVillageId)
+                ->where('phase', $selectedPhase)
                 ->first();
 
             if ($siteDev) {
@@ -1196,6 +1209,8 @@ class MMGAYBdoPossessionController extends Controller
         return view('mmgay.bdo.site_development', compact(
             'bdo',
             'villages',
+            'phases',
+            'selectedPhase',
             'selectedVillageId',
             'selectedVillageName',
             'siteDev',
@@ -1211,13 +1226,16 @@ class MMGAYBdoPossessionController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $villageId = $request->input('village_id');
+        $phase = $request->input('phase');
 
         $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
             ->where('village_id', $villageId)
+            ->where('phase', $phase)
             ->first();
 
         $request->validate([
             'village_id' => 'required|integer',
+            'phase' => 'required|string',
             'road_status' => 'required|string',
             'water_status' => 'required|string',
             'electricity_status' => 'required|string',
@@ -1251,6 +1269,7 @@ class MMGAYBdoPossessionController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $request->input('road_status'),
             'water_status' => $request->input('water_status'),
             'electricity_status' => $request->input('electricity_status'),
@@ -1280,6 +1299,7 @@ class MMGAYBdoPossessionController extends Controller
                 'district_id' => $districtId,
                 'block_id' => $blockMasterId,
                 'village_id' => $villageId,
+                'phase' => $phase,
             ],
             $updateData
         );
@@ -1290,6 +1310,7 @@ class MMGAYBdoPossessionController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $siteDev->road_status,
             'water_status' => $siteDev->water_status,
             'electricity_status' => $siteDev->electricity_status,
@@ -1299,7 +1320,7 @@ class MMGAYBdoPossessionController extends Controller
             'updated_by_name' => $bdo->name ?? 'BDO Officer',
         ]);
 
-        return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId])
+        return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId, 'phase' => $phase])
             ->with('success', 'Site Development details updated successfully.');
     }
 
@@ -1431,10 +1452,11 @@ class MMGAYBdoPossessionController extends Controller
 
         $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
             ->where('village_id', $owner->VillageId)
+            ->where('phase', $owner->Phase)
             ->first();
 
         if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
-            return redirect()->back()->with('error', 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के लिए Site Development का विवरण और फोटो अपलोड करें।');
+            return redirect()->back()->with('error', 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' (Phase ' . ($owner->Phase ?? 'N/A') . ') | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के Phase ' . ($owner->Phase ?? 'N/A') . ' के लिए Site Development का विवरण और फोटो अपलोड करें।');
         }
 
         return null;

@@ -27,6 +27,20 @@
         </div>
     </div>
 
+    <!-- Phase Tabs -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-3.5 flex items-center gap-2">
+        <span class="text-xs font-black uppercase text-slate-400 tracking-wider mr-4">Select Phase:</span>
+        <div class="flex gap-2">
+            @foreach($phases as $phaseVal)
+                <a href="{{ route('mmgay.bdo.site-development') }}?phase={{ $phaseVal }}&village_id={{ $selectedVillageId }}" 
+                   class="px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all 
+                   {{ $selectedPhase == $phaseVal ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }}">
+                    Phase {{ $phaseVal }}
+                </a>
+            @endforeach
+        </div>
+    </div>
+
     @if(session('success'))
         <div class="bg-emerald-50 border border-emerald-100 text-emerald-800 text-xs font-bold px-4 py-3 rounded-lg flex items-center gap-2 shadow-sm">
             <span class="material-symbols-outlined text-emerald-600 text-lg">check_circle</span>
@@ -59,7 +73,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow">
         
         <!-- Left Column: Village Select List -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-270px)] min-h-[480px] overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             <div class="pb-3 border-b border-slate-100 mb-3">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-blue-600 text-lg">map</span>
@@ -70,7 +84,7 @@
 
             <div class="flex-grow overflow-y-auto space-y-1.5 pr-1">
                 @forelse($villages as $vil)
-                    <a href="{{ route('mmgay.bdo.site-development') }}?village_id={{ $vil->VillageId }}" 
+                    <a href="{{ route('mmgay.bdo.site-development') }}?village_id={{ $vil->VillageId }}&phase={{ $selectedPhase }}" 
                        class="flex items-center justify-between p-3 rounded-lg border transition-all 
                        {{ $selectedVillageId == $vil->VillageId ? 'bg-blue-50 border-blue-200 text-blue-800 font-bold' : 'bg-slate-50 border-slate-150 text-slate-700 hover:bg-slate-100/70' }}">
                         <div class="flex items-center gap-2">
@@ -88,7 +102,7 @@
         </div>
 
         <!-- Right Column: Site Progress Status Form & Photos -->
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-270px)] min-h-[480px] overflow-hidden">
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             @if(!$selectedVillageId)
                 <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
                     <span class="material-symbols-outlined text-slate-300 text-5xl mb-3">location_city</span>
@@ -100,7 +114,7 @@
                     <div>
                         <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-blue-600 text-lg">construction</span>
-                            Development Status: {{ $selectedVillageName }}
+                            Development Status: {{ $selectedVillageName }} (Phase {{ $selectedPhase }})
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Fill status parameters and upload category progress photos</p>
                     </div>
@@ -111,6 +125,7 @@
                     <form action="{{ route('mmgay.bdo.site-development.save') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         <input type="hidden" name="village_id" value="{{ $selectedVillageId }}">
+                        <input type="hidden" name="phase" value="{{ $selectedPhase }}">
 
                         <!-- Status Parameters Row -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
