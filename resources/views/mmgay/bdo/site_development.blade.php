@@ -5,27 +5,9 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
 
 @section('content')
-<main class="ml-[260px] min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4" style="padding-top: 80px !important; margin-top: 0 !important;">
-
-    <!-- Header Banner -->
-    <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#111827] via-[#1f2937] to-[#374151] shadow-md py-4 px-6 border border-slate-700/10">
-        <div class="absolute -right-20 -top-20 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
-        <div class="relative flex items-center justify-between text-white">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-                    <span class="material-symbols-outlined text-white text-xl">engineering</span>
-                </div>
-                <div>
-                    <h2 class="text-lg font-extrabold tracking-tight">Site Development Works</h2>
-                    <p class="text-[10px] text-slate-300 font-semibold uppercase mt-0.5">Manage and report village-wise infrastructure progress and category-specific photo uploads</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-lg px-3 py-1.5 shadow-sm text-xs font-bold">
-                <span class="material-symbols-outlined text-sm">location_city</span>
-                <span>{{ strtoupper($bdo->block_name ?? 'Haryana') }} Block</span>
-            </div>
-        </div>
-    </div>
+<main class="ml-[260px] min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4">
+    <!-- Spacer to clear fixed top navbar -->
+    <div style="height: 80px;" class="w-full shrink-0"></div>
 
     <!-- Phase Tabs -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-3.5 flex items-center gap-2">
