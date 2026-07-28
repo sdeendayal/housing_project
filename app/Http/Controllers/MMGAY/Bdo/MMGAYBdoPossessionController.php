@@ -1159,12 +1159,6 @@ class MMGAYBdoPossessionController extends Controller
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
-        // Fetch all villages mapping to the BDO's block
-        $villages = DB::table('villagemaster')
-            ->where('BlockId', $blockMasterId)
-            ->orderBy('VillageName', 'asc')
-            ->get();
-
         // Fetch distinct phases
         $phases = DB::table('ownermaster')
             ->whereNotNull('Phase')
@@ -1177,11 +1171,27 @@ class MMGAYBdoPossessionController extends Controller
             $selectedPhase = $phases->first();
         }
 
+        // Fetch villages having entries in this phase under BDO's block
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->where('o.BlockId', $blockMasterId)
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
         $selectedVillageId = $request->input('village_id');
         
-        // Auto-select the first village of the block by default if none is selected
-        if (!$selectedVillageId && $villages->isNotEmpty()) {
-            $selectedVillageId = $villages->first()->VillageId;
+        // Validate if selected village has entries in this phase
+        $isValidVillageForPhase = $selectedVillageId && $villages->contains('VillageId', $selectedVillageId);
+
+        if (!$isValidVillageForPhase) {
+            if ($villages->isNotEmpty()) {
+                $selectedVillageId = $villages->first()->VillageId;
+            } else {
+                $selectedVillageId = null;
+            }
         }
 
         $selectedVillageName = '';

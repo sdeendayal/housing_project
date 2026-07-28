@@ -5,7 +5,7 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
 
 @section('content')
-<main class="ml-[260px] mt-14 min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4">
+<main class="ml-[260px] min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4" style="padding-top: 80px !important; margin-top: 0 !important;">
 
     <!-- Header Banner -->
     <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#111827] via-[#1f2937] to-[#374151] shadow-md py-4 px-6 border border-slate-700/10">
@@ -95,7 +95,7 @@
                     </a>
                 @empty
                     <div class="py-12 text-center text-slate-400 font-semibold text-xs">
-                        No villages found under your block.
+                        No villages found with entries in Phase {{ $selectedPhase }}.
                     </div>
                 @endforelse
             </div>

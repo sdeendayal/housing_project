@@ -3,7 +3,7 @@
 @section('page_header', 'Dashboard')
 
 @section('content')
-<main class="ml-[260px] mt-14 min-h-screen bg-[#f3f6fc] p-4 flex-1">
+<main class="ml-[260px] min-h-screen bg-[#f3f6fc] p-4 flex-1" style="padding-top: 80px !important; margin-top: 0 !important;">
 
 
     <!-- Header Banner - Denser & Modern Gradient -->
