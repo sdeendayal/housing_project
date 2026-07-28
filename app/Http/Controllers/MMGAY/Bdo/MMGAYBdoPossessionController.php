@@ -165,6 +165,9 @@ class MMGAYBdoPossessionController extends Controller
 
         // Phase Wise Drill Down Analytics data
         $phases = DB::table('ownermaster')
+            ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                $q->where('BlockId', $blockMasterId);
+            })
             ->whereNotNull('Phase')
             ->distinct()
             ->orderBy('Phase', 'asc')
@@ -1069,6 +1072,7 @@ class MMGAYBdoPossessionController extends Controller
 
         // Fetch distinct phases
         $phases = DB::table('ownermaster')
+            ->where('BlockId', $blockMasterId)
             ->whereNotNull('Phase')
             ->distinct()
             ->orderBy('Phase', 'asc')
@@ -1161,6 +1165,7 @@ class MMGAYBdoPossessionController extends Controller
 
         // Fetch distinct phases
         $phases = DB::table('ownermaster')
+            ->where('BlockId', $blockMasterId)
             ->whereNotNull('Phase')
             ->distinct()
             ->orderBy('Phase', 'asc')

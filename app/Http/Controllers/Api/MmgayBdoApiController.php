@@ -805,8 +805,9 @@ class MmgayBdoApiController extends Controller
             ], 400);
         }
 
-        // Fetch distinct phases
+        // Fetch distinct phases for the BDO's block
         $phases = DB::table('ownermaster')
+            ->where('BlockId', $blockMasterId)
             ->whereNotNull('Phase')
             ->distinct()
             ->orderBy('Phase', 'asc')
@@ -1080,8 +1081,9 @@ class MmgayBdoApiController extends Controller
             ], 400);
         }
 
-        // Fetch distinct phases
+        // Fetch distinct phases for the BDO's block
         $phases = DB::table('ownermaster')
+            ->where('BlockId', $blockMasterId)
             ->whereNotNull('Phase')
             ->distinct()
             ->orderBy('Phase', 'asc')
