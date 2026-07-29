@@ -52,7 +52,7 @@
                     @forelse($applications as $app)
                         <tr class="hover:bg-slate-50/50 transition">
                             <td class="px-3 py-1.5 font-bold text-slate-400">{{ $loop->iteration + ($applications->currentPage() - 1) * $applications->perPage() }}</td>
-                            <td class="px-3 py-1.5 font-bold text-slate-800">{{ $app->application_number ?? 'Awaiting Init' }}</td>
+                            <td class="px-3 py-1.5 font-bold text-slate-800">{{ $app->application_number ?? ($app->registration_no ?? 'Awaiting Init') }}</td>
                             <td class="px-3 py-1.5 text-slate-700 font-medium">
                                 {{ $app->applicant_name }}
                             </td>

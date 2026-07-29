@@ -24,24 +24,99 @@ class MmgayBdoApiController extends Controller
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
-        $ppaQuery = DB::table('mmgay_possession_applications');
+        $ppaQuery = DB::table('mmgay_possession_applications as mpa')
+            ->join('ownermaster as o', 'mpa.owner_id', '=', 'o.OwnerId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->select('mpa.*');
+
         if ($blockMasterId) {
-            $ppaQuery->where('block_id', $blockMasterId);
+            $ppaQuery->where('mpa.block_id', $blockMasterId);
         }
 
         $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
 
         if ($bypassApi) {
             // 1. Total Eligible (All registered owners in BDO block)
-            $totalEligibleQuery = DB::table('ownermaster');
+            $totalEligibleQuery = DB::table('ownermaster as o')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                });
             if ($blockMasterId) {
-                $totalEligibleQuery->where('BlockId', $blockMasterId);
+                $totalEligibleQuery->where('o.BlockId', $blockMasterId);
             }
             $totalEligibleCount = $totalEligibleQuery->count();
 
             // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
             $notScheduledQuery = DB::table('ownermaster as o')
-                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id');
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                });
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
             }
@@ -55,7 +130,7 @@ class MmgayBdoApiController extends Controller
             $totalEligibleCount = (clone $ppaQuery)->count();
 
             // 2. Not Scheduled (Synced owners whose schedule is pending)
-            $notScheduledCount = (clone $ppaQuery)->where('physical_possession_status', 'Eligible for Physical Possession')->count();
+            $notScheduledCount = (clone $ppaQuery)->where('mpa.physical_possession_status', 'Eligible for Physical Possession')->count();
         }
 
 
@@ -63,13 +138,13 @@ class MmgayBdoApiController extends Controller
         $stats = [
             'total_eligible' => $totalEligibleCount,
             'not_scheduled' => $notScheduledCount,
-            'awaiting_citizen' => (clone $ppaQuery)->where('physical_possession_status', 'Visit Scheduled')->count(),
-            'awaiting_coordinates' => (clone $ppaQuery)->where('physical_possession_status', 'Slot Selected')->count(),
-            'awaiting_bdo_doc' => (clone $ppaQuery)->where('physical_possession_status', 'Site Verified')->count(),
-            'verified' => (clone $ppaQuery)->where('physical_possession_status', 'Verified')->count(),
+            'awaiting_citizen' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Visit Scheduled')->count(),
+            'awaiting_coordinates' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Slot Selected')->count(),
+            'awaiting_bdo_doc' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Site Verified')->count(),
+            'verified' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Verified')->count(),
         ];
 
-        $recentApplications = (clone $ppaQuery)->latest()->take(6)->get();
+        $recentApplications = (clone $ppaQuery)->latest('mpa.created_at')->take(6)->get();
 
         return response()->json([
             'success' => true,
@@ -96,6 +171,30 @@ class MmgayBdoApiController extends Controller
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('MobileNo');
+            })
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             });
@@ -144,6 +243,8 @@ class MmgayBdoApiController extends Controller
             'o.OwnerName as applicant_name',
             'o.FatherHusbandName as father_name',
             'o.MobileNo as mobile',
+            'o.RegistrationNo as registration_no',
+            'o.Phase as owner_phase',
             'd.DistrictName as district_name',
             'b.BlockName as block_name',
             'ppa.application_number',
@@ -419,10 +520,36 @@ class MmgayBdoApiController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $query = MmgayPossessionApplication::query()
-            ->where('physical_possession_status', '!=', 'Eligible for Physical Possession');
+            ->join('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('MobileNo');
+            })
+            ->select('mmgay_possession_applications.*')
+            ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
 
         if ($blockMasterId) {
-            $query->where('block_id', $blockMasterId);
+            $query->where('mmgay_possession_applications.block_id', $blockMasterId);
         }
 
         $status = $request->input('status');
@@ -435,18 +562,18 @@ class MmgayBdoApiController extends Controller
                 default => $status
             };
 
-            $query->where('physical_possession_status', $mappedStatus);
+            $query->where('mmgay_possession_applications.physical_possession_status', $mappedStatus);
         }
 
         $search = $request->input('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('applicant_name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('application_number', 'like', "%{$search}%");
+                $q->where('mmgay_possession_applications.applicant_name', 'like', "%{$search}%")
+                  ->orWhere('mmgay_possession_applications.mobile', 'like', "%{$search}%")
+                  ->orWhere('mmgay_possession_applications.application_number', 'like', "%{$search}%");
             });
         }
-        $applications = $query->latest()->paginate(25)->withQueryString();
+        $applications = $query->latest('mmgay_possession_applications.created_at')->paginate(25)->withQueryString();
 
         return response()->json([
             'success' => true,
@@ -805,17 +932,58 @@ class MmgayBdoApiController extends Controller
             ], 400);
         }
 
-        // Fetch all villages mapping to the BDO's block
-        $villages = DB::table('villagemaster')
-            ->where('BlockId', $blockMasterId)
-            ->orderBy('VillageName', 'asc')
+        // Fetch distinct phases globally
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase');
+        if (!$selectedPhase && $phases->isNotEmpty()) {
+            $selectedPhase = $phases->first();
+        }
+
+        // Fetch villages having entries in this phase under BDO's block
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->where('o.BlockId', $blockMasterId)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
             ->get();
 
         $selectedVillageId = $request->input('village_id');
         
-        // Auto-select the first village of the block by default if none is selected
-        if (!$selectedVillageId && $villages->isNotEmpty()) {
-            $selectedVillageId = $villages->first()->VillageId;
+        // Validate if selected village has entries in this phase
+        $isValidVillageForPhase = $selectedVillageId && $villages->contains('VillageId', $selectedVillageId);
+
+        if (!$isValidVillageForPhase) {
+            if ($villages->isNotEmpty()) {
+                $selectedVillageId = $villages->first()->VillageId;
+            } else {
+                $selectedVillageId = null;
+            }
         }
 
         $selectedVillageName = '';
@@ -828,6 +996,7 @@ class MmgayBdoApiController extends Controller
 
             $siteDevRecord = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
                 ->where('village_id', $selectedVillageId)
+                ->where('phase', $selectedPhase)
                 ->first();
 
             if ($siteDevRecord) {
@@ -836,6 +1005,7 @@ class MmgayBdoApiController extends Controller
                     'district_id' => $siteDevRecord->district_id,
                     'block_id' => $siteDevRecord->block_id,
                     'village_id' => $siteDevRecord->village_id,
+                    'phase' => $siteDevRecord->phase,
                     'road_status' => $siteDevRecord->road_status,
                     'water_status' => $siteDevRecord->water_status,
                     'electricity_status' => $siteDevRecord->electricity_status,
@@ -875,6 +1045,8 @@ class MmgayBdoApiController extends Controller
                 'block_name' => $bdo->block_name,
             ],
             'villages' => $villages,
+            'phases' => $phases,
+            'selected_phase' => $selectedPhase,
             'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
             'selected_village_name' => $selectedVillageName,
             'site_development' => $siteDev,
@@ -902,6 +1074,14 @@ class MmgayBdoApiController extends Controller
             ], 422);
         }
 
+        $phase = $request->input('phase');
+        if (!$phase) {
+            return response()->json([
+                'success' => false,
+                'message' => 'phase is required.'
+            ], 422);
+        }
+
         // Verify if the village belongs to the BDO block and retrieve name
         $villageRecord = DB::table('villagemaster')
             ->where('VillageId', $villageId)
@@ -919,11 +1099,13 @@ class MmgayBdoApiController extends Controller
 
         $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
             ->where('village_id', $villageId)
+            ->where('phase', $phase)
             ->first();
 
         // Validation
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'village_id' => 'required|integer',
+            'phase' => 'required|string',
             'road_status' => 'required|string',
             'water_status' => 'required|string',
             'electricity_status' => 'required|string',
@@ -953,6 +1135,7 @@ class MmgayBdoApiController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $request->input('road_status'),
             'water_status' => $request->input('water_status'),
             'electricity_status' => $request->input('electricity_status'),
@@ -982,6 +1165,7 @@ class MmgayBdoApiController extends Controller
                 'district_id' => $districtId,
                 'block_id' => $blockMasterId,
                 'village_id' => $villageId,
+                'phase' => $phase,
             ],
             $updateData
         );
@@ -992,6 +1176,7 @@ class MmgayBdoApiController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $siteDev->road_status,
             'water_status' => $siteDev->water_status,
             'electricity_status' => $siteDev->electricity_status,
@@ -1009,6 +1194,7 @@ class MmgayBdoApiController extends Controller
                 'district_id' => $siteDev->district_id,
                 'block_id' => $siteDev->block_id,
                 'village_id' => $siteDev->village_id,
+                'phase' => $siteDev->phase,
                 'road_status' => $siteDev->road_status,
                 'water_status' => $siteDev->water_status,
                 'electricity_status' => $siteDev->electricity_status,
@@ -1040,7 +1226,7 @@ class MmgayBdoApiController extends Controller
             ], 400);
         }
 
-        // Fetch distinct phases
+        // Fetch distinct phases globally
         $phases = DB::table('ownermaster')
             ->whereNotNull('Phase')
             ->distinct()
@@ -1054,7 +1240,26 @@ class MmgayBdoApiController extends Controller
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
             ->where('o.BlockId', $blockMasterId)
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -1076,6 +1281,30 @@ class MmgayBdoApiController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -1130,12 +1359,13 @@ class MmgayBdoApiController extends Controller
 
         $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
             ->where('village_id', $owner->VillageId)
+            ->where('phase', $owner->Phase)
             ->first();
 
         if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
             return response()->json([
                 'success' => false,
-                'message' => 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के लिए Site Development का विवरण और फोटो अपलोड करें।'
+                'message' => 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' (Phase ' . ($owner->Phase ?? 'N/A') . ') | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के Phase ' . ($owner->Phase ?? 'N/A') . ' के लिए Site Development का विवरण और फोटो अपलोड करें।'
             ], 403);
         }
 

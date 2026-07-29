@@ -113,24 +113,99 @@ class MMGAYBdoPossessionController extends Controller
 
         // dd($blockMasterId);
 
-        $ppaQuery = DB::table('mmgay_possession_applications');
+        $ppaQuery = DB::table('mmgay_possession_applications as mpa')
+            ->join('ownermaster as o', 'mpa.owner_id', '=', 'o.OwnerId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->select('mpa.*');
+
         if ($blockMasterId) {
-            $ppaQuery->where('block_id', $blockMasterId);
+            $ppaQuery->where('mpa.block_id', $blockMasterId);
         }
 
         $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
 
         if ($bypassApi) {
             // 1. Total Eligible (All registered owners in BDO block)
-            $totalEligibleQuery = DB::table('ownermaster');
+            $totalEligibleQuery = DB::table('ownermaster as o')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                });
             if ($blockMasterId) {
-                $totalEligibleQuery->where('BlockId', $blockMasterId);
+                $totalEligibleQuery->where('o.BlockId', $blockMasterId);
             }
             $totalEligibleCount = $totalEligibleQuery->count();
 
             // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
             $notScheduledQuery = DB::table('ownermaster as o')
-                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id');
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                });
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
             }
@@ -144,22 +219,21 @@ class MMGAYBdoPossessionController extends Controller
             $totalEligibleCount = (clone $ppaQuery)->count();
 
             // 2. Not Scheduled (Synced owners whose schedule is pending)
-            $notScheduledCount = (clone $ppaQuery)->where('physical_possession_status', 'Eligible for Physical Possession')->count();
+            $notScheduledCount = (clone $ppaQuery)->where('mpa.physical_possession_status', 'Eligible for Physical Possession')->count();
         }
 
         $stats = [
             'total_eligible' => $totalEligibleCount,
             'not_scheduled' => $notScheduledCount,
-            'awaiting_citizen' => (clone $ppaQuery)->where('physical_possession_status', 'Visit Scheduled')->count(),
-            'awaiting_coordinates' => (clone $ppaQuery)->where('physical_possession_status', 'Slot Selected')->count(),
-            'awaiting_bdo_doc' => (clone $ppaQuery)->where('physical_possession_status', 'Site Verified')->count(),
-            'verified' => (clone $ppaQuery)->where('physical_possession_status', 'Verified')->count(),
+            'awaiting_citizen' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Visit Scheduled')->count(),
+            'awaiting_coordinates' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Slot Selected')->count(),
+            'awaiting_bdo_doc' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Site Verified')->count(),
+            'verified' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Verified')->count(),
         ];
 
         $recentApplications = (clone $ppaQuery)
-            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
-            ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
-            ->latest('mmgay_possession_applications.created_at')
+            ->select('mpa.*', 'o.Phase as owner_phase')
+            ->latest('mpa.created_at')
             ->take(6)
             ->get();
 
@@ -175,10 +249,29 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -199,6 +292,30 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -263,6 +380,30 @@ class MMGAYBdoPossessionController extends Controller
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             });
@@ -298,6 +439,7 @@ class MMGAYBdoPossessionController extends Controller
             'o.OwnerName as applicant_name',
             'o.FatherHusbandName as father_name',
             'o.MobileNo as mobile',
+            'o.RegistrationNo as registration_no',
             'o.Phase as owner_phase',
             'd.DistrictName as district_name',
             'b.BlockName as block_name',
@@ -567,7 +709,31 @@ class MMGAYBdoPossessionController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $query = MmgayPossessionApplication::query()
-            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->join('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
             ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
 
@@ -1080,10 +1246,24 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -1104,6 +1284,30 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -1154,22 +1358,131 @@ class MMGAYBdoPossessionController extends Controller
         ));
     }
 
+    /**
+     * Display BDO Villages Report.
+     */
+    public function villagesReport(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+
+        // Fetch Block Name
+        $block = DB::table('blockmaster')->where('BlockId', $blockMasterId)->first();
+        $blockName = $block->BlockName ?? 'Haryana';
+
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        // Fetch villages having allotted flats under this BDO block with their statistics
+        $villagesQuery = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('o.FlatId')
+            ->where('o.FlatId', '>', 0)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $villagesQuery->where('o.Phase', $selectedPhase);
+        }
+
+        $villages = $villagesQuery->select(
+            'v.VillageId',
+            'v.VillageName',
+            DB::raw("COUNT(DISTINCT o.OwnerId) as total_beneficiaries"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND EXISTS (SELECT 1 FROM registary r WHERE r.SecondPartyMobile = o.MobileNo) THEN 1 END) as approved_paid_matched"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT EXISTS (SELECT 1 FROM registary r WHERE r.SecondPartyMobile = o.MobileNo) THEN 1 END) as approved_paid_pending"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_unpaid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
+            DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
+            DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled")
+        )
+        ->groupBy('v.VillageId', 'v.VillageName')
+        ->orderBy('v.VillageName', 'asc')
+        ->get();
+
+        $activeMenu = 'villages_report';
+        return view('mmgay.bdo.villages_report', compact(
+            'bdo',
+            'blockName',
+            'phases',
+            'selectedPhase',
+            'villages',
+            'activeMenu'
+        ));
+    }
+
     public function siteDevelopmentForm(Request $request)
     {
         $bdo = Auth::user();
         $blockMasterId = $bdo->block_id;
 
-        // Fetch all villages mapping to the BDO's block
-        $villages = DB::table('villagemaster')
-            ->where('BlockId', $blockMasterId)
-            ->orderBy('VillageName', 'asc')
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase');
+        if (!$selectedPhase && $phases->isNotEmpty()) {
+            $selectedPhase = $phases->first();
+        }
+
+        // Fetch villages having entries in this phase under BDO's block
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->where('o.BlockId', $blockMasterId)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
             ->get();
 
         $selectedVillageId = $request->input('village_id');
         
-        // Auto-select the first village of the block by default if none is selected
-        if (!$selectedVillageId && $villages->isNotEmpty()) {
-            $selectedVillageId = $villages->first()->VillageId;
+        // Validate if selected village has entries in this phase
+        $isValidVillageForPhase = $selectedVillageId && $villages->contains('VillageId', $selectedVillageId);
+
+        if (!$isValidVillageForPhase) {
+            if ($villages->isNotEmpty()) {
+                $selectedVillageId = $villages->first()->VillageId;
+            } else {
+                $selectedVillageId = null;
+            }
         }
 
         $selectedVillageName = '';
@@ -1183,6 +1496,7 @@ class MMGAYBdoPossessionController extends Controller
 
             $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
                 ->where('village_id', $selectedVillageId)
+                ->where('phase', $selectedPhase)
                 ->first();
 
             if ($siteDev) {
@@ -1196,6 +1510,8 @@ class MMGAYBdoPossessionController extends Controller
         return view('mmgay.bdo.site_development', compact(
             'bdo',
             'villages',
+            'phases',
+            'selectedPhase',
             'selectedVillageId',
             'selectedVillageName',
             'siteDev',
@@ -1211,13 +1527,16 @@ class MMGAYBdoPossessionController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $villageId = $request->input('village_id');
+        $phase = $request->input('phase');
 
         $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
             ->where('village_id', $villageId)
+            ->where('phase', $phase)
             ->first();
 
         $request->validate([
             'village_id' => 'required|integer',
+            'phase' => 'required|string',
             'road_status' => 'required|string',
             'water_status' => 'required|string',
             'electricity_status' => 'required|string',
@@ -1251,6 +1570,7 @@ class MMGAYBdoPossessionController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $request->input('road_status'),
             'water_status' => $request->input('water_status'),
             'electricity_status' => $request->input('electricity_status'),
@@ -1280,6 +1600,7 @@ class MMGAYBdoPossessionController extends Controller
                 'district_id' => $districtId,
                 'block_id' => $blockMasterId,
                 'village_id' => $villageId,
+                'phase' => $phase,
             ],
             $updateData
         );
@@ -1290,6 +1611,7 @@ class MMGAYBdoPossessionController extends Controller
             'district_id' => $districtId,
             'block_id' => $blockMasterId,
             'village_id' => $villageId,
+            'phase' => $phase,
             'road_status' => $siteDev->road_status,
             'water_status' => $siteDev->water_status,
             'electricity_status' => $siteDev->electricity_status,
@@ -1299,7 +1621,7 @@ class MMGAYBdoPossessionController extends Controller
             'updated_by_name' => $bdo->name ?? 'BDO Officer',
         ]);
 
-        return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId])
+        return redirect()->route('mmgay.bdo.site-development', ['village_id' => $villageId, 'phase' => $phase])
             ->with('success', 'Site Development details updated successfully.');
     }
 
@@ -1431,12 +1753,515 @@ class MMGAYBdoPossessionController extends Controller
 
         $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
             ->where('village_id', $owner->VillageId)
+            ->where('phase', $owner->Phase)
             ->first();
 
         if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
-            return redirect()->back()->with('error', 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के लिए Site Development का विवरण और फोटो अपलोड करें।');
+            return redirect()->back()->with('error', 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' (Phase ' . ($owner->Phase ?? 'N/A') . ') | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के Phase ' . ($owner->Phase ?? 'N/A') . ' के लिए Site Development का विवरण और फोटो अपलोड करें।');
         }
 
         return null;
+    }
+
+    /**
+     * Display BDO Owner Status Report.
+     */
+    /**
+     * Display BDO Owner Status Report.
+     */
+    public function ownerStatusReport(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+
+        // Fetch Block Name
+        $block = DB::table('blockmaster')->where('BlockId', $blockMasterId)->first();
+        $blockName = $block->BlockName ?? 'Haryana';
+
+        // 1. Fetch villages for BDO block having valid entries in villagemaster for this phase
+        $villagesQuery = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            });
+
+        if ($selectedPhase) {
+            $villagesQuery->where('o.Phase', $selectedPhase);
+        }
+
+        $villages = $villagesQuery->select('v.VillageId', 'v.VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        // 2. Fetch phase list
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedVillageId = $request->input('village_id');
+        if ($selectedVillageId && !$villages->contains('VillageId', $selectedVillageId)) {
+            $selectedVillageId = null;
+        }
+        $search = $request->input('search');
+
+        // Overall Block Statistics Queries
+        // Total Villages Count matching phase
+        $villagesCountQuery = DB::table('ownermaster as o')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            });
+        if ($selectedPhase) {
+            $villagesCountQuery->where('o.Phase', $selectedPhase);
+        }
+        $totalVillagesCount = $villagesCountQuery->distinct()->count('o.VillageId');
+
+        // Total Applicants Count matching phase
+        $applicantsCountQuery = DB::table('ownermaster as o')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            });
+        if ($selectedPhase) {
+            $applicantsCountQuery->where('o.Phase', $selectedPhase);
+        }
+        $totalApplicantsCount = $applicantsCountQuery->count();
+
+        // Total Allotted Count matching filters
+        $allottedCountQuery = DB::table('ownermaster as o')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('o.FlatId')
+            ->where('o.FlatId', '>', 0)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+        if ($selectedPhase) {
+            $allottedCountQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $allottedCountQuery->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $allottedCountQuery->where(function($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+        $totalAllottedCount = $allottedCountQuery->count();
+
+        // Status Tabs counts (Conditional Count)
+        $countQuery = DB::table('ownermaster as o')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('o.FlatId')
+            ->where('o.FlatId', '>', 0)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $countQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $countQuery->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $countQuery->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        $counts = $countQuery->select(
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_unpaid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
+            DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
+            DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled")
+        )->first();
+
+        $grossTotal = $counts->approved_paid + $counts->approved_unpaid + $counts->yet_to_be_done + $counts->rejected + $counts->cancelled;
+
+        // 4. Fetch list based on active tab
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $listQuery = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('o.FlatId')
+            ->where('o.FlatId', '>', 0)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $listQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $listQuery->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $listQuery->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $listQuery->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $listQuery->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'cancelled') {
+            $listQuery->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $owners = $listQuery->select(
+            'o.OwnerId',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.RegistrationNo',
+            'o.Phase',
+            'o.IsApproved',
+            'o.IsPaid',
+            'o.IsRejected',
+            'o.IsAllotmentCancelled',
+            DB::raw("EXISTS (
+                SELECT 1 FROM registary as r WHERE r.SecondPartyMobile = o.MobileNo
+            ) as registry_matched"),
+            'd.DistrictName',
+            'b.BlockName',
+            'v.VillageName',
+            'f.FlatNo'
+        )
+        ->paginate(25)
+        ->withQueryString();
+
+        $activeMenu = 'owner_status_report';
+        return view('mmgay.bdo.owner_status_report', compact(
+            'bdo',
+            'blockName',
+            'villages',
+            'phases',
+            'counts',
+            'owners',
+            'activeTab',
+            'selectedPhase',
+            'selectedVillageId',
+            'search',
+            'totalVillagesCount',
+            'totalApplicantsCount',
+            'totalAllottedCount',
+            'grossTotal',
+            'activeMenu'
+        ));
+    }
+
+    /**
+     * Export owner status report to CSV format.
+     */
+    public function ownerStatusReportExportCsv(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+        $search = $request->input('search');
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $query = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $query->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $query->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $query->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $query->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $query->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'cancelled') {
+            $query->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="Owner_Status_Report_' . str_replace(' ', '_', $activeTab) . '_' . date('Ymd_His') . '.csv"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ];
+
+        $callback = function() use ($query) {
+            $file = fopen('php://output', 'w');
+            
+            // Add CSV Headers
+            fputcsv($file, [
+                'SR NO.',
+                'REGISTRATION NO.',
+                'OWNER NAME',
+                'FATHER/HUSBAND NAME',
+                'MOBILE NO.',
+                'PHASE',
+                'VILLAGE',
+                'FLAT NO.',
+                'BLOCK',
+                'DISTRICT'
+            ]);
+
+            $sr = 1;
+            
+            $query->select(
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.Phase',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'f.FlatNo'
+            )->orderBy('o.OwnerId', 'asc')
+            ->chunk(1000, function($rows) use (&$sr, $file) {
+                foreach ($rows as $row) {
+                    fputcsv($file, [
+                        $sr++,
+                        $row->RegistrationNo,
+                        $row->OwnerName,
+                        $row->FatherHusbandName,
+                        $row->MobileNo,
+                        'Phase ' . $row->Phase,
+                        $row->VillageName,
+                        $row->FlatNo ?? 'N/A',
+                        $row->BlockName,
+                        $row->DistrictName
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export owner status report to PDF format.
+     */
+    public function ownerStatusReportExportPdf(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+        $search = $request->input('search');
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $query = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $query->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $query->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $query->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $query->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'cancelled') {
+            $query->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $totalCount = $query->count();
+        if ($totalCount > 1000) {
+            return redirect()->back()->with('error', 'The PDF export is limited to 1,000 records to prevent memory issues. Please filter your search, or download as CSV instead.');
+        }
+
+        $owners = $query->select(
+            'o.OwnerId',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.RegistrationNo',
+            'o.Phase',
+            'd.DistrictName',
+            'b.BlockName',
+            'v.VillageName',
+            'f.FlatNo'
+        )
+        ->orderBy('o.OwnerName', 'asc')
+        ->take(1000)
+        ->get();
+
+        $pdfData = [
+            'bdo' => $bdo,
+            'owners' => $owners,
+            'status' => $activeTab,
+            'report_date' => date('d M Y h:i A')
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('mmgay.bdo.pdf.owner-status-pdf', $pdfData)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('Owner_Status_Report_' . str_replace(' ', '_', $activeTab) . '_' . date('Ymd_His') . '.pdf');
     }
 }

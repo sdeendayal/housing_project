@@ -26,6 +26,40 @@
     ];
 
     $cmsIsActive = $isActive($cmsRoutes);
+
+    $dashboardFilters = array_filter(
+        request()->only(['district_id', 'city_id', 'sector_id']),
+        fn($value) => $value !== null && $value !== '',
+    );
+
+    $filteredUrl = fn(string $path) => url($path) .
+        ($dashboardFilters ? '?' . http_build_query($dashboardFilters) : '');
+@endphp
+
+@php
+    $propertyView = request('property_view', 'registration');
+
+    $propertyUrl = function (string $view) use ($dashboardFilters) {
+        return url('mmsay-department-property-registration') .
+            '?' .
+            http_build_query(
+                array_merge($dashboardFilters, [
+                    'property_view' => $view,
+                ]),
+            );
+    };
+
+    $propertyMenuClass = function (string $view) use ($propertyView) {
+        return request()->is('mmsay-department-property-registration*') && $propertyView === $view
+            ? 'border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm'
+            : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900';
+    };
+
+    $propertyIconClass = function (string $view) use ($propertyView) {
+        return request()->is('mmsay-department-property-registration*') && $propertyView === $view
+            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600';
+    };
 @endphp
 
 <aside
@@ -69,7 +103,7 @@
                 dashboard
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Dashboard
             </span>
 
@@ -83,44 +117,67 @@
         </p>
 
         {{-- Property Registration --}}
-        <a href="{{ url('mmsay-department-property-registration') }}"
+        <a href="{{ $propertyUrl('registration') }}"
             class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
-                   {{ $menuClass('mmsay-department-property-registration*') }}">
+           {{ $propertyMenuClass('registration') }}">
 
             <span
                 class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-                       {{ $iconClass('mmsay-department-property-registration*') }}">
+               {{ $propertyIconClass('registration') }}">
                 app_registration
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Property Registration
             </span>
 
-            @if ($isActive('mmsay-department-property-registration*'))
+            @if (request()->is('mmsay-department-property-registration*') && $propertyView === 'registration')
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        {{-- Draw --}}
+        <a href="{{ $filteredUrl('mmsay-department-draw') }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-draw*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-draw*') }}">
+                casino
+            </span>
+
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Draw
+            </span>
+
+            @if ($isActive('mmsay-department-draw*'))
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             @endif
         </a>
 
         {{-- Allotted Properties --}}
-        <a href="{{ url('mmsay-department-allotted-properties') }}"
+        <a href="{{ $propertyUrl('allotted') }}"
             class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
-                   {{ $menuClass('mmsay-department-allotted-properties*') }}">
+           {{ $propertyMenuClass('allotted') }}">
 
             <span
                 class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-                       {{ $iconClass('mmsay-department-allotted-properties*') }}">
+               {{ $propertyIconClass('allotted') }}">
                 location_city
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Allotted Properties
             </span>
 
-            @if ($isActive('mmsay-department-allotted-properties*'))
+            @if (request()->is('mmsay-department-property-registration*') && $propertyView === 'allotted')
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             @endif
         </a>
+
+        {{-- EMI Payments --}}
+
 
         {{-- EMI Calculation --}}
         <a href="{{ url('mmsay-department-property-emi-calculation') }}"
@@ -153,11 +210,83 @@
                 engineering
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Site Engineer
             </span>
 
             @if ($isActive('mmsay-department-add-district-officer*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Payment Reports
+        </p>
+
+        {{-- Full Payment --}}
+        <a href="{{ $filteredUrl('full-paid-properties') }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('full-paid-properties*') }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('full-paid-properties*') }}">
+                task_alt
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">Full Payment</span>
+            @if ($isActive('full-paid-properties*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        {{-- Partial Payment --}}
+        <a href="{{ $filteredUrl('partial-paid-properties') }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass(['partial-paid-properties*', 'pending-properties*']) }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass(['partial-paid-properties*', 'pending-properties*']) }}">
+                pending_actions
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">Partial Payment</span>
+            @if ($isActive(['partial-paid-properties*', 'pending-properties*']))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Possession
+        </p>
+
+        {{-- Physical Possession Eligible --}}
+        <a href="{{ route('physical.possession.index', $dashboardFilters) }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-physical-possession') }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-physical-possession') }}">
+                real_estate_agent
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Possession Eligible
+            </span>
+            @if ($isActive('mmsay-department-physical-possession'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+        </a>
+
+        {{-- Physical Possession Not Eligible --}}
+        <a href="{{ route('physical.possession.not-eligible', $dashboardFilters) }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   {{ $menuClass('mmsay-department-physical-possession/not-eligible*') }}">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       {{ $iconClass('mmsay-department-physical-possession/not-eligible*') }}">
+                block
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Possession Not Eligible
+            </span>
+            @if ($isActive('mmsay-department-physical-possession/not-eligible*'))
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             @endif
         </a>
@@ -183,7 +312,7 @@
                     edit_square
                 </span>
 
-                <span class="min-w-0 flex-1 truncate">
+                <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                     CMS Management
                 </span>
 

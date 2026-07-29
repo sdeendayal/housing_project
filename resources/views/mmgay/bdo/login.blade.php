@@ -120,7 +120,7 @@
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                     mail
                                 </span>
-                                <input type="email" name="email" value="{{ old('email', 'bdo@mmgay.com') }}" placeholder="bdo@mmgay.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
+                                <input type="email" name="email" value="{{ old('email', 'bdporewari@gmail.com') }}" placeholder="bdporewari@gmail.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
                             </div>
                             @error('email')
                                 <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
@@ -136,7 +136,7 @@
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                     lock
                                 </span>
-                                <input id="password" type="password" name="password" value="password123" placeholder="••••••••" class="w-full h-[40px] pl-10 pr-10 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('password') border-red-500 @enderror" required>
+                                <input id="password" type="password" name="password" value="123456" placeholder="••••••••" class="w-full h-[40px] pl-10 pr-10 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('password') border-red-500 @enderror" required>
                                 <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                                     <span id="eyeIcon" class="material-symbols-outlined text-[18px]">
                                         visibility

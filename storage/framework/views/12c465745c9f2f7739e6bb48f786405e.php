@@ -126,7 +126,10 @@
                                 <td class="px-4 py-3">
                                     <p class="font-semibold text-slate-800">Asset #<?php echo e($application->asset_id); ?></p>
                                     <p class="mt-0.5 text-[10px] text-slate-400">
-                                        Purchaser App: <?php echo e($application->purchaser_application_number ?: '-'); ?>
+                                        Purchaser App:
+                                        <?php echo e(data_get($application, 'purchaser_application_number')
+                                            ?: data_get($application, 'application_number')
+                                            ?: '-'); ?>
 
                                     </p>
                                 </td>
@@ -177,9 +180,117 @@
             </div>
 
             <?php if($applications->hasPages()): ?>
-                <div class="border-t border-slate-100 px-4 py-3">
-                    <?php echo e($applications->onEachSide(1)->links()); ?>
+                <div
+                    class="flex flex-col gap-3 border-t border-slate-100 bg-white px-4 py-3
+                    sm:flex-row sm:items-center sm:justify-between">
 
+                    <p class="text-xs text-slate-500">
+                        Showing
+                        <span class="font-semibold text-slate-700">
+                            <?php echo e(number_format($applications->firstItem())); ?>
+
+                        </span>
+                        to
+                        <span class="font-semibold text-slate-700">
+                            <?php echo e(number_format($applications->lastItem())); ?>
+
+                        </span>
+                        of
+                        <span class="font-semibold text-slate-700">
+                            <?php echo e(number_format($applications->total())); ?>
+
+                        </span>
+                        records
+                    </p>
+
+                    <nav class="flex flex-wrap items-center gap-1" aria-label="Pagination">
+                        <?php if($applications->onFirstPage()): ?>
+                            <span
+                                class="inline-flex h-8 cursor-not-allowed items-center gap-1 rounded-lg
+                                border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-300">
+                                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                                <span class="hidden sm:inline">Previous</span>
+                            </span>
+                        <?php else: ?>
+                            <a href="<?php echo e($applications->previousPageUrl()); ?>"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200
+                                bg-white px-2.5 text-xs font-medium text-slate-600 transition
+                                hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                                <span class="material-symbols-outlined text-[16px]">chevron_left</span>
+                                <span class="hidden sm:inline">Previous</span>
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if($applications->currentPage() > 3): ?>
+                            <a href="<?php echo e($applications->url(1)); ?>"
+                                class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg
+                                border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600
+                                transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                                1
+                            </a>
+
+                            <?php if($applications->currentPage() > 4): ?>
+                                <span class="inline-flex h-8 min-w-8 items-center justify-center text-xs text-slate-400">
+                                    …
+                                </span>
+                            <?php endif; ?>
+                        <?php endif; ?>
+
+                        <?php $__currentLoopData = $applications->getUrlRange(
+                            max(1, $applications->currentPage() - 2),
+                            min($applications->lastPage(), $applications->currentPage() + 2)
+                        ); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $page => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if($page == $applications->currentPage()): ?>
+                                <span aria-current="page"
+                                    class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg
+                                    bg-indigo-600 px-2 text-xs font-semibold text-white shadow-sm">
+                                    <?php echo e($page); ?>
+
+                                </span>
+                            <?php else: ?>
+                                <a href="<?php echo e($url); ?>"
+                                    class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg
+                                    border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600
+                                    transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                                    <?php echo e($page); ?>
+
+                                </a>
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                        <?php if($applications->currentPage() < $applications->lastPage() - 2): ?>
+                            <?php if($applications->currentPage() < $applications->lastPage() - 3): ?>
+                                <span class="inline-flex h-8 min-w-8 items-center justify-center text-xs text-slate-400">
+                                    …
+                                </span>
+                            <?php endif; ?>
+
+                            <a href="<?php echo e($applications->url($applications->lastPage())); ?>"
+                                class="inline-flex h-8 min-w-8 items-center justify-center rounded-lg
+                                border border-slate-200 bg-white px-2 text-xs font-medium text-slate-600
+                                transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                                <?php echo e($applications->lastPage()); ?>
+
+                            </a>
+                        <?php endif; ?>
+
+                        <?php if($applications->hasMorePages()): ?>
+                            <a href="<?php echo e($applications->nextPageUrl()); ?>"
+                                class="inline-flex h-8 items-center gap-1 rounded-lg border border-slate-200
+                                bg-white px-2.5 text-xs font-medium text-slate-600 transition
+                                hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-600">
+                                <span class="hidden sm:inline">Next</span>
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </a>
+                        <?php else: ?>
+                            <span
+                                class="inline-flex h-8 cursor-not-allowed items-center gap-1 rounded-lg
+                                border border-slate-200 bg-slate-50 px-2.5 text-xs font-medium text-slate-300">
+                                <span class="hidden sm:inline">Next</span>
+                                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                            </span>
+                        <?php endif; ?>
+                    </nav>
                 </div>
             <?php endif; ?>
         </section>

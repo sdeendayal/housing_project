@@ -1,102 +1,217 @@
 @extends('layouts.mmsayDepartmentAuth')
-@section('title', 'MMSAY - EMI Pending Details')
+@section('title', 'MMSAY - Partial Paid Properties')
+
 @section('content')
-    <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
-        <div class="max-w-container-max mx-auto space-y-md">
-            <div class="bg-white rounded-xl shadow">
+@php
+    $districts = $districts ?? collect();
+    $cities = $cities ?? collect();
+    $sectors = $sectors ?? collect();
+    $districtId = $districtId ?? request('district_id');
+    $cityId = $cityId ?? request('city_id');
+    $sectorId = $sectorId ?? request('sector_id');
+    $search = $search ?? request('search', '');
+@endphp
 
-                <div class="p-4 border-b flex justify-between items-center">
-                    <h2 class="text-xl font-bold">
-                        Pending Properties
-                    </h2>
-
-                    <span class="text-sm text-gray-500">
-                        Total : {{ $properties->total() }}
-                    </span>
+<main class="ml-52 min-h-screen bg-slate-50 px-5 pb-6 pt-20">
+    <div class="mx-auto max-w-[1800px] space-y-4">
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900">Partial Paid Properties</h1>
+                    <p class="mt-0.5 text-xs text-slate-500">
+                        Properties where total received amount is below the flat cost
+                    </p>
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('partial-paid-properties.csv', request()->query()) }}"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-700">
+                        <span class="material-symbols-outlined text-[16px]">download</span>
+                        Excel CSV
+                    </a>
 
-                    <table class="w-full text-sm">
-
-                        <thead class="bg-gray-100">
-
-                            <tr>
-                                <th class="p-3 text-left">Asset ID</th>
-                                <th class="p-3 text-left">Application No</th>
-                                <th class="p-3 text-left">Applicant Name</th>
-                                <th class="p-3 text-left">Mobile</th>
-                                <th class="p-3 text-left">Property</th>
-                                <th class="p-3 text-left">Flat Cost</th>
-                                <th class="p-3 text-left">Paid</th>
-                                <th class="p-3 text-left">Pending</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody>
-
-                            @forelse($properties as $row)
-                                @php
-                                    $pending = $row->FlatCost - $row->total_paid;
-                                @endphp
-
-                                <tr class="border-t">
-
-                                    <td class="p-3">
-                                        {{ $row->AssetId }}
-                                    </td>
-
-                                    <td class="p-3">
-                                        {{ $row->ApplicationNo }}
-                                    </td>
-
-                                    <td class="p-3">
-                                        {{ $row->PrivatePurchaserName }}
-                                    </td>
-
-                                    <td class="p-3">
-                                        {{ $row->MobileNo }}
-                                    </td>
-
-                                    <td class="p-3">
-                                        {{ $row->AssetName }}
-                                    </td>
-
-                                    <td class="p-3">
-                                        ₹{{ number_format($row->FlatCost, 2) }}
-                                    </td>
-
-                                    <td class="p-3 text-green-600 font-semibold">
-                                        ₹{{ number_format($row->total_paid, 2) }}
-                                    </td>
-
-                                    <td class="p-3 text-red-600 font-semibold">
-                                        ₹{{ number_format($pending, 2) }}
-                                    </td>
-
-                                </tr>
-
-                            @empty
-
-                                <tr>
-                                    <td colspan="8" class="p-4 text-center text-gray-500">
-                                        No pending properties found.
-                                    </td>
-                                </tr>
-                            @endforelse
-
-                        </tbody>
-
-                    </table>
-
+                    <a href="{{ route('partial-paid-properties.print', request()->query()) }}" target="_blank"
+                        class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-800 px-3 text-xs font-semibold text-white transition hover:bg-slate-900">
+                        <span class="material-symbols-outlined text-[16px]">print</span>
+                        Print
+                    </a>
                 </div>
-
-                <div class="p-4 border-t">
-                    {{ $properties->links() }}
-                </div>
-
             </div>
-        </div>
-    </main>
+
+            <form method="GET" action="{{ route('partial-paid-properties') }}"
+                class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-12">
+                <input type="search" name="search" value="{{ request('search', '') }}"
+                    placeholder="Asset, applicant, application, mobile..."
+                    class="h-10 rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 xl:col-span-4">
+
+                <select name="district_id" id="district_id"
+                    onchange="document.getElementById('city_id').value=''; document.getElementById('sector_id').value=''; this.form.submit();"
+                    class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 xl:col-span-2">
+                    <option value="">All Districts</option>
+                    @foreach ($districts as $district)
+                        <option value="{{ $district->DistrictId }}" @selected((string) request('district_id') === (string) $district->DistrictId)>
+                            {{ $district->DistrictName }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="city_id" id="city_id"
+                    onchange="document.getElementById('sector_id').value=''; this.form.submit();"
+                    @disabled(!request()->filled('district_id'))
+                    class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 xl:col-span-2">
+                    <option value="">
+                        {{ request()->filled('district_id') ? 'All Cities' : 'Select district first' }}
+                    </option>
+                    @foreach ($cities as $city)
+                        <option value="{{ $city->CityId }}" @selected((string) request('city_id') === (string) $city->CityId)>
+                            {{ $city->CityName }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <select name="sector_id" id="sector_id"
+                    @disabled(!request()->filled('city_id'))
+                    class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 xl:col-span-2">
+                    <option value="">
+                        {{ request()->filled('city_id') ? 'All Villages / Sectors' : 'Select city first' }}
+                    </option>
+                    @foreach ($sectors as $sector)
+                        <option value="{{ $sector->SectorId }}" @selected((string) request('sector_id') === (string) $sector->SectorId)>
+                            {{ $sector->SectorName }}
+                        </option>
+                    @endforeach
+                </select>
+
+                <div class="flex gap-2 xl:col-span-2">
+                    <button type="submit"
+                        class="inline-flex h-10 flex-1 items-center justify-center gap-1 rounded-lg bg-indigo-600 px-3 text-xs font-semibold text-white transition hover:bg-indigo-700">
+                        <span class="material-symbols-outlined text-[17px]">filter_alt</span>
+                        Apply
+                    </button>
+                    <a href="{{ route('partial-paid-properties') }}"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50">
+                        <span class="material-symbols-outlined text-[18px]">restart_alt</span>
+                    </a>
+                </div>
+            </form>
+        </section>
+
+        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div class="border-b border-slate-100 px-5 py-4">
+                <h2 class="text-sm font-bold text-slate-800">Partial Payment Records</h2>
+                <p class="mt-0.5 text-[11px] text-slate-500">
+                    {{ number_format($properties->total()) }} filtered records
+                </p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[1250px] text-left">
+                    <thead class="bg-slate-50 text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                        <tr>
+                            <th class="px-4 py-3">ID / Application</th>
+                            <th class="px-4 py-3">Applicant</th>
+                            <th class="px-4 py-3">Property</th>
+                            <th class="px-4 py-3">Location</th>
+                            <th class="px-4 py-3 text-right">Flat Cost</th>
+                            <th class="px-4 py-3 text-right">Total Paid</th>
+                            <th class="px-4 py-3 text-right">Pending</th>
+                            <th class="px-4 py-3 text-right">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        @forelse ($properties as $row)
+                            @php
+                                $assetId = data_get($row, 'asset_id') ?? data_get($row, 'AssetId');
+                                $applicationNumber = data_get($row, 'application_number')
+                                    ?? data_get($row, 'ApplicationNo');
+                                $applicantName = data_get($row, 'applicant_name')
+                                    ?? data_get($row, 'PrivatePurchaserName');
+                                $mobile = data_get($row, 'mobile') ?? data_get($row, 'MobileNo');
+                                $assetName = data_get($row, 'asset_name') ?? data_get($row, 'AssetName');
+                                $assetSize = data_get($row, 'asset_size') ?? data_get($row, 'AssetSize');
+                                $assetUnit = data_get($row, 'asset_unit') ?? data_get($row, 'Unit');
+                                $districtName = data_get($row, 'district_name')
+                                    ?? data_get($row, 'DistrictName');
+                                $cityName = data_get($row, 'city_name') ?? data_get($row, 'CityName');
+                                $sectorName = data_get($row, 'sector_name') ?? data_get($row, 'SectorName');
+                                $flatCost = (float) (
+                                    data_get($row, 'flat_cost')
+                                    ?? data_get($row, 'FlatCost')
+                                    ?? 0
+                                );
+                                $totalPaid = (float) (
+                                    data_get($row, 'total_paid')
+                                    ?? data_get($row, 'total_received')
+                                    ?? 0
+                                );
+                                $pendingAmount = (float) (
+                                    data_get($row, 'pending_amount')
+                                    ?? max($flatCost - $totalPaid, 0)
+                                );
+                            @endphp
+
+                            <tr class="transition hover:bg-slate-50/70">
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-800">Asset #{{ $assetId ?: '-' }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400">App: {{ $applicationNumber ?: '-' }}</p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-semibold text-slate-800">{{ $applicantName ?: 'Not allotted' }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400">{{ $mobile ?: '-' }}</p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <p class="font-medium text-slate-700">{{ $assetName ?: '-' }}</p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400">
+                                        {{ $assetSize ?: '-' }} {{ $assetUnit }}
+                                    </p>
+                                </td>
+                                <td class="px-4 py-3 text-slate-600">
+                                    {{ $districtName ?: '-' }}
+                                    <p class="mt-0.5 text-[10px] text-slate-400">
+                                        {{ $cityName ?: '-' }} / {{ $sectorName ?: '-' }}
+                                    </p>
+                                </td>
+                                <td class="px-4 py-3 text-right font-semibold text-slate-700">
+                                    ₹{{ number_format($flatCost, 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <p class="font-bold text-emerald-600">₹{{ number_format($totalPaid, 2) }}</p>
+                                    <p class="mt-0.5 text-[9px] text-slate-400">Initial + cash receipts</p>
+                                </td>
+                                <td class="px-4 py-3 text-right font-bold text-rose-600">
+                                    ₹{{ number_format($pendingAmount, 2) }}
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <a href="{{ route('properties.show', $assetId) }}"
+                                        class="inline-flex h-8 items-center gap-1 rounded-lg bg-indigo-50 px-3 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
+                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
+                                        View
+                                    </a>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="8" class="px-5 py-14 text-center text-sm text-slate-400">
+                                    No partial paid property found.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            @if ($properties->hasPages())
+                <div class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-xs text-slate-500">
+                        Showing <strong>{{ number_format($properties->firstItem()) }}</strong>
+                        to <strong>{{ number_format($properties->lastItem()) }}</strong>
+                        of <strong>{{ number_format($properties->total()) }}</strong> records
+                    </p>
+                    <div>{{ $properties->onEachSide(1)->links() }}</div>
+                </div>
+            @endif
+        </section>
+    </div>
+</main>
 @endsection

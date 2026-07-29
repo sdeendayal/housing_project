@@ -339,17 +339,27 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/mmsay-department-cash-receipt', [PropertyManagementController::class, 'mmsayDepartmentCashReceipt']);
 
-    Route::get('/mmsay-department-allotted-properties', [PropertyManagementController::class, 'mmsayDepartmentAllottedProperties']);
+    Route::get(
+        '/mmsay-department-draw',
+        [PropertyManagementController::class, 'mmsayDepartmentDraw']
+    )->name('department.draw.index');
 
-    Route::get('/mmsay-department-draw', [PropertyManagementController::class, 'mmsayDepartmentDraw']);
+    Route::get(
+        '/mmsay-department-draw/export/csv',
+        [PropertyManagementController::class, 'mmsayDepartmentDrawCsv']
+    )->name('department.draw.csv');
+
+    Route::get(
+        '/mmsay-department-draw/print',
+        [PropertyManagementController::class, 'mmsayDepartmentDrawPrint']
+    )->name('department.draw.print');
 
     Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
 
     Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
         ->name('mmsay.department.emi.payments');
 
-    Route::get('/mmsay-emi-status/{assetId}', [PropertyManagementController::class, 'emiStatus'])
-        ->name('mmsay.emi.status');
+
 
     Route::get('/mmsay-department-physical-letter', [PropertyManagementController::class, 'departmentPhysicalLetter'])->name('mmsay.department.physical.letter');
 
@@ -400,9 +410,32 @@ Route::middleware(['auth', 'role:department'])->group(function () {
     )->name('full-paid-properties');
 
     Route::get(
-        'pending-properties',
+        'full-paid-properties/csv',
+        [PropertyManagementController::class, 'fullPaidPropertiesCsv']
+    )->name('full-paid-properties.csv');
+
+    Route::get(
+        'full-paid-properties/print',
+        [PropertyManagementController::class, 'fullPaidPropertiesPrint']
+    )->name('full-paid-properties.print');
+
+    Route::get(
+        'partial-paid-properties',
         [PropertyManagementController::class, 'pendingProperties']
-    )->name('pending-properties');
+    )->name('partial-paid-properties');
+
+    Route::get(
+        'partial-paid-properties/csv',
+        [PropertyManagementController::class, 'partialPaidPropertiesCsv']
+    )->name('partial-paid-properties.csv');
+
+    Route::get(
+        'partial-paid-properties/print',
+        [PropertyManagementController::class, 'partialPaidPropertiesPrint']
+    )->name('partial-paid-properties.print');
+
+    // Optional backward compatibility for the old URL.
+    Route::redirect('pending-properties', 'partial-paid-properties');
 
 
 

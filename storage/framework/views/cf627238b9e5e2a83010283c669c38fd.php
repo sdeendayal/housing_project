@@ -1,6 +1,5 @@
-@extends('layouts.mmsayDepartmentAuth')
-@section('title', 'MMSAY Department Property Registration')
-@section('content')
+<?php $__env->startSection('title', 'MMSAY Department Property Registration'); ?>
+<?php $__env->startSection('content'); ?>
     <style>
         .pagination-wrapper nav {
             display: flex;
@@ -40,48 +39,7 @@
 
             </div>
             <!-- Table Filters & Search -->
-            {{-- <div class="bg-white rounded-lg border border-gray-200 p-4 mb-4 shadow-sm">
-
-                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
-
-                    <h4 class="text-base font-medium text-primary">
-                        Land Auction Details
-                    </h4>
-
-                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-
-                        <div class="relative hidden" id="filterInputContainer">
-                            <input
-                                class="bg-white border border-gray-300 rounded-md px-3 py-2 w-60 text-sm focus:ring-1 focus:ring-primary focus:border-primary"
-                                id="tableSearch" onkeyup="filterTable()" placeholder="Search record..." type="text" />
-                        </div>
-
-                        <div class="flex items-center gap-2">
-
-                            <button
-                                class="flex items-center gap-1.5 border border-primary text-primary px-3 py-2 rounded-md text-sm font-normal hover:bg-primary/5 transition-all"
-                                onclick="toggleFilter()">
-
-                                <span class="material-symbols-outlined text-[18px]">
-                                    filter_alt
-                                </span>
-                                Filter
-                            </button>
-
-                            <button
-                                class="flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-md text-sm font-normal shadow-sm hover:shadow-md transition-all"
-                                onclick="downloadExcel()">
-
-                                <span class="material-symbols-outlined text-[18px]">
-                                    download
-                                </span>
-                                Download Excel
-                            </button>
-
-                        </div>
-                    </div>
-                </div>
-            </div> --}}
+            
             <!-- High Density Data Table -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
@@ -122,29 +80,34 @@
 
                         <tbody class="divide-y divide-slate-100">
 
-                            @foreach ($properties as $property)
+                            <?php $__currentLoopData = $properties; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $property): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-slate-50 transition">
 
                                     <td class="px-4 py-4 font-medium text-slate-700">
-                                        {{ $property->district }}
+                                        <?php echo e($property->district); ?>
+
                                     </td>
 
                                     <td class="px-4 py-4 font-medium text-slate-800">
-                                        {{ Str::limit($property->AssetName, 30) }}
+                                        <?php echo e(Str::limit($property->AssetName, 30)); ?>
+
                                     </td>
 
                                     <td class="px-4 py-4">
-                                        {{ $property->PrivatePurchaserName }}
+                                        <?php echo e($property->PrivatePurchaserName); ?>
+
                                     </td>
 
                                     <td class="px-4 py-4">
-                                        {{ $property->MobileNo }}
+                                        <?php echo e($property->MobileNo); ?>
+
                                     </td>
 
                                     <td class="px-4 py-4 text-right">
                                         <span
                                             class="inline-flex px-3 py-1 rounded-full bg-red-100 text-red-700 text-xs font-semibold">
-                                            ₹{{ number_format($property->BalanceAmount, 2) }}
+                                            ₹<?php echo e(number_format($property->BalanceAmount, 2)); ?>
+
                                         </span>
                                     </td>
 
@@ -155,18 +118,18 @@
                                             <!-- View Button -->
                                             <button
                                                 onclick="openPropertyModal(
-                '{{ $property->district }}',
-                '{{ $property->city }}',
-                '{{ $property->sector }}',
-                '{{ $property->AssetId }}',
-                '{{ $property->AssetName }}',
-                '{{ $property->AssetSize }}',
-                '{{ $property->PrivatePurchaserName }}',
-                '{{ $property->MobileNo }}',
-                '{{ $property->ApplicationNo }}',
-                '{{ $property->FlatCost }}',
-                '{{ $property->ReceivedAmount }}',
-                '{{ $property->BalanceAmount }}'
+                '<?php echo e($property->district); ?>',
+                '<?php echo e($property->city); ?>',
+                '<?php echo e($property->sector); ?>',
+                '<?php echo e($property->AssetId); ?>',
+                '<?php echo e($property->AssetName); ?>',
+                '<?php echo e($property->AssetSize); ?>',
+                '<?php echo e($property->PrivatePurchaserName); ?>',
+                '<?php echo e($property->MobileNo); ?>',
+                '<?php echo e($property->ApplicationNo); ?>',
+                '<?php echo e($property->FlatCost); ?>',
+                '<?php echo e($property->ReceivedAmount); ?>',
+                '<?php echo e($property->BalanceAmount); ?>'
             )"
                                                 class="inline-flex items-center gap-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
 
@@ -179,8 +142,8 @@
                                             </button>
 
                                             <!-- Allotment Letter Button -->
-                                            @if ($property->BalanceAmount < 100000)
-                                                <a href="{{ route('allotment.letter', $property->PropertyAuctionId) }}"
+                                            <?php if($property->BalanceAmount < 100000): ?>
+                                                <a href="<?php echo e(route('allotment.letter', $property->PropertyAuctionId)); ?>"
                                                     class="inline-flex items-center gap-1 px-3 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100"
                                                     target="_blank">
 
@@ -190,14 +153,14 @@
 
                                                     Allotment Letter
                                                 </a>
-                                            @endif
+                                            <?php endif; ?>
 
                                         </div>
 
                                     </td>
 
                                 </tr>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                         </tbody>
 
@@ -212,7 +175,8 @@
                         </div>
 
                         <div class="pagination-wrapper">
-                            {{ $properties->links() }}
+                            <?php echo e($properties->links()); ?>
+
                         </div>
 
                     </div>
@@ -559,4 +523,6 @@
                 .classList.add('hidden');
         }
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.mmsayDepartmentAuth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\xampp\htdocs\housing-project\resources\views/mmsay/deptartmentPropertyAllotment.blade.php ENDPATH**/ ?>

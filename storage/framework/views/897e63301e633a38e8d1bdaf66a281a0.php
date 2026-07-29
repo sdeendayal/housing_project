@@ -1,7 +1,6 @@
-@extends('layouts.mmsayDepartmentAuth')
-@section('title', 'MMSAY Department Dashboard')
+<?php $__env->startSection('title', 'MMSAY Department Dashboard'); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 
     <main class="ml-52 pt-20 px-6 pb-6 min-h-screen bg-slate-50">
 
@@ -25,20 +24,22 @@
 
                 <div>
                     <p class="text-gray-500">Total Plot Cost</p>
-                    <h2 class="text-xl font-bold">₹ {{ number_format($flatCost) }}</h2>
+                    <h2 class="text-xl font-bold">₹ <?php echo e(number_format($flatCost)); ?></h2>
                 </div>
 
                 <div>
                     <p class="text-green-600">Received Amount</p>
                     <h2 class="text-xl font-bold text-green-600">
-                        ₹ {{ number_format($ReceivedAmount) }}
+                        ₹ <?php echo e(number_format($ReceivedAmount)); ?>
+
                     </h2>
                 </div>
 
                 <div>
                     <p class="text-red-600">Pending Amount</p>
                     <h2 class="text-xl font-bold text-red-600">
-                        ₹ {{ number_format($BalanceAmount) }}
+                        ₹ <?php echo e(number_format($BalanceAmount)); ?>
+
                     </h2>
                 </div>
 
@@ -46,25 +47,7 @@
 
         </div>
 
-        {{-- <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6 rounded-2xl shadow mt-6">
-
-            <h2 class="text-lg font-semibold">EMI Recovery Summary</h2>
-
-            <div class="grid grid-cols-2 gap-6 mt-4">
-
-                <div>
-                    <p>Total EMI Received</p>
-                    <h2 class="text-2xl font-bold">₹ {{ number_format($emiReceived) }}</h2>
-                </div>
-
-                <div>
-                    <p>Remaining EMI Balance</p>
-                    <h2 class="text-2xl font-bold">₹ {{ number_format($emiPending) }}</h2>
-                </div>
-
-            </div>
-
-        </div> --}}
+        
 
         <div class="bg-white p-6 rounded-2xl shadow border mt-6">
 
@@ -72,14 +55,15 @@
 
             <div class="grid grid-cols-2 gap-4 text-sm">
 
-                <div><b>Asset ID:</b> {{ $property->AssetId }}</div>
-                <div><b>Asset Name:</b> {{ $property->AssetName ?? '-' }}</div>
-                <div><b>Plot Cost:</b> ₹ {{ number_format($property->FlatCost) }}</div>
+                <div><b>Asset ID:</b> <?php echo e($property->AssetId); ?></div>
+                <div><b>Asset Name:</b> <?php echo e($property->AssetName ?? '-'); ?></div>
+                <div><b>Plot Cost:</b> ₹ <?php echo e(number_format($property->FlatCost)); ?></div>
                 <div>
                     <b>Location:</b>
-                    {{ $property->sector ?? '-' }},
-                    {{ $property->city ?? '-' }},
-                    {{ $property->district ?? '-' }}
+                    <?php echo e($property->sector ?? '-'); ?>,
+                    <?php echo e($property->city ?? '-'); ?>,
+                    <?php echo e($property->district ?? '-'); ?>
+
                 </div>
 
             </div>
@@ -92,10 +76,10 @@
 
             <div class="grid grid-cols-2 gap-4 text-sm">
 
-                <div><b>Name:</b> {{ $property->PrivatePurchaserName ?? '-' }}</div>
-                <div><b>Mobile:</b> {{ $property->MobileNo ?? '-' }}</div>
-                <div><b>Application No:</b> {{ $property->ApplicationNo ?? '-' }}</div>
-                {{-- <div><b>Member ID:</b> {{ $property->MemberID ?? '-' }}</div> --}}
+                <div><b>Name:</b> <?php echo e($property->PrivatePurchaserName ?? '-'); ?></div>
+                <div><b>Mobile:</b> <?php echo e($property->MobileNo ?? '-'); ?></div>
+                <div><b>Application No:</b> <?php echo e($property->ApplicationNo ?? '-'); ?></div>
+                
 
             </div>
 
@@ -120,30 +104,30 @@
 
                 <tbody>
 
-                    @foreach ($ledger as $row)
+                    <?php $__currentLoopData = $ledger; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <tr class="border-t">
 
-                            <td class="p-3">{{ $row['no'] }}</td>
-                            <td class="p-3">{{ $row['due'] }}</td>
+                            <td class="p-3"><?php echo e($row['no']); ?></td>
+                            <td class="p-3"><?php echo e($row['due']); ?></td>
 
-                            <td class="p-3">₹{{ number_format($row['emi']) }}</td>
-                            <td class="p-3 text-green-600">₹{{ number_format($row['paid']) }}</td>
-                            <td class="p-3 text-red-600">₹{{ number_format($row['balance']) }}</td>
+                            <td class="p-3">₹<?php echo e(number_format($row['emi'])); ?></td>
+                            <td class="p-3 text-green-600">₹<?php echo e(number_format($row['paid'])); ?></td>
+                            <td class="p-3 text-red-600">₹<?php echo e(number_format($row['balance'])); ?></td>
 
                             <td class="p-3">
 
-                                @if ($row['status'] == 'Paid')
+                                <?php if($row['status'] == 'Paid'): ?>
                                     <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">Paid</span>
-                                @elseif($row['status'] == 'Partial')
+                                <?php elseif($row['status'] == 'Partial'): ?>
                                     <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs">Partial</span>
-                                @else
+                                <?php else: ?>
                                     <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Unpaid</span>
-                                @endif
+                                <?php endif; ?>
 
                             </td>
 
                         </tr>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                 </tbody>
 
@@ -151,4 +135,6 @@
         </div>
     </main>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.mmsayDepartmentAuth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\xampp\htdocs\housing-project\resources\views/mmsay/emiStatus.blade.php ENDPATH**/ ?>

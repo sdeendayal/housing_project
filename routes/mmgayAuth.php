@@ -193,6 +193,7 @@ Route::get('/mmgay/bdo/refresh-captcha', [App\Http\Controllers\MMGAY\Bdo\MMGAYBd
 Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->name('mmgay.bdo.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'dashboard'])->name('dashboard');
     Route::get('/phase-report', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'phaseReport'])->name('phase-report');
+    Route::get('/villages-report', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'villagesReport'])->name('villages-report');
     Route::get('/eligibility-list', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'eligibilityList'])->name('eligibility-list');
     Route::get('/schedule/capacity/check', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'getSlotCapacityCheck'])->name('schedule.capacity-check');
     Route::get('/schedule/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'scheduleForm'])->name('schedule-form');
@@ -203,6 +204,10 @@ Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->na
     Route::get('/download-certificate/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadCertificate'])->name('download-certificate');
     Route::get('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentForm'])->name('site-development');
     Route::post('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentSave'])->name('site-development.save');
+    Route::get('/owner-status-report', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'ownerStatusReport'])->name('owner-status-report');
+    Route::get('/owner-registry-details/{mobile}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'getOwnerRegistryDetails'])->name('owner-registry-details');
+    Route::get('/owner-status-report/export/csv', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'ownerStatusReportExportCsv'])->name('owner-status-report.export.csv');
+    Route::get('/owner-status-report/export/pdf', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'ownerStatusReportExportPdf'])->name('owner-status-report.export.pdf');
     Route::get('/profile', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'profile'])->name('profile');
     Route::post('/profile/change-password', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'changePassword'])->name('profile.change-password');
 

@@ -13,6 +13,7 @@ class MmgaySiteDevelopment extends Model
         'district_id',
         'block_id',
         'village_id',
+        'phase',
         'road_status',
         'water_status',
         'electricity_status',
