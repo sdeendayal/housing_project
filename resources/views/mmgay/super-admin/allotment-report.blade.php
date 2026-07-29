@@ -466,11 +466,11 @@
             </div>
 
             <h3 class="mt-5 text-lg font-bold text-slate-800">
-                Report Generate Ho Rahi Hai
+                The report is generating.
             </h3>
 
             <p id="downloadMessage" class="mt-2 text-sm text-slate-500">
-                Kripya wait karein...
+                Please wait...
             </p>
 
             <div class="mt-5 h-2 overflow-hidden rounded-full bg-slate-100">
@@ -478,7 +478,7 @@
             </div>
 
             <p class="mt-4 text-xs text-slate-400">
-                Download complete hone tak page close na karein.
+                Don't close the page until the download is complete.
             </p>
 
         </div>

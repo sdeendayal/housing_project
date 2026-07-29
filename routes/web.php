@@ -244,7 +244,91 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'dashboard']
     )->name('mmsay.dashboard');
 
-    Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'index']);
+    Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'propertyRegistration']);
+
+    // Total filtered records print
+    Route::get(
+        '/mmsay-department-property-registration/print-records',
+        [PropertyManagementController::class, 'printPropertyRecords']
+    )->name('properties.records.print');
+
+    // Excel export
+    Route::get(
+        '/mmsay-department-property-registration/export/excel',
+        [PropertyManagementController::class, 'exportPropertiesExcel']
+    )->name('properties.export.excel');
+
+    // Individual property details
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}',
+        [PropertyManagementController::class, 'propertyDetails']
+    )
+        ->whereNumber('assetId')
+        ->name('properties.show');
+
+    // Individual print
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}/print',
+        [PropertyManagementController::class, 'propertyPrint']
+    )
+        ->whereNumber('assetId')
+        ->name('properties.print');
+
+    Route::get(
+        '/mmsay-department-property-registration/export/csv',
+        [PropertyManagementController::class, 'exportPropertiesCsv']
+    )->name('properties.export.csv');
+
+    Route::get(
+        '/mmsay-department-property-registration/{assetId}/pdf',
+        [PropertyManagementController::class, 'propertyPdf']
+    )->name('properties.pdf');
+
+    // physical-possession routes Start
+
+    Route::get(
+        '/mmsay-department-physical-possession',
+        [PropertyManagementController::class, 'physicalPossessionEligible']
+    )->name('physical.possession.index');
+
+    Route::get(
+        '/mmsay-department-physical-possession/export/csv',
+        [PropertyManagementController::class, 'physicalPossessionCsv']
+    )->name('physical.possession.csv');
+
+    Route::get(
+        '/mmsay-department-physical-possession/print',
+        [PropertyManagementController::class, 'physicalPossessionPrint']
+    )->name('physical.possession.print');
+
+    Route::get(
+        '/mmsay-department-physical-possession/{assetId}/view',
+        [PropertyManagementController::class, 'physicalPossessionShow']
+    )
+        ->whereNumber('assetId')
+        ->name('physical.possession.show');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible',
+        [PropertyManagementController::class, 'physicalPossessionNotEligible']
+    )->name('physical.possession.not-eligible');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible/csv',
+        [PropertyManagementController::class, 'physicalPossessionNotEligibleCsv']
+    )->name('physical.possession.not-eligible.csv');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible/print',
+        [PropertyManagementController::class, 'physicalPossessionNotEligiblePrint']
+    )->name('physical.possession.not-eligible.print');
+
+    Route::get(
+        '/mmsay-department-physical-possession/filter-options',
+        [PropertyManagementController::class, 'physicalPossessionFilterOptions']
+    )->name('physical.possession.filter-options');
+
+    // physical-possession routes End
 
     Route::get('/get-districts/{name}', [PropertyManagementController::class, 'getDistricts']);
     Route::get('/get-cities/{name}', [PropertyManagementController::class, 'getCities']);

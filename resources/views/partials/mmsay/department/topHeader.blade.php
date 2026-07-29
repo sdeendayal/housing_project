@@ -1,56 +1,65 @@
 <header
-    class="fixed top-0 right-0 left-52 h-16 bg-[rgb(0_51_88/1)] text-white border-b border-white/20 shadow-sm flex items-center justify-between px-6 z-40">
+    class="fixed left-52 right-0 top-0 z-40 flex h-16 items-center justify-between
+           border-b border-white/15 bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-500
+           px-6 text-white shadow-sm">
 
-    <div class="flex items-center gap-4 flex-1">
-        <h2 class="text-lg font-semibold tracking-wide">
-            Department Dashboard
-        </h2>
+    {{-- Dashboard identity --}}
+    <div class="flex min-w-0 items-center gap-3">
+        <div
+            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl
+                   bg-white/15 ring-1 ring-white/15">
+            <span class="material-symbols-outlined text-[25px]">
+                dashboard
+            </span>
+        </div>
+
+        <div class="min-w-0 leading-tight">
+            <h2 class="truncate text-xl font-bold tracking-tight">
+                Department Dashboard
+            </h2>
+
+            <p class="mt-0.5 truncate text-[11px] font-medium text-white/75">
+                MMSAY Monitoring System
+            </p>
+        </div>
     </div>
 
-    <div class="flex items-center gap-4">
-<div class="flex gap-3">
+    {{-- Header actions --}}
+    <div class="flex items-center gap-3">        
+        
 
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="bg-white border border-outline-variant rounded-lg px-3 py-2 flex items-center gap-2 shadow-sm cursor-pointer hover:bg-surface-container transition-colors text-sm">
+        {{-- Date --}}
+        <div
+            class="hidden h-11 items-center gap-2 rounded-xl border border-white/20
+                   bg-white/10 px-4 text-sm font-semibold backdrop-blur-sm lg:flex">
 
-                            <span class="font-medium text-gray-600">
-                                Branch:
-                            </span>
+            <span class="material-symbols-outlined text-[20px] text-amber-300">
+                calendar_month
+            </span>
 
-                            <span class="font-medium text-primary">
-                                All Branch
-                            </span>
+            <span>{{ now()->format('d M Y') }}</span>
+        </div>
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                expand_more
-                            </span>
-                        </div>
+        {{-- Administrator --}}
+        <div
+            class="flex h-12 cursor-pointer items-center gap-3 rounded-xl border border-white/20
+                   bg-white/10 px-3 backdrop-blur-sm transition hover:bg-white/20">
 
-                    </div>
-                </div>
-        <div class="flex items-center border-l border-white/20 pl-4">
-            
             <div
-                class="flex items-center gap-3 bg-white/10 px-4 py-2 rounded-xl cursor-pointer hover:bg-white/20 transition-all duration-200">
-                
-
-                <img
-                    alt="Administrator Profile"
-                    class="w-9 h-9 rounded-full border-2 border-white/30 object-cover"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBftP-_Ub9eLdOthwMCCpMxzNLCBOpmFJ1NZ9fYGEUQYH-SW_-R_mHXtHL_Pl_WnZPLiGrr1hqavwmwwMg_EPQSn2sbIs87WLi44wr0wLFBMpJiilI-wZUGwk2tSJ3iSbNYSMo3wov5EGZ993-C_ZqbWnI21rkbGX1oIP1V3EJqs5X5oaR1a7pkAzBASJB9EcpacMzpLZbm9AcRWw3Hu8Xj6g0TkY9B5MwvCnFmLSEzpL87hUsC7_Ob4gAu__7KLrkqVKQNubqy7V8">
-
-                <div class="flex flex-col leading-tight">
-                    <span class="text-sm font-semibold">
-                        Department Admin
-                    </span>
-                    <span class="text-xs text-white/70">
-                        Administrator
-                    </span>
-                </div>
-
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full
+                       bg-white text-sm font-bold text-indigo-600 shadow-sm">
+                {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
             </div>
 
+            <div class="hidden min-w-0 leading-tight sm:block">
+                <p class="max-w-36 truncate text-sm font-semibold">
+                    {{ auth()->user()->name ?? 'Department Admin' }}
+                </p>
+
+                <p class="mt-0.5 text-[11px] font-medium text-white/70">
+                    MMSAY Portal
+                </p>
+            </div>
         </div>
 
     </div>

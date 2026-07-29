@@ -207,14 +207,14 @@ class SuperAdminController extends Controller
          * पहले की तरह total registry rows का count रखा गया है।
          * इसमें कोई dashboard logic change नहीं किया गया।
          */
-        $totalRegistration = DB::table('dddnew1.registary')
+        $totalRegistration = DB::table('registary')
             ->count();
 
         /*
          * केवल matched mobile numbers unique count होंगे।
          * एक mobile registry में कई बार होने पर भी count 1 आएगा।
          */
-        $matched = DB::table('dddnew1.registary as r')
+        $matched = DB::table('registary as r')
             ->joinSub(
                 $filteredOwnerMobiles,
                 'filtered_owners',
@@ -2109,9 +2109,9 @@ class SuperAdminController extends Controller
         | These counts do not change with dashboard filters or search.
         */
 
-        $totalRegistrations = DB::table('dddnew1.registary')->count();
+        $totalRegistrations = DB::table('registary')->count();
 
-        $blankRegistryNumbers = DB::table('dddnew1.registary as r')
+        $blankRegistryNumbers = DB::table('registary as r')
             ->where(function ($query) {
                 $query
                     ->whereNull('r.RegistaryNumber')
@@ -2119,7 +2119,7 @@ class SuperAdminController extends Controller
             })
             ->count();
 
-        $uniqueRegistrations = DB::table('dddnew1.registary as r')
+        $uniqueRegistrations = DB::table('registary as r')
             ->whereNotNull('r.RegistaryNumber')
             ->whereRaw("TRIM(r.RegistaryNumber) != ''")
             ->distinct()
@@ -2139,7 +2139,7 @@ class SuperAdminController extends Controller
         | EXISTS prevents duplicate OwnerMaster mobile rows from increasing count.
         */
 
-        $globalMatchedQuery = DB::table('dddnew1.registary as r')
+        $globalMatchedQuery = DB::table('registary as r')
             ->whereNotNull('r.SecondPartyMobile')
             ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
             ->whereExists(function ($query) {
@@ -2183,7 +2183,7 @@ class SuperAdminController extends Controller
         | MySQL 8+ required because ROW_NUMBER() and COUNT() OVER() are used.
         */
 
-        $registryRankedSubQuery = DB::table('dddnew1.registary as rs')
+        $registryRankedSubQuery = DB::table('registary as rs')
             ->select(
                 'rs.District',
                 'rs.TehsilName',
@@ -2543,7 +2543,7 @@ class SuperAdminController extends Controller
             $type = 'matched';
         }
 
-        $registryRankedSubQuery = DB::table('dddnew1.registary as rs')
+        $registryRankedSubQuery = DB::table('registary as rs')
             ->select(
                 'rs.District',
                 'rs.TehsilName',

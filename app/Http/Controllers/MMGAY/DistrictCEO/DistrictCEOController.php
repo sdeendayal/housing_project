@@ -6,14 +6,18 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as ExcelFormat;
 use App\Exports\DistrictVillageSummaryExport;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\ApplicantReportExport;
 
 class DistrictCEOController extends Controller
 {
     public function dashboard(Request $request, $phase = 'all')
     {
         $user = auth()->user();
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -27,6 +31,8 @@ class DistrictCEOController extends Controller
         if (!$districtId) {
             abort(404, 'District not found.');
         }
+
+
 
         /*
         |--------------------------------------------------------------------------
@@ -858,15 +864,16 @@ END) AS RegistryUnmatchedWithoutMobile,
 
     private function getVillageSummaryData(
         int $districtId,
-        int $phase,
+        int|string $phase,
         ?int $villageId = null
     ) {
         return DB::table('OwnerMaster as o')
             ->join(
                 'VillageMaster as v',
-                'o.VillageId',
-                '=',
-                'v.VillageId'
+                function ($join) {
+                    $join->on('o.VillageId', '=', 'v.VillageId')
+                        ->on('o.DistrictId', '=', 'v.DistrictId');
+                }
             )
             ->join(
                 'DistrictMaster as d',
@@ -881,17 +888,30 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'f.FlatId'
             )
             ->where('o.DistrictId', $districtId)
-            ->where('o.Phase', $phase)
             ->where('v.DistrictId', $districtId)
-            ->where('v.phase', $phase)
             ->where('v.plots', '>', 0)
+
+            ->when(
+                $phase === 'all',
+                function ($query) {
+                    $query->whereColumn('o.Phase', 'v.phase');
+                },
+                function ($query) use ($phase) {
+                    $query
+                        ->where('o.Phase', (int) $phase)
+                        ->where('v.phase', (int) $phase);
+                }
+            )
+
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('v.VillageId', $villageId);
             })
+
             ->selectRaw("
             d.DistrictName,
             v.VillageId,
             v.VillageName,
+            v.phase AS Phase,
             v.plots AS TotalPlots,
 
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
@@ -974,31 +994,39 @@ END) AS RegistryUnmatchedWithoutMobile,
                 THEN o.OwnerId
             END) AS Others
         ")
+
             ->groupBy(
                 'd.DistrictName',
                 'v.VillageId',
                 'v.VillageName',
+                'v.phase',
                 'v.plots'
             )
+
+            ->orderBy('v.phase')
             ->orderBy('v.VillageName')
             ->get();
     }
 
-    public function exportVillageSummaryPdf(Request $request, $phase = 1)
+    public function exportVillageSummaryPdf(Request $request, $phase = 'all')
     {
         $user = auth()->user();
+
+        abort_unless($user, 401);
 
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
-        if (!$districtId) {
-            abort(404, 'District not found.');
-        }
+        abort_unless($districtId, 404, 'District not found.');
 
-        $phase = in_array((int) $phase, [1, 2, 3], true)
-            ? (int) $phase
-            : 1;
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 1;
+            }
+        }
 
         $villageId = $request->filled('village_id')
             ? (int) $request->village_id
@@ -1033,26 +1061,34 @@ END) AS RegistryUnmatchedWithoutMobile,
             )
         )->setPaper('a4', 'landscape');
 
+        $phaseLabel = $phase === 'all'
+            ? 'all-phases'
+            : 'phase-' . $phase;
+
         return $pdf->download(
-            'village-summary-phase-' . $phase . '.pdf'
+            'village-summary-' . $phaseLabel . '.pdf'
         );
     }
 
-    public function exportVillageSummaryExcel(Request $request, $phase = 1)
+    public function exportVillageSummaryExcel(Request $request, $phase = 'all')
     {
         $user = auth()->user();
+
+        abort_unless($user, 401);
 
         $districtId = DB::table('DistrictMaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
-        if (!$districtId) {
-            abort(404, 'District not found.');
-        }
+        abort_unless($districtId, 404, 'District not found.');
 
-        $phase = in_array((int) $phase, [1, 2, 3], true)
-            ? (int) $phase
-            : 1;
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 1;
+            }
+        }
 
         $villageId = $request->filled('village_id')
             ? (int) $request->village_id
@@ -1064,9 +1100,13 @@ END) AS RegistryUnmatchedWithoutMobile,
             $villageId
         );
 
+        $phaseLabel = $phase === 'all'
+            ? 'all-phases'
+            : 'phase-' . $phase;
+
         return Excel::download(
             new DistrictVillageSummaryExport($villageData),
-            'village-summary-phase-' . $phase . '.xlsx'
+            'village-summary-' . $phaseLabel . '.xlsx'
         );
     }
 
@@ -2391,12 +2431,17 @@ END) AS RegistryUnmatchedWithoutMobile,
         switch ($status) {
             case 'allotted':
                 $query
-                    ->whereNotNull('o.FlatId')
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
                 break;
 
             case 'approved_paid':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->where('o.IsApproved', 1)
                     ->where('o.IsPaid', 1)
                     ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
@@ -2405,6 +2450,9 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'approved_unpaid':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->where('o.IsApproved', 1)
                     ->whereRaw('COALESCE(o.IsPaid, 0) = 0')
                     ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
@@ -2428,8 +2476,12 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'registry_done':
                 $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereNotNull('o.MobileNo')
                     ->where('o.MobileNo', '<>', '')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereExists(function ($registryQuery) {
                         $registryQuery
                             ->selectRaw('1')
@@ -2443,7 +2495,9 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             case 'registry_pending':
                 $query
-                    ->whereNotNull('o.FlatId')
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
                     ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->where(function ($registryQuery) {
                         $registryQuery
@@ -2459,6 +2513,50 @@ END) AS RegistryUnmatchedWithoutMobile,
                                     );
                             });
                     });
+                break;
+
+            case 'sc':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'SC')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'ghumantu':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'Ghumantu')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'widow':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.Caste', 'Widow')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
+                break;
+
+            case 'others':
+                $query
+                    ->whereNotNull('f.FlatId')
+                    ->whereNotNull('f.FlatNo')
+                    ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->whereIn('o.Caste', ['General', 'Others'])
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0');
                 break;
         }
 
@@ -2497,7 +2595,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
                     THEN 'Cancelled'
 
-                WHEN o.FlatId IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
                     THEN 'Allotted'
 
                 ELSE 'Not Allotted'
@@ -2559,7 +2659,10 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN COALESCE(o.IsAllotmentCancelled, 0) = 1
                     THEN 'Not Applicable'
 
-                WHEN o.MobileNo IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
+                    AND o.MobileNo IS NOT NULL
                     AND o.MobileNo <> ''
                     AND EXISTS (
                         SELECT 1
@@ -2568,7 +2671,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                     )
                     THEN 'Registry Done'
 
-                WHEN o.FlatId IS NOT NULL
+                WHEN f.FlatId IS NOT NULL
+                    AND f.FlatNo IS NOT NULL
+                    AND TRIM(f.FlatNo) <> ''
                     THEN 'Registry Pending'
 
                 ELSE 'Not Applicable'
@@ -2576,5 +2681,53 @@ END) AS RegistryUnmatchedWithoutMobile,
         ");
     }
 
+    public function exportApplicantReportExcel(Request $request)
+    {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        return Excel::download(
+            new ApplicantReportExport(
+                $districtId,
+                $request->query('status', 'all_applicants'),
+                $request->query('phase', 'all'),
+                $request->query('village_id'),
+                $request->query('search')
+            ),
+            'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.xlsx'
+        );
+    }
+
+    public function exportApplicantReportCsv(Request $request)
+    {
+        $user = auth()->user();
+
+        abort_unless($user, 401);
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        return Excel::download(
+            new ApplicantReportExport(
+                $districtId,
+                $request->query('status', 'all_applicants'),
+                $request->query('phase', 'all'),
+                $request->query('village_id'),
+                $request->query('search')
+            ),
+            'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.csv',
+            ExcelFormat::CSV
+        );
+    }
 
 }
