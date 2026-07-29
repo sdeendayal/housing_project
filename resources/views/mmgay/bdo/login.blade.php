@@ -120,7 +120,7 @@
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                     mail
                                 </span>
-                                <input type="email" name="email" value="{{ old('email', 'bdporewari@gmail.com') }}" placeholder="bdporewari@gmail.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
+                                <input type="email" name="email" value="{{ old('email', 'bdpobhiwani@gmail.com') }}" placeholder="bdpobhiwani@gmail.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
                             </div>
                             @error('email')
                                 <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
