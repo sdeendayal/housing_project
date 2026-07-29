@@ -26,6 +26,40 @@
     ];
 
     $cmsIsActive = $isActive($cmsRoutes);
+
+    $dashboardFilters = array_filter(
+        request()->only(['district_id', 'city_id', 'sector_id']),
+        fn($value) => $value !== null && $value !== '',
+    );
+
+    $filteredUrl = fn(string $path) => url($path) .
+        ($dashboardFilters ? '?' . http_build_query($dashboardFilters) : '');
+?>
+
+<?php
+    $propertyView = request('property_view', 'registration');
+
+    $propertyUrl = function (string $view) use ($dashboardFilters) {
+        return url('mmsay-department-property-registration') .
+            '?' .
+            http_build_query(
+                array_merge($dashboardFilters, [
+                    'property_view' => $view,
+                ]),
+            );
+    };
+
+    $propertyMenuClass = function (string $view) use ($propertyView) {
+        return request()->is('mmsay-department-property-registration*') && $propertyView === $view
+            ? 'border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm'
+            : 'border-transparent text-slate-600 hover:bg-slate-50 hover:text-slate-900';
+    };
+
+    $propertyIconClass = function (string $view) use ($propertyView) {
+        return request()->is('mmsay-department-property-registration*') && $propertyView === $view
+            ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+            : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600';
+    };
 ?>
 
 <aside
@@ -69,7 +103,7 @@
                 dashboard
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Dashboard
             </span>
 
@@ -83,44 +117,67 @@
         </p>
 
         
-        <a href="<?php echo e(url('mmsay-department-property-registration')); ?>"
+        <a href="<?php echo e($propertyUrl('registration')); ?>"
             class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
-                   <?php echo e($menuClass('mmsay-department-property-registration*')); ?>">
+           <?php echo e($propertyMenuClass('registration')); ?>">
 
             <span
                 class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-                       <?php echo e($iconClass('mmsay-department-property-registration*')); ?>">
+               <?php echo e($propertyIconClass('registration')); ?>">
                 app_registration
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Property Registration
             </span>
 
-            <?php if($isActive('mmsay-department-property-registration*')): ?>
+            <?php if(request()->is('mmsay-department-property-registration*') && $propertyView === 'registration'): ?>
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             <?php endif; ?>
         </a>
 
         
-        <a href="<?php echo e(url('mmsay-department-allotted-properties')); ?>"
-            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
-                   <?php echo e($menuClass('mmsay-department-allotted-properties*')); ?>">
+        <a href="<?php echo e($filteredUrl('mmsay-department-draw')); ?>"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   <?php echo e($menuClass('mmsay-department-draw*')); ?>">
 
             <span
                 class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-                       <?php echo e($iconClass('mmsay-department-allotted-properties*')); ?>">
-                location_city
+                       <?php echo e($iconClass('mmsay-department-draw*')); ?>">
+                casino
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
-                Allotted Properties
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Draw
             </span>
 
-            <?php if($isActive('mmsay-department-allotted-properties*')): ?>
+            <?php if($isActive('mmsay-department-draw*')): ?>
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             <?php endif; ?>
         </a>
+
+        
+        <a href="<?php echo e($propertyUrl('allotted')); ?>"
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
+           <?php echo e($propertyMenuClass('allotted')); ?>">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+               <?php echo e($propertyIconClass('allotted')); ?>">
+                location_city
+            </span>
+
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Allotted Properties
+            </span>
+
+            <?php if(request()->is('mmsay-department-property-registration*') && $propertyView === 'allotted'): ?>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            <?php endif; ?>
+        </a>
+
+        
+
 
         
         <a href="<?php echo e(url('mmsay-department-property-emi-calculation')); ?>"
@@ -153,11 +210,83 @@
                 engineering
             </span>
 
-            <span class="min-w-0 flex-1 truncate">
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                 Site Engineer
             </span>
 
             <?php if($isActive('mmsay-department-add-district-officer*')): ?>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            <?php endif; ?>
+        </a>
+
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Payment Reports
+        </p>
+
+        
+        <a href="<?php echo e($filteredUrl('full-paid-properties')); ?>"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   <?php echo e($menuClass('full-paid-properties*')); ?>">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       <?php echo e($iconClass('full-paid-properties*')); ?>">
+                task_alt
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">Full Payment</span>
+            <?php if($isActive('full-paid-properties*')): ?>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            <?php endif; ?>
+        </a>
+
+        
+        <a href="<?php echo e($filteredUrl('partial-paid-properties')); ?>"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   <?php echo e($menuClass(['partial-paid-properties*', 'pending-properties*'])); ?>">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       <?php echo e($iconClass(['partial-paid-properties*', 'pending-properties*'])); ?>">
+                pending_actions
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">Partial Payment</span>
+            <?php if($isActive(['partial-paid-properties*', 'pending-properties*'])): ?>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            <?php endif; ?>
+        </a>
+
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            Possession
+        </p>
+
+        
+        <a href="<?php echo e(route('physical.possession.index', $dashboardFilters)); ?>"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   <?php echo e($menuClass('mmsay-department-physical-possession')); ?>">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       <?php echo e($iconClass('mmsay-department-physical-possession')); ?>">
+                real_estate_agent
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Possession Eligible
+            </span>
+            <?php if($isActive('mmsay-department-physical-possession')): ?>
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            <?php endif; ?>
+        </a>
+
+        
+        <a href="<?php echo e(route('physical.possession.not-eligible', $dashboardFilters)); ?>"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+                   <?php echo e($menuClass('mmsay-department-physical-possession/not-eligible*')); ?>">
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+                       <?php echo e($iconClass('mmsay-department-physical-possession/not-eligible*')); ?>">
+                block
+            </span>
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+                Possession Not Eligible
+            </span>
+            <?php if($isActive('mmsay-department-physical-possession/not-eligible*')): ?>
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             <?php endif; ?>
         </a>
@@ -183,7 +312,7 @@
                     edit_square
                 </span>
 
-                <span class="min-w-0 flex-1 truncate">
+                <span class="min-w-0 flex-1 whitespace-normal leading-tight">
                     CMS Management
                 </span>
 

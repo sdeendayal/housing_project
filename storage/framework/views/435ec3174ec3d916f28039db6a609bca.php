@@ -1,7 +1,6 @@
-@extends('layouts.mmsayDepartmentAuth')
-@section('title', 'MMSAY - Full Paid Properties')
+<?php $__env->startSection('title', 'MMSAY - Full Paid Properties'); ?>
 
-@section('content')
+<?php $__env->startSection('content'); ?>
 <main class="ml-52 min-h-screen bg-slate-50 px-5 pb-6 pt-20">
     <div class="mx-auto max-w-[1800px] space-y-4">
         <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
@@ -14,13 +13,13 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                    <a href="{{ route('full-paid-properties.csv', request()->query()) }}"
+                    <a href="<?php echo e(route('full-paid-properties.csv', request()->query())); ?>"
                         class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-emerald-600 px-3 text-xs font-semibold text-white transition hover:bg-emerald-700">
                         <span class="material-symbols-outlined text-[16px]">download</span>
                         Excel CSV
                     </a>
 
-                    <a href="{{ route('full-paid-properties.print', request()->query()) }}" target="_blank"
+                    <a href="<?php echo e(route('full-paid-properties.print', request()->query())); ?>" target="_blank"
                         class="inline-flex h-9 items-center gap-1.5 rounded-lg bg-slate-800 px-3 text-xs font-semibold text-white transition hover:bg-slate-900">
                         <span class="material-symbols-outlined text-[16px]">print</span>
                         Print
@@ -28,9 +27,9 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('full-paid-properties') }}"
+            <form method="GET" action="<?php echo e(route('full-paid-properties')); ?>"
                 class="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 xl:grid-cols-12">
-                <input type="search" name="search" value="{{ request('search', '') }}"
+                <input type="search" name="search" value="<?php echo e(request('search', '')); ?>"
                     placeholder="Asset, applicant, application, mobile..."
                     class="h-10 rounded-lg border border-slate-200 px-3 text-xs outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 xl:col-span-4">
 
@@ -38,38 +37,43 @@
                     onchange="document.getElementById('city_id').value=''; document.getElementById('sector_id').value=''; this.form.submit();"
                     class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 xl:col-span-2">
                     <option value="">All Districts</option>
-                    @foreach ($districts as $district)
-                        <option value="{{ $district->DistrictId }}" @selected((string) request('district_id') === (string) $district->DistrictId)>
-                            {{ $district->DistrictName }}
+                    <?php $__currentLoopData = $districts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $district): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($district->DistrictId); ?>" <?php if((string) request('district_id') === (string) $district->DistrictId): echo 'selected'; endif; ?>>
+                            <?php echo e($district->DistrictName); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
 
                 <select name="city_id" id="city_id"
                     onchange="document.getElementById('sector_id').value=''; this.form.submit();"
-                    @disabled(!request()->filled('district_id'))
+                    <?php if(!request()->filled('district_id')): echo 'disabled'; endif; ?>
                     class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 xl:col-span-2">
                     <option value="">
-                        {{ request()->filled('district_id') ? 'All Cities' : 'Select district first' }}
+                        <?php echo e(request()->filled('district_id') ? 'All Cities' : 'Select district first'); ?>
+
                     </option>
-                    @foreach ($cities as $city)
-                        <option value="{{ $city->CityId }}" @selected((string) request('city_id') === (string) $city->CityId)>
-                            {{ $city->CityName }}
+                    <?php $__currentLoopData = $cities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $city): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($city->CityId); ?>" <?php if((string) request('city_id') === (string) $city->CityId): echo 'selected'; endif; ?>>
+                            <?php echo e($city->CityName); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
 
                 <select name="sector_id" id="sector_id"
-                    @disabled(!request()->filled('city_id'))
+                    <?php if(!request()->filled('city_id')): echo 'disabled'; endif; ?>
                     class="h-10 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none focus:border-indigo-400 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400 xl:col-span-2">
                     <option value="">
-                        {{ request()->filled('city_id') ? 'All Villages / Sectors' : 'Select city first' }}
+                        <?php echo e(request()->filled('city_id') ? 'All Villages / Sectors' : 'Select city first'); ?>
+
                     </option>
-                    @foreach ($sectors as $sector)
-                        <option value="{{ $sector->SectorId }}" @selected((string) request('sector_id') === (string) $sector->SectorId)>
-                            {{ $sector->SectorName }}
+                    <?php $__currentLoopData = $sectors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sector): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($sector->SectorId); ?>" <?php if((string) request('sector_id') === (string) $sector->SectorId): echo 'selected'; endif; ?>>
+                            <?php echo e($sector->SectorName); ?>
+
                         </option>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </select>
 
                 <div class="flex gap-2 xl:col-span-2">
@@ -78,7 +82,7 @@
                         <span class="material-symbols-outlined text-[17px]">filter_alt</span>
                         Apply
                     </button>
-                    <a href="{{ route('full-paid-properties') }}"
+                    <a href="<?php echo e(route('full-paid-properties')); ?>"
                         class="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-500 transition hover:bg-slate-50">
                         <span class="material-symbols-outlined text-[18px]">restart_alt</span>
                     </a>
@@ -90,7 +94,7 @@
             <div class="border-b border-slate-100 px-5 py-4">
                 <h2 class="text-sm font-bold text-slate-800">Full Payment Records</h2>
                 <p class="mt-0.5 text-[11px] text-slate-500">
-                    {{ number_format($properties->total()) }} filtered records
+                    <?php echo e(number_format($properties->total())); ?> filtered records
                 </p>
             </div>
 
@@ -110,75 +114,84 @@
                     </thead>
 
                     <tbody class="divide-y divide-slate-100 text-xs">
-                        @forelse ($properties as $row)
+                        <?php $__empty_1 = true; $__currentLoopData = $properties; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr class="transition hover:bg-slate-50/70">
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-800">Asset #{{ $row->asset_id }}</p>
+                                    <p class="font-semibold text-slate-800">Asset #<?php echo e($row->asset_id); ?></p>
                                     <p class="mt-0.5 text-[10px] text-slate-400">
-                                        App: {{ $row->application_number ?: '-' }}
+                                        App: <?php echo e($row->application_number ?: '-'); ?>
+
                                     </p>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <p class="font-semibold text-slate-800">{{ $row->applicant_name ?: 'Not allotted' }}</p>
-                                    <p class="mt-0.5 text-[10px] text-slate-400">{{ $row->mobile ?: '-' }}</p>
+                                    <p class="font-semibold text-slate-800"><?php echo e($row->applicant_name ?: 'Not allotted'); ?></p>
+                                    <p class="mt-0.5 text-[10px] text-slate-400"><?php echo e($row->mobile ?: '-'); ?></p>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <p class="font-medium text-slate-700">{{ $row->asset_name ?: '-' }}</p>
+                                    <p class="font-medium text-slate-700"><?php echo e($row->asset_name ?: '-'); ?></p>
                                     <p class="mt-0.5 text-[10px] text-slate-400">
-                                        {{ $row->asset_size }} {{ $row->asset_unit }}
+                                        <?php echo e($row->asset_size); ?> <?php echo e($row->asset_unit); ?>
+
                                     </p>
                                 </td>
                                 <td class="px-4 py-3 text-slate-600">
-                                    {{ $row->district_name ?: '-' }}
+                                    <?php echo e($row->district_name ?: '-'); ?>
+
                                     <p class="mt-0.5 text-[10px] text-slate-400">
-                                        {{ $row->city_name ?: '-' }} / {{ $row->sector_name ?: '-' }}
+                                        <?php echo e($row->city_name ?: '-'); ?> / <?php echo e($row->sector_name ?: '-'); ?>
+
                                     </p>
                                 </td>
                                 <td class="px-4 py-3 text-right font-semibold text-slate-700">
-                                    ₹{{ number_format($row->flat_cost ?? 0, 2) }}
+                                    ₹<?php echo e(number_format($row->flat_cost ?? 0, 2)); ?>
+
                                 </td>
                                 <td class="px-4 py-3 text-right">
                                     <p class="font-bold text-emerald-600">
-                                        ₹{{ number_format($row->total_paid ?? 0, 2) }}
+                                        ₹<?php echo e(number_format($row->total_paid ?? 0, 2)); ?>
+
                                     </p>
                                     <p class="mt-0.5 text-[9px] text-slate-400">Initial + cash receipts</p>
                                 </td>
                                 <td class="px-4 py-3 text-right font-semibold text-indigo-600">
-                                    ₹{{ number_format($row->excess_amount ?? 0, 2) }}
+                                    ₹<?php echo e(number_format($row->excess_amount ?? 0, 2)); ?>
+
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('properties.show', $row->asset_id) }}"
+                                    <a href="<?php echo e(route('properties.show', $row->asset_id)); ?>"
                                         class="inline-flex h-8 items-center gap-1 rounded-lg bg-indigo-50 px-3 text-xs font-semibold text-indigo-600 transition hover:bg-indigo-100">
                                         <span class="material-symbols-outlined text-[16px]">visibility</span>
                                         View
                                     </a>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="8" class="px-5 py-14 text-center text-sm text-slate-400">
                                     No full paid property found.
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
 
-            @if ($properties->hasPages())
+            <?php if($properties->hasPages()): ?>
                 <div class="flex flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <p class="text-xs text-slate-500">
-                        Showing <strong>{{ number_format($properties->firstItem()) }}</strong>
-                        to <strong>{{ number_format($properties->lastItem()) }}</strong>
-                        of <strong>{{ number_format($properties->total()) }}</strong> records
+                        Showing <strong><?php echo e(number_format($properties->firstItem())); ?></strong>
+                        to <strong><?php echo e(number_format($properties->lastItem())); ?></strong>
+                        of <strong><?php echo e(number_format($properties->total())); ?></strong> records
                     </p>
 
                     <div class="flex items-center gap-1">
-                        {{ $properties->onEachSide(1)->links() }}
+                        <?php echo e($properties->onEachSide(1)->links()); ?>
+
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
         </section>
     </div>
 </main>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('layouts.mmsayDepartmentAuth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\xampp\htdocs\housing-project\resources\views/mmsay/fullPaidProperties.blade.php ENDPATH**/ ?>

@@ -181,161 +181,7 @@
                 </form>
             </div>
 
-            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-                
-                <div
-                    class="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/70 to-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex items-center gap-3">
-                        <div
-                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-indigo-100">
-                            <span class="material-symbols-outlined text-[21px]">
-                                account_tree
-                            </span>
-                        </div>
-
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-800">
-                                Property Process
-                            </h3>
-
-                            <p class="mt-0.5 text-[11px] text-slate-500">
-                                Quick access to each processing stage
-                            </p>
-                        </div>
-                    </div>
-
-                    <span
-                        class="inline-flex w-fit items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1.5 text-[10px] font-semibold text-indigo-600">
-                        <span class="h-1.5 w-1.5 rounded-full bg-indigo-500"></span>
-                        6 Process Stages
-                    </span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-6 lg:p-5">
-
-                    
-                    <a href="<?php echo e(url('mmsay-department-property-registration')); ?>"
-                        class="group relative overflow-hidden rounded-xl border border-emerald-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-emerald-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 transition group-hover:bg-emerald-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">app_registration</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">Registration</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">Property entry</p>
-                    </a>
-
-                    
-                    <a href="<?php echo e(url('/mmsay-department-draw')); ?>"
-                        class="group relative overflow-hidden rounded-xl border border-cyan-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-cyan-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600 transition group-hover:bg-cyan-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">casino</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-cyan-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">Draw</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">Property selection</p>
-                    </a>
-
-                    
-                    <a href="<?php echo e(url('mmsay-department-allotted-properties')); ?>"
-                        class="group relative overflow-hidden rounded-xl border border-orange-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-orange-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-600 transition group-hover:bg-orange-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">home_work</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-orange-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">Allotment</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">Plot / flat allotted</p>
-                    </a>
-
-                    
-                    <a href="#"
-                        class="group relative overflow-hidden rounded-xl border border-blue-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-blue-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 transition group-hover:bg-blue-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">description</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-blue-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">Provisional</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">Issued after draw</p>
-                    </a>
-
-                    
-                    <a href="<?php echo e(url('/mmsay-department-emi-payments')); ?>"
-                        class="group relative overflow-hidden rounded-xl border border-amber-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-amber-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-600 transition group-hover:bg-amber-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">payments</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-amber-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">EMI Payments</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">Monthly installments</p>
-                    </a>
-
-                    
-                    <a href="<?php echo e(url('mmsay-department-physical-letter')); ?>"
-                        class="group relative overflow-hidden rounded-xl border border-pink-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md">
-                        <span class="absolute inset-x-0 top-0 h-0.5 bg-pink-500"></span>
-
-                        <div class="flex items-start justify-between">
-                            <div
-                                class="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-50 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white">
-                                <span class="material-symbols-outlined text-[21px]">approval</span>
-                            </div>
-                            <span
-                                class="material-symbols-outlined text-[16px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-pink-500">
-                                arrow_outward
-                            </span>
-                        </div>
-
-                        <h4 class="mt-3 text-xs font-bold text-slate-800">Physical Letter</h4>
-                        <p class="mt-1 truncate text-[10px] text-slate-400">After payment eligibility</p>
-                    </a>
-
-                </div>
-            </section>
+            
 
             <!-- Bento Grid - Summary Metrics -->
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
@@ -413,7 +259,14 @@
                 </a>
 
                 
-                <a href="<?php echo e(url('mmsay-department-allotted-properties')); ?>"
+                <a href="<?php echo e(url('mmsay-department-property-registration')); ?>?<?php echo e(http_build_query(
+                    array_filter([
+                        'property_view' => 'allotted',
+                        'district_id' => $districtId ?? null,
+                        'city_id' => $cityId ?? null,
+                        'sector_id' => $sectorId ?? null,
+                    ]),
+                )); ?>"
                     class="group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
@@ -619,6 +472,177 @@
                     </div>
                 </div>
             </div>
+
+            
+            <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div
+                    class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                            <span class="material-symbols-outlined text-[20px]">
+                                real_estate_agent
+                            </span>
+                        </div>
+
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">
+                                Latest Scheduled Possession Applications
+                            </h3>
+                            <p class="mt-0.5 text-xs text-slate-400">
+                                Latest 10 applications with a citizen-selected visit slot
+                            </p>
+                        </div>
+                    </div>
+
+                    <a href="<?php echo e(route(
+                        'physical.possession.index',
+                        array_filter([
+                            'district_id' => $districtId ?? null,
+                            'city_id' => $cityId ?? null,
+                            'sector_id' => $sectorId ?? null,
+                        ]),
+                    )); ?>"
+                        class="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-violet-100 bg-violet-50 px-3 text-xs font-semibold text-violet-600 transition hover:bg-violet-100">
+                        View All
+                        <span class="material-symbols-outlined text-[16px]">
+                            arrow_forward
+                        </span>
+                    </a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full min-w-[1100px] text-left text-xs">
+                        <thead class="border-b border-slate-200 bg-slate-50">
+                            <tr class="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                <th class="px-5 py-3">Application</th>
+                                <th class="px-5 py-3">Applicant</th>
+                                <th class="px-5 py-3">Property</th>
+                                <th class="px-5 py-3">Location</th>
+                                <th class="px-5 py-3 text-right">Received</th>
+                                <th class="px-5 py-3">Schedule</th>
+                                <th class="px-5 py-3">Status</th>
+                                <th class="px-5 py-3 text-right">Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody class="divide-y divide-slate-100">
+                            <?php $__empty_1 = true; $__currentLoopData = $latestPhysicalApplications ?? collect(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $application): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                                <?php
+                                    $currentStatus =
+                                        $application->physical_possession_status ?: $application->status ?: 'Pending';
+
+                                    $statusClass = match (strtolower($currentStatus)) {
+                                        'verified', 'approved' => 'bg-emerald-50 text-emerald-600',
+                                        'site verified' => 'bg-cyan-50 text-cyan-600',
+                                        'slot selected' => 'bg-orange-50 text-orange-600',
+                                        'visit scheduled' => 'bg-blue-50 text-blue-600',
+                                        default => 'bg-amber-50 text-amber-600',
+                                    };
+                                ?>
+
+                                <tr class="transition hover:bg-slate-50/70">
+                                    <td class="px-5 py-3.5">
+                                        <p class="font-bold text-slate-800">
+                                            <?php echo e($application->application_number ?: 'Application #' . $application->id); ?>
+
+                                        </p>
+                                        <p class="mt-1 text-[10px] text-slate-400">
+                                            Asset #<?php echo e($application->asset_id ?: '-'); ?>
+
+                                        </p>
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <p class="font-semibold text-slate-800">
+                                            <?php echo e($application->applicant_name ?: '-'); ?>
+
+                                        </p>
+                                        <p class="mt-1 text-[10px] text-slate-400">
+                                            <?php echo e($application->mobile ?: '-'); ?>
+
+                                        </p>
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <p class="font-medium text-slate-700">
+                                            <?php echo e($application->asset_name ?: '-'); ?>
+
+                                        </p>
+                                        <p class="mt-1 text-[10px] text-slate-400">
+                                            <?php echo e($application->asset_size ?: '-'); ?>
+
+                                            <?php echo e($application->asset_unit ?: ''); ?>
+
+                                        </p>
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <p class="font-medium text-slate-700">
+                                            <?php echo e($application->district_name ?: '-'); ?>
+
+                                        </p>
+                                        <p class="mt-1 text-[10px] text-slate-400">
+                                            <?php echo e(collect([$application->city_name, $application->sector_name])->filter()->implode(' / ') ?:
+                                                '-'); ?>
+
+                                        </p>
+                                    </td>
+
+                                    <td class="px-5 py-3.5 text-right">
+                                        <p class="font-bold text-emerald-600">
+                                            ₹<?php echo e(number_format((float) ($application->received_amount ?? 0), 2)); ?>
+
+                                        </p>
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <?php if($application->citizen_visit_date): ?>
+                                            <p class="font-medium text-slate-700">
+                                                <?php echo e(\Illuminate\Support\Carbon::parse($application->citizen_visit_date)->format('d M Y, h:i A')); ?>
+
+                                            </p>
+                                        <?php else: ?>
+                                            <span class="text-slate-400">Not selected</span>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td class="px-5 py-3.5">
+                                        <span
+                                            class="inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold uppercase tracking-wide <?php echo e($statusClass); ?>">
+                                            <?php echo e($currentStatus); ?>
+
+                                        </span>
+                                    </td>
+
+                                    <td class="px-5 py-3.5 text-right">
+                                        <a href="<?php echo e(url('mmsay-department-physical-possession/' . $application->asset_id . '/view')); ?>"
+                                            class="inline-flex h-8 items-center justify-center gap-1 rounded-lg bg-indigo-50 px-3 text-[10px] font-semibold text-indigo-600 transition hover:bg-indigo-100">
+
+                                            <span class="material-symbols-outlined text-[15px]">
+                                                visibility
+                                            </span>
+
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                                <tr>
+                                    <td colspan="8" class="px-5 py-10 text-center">
+                                        <span class="material-symbols-outlined text-3xl text-slate-300">
+                                            inbox
+                                        </span>
+                                        <p class="mt-2 text-xs font-medium text-slate-500">
+                                            No physical possession applications found.
+                                        </p>
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </div>
     </main>
 

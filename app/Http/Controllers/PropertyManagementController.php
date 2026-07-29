@@ -385,6 +385,20 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Latest physical possession applications
+        |--------------------------------------------------------------------------
+        */
+
+        $latestPhysicalApplications = $this->eligiblePossessionSelect(
+            $this->eligiblePossessionQuery($request)
+        )
+            ->whereNotNull('ppa.id')
+            ->whereNotNull('ppa.citizen_visit_date')
+            ->orderByDesc('ppa.id')
+            ->limit(10)
+            ->get();
+        /*
+        |--------------------------------------------------------------------------
         | Dashboard view
         |--------------------------------------------------------------------------
         */
@@ -404,120 +418,9 @@ class PropertyManagementController extends Controller
             'paymentStats',
             'eligiblePhysicalPossession',
             'notEligiblePhysicalPossession',
-            'totalPhysicalPossessionCandidates'
+            'totalPhysicalPossessionCandidates',
+            'latestPhysicalApplications'
         ));
-    }
-
-    public function fullPaidProperties()
-    {
-        $properties = DB::select("
-        SELECT
-            pad.AssetId,
-            ppp.ApplicationNo,
-            ppp.PrivatePurchaserName,
-            ppp.MobileNo,
-            pr.AssetName,
-            pad.FlatCost,
-            (
-                COALESCE(pad.ReceivedAmount,0) +
-                COALESCE(SUM(cr.total_paid_amount),0)
-            ) AS total_paid
-        FROM property_auction_detail pad
-
-        INNER JOIN property_private_purchasers ppp
-            ON pad.PurchaserID = ppp.PrivatePurchaserId
-
-        INNER JOIN property_registration pr
-            ON pad.AssetId = pr.AssetId
-
-        LEFT JOIN cash_receipt_details cr
-            ON cr.asset_number = pad.AssetId
-            AND cr.IsDeleted = 0
-
-        WHERE pad.IsDeleted = 0
-          AND pad.IsActive = 1
-
-        GROUP BY
-            pad.AssetId,
-            ppp.ApplicationNo,
-            ppp.PrivatePurchaserName,
-            ppp.MobileNo,
-            pr.AssetName,
-            pad.FlatCost,
-            pad.ReceivedAmount
-
-        HAVING total_paid >= pad.FlatCost
-
-        ORDER BY pad.AssetId DESC
-    ");
-
-        return view('mmsay.fullPaidProperties', compact('properties'));
-    }
-
-    public function pendingProperties()
-    {
-        $properties = DB::table('property_auction_detail as pad')
-
-            ->join(
-                'property_private_purchasers as ppp',
-                'pad.PurchaserID',
-                '=',
-                'ppp.PrivatePurchaserId'
-            )
-
-            ->join(
-                'property_registration as pr',
-                'pad.AssetId',
-                '=',
-                'pr.AssetId'
-            )
-
-            ->leftJoin('cash_receipt_details as cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pad.AssetId')
-                    ->where('cr.IsDeleted', 0);
-            })
-
-            ->select(
-                'pad.AssetId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-
-                'ppp.ApplicationNo',
-                'ppp.PrivatePurchaserName',
-                'ppp.MobileNo',
-
-                'pr.AssetName'
-            )
-
-            ->selectRaw("
-            (
-                COALESCE(pad.ReceivedAmount,0)
-                + COALESCE(SUM(cr.total_paid_amount),0)
-            ) as total_paid
-        ")
-
-            ->groupBy(
-                'pad.AssetId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-                'ppp.ApplicationNo',
-                'ppp.PrivatePurchaserName',
-                'ppp.MobileNo',
-                'pr.AssetName'
-            )
-
-            ->havingRaw("
-            (
-                COALESCE(pad.ReceivedAmount,0)
-                + COALESCE(SUM(cr.total_paid_amount),0)
-            ) < pad.FlatCost
-        ")
-
-            ->orderByDesc('pad.AssetId')
-
-            ->paginate(50);
-
-        return view('mmsay.pendingProperties', compact('properties'));
     }
 
     public function propertyRegistration(Request $request)
@@ -526,6 +429,10 @@ class PropertyManagementController extends Controller
         $cityId = $request->integer('city_id') ?: null;
         $sectorId = $request->integer('sector_id') ?: null;
         $search = trim((string) $request->input('search'));
+        $sortOrder = strtolower((string) $request->input('sort_order', 'desc'));
+        $sortOrder = in_array($sortOrder, ['asc', 'desc'], true)
+            ? $sortOrder
+            : 'desc';
 
         $receiptTotals = DB::table('cash_receipt_details')
             ->selectRaw('
@@ -621,7 +528,7 @@ class PropertyManagementController extends Controller
                         ->orWhere('ppp.ApplicationNo', 'LIKE', "%{$search}%");
                 });
             })
-            ->orderByDesc('pr.AssetId')
+            ->orderBy('pr.AssetId', $sortOrder)
             ->paginate(50)
             ->withQueryString();
 
@@ -664,7 +571,8 @@ class PropertyManagementController extends Controller
             'districtId',
             'cityId',
             'sectorId',
-            'search'
+            'search',
+            'sortOrder'
         ));
     }
 
@@ -1123,6 +1031,7 @@ class PropertyManagementController extends Controller
             'city_id',
             'sector_id',
             'search',
+            'sort_order',
         ]);
 
         $chunkSize = 500;
@@ -1144,13 +1053,17 @@ class PropertyManagementController extends Controller
         $cityId = $request->integer('city_id') ?: null;
         $sectorId = $request->integer('sector_id') ?: null;
         $search = trim((string) $request->input('search'));
+        $sortOrder = strtolower((string) $request->input('sort_order', 'desc'));
+        $sortOrder = in_array($sortOrder, ['asc', 'desc'], true)
+            ? $sortOrder
+            : 'desc';
 
         $fileName = 'property-records-'
             . now()->format('Y-m-d-His')
             . '.csv';
 
         return response()->streamDownload(
-            function () use ($districtId, $cityId, $sectorId, $search) {
+            function () use ($districtId, $cityId, $sectorId, $search, $sortOrder) {
                 $output = fopen('php://output', 'w');
 
                 if ($output === false) {
@@ -1381,7 +1294,11 @@ class PropertyManagementController extends Controller
                  * 2,000 records per database chunk.
                  * Entire dataset memory mein load nahi hoga.
                  */
-                $query->chunkById(
+                $chunkMethod = $sortOrder === 'desc'
+                    ? 'chunkByIdDesc'
+                    : 'chunkById';
+
+                $query->{$chunkMethod}(
                     2000,
                     function ($records) use ($output, $safeCsvValue) {
                         foreach ($records as $item) {
@@ -1465,6 +1382,11 @@ class PropertyManagementController extends Controller
 
     private function propertyExportQuery(array $filters)
     {
+        $sortOrder = strtolower((string) ($filters['sort_order'] ?? 'desc'));
+        $sortOrder = in_array($sortOrder, ['asc', 'desc'], true)
+            ? $sortOrder
+            : 'desc';
+
         $receiptTotals = DB::table('cash_receipt_details')
             ->selectRaw('
             asset_number,
@@ -1559,7 +1481,7 @@ class PropertyManagementController extends Controller
                     });
                 }
             )
-            ->orderBy('pr.AssetId');
+            ->orderBy('pr.AssetId', $sortOrder);
     }
 
     public function exportPropertiesExcel(Request $request)
@@ -1569,6 +1491,7 @@ class PropertyManagementController extends Controller
             'city_id',
             'sector_id',
             'search',
+            'sort_order',
         ]);
 
         return Excel::download(
@@ -1694,23 +1617,165 @@ class PropertyManagementController extends Controller
     }
 
 
-    public function mmsayDepartmentDraw()
+    private function departmentDrawQuery(Request $request)
     {
-        $districts = DB::table('property_registration as pr')
-            ->leftJoin('districts as d', 'd.DistrictId', '=', 'pr.DistrictId')
-            ->select(
+        $districtId = $request->integer('district_id') ?: null;
+
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array($sortOrder, ['asc', 'desc'], true)
+            ? $sortOrder
+            : 'desc';
+
+        return DB::table('property_registration as pr')
+            ->join('districts as d', function ($join) {
+                $join->on(
+                    'd.DistrictId',
+                    '=',
+                    'pr.DistrictId'
+                )
+                    ->where('d.Is_Deleted', 0)
+                    ->where('d.Is_Active', 1);
+            })
+            ->select([
                 'd.DistrictId',
                 'd.DistrictName',
-                DB::raw('COUNT(pr.AssetId) as total_assets')
+            ])
+            ->selectRaw('COUNT(pr.AssetId) AS total_assets')
+            ->where('pr.IsDeleted', 0)
+            ->where('pr.IsActive', 1)
+            ->when(
+                $districtId,
+                fn($query) => $query->where(
+                    'pr.DistrictId',
+                    $districtId
+                )
             )
-            ->groupBy('d.DistrictId', 'd.DistrictName')
-            ->orderBy('total_assets', 'DESC')
+            ->groupBy(
+                'd.DistrictId',
+                'd.DistrictName'
+            )
+            ->orderBy('total_assets', $sortOrder)
+            ->orderBy('d.DistrictName');
+    }
+
+    public function mmsayDepartmentDraw(Request $request)
+    {
+        $districtId = $request->integer('district_id') ?: null;
+
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array($sortOrder, ['asc', 'desc'], true)
+            ? $sortOrder
+            : 'desc';
+
+        $districts = DB::table('districts')
+            ->select([
+                'DistrictId',
+                'DistrictName',
+            ])
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
             ->get();
 
-        // 👉 Grand Total calculate
-        $grandTotal = $districts->sum('total_assets');
+        $drawDistricts = $this->departmentDrawQuery($request)
+            ->get();
 
-        return view('mmsay.departmentDraw', compact('districts', 'grandTotal'));
+        $grandTotal = (int) $drawDistricts->sum('total_assets');
+
+        return view('mmsay.departmentDraw', compact(
+            'districts',
+            'drawDistricts',
+            'grandTotal',
+            'districtId',
+            'sortOrder'
+        ));
+    }
+
+    public function mmsayDepartmentDrawCsv(Request $request)
+    {
+        $fileName = 'district-draw-summary-'
+            . now()->format('Y-m-d-His')
+            . '.csv';
+
+        return response()->streamDownload(
+            function () use ($request) {
+                $output = fopen('php://output', 'w');
+
+                if ($output === false) {
+                    throw new RuntimeException(
+                        'Unable to open CSV output stream.'
+                    );
+                }
+
+                // Excel में UTF-8 content सही दिखाने के लिए BOM
+                fwrite($output, "\xEF\xBB\xBF");
+
+                fputcsv($output, [
+                    'S.No.',
+                    'District ID',
+                    'District Name',
+                    'Total Assets',
+                ]);
+
+                $drawDistricts = $this->departmentDrawQuery($request)
+                    ->get();
+
+                $serial = 1;
+                $grandTotal = 0;
+
+                foreach ($drawDistricts as $district) {
+                    $totalAssets = (int) $district->total_assets;
+
+                    $grandTotal += $totalAssets;
+
+                    fputcsv($output, [
+                        $serial++,
+                        $district->DistrictId,
+                        $district->DistrictName,
+                        $totalAssets,
+                    ]);
+                }
+
+                // Empty separator row
+                fputcsv($output, ['', '', '', '']);
+
+                // Grand Total row
+                fputcsv($output, [
+                    '',
+                    '',
+                    'GRAND TOTAL',
+                    $grandTotal,
+                ]);
+
+                fclose($output);
+            },
+            $fileName,
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
+    }
+
+    public function mmsayDepartmentDrawPrint(Request $request)
+    {
+        $drawDistricts = $this->departmentDrawQuery($request)
+            ->get();
+
+        $grandTotal = (int) $drawDistricts->sum('total_assets');
+
+        return view('mmsay.departmentDrawPrint', compact(
+            'drawDistricts',
+            'grandTotal'
+        ));
     }
 
     public function districtDetails($id)
@@ -1741,105 +1806,6 @@ class PropertyManagementController extends Controller
             'districtName',
             'totalRecords'
         ));
-    }
-
-    public function mmsayDepartmentAllottedProperties()
-    {
-        $properties = DB::table('property_auction_detail as pad')
-
-            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
-
-            ->leftJoin(
-                'property_private_purchasers as ppp',
-                'pad.PurchaserID',
-                '=',
-                'ppp.PrivatePurchaserId'
-            )
-
-            ->leftJoin('districts as d', 'pad.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('cities as c', 'pad.CityId', '=', 'c.CityId')
-            ->leftJoin('sectors as s', 'pad.SectorId', '=', 's.SectorId')
-
-            // Total EMI Paid
-            ->leftJoin(
-                DB::raw("
-                (
-                    SELECT
-                        AssetId,
-                        SUM(Payment) as TotalEmiPaid
-                    FROM ledger
-                    WHERE Is_Deleted = 0
-                    AND Is_Active = 1
-                    GROUP BY AssetId
-                ) lg
-            "),
-                'pad.AssetId',
-                '=',
-                'lg.AssetId'
-            )
-
-            ->select(
-                'pad.*',
-
-                'pr.AssetName',
-                'pr.AssetSize',
-
-                'd.DistrictName as district',
-                'c.CityName as city',
-                's.SectorName as sector',
-
-                'ppp.PrivatePurchaserName',
-                'ppp.MobileNo',
-                'ppp.ApplicationNo',
-                'ppp.PPPId',
-
-                // Registration Amount
-                DB::raw('COALESCE(pad.ReceivedAmount,0) as RegistrationAmount'),
-
-                // EMI Paid
-                DB::raw('COALESCE(lg.TotalEmiPaid,0) as TotalEmiPaid'),
-
-                // Total Paid
-                DB::raw('(
-                COALESCE(pad.ReceivedAmount,0)
-                + COALESCE(lg.TotalEmiPaid,0)
-            ) as ReceivedAmount'),
-
-                // Final Balance
-                DB::raw('(
-                COALESCE(pad.FlatCost,0)
-                - (
-                    COALESCE(pad.ReceivedAmount,0)
-                    + COALESCE(lg.TotalEmiPaid,0)
-                )
-            ) as BalanceAmount'),
-
-                DB::raw("
-                CASE
-                    WHEN (
-                        COALESCE(pad.FlatCost,0)
-                        - (
-                            COALESCE(pad.ReceivedAmount,0)
-                            + COALESCE(lg.TotalEmiPaid,0)
-                        )
-                    ) <= 0
-                    THEN 'Paid'
-                    ELSE 'Pending'
-                END as PaymentStatus
-            ")
-            )
-
-            ->where('pad.IsDeleted', 0)
-            ->where('pad.IsActive', 1)
-
-            ->orderByDesc('pad.PropertyAuctionId')
-
-            ->paginate(20);
-
-        return view(
-            'mmsay.deptartmentPropertyAllotment',
-            compact('properties')
-        );
     }
 
     public function departmentEmiPayments()
@@ -1913,128 +1879,6 @@ class PropertyManagementController extends Controller
             'mmsay.departmentEmiPayments',
             compact('properties')
         );
-    }
-
-    public function emiStatus($assetId)
-    {
-        $property = DB::table('property_auction_detail as pad')
-
-            ->leftJoin(
-                'property_private_purchasers as ppp',
-                'pad.PurchaserID',
-                '=',
-                'ppp.PrivatePurchaserId'
-            )
-
-            ->leftJoin(
-                'property_registration as pr',
-                'pad.AssetId',
-                '=',
-                'pr.AssetId'
-            )
-
-            ->leftJoin(
-                'districts as d',
-                'pad.DistrictId',
-                '=',
-                'd.DistrictId'
-            )
-
-            ->leftJoin(
-                'cities as c',
-                'pad.CityId',
-                '=',
-                'c.CityId'
-            )
-
-            ->leftJoin(
-                'sectors as s',
-                'pad.SectorId',
-                '=',
-                's.SectorId'
-            )
-
-            ->select(
-                'pad.*',
-                'ppp.*',
-                'pr.AssetName',
-                'pr.AssetSize',
-
-                'd.DistrictName as district',
-                'c.CityName as city',
-                's.SectorName as sector'
-            )
-
-            ->where('pad.AssetId', $assetId)
-            ->first();
-
-        if (!$property) {
-            abort(404, 'Property not found');
-        }
-
-        $flatCost = $property->FlatCost ?? 0;
-
-        // Actual received amount from receipts
-        $totalReceived = DB::table('cash_receipt_details')
-            ->where('asset_number', $assetId)
-            ->sum('total_paid_amount');
-
-        $ReceivedAmount = $totalReceived;
-        $BalanceAmount = max(0, $flatCost - $totalReceived);
-
-        // EMI schedule
-        $installments = DB::table('installment_due')
-            ->where('AssetId', $assetId)
-            ->orderBy('InstallmentNumber')
-            ->get();
-
-        $remaining = $totalReceived;
-        $today = date('Y-m-d');
-
-        $ledger = [];
-
-        foreach ($installments as $emi) {
-
-            $dueAmount = $emi->DueAmount;
-            $paid = 0;
-
-            if ($remaining > 0) {
-                $paid = min($remaining, $dueAmount);
-                $remaining -= $paid;
-            }
-
-            $balance = $dueAmount - $paid;
-
-            if ($emi->DueDate > $today) {
-                $status = 'Upcoming';
-            } else {
-                if ($paid == 0) {
-                    $status = 'Unpaid';
-                } elseif ($paid < $dueAmount) {
-                    $status = 'Partial';
-                } else {
-                    $status = 'Paid';
-                }
-            }
-
-            $ledger[] = [
-                'no' => $emi->InstallmentNumber,
-                'due' => $emi->DueDate,
-                'emi' => $dueAmount,
-                'paid' => $paid,
-                'balance' => $balance,
-                'status' => $status
-            ];
-        }
-
-        return view('mmsay.emiStatus', compact(
-            'property',
-            'flatCost',
-            'ReceivedAmount',
-            'BalanceAmount',
-            'totalReceived',
-            'ledger'
-        ));
     }
 
     public function departmentPhysicalLetter()
@@ -2523,8 +2367,6 @@ class PropertyManagementController extends Controller
             )
         );
     }
-
-
 
     private function possessionStatusSql(string $alias = 'ppa'): string
     {
@@ -3078,223 +2920,764 @@ class PropertyManagementController extends Controller
     }
 
     private function notEligiblePossessionQuery(Request $request)
-{
-    $receiptTotals = DB::table('cash_receipt_details')
-        ->selectRaw('asset_number, SUM(total_paid_amount) AS cash_received')
-        ->where('IsDeleted', 0)
-        ->where('IsActive', 1)
-        ->groupBy('asset_number');
+    {
+        $paymentSummary = DB::table('property_auction_detail as pad')
+            ->leftJoin('cash_receipt_details as cr', function ($join) {
+                $join->on('cr.asset_number', '=', 'pad.AssetId')
+                    ->where('cr.IsDeleted', 0)
+                    ->where('cr.IsActive', 1);
+            })
+            ->where('pad.IsDeleted', 0)
+            ->where('pad.IsActive', 1)
+            // ReceivedAmount is NOT NULL; plain comparison can use the composite index.
+            ->where('pad.ReceivedAmount', '<', 60000)
+            ->when(
+                $request->filled('district_id'),
+                fn($query) => $query->where(
+                    'pad.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+            ->when(
+                $request->filled('city_id'),
+                fn($query) => $query->where(
+                    'pad.CityId',
+                    $request->integer('city_id')
+                )
+            )
+            ->when(
+                $request->filled('sector_id'),
+                fn($query) => $query->where(
+                    'pad.SectorId',
+                    $request->integer('sector_id')
+                )
+            )
+            ->select([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
+            ->selectRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0)
+            AS total_received
+        ')
+            ->groupBy([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->havingRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0) < 60000
+        ');
 
-    return DB::table('property_auction_detail as pad')
-        ->join('property_registration as pr', 'pr.AssetId', '=', 'pad.AssetId')
-        ->leftJoin('property_private_purchasers as ppp', function ($join) {
-            $join->on('ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
-                ->where('ppp.IsDeleted', 0);
-        })
-        ->leftJoin('districts as d', 'd.DistrictId', '=', 'pad.DistrictId')
-        ->leftJoin('cities as c', 'c.CityId', '=', 'pad.CityId')
-        ->leftJoin('sectors as s', 's.SectorId', '=', 'pad.SectorId')
-        ->leftJoinSub($receiptTotals, 'cr', function ($join) {
-            $join->on('cr.asset_number', '=', 'pad.AssetId');
-        })
-        ->where('pad.IsDeleted', 0)
-        ->where('pad.IsActive', 1)
-        ->where('pr.IsDeleted', 0)
-        ->whereRaw(
-            '(COALESCE(pad.ReceivedAmount, 0) + COALESCE(cr.cash_received, 0)) < ?',
-            [60000]
-        )
-        ->when($request->filled('district_id'), function ($query) use ($request) {
-            $query->where('pad.DistrictId', $request->integer('district_id'));
-        })
-        ->when($request->filled('city_id'), function ($query) use ($request) {
-            $query->where('pad.CityId', $request->integer('city_id'));
-        })
-        ->when($request->filled('sector_id'), function ($query) use ($request) {
-            $query->where('pad.SectorId', $request->integer('sector_id'));
-        })
-        ->when($request->filled('search'), function ($query) use ($request) {
-            $search = trim($request->string('search')->toString());
-            $query->where(function ($inner) use ($search) {
-                $inner->where('pr.AssetName', 'like', "%{$search}%")
-                    ->orWhere('pr.AssetId', 'like', "%{$search}%")
-                    ->orWhere('ppp.PrivatePurchaserName', 'like', "%{$search}%")
-                    ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
-                    ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%");
+        $query = DB::query()
+            ->fromSub($paymentSummary, 'ps')
+            ->join('property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'ps.AssetId')
+                    ->where('pr.IsDeleted', 0)
+                    ->where('pr.IsActive', 1);
+            })
+            ->leftJoin('property_private_purchasers as ppp', function ($join) {
+                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
+                    ->where('ppp.IsDeleted', 0);
+            })
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
+            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
+            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
+
+        $search = trim((string) $request->input('search'));
+
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($subQuery) use ($like) {
+                $subQuery->where('ps.AssetId', 'like', $like)
+                    ->orWhere('pr.AssetName', 'like', $like)
+                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
+                    ->orWhere('ppp.MobileNo', 'like', $like)
+                    ->orWhere('ppp.ApplicationNo', 'like', $like);
             });
-        })
-        ->select([
-            'pad.PropertyAuctionId as property_auction_id',
-            'pad.AssetId as asset_id',
-            'pr.AssetName as asset_name',
-            'pr.AssetSize as asset_size',
-            'pr.Unit as asset_unit',
-            'ppp.PrivatePurchaserName as applicant_name',
-            'ppp.MobileNo as mobile',
-            'ppp.ApplicationNo as application_number',
-            'd.DistrictName as district_name',
-            'c.CityName as city_name',
-            's.SectorName as sector_name',
-            'pad.FlatCost as flat_cost',
-        ])
-        ->selectRaw('COALESCE(pad.ReceivedAmount, 0) AS initial_received')
-        ->selectRaw('COALESCE(cr.cash_received, 0) AS cash_received')
-        ->selectRaw(
-            '(COALESCE(pad.ReceivedAmount, 0) + COALESCE(cr.cash_received, 0)) AS received_amount'
-        )
-        ->selectRaw(
-            'GREATEST(60000 - (COALESCE(pad.ReceivedAmount, 0) + COALESCE(cr.cash_received, 0)), 0) AS eligibility_shortfall'
-        );
-}
+        }
 
-public function physicalPossessionNotEligible(Request $request)
-{
-    $districtId = $request->integer('district_id') ?: null;
-    $cityId = $request->integer('city_id') ?: null;
-    $sectorId = $request->integer('sector_id') ?: null;
-    $search = trim($request->string('search')->toString());
+        return $query
+            ->select([
+                'ps.PropertyAuctionId as property_auction_id',
+                'ps.AssetId as asset_id',
+                'pr.AssetName as asset_name',
+                'pr.AssetSize as asset_size',
+                'pr.Unit as asset_unit',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.MobileNo as mobile',
+                'ppp.ApplicationNo as application_number',
+                'ppp.ApplicationNo as purchaser_application_number',
+                'd.DistrictName as district_name',
+                'c.CityName as city_name',
+                's.SectorName as sector_name',
+                'ps.FlatCost as flat_cost',
+            ])
+            ->selectRaw('COALESCE(ps.ReceivedAmount, 0) AS initial_received')
+            ->selectRaw('ps.cash_received')
+            ->selectRaw('ps.total_received AS received_amount')
+            ->selectRaw(
+                'GREATEST(COALESCE(ps.FlatCost, 0) - ps.total_received, 0)
+             AS pending_amount'
+            )
+            ->selectRaw(
+                'GREATEST(60000 - ps.total_received, 0)
+             AS eligibility_shortfall'
+            );
+    }
 
-    $districts = DB::table('districts')
-        ->select('DistrictId', 'DistrictName')
-        ->where('Is_Deleted', 0)
-        ->where('Is_Active', 1)
-        ->orderBy('DistrictName')
-        ->get();
+    public function physicalPossessionNotEligible(Request $request)
+    {
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+        $sectorId = $request->integer('sector_id') ?: null;
+        $search = trim((string) $request->input('search'));
+        $filters = [
+            'district_id' => $districtId,
+            'city_id' => $cityId,
+            'sector_id' => $sectorId,
+            'search' => $search,
+        ];
 
-    $cities = collect();
-    if ($districtId) {
-        $cities = DB::table('cities')
-            ->select('CityId', 'CityName')
-            ->where('DistrictId', $districtId)
+        $districts = DB::table('districts')
+            ->select('DistrictId', 'DistrictName')
             ->where('Is_Deleted', 0)
             ->where('Is_Active', 1)
-            ->orderBy('CityName')
+            ->orderBy('DistrictName')
             ->get();
-    }
 
-    $sectors = collect();
-    if ($cityId) {
-        $sectors = DB::table('city_sector_associations as csa')
-            ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
-            ->select('s.SectorId', 's.SectorName')
-            ->where('csa.CityId', $cityId)
-            ->where('csa.Is_Deleted', 0)
-            ->where('csa.Is_Active', 1)
-            ->where('s.Is_Deleted', 0)
-            ->where('s.Is_Active', 1)
-            ->distinct()
-            ->orderBy('s.SectorName')
-            ->get();
-    }
-
-    $applications = $this->notEligiblePossessionQuery($request)
-        ->orderByDesc('pad.PropertyAuctionId')
-        ->paginate(50)
-        ->withQueryString();
-
-    return view('mmsay.physicalPossessionNotEligible', compact(
-        'applications',
-        'districts',
-        'cities',
-        'sectors',
-        'districtId',
-        'cityId',
-        'sectorId',
-        'search'
-    ));
-}
-
-public function physicalPossessionFilterOptions(Request $request)
-{
-    if ($request->filled('district_id')) {
-        return response()->json([
-            'cities' => DB::table('cities')
-                ->select('CityId as id', 'CityName as name')
-                ->where('DistrictId', $request->integer('district_id'))
+        $cities = $districtId
+            ? DB::table('cities')
+                ->select('CityId', 'CityName')
+                ->where('DistrictId', $districtId)
                 ->where('Is_Deleted', 0)
                 ->where('Is_Active', 1)
                 ->orderBy('CityName')
-                ->get(),
-        ]);
-    }
+                ->get()
+            : collect();
 
-    if ($request->filled('city_id')) {
-        return response()->json([
-            'sectors' => DB::table('city_sector_associations as csa')
+        $sectors = $cityId
+            ? DB::table('city_sector_associations as csa')
                 ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
-                ->select('s.SectorId as id', 's.SectorName as name')
-                ->where('csa.CityId', $request->integer('city_id'))
+                ->select('s.SectorId', 's.SectorName')
+                ->where('csa.CityId', $cityId)
                 ->where('csa.Is_Deleted', 0)
                 ->where('csa.Is_Active', 1)
                 ->where('s.Is_Deleted', 0)
                 ->where('s.Is_Active', 1)
                 ->distinct()
                 ->orderBy('s.SectorName')
-                ->get(),
+                ->get()
+            : collect();
+
+        // Length-aware pagination is required for page numbers and total records.
+        $applications = $this->notEligiblePossessionQuery($request)
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('mmsay.physicalPossessionNotEligible', compact(
+            'applications',
+            'districts',
+            'cities',
+            'sectors',
+            'districtId',
+            'cityId',
+            'sectorId',
+            'search',
+            'filters'
+        ));
+    }
+
+    public function physicalPossessionNotEligibleCsv(Request $request)
+    {
+        $fileName = 'physical-possession-not-eligible-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'S.No.',
+                'Asset ID',
+                'Property',
+                'Application No.',
+                'Applicant',
+                'Mobile',
+                'District',
+                'City',
+                'Sector',
+                'Total Cost',
+                'Total Received',
+                'Total Pending',
+            ]);
+
+            $serial = 1;
+
+            $this->notEligiblePossessionQuery($request)
+                ->orderByDesc('ps.PropertyAuctionId')
+                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                    foreach ($rows as $row) {
+                        fputcsv($handle, [
+                            $serial++,
+                            $row->asset_id,
+                            $row->asset_name,
+                            $row->application_number,
+                            $row->applicant_name,
+                            $row->mobile,
+                            $row->district_name,
+                            $row->city_name,
+                            $row->sector_name,
+                            $row->flat_cost,
+                            $row->received_amount,
+                            $row->pending_amount,
+                        ]);
+                    }
+                }, 'ps.PropertyAuctionId', 'property_auction_id');
+
+            fclose($handle);
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
         ]);
     }
 
-    return response()->json(['cities' => [], 'sectors' => []]);
-}
+    public function physicalPossessionNotEligiblePrint(Request $request)
+    {
+        $perChunk = 500000;
+        $afterId = max(0, $request->integer('after_id'));
 
-public function physicalPossessionNotEligibleCsv(Request $request)
-{
-    $fileName = 'physical-possession-not-eligible-' . now()->format('Ymd-His') . '.csv';
+        $rows = $this->notEligiblePossessionQuery($request)
+            ->when(
+                $afterId > 0,
+                fn($query) => $query->where('ps.PropertyAuctionId', '<', $afterId)
+            )
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->limit($perChunk + 1)
+            ->get();
 
-    return response()->streamDownload(function () use ($request) {
-        $handle = fopen('php://output', 'w');
-        fwrite($handle, "\xEF\xBB\xBF");
-        fputcsv($handle, [
-            'S.No.', 'Asset ID', 'Property', 'Application No.', 'Applicant',
-            'Mobile', 'District', 'City', 'Sector', 'Received Amount',
-            'Amount Required for Eligibility',
-        ]);
+        $hasMore = $rows->count() > $perChunk;
+        $applications = $rows->take($perChunk)->values();
+        $nextAfterId = $hasMore
+            ? $applications->last()->property_auction_id
+            : null;
 
-        $serial = 1;
-        $this->notEligiblePossessionQuery($request)
-            ->orderBy('pad.PropertyAuctionId')
-            ->chunkById(1000, function ($rows) use (&$serial, $handle) {
-                foreach ($rows as $row) {
-                    fputcsv($handle, [
-                        $serial++,
-                        $row->asset_id,
-                        $row->asset_name,
-                        $row->application_number,
-                        $row->applicant_name,
-                        $row->mobile,
-                        $row->district_name,
-                        $row->city_name,
-                        $row->sector_name,
-                        $row->received_amount,
-                        $row->eligibility_shortfall,
-                    ]);
-                }
-            }, 'pad.PropertyAuctionId', 'property_auction_id');
+        return view('mmsay.physicalPossessionNotEligiblePrint', compact(
+            'applications',
+            'hasMore',
+            'nextAfterId'
+        ));
+    }
 
-        fclose($handle);
-    }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
-}
+    private function fullPaidPropertiesQuery(Request $request)
+    {
+        $paymentSummary = DB::table('property_auction_detail as pad')
+            ->leftJoin('cash_receipt_details as cr', function ($join) {
+                $join->on('cr.asset_number', '=', 'pad.AssetId')
+                    ->where('cr.IsDeleted', 0)
+                    ->where('cr.IsActive', 1);
+            })
+            ->where('pad.IsDeleted', 0)
+            ->where('pad.IsActive', 1)
+            ->when(
+                $request->filled('district_id'),
+                fn($query) => $query->where(
+                    'pad.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+            ->when(
+                $request->filled('city_id'),
+                fn($query) => $query->where(
+                    'pad.CityId',
+                    $request->integer('city_id')
+                )
+            )
+            ->when(
+                $request->filled('sector_id'),
+                fn($query) => $query->where(
+                    'pad.SectorId',
+                    $request->integer('sector_id')
+                )
+            )
+            ->select([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
+            ->selectRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0)
+            AS total_paid
+        ')
+            ->groupBy([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->havingRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0)
+            >= COALESCE(pad.FlatCost, 0)
+        ');
 
-public function physicalPossessionNotEligiblePrint(Request $request)
-{
-    $perChunk = 500;
-    $afterId = max(0, $request->integer('after_id'));
+        $query = DB::query()
+            ->fromSub($paymentSummary, 'ps')
+            ->join('property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'ps.AssetId')
+                    ->where('pr.IsDeleted', 0)
+                    ->where('pr.IsActive', 1);
+            })
+            ->leftJoin('property_private_purchasers as ppp', function ($join) {
+                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
+                    ->where('ppp.IsDeleted', 0);
+            })
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
+            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
+            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
 
-    $rows = $this->notEligiblePossessionQuery($request)
-        ->when($afterId, fn ($query) => $query->where('pad.PropertyAuctionId', '>', $afterId))
-        ->orderBy('pad.PropertyAuctionId')
-        ->limit($perChunk + 1)
-        ->get();
+        $search = trim((string) $request->input('search'));
 
-    $hasMore = $rows->count() > $perChunk;
-    $applications = $rows->take($perChunk);
-    $nextAfterId = $hasMore ? $applications->last()->property_auction_id : null;
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
 
-    return view('mmsay.physicalPossessionNotEligiblePrint', compact(
-        'applications',
-        'hasMore',
-        'nextAfterId'
-    ));
-}
+            $query->where(function ($subQuery) use ($like) {
+                $subQuery->where('ps.AssetId', 'like', $like)
+                    ->orWhere('pr.AssetName', 'like', $like)
+                    ->orWhere('ppp.ApplicationNo', 'like', $like)
+                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
+                    ->orWhere('ppp.MobileNo', 'like', $like);
+            });
+        }
+
+        return $query
+            ->select([
+                'ps.PropertyAuctionId as property_auction_id',
+                'ps.AssetId as asset_id',
+                'ps.FlatCost as flat_cost',
+                'ps.ReceivedAmount as initial_received',
+                'ps.cash_received',
+                'ps.total_paid',
+                'pr.AssetName as asset_name',
+                'pr.AssetSize as asset_size',
+                'pr.Unit as asset_unit',
+                'ppp.ApplicationNo as application_number',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.MobileNo as mobile',
+                'd.DistrictName as district_name',
+                'c.CityName as city_name',
+                's.SectorName as sector_name',
+            ])
+            ->selectRaw('GREATEST(ps.total_paid - ps.FlatCost, 0) AS excess_amount');
+    }
+
+    public function fullPaidProperties(Request $request)
+    {
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+        $sectorId = $request->integer('sector_id') ?: null;
+        $search = trim((string) $request->input('search'));
+
+        $districts = DB::table('districts')
+            ->select('DistrictId', 'DistrictName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+        $cities = $districtId
+            ? DB::table('cities')
+                ->select('CityId', 'CityName')
+                ->where('DistrictId', $districtId)
+                ->where('Is_Deleted', 0)
+                ->where('Is_Active', 1)
+                ->orderBy('CityName')
+                ->get()
+            : collect();
+
+        $sectors = $cityId
+            ? DB::table('city_sector_associations as csa')
+                ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                ->select('s.SectorId', 's.SectorName')
+                ->where('csa.CityId', $cityId)
+                ->where('csa.Is_Deleted', 0)
+                ->where('csa.Is_Active', 1)
+                ->where('s.Is_Deleted', 0)
+                ->where('s.Is_Active', 1)
+                ->distinct()
+                ->orderBy('s.SectorName')
+                ->get()
+            : collect();
+
+        $properties = $this->fullPaidPropertiesQuery($request)
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('mmsay.fullPaidProperties', compact(
+            'properties',
+            'districts',
+            'cities',
+            'sectors',
+            'districtId',
+            'cityId',
+            'sectorId',
+            'search'
+        ));
+    }
+
+    public function fullPaidPropertiesCsv(Request $request)
+    {
+        $fileName = 'full-paid-properties-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'S.No.',
+                'Asset ID',
+                'Application No.',
+                'Applicant',
+                'Mobile',
+                'Property',
+                'District',
+                'City',
+                'Sector',
+                'Flat Cost',
+                'Initial Received',
+                'Cash Receipts',
+                'Total Paid',
+                'Excess Amount',
+            ]);
+
+            $serial = 1;
+
+            $this->fullPaidPropertiesQuery($request)
+                ->orderByDesc('ps.PropertyAuctionId')
+                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                    foreach ($rows as $row) {
+                        fputcsv($handle, [
+                            $serial++,
+                            $row->asset_id,
+                            $row->application_number,
+                            $row->applicant_name,
+                            $row->mobile,
+                            $row->asset_name,
+                            $row->district_name,
+                            $row->city_name,
+                            $row->sector_name,
+                            $row->flat_cost,
+                            $row->initial_received,
+                            $row->cash_received,
+                            $row->total_paid,
+                            $row->excess_amount,
+                        ]);
+                    }
+                }, 'ps.PropertyAuctionId', 'property_auction_id');
+
+            fclose($handle);
+        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function fullPaidPropertiesPrint(Request $request)
+    {
+        $perChunk = 500;
+        $afterId = max(0, $request->integer('after_id'));
+
+        $rows = $this->fullPaidPropertiesQuery($request)
+            ->when(
+                $afterId > 0,
+                fn($query) => $query->where('ps.PropertyAuctionId', '<', $afterId)
+            )
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->limit($perChunk + 1)
+            ->get();
+
+        $hasMore = $rows->count() > $perChunk;
+        $properties = $rows->take($perChunk)->values();
+        $nextAfterId = $hasMore ? $properties->last()->property_auction_id : null;
+
+        return view('mmsay.fullPaidPropertiesPrint', compact(
+            'properties',
+            'hasMore',
+            'nextAfterId'
+        ));
+    }
+
+    private function partialPaidPropertiesQuery(Request $request)
+    {
+        $paymentSummary = DB::table('property_auction_detail as pad')
+            ->leftJoin('cash_receipt_details as cr', function ($join) {
+                $join->on('cr.asset_number', '=', 'pad.AssetId')
+                    ->where('cr.IsDeleted', 0)
+                    ->where('cr.IsActive', 1);
+            })
+            ->where('pad.IsDeleted', 0)
+            ->where('pad.IsActive', 1)
+            ->when(
+                $request->filled('district_id'),
+                fn($query) => $query->where(
+                    'pad.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+            ->when(
+                $request->filled('city_id'),
+                fn($query) => $query->where(
+                    'pad.CityId',
+                    $request->integer('city_id')
+                )
+            )
+            ->when(
+                $request->filled('sector_id'),
+                fn($query) => $query->where(
+                    'pad.SectorId',
+                    $request->integer('sector_id')
+                )
+            )
+            ->select([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
+            ->selectRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0)
+            AS total_paid
+        ')
+            ->groupBy([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+            ->havingRaw('
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(SUM(cr.total_paid_amount), 0)
+            < COALESCE(pad.FlatCost, 0)
+        ');
+
+        $query = DB::query()
+            ->fromSub($paymentSummary, 'ps')
+            ->join('property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'ps.AssetId')
+                    ->where('pr.IsDeleted', 0)
+                    ->where('pr.IsActive', 1);
+            })
+            ->leftJoin('property_private_purchasers as ppp', function ($join) {
+                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
+                    ->where('ppp.IsDeleted', 0);
+            })
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
+            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
+            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
+
+        $search = trim((string) $request->input('search'));
+
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($subQuery) use ($like) {
+                $subQuery->where('ps.AssetId', 'like', $like)
+                    ->orWhere('pr.AssetName', 'like', $like)
+                    ->orWhere('ppp.ApplicationNo', 'like', $like)
+                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
+                    ->orWhere('ppp.MobileNo', 'like', $like);
+            });
+        }
+
+        return $query
+            ->select([
+                'ps.PropertyAuctionId as property_auction_id',
+                'ps.AssetId as asset_id',
+                'ps.FlatCost as flat_cost',
+                'ps.ReceivedAmount as initial_received',
+                'ps.cash_received',
+                'ps.total_paid',
+                'pr.AssetName as asset_name',
+                'pr.AssetSize as asset_size',
+                'pr.Unit as asset_unit',
+                'ppp.ApplicationNo as application_number',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.MobileNo as mobile',
+                'd.DistrictName as district_name',
+                'c.CityName as city_name',
+                's.SectorName as sector_name',
+            ])
+            ->selectRaw('
+            GREATEST(COALESCE(ps.FlatCost, 0) - ps.total_paid, 0)
+            AS pending_amount
+        ');
+    }
+
+    public function pendingProperties(Request $request)
+    {
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+        $sectorId = $request->integer('sector_id') ?: null;
+        $search = trim((string) $request->input('search'));
+
+        $districts = DB::table('districts')
+            ->select('DistrictId', 'DistrictName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+        $cities = $districtId
+            ? DB::table('cities')
+                ->select('CityId', 'CityName')
+                ->where('DistrictId', $districtId)
+                ->where('Is_Deleted', 0)
+                ->where('Is_Active', 1)
+                ->orderBy('CityName')
+                ->get()
+            : collect();
+
+        $sectors = $cityId
+            ? DB::table('city_sector_associations as csa')
+                ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                ->select('s.SectorId', 's.SectorName')
+                ->where('csa.CityId', $cityId)
+                ->where('csa.Is_Deleted', 0)
+                ->where('csa.Is_Active', 1)
+                ->where('s.Is_Deleted', 0)
+                ->where('s.Is_Active', 1)
+                ->distinct()
+                ->orderBy('s.SectorName')
+                ->get()
+            : collect();
+
+        $properties = $this->partialPaidPropertiesQuery($request)
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('mmsay.pendingProperties', compact(
+            'properties',
+            'districts',
+            'cities',
+            'sectors',
+            'districtId',
+            'cityId',
+            'sectorId',
+            'search'
+        ));
+    }
+
+    public function partialPaidPropertiesCsv(Request $request)
+    {
+        $fileName = 'partial-paid-properties-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            fputcsv($handle, [
+                'S.No.',
+                'Asset ID',
+                'Application No.',
+                'Applicant',
+                'Mobile',
+                'Property',
+                'District',
+                'City',
+                'Sector',
+                'Flat Cost',
+                'Initial Received',
+                'Cash Receipts',
+                'Total Paid',
+                'Pending Amount',
+            ]);
+
+            $serial = 1;
+
+            $this->partialPaidPropertiesQuery($request)
+                ->orderByDesc('ps.PropertyAuctionId')
+                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                    foreach ($rows as $row) {
+                        fputcsv($handle, [
+                            $serial++,
+                            $row->asset_id,
+                            $row->application_number,
+                            $row->applicant_name,
+                            $row->mobile,
+                            $row->asset_name,
+                            $row->district_name,
+                            $row->city_name,
+                            $row->sector_name,
+                            $row->flat_cost,
+                            $row->initial_received,
+                            $row->cash_received,
+                            $row->total_paid,
+                            $row->pending_amount,
+                        ]);
+                    }
+                }, 'ps.PropertyAuctionId', 'property_auction_id');
+
+            fclose($handle);
+        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function partialPaidPropertiesPrint(Request $request)
+    {
+        $perChunk = 500;
+        $afterId = max(0, $request->integer('after_id'));
+
+        $rows = $this->partialPaidPropertiesQuery($request)
+            ->when(
+                $afterId > 0,
+                fn($query) => $query->where('ps.PropertyAuctionId', '<', $afterId)
+            )
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->limit($perChunk + 1)
+            ->get();
+
+        $hasMore = $rows->count() > $perChunk;
+        $properties = $rows->take($perChunk)->values();
+        $nextAfterId = $hasMore ? $properties->last()->property_auction_id : null;
+
+        return view('mmsay.pendingPropertiesPrint', compact(
+            'properties',
+            'hasMore',
+            'nextAfterId'
+        ));
+    }
 
 }
