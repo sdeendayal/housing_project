@@ -115,9 +115,25 @@ class MMGAYBdoPossessionController extends Controller
 
         $ppaQuery = DB::table('mmgay_possession_applications as mpa')
             ->join('ownermaster as o', 'mpa.owner_id', '=', 'o.OwnerId')
-            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->whereNotNull('v.plots')
-            ->whereNotNull('v.phase')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
             ->select('mpa.*');
 
         if ($blockMasterId) {
@@ -129,9 +145,25 @@ class MMGAYBdoPossessionController extends Controller
         if ($bypassApi) {
             // 1. Total Eligible (All registered owners in BDO block)
             $totalEligibleQuery = DB::table('ownermaster as o')
-                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-                ->whereNotNull('v.plots')
-                ->whereNotNull('v.phase');
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                });
             if ($blockMasterId) {
                 $totalEligibleQuery->where('o.BlockId', $blockMasterId);
             }
@@ -139,10 +171,26 @@ class MMGAYBdoPossessionController extends Controller
 
             // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
             $notScheduledQuery = DB::table('ownermaster as o')
-                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
-                ->whereNotNull('v.plots')
-                ->whereNotNull('v.phase');
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                });
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
             }
@@ -186,12 +234,24 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
             ->whereNotNull('v.plots')
             ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -212,9 +272,25 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-                ->whereNotNull('v.plots')
-                ->whereNotNull('v.phase')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -279,9 +355,25 @@ class MMGAYBdoPossessionController extends Controller
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->whereNotNull('v.plots')
-            ->whereNotNull('v.phase')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             });
@@ -317,6 +409,7 @@ class MMGAYBdoPossessionController extends Controller
             'o.OwnerName as applicant_name',
             'o.FatherHusbandName as father_name',
             'o.MobileNo as mobile',
+            'o.RegistrationNo as registration_no',
             'o.Phase as owner_phase',
             'd.DistrictName as district_name',
             'b.BlockName as block_name',
@@ -587,9 +680,25 @@ class MMGAYBdoPossessionController extends Controller
 
         $query = MmgayPossessionApplication::query()
             ->join('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
-            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->whereNotNull('v.plots')
-            ->whereNotNull('v.phase')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
             ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
             ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
 
@@ -1102,12 +1211,19 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
             ->whereNotNull('v.plots')
             ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -1128,9 +1244,25 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-                ->whereNotNull('v.plots')
-                ->whereNotNull('v.phase')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v')
+                        ->whereColumn('v.VillageId', 'o.VillageId')
+                        ->whereNotNull('v.plots')
+                        ->whereNotNull('v.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                })
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -1203,8 +1335,15 @@ class MMGAYBdoPossessionController extends Controller
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
             ->where('o.BlockId', $blockMasterId)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
             ->whereNotNull('v.plots')
             ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
             ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
