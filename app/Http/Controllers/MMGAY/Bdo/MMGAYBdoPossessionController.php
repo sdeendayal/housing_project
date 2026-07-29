@@ -1914,7 +1914,8 @@ class MMGAYBdoPossessionController extends Controller
                 'b.BlockName',
                 'v.VillageName',
                 'f.FlatNo'
-            )->chunk(1000, function($rows) use (&$sr, $file) {
+            )->orderBy('o.OwnerId', 'asc')
+            ->chunk(1000, function($rows) use (&$sr, $file) {
                 foreach ($rows as $row) {
                     fputcsv($file, [
                         $sr++,
@@ -2021,6 +2022,7 @@ class MMGAYBdoPossessionController extends Controller
             'v.VillageName',
             'f.FlatNo'
         )
+        ->orderBy('o.OwnerName', 'asc')
         ->take(1000)
         ->get();
 
