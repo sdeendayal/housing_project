@@ -51,68 +51,146 @@
         </div>
     </div>
 
-    <!-- Status Tabs / Cards -->
-    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
-        <!-- Approved + Paid -->
-        <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_paid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-           class="bg-white rounded-xl shadow-sm border {{ $activeTab === 'approved_paid' ? 'border-green-500 bg-green-50/20' : 'border-slate-100' }} p-3 flex items-center justify-between hover:shadow transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Approved + Paid</p>
-                <h2 class="text-base font-extrabold text-green-700 mt-0.5">{{ $counts->approved_paid }}</h2>
+    <!-- Overall Block Statistics -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div>
+                <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">Overall Block Statistics</h3>
+                <p class="text-[9px] text-slate-450 font-bold uppercase tracking-wider mt-0.5">Live statistics of MMGAY beneficiaries in this Block</p>
             </div>
-            <div class="w-8.5 h-8.5 rounded-lg {{ $activeTab === 'approved_paid' ? 'bg-green-100 text-green-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">payments</span>
-            </div>
-        </a>
+            <span class="text-[9px] bg-blue-50 border border-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">Live</span>
+        </div>        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Block Card -->
+            <a href="{{ route('mmgay.bdo.dashboard') }}" class="flex items-center p-3 bg-gradient-to-r from-blue-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center mr-3 text-blue-600 shrink-0">
+                    <span class="material-symbols-outlined text-lg">location_city</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider truncate">Block</p>
+                    <h3 class="text-sm font-extrabold text-slate-800 truncate">{{ strtoupper($blockName) }}</h3>
+                </div>
+            </a>
 
-        <!-- Approved + Unpaid -->
-        <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_unpaid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-           class="bg-white rounded-xl shadow-sm border {{ $activeTab === 'approved_unpaid' ? 'border-amber-500 bg-amber-50/20' : 'border-slate-100' }} p-3 flex items-center justify-between hover:shadow transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Approved + Unpaid</p>
-                <h2 class="text-base font-extrabold text-amber-700 mt-0.5">{{ $counts->approved_unpaid }}</h2>
-            </div>
-            <div class="w-8.5 h-8.5 rounded-lg {{ $activeTab === 'approved_unpaid' ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">money_off</span>
-            </div>
-        </a>
+            <!-- Villages Card -->
+            <a href="{{ route('mmgay.bdo.villages-report') }}" class="flex items-center p-3 bg-gradient-to-r from-green-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+                <div class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center mr-3 text-green-600 shrink-0">
+                    <span class="material-symbols-outlined text-lg">home</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider truncate">Villages</p>
+                    <h3 class="text-sm font-extrabold text-slate-800">{{ number_format($totalVillagesCount) }}</h3>
+                </div>
+            </a>
 
-        <!-- Yet To Be Done -->
-        <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'yet_to_be_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-           class="bg-white rounded-xl shadow-sm border {{ $activeTab === 'yet_to_be_done' ? 'border-indigo-500 bg-indigo-50/20' : 'border-slate-100' }} p-3 flex items-center justify-between hover:shadow transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Yet To Be Done</p>
-                <h2 class="text-base font-extrabold text-indigo-700 mt-0.5">{{ $counts->yet_to_be_done }}</h2>
-            </div>
-            <div class="w-8.5 h-8.5 rounded-lg {{ $activeTab === 'yet_to_be_done' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">pending</span>
-            </div>
-        </a>
+            <!-- Applicants Card -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total']) }}" class="flex items-center p-3 bg-gradient-to-r from-indigo-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+                <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mr-3 text-indigo-600 shrink-0">
+                    <span class="material-symbols-outlined text-lg">groups</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider truncate">Applicants</p>
+                    <h3 class="text-sm font-extrabold text-slate-800">{{ number_format($totalApplicantsCount) }}</h3>
+                </div>
+            </a>
 
-        <!-- Rejected -->
-        <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'rejected', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-           class="bg-white rounded-xl shadow-sm border {{ $activeTab === 'rejected' ? 'border-red-500 bg-red-50/20' : 'border-slate-100' }} p-3 flex items-center justify-between hover:shadow transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Rejected</p>
-                <h2 class="text-base font-extrabold text-red-700 mt-0.5">{{ $counts->rejected }}</h2>
-            </div>
-            <div class="w-8.5 h-8.5 rounded-lg {{ $activeTab === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">cancel</span>
-            </div>
-        </a>
-
-        <!-- Cancelled -->
-        <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'cancelled', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-           class="bg-white rounded-xl shadow-sm border {{ $activeTab === 'cancelled' ? 'border-slate-800 bg-slate-100' : 'border-slate-100' }} p-3 flex items-center justify-between hover:shadow transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Cancelled</p>
-                <h2 class="text-base font-extrabold text-slate-800 mt-0.5">{{ $counts->cancelled }}</h2>
-            </div>
-            <div class="w-8.5 h-8.5 rounded-lg {{ $activeTab === 'cancelled' ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center shrink-0">
-                <span class="material-symbols-outlined text-base">delete_forever</span>
-            </div>
-        </a>
+            <!-- Allotted Card -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total']) }}" class="flex items-center p-3 bg-gradient-to-r from-orange-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+                <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mr-3 text-orange-600 shrink-0">
+                    <span class="material-symbols-outlined text-lg">cottage</span>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[9px] text-slate-400 uppercase font-black tracking-wider truncate">Allotted</p>
+                    <h3 class="text-sm font-extrabold text-slate-800">{{ number_format($totalAllottedCount) }}</h3>
+                </div>
+            </a>
+        </div>
     </div>
+
+    <!-- Allotment Status -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+            <div>
+                <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">Allotment Status</h3>
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Status of Allotted Beneficiaries</p>
+            </div>
+            <span class="text-[9px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
+                {{ number_format($grossTotal) }} Records
+            </span>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
+            <!-- Total -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'total' ? 'border-blue-500 bg-blue-50/10' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'total' ? 'bg-blue-100 text-blue-600' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">format_list_bulleted</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Total</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($grossTotal) }}</h3>
+                </div>
+            </a>
+
+            <!-- Approved + Paid -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_paid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'approved_paid' ? 'border-green-500 bg-green-50/10' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'approved_paid' ? 'bg-green-100 text-green-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">payments</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Approved + Paid</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($counts->approved_paid) }}</h3>
+                </div>
+            </a>
+
+            <!-- Approved + Unpaid -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_unpaid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'approved_unpaid' ? 'border-amber-500 bg-amber-50/10' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'approved_unpaid' ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">money_off</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Approved + Unpaid</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($counts->approved_unpaid) }}</h3>
+                </div>
+            </a>
+
+            <!-- Yet to be Approved -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'yet_to_be_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'yet_to_be_done' ? 'border-indigo-500 bg-indigo-50/10' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'yet_to_be_done' ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">pending</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight">Yet to Approve</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($counts->yet_to_be_done) }}</h3>
+                </div>
+            </a>
+
+            <!-- Rejected -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'rejected', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'rejected' ? 'border-red-500 bg-red-50/10' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">cancel</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Rejected</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($counts->rejected) }}</h3>
+                </div>
+            </a>
+
+            <!-- Cancelled -->
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'cancelled', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'cancelled' ? 'border-slate-800 bg-slate-100' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'cancelled' ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">delete_forever</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Cancelled</p>
+                    <h3 class="text-xs font-extrabold text-slate-800 mt-0.5">{{ number_format($counts->cancelled) }}</h3>
+                </div>
+            </a>
+        </div>
 
     <!-- Filters Panel -->
     <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-4">
@@ -190,6 +268,7 @@
                         <th class="px-3 py-2">Village</th>
                         <th class="px-3 py-2">Flat No.</th>
                         <th class="px-3 py-2 text-center">Status</th>
+                        <th class="px-3 py-2 text-center w-20">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -220,20 +299,53 @@
                                 {{ $owner->FlatNo ?? 'N/A' }}
                             </td>
                             <td class="px-3 py-1.5 text-center">
-                                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase
-                                    @if($activeTab === 'approved_paid') bg-green-50 text-green-700 border border-green-100
-                                    @elseif($activeTab === 'approved_unpaid') bg-amber-50 text-amber-700 border border-amber-100
-                                    @elseif($activeTab === 'yet_to_be_done') bg-indigo-50 text-indigo-700 border border-indigo-100
-                                    @elseif($activeTab === 'rejected') bg-red-50 text-red-700 border border-red-100
-                                    @else bg-slate-800 text-white
-                                    @endif">
-                                    {{ str_replace('_', ' ', $activeTab) }}
+                                @php
+                                    $statusText = 'YET TO BE APPROVED';
+                                    $statusClass = 'bg-indigo-50 text-indigo-700 border border-indigo-100';
+                                    if ($owner->IsAllotmentCancelled ?? 0) {
+                                        $statusText = 'CANCELLED';
+                                        $statusClass = 'bg-slate-800 text-white';
+                                    } elseif ($owner->IsRejected ?? 0) {
+                                        $statusText = 'REJECTED';
+                                        $statusClass = 'bg-red-50 text-red-700 border border-red-100';
+                                    } elseif ($owner->IsApproved ?? 0) {
+                                        if ($owner->IsPaid ?? 0) {
+                                            if ($owner->registry_matched ?? 0) {
+                                                $statusText = 'APPROVED & PAID (Registry Matched)';
+                                                $statusClass = 'bg-green-50 text-green-700 border border-green-100';
+                                            } else {
+                                                $statusText = 'APPROVED & PAID (Registry Pending)';
+                                                $statusClass = 'bg-cyan-50 text-cyan-700 border border-cyan-100';
+                                            }
+                                        } else {
+                                            $statusText = 'APPROVED & UNPAID';
+                                            $statusClass = 'bg-amber-50 text-amber-700 border border-amber-100';
+                                        }
+                                    }
+                                @endphp
+                                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase {{ $statusClass }}">
+                                    {{ $statusText }}
                                 </span>
+                            </td>
+                            <td class="px-3 py-1.5 text-center">
+                                <button onclick="openViewModal(this)" 
+                                        data-name="{{ $owner->OwnerName }}"
+                                        data-reg="{{ $owner->RegistrationNo }}"
+                                        data-father="{{ $owner->FatherHusbandName ?? 'N/A' }}"
+                                        data-mobile="{{ $owner->MobileNo }}"
+                                        data-phase="Phase {{ $owner->Phase }}"
+                                        data-village="{{ $owner->VillageName }}"
+                                        data-flat="{{ $owner->FlatNo ?? 'N/A' }}"
+                                        data-status="{{ $statusText }}"
+                                        data-status-class="{{ $statusClass }}"
+                                        class="bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm transition">
+                                    View
+                                </button>
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="9" class="px-3 py-6 text-center text-slate-400 font-medium">
+                            <td colspan="10" class="px-3 py-6 text-center text-slate-400 font-medium">
                                 <span class="material-symbols-outlined text-2xl block mb-1 text-slate-300">folder_open</span>
                                 No beneficiaries found under this status.
                             </td>
@@ -249,5 +361,211 @@
             </div>
         @endif
     </div>
+
+    <!-- View Beneficiary Profile Modal -->
+    <div id="viewModal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-xl border border-slate-150 max-w-lg w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="modalCard">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600 text-lg">account_circle</span>
+                    <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">Beneficiary Profile</h3>
+                </div>
+                <button onclick="closeViewModal()" class="w-6 h-6 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+                    <span class="material-symbols-outlined text-sm">close</span>
+                </button>
+            </div>
+
+            <!-- Modal Content -->
+            <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                
+                <!-- Profile Header -->
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h4 id="modalName" class="text-sm font-extrabold text-slate-800">-</h4>
+                        <p id="modalReg" class="text-[10px] text-slate-400 font-mono mt-0.5">-</p>
+                    </div>
+                    <span id="modalStatus" class="px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase">-</span>
+                </div>
+
+                <!-- Personal & Location Info -->
+                <div>
+                    <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-wider mb-2">Personal & Allotment Info</h5>
+                    <div class="grid grid-cols-2 gap-3 text-xs">
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Father / Husband</span>
+                            <span id="modalFather" class="font-semibold text-slate-700">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Mobile Number</span>
+                            <span id="modalMobile" class="font-mono font-bold text-slate-700">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Village (Phase)</span>
+                            <span id="modalVillage" class="font-semibold text-slate-700">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Flat Number</span>
+                            <span id="modalFlat" class="font-mono font-bold text-slate-700">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registry Details Section -->
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <h5 class="text-[9px] font-black text-slate-400 uppercase tracking-wider">Land Registry matching details</h5>
+                        <span id="registryStatusBadge" class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded">Checking...</span>
+                    </div>
+
+                    <!-- Loader Spinner -->
+                    <div id="registryLoader" class="py-6 flex items-center justify-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <span class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+                        <span>Fetching registry...</span>
+                    </div>
+
+                    <!-- No registry message -->
+                    <div id="registryEmpty" class="hidden p-4 bg-amber-50/50 border border-amber-100 rounded-xl text-center text-slate-500">
+                        <span class="material-symbols-outlined text-amber-500 text-lg block mb-1">warning</span>
+                        <p class="text-[10px] font-bold uppercase tracking-wide">No property registration details found for this mobile number in local database</p>
+                    </div>
+
+                    <!-- Registry Information Panel -->
+                    <div id="registryData" class="hidden grid grid-cols-2 gap-3 text-xs">
+                        <div class="col-span-2 p-2.5 bg-emerald-50/20 border border-emerald-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-emerald-600 uppercase tracking-wider mb-0.5">Second Party / Owner in Land Record</span>
+                            <span id="regSecondParty" class="font-bold text-slate-800">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Token ID</span>
+                            <span id="regToken" class="font-mono text-[10px] font-bold text-slate-700 break-all">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Registry Number</span>
+                            <span id="regNumber" class="font-mono font-bold text-slate-700">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Khewat Number</span>
+                            <span id="regKhewat" class="font-mono font-bold text-slate-700">-</span>
+                        </div>
+                        <div class="p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Area Transferred</span>
+                            <span id="regArea" class="font-bold text-slate-700">-</span>
+                        </div>
+                        <div class="col-span-2 p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
+                            <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-0.5">Registry Date</span>
+                            <span id="regDate" class="font-semibold text-slate-700">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+                <button onclick="closeViewModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold py-1.5 px-4 rounded-lg shadow-sm transition">
+                    Close Details
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openViewModal(button) {
+            // 1. Populate basic owner info from data attributes
+            document.getElementById('modalName').innerText = button.getAttribute('data-name');
+            document.getElementById('modalReg').innerText = button.getAttribute('data-reg');
+            document.getElementById('modalFather').innerText = button.getAttribute('data-father');
+            document.getElementById('modalMobile').innerText = button.getAttribute('data-mobile');
+            document.getElementById('modalVillage').innerText = button.getAttribute('data-village') + ' (' + button.getAttribute('data-phase') + ')';
+            document.getElementById('modalFlat').innerText = button.getAttribute('data-flat');
+            
+            const statusElement = document.getElementById('modalStatus');
+            statusElement.innerText = button.getAttribute('data-status');
+            statusElement.className = "px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase " + button.getAttribute('data-status-class');
+
+            // 2. Open Modal Animation
+            const modal = document.getElementById('viewModal');
+            const card = document.getElementById('modalCard');
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                card.classList.remove('scale-95', 'opacity-0');
+                card.classList.add('scale-100', 'opacity-100');
+            }, 50);
+
+            // 3. Reset registry panel to loading state
+            const loader = document.getElementById('registryLoader');
+            const emptyState = document.getElementById('registryEmpty');
+            const dataPanel = document.getElementById('registryData');
+            const regStatusBadge = document.getElementById('registryStatusBadge');
+
+            loader.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+            dataPanel.classList.add('hidden');
+            
+            regStatusBadge.innerText = 'Checking...';
+            regStatusBadge.className = 'text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500';
+
+            // 4. Hit AJAX route to get registry details
+            const mobile = button.getAttribute('data-mobile');
+            fetch('{{ url("/mmgay/bdo/owner-registry-details") }}/' + mobile)
+                .then(res => res.json())
+                .then(data => {
+                    loader.classList.add('hidden');
+                    
+                    if (data.success && data.registry) {
+                        const reg = data.registry;
+                        
+                        // Populate fields
+                        document.getElementById('regSecondParty').innerText = reg.SecondParty || 'N/A';
+                        document.getElementById('regToken').innerText = reg.Token || 'N/A';
+                        document.getElementById('regNumber').innerText = reg.RegistaryNumber || 'N/A';
+                        document.getElementById('regKhewat').innerText = reg.Khewat || 'N/A';
+                        document.getElementById('regArea').innerText = (reg.TransferArea || '0') + ' units (Bhag: ' + (reg.Bhag || 'N/A') + ')';
+                        
+                        // Format Date
+                        let formattedDate = 'N/A';
+                        if (reg.RegistaryDate) {
+                            try {
+                                const dateObj = new Date(reg.RegistaryDate);
+                                formattedDate = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                            } catch (e) {
+                                formattedDate = reg.RegistaryDate;
+                            }
+                        }
+                        document.getElementById('regDate').innerText = formattedDate;
+
+                        // Show data panel
+                        dataPanel.classList.remove('hidden');
+                        regStatusBadge.innerText = 'Matched';
+                        regStatusBadge.className = 'text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800';
+                    } else {
+                        // Show empty state
+                        emptyState.classList.remove('hidden');
+                        regStatusBadge.innerText = 'Unmatched';
+                        regStatusBadge.className = 'text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-800';
+                    }
+                })
+                .catch(err => {
+                    loader.classList.add('hidden');
+                    emptyState.classList.remove('hidden');
+                    regStatusBadge.innerText = 'Error';
+                    regStatusBadge.className = 'text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-red-100 text-red-800';
+                    console.error(err);
+                });
+        }
+
+        function closeViewModal() {
+            const modal = document.getElementById('viewModal');
+            const card = document.getElementById('modalCard');
+            
+            card.classList.remove('scale-100', 'opacity-100');
+            card.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+    </script>
 </main>
 @endsection
