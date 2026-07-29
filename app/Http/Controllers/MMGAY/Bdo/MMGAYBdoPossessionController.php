@@ -134,6 +134,11 @@ class MMGAYBdoPossessionController extends Controller
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
             ->select('mpa.*');
 
         if ($blockMasterId) {
@@ -163,6 +168,11 @@ class MMGAYBdoPossessionController extends Controller
                     $query->select(DB::raw(1))
                         ->from('flatmaster as f')
                         ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
                 });
             if ($blockMasterId) {
                 $totalEligibleQuery->where('o.BlockId', $blockMasterId);
@@ -190,6 +200,11 @@ class MMGAYBdoPossessionController extends Controller
                     $query->select(DB::raw(1))
                         ->from('flatmaster as f')
                         ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
                 });
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
@@ -243,6 +258,11 @@ class MMGAYBdoPossessionController extends Controller
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
                     ->from('ownermaster')
@@ -285,6 +305,11 @@ class MMGAYBdoPossessionController extends Controller
                     $query->select(DB::raw(1))
                         ->from('flatmaster as f')
                         ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -368,6 +393,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -693,6 +723,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1220,6 +1255,11 @@ class MMGAYBdoPossessionController extends Controller
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
@@ -1257,6 +1297,11 @@ class MMGAYBdoPossessionController extends Controller
                     $query->select(DB::raw(1))
                         ->from('flatmaster as f')
                         ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -1343,6 +1388,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
             ->groupBy('v.VillageId', 'v.VillageName')
@@ -1664,6 +1714,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             });
 
         if ($selectedPhase) {
@@ -1702,6 +1757,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             });
 
         if ($selectedPhase) {
@@ -1746,6 +1806,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1843,6 +1908,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1972,6 +2042,11 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
