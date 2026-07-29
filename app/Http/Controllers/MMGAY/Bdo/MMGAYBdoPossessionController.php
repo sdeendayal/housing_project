@@ -113,24 +113,36 @@ class MMGAYBdoPossessionController extends Controller
 
         // dd($blockMasterId);
 
-        $ppaQuery = DB::table('mmgay_possession_applications');
+        $ppaQuery = DB::table('mmgay_possession_applications as mpa')
+            ->join('ownermaster as o', 'mpa.owner_id', '=', 'o.OwnerId')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->select('mpa.*');
+
         if ($blockMasterId) {
-            $ppaQuery->where('block_id', $blockMasterId);
+            $ppaQuery->where('mpa.block_id', $blockMasterId);
         }
 
         $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
 
         if ($bypassApi) {
             // 1. Total Eligible (All registered owners in BDO block)
-            $totalEligibleQuery = DB::table('ownermaster');
+            $totalEligibleQuery = DB::table('ownermaster as o')
+                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->whereNotNull('v.plots')
+                ->whereNotNull('v.phase');
             if ($blockMasterId) {
-                $totalEligibleQuery->where('BlockId', $blockMasterId);
+                $totalEligibleQuery->where('o.BlockId', $blockMasterId);
             }
             $totalEligibleCount = $totalEligibleQuery->count();
 
             // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
             $notScheduledQuery = DB::table('ownermaster as o')
-                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id');
+                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->whereNotNull('v.plots')
+                ->whereNotNull('v.phase');
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
             }
@@ -144,22 +156,21 @@ class MMGAYBdoPossessionController extends Controller
             $totalEligibleCount = (clone $ppaQuery)->count();
 
             // 2. Not Scheduled (Synced owners whose schedule is pending)
-            $notScheduledCount = (clone $ppaQuery)->where('physical_possession_status', 'Eligible for Physical Possession')->count();
+            $notScheduledCount = (clone $ppaQuery)->where('mpa.physical_possession_status', 'Eligible for Physical Possession')->count();
         }
 
         $stats = [
             'total_eligible' => $totalEligibleCount,
             'not_scheduled' => $notScheduledCount,
-            'awaiting_citizen' => (clone $ppaQuery)->where('physical_possession_status', 'Visit Scheduled')->count(),
-            'awaiting_coordinates' => (clone $ppaQuery)->where('physical_possession_status', 'Slot Selected')->count(),
-            'awaiting_bdo_doc' => (clone $ppaQuery)->where('physical_possession_status', 'Site Verified')->count(),
-            'verified' => (clone $ppaQuery)->where('physical_possession_status', 'Verified')->count(),
+            'awaiting_citizen' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Visit Scheduled')->count(),
+            'awaiting_coordinates' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Slot Selected')->count(),
+            'awaiting_bdo_doc' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Site Verified')->count(),
+            'verified' => (clone $ppaQuery)->where('mpa.physical_possession_status', 'Verified')->count(),
         ];
 
         $recentApplications = (clone $ppaQuery)
-            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
-            ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
-            ->latest('mmgay_possession_applications.created_at')
+            ->select('mpa.*', 'o.Phase as owner_phase')
+            ->latest('mpa.created_at')
             ->take(6)
             ->get();
 
@@ -175,6 +186,8 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
@@ -199,6 +212,9 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->whereNotNull('v.plots')
+                ->whereNotNull('v.phase')
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -263,6 +279,9 @@ class MMGAYBdoPossessionController extends Controller
         $query = DB::table('ownermaster as o')
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
             });
@@ -567,7 +586,10 @@ class MMGAYBdoPossessionController extends Controller
         $blockMasterId = $bdo->block_id;
 
         $query = MmgayPossessionApplication::query()
-            ->leftJoin('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->join('ownermaster as o', 'mmgay_possession_applications.owner_id', '=', 'o.OwnerId')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->select('mmgay_possession_applications.*', 'o.Phase as owner_phase')
             ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
 
@@ -1080,6 +1102,8 @@ class MMGAYBdoPossessionController extends Controller
         $villages = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
@@ -1104,6 +1128,9 @@ class MMGAYBdoPossessionController extends Controller
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->whereNotNull('v.plots')
+                ->whereNotNull('v.phase')
                 ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
                 ->where('o.Phase', $selectedPhase)
                 ->where('o.VillageId', $selectedVillageId)
@@ -1176,6 +1203,8 @@ class MMGAYBdoPossessionController extends Controller
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.Phase', $selectedPhase)
             ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
