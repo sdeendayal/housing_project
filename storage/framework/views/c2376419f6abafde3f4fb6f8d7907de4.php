@@ -1,16 +1,16 @@
-@extends('layouts.mmgayAdmin')
 
-@section('title', 'Allotment Report')
 
-@section('content')
+<?php $__env->startSection('title', 'Allotment Report'); ?>
+
+<?php $__env->startSection('content'); ?>
 
     <main class="min-h-screen bg-slate-100 p-6 pt-20 ml-[260px] w-[calc(100%-260px)] overflow-x-hidden">
 
-        {{-- Page Header --}}
+        
         <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
 
-                {{-- Heading --}}
+                
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-800">
                         Allotment Report
@@ -21,17 +21,17 @@
                     </p>
                 </div>
 
-                {{-- Action Buttons --}}
+                
                 <div class="flex flex-wrap items-center gap-3">
 
-                    {{-- Excel --}}
+                    
                     <button type="button"
                         class="allotment-download-btn inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700"
                         data-download-type="excel"
-                        data-download-url="{{ route(
+                        data-download-url="<?php echo e(route(
                             'admin.allotment.export.excel',
                             request()->only(['phase', 'district_id', 'block_id', 'village_id', 'search', 'status']),
-                        ) }}">
+                        )); ?>">
                         <span class="material-symbols-outlined text-[20px]">
                             table_view
                         </span>
@@ -42,10 +42,10 @@
                     <button type="button"
                         class="allotment-download-btn inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700"
                         data-download-type="pdf"
-                        data-download-url="{{ route(
+                        data-download-url="<?php echo e(route(
                             'admin.allotment.export.pdf',
                             request()->only(['phase', 'district_id', 'block_id', 'village_id', 'search', 'status']),
-                        ) }}">
+                        )); ?>">
                         <span class="material-symbols-outlined text-[20px]">
                             picture_as_pdf
                         </span>
@@ -58,10 +58,10 @@
             </div>
         </div>
 
-        {{-- Filters --}}
+        
         <div class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-            <form method="GET" action="{{ route('admin.allotment.report') }}"
+            <form method="GET" action="<?php echo e(route('admin.allotment.report')); ?>"
                 class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-6">
 
                 <div>
@@ -74,11 +74,12 @@
 
                         <option value="">All Phases</option>
 
-                        @foreach ($phases as $phase)
-                            <option value="{{ $phase }}" @selected(request('phase') == $phase)>
-                                {{ $phase }}
+                        <?php $__currentLoopData = $phases; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $phase): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($phase); ?>" <?php if(request('phase') == $phase): echo 'selected'; endif; ?>>
+                                <?php echo e($phase); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </select>
                 </div>
@@ -94,11 +95,12 @@
 
                         <option value="">All Districts</option>
 
-                        @foreach ($districts as $district)
-                            <option value="{{ $district->DistrictId }}" @selected(request('district_id') == $district->DistrictId)>
-                                {{ $district->DistrictName }}
+                        <?php $__currentLoopData = $districts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $district): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($district->DistrictId); ?>" <?php if(request('district_id') == $district->DistrictId): echo 'selected'; endif; ?>>
+                                <?php echo e($district->DistrictName); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </select>
                 </div>
@@ -113,11 +115,12 @@
 
                         <option value="">All Blocks</option>
 
-                        @foreach ($blocks as $block)
-                            <option value="{{ $block->BlockId }}" @selected(request('block_id') == $block->BlockId)>
-                                {{ $block->BlockName }}
+                        <?php $__currentLoopData = $blocks; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $block): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($block->BlockId); ?>" <?php if(request('block_id') == $block->BlockId): echo 'selected'; endif; ?>>
+                                <?php echo e($block->BlockName); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </select>
                 </div>
@@ -133,11 +136,12 @@
 
                         <option value="">All Villages</option>
 
-                        @foreach ($villages as $village)
-                            <option value="{{ $village->VillageId }}" @selected(request('village_id') == $village->VillageId)>
-                                {{ $village->VillageName }}
+                        <?php $__currentLoopData = $villages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $village): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <option value="<?php echo e($village->VillageId); ?>" <?php if(request('village_id') == $village->VillageId): echo 'selected'; endif; ?>>
+                                <?php echo e($village->VillageName); ?>
+
                             </option>
-                        @endforeach
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
                     </select>
                 </div>
@@ -147,7 +151,7 @@
                         Search
                     </label>
 
-                    <input type="text" name="search" id="search" value="{{ request('search') }}"
+                    <input type="text" name="search" id="search" value="<?php echo e(request('search')); ?>"
                         placeholder="Name, mobile, application..."
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none placeholder:text-slate-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
                 </div>
@@ -159,7 +163,7 @@
                         Apply
                     </button>
 
-                    <a href="{{ route('admin.allotment.report') }}"
+                    <a href="<?php echo e(route('admin.allotment.report')); ?>"
                         class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">
 
                         <span class="material-symbols-outlined text-[20px]">
@@ -171,105 +175,111 @@
 
                 </div>
 
-                @if (request('status'))
-                    <input type="hidden" name="status" value="{{ request('status') }}">
-                @endif
+                <?php if(request('status')): ?>
+                    <input type="hidden" name="status" value="<?php echo e(request('status')); ?>">
+                <?php endif; ?>
 
             </form>
         </div>
 
-        {{-- Summary Cards --}}
+        
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 
-            <a href="{{ route('admin.allotment.report', request()->except(['status', 'page'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', request()->except(['status', 'page']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ !request('status') ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white' }}">
+                <?php echo e(!request('status') ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">Total</p>
 
                 <h3 class="mt-2 text-2xl font-bold text-slate-800">
-                    {{ number_format($summary->Total ?? 0) }}
+                    <?php echo e(number_format($summary->Total ?? 0)); ?>
+
                 </h3>
             </a>
 
-            <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_paid'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_paid']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ request('status') === 'approved_paid'
+                <?php echo e(request('status') === 'approved_paid'
                     ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
-                    : 'border-slate-200 bg-white' }}">
+                    : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Approved & Paid
                 </p>
 
                 <h3 class="mt-2 text-2xl font-bold text-green-700">
-                    {{ number_format($summary->ApprovedPaid ?? 0) }}
+                    <?php echo e(number_format($summary->ApprovedPaid ?? 0)); ?>
+
                 </h3>
             </a>
 
-            <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_unpaid'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_unpaid']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ request('status') === 'approved_unpaid'
+                <?php echo e(request('status') === 'approved_unpaid'
                     ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-100'
-                    : 'border-slate-200 bg-white' }}">
+                    : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Approved & Unpaid
                 </p>
 
                 <h3 class="mt-2 text-2xl font-bold text-amber-700">
-                    {{ number_format($summary->ApprovedUnpaid ?? 0) }}
+                    <?php echo e(number_format($summary->ApprovedUnpaid ?? 0)); ?>
+
                 </h3>
             </a>
 
-            <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'pending'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'pending']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ request('status') === 'pending'
+                <?php echo e(request('status') === 'pending'
                     ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-100'
-                    : 'border-slate-200 bg-white' }}">
+                    : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Yet to be Approved
                 </p>
 
                 <h3 class="mt-2 text-2xl font-bold text-indigo-700">
-                    {{ number_format($summary->PendingApproval ?? 0) }}
+                    <?php echo e(number_format($summary->PendingApproval ?? 0)); ?>
+
                 </h3>
             </a>
 
-            <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'rejected'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'rejected']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ request('status') === 'rejected'
+                <?php echo e(request('status') === 'rejected'
                     ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
-                    : 'border-slate-200 bg-white' }}">
+                    : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Rejected
                 </p>
 
                 <h3 class="mt-2 text-2xl font-bold text-red-700">
-                    {{ number_format($summary->Rejected ?? 0) }}
+                    <?php echo e(number_format($summary->Rejected ?? 0)); ?>
+
                 </h3>
             </a>
 
-            <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'cancelled'])) }}"
+            <a href="<?php echo e(route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'cancelled']))); ?>"
                 class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
-                {{ request('status') === 'cancelled'
+                <?php echo e(request('status') === 'cancelled'
                     ? 'border-slate-500 bg-slate-100 ring-2 ring-slate-200'
-                    : 'border-slate-200 bg-white' }}">
+                    : 'border-slate-200 bg-white'); ?>">
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Cancelled
                 </p>
 
                 <h3 class="mt-2 text-2xl font-bold text-slate-700">
-                    {{ number_format($summary->Cancelled ?? 0) }}
+                    <?php echo e(number_format($summary->Cancelled ?? 0)); ?>
+
                 </h3>
             </a>
 
         </div>
 
-        {{-- Table --}}
+        
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             <div
@@ -281,18 +291,20 @@
                     </h2>
 
                     <p class="mt-1 text-sm text-slate-500">
-                        Showing {{ $allotments->firstItem() ?? 0 }}
-                        to {{ $allotments->lastItem() ?? 0 }}
-                        of {{ number_format($allotments->total()) }} records
+                        Showing <?php echo e($allotments->firstItem() ?? 0); ?>
+
+                        to <?php echo e($allotments->lastItem() ?? 0); ?>
+
+                        of <?php echo e(number_format($allotments->total())); ?> records
                     </p>
                 </div>
 
-                @if (request('status'))
-                    <a href="{{ route('admin.allotment.report', request()->except(['status', 'page'])) }}"
+                <?php if(request('status')): ?>
+                    <a href="<?php echo e(route('admin.allotment.report', request()->except(['status', 'page']))); ?>"
                         class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-semibold text-orange-700 hover:bg-orange-100">
                         Clear Status
                     </a>
-                @endif
+                <?php endif; ?>
 
             </div>
 
@@ -339,8 +351,8 @@
 
                     <tbody class="divide-y divide-slate-100">
 
-                        @forelse ($allotments as $allotment)
-                            @php
+                        <?php $__empty_1 = true; $__currentLoopData = $allotments; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $allotment): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <?php
                                 if ((int) $allotment->IsAllotmentCancelled === 1) {
                                     $statusText = 'Cancelled';
                                     $statusClass = 'bg-slate-100 text-slate-700';
@@ -357,69 +369,81 @@
                                     $statusText = 'Yet to be Approved';
                                     $statusClass = 'bg-indigo-100 text-indigo-700';
                                 }
-                            @endphp
+                            ?>
 
                             <tr class="transition hover:bg-slate-50">
 
                                 <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                                    {{ ($allotments->firstItem() ?? 1) + $loop->index }}
+                                    <?php echo e(($allotments->firstItem() ?? 1) + $loop->index); ?>
+
                                 </td>
 
                                 <td class="whitespace-nowrap px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
-                                        {{ $allotment->RegistrationNo ?? '-' }}
+                                        <?php echo e($allotment->RegistrationNo ?? '-'); ?>
+
                                     </p>
                                     <p class="mt-1 text-xs text-slate-500">
-                                        Owner ID: {{ $allotment->OwnerId ?? '-' }}
+                                        Owner ID: <?php echo e($allotment->OwnerId ?? '-'); ?>
+
                                     </p>
                                 </td>
 
                                 <td class="min-w-[220px] px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
-                                        {{ $allotment->OwnerName ?? '-' }}
+                                        <?php echo e($allotment->OwnerName ?? '-'); ?>
+
                                     </p>
                                     <p class="mt-1 text-xs text-slate-500">
-                                        {{ $allotment->FatherHusbandName ?? '-' }}
+                                        <?php echo e($allotment->FatherHusbandName ?? '-'); ?>
+
                                     </p>
                                 </td>
 
                                 <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                                    {{ $allotment->MobileNo ?? '-' }}
+                                    <?php echo e($allotment->MobileNo ?? '-'); ?>
+
                                 </td>
 
                                 <td class="min-w-[220px] px-4 py-4">
                                     <p class="text-sm font-medium text-slate-700">
-                                        {{ $allotment->VillageName ?? '-' }}
+                                        <?php echo e($allotment->VillageName ?? '-'); ?>
+
                                     </p>
                                     <p class="mt-1 text-xs text-slate-500">
-                                        {{ $allotment->BlockName ?? '-' }},
-                                        {{ $allotment->DistrictName ?? '-' }}
+                                        <?php echo e($allotment->BlockName ?? '-'); ?>,
+                                        <?php echo e($allotment->DistrictName ?? '-'); ?>
+
                                     </p>
                                 </td>
 
                                 <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
-                                    {{ $allotment->Phase ?? '-' }}
+                                    <?php echo e($allotment->Phase ?? '-'); ?>
+
                                 </td>
 
                                 <td class="whitespace-nowrap px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
-                                        {{ $allotment->FlatNo ?? '-' }}
+                                        <?php echo e($allotment->FlatNo ?? '-'); ?>
+
                                     </p>
                                     <p class="mt-1 text-xs text-slate-500">
-                                        Flat ID: {{ $allotment->FlatId ?? '-' }}
+                                        Flat ID: <?php echo e($allotment->FlatId ?? '-'); ?>
+
                                     </p>
                                 </td>
 
                                 <td class="whitespace-nowrap px-4 py-4">
                                     <span
-                                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
-                                        {{ $statusText }}
+                                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?php echo e($statusClass); ?>">
+                                        <?php echo e($statusText); ?>
+
                                     </span>
                                 </td>
 
                             </tr>
 
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
 
                             <tr>
                                 <td colspan="8" class="px-6 py-14 text-center">
@@ -431,18 +455,19 @@
                                     </p>
                                 </td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
 
                     </tbody>
                 </table>
 
             </div>
 
-            @if ($allotments->hasPages())
+            <?php if($allotments->hasPages()): ?>
                 <div class="border-t border-slate-200 px-5 py-4">
-                    {{ $allotments->onEachSide(1)->links('pagination::tailwind') }}
+                    <?php echo e($allotments->onEachSide(1)->links('pagination::tailwind')); ?>
+
                 </div>
-            @endif
+            <?php endif; ?>
 
         </div>
 
@@ -483,4 +508,6 @@
 
         </div>
     </div>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.mmgayAdmin', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\xampp\htdocs\housing-project\resources\views/mmgay/super-admin/allotment-report.blade.php ENDPATH**/ ?>

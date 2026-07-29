@@ -1,21 +1,21 @@
-@extends('layouts.mmsayDepartmentAuth')
-@section('title', 'MMSAY Department Dashboard')
-@section('content')
+<?php $__env->startSection('title', 'MMSAY Department Dashboard'); ?>
+<?php $__env->startSection('content'); ?>
 
-    @if (session('success'))
+    <?php if(session('success')): ?>
         <div id="successToast" class="success-toast">
             <span class="material-symbols-outlined me-2">
                 check_circle
             </span>
 
-            {{ session('success') }}
+            <?php echo e(session('success')); ?>
+
         </div>
-    @endif
+    <?php endif; ?>
     <main class="ml-52 pt-20 px-5 pb-5 min-h-screen">
         <div class="max-w-container-max mx-auto space-y-md">
             <div class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-                {{-- Filter Header --}}
+                
                 <div
                     class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-center gap-3">
@@ -36,7 +36,7 @@
                         </div>
                     </div>
 
-                    @if ($districtId || $cityId || $sectorId)
+                    <?php if($districtId || $cityId || $sectorId): ?>
                         <div
                             class="inline-flex w-fit items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
                             <span class="material-symbols-outlined text-[16px]">
@@ -44,14 +44,14 @@
                             </span>
                             Filter applied
                         </div>
-                    @endif
+                    <?php endif; ?>
                 </div>
 
-                {{-- Filter Form --}}
-                <form method="GET" action="{{ url()->current() }}" id="dashboardFilterForm" class="p-5">
+                
+                <form method="GET" action="<?php echo e(url()->current()); ?>" id="dashboardFilterForm" class="p-5">
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-                        {{-- District --}}
+                        
                         <div>
                             <label for="district_id"
                                 class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -69,11 +69,12 @@
                                hover:border-violet-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100">
                                     <option value="">All Districts</option>
 
-                                    @foreach ($districts as $district)
-                                        <option value="{{ $district->DistrictId }}" @selected((string) $districtId === (string) $district->DistrictId)>
-                                            {{ $district->DistrictName }}
+                                    <?php $__currentLoopData = $districts; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $district): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($district->DistrictId); ?>" <?php if((string) $districtId === (string) $district->DistrictId): echo 'selected'; endif; ?>>
+                                            <?php echo e($district->DistrictName); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
 
                                 <span
@@ -83,7 +84,7 @@
                             </div>
                         </div>
 
-                        {{-- City --}}
+                        
                         <div>
                             <label for="city_id"
                                 class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -96,19 +97,21 @@
                                     apartment
                                 </span>
 
-                                <select name="city_id" id="city_id" @disabled(!$districtId)
+                                <select name="city_id" id="city_id" <?php if(!$districtId): echo 'disabled'; endif; ?>
                                     class="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-9 text-sm font-medium text-slate-700 outline-none transition
                                hover:border-violet-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100
                                disabled:cursor-not-allowed disabled:border-slate-100 disabled:bg-slate-100 disabled:text-slate-400">
                                     <option value="">
-                                        {{ $districtId ? 'All Cities' : 'Select district first' }}
+                                        <?php echo e($districtId ? 'All Cities' : 'Select district first'); ?>
+
                                     </option>
 
-                                    @foreach ($cities as $city)
-                                        <option value="{{ $city->CityId }}" @selected((string) $cityId === (string) $city->CityId)>
-                                            {{ $city->CityName }}
+                                    <?php $__currentLoopData = $cities; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $city): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($city->CityId); ?>" <?php if((string) $cityId === (string) $city->CityId): echo 'selected'; endif; ?>>
+                                            <?php echo e($city->CityName); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
 
                                 <span
@@ -118,7 +121,7 @@
                             </div>
                         </div>
 
-                        {{-- Sector --}}
+                        
                         <div>
                             <label for="sector_id"
                                 class="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
@@ -131,19 +134,21 @@
                                     grid_view
                                 </span>
 
-                                <select name="sector_id" id="sector_id" @disabled(!$cityId)
+                                <select name="sector_id" id="sector_id" <?php if(!$cityId): echo 'disabled'; endif; ?>
                                     class="h-11 w-full appearance-none rounded-xl border border-slate-200 bg-slate-50 py-2 pl-10 pr-9 text-sm font-medium text-slate-700 outline-none transition
                                hover:border-violet-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-100
                                disabled:cursor-not-allowed disabled:border-slate-100 disabled:bg-slate-100 disabled:text-slate-400">
                                     <option value="">
-                                        {{ $cityId ? 'All Sectors' : 'Select city first' }}
+                                        <?php echo e($cityId ? 'All Sectors' : 'Select city first'); ?>
+
                                     </option>
 
-                                    @foreach ($sectors as $sector)
-                                        <option value="{{ $sector->SectorId }}" @selected((string) $sectorId === (string) $sector->SectorId)>
-                                            {{ $sector->SectorName }}
+                                    <?php $__currentLoopData = $sectors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sector): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <option value="<?php echo e($sector->SectorId); ?>" <?php if((string) $sectorId === (string) $sector->SectorId): echo 'selected'; endif; ?>>
+                                            <?php echo e($sector->SectorName); ?>
+
                                         </option>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
 
                                 <span
@@ -153,7 +158,7 @@
                             </div>
                         </div>
 
-                        {{-- Actions --}}
+                        
                         <div class="flex items-end gap-2">
                             <button type="submit"
                                 class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-violet-600 px-5 text-sm font-semibold text-white shadow-sm transition
@@ -164,7 +169,7 @@
                                 Apply
                             </button>
 
-                            <a href="{{ url()->current() }}" title="Reset filters"
+                            <a href="<?php echo e(url()->current()); ?>" title="Reset filters"
                                 class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition
                            hover:border-red-200 hover:bg-red-50 hover:text-red-500 focus:outline-none focus:ring-4 focus:ring-red-100">
                                 <span class="material-symbols-outlined text-[20px]">
@@ -178,7 +183,7 @@
 
             <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-                {{-- Section heading --}}
+                
                 <div
                     class="flex flex-col gap-3 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/70 to-white px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                     <div class="flex items-center gap-3">
@@ -209,8 +214,8 @@
 
                 <div class="grid grid-cols-2 gap-3 p-4 sm:grid-cols-3 lg:grid-cols-6 lg:p-5">
 
-                    {{-- Registration --}}
-                    <a href="{{ url('mmsay-department-property-registration') }}"
+                    
+                    <a href="<?php echo e(url('mmsay-department-property-registration')); ?>"
                         class="group relative overflow-hidden rounded-xl border border-emerald-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-emerald-500"></span>
 
@@ -229,8 +234,8 @@
                         <p class="mt-1 truncate text-[10px] text-slate-400">Property entry</p>
                     </a>
 
-                    {{-- Draw --}}
-                    <a href="{{ url('/mmsay-department-draw') }}"
+                    
+                    <a href="<?php echo e(url('/mmsay-department-draw')); ?>"
                         class="group relative overflow-hidden rounded-xl border border-cyan-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-cyan-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-cyan-500"></span>
 
@@ -249,8 +254,8 @@
                         <p class="mt-1 truncate text-[10px] text-slate-400">Property selection</p>
                     </a>
 
-                    {{-- Property Allotment --}}
-                    <a href="{{ url('mmsay-department-allotted-properties') }}"
+                    
+                    <a href="<?php echo e(url('mmsay-department-allotted-properties')); ?>"
                         class="group relative overflow-hidden rounded-xl border border-orange-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-orange-500"></span>
 
@@ -269,7 +274,7 @@
                         <p class="mt-1 truncate text-[10px] text-slate-400">Plot / flat allotted</p>
                     </a>
 
-                    {{-- Provisional Letter --}}
+                    
                     <a href="#"
                         class="group relative overflow-hidden rounded-xl border border-blue-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-blue-500"></span>
@@ -289,8 +294,8 @@
                         <p class="mt-1 truncate text-[10px] text-slate-400">Issued after draw</p>
                     </a>
 
-                    {{-- EMI Payments --}}
-                    <a href="{{ url('/mmsay-department-emi-payments') }}"
+                    
+                    <a href="<?php echo e(url('/mmsay-department-emi-payments')); ?>"
                         class="group relative overflow-hidden rounded-xl border border-amber-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-amber-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-amber-500"></span>
 
@@ -309,8 +314,8 @@
                         <p class="mt-1 truncate text-[10px] text-slate-400">Monthly installments</p>
                     </a>
 
-                    {{-- Physical Letter --}}
-                    <a href="{{ url('mmsay-department-physical-letter') }}"
+                    
+                    <a href="<?php echo e(url('mmsay-department-physical-letter')); ?>"
                         class="group relative overflow-hidden rounded-xl border border-pink-100 bg-white p-3.5 shadow-[0_1px_3px_rgba(15,23,42,0.05)] transition duration-200 hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-md">
                         <span class="absolute inset-x-0 top-0 h-0.5 bg-pink-500"></span>
 
@@ -335,8 +340,8 @@
             <!-- Bento Grid - Summary Metrics -->
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
 
-                {{-- Registration --}}
-                <a href="{{ url('mmsay-department-property-registration') .
+                
+                <a href="<?php echo e(url('mmsay-department-property-registration') .
                     '?' .
                     http_build_query(
                         array_filter([
@@ -344,7 +349,7 @@
                             'city_id' => $cityId,
                             'sector_id' => $sectorId,
                         ]),
-                    ) }}"
+                    )); ?>"
                     class="group rounded-xl border border-indigo-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
@@ -366,7 +371,8 @@
                     </p>
 
                     <h3 class="mt-1 text-2xl font-bold leading-none text-slate-800">
-                        {{ number_format($totalApplications ?? 0) }}
+                        <?php echo e(number_format($totalApplications ?? 0)); ?>
+
                     </h3>
 
                     <p class="mt-2 text-[11px] text-slate-400">
@@ -374,8 +380,8 @@
                     </p>
                 </a>
 
-                {{-- Draw --}}
-                <a href="{{ url('mmsay-department-draw') }}"
+                
+                <a href="<?php echo e(url('mmsay-department-draw')); ?>"
                     class="group rounded-xl border border-emerald-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
@@ -397,7 +403,8 @@
                     </p>
 
                     <h3 class="mt-1 text-2xl font-bold leading-none text-emerald-600">
-                        {{ number_format($allottedUnits ?? 0) }}
+                        <?php echo e(number_format($allottedUnits ?? 0)); ?>
+
                     </h3>
 
                     <p class="mt-2 text-[11px] text-slate-400">
@@ -405,8 +412,8 @@
                     </p>
                 </a>
 
-                {{-- Allotted --}}
-                <a href="{{ url('mmsay-department-allotted-properties') }}"
+                
+                <a href="<?php echo e(url('mmsay-department-allotted-properties')); ?>"
                     class="group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
@@ -428,7 +435,8 @@
                     </p>
 
                     <h3 class="mt-1 text-2xl font-bold leading-none text-orange-600">
-                        {{ number_format($allottedUnits ?? 0) }}
+                        <?php echo e(number_format($allottedUnits ?? 0)); ?>
+
                     </h3>
 
                     <p class="mt-2 text-[11px] text-slate-400">
@@ -436,7 +444,7 @@
                     </p>
                 </a>
 
-                {{-- EMI --}}
+                
                 <div class="rounded-xl border border-amber-100 bg-white p-4 shadow-sm lg:col-span-2">
 
                     <div class="flex items-center justify-between">
@@ -453,8 +461,8 @@
 
                     <div class="mt-3 grid grid-cols-2 gap-2">
 
-                        {{-- Full Payment --}}
-                        <a href="{{ url('full-paid-properties') .
+                        
+                        <a href="<?php echo e(url('full-paid-properties') .
                             '?' .
                             http_build_query(
                                 array_filter([
@@ -462,19 +470,20 @@
                                     'city_id' => $cityId,
                                     'sector_id' => $sectorId,
                                 ]),
-                            ) }}"
+                            )); ?>"
                             class="rounded-lg bg-emerald-50 px-2 py-2.5 text-center transition hover:bg-emerald-100">
                             <p class="text-[9px] font-medium uppercase text-slate-500">
                                 Full Payment
                             </p>
 
                             <p class="mt-1 text-lg font-bold leading-none text-emerald-600">
-                                {{ number_format($paymentStats->total_paid_properties ?? 0) }}
+                                <?php echo e(number_format($paymentStats->total_paid_properties ?? 0)); ?>
+
                             </p>
                         </a>
 
-                        {{-- Partial Payment --}}
-                        <a href="{{ url('partial-paid-properties') .
+                        
+                        <a href="<?php echo e(url('partial-paid-properties') .
                             '?' .
                             http_build_query(
                                 array_filter([
@@ -482,24 +491,25 @@
                                     'city_id' => $cityId,
                                     'sector_id' => $sectorId,
                                 ]),
-                            ) }}"
+                            )); ?>"
                             class="rounded-lg bg-amber-50 px-2 py-2.5 text-center transition hover:bg-amber-100">
                             <p class="text-[9px] font-medium uppercase text-slate-500">
                                 Partial Payment
                             </p>
 
                             <p class="mt-1 text-lg font-bold leading-none text-amber-600">
-                                {{ number_format($paymentStats->pending_properties ?? 0) }}
+                                <?php echo e(number_format($paymentStats->pending_properties ?? 0)); ?>
+
                             </p>
                         </a>
                     </div>
                 </div>
 
-                {{-- Physical Possession --}}
+                
                 <div
                     class="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm sm:col-span-2 lg:col-span-4">
 
-                    {{-- Header --}}
+                    
                     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                         <div class="flex items-center gap-2.5">
                             <div
@@ -525,17 +535,17 @@
                         </span>
                     </div>
 
-                    {{-- Eligible and Not Eligible --}}
+                    
                     <div class="grid grid-cols-2 divide-x divide-slate-100">
 
-                        <a href="{{ route(
+                        <a href="<?php echo e(route(
                             'physical.possession.index',
                             array_filter([
                                 'district_id' => $districtId ?? null,
                                 'city_id' => $cityId ?? null,
                                 'sector_id' => $sectorId ?? null,
                             ]),
-                        ) }}"
+                        )); ?>"
                             class="group px-4 py-3 transition hover:bg-emerald-50/60">
 
                             <div class="flex items-center gap-1.5">
@@ -551,7 +561,8 @@
                             <div class="mt-2 flex items-end justify-between gap-2">
                                 <div>
                                     <h3 class="text-2xl font-bold leading-none text-emerald-600">
-                                        {{ number_format($eligiblePhysicalPossession ?? 0) }}
+                                        <?php echo e(number_format($eligiblePhysicalPossession ?? 0)); ?>
+
                                     </h3>
 
                                     <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
@@ -567,14 +578,14 @@
                             </div>
                         </a>
 
-                        <a href="{{ route(
+                        <a href="<?php echo e(route(
                             'physical.possession.not-eligible',
                             array_filter([
                                 'district_id' => $districtId ?? null,
                                 'city_id' => $cityId ?? null,
                                 'sector_id' => $sectorId ?? null,
                             ]),
-                        ) }}"
+                        )); ?>"
                             class="group px-4 py-3 transition hover:bg-rose-50/60">
 
                             <div class="flex items-center gap-1.5">
@@ -590,7 +601,8 @@
                             <div class="mt-2 flex items-end justify-between gap-2">
                                 <div>
                                     <h3 class="text-2xl font-bold leading-none text-rose-600">
-                                        {{ number_format($notEligiblePhysicalPossession ?? 0) }}
+                                        <?php echo e(number_format($notEligiblePhysicalPossession ?? 0)); ?>
+
                                     </h3>
 
                                     <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
@@ -610,4 +622,6 @@
         </div>
     </main>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layouts.mmsayDepartmentAuth', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\xampp\htdocs\housing-project\resources\views/mmsay/departmentDashboard.blade.php ENDPATH**/ ?>

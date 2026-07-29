@@ -284,6 +284,51 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'propertyPdf']
     )->name('properties.pdf');
 
+    // physical-possession routes Start
+
+    Route::get(
+        '/mmsay-department-physical-possession',
+        [PropertyManagementController::class, 'physicalPossessionEligible']
+    )->name('physical.possession.index');
+
+    Route::get(
+        '/mmsay-department-physical-possession/export/csv',
+        [PropertyManagementController::class, 'physicalPossessionCsv']
+    )->name('physical.possession.csv');
+
+    Route::get(
+        '/mmsay-department-physical-possession/print',
+        [PropertyManagementController::class, 'physicalPossessionPrint']
+    )->name('physical.possession.print');
+
+    Route::get(
+        '/mmsay-department-physical-possession/{assetId}/view',
+        [PropertyManagementController::class, 'physicalPossessionShow']
+    )
+        ->whereNumber('assetId')
+        ->name('physical.possession.show');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible',
+        [PropertyManagementController::class, 'physicalPossessionNotEligible']
+    )->name('physical.possession.not-eligible');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible/csv',
+        [PropertyManagementController::class, 'physicalPossessionNotEligibleCsv']
+    )->name('physical.possession.not-eligible.csv');
+
+    Route::get(
+        '/mmsay-department-physical-possession/not-eligible/print',
+        [PropertyManagementController::class, 'physicalPossessionNotEligiblePrint']
+    )->name('physical.possession.not-eligible.print');
+
+    Route::get(
+        '/mmsay-department-physical-possession/filter-options',
+        [PropertyManagementController::class, 'physicalPossessionFilterOptions']
+    )->name('physical.possession.filter-options');
+
+    // physical-possession routes End
 
     Route::get('/get-districts/{name}', [PropertyManagementController::class, 'getDistricts']);
     Route::get('/get-cities/{name}', [PropertyManagementController::class, 'getCities']);
