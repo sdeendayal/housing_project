@@ -76,7 +76,15 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
         [DistrictCeoController::class, 'printApplicantReport']
     )->name('district.dashboard.applicants.print');
 
+    Route::get(
+        '/report/applicants/excel',
+        [DistrictCeoController::class, 'exportApplicantReportExcel']
+    )->name('district.dashboard.applicants.excel');
 
+    Route::get(
+        '/report/applicants/csv',
+        [DistrictCEOController::class, 'exportApplicantReportCsv']
+    )->name('district.dashboard.applicants.csv');
     /*
     |--------------------------------------------------------------------------
     | Village Wise Summary

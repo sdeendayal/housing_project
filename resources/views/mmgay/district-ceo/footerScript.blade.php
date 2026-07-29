@@ -2,6 +2,141 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- Micro-interactions Script -->
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loader = document.getElementById('exportLoader');
+        const exportLinks = document.querySelectorAll('.download-export-link');
+
+        function showLoader() {
+            loader.classList.remove('hidden');
+            loader.classList.add('flex');
+
+            exportLinks.forEach(function(link) {
+                link.classList.add(
+                    'pointer-events-none',
+                    'cursor-not-allowed',
+                    'opacity-60'
+                );
+            });
+        }
+
+        function hideLoader() {
+            loader.classList.add('hidden');
+            loader.classList.remove('flex');
+
+            exportLinks.forEach(function(link) {
+                link.classList.remove(
+                    'pointer-events-none',
+                    'cursor-not-allowed',
+                    'opacity-60'
+                );
+            });
+        }
+
+        function getDownloadFilename(response, fallbackFilename) {
+            const disposition = response.headers.get('Content-Disposition');
+
+            if (!disposition) {
+                return fallbackFilename;
+            }
+
+            // filename*=UTF-8''Applicant_Report.xlsx
+            const encodedMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
+
+            if (encodedMatch && encodedMatch[1]) {
+                return decodeURIComponent(encodedMatch[1].replace(/["']/g, ''));
+            }
+
+            // filename="Applicant_Report.xlsx"
+            const normalMatch = disposition.match(/filename="?([^"]+)"?/i);
+
+            if (normalMatch && normalMatch[1]) {
+                return normalMatch[1].trim();
+            }
+
+            return fallbackFilename;
+        }
+
+        exportLinks.forEach(function(link) {
+            link.addEventListener('click', async function(event) {
+                event.preventDefault();
+
+                const downloadUrl = this.href;
+                const isCsv = downloadUrl.toLowerCase().includes('csv');
+
+                const fallbackFilename = isCsv ?
+                    'Applicant_Report.csv' :
+                    'Applicant_Report.xlsx';
+
+                showLoader();
+
+                try {
+                    const response = await fetch(downloadUrl, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': isCsv ?
+                                'text/csv,application/octet-stream' :
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        let errorMessage = 'Report download failed.';
+
+                        try {
+                            const errorData = await response.json();
+                            errorMessage = errorData.message || errorMessage;
+                        } catch (error) {
+                            // Response JSON नहीं है तो default message रखें।
+                        }
+
+                        throw new Error(errorMessage);
+                    }
+
+                    const blob = await response.blob();
+
+                    if (!blob || blob.size === 0) {
+                        throw new Error('Downloaded report is empty.');
+                    }
+
+                    const filename = getDownloadFilename(
+                        response,
+                        fallbackFilename
+                    );
+
+                    const objectUrl = URL.createObjectURL(blob);
+                    const downloadAnchor = document.createElement('a');
+
+                    downloadAnchor.href = objectUrl;
+                    downloadAnchor.download = filename;
+                    downloadAnchor.style.display = 'none';
+
+                    document.body.appendChild(downloadAnchor);
+                    downloadAnchor.click();
+                    downloadAnchor.remove();
+
+                    setTimeout(function() {
+                        URL.revokeObjectURL(objectUrl);
+                    }, 1000);
+
+                } catch (error) {
+                    console.error(error);
+
+                    alert(
+                        error.message ||
+                        'Report download नहीं हो पाया। कृपया दोबारा प्रयास करें।'
+                    );
+                } finally {
+                    hideLoader();
+                }
+            });
+        });
+    });
+</script>
+
+
+<script>
     document.addEventListener('DOMContentLoaded', () => {
         // Simple logic for branch selector toggle simulation
         const branchBtn = document.querySelector('button[class*="Branch Selector"]'); // Placeholder selector
