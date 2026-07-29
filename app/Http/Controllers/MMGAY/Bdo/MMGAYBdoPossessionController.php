@@ -1639,4 +1639,392 @@ class MMGAYBdoPossessionController extends Controller
 
         return null;
     }
+
+    /**
+     * Display BDO Owner Status Report.
+     */
+    public function ownerStatusReport(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        // 1. Fetch villages for BDO block having valid entries in villagemaster
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->select('v.VillageId', 'v.VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        // 2. Fetch phase list
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        // 3. Status Tabs counts (Conditional Count)
+        $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+        $search = $request->input('search');
+
+        $countQuery = DB::table('ownermaster as o')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            });
+
+        if ($selectedPhase) {
+            $countQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $countQuery->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $countQuery->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        $counts = $countQuery->select(
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 THEN 1 END) as approved_paid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 THEN 1 END) as approved_unpaid"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
+            DB::raw("COUNT(CASE WHEN o.IsRejected = 1 THEN 1 END) as rejected"),
+            DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled")
+        )->first();
+
+        // 4. Fetch list based on active tab
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $listQuery = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $listQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $listQuery->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $listQuery->where(function ($q) use ($search) {
+                $q->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 1);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $listQuery->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $listQuery->where('o.IsRejected', 1);
+        } elseif ($activeTab === 'cancelled') {
+            $listQuery->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $owners = $listQuery->select(
+            'o.OwnerId',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.RegistrationNo',
+            'o.Phase',
+            'd.DistrictName',
+            'b.BlockName',
+            'v.VillageName',
+            'f.FlatNo'
+        )
+        ->paginate(25)
+        ->withQueryString();
+
+        $activeMenu = 'owner_status_report';
+        return view('mmgay.bdo.owner_status_report', compact(
+            'bdo',
+            'villages',
+            'phases',
+            'counts',
+            'owners',
+            'activeTab',
+            'selectedPhase',
+            'selectedVillageId',
+            'search',
+            'activeMenu'
+        ));
+    }
+
+    /**
+     * Export owner status report to CSV format.
+     */
+    public function ownerStatusReportExportCsv(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+        $search = $request->input('search');
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $query = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $query->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $query->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $query->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $query->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $query->where('o.IsRejected', 1);
+        } elseif ($activeTab === 'cancelled') {
+            $query->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="Owner_Status_Report_' . str_replace(' ', '_', $activeTab) . '_' . date('Ymd_His') . '.csv"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ];
+
+        $callback = function() use ($query) {
+            $file = fopen('php://output', 'w');
+            
+            // Add CSV Headers
+            fputcsv($file, [
+                'SR NO.',
+                'REGISTRATION NO.',
+                'OWNER NAME',
+                'FATHER/HUSBAND NAME',
+                'MOBILE NO.',
+                'PHASE',
+                'VILLAGE',
+                'FLAT NO.',
+                'BLOCK',
+                'DISTRICT'
+            ]);
+
+            $sr = 1;
+            
+            $query->select(
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.Phase',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'f.FlatNo'
+            )->chunk(1000, function($rows) use (&$sr, $file) {
+                foreach ($rows as $row) {
+                    fputcsv($file, [
+                        $sr++,
+                        $row->RegistrationNo,
+                        $row->OwnerName,
+                        $row->FatherHusbandName,
+                        $row->MobileNo,
+                        'Phase ' . $row->Phase,
+                        $row->VillageName,
+                        $row->FlatNo ?? 'N/A',
+                        $row->BlockName,
+                        $row->DistrictName
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Export owner status report to PDF format.
+     */
+    public function ownerStatusReportExportPdf(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            abort(400, 'BDO block not defined.');
+        }
+
+        $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+        $search = $request->input('search');
+        $activeTab = $request->input('status', 'approved_paid');
+
+        $query = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->where('o.BlockId', $blockMasterId)
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v2')
+                    ->whereColumn('v2.VillageId', 'o.VillageId')
+                    ->whereNotNull('v2.plots')
+                    ->whereNotNull('v2.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            });
+
+        if ($selectedPhase) {
+            $query->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $query->where('o.VillageId', $selectedVillageId);
+        }
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $query->where('o.OwnerName', 'like', "%{$search}%")
+                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+            });
+        }
+
+        if ($activeTab === 'approved_paid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1);
+        } elseif ($activeTab === 'approved_unpaid') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 0);
+        } elseif ($activeTab === 'yet_to_be_done') {
+            $query->where('o.IsApproved', 0)->where('o.IsPaid', 0)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'rejected') {
+            $query->where('o.IsRejected', 1);
+        } elseif ($activeTab === 'cancelled') {
+            $query->where('o.IsAllotmentCancelled', 1);
+        }
+
+        $totalCount = $query->count();
+        if ($totalCount > 1000) {
+            return redirect()->back()->with('error', 'The PDF export is limited to 1,000 records to prevent memory issues. Please filter your search, or download as CSV instead.');
+        }
+
+        $owners = $query->select(
+            'o.OwnerId',
+            'o.OwnerName',
+            'o.FatherHusbandName',
+            'o.MobileNo',
+            'o.RegistrationNo',
+            'o.Phase',
+            'd.DistrictName',
+            'b.BlockName',
+            'v.VillageName',
+            'f.FlatNo'
+        )
+        ->take(1000)
+        ->get();
+
+        $pdfData = [
+            'bdo' => $bdo,
+            'owners' => $owners,
+            'status' => $activeTab,
+            'report_date' => date('d M Y h:i A')
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('mmgay.bdo.pdf.owner-status-pdf', $pdfData)
+            ->setPaper('a4', 'landscape');
+
+        return $pdf->download('Owner_Status_Report_' . str_replace(' ', '_', $activeTab) . '_' . date('Ymd_His') . '.pdf');
+    }
 }

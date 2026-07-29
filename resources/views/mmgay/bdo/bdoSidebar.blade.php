@@ -69,6 +69,13 @@
             <span class="font-label-md text-label-md text-xs">Site Development</span>
         </a>
 
+        <!-- Owner Status Report -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'owner_status_report') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.owner-status-report') }}">
+            <span class="material-symbols-outlined text-base">assignment</span>
+            <span class="font-label-md text-label-md text-xs">Owner Status Report</span>
+        </a>
+
         <!-- HFA API Test Tool -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'hfa_api_test') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.hfa-api-test') }}">
