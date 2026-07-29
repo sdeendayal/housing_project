@@ -15,35 +15,35 @@
 <head>
     <meta charset="utf-8">
     <style>
-        @page { size: A4 portrait; margin: 0.75in 0.5in; }
-        body { font-family: 'noto sans devanagari', DejaVu Sans, sans-serif; color: #111; line-height: 1.55; margin: 0; padding: 0; }
+        @page { size: A4 portrait; margin: 0.35in 0.35in; }
+        body { font-family: 'noto sans devanagari', DejaVu Sans, sans-serif; color: #111; line-height: 1.45; margin: 0; padding: 0; }
         .container {
             border: 5px solid orange;
-            padding: 18px 20px;
-            margin-bottom: 20px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
         }
         .text-center { text-align: center; }
         .text-end { text-align: right; }
-        .logo { width: 110px; margin-bottom: 8px; }
-        h2 { font-size: 18px; margin: 8px 0; font-weight: bold; }
-        h3 { font-size: 20px; color: #d97706; margin: 10px 0; font-weight: bold; text-align: center; }
+        .logo { width: 90px; margin-bottom: 6px; }
+        h2 { font-size: 16px; margin: 4px 0; font-weight: bold; }
+        h3 { font-size: 18px; color: #d97706; margin: 6px 0; font-weight: bold; text-align: center; }
         h4.badge {
             display: inline-block;
             background: #198754;
             color: #fff;
-            padding: 6px 16px;
+            padding: 4px 12px;
             border-radius: 4px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
-            margin: 6px 0;
+            margin: 4px 0;
         }
-        p, th, td, li { font-size: 14px; text-align: left; }
-        .intro { font-size: 14px; margin: 12px 0 16px; text-align: center; }
-        table.data-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        p, th, td, li { font-size: 12.5px; text-align: left; }
+        .intro { font-size: 12.5px; margin: 6px 0 10px; text-align: center; }
+        table.data-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
         table.data-table th, table.data-table td {
             border: 1px solid #dee2e6;
-            padding: 8px 10px;
-            vertical-align: top;
+            padding: 6px 8px;
+            vertical-align: middle;
         }
         table.data-table th {
             color: rgb(0, 112, 192);
@@ -51,21 +51,22 @@
             width: 42%;
             background: #f8f9fa;
         }
-        .qr-section { margin-top: 16px; }
+        .qr-section { margin-top: 10px; }
         .qr-section td { border: none !important; vertical-align: middle; }
-        .qr-img { width: 100px; height: 100px; border: 1px solid #ddd; }
-        .footer-note { font-size: 13px; margin-top: 14px; }
+        .qr-img { width: 80px; height: 80px; border: 1px solid #ddd; }
+        .footer-note { font-size: 11.5px; margin-top: 8px; }
         .terms-note { color: #dc3545; }
-        .page-break { page-break-before: always; padding-top: 40px; }
-        .terms-container { padding-top: 24px; }
-        .terms-title { font-size: 20px; text-align: center; margin: 0 0 14px; font-weight: bold; }
+        .page-break { page-break-before: always; }
+        .terms-container { padding-top: 10px; }
+        .terms-title { font-size: 17px; text-align: center; margin: 0 0 10px; font-weight: bold; }
         .numbered-list { counter-reset: list-counter; list-style: none; padding-left: 0; margin: 0; }
         .numbered-list li {
             list-style: none;
             position: relative;
-            padding-left: 2em;
-            margin-bottom: 10px;
-            font-size: 14px;
+            padding-left: 1.8em;
+            margin-bottom: 6px;
+            font-size: 12.5px;
+            line-height: 1.35;
         }
         .numbered-list li::before {
             counter-increment: list-counter;

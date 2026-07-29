@@ -49,5 +49,10 @@ class BlockMasterSeeder extends Seeder
         });
         
         $this->command->info("blockmaster seeded: " . count($data) . " rows");
+        if (isset($spreadsheet)) {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+        gc_collect_cycles();
     }
 }

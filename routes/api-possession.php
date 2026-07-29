@@ -32,8 +32,10 @@ Route::prefix('mmgay')->group(function () {
         Route::post('/schedule/{secure_id}', [MmgayBdoApiController::class, 'scheduleSave']);
         Route::get('/possession-applications', [MmgayBdoApiController::class, 'applications']);
         Route::get('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifyForm']);
-        Route::post('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifySave']);
         Route::get('/download-certificate/{secure_id}', [MmgayBdoApiController::class, 'downloadCertificate']);
+        Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
+        Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
+        Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
     });
 
     // Villager Authenticated APIs
@@ -65,8 +67,10 @@ Route::prefix('possession')->group(function () {
         Route::post('/schedule/{secure_id}', [MmgayBdoApiController::class, 'scheduleSave']);
         Route::get('/possession-applications', [MmgayBdoApiController::class, 'applications']);
         Route::get('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifyForm']);
-        Route::post('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifySave']);
         Route::get('/download-certificate/{secure_id}', [MmgayBdoApiController::class, 'downloadCertificate']);
+        Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
+        Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
+        Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
     });
 
     // Department officer OTP Login (public)

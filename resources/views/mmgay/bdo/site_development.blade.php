@@ -5,25 +5,21 @@
 <link href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" rel="stylesheet" />
 
 @section('content')
-<main class="ml-[260px] mt-14 min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4">
+<main class="ml-[260px] min-h-screen bg-[#f3f6fc] p-4 flex flex-col gap-4">
+    <!-- Spacer to clear fixed top navbar -->
+    <div style="height: 80px;" class="w-full shrink-0"></div>
 
-    <!-- Header Banner -->
-    <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#111827] via-[#1f2937] to-[#374151] shadow-md py-4 px-6 border border-slate-700/10">
-        <div class="absolute -right-20 -top-20 w-60 h-60 bg-white/5 rounded-full blur-3xl"></div>
-        <div class="relative flex items-center justify-between text-white">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-                    <span class="material-symbols-outlined text-white text-xl">engineering</span>
-                </div>
-                <div>
-                    <h2 class="text-lg font-extrabold tracking-tight">Site Development Works</h2>
-                    <p class="text-[10px] text-slate-300 font-semibold uppercase mt-0.5">Manage and report village-wise infrastructure progress and category-specific photo uploads</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/15 rounded-lg px-3 py-1.5 shadow-sm text-xs font-bold">
-                <span class="material-symbols-outlined text-sm">location_city</span>
-                <span>{{ strtoupper($bdo->block_name ?? 'Haryana') }} Block</span>
-            </div>
+    <!-- Phase Tabs -->
+    <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-3.5 flex items-center gap-2">
+        <span class="text-xs font-black uppercase text-slate-400 tracking-wider mr-4">Select Phase:</span>
+        <div class="flex gap-2">
+            @foreach($phases as $phaseVal)
+                <a href="{{ route('mmgay.bdo.site-development') }}?phase={{ $phaseVal }}&village_id={{ $selectedVillageId }}" 
+                   class="px-4 py-2 text-xs font-black uppercase tracking-wider rounded-lg transition-all 
+                   {{ $selectedPhase == $phaseVal ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 hover:bg-slate-200 text-slate-700' }}">
+                    Phase {{ $phaseVal }}
+                </a>
+            @endforeach
         </div>
     </div>
 
@@ -59,7 +55,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-grow">
         
         <!-- Left Column: Village Select List -->
-        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-270px)] min-h-[480px] overflow-hidden">
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             <div class="pb-3 border-b border-slate-100 mb-3">
                 <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                     <span class="material-symbols-outlined text-blue-600 text-lg">map</span>
@@ -70,7 +66,7 @@
 
             <div class="flex-grow overflow-y-auto space-y-1.5 pr-1">
                 @forelse($villages as $vil)
-                    <a href="{{ route('mmgay.bdo.site-development') }}?village_id={{ $vil->VillageId }}" 
+                    <a href="{{ route('mmgay.bdo.site-development') }}?village_id={{ $vil->VillageId }}&phase={{ $selectedPhase }}" 
                        class="flex items-center justify-between p-3 rounded-lg border transition-all 
                        {{ $selectedVillageId == $vil->VillageId ? 'bg-blue-50 border-blue-200 text-blue-800 font-bold' : 'bg-slate-50 border-slate-150 text-slate-700 hover:bg-slate-100/70' }}">
                         <div class="flex items-center gap-2">
@@ -81,14 +77,14 @@
                     </a>
                 @empty
                     <div class="py-12 text-center text-slate-400 font-semibold text-xs">
-                        No villages found under your block.
+                        No villages found with entries in Phase {{ $selectedPhase }}.
                     </div>
                 @endforelse
             </div>
         </div>
 
         <!-- Right Column: Site Progress Status Form & Photos -->
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-270px)] min-h-[480px] overflow-hidden">
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 p-4 flex flex-col h-[calc(100vh-340px)] min-h-[480px] overflow-hidden">
             @if(!$selectedVillageId)
                 <div class="flex-1 flex flex-col items-center justify-center text-center p-8">
                     <span class="material-symbols-outlined text-slate-300 text-5xl mb-3">location_city</span>
@@ -100,7 +96,7 @@
                     <div>
                         <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-blue-600 text-lg">construction</span>
-                            Development Status: {{ $selectedVillageName }}
+                            Development Status: {{ $selectedVillageName }} (Phase {{ $selectedPhase }})
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Fill status parameters and upload category progress photos</p>
                     </div>
@@ -111,6 +107,7 @@
                     <form action="{{ route('mmgay.bdo.site-development.save') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         <input type="hidden" name="village_id" value="{{ $selectedVillageId }}">
+                        <input type="hidden" name="phase" value="{{ $selectedPhase }}">
 
                         <!-- Status Parameters Row -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

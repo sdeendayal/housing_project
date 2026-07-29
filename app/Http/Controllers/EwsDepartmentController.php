@@ -64,7 +64,10 @@ class EwsDepartmentController extends Controller
     {
         $user = Auth::user();
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
+        $districts = DB::table('ews_districts')
+            ->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'faridabad', 'panipat', 'rohtak', 'rewari', 'sonepat'])
+            ->orderBy('name')
+            ->get();
         
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))
@@ -81,7 +84,13 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                  ->from('ews_reject_ppp_exclusion_2')
+                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+            })
+            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
         $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -160,7 +169,10 @@ class EwsDepartmentController extends Controller
         $user = Auth::user();
         $type = $request->input('type', 'all');
         $districtId = $request->input('district_id');
-        $districts = DB::table('ews_districts')->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'sonepat'])->orderBy('name')->get();
+        $districts = DB::table('ews_districts')
+            ->whereIn(DB::raw('LOWER(name)'), ['sonipat', 'gurugram', 'faridabad', 'panipat', 'rohtak', 'rewari', 'sonepat'])
+            ->orderBy('name')
+            ->get();
 
         $totalRegistrationCount = DB::table('ppt_members')
             ->when($districtId, fn($q) => $q->where('district_id', $districtId))
@@ -177,7 +189,13 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                  ->from('ews_reject_ppp_exclusion_2')
+                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+            })
+            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
             ->count();
         $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
@@ -264,7 +282,7 @@ class EwsDepartmentController extends Controller
                     DB::raw('MIN(id) as id'),
                     DB::raw('MIN(familyID) as application_number'),
                     DB::raw('MIN(fullName) as full_name'),
-                    DB::raw('MIN(aadhaarNo) as aadhar_no'),
+                    DB::raw('NULL as aadhar_no'),
                     DB::raw('MIN(mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'ppt_members' as type"),
@@ -283,7 +301,7 @@ class EwsDepartmentController extends Controller
                     DB::raw('MIN(ppt_members.id) as id'),
                     DB::raw('MIN(ppt_members.familyID) as application_number'),
                     DB::raw('MIN(ppt_members.fullName) as full_name'),
-                    DB::raw('MIN(ppt_members.aadhaarNo) as aadhar_no'),
+                    DB::raw('NULL as aadhar_no'),
                     DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'not_in_survey' as type"),
@@ -295,7 +313,20 @@ class EwsDepartmentController extends Controller
                 ->groupBy('ppt_members.memberID');
         } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'registered' as type"), DB::raw("'Verify in survey app' as status"), 'dist_name');
+                ->select(
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
+                    DB::raw('NULL as aadhar_no'),
+                    'mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'registered' as type"),
+                    DB::raw("'Verify in survey app' as status"),
+                    'dist_name',
+                    'dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'allotted') {
             $query = DB::table('ews_allotted_8')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), 'dist_name');
@@ -304,6 +335,12 @@ class EwsDepartmentController extends Controller
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
+                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                      ->from('ews_reject_ppp_exclusion_2')
+                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+                })
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
             $query = DB::table('ews_reject_property_in_india_3')
@@ -367,7 +404,7 @@ class EwsDepartmentController extends Controller
                 $query->where('ppt_members.fullName', 'like', "%{$keyword}%");
             });
             $datatables->filterColumn('aadhar_no', function($query, $keyword) {
-                $query->where('ppt_members.aadhaarNo', 'like', "%{$keyword}%");
+                $query->whereRaw('1=0');
             });
             $datatables->filterColumn('mobile_number', function($query, $keyword) {
                 $query->where('ppt_members.mobileNo', 'like', "%{$keyword}%");
@@ -407,7 +444,7 @@ class EwsDepartmentController extends Controller
             if ($beneficiary) {
                 $beneficiary->application_number = $beneficiary->familyID;
                 $beneficiary->full_name = $beneficiary->fullName;
-                $beneficiary->aadhar_no = $beneficiary->aadhaarNo;
+                $beneficiary->aadhar_no = 'N/A';
                 $beneficiary->mobile_number = $beneficiary->mobileNo;
                 $beneficiary->flat_no = 'N/A';
                 $beneficiary->dist_name = $beneficiary->district;
@@ -813,7 +850,37 @@ class EwsDepartmentController extends Controller
         $search = $request->input('search');
         $format = strtolower($request->input('format', 'csv'));
 
-        if ($type === 'registered') {
+        if ($type === 'ppt_members') {
+            $query = DB::table('ppt_members')
+                ->select(
+                    DB::raw('MIN(id) as id'),
+                    DB::raw('MIN(familyID) as application_number'),
+                    DB::raw('MIN(fullName) as full_name'),
+                    DB::raw('NULL as aadhar_no'),
+                    DB::raw('MIN(mobileNo) as mobile_number'),
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'Total registration' as status"),
+                    DB::raw('MIN(district) as dist_name')
+                )
+                ->when($districtId, fn($q) => $q->where('district_id', $districtId))
+                ->groupBy('memberID');
+        } elseif ($type === 'not_in_survey') {
+            $query = DB::table('ppt_members')
+                ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
+                ->whereNull('all_ews_data_1.member_id')
+                ->select(
+                    DB::raw('MIN(ppt_members.id) as id'),
+                    DB::raw('MIN(ppt_members.familyID) as application_number'),
+                    DB::raw('MIN(ppt_members.fullName) as full_name'),
+                    DB::raw('NULL as aadhar_no'),
+                    DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'Not in survey' as status"),
+                    DB::raw('MIN(ppt_members.district) as dist_name')
+                )
+                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
+                ->groupBy('ppt_members.memberID');
+        } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Verify in survey app' as status"), 'dist_name');
         } elseif ($type === 'allotted') {
@@ -824,6 +891,12 @@ class EwsDepartmentController extends Controller
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
+                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
+                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
+                      ->from('ews_reject_ppp_exclusion_2')
+                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
+                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+                })
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
         } elseif ($type === 'rejected_property') {
             $query = DB::table('ews_reject_property_in_india_3')
@@ -873,47 +946,38 @@ class EwsDepartmentController extends Controller
             ) as beneficiaries"));
         }
 
-        if ($districtId) {
+        if ($districtId && $type !== 'ppt_members' && $type !== 'not_in_survey') {
             $query->where('dist_id', $districtId);
         }
 
         if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('application_number', 'like', "%{$search}%")
-                  ->orWhere('full_name', 'like', "%{$search}%")
-                  ->orWhere('aadhar_no', 'like', "%{$search}%")
-                  ->orWhere('mobile_number', 'like', "%{$search}%")
-                  ->orWhere('dist_name', 'like', "%{$search}%");
-            });
+            if ($type === 'ppt_members' || $type === 'not_in_survey') {
+                $query->where(function($q) use ($search) {
+                    $q->where('ppt_members.familyID', 'like', "%{$search}%")
+                      ->orWhere('ppt_members.fullName', 'like', "%{$search}%")
+                      ->orWhere('ppt_members.mobileNo', 'like', "%{$search}%")
+                      ->orWhere('ppt_members.district', 'like', "%{$search}%");
+                });
+            } else {
+                $query->where(function($q) use ($search) {
+                    $q->where('application_number', 'like', "%{$search}%")
+                      ->orWhere('full_name', 'like', "%{$search}%")
+                      ->orWhere('aadhar_no', 'like', "%{$search}%")
+                      ->orWhere('mobile_number', 'like', "%{$search}%")
+                      ->orWhere('dist_name', 'like', "%{$search}%");
+                });
+            }
         }
-
-        $records = $query->limit(50000)->get();
-        $filename = "ews_beneficiaries_{$type}_" . date('Y-m-d_H-i') . "." . ($format === 'pdf' ? 'html' : 'csv');
 
         $headers = ['S.No.', 'Application Number', 'Full Name', 'District', 'Aadhar Number', 'Mobile Number'];
         if ($type === 'allotted') {
             $headers[] = 'Flat Number';
         }
-        $headers[] = 'Status';
-
-        $mappedData = $records->map(function($row, $i) use ($type) {
-            $item = [
-                $i + 1,
-                $row->application_number ?? 'N/A',
-                $row->full_name ?? 'N/A',
-                $row->dist_name ?? 'N/A',
-                $row->aadhar_no ?? 'N/A',
-                $row->mobile_number ?? 'N/A',
-            ];
-            if ($type === 'allotted') {
-                $item[] = $row->flat_no ?? 'N/A';
-            }
-            $item[] = $row->status ?? 'N/A';
-            return $item;
-        });
 
         $typeTitle = $type;
-        if ($type === 'registered') $typeTitle = 'Verify in survey app';
+        if ($type === 'ppt_members') $typeTitle = 'Total registration';
+        elseif ($type === 'not_in_survey') $typeTitle = 'Rejected in survey app';
+        elseif ($type === 'registered') $typeTitle = 'Verify in survey app';
         elseif ($type === 'pending') $typeTitle = 'Waiting';
         elseif ($type === 'eligible_draw') $typeTitle = 'Eligible for booking';
         elseif ($type === 'booking') $typeTitle = 'Booking Amount Received';
@@ -922,11 +986,44 @@ class EwsDepartmentController extends Controller
         elseif ($type === 'adc_failed') $typeTitle = 'Not Eligible';
 
         if ($format === 'pdf') {
-            return $this->renderPrintPdfResponse("EWS BENEFICIARIES REGISTRY - " . strtoupper($typeTitle), $headers, $mappedData);
+            return $this->streamPrintPdfResponse("EWS BENEFICIARIES REGISTRY - " . strtoupper($typeTitle), $headers, $query, $type);
         }
 
         $exportFilename = "ews_beneficiaries_" . str_replace(' ', '_', strtolower($typeTitle)) . "_" . date('Y-m-d_H-i') . ".csv";
-        return $this->streamCsvResponse($exportFilename, $headers, $mappedData);
+        
+        $responseHeaders = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$exportFilename}",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($headers, $query, $type) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $headers);
+            
+            $i = 0;
+            $query->orderBy('id', 'asc')->lazy(2000)->each(function($row) use ($file, &$i, $type) {
+                $item = [
+                    ++$i,
+                    $row->application_number ?? 'N/A',
+                    $row->full_name ?? 'N/A',
+                    $row->dist_name ?? 'N/A',
+                    $row->aadhar_no ?? 'N/A',
+                    $row->mobile_number ?? 'N/A',
+                ];
+                if ($type === 'allotted') {
+                    $item[] = $row->flat_no ?? 'N/A';
+                }
+                fputcsv($file, $item);
+            });
+            
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $responseHeaders);
     }
 
     public function exportDevelopers(Request $request)
@@ -946,38 +1043,43 @@ class EwsDepartmentController extends Controller
             });
         }
 
-        $records = $query->get();
+        $headers = ['S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions'];
         $filename = "ews_developers_" . date('Y-m-d_H-i') . ".csv";
 
         if ($format === 'pdf') {
-            return $this->renderPrintPdfResponse("EWS DEVELOPER ACCOUNTS REPORT", [
-                'S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions', 'Status'
-            ], $records->map(function($row, $i) {
+            return $this->streamPrintPdfResponse("EWS DEVELOPER ACCOUNTS REPORT", $headers, $query);
+        }
+
+        $responseHeaders = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$filename}",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($headers, $query) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $headers);
+            
+            $i = 0;
+            $query->lazy(2000)->each(function($row) use ($file, &$i) {
                 $flatsCount = DB::table('ews_builder_flats')->where('created_by', $row->id)->count();
-                return [
-                    $i + 1,
+                fputcsv($file, [
+                    ++$i,
                     $row->name,
                     $row->mobile,
                     $row->email,
                     strtoupper($row->district_name ?? 'N/A'),
                     $flatsCount,
-                    $row->Is_Active ? 'Active' : 'Inactive',
-                ];
-            }));
-        }
+                ]);
+            });
+            
+            fclose($file);
+        };
 
-        return $this->streamCsvResponse($filename, ['S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions', 'Status'], $records->map(function($row, $i) {
-            $flatsCount = DB::table('ews_builder_flats')->where('created_by', $row->id)->count();
-            return [
-                $i + 1,
-                $row->name,
-                $row->mobile,
-                $row->email,
-                strtoupper($row->district_name ?? 'N/A'),
-                $flatsCount,
-                $row->Is_Active ? 'Active' : 'Inactive',
-            ];
-        }));
+        return response()->stream($callback, 200, $responseHeaders);
     }
 
     public function exportDeveloperFlats(Request $request)
@@ -1002,15 +1104,30 @@ class EwsDepartmentController extends Controller
             });
         }
 
-        $records = $query->get();
+        $headers = ['S.No.', 'District', 'Town Name', 'Project Name', 'Block / Tower', 'Floor', 'Flat Number', 'Submitted By Developer'];
         $filename = "ews_builder_flats_" . date('Y-m-d_H-i') . ".csv";
 
         if ($format === 'pdf') {
-            return $this->renderPrintPdfResponse("EWS BUILDER FLAT SUBMISSIONS REPORT", [
-                'S.No.', 'District', 'Town Name', 'Project Name', 'Block / Tower', 'Floor', 'Flat Number', 'Submitted By Developer'
-            ], $records->map(function($row, $i) {
-                return [
-                    $i + 1,
+            return $this->streamPrintPdfResponse("EWS BUILDER FLAT SUBMISSIONS REPORT", $headers, $query);
+        }
+
+        $responseHeaders = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$filename}",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($headers, $query) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $headers);
+            
+            $i = 0;
+            $query->lazy(2000)->each(function($row) use ($file, &$i) {
+                fputcsv($file, [
+                    ++$i,
                     strtoupper($row->district->name ?? 'N/A'),
                     strtoupper($row->town_name ?? 'N/A'),
                     strtoupper($row->project_name ?? 'N/A'),
@@ -1018,22 +1135,13 @@ class EwsDepartmentController extends Controller
                     $row->floor ?? 'N/A',
                     $row->flat_number ?? 'N/A',
                     ($row->creator->name ?? 'N/A') . ' (' . ($row->creator->mobile ?? '') . ')'
-                ];
-            }));
-        }
+                ]);
+            });
+            
+            fclose($file);
+        };
 
-        return $this->streamCsvResponse($filename, ['S.No.', 'District', 'Town Name', 'Project Name', 'Block / Tower', 'Floor', 'Flat Number', 'Submitted By Developer'], $records->map(function($row, $i) {
-            return [
-                $i + 1,
-                strtoupper($row->district->name ?? 'N/A'),
-                strtoupper($row->town_name ?? 'N/A'),
-                strtoupper($row->project_name ?? 'N/A'),
-                $row->block_tower_number ?? 'N/A',
-                $row->floor ?? 'N/A',
-                $row->flat_number ?? 'N/A',
-                ($row->creator->name ?? 'N/A') . ' (' . ($row->creator->mobile ?? '') . ')'
-            ];
-        }));
+        return response()->stream($callback, 200, $responseHeaders);
     }
 
     public function exportDeveloperLogs(Request $request)
@@ -1056,36 +1164,43 @@ class EwsDepartmentController extends Controller
             });
         }
 
-        $records = $query->limit(10000)->get();
+        $headers = ['S.No.', 'Developer Name', 'Mobile ID', 'Action', 'Action Details', 'IP Address', 'Timestamp'];
         $filename = "ews_developer_logs_" . date('Y-m-d_H-i') . ".csv";
 
         if ($format === 'pdf') {
-            return $this->renderPrintPdfResponse("EWS DEVELOPER ACTIVITY LOGS REPORT", [
-                'S.No.', 'Developer Name', 'Mobile ID', 'Action', 'Action Details', 'IP Address', 'Timestamp'
-            ], $records->map(function($row, $i) {
-                return [
-                    $i + 1,
+            return $this->streamPrintPdfResponse("EWS DEVELOPER ACTIVITY LOGS REPORT", $headers, $query);
+        }
+
+        $responseHeaders = [
+            "Content-type" => "text/csv; charset=UTF-8",
+            "Content-Disposition" => "attachment; filename={$filename}",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
+
+        $callback = function() use ($headers, $query) {
+            $file = fopen('php://output', 'w');
+            fputs($file, "\xEF\xBB\xBF");
+            fputcsv($file, $headers);
+            
+            $i = 0;
+            $query->lazy(2000)->each(function($row) use ($file, &$i) {
+                fputcsv($file, [
+                    ++$i,
                     $row->developer_name ?? ('User #' . $row->user_id),
                     $row->developer_mobile ?? 'N/A',
                     strtoupper($row->action),
                     $row->details,
                     $row->ip_address,
                     $row->created_at,
-                ];
-            }));
-        }
+                ]);
+            });
+            
+            fclose($file);
+        };
 
-        return $this->streamCsvResponse($filename, ['S.No.', 'Developer Name', 'Mobile ID', 'Action', 'Action Details', 'IP Address', 'Timestamp'], $records->map(function($row, $i) {
-            return [
-                $i + 1,
-                $row->developer_name ?? ('User #' . $row->user_id),
-                $row->developer_mobile ?? 'N/A',
-                strtoupper($row->action),
-                $row->details,
-                $row->ip_address,
-                $row->created_at,
-            ];
-        }));
+        return response()->stream($callback, 200, $responseHeaders);
     }
 
     private function streamCsvResponse($filename, $headers, $data)
@@ -1111,55 +1226,143 @@ class EwsDepartmentController extends Controller
         return response()->stream($callback, 200, $responseHeaders);
     }
 
-    private function renderPrintPdfResponse($title, $headers, $data)
+    private function streamPrintPdfResponse($title, $headers, $query, $type = null)
     {
-        $rowsHtml = '';
-        foreach ($data as $row) {
-            $rowsHtml .= '<tr>';
-            foreach ($row as $cell) {
-                $rowsHtml .= '<td style="border: 1px solid #cbd5e1; padding: 8px; font-size: 11px;">' . htmlspecialchars($cell) . '</td>';
-            }
-            $rowsHtml .= '</tr>';
-        }
+        $responseHeaders = [
+            "Content-Type" => "text/html; charset=UTF-8",
+            "Pragma" => "no-cache",
+            "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+            "Expires" => "0"
+        ];
 
         $headerHtml = '';
         foreach ($headers as $h) {
             $headerHtml .= '<th style="border: 1px solid #94a3b8; padding: 10px; background: #f1f5f9; font-size: 10px; text-transform: uppercase;">' . htmlspecialchars($h) . '</th>';
         }
 
-        $html = '
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>' . htmlspecialchars($title) . '</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; color: #1e293b; }
-                .header { text-align: center; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px; }
-                .header h2 { margin: 0; color: #ea580c; text-transform: uppercase; font-size: 18px; }
-                .header p { margin: 5px 0 0 0; font-size: 12px; color: #64748b; font-weight: bold; }
-                table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body onload="window.print()">
-            <div class="no-print" style="margin-bottom: 15px; text-align: right;">
-                <button onclick="window.print()" style="background: #ea580c; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Print / Save as PDF</button>
-            </div>
-            <div class="header">
-                <h2>HOUSING FOR ALL DEPARTMENT, HARYANA</h2>
-                <p>' . htmlspecialchars($title) . ' (Generated on: ' . date('d-M-Y H:i A') . ')</p>
-            </div>
-            <table>
-                <thead><tr>' . $headerHtml . '</tr></thead>
-                <tbody>' . $rowsHtml . '</tbody>
-            </table>
-        </body>
-        </html>
-        ';
+        $callback = function() use ($title, $headerHtml, $query, $type) {
+            echo '<!DOCTYPE html>
+            <html>
+            <head>
+                <title>' . htmlspecialchars($title) . '</title>
+                <style>
+                    body { font-family: Arial, sans-serif; margin: 20px; color: #1e293b; }
+                    .header { text-align: center; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px; }
+                    .header h2 { margin: 0; color: #ea580c; text-transform: uppercase; font-size: 18px; }
+                    .header p { margin: 5px 0 0 0; font-size: 12px; color: #64748b; font-weight: bold; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    @media print {
+                        .no-print { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="no-print" style="margin-bottom: 15px; text-align: right; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 10px 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <span id="load-status" style="font-size: 12px; font-weight: bold; color: #ea580c;">Loading and rendering report rows (please wait)...</span>
+                    <button onclick="window.print()" style="background: #ea580c; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Print / Save as PDF</button>
+                </div>
+                <div class="header">
+                    <h2>HOUSING FOR ALL DEPARTMENT, HARYANA</h2>
+                    <p>' . htmlspecialchars($title) . ' (Generated on: ' . date('d-M-Y H:i A') . ')</p>
+                </div>
+                <table>
+                    <thead><tr>' . $headerHtml . '</tr></thead>
+                    <tbody>';
+            
+            ob_flush();
+            flush();
 
-        return response($html, 200, ['Content-Type' => 'text/html']);
+            $i = 0;
+            
+            $orderedQuery = $query;
+            if (empty($query->orders) && empty($query->unionOrders)) {
+                $orderedQuery = $query->orderBy('id', 'asc');
+            }
+
+            $orderedQuery->lazy(2000)->each(function($row) use (&$i, $type) {
+                $cells = [];
+                
+                if (isset($row->action) && isset($row->details) && isset($row->ip_address)) {
+                    $cells = [
+                        ++$i,
+                        $row->developer_name ?? ('User #' . $row->user_id),
+                        $row->developer_mobile ?? 'N/A',
+                        strtoupper($row->action),
+                        $row->details,
+                        $row->ip_address,
+                        $row->created_at,
+                    ];
+                }
+                elseif (isset($row->project_name) && isset($row->flat_number)) {
+                    $cells = [
+                        ++$i,
+                        strtoupper($row->district->name ?? 'N/A'),
+                        strtoupper($row->town_name ?? 'N/A'),
+                        strtoupper($row->project_name ?? 'N/A'),
+                        $row->block_tower_number ?? 'N/A',
+                        $row->floor ?? 'N/A',
+                        $row->flat_number ?? 'N/A',
+                        ($row->creator->name ?? 'N/A') . ' (' . ($row->creator->mobile ?? '') . ')'
+                    ];
+                }
+                elseif (isset($row->email) && isset($row->role) && $row->role === 'ews_developer') {
+                    $flatsCount = DB::table('ews_builder_flats')->where('created_by', $row->id)->count();
+                    $cells = [
+                        ++$i,
+                        $row->name,
+                        $row->mobile,
+                        $row->email,
+                        strtoupper($row->district_name ?? 'N/A'),
+                        $flatsCount,
+                    ];
+                }
+                else {
+                    $cells = [
+                        ++$i,
+                        $row->application_number ?? 'N/A',
+                        $row->full_name ?? 'N/A',
+                        $row->dist_name ?? 'N/A',
+                        $row->aadhar_no ?? 'N/A',
+                        $row->mobile_number ?? 'N/A',
+                    ];
+                    if ($type === 'allotted') {
+                        $cells[] = $row->flat_no ?? 'N/A';
+                    }
+                }
+
+                echo '<tr>';
+                foreach ($cells as $cell) {
+                    echo '<td style="border: 1px solid #cbd5e1; padding: 8px; font-size: 11px;">' . htmlspecialchars($cell) . '</td>';
+                }
+                echo '</tr>';
+
+                if ($i % 500 === 0) {
+                    ob_flush();
+                    flush();
+                }
+            });
+
+            echo '</tbody>
+                </table>
+                <script>
+                    const rowCount = ' . $i . ';
+                    const statusText = document.getElementById("load-status");
+                    statusText.innerText = "Report loaded (" + rowCount + " records). Ready to print.";
+                    statusText.style.color = "#16a34a"; // Green
+                    
+                    if (rowCount <= 1000) {
+                        setTimeout(function() {
+                            window.print();
+                        }, 500);
+                    } else {
+                        statusText.innerText += " (Please click the Print button to save/print)";
+                    }
+                </script>
+            </body>
+            </html>';
+        };
+
+        return response()->stream($callback, 200, $responseHeaders);
     }
 
     public function showProfile($secureId)
@@ -1231,7 +1434,17 @@ class EwsDepartmentController extends Controller
     public function seederDataIndex(Request $request)
     {
         $user = Auth::user();
-        $districtId = $request->query('district') ?? $request->query('district_id') ?? '';
+        $districtName = strtoupper(trim($request->query('district') ?? $request->query('district_id') ?? 'SONIPAT'));
+        $districtMap = [
+            'FARIDABAD' => 4,
+            'GURUGRAM' => 6,
+            'PANIPAT' => 18,
+            'REWARI' => 19,
+            'ROHTAK' => 20,
+            'SONIPAT' => 22,
+            'OTHER' => 0
+        ];
+        $districtId = $districtMap[$districtName] ?? 22;
 
         // Fetch counts for sidebar
         $totalCount = DB::table('ews_allotted_8')->when($districtId, fn($q) => $q->where('dist_id', $districtId))->count() +
@@ -1249,45 +1462,131 @@ class EwsDepartmentController extends Controller
         
         $currentType = 'seeder';
 
-        // EWS Raw Files configuration using exact original filenames
-        $rawFiles = [
-            [
-                'name' => 'Registered Applicants Master (1. Verify in survey app)',
-                'filename' => 'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
-                'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
-                'sheets' => 'registered'
-            ],
-            [
-                'name' => 'Survey Exclusions & Verification Master (2, 3, 4, 7, 8, 9 Stages)',
-                'filename' => 'survey.xlsx',
-                'description' => 'Comprehensive master database containing all EWS funnel tabs: exclusions, property checks, house ownership, draw lists, bookings, allotments, and waiting lists.',
-                'sheets' => 'exclusion, prop, house, draw, eligible, booking, allotted, waiting'
-            ],
-            [
-                'name' => 'Eligible Draw List Database (5. Eligible for booking)',
-                'filename' => '794 eligible list with category for sonipat draw.xlsx',
-                'description' => 'Excel registry containing verified candidates qualified for the lottery draw.',
-                'sheets' => 'draw_eligible'
-            ],
-            [
-                'name' => 'Developer Draw Allotments',
-                'filename' => 'final draw sheet fo developeres.xlsx',
-                'description' => 'Official draw list sheet structured developer-wise containing sector alignments, towers, and flat allocations.',
-                'sheets' => 'developer_draw'
-            ],
-            [
-                'name' => 'Master Draw Sonipat',
-                'filename' => 'Master sheet for draw sonipat.xlsx',
-                'description' => 'The raw draw outcome sheets filtered specifically for Sonipat region.',
-                'sheets' => 'master_sonipat'
-            ],
-            [
-                'name' => 'EWS Approved Flat Masters',
-                'filename' => 'booking amount  flat final recevied data from sunit ji.xlsx',
-                'description' => 'Inventory ledger mapping flat IDs, developer codes, sector allocations, and CRID verification keys.',
-                'sheets' => 'flats_crid'
-            ]
-        ];
+        // EWS Raw Files configuration dynamically defined district-wise
+        $rawFiles = [];
+        if ($districtName === 'SONIPAT') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'SurveyData_Sonipat_updated exclusion by ashish CRID.xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
+                    'sheets' => 'registered',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Survey Exclusions & Verification Master (2, 3, 4, 7, 8, 9 Stages)',
+                    'filename' => 'survey.xlsx',
+                    'description' => 'Comprehensive master database containing all EWS funnel tabs: exclusions, property checks, house ownership, draw lists, bookings, allotments, and waiting lists.',
+                    'sheets' => 'exclusion, prop, house, draw, eligible, booking, allotted, waiting',
+                    'category' => 'Exclusion data from PPP / Master'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => '794 eligible list with category for sonipat draw.xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the lottery draw.',
+                    'sheets' => 'draw_eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'Developer Draw Allotments',
+                    'filename' => 'final draw sheet fo developeres.xlsx',
+                    'description' => 'Official draw list sheet structured developer-wise containing sector alignments, towers, and flat allocations.',
+                    'sheets' => 'developer_draw',
+                    'category' => 'developer draw'
+                ],
+                [
+                    'name' => 'Master Draw Sonipat',
+                    'filename' => 'Master sheet for draw sonipat.xlsx',
+                    'description' => 'The raw draw outcome sheets filtered specifically for Sonipat region.',
+                    'sheets' => 'master_sonipat',
+                    'category' => 'master draw'
+                ],
+                [
+                    'name' => 'EWS Approved Flat Masters',
+                    'filename' => 'booking amount  flat final recevied data from sunit ji.xlsx',
+                    'description' => 'Inventory ledger mapping flat IDs, developer codes, sector allocations, and CRID verification keys.',
+                    'sheets' => 'flats_crid',
+                    'category' => 'approved flats'
+                ]
+            ];
+        } elseif ($districtName === 'OTHER') {
+            $rawFiles = [
+                [
+                    'name' => 'PPP Exclusion Data 1st Stage',
+                    'filename' => 'PPP ecclusion data ist stage.xlsx',
+                    'description' => 'Comprehensive first stage Family Information Depot (PPP) exclusion database.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'amanshareddata'
+                ],
+                [
+                    'name' => 'PPP Exclusion Data 1st Stage 1',
+                    'filename' => 'PPP ecclusion data ist stage1.xlsx',
+                    'description' => 'Comprehensive first stage Family Information Depot (PPP) exclusion database version 1.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'amanshareddata'
+                ]
+            ];
+        } else {
+            $filesMap = [
+                'FARIDABAD' => [
+                    'raw' => 'FARIDABAD_Completed_MC_22-01-2026 (2).xlsx',
+                    'raw_sheet' => 'FARIDABAD_Completed_MC_22-01-20',
+                    'draw' => 'FARIDABAD_Completed_MC_22-01-2026 (2) (3).xlsx',
+                    'ppp' => 'faridabad_mc.xlsx'
+                ],
+                'GURUGRAM' => [
+                    'raw' => 'GURGAON_Completed_24-01-2026.xlsx',
+                    'raw_sheet' => 'GURGAON_Completed_24-01-2026',
+                    'draw' => 'GURGAON_Completed_24-01-2026 (3).xlsx',
+                    'ppp' => 'gurgaon_mc.xlsx'
+                ],
+                'PANIPAT' => [
+                    'raw' => 'PANIPAT_MC_Completed_22-01-2026 (2).xlsx',
+                    'raw_sheet' => 'PANIPAT_MC_Completed_22-01-2026',
+                    'draw' => 'PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx',
+                    'ppp' => 'panipat_mc.xlsx'
+                ],
+                'REWARI' => [
+                    'raw' => 'REWARI_Completed_25-01-2026.xlsx',
+                    'raw_sheet' => 'REWARI_Completed_25-01-2026',
+                    'draw' => 'REWARI_Completed_25-01-2026 (3).xlsx',
+                    'ppp' => 'RewariData.xlsx'
+                ],
+                'ROHTAK' => [
+                    'raw' => 'Rohtak_completed (3).xlsx',
+                    'raw_sheet' => 'Rohtak_MC_Complted_09.01.26',
+                    'draw' => 'Rohtak_completed (2) (3).xlsx',
+                    'ppp' => 'Rohtakcompleterevised_Final (1).xlsx'
+                ]
+            ];
+            
+            $config = $filesMap[$districtName] ?? null;
+            if ($config) {
+                $rawFiles = [
+                    [
+                        'name' => "Registered Applicants Master (1. Verify in survey app)",
+                        'filename' => $config['raw'],
+                        'description' => "Original master Excel file containing all citizen housing registrations, full applicant details, demographics, exclusions, and assets data for {$districtName}.",
+                        'sheets' => $config['raw_sheet'],
+                        'category' => 'survey data frm meet monk'
+                    ],
+                    [
+                        'name' => "Eligible Draw List Database (5. Eligible for booking)",
+                        'filename' => $config['draw'],
+                        'description' => "Excel registry containing verified candidates qualified for the {$districtName} lottery draw.",
+                        'sheets' => 'Eligible',
+                        'category' => 'eligiblity data from sunit'
+                    ],
+                    [
+                        'name' => "PPP Exclusions & Verification Master (2. PPP Exclusion)",
+                        'filename' => $config['ppp'],
+                        'description' => "Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry for {$districtName}.",
+                        'sheets' => 'Sheet1',
+                        'category' => 'Exclusion data from PPP'
+                    ]
+                ];
+            }
+        }
 
         // Hydrate files info (size, last modified time)
         $files = [];
@@ -1311,6 +1610,8 @@ class EwsDepartmentController extends Controller
             $files[] = $file;
         }
 
+        $districtId = $districtName;
+
         return view('ews.department.seeder_data', compact(
             'user', 'files', 'districtId',
             'totalCount', 'allottedCount', 'pendingCount', 'drawRemainingCount',
@@ -1326,7 +1627,17 @@ class EwsDepartmentController extends Controller
             '794 eligible list with category for sonipat draw.xlsx',
             'final draw sheet fo developeres.xlsx',
             'Master sheet for draw sonipat.xlsx',
-            'booking amount  flat final recevied data from sunit ji.xlsx'
+            'booking amount  flat final recevied data from sunit ji.xlsx',
+            'FARIDABAD_Completed_MC_22-01-2026 (2).xlsx',
+            'FARIDABAD_Completed_MC_22-01-2026 (2) (3).xlsx',
+            'GURGAON_Completed_24-01-2026.xlsx',
+            'GURGAON_Completed_24-01-2026 (3).xlsx',
+            'PANIPAT_MC_Completed_22-01-2026 (2).xlsx',
+            'PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx',
+            'REWARI_Completed_25-01-2026.xlsx',
+            'REWARI_Completed_25-01-2026 (3).xlsx',
+            'Rohtak_completed (3).xlsx',
+            'Rohtak_completed (2) (3).xlsx'
         ];
 
         if (!in_array($filename, $allowedFiles)) {

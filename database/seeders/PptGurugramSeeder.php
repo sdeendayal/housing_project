@@ -12,32 +12,24 @@ class PptGurugramSeeder extends Seeder
      */
     public function run(): void
     {
-        // 1. Delete existing Gurugram records to ensure idempotency
+        // 1. Delete existing Gurugram records to make this seeder re-runnable
         $this->command->info("Clearing existing Gurugram records (district_id = 6) from ppt_members table...");
         DB::table('ppt_members')->where('district_id', 6)->delete();
 
-        $csvPath = database_path('seeders/data/ppt_gurugram.csv');
+        $csvPath = database_path('seeders/data/gurgram.csv');
         if (!file_exists($csvPath)) {
             $this->command->error("CSV file not found at: {$csvPath}");
             return;
         }
 
-        $this->command->info("Starting import of Gurugram members from: {$csvPath}");
-
         $handle = fopen($csvPath, 'r');
         $headers = fgetcsv($handle);
         if ($headers === false) {
             fclose($handle);
-            $this->command->error("Unable to read headers from CSV.");
             return;
         }
 
-        // Clean headers to remove spaces and UTF-8 BOM
-        $headers = array_map(function($header) {
-            $header = preg_replace('/^[\xef\xbb\xbf\xff\xfe]+/i', '', trim($header));
-            return $header;
-        }, $headers);
-
+        $headers = array_map('trim', $headers);
         $batch = [];
         $count = 0;
         $startTime = microtime(true);
@@ -65,20 +57,13 @@ class PptGurugramSeeder extends Seeder
                 $data['updated_at'] = now();
             }
 
-            // Remove 'id' and '﻿id' (with BOM) to let database auto-increment the ID and avoid primary key duplicate errors
-            unset($data['id']);
-            unset($data['﻿id']);
-
             $batch[] = $data;
             $count++;
 
-            // Batch insert in chunks of 100 to avoid MySQL placeholder limit (134 columns * 100 = 13400 placeholders)
-            if (count($batch) >= 100) {
+            // Batch insert in chunks of 200
+            if (count($batch) >= 200) {
                 DB::table('ppt_members')->insert($batch);
                 $batch = [];
-                if ($count % 5000 === 0) {
-                    $this->command->info("Seeded {$count} records...");
-                }
             }
         }
 

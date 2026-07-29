@@ -185,6 +185,10 @@ class MmgayBdoApiController extends Controller
             return response()->json(['success' => false, 'message' => 'Physical Possession is only available for beneficiaries verified under HFA land registration.'], 400);
         }
 
+        if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
+            return $res;
+        }
+
         // 2. Find or dynamically create the physical possession application row
         $application = MmgayPossessionApplication::where('owner_id', $owner->OwnerId)->first();
 
@@ -273,6 +277,16 @@ class MmgayBdoApiController extends Controller
 
         if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized block access.'], 403);
+        }
+
+        $owner = DB::table('ownermaster as o')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.OwnerId', $application->owner_id)
+            ->select('o.*', 'v.VillageName')
+            ->first();
+
+        if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
+            return $res;
         }
 
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
@@ -465,6 +479,10 @@ class MmgayBdoApiController extends Controller
             ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
             ->first();
 
+        if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
+            return $res;
+        }
+
         $logs = MmgayPossessionStatusLog::where('application_id', $application->id)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -491,6 +509,16 @@ class MmgayBdoApiController extends Controller
 
         if ($bdo->block_id && $application->block_id !== $bdo->block_id) {
             return response()->json(['success' => false, 'message' => 'Unauthorized block access.'], 403);
+        }
+
+        $owner = DB::table('ownermaster as o')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.OwnerId', $application->owner_id)
+            ->select('o.*', 'v.VillageName')
+            ->first();
+
+        if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
+            return $res;
         }
 
         $currentStatus = $application->physical_possession_status;
@@ -763,5 +791,395 @@ class MmgayBdoApiController extends Controller
             'success' => true,
             'counts' => $counts
         ]);
+    }
+
+    public function siteDevelopmentGet(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BDO block not defined.'
+            ], 400);
+        }
+
+        // Fetch distinct phases globally
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase');
+        if (!$selectedPhase && $phases->isNotEmpty()) {
+            $selectedPhase = $phases->first();
+        }
+
+        // Fetch villages having entries in this phase under BDO's block
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->where('o.BlockId', $blockMasterId)
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        $selectedVillageId = $request->input('village_id');
+        
+        // Validate if selected village has entries in this phase
+        $isValidVillageForPhase = $selectedVillageId && $villages->contains('VillageId', $selectedVillageId);
+
+        if (!$isValidVillageForPhase) {
+            if ($villages->isNotEmpty()) {
+                $selectedVillageId = $villages->first()->VillageId;
+            } else {
+                $selectedVillageId = null;
+            }
+        }
+
+        $selectedVillageName = '';
+        $siteDev = null;
+        $logs = [];
+
+        if ($selectedVillageId) {
+            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+
+            $siteDevRecord = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
+                ->where('village_id', $selectedVillageId)
+                ->where('phase', $selectedPhase)
+                ->first();
+
+            if ($siteDevRecord) {
+                $siteDev = [
+                    'id' => $siteDevRecord->id,
+                    'district_id' => $siteDevRecord->district_id,
+                    'block_id' => $siteDevRecord->block_id,
+                    'village_id' => $siteDevRecord->village_id,
+                    'phase' => $siteDevRecord->phase,
+                    'road_status' => $siteDevRecord->road_status,
+                    'water_status' => $siteDevRecord->water_status,
+                    'electricity_status' => $siteDevRecord->electricity_status,
+                    'sewerage_status' => $siteDevRecord->sewerage_status,
+                    'remarks' => $siteDevRecord->remarks,
+                    'road_photo' => $siteDevRecord->road_photo ? url('storage/' . $siteDevRecord->road_photo) : null,
+                    'water_photo' => $siteDevRecord->water_photo ? url('storage/' . $siteDevRecord->water_photo) : null,
+                    'electricity_photo' => $siteDevRecord->electricity_photo ? url('storage/' . $siteDevRecord->electricity_photo) : null,
+                    'sewerage_photo' => $siteDevRecord->sewerage_photo ? url('storage/' . $siteDevRecord->sewerage_photo) : null,
+                    'updated_by' => $siteDevRecord->updated_by,
+                    'created_at' => $siteDevRecord->created_at,
+                    'updated_at' => $siteDevRecord->updated_at,
+                ];
+                
+                // Fetch logs
+                $logs = $siteDevRecord->logs()->get()->map(function ($log) {
+                    return [
+                        'id' => $log->id,
+                        'road_status' => $log->road_status,
+                        'water_status' => $log->water_status,
+                        'electricity_status' => $log->electricity_status,
+                        'sewerage_status' => $log->sewerage_status,
+                        'remarks' => $log->remarks,
+                        'updated_by_name' => $log->updated_by_name,
+                        'created_at' => $log->created_at,
+                    ];
+                });
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'bdo' => [
+                'id' => $bdo->id,
+                'name' => $bdo->name,
+                'block_id' => $blockMasterId,
+                'block_name' => $bdo->block_name,
+            ],
+            'villages' => $villages,
+            'phases' => $phases,
+            'selected_phase' => $selectedPhase,
+            'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
+            'selected_village_name' => $selectedVillageName,
+            'site_development' => $siteDev,
+            'logs' => $logs
+        ]);
+    }
+
+    public function siteDevelopmentSave(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BDO block not defined.'
+            ], 400);
+        }
+
+        $villageId = $request->input('village_id');
+        if (!$villageId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'village_id is required.'
+            ], 422);
+        }
+
+        $phase = $request->input('phase');
+        if (!$phase) {
+            return response()->json([
+                'success' => false,
+                'message' => 'phase is required.'
+            ], 422);
+        }
+
+        // Verify if the village belongs to the BDO block and retrieve name
+        $villageRecord = DB::table('villagemaster')
+            ->where('VillageId', $villageId)
+            ->where('BlockId', $blockMasterId)
+            ->first();
+
+        if (!$villageRecord) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized access to a village outside your block.'
+            ], 403);
+        }
+
+        $selectedVillageName = $villageRecord->VillageName;
+
+        $siteDevExists = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
+            ->where('village_id', $villageId)
+            ->where('phase', $phase)
+            ->first();
+
+        // Validation
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'village_id' => 'required|integer',
+            'phase' => 'required|string',
+            'road_status' => 'required|string',
+            'water_status' => 'required|string',
+            'electricity_status' => 'required|string',
+            'sewerage_status' => 'required|string',
+            'remarks' => 'required|string',
+            'road_photo' => ($siteDevExists && $siteDevExists->road_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'water_photo' => ($siteDevExists && $siteDevExists->water_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'electricity_photo' => ($siteDevExists && $siteDevExists->electricity_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+            'sewerage_photo' => ($siteDevExists && $siteDevExists->sewerage_photo) ? 'nullable|image|mimes:jpg,jpeg,png|max:500' : 'required|image|mimes:jpg,jpeg,png|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation error',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $districtId = $bdo->district_id;
+        if (!$districtId && $blockMasterId) {
+            $blockRecord = DB::table('blockmaster')->where('BlockId', $blockMasterId)->first();
+            $districtId = $blockRecord ? $blockRecord->DistrictId : null;
+        }
+
+        $updateData = [
+            'district_id' => $districtId,
+            'block_id' => $blockMasterId,
+            'village_id' => $villageId,
+            'phase' => $phase,
+            'road_status' => $request->input('road_status'),
+            'water_status' => $request->input('water_status'),
+            'electricity_status' => $request->input('electricity_status'),
+            'sewerage_status' => $request->input('sewerage_status'),
+            'remarks' => $request->input('remarks'),
+            'updated_by' => $bdo->id,
+        ];
+
+        // Handle uploaded category photos using Laravel Storage public disk
+        foreach (['road_photo', 'water_photo', 'electricity_photo', 'sewerage_photo'] as $field) {
+            if ($request->hasFile($field)) {
+                $file = $request->file($field);
+                if ($file->isValid()) {
+                    $sluggedVillageName = \Illuminate\Support\Str::slug($selectedVillageName);
+                    $fileName = 'site_' . $field . '_' . $villageId . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                    
+                    // Saves to: storage/app/public/site_developments/{village-name}/{filename}
+                    $storedPath = $file->storeAs('site_developments/' . $sluggedVillageName, $fileName, 'public');
+                    $updateData[$field] = $storedPath;
+                }
+            }
+        }
+
+        // Update or create site development record
+        $siteDev = \App\Models\MmgaySiteDevelopment::updateOrCreate(
+            [
+                'district_id' => $districtId,
+                'block_id' => $blockMasterId,
+                'village_id' => $villageId,
+                'phase' => $phase,
+            ],
+            $updateData
+        );
+
+        // Record the submission in audit log trail
+        \App\Models\MmgaySiteDevelopmentLog::create([
+            'site_development_id' => $siteDev->id,
+            'district_id' => $districtId,
+            'block_id' => $blockMasterId,
+            'village_id' => $villageId,
+            'phase' => $phase,
+            'road_status' => $siteDev->road_status,
+            'water_status' => $siteDev->water_status,
+            'electricity_status' => $siteDev->electricity_status,
+            'sewerage_status' => $siteDev->sewerage_status,
+            'remarks' => $siteDev->remarks,
+            'updated_by' => $bdo->id,
+            'updated_by_name' => $bdo->name ?? 'BDO Officer',
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Site Development details updated successfully.',
+            'site_development' => [
+                'id' => $siteDev->id,
+                'district_id' => $siteDev->district_id,
+                'block_id' => $siteDev->block_id,
+                'village_id' => $siteDev->village_id,
+                'phase' => $siteDev->phase,
+                'road_status' => $siteDev->road_status,
+                'water_status' => $siteDev->water_status,
+                'electricity_status' => $siteDev->electricity_status,
+                'sewerage_status' => $siteDev->sewerage_status,
+                'remarks' => $siteDev->remarks,
+                'road_photo' => $siteDev->road_photo ? url('storage/' . $siteDev->road_photo) : null,
+                'water_photo' => $siteDev->water_photo ? url('storage/' . $siteDev->water_photo) : null,
+                'electricity_photo' => $siteDev->electricity_photo ? url('storage/' . $siteDev->electricity_photo) : null,
+                'sewerage_photo' => $siteDev->sewerage_photo ? url('storage/' . $siteDev->sewerage_photo) : null,
+                'updated_by' => $siteDev->updated_by,
+                'created_at' => $siteDev->created_at,
+                'updated_at' => $siteDev->updated_at,
+            ]
+        ]);
+    }
+
+    /**
+     * Helper to restrict BDO actions in APIs if Site Development is not complete.
+     */
+    public function phaseReport(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        if (!$blockMasterId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'BDO block not defined.'
+            ], 400);
+        }
+
+        // Fetch distinct phases globally
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
+
+        $selectedPhase = $request->input('phase', $phases->first() ?: 1);
+
+        // Fetch villages having entries in this phase
+        $villages = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->where('o.Phase', $selectedPhase)
+            ->where('o.BlockId', $blockMasterId)
+            ->select('v.VillageId', 'v.VillageName', DB::raw('count(o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        $selectedVillageId = $request->input('village_id');
+        if (!$selectedVillageId && $villages->isNotEmpty()) {
+            $selectedVillageId = $villages->first()->VillageId;
+        }
+
+        $selectedVillageName = '';
+        $beneficiaries = [];
+        $search = $request->input('search');
+
+        if ($selectedVillageId) {
+            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.Phase', $selectedPhase)
+                ->where('o.VillageId', $selectedVillageId)
+                ->where('o.BlockId', $blockMasterId);
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('o.OwnerName', 'like', "%{$search}%")
+                      ->orWhere('o.MobileNo', 'like', "%{$search}%")
+                      ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
+                });
+            }
+
+            $beneficiariesPaginated = $query->select(
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.secure_id',
+                'd.DistrictName',
+                'b.BlockName',
+                'f.FlatNo',
+                DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
+                'ppa.application_number',
+                'o.PPPId',
+                'o.MemberId',
+                'o.OwnerAddress'
+            )
+            ->orderBy('o.OwnerName', 'asc')
+            ->paginate(10);
+            
+            $beneficiaries = $beneficiariesPaginated;
+        }
+
+        return response()->json([
+            'success' => true,
+            'phases' => $phases,
+            'selected_phase' => $selectedPhase,
+            'villages' => $villages,
+            'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
+            'selected_village_name' => $selectedVillageName,
+            'beneficiaries' => $beneficiaries
+        ]);
+    }
+
+    private function checkSiteDevelopmentRestriction($owner)
+    {
+        if (!$owner) {
+            return null;
+        }
+
+        $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $owner->BlockId)
+            ->where('village_id', $owner->VillageId)
+            ->where('phase', $owner->Phase)
+            ->first();
+
+        if (!$siteDev || !$siteDev->road_photo || !$siteDev->water_photo || !$siteDev->electricity_photo || !$siteDev->sewerage_photo) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Action Restricted: Please upload Site Development progress and photos for village: ' . ($owner->VillageName ?? 'this village') . ' (Phase ' . ($owner->Phase ?? 'N/A') . ') | कार्रवाई प्रतिबंधित: कृपया पहले इस गांव के Phase ' . ($owner->Phase ?? 'N/A') . ' के लिए Site Development का विवरण और फोटो अपलोड करें।'
+            ], 403);
+        }
+
+        return null;
     }
 }

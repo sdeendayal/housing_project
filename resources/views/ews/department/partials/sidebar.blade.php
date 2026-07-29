@@ -276,6 +276,41 @@
                         <span>Gurugram</span>
                     </div>
                 </a>
+                <!-- Faridabad Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'FARIDABAD']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'FARIDABAD') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Faridabad</span>
+                    </div>
+                </a>
+                <!-- Panipat Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'PANIPAT']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'PANIPAT') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Panipat</span>
+                    </div>
+                </a>
+                <!-- Rewari Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'REWARI']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'REWARI') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Rewari</span>
+                    </div>
+                </a>
+                <!-- Rohtak Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'ROHTAK']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'ROHTAK') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        <span>Rohtak</span>
+                    </div>
+                </a>
+                <!-- Other Files -->
+                <a href="{{ route('ews.department.seeder.index', ['district' => 'OTHER']) }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-slate-800 hover:text-white transition-all text-left {{ ($isSeederActive && request()->query('district') === 'OTHER') ? 'bg-orange-600 text-white font-bold' : '' }}">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-sm">folder_open</span>
+                        <span>Other</span>
+                    </div>
+                </a>
             </div>
         </div>
 
