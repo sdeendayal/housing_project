@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="<?php echo e(csrf_token()); ?>">
+    <title><?php echo $__env->yieldContent('title', 'Officer Dashboard'); ?> - Physical Possession</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <?php echo $__env->make('physical-possession.partials.styles', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->yieldPushContent('styles'); ?>
+</head>
+<body class="pp-body">
+    <?php 
+        $officer = Auth::user(); 
+        $routeApp = request()->route('application') ?? ($application ?? null);
+        $appStatus = ($routeApp && $routeApp instanceof \App\Models\PhysicalPossessionApplication) ? $routeApp->physical_possession_status : null;
+        $isVerifyForm = request()->routeIs('pp.officer.verify-form');
+    ?>
+
+    <div class="pp-sidebar-overlay" id="ppSidebarOverlay" onclick="ppToggleSidebar()"></div>
+
+    <nav class="pp-sidebar d-flex flex-column" id="ppSidebar">
+        <div class="pp-sidebar-brand">
+            <button type="button" class="pp-sidebar-close d-xl-none" onclick="ppToggleSidebar()" aria-label="Close menu">
+                <i class="bi bi-x-lg"></i>
+            </button>
+            <div class="pp-sidebar-logo">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="pp-sidebar-brand-text">
+                <span class="pp-sidebar-title">Officer Panel</span>
+                <span class="pp-sidebar-scheme">Physical Possession</span>
+            </div>
+            <div class="pp-sidebar-district">
+                <i class="bi bi-geo-alt-fill"></i> <?php echo e($officer->district_name); ?>
+
+            </div>
+        </div>
+
+        <div class="pp-sidebar-nav flex-grow-1">
+            <div class="pp-sidebar-section">Main</div>
+            <a href="<?php echo e(route('pp.officer.dashboard')); ?>" class="pp-sidebar-link <?php echo e(request()->routeIs('pp.officer.dashboard') ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon"><i class="bi bi-speedometer2"></i></span>
+                <span class="pp-sidebar-link-label">Dashboard</span>
+            </a>
+
+            <div class="pp-sidebar-section">Applications</div>
+            <a href="<?php echo e(route('pp.officer.eligibility-list')); ?>" class="pp-sidebar-link <?php echo e(request()->routeIs('pp.officer.eligibility-list') || request()->routeIs('pp.officer.schedule-form') ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon text-primary"><i class="bi bi-person-check-fill"></i></span>
+                <span class="pp-sidebar-link-label">Eligibility List</span>
+            </a>
+
+            <a href="<?php echo e(route('pp.officer.possession-applications', ['status' => 'Eligible for Physical Possession'])); ?>" class="pp-sidebar-link <?php echo e((request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Eligible for Physical Possession') || ($isVerifyForm && $appStatus === 'Eligible for Physical Possession') ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon danger"><i class="bi bi-calendar-x"></i></span>
+                <span class="pp-sidebar-link-label">Pending Schedule</span>
+            </a>
+
+            <a href="<?php echo e(route('pp.officer.possession-applications', ['status' => 'Visit Scheduled'])); ?>" class="pp-sidebar-link <?php echo e((request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Visit Scheduled') || ($isVerifyForm && $appStatus === 'Visit Scheduled') ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon purple"><i class="bi bi-calendar-event"></i></span>
+                <span class="pp-sidebar-link-label">Visits Scheduled</span>
+            </a>
+
+            <a href="<?php echo e(route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted'])); ?>" class="pp-sidebar-link <?php echo e((request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Physical Possession Submitted') || ($isVerifyForm && in_array($appStatus, ['Slot Selected', 'Physical Possession Submitted'])) ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon orange"><i class="bi bi-hourglass-split"></i></span>
+                <span class="pp-sidebar-link-label">Pending Verify</span>
+            </a>
+
+            <a href="<?php echo e(route('pp.officer.possession-applications', ['status' => 'Site Verified'])); ?>" class="pp-sidebar-link <?php echo e((request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Site Verified') || ($isVerifyForm && $appStatus === 'Site Verified') ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon teal"><i class="bi bi-file-earmark-check"></i></span>
+                <span class="pp-sidebar-link-label">E-Possession Pending</span>
+            </a>
+
+            <a href="<?php echo e(route('pp.officer.possession-applications', ['status' => 'Verified'])); ?>" class="pp-sidebar-link <?php echo e((request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Verified') || ($isVerifyForm && in_array($appStatus, ['Verified', 'Rejected'])) ? 'active' : ''); ?>">
+                <span class="pp-sidebar-link-icon green"><i class="bi bi-check-circle"></i></span>
+                <span class="pp-sidebar-link-label">Verified</span>
+            </a>
+
+
+        </div>
+
+        <div class="pp-sidebar-foot">
+            <div class="pp-sidebar-user">
+                <div class="pp-sidebar-avatar"><?php echo e(strtoupper(substr($officer->name, 0, 1))); ?></div>
+                <div class="pp-sidebar-user-info">
+                    <strong><?php echo e($officer->name); ?></strong>
+                    <small>Site Engineer</small>
+                </div>
+            </div>
+            <a href="<?php echo e(route('pp.officer.logout')); ?>" class="pp-sidebar-logout">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+        </div>
+    </nav>
+
+    <div class="pp-main">
+        <div class="pp-page-head pp-no-print">
+            <div class="d-flex align-items-center gap-2 min-w-0">
+                <button type="button" class="pp-menu-btn d-xl-none" onclick="ppToggleSidebar()" aria-label="Open menu">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="min-w-0">
+                    <h1><?php echo $__env->yieldContent('page-title', 'Dashboard'); ?></h1>
+                    <div class="pp-page-sub text-truncate"><?php echo e($officer->name); ?></div>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2 shrink-0">
+            <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="ppToggleTheme()" title="Toggle theme">
+                <i class="bi bi-moon-stars"></i>
+            </button>
+            <a href="<?php echo e(route('pp.officer.logout')); ?>" class="btn btn-sm btn-outline-danger py-0 px-2 d-flex align-items-center gap-1" title="Logout">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="d-none d-sm-inline">Logout</span>
+            </a>
+            </div>
+        </div>
+
+        <?php echo $__env->yieldContent('content'); ?>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <?php echo $__env->make('physical-possession.partials.scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+    <?php echo $__env->yieldPushContent('scripts'); ?>
+</body>
+</html>
+<?php /**PATH D:\xampp\htdocs\housing-project\resources\views/physical-possession/layouts/officer.blade.php ENDPATH**/ ?>
