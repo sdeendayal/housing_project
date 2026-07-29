@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 \Illuminate\Support\Facades\Schedule::command('mmgay:sync-land-registrations')->daily();
+\Illuminate\Support\Facades\Schedule::command('mmgay:sync-registary-table')->dailyAt('00:00');
