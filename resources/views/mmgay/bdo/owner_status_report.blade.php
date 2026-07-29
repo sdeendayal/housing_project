@@ -122,7 +122,7 @@
             <!-- Phase Filter -->
             <div>
                 <label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Select Phase</label>
-                <select name="phase" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700">
+                <select name="phase" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700">
                     <option value="">All Phases</option>
                     @foreach($phases as $p)
                         <option value="{{ $p }}" {{ $selectedPhase == $p ? 'selected' : '' }}>Phase {{ $p }}</option>
@@ -133,7 +133,7 @@
             <!-- Village Filter -->
             <div>
                 <label class="block text-[10px] uppercase font-bold text-slate-500 mb-1">Select Village</label>
-                <select name="village_id" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700">
+                <select name="village_id" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 text-xs rounded-lg p-2 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-slate-700">
                     <option value="">All Villages</option>
                     @foreach($villages as $v)
                         <option value="{{ $v->VillageId }}" {{ $selectedVillageId == $v->VillageId ? 'selected' : '' }}>{{ $v->VillageName }}</option>

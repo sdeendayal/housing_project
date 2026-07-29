@@ -1652,8 +1652,10 @@ class MMGAYBdoPossessionController extends Controller
             abort(400, 'BDO block not defined.');
         }
 
-        // 1. Fetch villages for BDO block having valid entries in villagemaster
-        $villages = DB::table('ownermaster as o')
+        $selectedPhase = $request->input('phase');
+
+        // 1. Fetch villages for BDO block having valid entries in villagemaster for this phase
+        $villagesQuery = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.BlockId', $blockMasterId)
             ->whereNotNull('v.plots')
@@ -1662,8 +1664,13 @@ class MMGAYBdoPossessionController extends Controller
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
-            })
-            ->select('v.VillageId', 'v.VillageName')
+            });
+
+        if ($selectedPhase) {
+            $villagesQuery->where('o.Phase', $selectedPhase);
+        }
+
+        $villages = $villagesQuery->select('v.VillageId', 'v.VillageName')
             ->groupBy('v.VillageId', 'v.VillageName')
             ->orderBy('v.VillageName', 'asc')
             ->get();
@@ -1676,8 +1683,10 @@ class MMGAYBdoPossessionController extends Controller
             ->pluck('Phase');
 
         // 3. Status Tabs counts (Conditional Count)
-        $selectedPhase = $request->input('phase');
         $selectedVillageId = $request->input('village_id');
+        if ($selectedVillageId && !$villages->contains('VillageId', $selectedVillageId)) {
+            $selectedVillageId = null;
+        }
         $search = $request->input('search');
 
         $countQuery = DB::table('ownermaster as o')
