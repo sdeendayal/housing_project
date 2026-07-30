@@ -12,7 +12,7 @@ class RegistarySeeder extends Seeder
      */
     public function run(): void
     {
-        $csvPath = 'C:/Users/hp/Downloads/registary.csv';
+        $csvPath = database_path('seeders/data/registary.csv');
 
         if (!file_exists($csvPath)) {
             $this->command->error("CSV file not found at: {$csvPath}");
