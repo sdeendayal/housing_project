@@ -1477,38 +1477,17 @@ class SuperAdminController extends Controller
 
     public function applicantsPdf(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
         $applicants = $this->applicantsQuery($request)
             ->orderByDesc('o.OwnerId')
             ->get();
 
-        $downloadToken = $request->download_token;
-
-        $pdf = Pdf::loadView(
-            'mmgay.super-admin.applicants.pdf',
+        return view(
+            'mmgay.super-admin.applicants.print',
             compact('applicants')
-        )->setPaper('a4', 'landscape');
-
-        $response = $pdf->download(
-            'applicants-' . now()->format('Y-m-d-H-i-s') . '.pdf'
         );
-
-        if ($downloadToken) {
-            $response->headers->setCookie(
-                cookie(
-                    'download_token',
-                    $downloadToken,
-                    5,
-                    '/',
-                    null,
-                    false,
-                    false,
-                    false,
-                    'Lax'
-                )
-            );
-        }
-
-        return $response;
     }
 
     public function allotmentReport(Request $request)
@@ -1833,7 +1812,7 @@ class SuperAdminController extends Controller
 
     public function exportAllotmentExcel(Request $request)
     {
-        set_time_limit(300);
+        set_time_limit(600);
         ini_set('memory_limit', '512M');
 
         $filters = $request->only([
@@ -1847,23 +1826,176 @@ class SuperAdminController extends Controller
 
         $fileName = 'allotment-report-'
             . now()->format('d-m-Y-H-i-s')
-            . '.xlsx';
+            . '.csv';
 
-        return Excel::download(
-            new AllotmentReportExport($filters),
-            $fileName
-        );
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
+
+        $callback = function() use ($filters) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for proper UTF-8 Excel support
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Write CSV headers
+            fputcsv($file, [
+                'Sr. No.',
+                'Application No.',
+                'Owner ID',
+                'Applicant Name',
+                'Father/Husband Name',
+                'Mobile No.',
+                'PPP ID',
+                'Member ID',
+                'Gender',
+                'Caste',
+                'District',
+                'Block',
+                'Village',
+                'Phase',
+                'Plot No.',
+                'Allotment Status',
+            ]);
+
+            $query = DB::table('OwnerMaster as o')
+                ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+                ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+                ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+                ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+                ->where('v.plots', '>', 0)
+                ->whereNotNull('o.FlatId')
+                ->where('o.FlatId', '>', 0);
+
+            if (!empty($filters['phase'])) {
+                $query->where('o.Phase', $filters['phase']);
+            }
+            if (!empty($filters['district_id'])) {
+                $query->where('o.DistrictId', $filters['district_id']);
+            }
+            if (!empty($filters['block_id'])) {
+                $query->where('o.BlockId', $filters['block_id']);
+            }
+            if (!empty($filters['village_id'])) {
+                $query->where('o.VillageId', $filters['village_id']);
+            }
+            if (!empty($filters['search'])) {
+                $search = trim($filters['search']);
+                $query->where(function ($subQuery) use ($search) {
+                    $subQuery->where('o.RegistrationNo', $search)
+                        ->orWhere('o.MobileNo', $search)
+                        ->orWhere('o.PPPId', $search)
+                        ->orWhere('f.FlatNo', $search)
+                        ->orWhere('o.OwnerName', 'like', '%' . $search . '%')
+                        ->orWhere('o.FatherHusbandName', 'like', '%' . $search . '%');
+                });
+            }
+
+            switch ($filters['status'] ?? '') {
+                case 'approved_paid':
+                    $query->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsApproved, 0) = 1')
+                        ->whereRaw('IFNULL(o.IsPaid, 0) = 1');
+                    break;
+                case 'approved_unpaid':
+                    $query->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsApproved, 0) = 1')
+                        ->whereRaw('IFNULL(o.IsPaid, 0) = 0');
+                    break;
+                case 'pending':
+                    $query->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsRejected, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsApproved, 0) = 0');
+                    break;
+                case 'rejected':
+                    $query->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 0')
+                        ->whereRaw('IFNULL(o.IsRejected, 0) = 1');
+                    break;
+                case 'cancelled':
+                    $query->whereRaw('IFNULL(o.IsAllotmentCancelled, 0) = 1');
+                    break;
+            }
+
+            $query->select([
+                'o.OwnerId',
+                'o.RegistrationNo',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Gender',
+                'o.Caste',
+                'o.Phase',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'f.FlatNo',
+                'o.IsAllotmentCancelled',
+                'o.IsRejected',
+                'o.IsApproved',
+                'o.IsPaid'
+            ])->orderBy('o.OwnerId');
+
+            $serial = 0;
+            $query->chunk(1000, function($records) use ($file, &$serial) {
+                foreach ($records as $record) {
+                    $serial++;
+                    
+                    if ((int) ($record->IsAllotmentCancelled ?? 0) === 1) {
+                        $status = 'Cancelled';
+                    } elseif ((int) ($record->IsRejected ?? 0) === 1) {
+                        $status = 'Rejected';
+                    } elseif (
+                        (int) ($record->IsApproved ?? 0) === 1 &&
+                        (int) ($record->IsPaid ?? 0) === 1
+                    ) {
+                        $status = 'Approved & Paid';
+                    } elseif ((int) ($record->IsApproved ?? 0) === 1) {
+                        $status = 'Approved & Unpaid';
+                    } else {
+                        $status = 'Yet to be Approved';
+                    }
+
+                    fputcsv($file, [
+                        $serial,
+                        $record->RegistrationNo ?? '-',
+                        $record->OwnerId ?? '-',
+                        $record->OwnerName ?? '-',
+                        $record->FatherHusbandName ?? '-',
+                        $record->MobileNo ?? '-',
+                        $record->PPPId ?? '-',
+                        $record->MemberId ?? '-',
+                        $record->Gender ?? '-',
+                        $record->Caste ?? '-',
+                        $record->DistrictName ?? '-',
+                        $record->BlockName ?? '-',
+                        $record->VillageName ?? '-',
+                        $record->Phase ?? '-',
+                        $record->FlatNo ?? '-',
+                        $status
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function exportAllotmentPdf(Request $request)
     {
-        $query = $this->getFilteredAllotmentQuery($request);
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
 
-        /*
-         * Dompdf large dataset par bahut memory use karta hai.
-         * Isliye PDF me practical record limit rakhi gayi hai.
-         */
-        $pdfLimit = 2000;
+        $query = $this->getFilteredAllotmentQuery($request);
 
         $allotments = $query
             ->select([
@@ -1885,12 +2017,7 @@ class SuperAdminController extends Controller
                 'f.FlatNo',
             ])
             ->orderByDesc('o.OwnerId')
-            ->limit($pdfLimit)
             ->get();
-
-        $totalRecords = (clone $query)
-            ->distinct('o.OwnerId')
-            ->count('o.OwnerId');
 
         $filters = [
             'phase' => $request->phase,
@@ -1901,20 +2028,9 @@ class SuperAdminController extends Controller
             'status' => $request->status,
         ];
 
-        $pdf = Pdf::loadView(
-            'mmgay.super-admin.allotment.pdf',
-            compact(
-                'allotments',
-                'filters',
-                'totalRecords',
-                'pdfLimit'
-            )
-        )
-            ->setPaper('a4', 'landscape')
-            ->setOption('isRemoteEnabled', false);
-
-        return $pdf->download(
-            'allotment-report-' . now()->format('d-m-Y-H-i-s') . '.pdf'
+        return view(
+            'mmgay.super-admin.allotment.print',
+            compact('allotments', 'filters')
         );
     }
 
@@ -2447,6 +2563,9 @@ class SuperAdminController extends Controller
 
     public function exportRegistrationExcel(Request $request)
     {
+        set_time_limit(600);
+        ini_set('memory_limit', '512M');
+
         $type = $request->input('type', 'all');
 
         $allowedTypes = [
@@ -2464,30 +2583,125 @@ class SuperAdminController extends Controller
             $type = 'all';
         }
 
-        $filters = [
-            'type' => $type,
-            'phase' => $request->input('phase'),
-            'district_id' => $request->input('district_id'),
-            'block_id' => $request->input('block_id'),
-            'village_id' => $request->input('village_id'),
-            'search' => $request->input('search'),
-        ];
-
         $fileName = 'registry-' .
             $type . '-' .
             now()->format('Y-m-d-H-i-s') .
-            '.xlsx';
+            '.csv';
 
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0'
+        ];
 
+        $callback = function() use ($request) {
+            $file = fopen('php://output', 'w');
+            
+            // Add BOM for proper UTF-8 Excel support
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-        return Excel::download(
-            new RegistrationReportExport($filters),
-            $fileName
-        );
+            // Get columns of the registry table dynamically
+            $dbName = config('database.connections.mysql.database', 'dddnew1');
+            $columns = DB::select("SHOW COLUMNS FROM `{$dbName}`.`registary`");
+            $registryColumns = array_map(static fn ($column) => $column->Field, $columns);
+
+            // Write CSV headers
+            $headers = array_merge(
+                ['Sr. No.'],
+                $registryColumns,
+                [
+                    'Registry Row Count',
+                    'Mobile Row Count',
+                    'Match Status',
+                    'Matched Application No.',
+                    'Matched Owner ID',
+                    'Matched Owner Name',
+                    'Matched Father / Husband Name',
+                    'Matched Owner Mobile',
+                    'Matched PPP ID',
+                    'Matched Member ID',
+                    'Matched Caste',
+                    'Matched Phase',
+                ]
+            );
+            fputcsv($file, $headers);
+
+            $query = $this->getRegistrationExportQuery($request);
+
+            $registrySelectColumns = array_map(static fn ($column) => 'r.' . $column, $registryColumns);
+            
+            $query->select($registrySelectColumns)
+                ->addSelect([
+                    'r.registry_group_count',
+                    'r.mobile_group_count',
+                    'o.OwnerId as matched_owner_id',
+                    'o.RegistrationNo as matched_registration_no',
+                    'o.OwnerName as matched_owner_name',
+                    'o.FatherHusbandName as matched_father_husband_name',
+                    'o.MobileNo as matched_owner_mobile',
+                    'o.PPPId as matched_ppp_id',
+                    'o.MemberId as matched_member_id',
+                    'o.Caste as matched_caste',
+                    'o.Phase as matched_phase',
+                ])
+                ->orderByDesc('r.RegistaryDate')
+                ->orderByDesc('r.Token')
+                ->orderBy('r.RegistaryNumber')
+                ->orderBy('r.SecondPartyMobile')
+                ->orderBy('r.SecondParty')
+                ->orderBy('r.FirstParty')
+                ->orderBy('r.District')
+                ->orderBy('r.TehsilName')
+                ->orderBy('r.Village');
+
+            $serial = 0;
+            foreach ($query->cursor() as $row) {
+                $serial++;
+                $registryValues = [];
+                foreach ($registryColumns as $column) {
+                    $value = $row->{$column} ?? '';
+                    if ($value !== '' && $value !== null && stripos($column, 'date') !== false) {
+                        $timestamp = strtotime((string) $value);
+                        if ($timestamp !== false) {
+                            $value = date('d-m-Y', $timestamp);
+                        }
+                    }
+                    $registryValues[] = $value ?? '';
+                }
+
+                fputcsv($file, array_merge(
+                    [$serial],
+                    $registryValues,
+                    [
+                        $row->registry_group_count ?? 0,
+                        $row->mobile_group_count ?? 0,
+                        !empty($row->matched_owner_id) ? 'Matched' : 'Unmatched',
+                        $row->matched_registration_no ?? '',
+                        $row->matched_owner_id ?? '',
+                        $row->matched_owner_name ?? '',
+                        $row->matched_father_husband_name ?? '',
+                        $row->matched_owner_mobile ?? '',
+                        $row->matched_ppp_id ?? '',
+                        $row->matched_member_id ?? '',
+                        $row->matched_caste ?? '',
+                        $row->matched_phase ?? '',
+                    ]
+                ));
+            }
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 
     public function exportRegistrationPdf(Request $request)
     {
+        ini_set('memory_limit', '1024M');
+        set_time_limit(300);
+
         $registrations = $this->getRegistrationExportQuery($request)
             ->orderByDesc('r.RegistaryDate')
             ->get();
@@ -2506,16 +2720,9 @@ class SuperAdminController extends Controller
         $type = $request->input('type', 'matched');
         $reportTitle = $typeLabels[$type] ?? 'Registry Report';
 
-        $pdf = Pdf::loadView(
+        return view(
             'mmgay.super-admin.exports.registration-pdf',
-            compact(
-                'registrations',
-                'reportTitle'
-            )
-        )->setPaper('a4', 'landscape');
-
-        return $pdf->download(
-            'registry-report-' . now()->format('Y-m-d-H-i-s') . '.pdf'
+            compact('registrations', 'reportTitle')
         );
     }
 
