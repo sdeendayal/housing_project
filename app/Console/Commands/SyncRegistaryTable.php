@@ -33,6 +33,8 @@ class SyncRegistaryTable extends Command
 
         // 1. Fetch approved and paid owners who do not have a registry entry in the database yet
         $owners = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->where('o.IsApproved', 1)
             ->where('o.IsPaid', 1)
             ->whereNotNull('o.RegistrationNo')
@@ -41,7 +43,13 @@ class SyncRegistaryTable extends Command
                     ->from('registary as r')
                     ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
-            ->get(['o.RegistrationNo', 'o.MobileNo', 'o.OwnerName']);
+            ->get([
+                'o.RegistrationNo',
+                'o.MobileNo',
+                'o.OwnerName',
+                'd.DistrictName',
+                'v.VillageName'
+            ]);
 
         $totalOwners = $owners->count();
         $this->info("Found {$totalOwners} approved & paid owners lacking registry matches in DB.");
@@ -68,16 +76,17 @@ class SyncRegistaryTable extends Command
                     ->withHeaders([
                         'X-API-KEY' => 'HFA26@hry#',
                     ])
-                    ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland', [
+                    ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFALand', [
                         'RegistrationNo' => $regNo,
                     ]);
 
                 if ($response->successful()) {
-                    $registrations = $response->json();
+                    $responseData = $response->json();
+                    $registrations = $responseData['payload'] ?? [];
 
                     if (!empty($registrations) && is_array($registrations)) {
                         foreach ($registrations as $reg) {
-                            $token = $reg['Token'] ?? $reg['token'] ?? null;
+                            $token = $reg['flatnumber'] ?? $reg['flatid'] ?? $reg['ppId'] ?? null;
                             if (!$token) {
                                 continue;
                             }
@@ -89,19 +98,19 @@ class SyncRegistaryTable extends Command
 
                             if (!$exists) {
                                 DB::table('registary')->insert([
-                                    'District' => $reg['District'] ?? $reg['district'] ?? null,
-                                    'TehsilName' => $reg['TehsilName'] ?? $reg['tehsilName'] ?? null,
-                                    'Village' => $reg['Village'] ?? $reg['village'] ?? null,
+                                    'District' => $owner->DistrictName ?? null,
+                                    'TehsilName' => null,
+                                    'Village' => $owner->VillageName ?? null,
                                     'Token' => $token,
-                                    'Khewat' => $reg['Khewat'] ?? $reg['khewat'] ?? null,
-                                    'FirstParty' => $reg['FirstParty'] ?? $reg['firstParty'] ?? null,
-                                    'TotalArea' => $reg['TotalArea'] ?? $reg['totalArea'] ?? null,
-                                    'Bhag' => $reg['Bhag'] ?? $reg['bhag'] ?? null,
-                                    'TransferArea' => $reg['TransferArea'] ?? $reg['transferArea'] ?? null,
-                                    'SecondParty' => $reg['SecondParty'] ?? $reg['secondParty'] ?? null,
-                                    'SecondPartyMobile' => $reg['SecondPartyMobile'] ?? $reg['secondPartyMobile'] ?? $reg['SecondPartyMobileNo'] ?? $owner->MobileNo,
-                                    'RegistaryNumber' => $reg['RegistaryNumber'] ?? $reg['registaryNumber'] ?? null,
-                                    'RegistaryDate' => $reg['RegistaryDate'] ?? $reg['registaryDate'] ?? null,
+                                    'Khewat' => null,
+                                    'FirstParty' => 'Government/HFA',
+                                    'TotalArea' => $reg['area'] ?? null,
+                                    'Bhag' => null,
+                                    'TransferArea' => $reg['area'] ?? null,
+                                    'SecondParty' => $reg['fullname'] ?? $owner->OwnerName,
+                                    'SecondPartyMobile' => $owner->MobileNo,
+                                    'RegistaryNumber' => $reg['registrationNo'] ?? $regNo,
+                                    'RegistaryDate' => now(),
                                     'created_at' => now(),
                                     'updated_at' => now(),
                                 ]);

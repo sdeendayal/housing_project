@@ -41,7 +41,7 @@ class SyncLandRegistrations extends Command
                 ->withHeaders([
                     'X-API-KEY' => 'HFA26@hry#',
                 ])
-                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland', [
+                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFALand', [
                     'RegFromDate' => $fromDate,
                     'RegToDate' => $toDate,
                 ]);

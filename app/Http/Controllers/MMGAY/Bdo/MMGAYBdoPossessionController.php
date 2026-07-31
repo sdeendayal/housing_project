@@ -1690,7 +1690,7 @@ class MMGAYBdoPossessionController extends Controller
         $fromDate = $request->input('from_date');
         $toDate = $request->input('to_date');
 
-        $apiUrl = 'https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland';
+        $apiUrl = 'https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFALand';
         $headers = [
             'X-API-KEY' => 'HFA26@hry#',
             'Accept' => 'application/json',

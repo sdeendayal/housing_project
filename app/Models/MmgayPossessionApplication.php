@@ -112,13 +112,13 @@ class MmgayPossessionApplication extends Model
                 ->withHeaders([
                     'X-API-KEY' => 'HFA26@hry#',
                 ])
-                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFAland', [
+                ->get('https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFALand', [
                     'RegistrationNo' => $registrationNo,
                 ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                return !empty($data);
+                return !empty($data['payload']);
             }
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error("HFA Land Registration API Error for " . $registrationNo . ": " . $e->getMessage());
