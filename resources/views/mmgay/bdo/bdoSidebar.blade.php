@@ -31,28 +31,28 @@
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'awaiting_citizen') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Visit Scheduled']) }}">
             <span class="material-symbols-outlined text-base">contact_support</span>
-            <span class="font-label-md text-label-md text-xs">Awaiting Citizen</span>
+            <span class="font-label-md text-label-md text-xs">Confirmation Pending From Citizen</span>
         </a>
 
         <!-- 4. Field Visit Pending -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'field_visit_pending') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Slot Selected']) }}">
             <span class="material-symbols-outlined text-base">location_on</span>
-            <span class="font-label-md text-label-md text-xs">Field Visit Pending</span>
+            <span class="font-label-md text-label-md text-xs">Physical/Site Visit Pending</span>
         </a>
 
         <!-- 5. E-Possession Pending -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'epossession_pending') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Site Verified']) }}">
             <span class="material-symbols-outlined text-base">description</span>
-            <span class="font-label-md text-label-md text-xs">Possession Pending</span>
+            <span class="font-label-md text-label-md text-xs">Registry documentation, verify</span>
         </a>
 
         <!-- 6. Verified -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'verified') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.possession-applications', ['status' => 'Verified']) }}">
             <span class="material-symbols-outlined text-base">verified</span>
-            <span class="font-label-md text-label-md text-xs">Verified / Completed</span>
+            <span class="font-label-md text-label-md text-xs">Possession given</span>
         </a>
 
         <!-- 7. Phase Analytics -->

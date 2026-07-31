@@ -56,7 +56,7 @@
         <!-- Citizen Confirmation Pending -->
         <a href="<?php echo e(route('mmgay.bdo.possession-applications', ['status' => 'Visit Scheduled'])); ?>" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-orange-200 transition">
             <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Awaiting Citizen</p>
+                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Confirmation Pending From Citizen</p>
                 <h2 class="text-lg font-extrabold text-orange-700 mt-0.5"><?php echo e($stats['awaiting_citizen']); ?></h2>
             </div>
             <div class="w-8.5 h-8.5 rounded-lg bg-orange-50 flex items-center justify-center shrink-0">
@@ -67,7 +67,7 @@
         <!-- Field Visit Pending -->
         <a href="<?php echo e(route('mmgay.bdo.possession-applications', ['status' => 'Slot Selected'])); ?>" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-indigo-200 transition">
             <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Field Visit Pending</p>
+                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Physical/Site Visit Pending</p>
                 <h2 class="text-lg font-extrabold text-indigo-700 mt-0.5"><?php echo e($stats['awaiting_coordinates']); ?></h2>
             </div>
             <div class="w-8.5 h-8.5 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
@@ -76,9 +76,9 @@
         </a>
 
         <!-- E-Possession Pending -->
-        <a href="<?php echo e(route('mmgay.bdo.possession-applications', ['status' => 'Site Verified'])); ?>" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-amber-200 transition font-semibold">
+        <a href="<?php echo e(route('mmgay.bdo.possession-applications', ['status' => 'Site Verified'])); ?>" class="bg-white rounded-xl shadow-sm border border-slate-150 p-3 flex items-center justify-between hover:shadow hover:border-amber-200 transition font-semibold">
             <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Possession Pending</p>
+                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Registry documentation, verify</p>
                 <h2 class="text-lg font-extrabold text-amber-700 mt-0.5"><?php echo e($stats['awaiting_bdo_doc']); ?></h2>
             </div>
             <div class="w-8.5 h-8.5 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
@@ -89,7 +89,7 @@
         <!-- Verified -->
         <a href="<?php echo e(route('mmgay.bdo.possession-applications', ['status' => 'Verified'])); ?>" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-emerald-200 transition">
             <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Verified</p>
+                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider">Possession given</p>
                 <h2 class="text-lg font-extrabold text-emerald-700 mt-0.5"><?php echo e($stats['verified']); ?></h2>
             </div>
             <div class="w-8.5 h-8.5 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
