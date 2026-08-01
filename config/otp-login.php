@@ -33,6 +33,11 @@ return [
         'message' => 'Dear {#alp#}, Mukhyamantri Gramin Awas Yojana (MMGAY) Physical Possession slots have been scheduled for your Application No. {#alp#}. Please login to https://hfa.haryana.gov.in/ to select your preferred slot. - HFA Haryana',
     ],
 
+    'mmgay_possession_absent_sms' => [
+        'template_id' => env('MMGAY_POSSESSION_ABSENT_SMS_TEMPLATE_ID', '1477178539806041865'),
+        'message' => 'Dear {#alp#}, you were found absent during your MMGAY Physical Possession visit on {#alp#}. Your slot has been reset, and a new schedule will be shared shortly. Please login to https://hfa.haryana.gov.in/ for updates. - HFA Haryana',
+    ],
+
     'sms_username' => env('OTP_SMS_USERNAME', 'haryanait-sport'),
     'sms_password' => env('OTP_SMS_PASSWORD', 'sports@1234'),
     'sms_sender_id' => env('OTP_SMS_SENDER_ID', 'GOVHRY'),

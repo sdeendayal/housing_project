@@ -38,4 +38,37 @@ class MmgayPossessionSmsTest extends TestCase
             $template
         );
     }
+
+    /**
+     * Test that the MMGAY possession absent SMS config is present and formats correctly.
+     */
+    public function test_mmgay_possession_absent_sms_config_and_formatting()
+    {
+        $config = config('otp-login.mmgay_possession_absent_sms');
+
+        $this->assertIsArray($config);
+        $this->assertEquals('1477178539806041865', $config['template_id']);
+        
+        $template = $config['message'];
+        $this->assertStringContainsString('{#alp#}', $template);
+
+        // Perform replacement
+        $applicantName = 'John Doe';
+        $visitDate = '01 Aug 2026';
+
+        // Replace the first {#alp#} with the applicant's name
+        $pos = strpos($template, '{#alp#}');
+        $this->assertNotFalse($pos);
+        $template = substr_replace($template, $applicantName, $pos, strlen('{#alp#}'));
+
+        // Replace the second {#alp#} with the visit date
+        $pos = strpos($template, '{#alp#}');
+        $this->assertNotFalse($pos);
+        $template = substr_replace($template, $visitDate, $pos, strlen('{#alp#}'));
+
+        $this->assertEquals(
+            "Dear John Doe, you were found absent during your MMGAY Physical Possession visit on 01 Aug 2026. Your slot has been reset, and a new schedule will be shared shortly. Please login to https://hfa.haryana.gov.in/ for updates. - HFA Haryana",
+            $template
+        );
+    }
 }
