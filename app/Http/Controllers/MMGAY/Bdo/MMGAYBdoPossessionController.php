@@ -695,7 +695,30 @@ class MMGAYBdoPossessionController extends Controller
             'remarks' => $request->visit_instructions ?? 'Visit scheduled by BDO.',
         ]);
 
-        Log::info("MMGAY SMS Mock: Physical Possession slots scheduled for {$application->applicant_name} (Mobile: {$application->mobile}).");
+        $smsService = app(\App\Services\LoginOtpSmsService::class);
+        $smsConfig = config('otp-login.mmgay_possession_scheduled_sms');
+        if ($smsConfig && !empty($application->mobile)) {
+            $message = $smsConfig['message'];
+            // Replace the first {#alp#} with the applicant's name
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->applicant_name, $pos, strlen('{#alp#}'));
+            }
+            // Replace the second {#alp#} with the application number
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->application_number, $pos, strlen('{#alp#}'));
+            }
+
+            $smsService->sendCustomMessage(
+                $application->mobile,
+                $message,
+                $smsConfig['template_id'],
+                'MMGAY Possession Schedule '.$application->application_number
+            );
+        }
+
+        Log::info("MMGAY SMS Notification: Physical Possession slots scheduled for {$application->applicant_name} (Mobile: {$application->mobile}).");
 
         return redirect()->route('mmgay.bdo.eligibility-list')->with('success', 'Physical Possession visit has been successfully scheduled.');
     }
