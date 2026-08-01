@@ -71,4 +71,58 @@ class MmgayPossessionSmsTest extends TestCase
             $template
         );
     }
+
+    /**
+     * Test that the MMSAY/HFA possession scheduled SMS config is present and formats correctly.
+     */
+    public function test_mmsay_possession_scheduled_sms_config_and_formatting()
+    {
+        $config = config('otp-login.mmsay_possession_scheduled_sms');
+
+        $this->assertIsArray($config);
+        $this->assertEquals('1477178539740088117', $config['template_id']);
+        
+        $template = $config['message'];
+        $this->assertStringContainsString('{#alp#}', $template);
+
+        // Perform replacement
+        $appNumber = 'PP-2026-161845';
+
+        // Replace the {#alp#} with the application number
+        $pos = strpos($template, '{#alp#}');
+        $this->assertNotFalse($pos);
+        $template = substr_replace($template, $appNumber, $pos, strlen('{#alp#}'));
+
+        $this->assertEquals(
+            "Physical Possession slots have been offered for your Application No. PP-2026-161845. Please login to https://hfa.haryana.gov.in/ to select your preferred slot. - HFA Haryana",
+            $template
+        );
+    }
+
+    /**
+     * Test that the MMSAY/HFA possession absent SMS config is present and formats correctly.
+     */
+    public function test_mmsay_possession_absent_sms_config_and_formatting()
+    {
+        $config = config('otp-login.mmsay_possession_absent_sms');
+
+        $this->assertIsArray($config);
+        $this->assertEquals('1477178539760512498', $config['template_id']);
+        
+        $template = $config['message'];
+        $this->assertStringContainsString('{#alp#}', $template);
+
+        // Perform replacement
+        $visitDate = '11 Aug 2026';
+
+        // Replace the {#alp#} with the visit date
+        $pos = strpos($template, '{#alp#}');
+        $this->assertNotFalse($pos);
+        $template = substr_replace($template, $visitDate, $pos, strlen('{#alp#}'));
+
+        $this->assertEquals(
+            "You were absent for your Physical Possession visit on 11 Aug 2026. Your slot has been reset. A new schedule will be shared soon. Please login to https://hfa.haryana.gov.in/ for updates. - HFA Haryana",
+            $template
+        );
+    }
 }

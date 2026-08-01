@@ -937,6 +937,25 @@ class PpOfficerApiController extends Controller
             'changed_by_id' => Auth::id(),
         ]);
 
+        // Send SMS notification
+        $smsService = app(\App\Services\LoginOtpSmsService::class);
+        $smsConfig = config('otp-login.mmsay_possession_scheduled_sms');
+        if ($smsConfig && !empty($application->mobile)) {
+            $message = $smsConfig['message'];
+            // Replace the {#alp#} with the application number
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->application_number, $pos, strlen('{#alp#}'));
+            }
+
+            $smsService->sendCustomMessage(
+                $application->mobile,
+                $message,
+                $smsConfig['template_id'],
+                'MMSAY Possession Schedule API '.$application->application_number
+            );
+        }
+
         Log::info("SMS Notification via API: Physical Possession visit scheduled for applicant {$application->applicant_name}");
 
         return response()->json([
@@ -1183,9 +1202,30 @@ class PpOfficerApiController extends Controller
 
             // Capture the previous slot time before resetting
             $prevSlotInfo = "N/A";
+            $visitDateStr = "N/A";
             if ($application->possession_date) {
                 $dateFormatted = date('d M Y', strtotime($application->possession_date));
                 $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
+                $visitDateStr = $dateFormatted;
+            }
+
+            // Send absent SMS
+            $smsService = app(\App\Services\LoginOtpSmsService::class);
+            $smsConfig = config('otp-login.mmsay_possession_absent_sms');
+            if ($smsConfig && !empty($application->mobile)) {
+                $message = $smsConfig['message'];
+                // Replace the {#alp#} with the visit date
+                $pos = strpos($message, '{#alp#}');
+                if ($pos !== false) {
+                    $message = substr_replace($message, $visitDateStr, $pos, strlen('{#alp#}'));
+                }
+
+                $smsService->sendCustomMessage(
+                    $application->mobile,
+                    $message,
+                    $smsConfig['template_id'],
+                    'MMSAY Possession Absent Reset API '.$application->application_number
+                );
             }
 
             $application->physical_possession_status = 'Eligible for Physical Possession';
