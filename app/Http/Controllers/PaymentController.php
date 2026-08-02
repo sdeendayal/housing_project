@@ -1000,10 +1000,7 @@ class PaymentController extends Controller
         float $lastInstallmentTargetEmi = 0.0
     ): float {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            if ($isPaid) {
-                return $lastInstallmentTargetEmi;
-            }
-            return $remainingBalance;
+            return $lastInstallmentTargetEmi;
         }
         return (float) $row->EMIAmount;
     }

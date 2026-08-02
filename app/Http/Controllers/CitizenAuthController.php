@@ -788,7 +788,6 @@ class CitizenAuthController extends Controller
         return max(0.0, round($flatCost - $receivedAmount - $receiptsTotal, 2));
     }
 
-    /** 36vi kist = poora bacha hua amount; kam jama nahi — closing balance to reach FlatCost. */
     private function emiAmountForInstallment(
         $row,
         float $remainingBalance,
@@ -797,11 +796,7 @@ class CitizenAuthController extends Controller
         float $lastInstallmentTargetEmi = 0.0
     ): float {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            if ($isPaid) {
-                return $lastInstallmentTargetEmi;
-            }
-
-            return $remainingBalance;
+            return $lastInstallmentTargetEmi;
         }
 
         return (float) $row->EMIAmount;
