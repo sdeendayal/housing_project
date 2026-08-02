@@ -13,6 +13,8 @@ use App\Exports\DistrictReportExport;
 use App\Exports\VillageReportExport;
 use App\Exports\AllotmentReportExport;
 use App\Exports\RegistrationReportExport;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Storage;
 
 
 class SuperAdminController extends Controller
@@ -270,6 +272,708 @@ class SuperAdminController extends Controller
                 'districts',
                 'blocks',
                 'villages'
+            )
+        );
+    }
+
+    private function possessionBaseQuery(Request $request)
+    {
+        $phase = $request->filled('phase')
+            ? (int) $request->phase
+            : null;
+
+        $districtId = $request->filled('district_id')
+            ? (int) $request->district_id
+            : null;
+
+        $blockId = $request->filled('block_id')
+            ? (int) $request->block_id
+            : null;
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        return DB::table('OwnerMaster as o')
+
+            /*
+            |--------------------------------------------------------------------------
+            | Display-only joins
+            |--------------------------------------------------------------------------
+            | LEFT JOIN रखा है, इसलिए missing village/flat के कारण eligible record
+            | exclude नहीं होगा।
+            |--------------------------------------------------------------------------
+            */
+            ->leftJoin(
+                'VillageMaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.owner_id',
+                '=',
+                'o.OwnerId'
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registry matched + approved + paid
+            |--------------------------------------------------------------------------
+            */
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+
+            ->whereNotNull('o.MobileNo')
+            ->where('o.MobileNo', '<>', '')
+
+            ->whereExists(function ($query) {
+                $query
+                    ->selectRaw('1')
+                    ->from('registary as r')
+                    ->whereColumn(
+                        'r.SecondPartyMobile',
+                        'o.MobileNo'
+                    );
+            })
+
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase);
+            })
+
+            ->when($districtId, function ($query) use ($districtId) {
+                $query->where(
+                    'o.DistrictId',
+                    $districtId
+                );
+            })
+
+            ->when($blockId, function ($query) use ($blockId) {
+                $query->where(
+                    'o.BlockId',
+                    $blockId
+                );
+            })
+
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where(
+                    'o.VillageId',
+                    $villageId
+                );
+            });
+    }
+
+    public function possessionStats(Request $request)
+    {
+        $eligibleQuery =
+            $this->possessionBaseQuery($request);
+
+        $totalEligible = (clone $eligibleQuery)
+            ->distinct()
+            ->count('o.OwnerId');
+
+        $possessionGiven = (clone $eligibleQuery)
+            ->whereRaw("
+            LOWER(
+                TRIM(
+                    COALESCE(
+                        pa.physical_possession_status,
+                        ''
+                    )
+                )
+            ) = ?
+        ", ['verified'])
+            ->distinct()
+            ->count('o.OwnerId');
+
+        return response()->json([
+            'success' => true,
+
+            'totals' => [
+                'eligible' => $totalEligible,
+                'given' => $possessionGiven,
+                'pending' => max(
+                    0,
+                    $totalEligible - $possessionGiven
+                ),
+            ],
+        ]);
+    }
+
+    public function possessionList(
+        Request $request,
+        string $filter = 'all'
+    ) {
+        $allowedFilters = [
+            'all',
+            'schedule_pending',
+            'awaiting_citizen',
+            'field_visit_pending',
+            'document_verification',
+            'verified',
+        ];
+
+        abort_unless(
+            in_array($filter, $allowedFilters, true),
+            404
+        );
+
+        $phase = $request->filled('phase')
+            ? (int) $request->phase
+            : null;
+
+        $districtId = $request->filled('district_id')
+            ? (int) $request->district_id
+            : null;
+
+        $blockId = $request->filled('block_id')
+            ? (int) $request->block_id
+            : null;
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        $perPage = (int) $request->query('per_page', 20);
+
+        if (!in_array($perPage, [20, 50, 100, 200], true)) {
+            $perPage = 20;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Dropdown Data
+        |--------------------------------------------------------------------------
+        */
+        $districts = DB::table('DistrictMaster as d')
+            ->join(
+                'VillageMaster as v',
+                'v.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+            ->where('v.plots', '>', 0)
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.Phase', $phase);
+            })
+            ->select([
+                'd.DistrictId',
+                'd.DistrictName',
+            ])
+            ->distinct()
+            ->orderBy('d.DistrictName')
+            ->get();
+
+        $blocks = $districtId
+            ? DB::table('BlockMaster as b')
+                ->join(
+                    'VillageMaster as v',
+                    'v.BlockId',
+                    '=',
+                    'b.BlockId'
+                )
+                ->where('b.DistrictId', $districtId)
+                ->where('v.plots', '>', 0)
+                ->when($phase, function ($query) use ($phase) {
+                    $query->where('v.Phase', $phase);
+                })
+                ->select([
+                    'b.BlockId',
+                    'b.BlockName',
+                ])
+                ->distinct()
+                ->orderBy('b.BlockName')
+                ->get()
+            : collect();
+
+        $villages = $blockId
+            ? DB::table('VillageMaster as v')
+                ->where('v.BlockId', $blockId)
+                ->where('v.plots', '>', 0)
+                ->when($phase, function ($query) use ($phase) {
+                    $query->where('v.Phase', $phase);
+                })
+                ->select([
+                    'v.VillageId',
+                    'v.VillageName',
+                    'v.Phase',
+                ])
+                ->orderBy('v.VillageName')
+                ->get()
+            : collect();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registry Matched + Approved + Paid + Not Cancelled
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = $this->possessionBaseQuery($request);
+
+        $statusExpression = "
+        LOWER(
+            TRIM(
+                COALESCE(
+                    pa.physical_possession_status,
+                    ''
+                )
+            )
+        )
+    ";
+
+        /*
+        |--------------------------------------------------------------------------
+        | Counts
+        |--------------------------------------------------------------------------
+        */
+        $counts = [
+            'all' => (clone $baseQuery)
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'schedule_pending' => (clone $baseQuery)
+                ->whereNull('pa.id')
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'awaiting_citizen' => (clone $baseQuery)
+                ->whereNotNull('pa.id')
+                ->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['visit scheduled']
+                )
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'field_visit_pending' => (clone $baseQuery)
+                ->whereNotNull('pa.id')
+                ->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['slot selected']
+                )
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'document_verification' => (clone $baseQuery)
+                ->whereNotNull('pa.id')
+                ->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['site verified']
+                )
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'verified' => (clone $baseQuery)
+                ->whereNotNull('pa.id')
+                ->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['verified']
+                )
+                ->distinct()
+                ->count('o.OwnerId'),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Applications Query
+        |--------------------------------------------------------------------------
+        */
+        $applicationsQuery = (clone $baseQuery)
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Phase',
+                'o.OwnerAddress',
+                'o.Caste',
+
+                'v.VillageName',
+                'f.FlatNo',
+
+                'pa.id as application_id',
+                'pa.secure_id',
+                'pa.application_number',
+                'pa.status',
+                'pa.remarks',
+                'pa.physical_possession_status',
+
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.visit_slot_1',
+                'pa.visit_slot_2',
+                'pa.visit_slot_3',
+                'pa.visit_instructions',
+
+                'pa.latitude',
+                'pa.longitude',
+                'pa.plot_image',
+                'pa.image_capture_datetime',
+
+                'pa.possession_certificate',
+                'pa.site_engineer_file',
+
+                'pa.verified_by',
+                'pa.verified_at',
+                'pa.created_at',
+                'pa.updated_at',
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selected Filter
+        |--------------------------------------------------------------------------
+        */
+        switch ($filter) {
+            case 'schedule_pending':
+                $applicationsQuery
+                    ->whereNull('pa.id');
+                break;
+
+            case 'awaiting_citizen':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['visit scheduled']
+                    );
+                break;
+
+            case 'field_visit_pending':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['slot selected']
+                    );
+                break;
+
+            case 'document_verification':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['site verified']
+                    );
+                break;
+
+            case 'verified':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['verified']
+                    );
+                break;
+        }
+
+        $applications = $applicationsQuery
+            ->orderByRaw(
+                'CASE
+                WHEN pa.updated_at IS NULL
+                THEN 1
+                ELSE 0
+            END'
+            )
+            ->orderByDesc('pa.updated_at')
+            ->orderBy('o.OwnerName')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $filterLabels = [
+            'all' => 'Total Eligible',
+            'schedule_pending' => 'Schedule Pending',
+            'awaiting_citizen' =>
+                'Confirmation Pending From Citizen',
+            'field_visit_pending' =>
+                'Physical/Site Visit Pending',
+            'document_verification' =>
+                'Document Verification',
+            'verified' => 'Possession Given',
+        ];
+
+        return view(
+            'mmgay.super-admin.possession-list',
+            compact(
+                'applications',
+                'counts',
+                'filter',
+                'filterLabels',
+                'phase',
+                'districtId',
+                'blockId',
+                'villageId',
+                'districts',
+                'blocks',
+                'villages',
+                'perPage'
+            )
+        );
+    }
+
+    private function applyPossessionStatusFilter(
+        $query,
+        string $filter
+    ) {
+        $statusExpression = "
+        LOWER(
+            TRIM(
+                COALESCE(
+                    pa.physical_possession_status,
+                    ''
+                )
+            )
+        )
+    ";
+
+        switch ($filter) {
+            case 'schedule_pending':
+                $query->whereNull('pa.id');
+                break;
+
+            case 'awaiting_citizen':
+                $query
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['visit scheduled']
+                    );
+                break;
+
+            case 'field_visit_pending':
+                $query
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['slot selected']
+                    );
+                break;
+
+            case 'document_verification':
+                $query
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['site verified']
+                    );
+                break;
+
+            case 'verified':
+                $query
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['verified']
+                    );
+                break;
+        }
+
+        return $query;
+    }
+
+    public function possessionExportCsv(Request $request)
+    {
+        $filter = (string) $request->query(
+            'filter',
+            'all'
+        );
+
+        $allowedFilters = [
+            'all',
+            'schedule_pending',
+            'awaiting_citizen',
+            'field_visit_pending',
+            'document_verification',
+            'verified',
+        ];
+
+        if (!in_array($filter, $allowedFilters, true)) {
+            $filter = 'all';
+        }
+
+        $query = $this->possessionBaseQuery($request);
+
+        $query = $this->applyPossessionStatusFilter(
+            $query,
+            $filter
+        );
+
+        $records = $query
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Phase',
+
+                'v.VillageName',
+                'f.FlatNo',
+
+                'pa.application_number',
+                'pa.physical_possession_status',
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.possession_date',
+                'pa.verified_at',
+            ])
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerName')
+            ->get();
+
+        $fileName = 'Possession_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.csv';
+
+        return response()->streamDownload(
+            function () use ($records) {
+                $handle = fopen('php://output', 'w');
+
+                if ($handle === false) {
+                    throw new \RuntimeException(
+                        'CSV stream could not be opened.'
+                    );
+                }
+
+                fwrite($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'Sr. No.',
+                    'Owner ID',
+                    'Applicant Name',
+                    'Father / Husband',
+                    'Mobile Number',
+                    'Registration Number',
+                    'PPP ID',
+                    'Member ID',
+                    'Flat Number',
+                    'Village',
+                    'Phase',
+                    'Application Number',
+                    'Possession Status',
+                    'Meeting Slot',
+                    'Citizen Visit Date',
+                    'Possession Date',
+                    'Verified At',
+                ]);
+
+                foreach ($records as $index => $record) {
+                    fputcsv($handle, [
+                        $index + 1,
+                        $record->OwnerId,
+                        $record->OwnerName,
+                        $record->FatherHusbandName,
+                        $record->MobileNo,
+                        $record->RegistrationNo,
+                        $record->PPPId,
+                        $record->MemberId,
+                        $record->FlatNo,
+                        $record->VillageName,
+                        $record->Phase,
+                        $record->application_number,
+                        $record->physical_possession_status
+                        ?: 'Schedule Pending',
+                        $record->meeting_slot,
+                        $record->citizen_visit_date,
+                        $record->possession_date,
+                        $record->verified_at,
+                    ]);
+                }
+
+                fclose($handle);
+            },
+            $fileName,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
+    public function possessionPrint(
+        Request $request,
+        string $filter = 'all'
+    ) {
+        $allowedFilters = [
+            'all',
+            'schedule_pending',
+            'awaiting_citizen',
+            'field_visit_pending',
+            'document_verification',
+            'verified',
+        ];
+
+        abort_unless(
+            in_array($filter, $allowedFilters, true),
+            404
+        );
+
+        $query = $this->possessionBaseQuery($request);
+
+        $query = $this->applyPossessionStatusFilter(
+            $query,
+            $filter
+        );
+
+        $applications = $query
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Phase',
+
+                'v.VillageName',
+                'f.FlatNo',
+
+                'pa.application_number',
+                'pa.physical_possession_status',
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.possession_date',
+                'pa.verified_at',
+            ])
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerName')
+            ->get();
+
+        $filterLabels = [
+            'all' => 'Total Eligible',
+            'schedule_pending' => 'Schedule Pending',
+            'awaiting_citizen' =>
+                'Confirmation Pending From Citizen',
+            'field_visit_pending' =>
+                'Physical/Site Visit Pending',
+            'document_verification' =>
+                'Document Verification',
+            'verified' => 'Possession Given',
+        ];
+
+        return view(
+            'mmgay.super-admin.possession-print',
+            compact(
+                'applications',
+                'filter',
+                'filterLabels'
             )
         );
     }
@@ -897,172 +1601,394 @@ class SuperAdminController extends Controller
         ];
     }
 
-    public function villageReportData(Request $request)
+    // Village Function Start 
+
+    private function villageReportPhase(Request $request): ?int
     {
-        $phase = $request->phase;
-        $villageId = $request->village_id;
+        $phase = (string) $request->input('phase', '');
+
+        return in_array($phase, ['1', '2', '3'], true)
+            ? (int) $phase
+            : null;
+    }
+
+    private function villageReportVillageId(Request $request): ?int
+    {
+        return $request->filled('village_id')
+            ? (int) $request->input('village_id')
+            : null;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Optimized Village Report Query
+    |--------------------------------------------------------------------------
+    | OwnerMaster केवल एक बार scan होगा।
+    |--------------------------------------------------------------------------
+    */
+    private function villageReportQuery(Request $request)
+    {
+        $phase = $this->villageReportPhase($request);
+        $villageId = $this->villageReportVillageId($request);
 
         /*
         |--------------------------------------------------------------------------
-        | Main grouped query
+        | Beneficiary Summary
+        |--------------------------------------------------------------------------
+        | Village grouping : OwnerMaster.VillageId
+        | Allotment check  : OwnerMaster.FlatId = FlatMaster.FlatId
         |--------------------------------------------------------------------------
         */
-        $baseQuery = DB::table('VillageMaster as v')
-
-            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
-                $join->on('v.VillageId', '=', 'o.VillageId');
-
-                if (!empty($phase)) {
-                    $join->where('o.Phase', '=', $phase);
-                }
-            })
-
+        $beneficiarySummary = DB::table('OwnerMaster as o')
             ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->when($phase !== null, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase);
+            })
+            ->when($villageId !== null, function ($query) use ($villageId) {
+                $query->where('o.VillageId', $villageId);
+            })
+            ->selectRaw("
+            o.VillageId,
 
+            COUNT(*) AS RegisteredBeneficiaries,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS AllottedBeneficiaries,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                        AND COALESCE(o.IsApproved, 0) = 1
+                        AND COALESCE(o.IsPaid, 0) = 1
+                        AND COALESCE(o.IsRejected, 0) = 0
+                        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS ApprovedPaid,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                        AND COALESCE(o.IsApproved, 0) = 1
+                        AND COALESCE(o.IsPaid, 0) = 0
+                        AND COALESCE(o.IsRejected, 0) = 0
+                        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS ApprovedUnpaid,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                        AND COALESCE(o.IsApproved, 0) = 0
+                        AND COALESCE(o.IsRejected, 0) = 0
+                        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS PendingApprovalPayment,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                        AND COALESCE(o.IsRejected, 0) = 1
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS Rejected,
+
+            SUM(
+                CASE
+                    WHEN f.FlatId IS NOT NULL
+                        AND COALESCE(o.IsAllotmentCancelled, 0) = 1
+                    THEN 1
+                    ELSE 0
+                END
+            ) AS AllotmentCancelled
+        ")
+            ->groupBy('o.VillageId');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Final Village Report
+        |--------------------------------------------------------------------------
+        */
+        return DB::table('VillageMaster as v')
+            ->leftJoinSub(
+                $beneficiarySummary,
+                'beneficiary_summary',
+                function ($join) {
+                    $join->on(
+                        'beneficiary_summary.VillageId',
+                        '=',
+                        'v.VillageId'
+                    );
+                }
+            )
+            ->where('v.plots', '>', 0)
+            ->when($phase !== null, function ($query) use ($phase) {
+                $query->where('v.Phase', $phase);
+            })
+            ->when($villageId !== null, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            })
+            ->selectRaw("
+            v.VillageId,
+            v.VillageName,
+            v.Phase,
+            COALESCE(v.plots, 0) AS TotalPlots,
+
+            COALESCE(
+                beneficiary_summary.RegisteredBeneficiaries,
+                0
+            ) AS RegisteredBeneficiaries,
+
+            COALESCE(
+                beneficiary_summary.AllottedBeneficiaries,
+                0
+            ) AS AllottedBeneficiaries,
+
+            COALESCE(
+                beneficiary_summary.ApprovedPaid,
+                0
+            ) AS ApprovedPaid,
+
+            COALESCE(
+                beneficiary_summary.ApprovedUnpaid,
+                0
+            ) AS ApprovedUnpaid,
+
+            COALESCE(
+                beneficiary_summary.PendingApprovalPayment,
+                0
+            ) AS PendingApprovalPayment,
+
+            COALESCE(
+                beneficiary_summary.Rejected,
+                0
+            ) AS Rejected,
+
+            COALESCE(
+                beneficiary_summary.AllotmentCancelled,
+                0
+            ) AS AllotmentCancelled
+        ")
+            ->orderBy('v.Phase')
+            ->orderBy('v.VillageName');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Common Data
+    |--------------------------------------------------------------------------
+    */
+
+    private function dashboardAllotmentStats(Request $request): object
+    {
+        $phase = $this->villageReportPhase($request);
+
+        $villageId = $this->villageReportVillageId($request);
+
+        return DB::table('OwnerMaster as o')
+            ->join(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+            ->when($phase !== null, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase);
+            })
+            ->when($villageId !== null, function ($query) use ($villageId) {
+                $query->where('o.VillageId', $villageId);
+            })
+            ->selectRaw("
+            COUNT(*) AS AllottedBeneficiaries,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN o.IsApproved = 1
+                            AND o.IsPaid = 1
+                            AND o.IsAllotmentCancelled = 0
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS ApprovedPaid,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN o.IsApproved = 1
+                            AND o.IsPaid = 0
+                            AND o.IsAllotmentCancelled = 0
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS ApprovedUnpaid,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN o.IsApproved = 0
+                            AND o.IsPaid = 0
+                            AND o.IsRejected = 0
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS PendingApprovalPayment,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN o.IsRejected = 1
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS Rejected,
+
+            COALESCE(
+                SUM(
+                    CASE
+                        WHEN o.IsAllotmentCancelled = 1
+                        THEN 1
+                        ELSE 0
+                    END
+                ),
+                0
+            ) AS AllotmentCancelled
+        ")
+            ->first();
+    }
+
+
+    private function villageReportData(
+        Request $request,
+        bool $paginate = true
+    ): array {
+        $phase = $this->villageReportPhase($request);
+
+        /*
+        |--------------------------------------------------------------------------
+        | केवल एक database query
+        |--------------------------------------------------------------------------
+        */
+        $allReportRows = $this->villageReportQuery($request)->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Gross Total
+        |--------------------------------------------------------------------------
+        */
+        $grossTotal = (object) [
+            'TotalVillages' =>
+                $allReportRows->count(),
+
+            'TotalPlots' =>
+                (int) $allReportRows->sum('TotalPlots'),
+
+            'RegisteredBeneficiaries' =>
+                (int) $allReportRows->sum(
+                    'RegisteredBeneficiaries'
+                ),
+
+            'AllottedBeneficiaries' =>
+                (int) $allReportRows->sum(
+                    'AllottedBeneficiaries'
+                ),
+
+            'ApprovedPaid' =>
+                (int) $allReportRows->sum('ApprovedPaid'),
+
+            'ApprovedUnpaid' =>
+                (int) $allReportRows->sum('ApprovedUnpaid'),
+
+            'PendingApprovalPayment' =>
+                (int) $allReportRows->sum(
+                    'PendingApprovalPayment'
+                ),
+
+            'Rejected' =>
+                (int) $allReportRows->sum('Rejected'),
+
+            'AllotmentCancelled' =>
+                (int) $allReportRows->sum(
+                    'AllotmentCancelled'
+                ),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Screen Pagination
+        |--------------------------------------------------------------------------
+        | केवल 260 villages हैं, इसलिए collection pagination fast रहेगी।
+        |--------------------------------------------------------------------------
+        */
+        if ($paginate) {
+            $perPage = 50;
+
+            $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+            $currentItems = $allReportRows
+                ->forPage($currentPage, $perPage)
+                ->values();
+
+            $report = new LengthAwarePaginator(
+                $currentItems,
+                $allReportRows->count(),
+                $perPage,
+                $currentPage,
+                [
+                    'path' => $request->url(),
+                    'query' => $request->query(),
+                ]
+            );
+        } else {
+            /*
+            |--------------------------------------------------------------------------
+            | Print और PDF में सभी 260 villages
+            |--------------------------------------------------------------------------
+            */
+            $report = $allReportRows;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village Dropdown
+        |--------------------------------------------------------------------------
+        */
+        $villages = DB::table('VillageMaster as v')
+            ->whereNotNull('v.plots')
             ->where('v.plots', '>', 0)
 
-            ->when($phase, function ($query) use ($phase) {
-                $query->where('v.phase', '=', $phase);
-            })
-
-            ->when($villageId, function ($query) use ($villageId) {
-                $query->where('v.VillageId', '=', $villageId);
+            ->when($phase !== null, function ($query) use ($phase) {
+                $query->where('v.Phase', $phase);
             })
 
             ->select([
                 'v.VillageId',
                 'v.VillageName',
-                'v.phase as Phase',
-                'v.plots as TotalPlots',
+                'v.Phase',
             ])
 
-            ->selectRaw("
-            COUNT(DISTINCT o.OwnerId) AS RegisteredBeneficiaries,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                THEN o.OwnerId
-            END) AS AllottedBeneficiaries,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                    AND o.IsApproved = 1
-                    AND o.IsPaid = 1
-                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-                THEN o.OwnerId
-            END) AS ApprovedPaid,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                    AND o.IsApproved = 1
-                    AND COALESCE(o.IsPaid, 0) = 0
-                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-                THEN o.OwnerId
-            END) AS ApprovedUnpaid,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                    AND COALESCE(o.IsApproved, 0) = 0
-                    AND COALESCE(o.IsPaid, 0) = 0
-                    AND COALESCE(o.IsRejected, 0) = 0
-                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-                THEN o.OwnerId
-            END) AS PendingApprovalPayment,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                    AND o.IsRejected = 1
-                THEN o.OwnerId
-            END) AS Rejected,
-
-            COUNT(DISTINCT CASE
-                WHEN f.FlatId IS NOT NULL
-                    AND o.IsAllotmentCancelled = 1
-                THEN o.OwnerId
-            END) AS AllotmentCancelled
-        ")
-
-            ->groupBy([
-                'v.VillageId',
-                'v.VillageName',
-                'v.phase',
-                'v.plots',
-            ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fast pagination count
-        |--------------------------------------------------------------------------
-        | Laravel को grouped query की expensive count query चलाने से रोकता है।
-        */
-        $totalVillages = DB::table('VillageMaster as v')
-            ->where('v.plots', '>', 0)
-
-            ->when($phase, function ($query) use ($phase) {
-                $query->where('v.phase', '=', $phase);
-            })
-
-            ->when($villageId, function ($query) use ($villageId) {
-                $query->where('v.VillageId', '=', $villageId);
-            })
-
-            ->count();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Gross totals directly from database
-        |--------------------------------------------------------------------------
-        | पूरी collection PHP memory में load नहीं होगी।
-        */
-        $grossTotal = DB::query()
-            ->fromSub(clone $baseQuery, 'village_report')
-            ->selectRaw("
-            COUNT(*) AS TotalVillages,
-            COALESCE(SUM(TotalPlots), 0) AS TotalPlots,
-            COALESCE(SUM(RegisteredBeneficiaries), 0) AS RegisteredBeneficiaries,
-            COALESCE(SUM(AllottedBeneficiaries), 0) AS AllottedBeneficiaries,
-            COALESCE(SUM(ApprovedPaid), 0) AS ApprovedPaid,
-            COALESCE(SUM(ApprovedUnpaid), 0) AS ApprovedUnpaid,
-            COALESCE(SUM(PendingApprovalPayment), 0) AS PendingApprovalPayment,
-            COALESCE(SUM(Rejected), 0) AS Rejected,
-            COALESCE(SUM(AllotmentCancelled), 0) AS AllotmentCancelled
-        ")
-            ->first();
-
-        /*
-        |--------------------------------------------------------------------------
-        | 50 records per page
-        |--------------------------------------------------------------------------
-        */
-        $report = (clone $baseQuery)
+            ->orderBy('v.Phase')
             ->orderBy('v.VillageName')
-            ->paginate(
-                perPage: 50,
-                columns: ['*'],
-                pageName: 'page',
-                page: null,
-                total: $totalVillages
-            )
-            ->withQueryString();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Village dropdown
-        |--------------------------------------------------------------------------
-        */
-        $villages = DB::table('VillageMaster as v')
-            ->where('v.plots', '>', 0)
-
-            ->when($phase, function ($query) use ($phase) {
-                $query->where('v.phase', '=', $phase);
-            })
-
-            ->orderBy('v.VillageName')
-
-            ->get([
-                'v.VillageId',
-                'v.VillageName',
-            ]);
+            ->get();
 
         return [
             'report' => $report,
@@ -1071,37 +1997,482 @@ class SuperAdminController extends Controller
         ];
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Page
+    |--------------------------------------------------------------------------
+    */
     public function villageWiseReport(Request $request)
     {
-        $data = $this->villageReportData($request);
-
         return view(
             'mmgay.super-admin.village-report',
-            $data
+            $this->villageReportData($request, true)
         );
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report PDF
+    |--------------------------------------------------------------------------
+    | paginate=false होने के कारण सभी matching villages आएंगे।
+    | बिना filters के केवल plots > 0 वाले 260 villages आएंगे।
+    |--------------------------------------------------------------------------
+    */
     public function villageReportPdf(Request $request)
     {
-        $data = $this->villageReportData($request);
+        $data = $this->villageReportData($request, false);
 
         $pdf = Pdf::loadView(
             'mmgay.super-admin.village-report-pdf',
             $data
+        )
+            ->setPaper('a4', 'landscape')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->download(
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.pdf'
         );
-
-        $pdf->setPaper('A4', 'landscape');
-
-        return $pdf->download('Village_Report.pdf');
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Print
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportPrint(Request $request)
+    {
+        $data = $this->villageReportData($request, false);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Keep only valid villages with plots
+        |--------------------------------------------------------------------------
+        */
+        $report = collect($data['report'] ?? [])
+            ->filter(function ($row) {
+                return !empty($row->VillageId)
+                    && (int) ($row->TotalPlots ?? 0) > 0;
+            })
+
+            /*
+            |--------------------------------------------------------------------------
+            | Remove duplicate village rows
+            |--------------------------------------------------------------------------
+            */
+            ->unique(function ($row) {
+                return (string) $row->VillageId;
+            })
+
+            ->sortBy([
+                ['Phase', 'asc'],
+                ['VillageName', 'asc'],
+            ])
+            ->values();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Print records
+        |--------------------------------------------------------------------------
+        */
+        $data['report'] = $report;
+        $data['totalVillages'] = $report->count();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Totals from only printed villages
+        |--------------------------------------------------------------------------
+        */
+        $data['grossTotal'] = (object) [
+            'TotalPlots' => (int) $report->sum(
+                fn($row) => (int) ($row->TotalPlots ?? 0)
+            ),
+
+            'RegisteredBeneficiaries' => (int) $report->sum(
+                fn($row) => (int) ($row->RegisteredBeneficiaries ?? 0)
+            ),
+
+            'AllottedBeneficiaries' => (int) $report->sum(
+                fn($row) => (int) ($row->AllottedBeneficiaries ?? 0)
+            ),
+
+            'ApprovedPaid' => (int) $report->sum(
+                fn($row) => (int) ($row->ApprovedPaid ?? 0)
+            ),
+
+            'ApprovedUnpaid' => (int) $report->sum(
+                fn($row) => (int) ($row->ApprovedUnpaid ?? 0)
+            ),
+
+            'PendingApprovalPayment' => (int) $report->sum(
+                fn($row) => (int) ($row->PendingApprovalPayment ?? 0)
+            ),
+
+            'Rejected' => (int) $report->sum(
+                fn($row) => (int) ($row->Rejected ?? 0)
+            ),
+
+            'AllotmentCancelled' => (int) $report->sum(
+                fn($row) => (int) ($row->AllotmentCancelled ?? 0)
+            ),
+        ];
+
+        return view(
+            'mmgay.super-admin.village-report-print',
+            $data
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report CSV
+    |--------------------------------------------------------------------------
+    | cursor() से records stream होंगे और memory कम लगेगी।
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportCsv(Request $request)
+    {
+        $fileName = 'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.csv';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Query केवल एक बार
+        |--------------------------------------------------------------------------
+        */
+        $rows = $this->villageReportQuery($request)->get();
+
+        $allotmentStats = $this->dashboardAllotmentStats($request);
+
+        $grossTotal = [
+            'TotalPlots' => (int) $rows->sum(
+                fn($row) => (int) ($row->TotalPlots ?? 0)
+            ),
+
+            'RegisteredBeneficiaries' => (int) $rows->sum(
+                fn($row) => (int) ($row->RegisteredBeneficiaries ?? 0)
+            ),
+
+            'AllottedBeneficiaries' =>
+                (int) ($allotmentStats->AllottedBeneficiaries ?? 0),
+
+            'ApprovedPaid' =>
+                (int) ($allotmentStats->ApprovedPaid ?? 0),
+
+            'ApprovedUnpaid' =>
+                (int) ($allotmentStats->ApprovedUnpaid ?? 0),
+
+            'PendingApprovalPayment' =>
+                (int) ($allotmentStats->PendingApprovalPayment ?? 0),
+
+            'Rejected' =>
+                (int) ($allotmentStats->Rejected ?? 0),
+
+            'AllotmentCancelled' =>
+                (int) ($allotmentStats->AllotmentCancelled ?? 0),
+        ];
+
+        return response()->streamDownload(
+            function () use ($rows, $grossTotal) {
+                $handle = fopen('php://output', 'w');
+
+                if ($handle === false) {
+                    throw new \RuntimeException(
+                        'CSV stream could not be opened.'
+                    );
+                }
+
+                fwrite($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'Sr. No.',
+                    'Village',
+                    'Phase',
+                    'Total Plots',
+                    'Applicants',
+                    'Allotted',
+                    'Approved & Paid',
+                    'Approved & Unpaid',
+                    'Yet to be Approved',
+                    'Rejected',
+                    'Cancelled',
+                ]);
+
+                foreach ($rows as $index => $row) {
+                    fputcsv($handle, [
+                        $index + 1,
+                        $row->VillageName ?? '-',
+                        $row->Phase ?? '-',
+                        (int) ($row->TotalPlots ?? 0),
+                        (int) ($row->RegisteredBeneficiaries ?? 0),
+                        (int) ($row->AllottedBeneficiaries ?? 0),
+                        (int) ($row->ApprovedPaid ?? 0),
+                        (int) ($row->ApprovedUnpaid ?? 0),
+                        (int) ($row->PendingApprovalPayment ?? 0),
+                        (int) ($row->Rejected ?? 0),
+                        (int) ($row->AllotmentCancelled ?? 0),
+                    ]);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Empty separator row
+                |--------------------------------------------------------------------------
+                */
+                fputcsv($handle, []);
+
+                /*
+                |--------------------------------------------------------------------------
+                | Gross Total row
+                |--------------------------------------------------------------------------
+                */
+                fputcsv($handle, [
+                    '',
+                    'Gross Total',
+                    '',
+                    $grossTotal['TotalPlots'],
+                    $grossTotal['RegisteredBeneficiaries'],
+                    $grossTotal['AllottedBeneficiaries'],
+                    $grossTotal['ApprovedPaid'],
+                    $grossTotal['ApprovedUnpaid'],
+                    $grossTotal['PendingApprovalPayment'],
+                    $grossTotal['Rejected'],
+                    $grossTotal['AllotmentCancelled'],
+                ]);
+
+                fclose($handle);
+            },
+            $fileName,
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' =>
+                    'no-store, no-cache, must-revalidate',
+            ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Excel
+    |--------------------------------------------------------------------------
+    */
     public function villageReportExcel(Request $request)
     {
         return Excel::download(
             new VillageReportExport($request),
-            'Village_Report.xlsx'
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.xlsx'
         );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Site Development
+    |--------------------------------------------------------------------------
+    | यहां phase filter जानबूझकर development query पर नहीं लगाया गया है।
+    | VillageId से उस village के सभी development updates दिखेंगे।
+    |--------------------------------------------------------------------------
+    */
+    public function villageSiteDevelopment(
+        Request $request,
+        int $villageId
+    ) {
+        $village = DB::table('VillageMaster as v')
+            ->where('v.VillageId', $villageId)
+            ->select([
+                'v.VillageId',
+                'v.VillageName',
+                'v.Phase',
+                'v.DistrictId',
+                'v.BlockId',
+            ])
+            ->first();
+
+        if (!$village) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Village record not found.',
+                'records' => [],
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Direct indexed lookup
+        |--------------------------------------------------------------------------
+        */
+        $records = DB::table('mmgay_site_developments as sd')
+            ->where('sd.village_id', '=', $villageId)
+            ->select([
+                'sd.id',
+                'sd.district_id',
+                'sd.block_id',
+                'sd.village_id',
+                'sd.phase',
+
+                'sd.road_status',
+                'sd.water_status',
+                'sd.electricity_status',
+                'sd.sewerage_status',
+
+                'sd.remarks',
+                'sd.updated_by',
+
+                'sd.created_at',
+                'sd.updated_at',
+
+                'sd.road_photo',
+                'sd.water_photo',
+                'sd.electricity_photo',
+                'sd.sewerage_photo',
+            ])
+            ->orderByDesc('sd.id')
+            ->limit(20)
+            ->get();
+
+        $records = $records
+            ->map(function ($record) {
+                return [
+                    'id' => (int) $record->id,
+
+                    'district_id' => $record->district_id,
+                    'block_id' => $record->block_id,
+                    'village_id' => $record->village_id,
+                    'phase' => $record->phase,
+
+                    'road_status' =>
+                        filled($record->road_status)
+                        ? $record->road_status
+                        : 'Not Updated',
+
+                    'water_status' =>
+                        filled($record->water_status)
+                        ? $record->water_status
+                        : 'Not Updated',
+
+                    'electricity_status' =>
+                        filled($record->electricity_status)
+                        ? $record->electricity_status
+                        : 'Not Updated',
+
+                    'sewerage_status' =>
+                        filled($record->sewerage_status)
+                        ? $record->sewerage_status
+                        : 'Not Updated',
+
+                    'remarks' =>
+                        $record->remarks ?: 'No remarks added.',
+
+                    'updated_by' =>
+                        $record->updated_by ?: '-',
+
+                    'created_at' =>
+                        $this->formatDevelopmentDate(
+                            $record->created_at
+                        ),
+
+                    'updated_at' =>
+                        $this->formatDevelopmentDate(
+                            $record->updated_at
+                        ),
+
+                    'road_photo_url' =>
+                        $this->siteDevelopmentPhotoUrl(
+                            $record->road_photo
+                        ),
+
+                    'water_photo_url' =>
+                        $this->siteDevelopmentPhotoUrl(
+                            $record->water_photo
+                        ),
+
+                    'electricity_photo_url' =>
+                        $this->siteDevelopmentPhotoUrl(
+                            $record->electricity_photo
+                        ),
+
+                    'sewerage_photo_url' =>
+                        $this->siteDevelopmentPhotoUrl(
+                            $record->sewerage_photo
+                        ),
+                ];
+            })
+            ->values();
+
+        return response()->json([
+            'success' => true,
+
+            'village' => [
+                'id' => $village->VillageId,
+                'name' => $village->VillageName,
+                'phase' => $village->Phase,
+            ],
+
+            'total_records' => $records->count(),
+            'records' => $records,
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Development Date Formatter
+    |--------------------------------------------------------------------------
+    */
+    private function formatDevelopmentDate($date): ?string
+    {
+        if (blank($date)) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($date)
+                ->format('d-m-Y h:i A');
+        } catch (\Throwable $exception) {
+            return (string) $date;
+        }
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Development Photo URL
+    |--------------------------------------------------------------------------
+    */
+    private function siteDevelopmentPhotoUrl(?string $photo): ?string
+    {
+        if (empty($photo)) {
+            return null;
+        }
+
+        $photo = str_replace('\\', '/', trim($photo));
+
+        if (str_starts_with($photo, 'http')) {
+            return $photo;
+        }
+
+        if (str_starts_with($photo, '/storage/')) {
+            return asset(ltrim($photo, '/'));
+        }
+
+        if (str_starts_with($photo, 'storage/')) {
+            return asset($photo);
+        }
+
+        if (str_starts_with($photo, 'public/')) {
+            $photo = substr($photo, 7);
+        }
+
+        return asset('storage/' . ltrim($photo, '/'));
+    }
+
+    // VIllage Function End
 
     public function applicants(Request $request)
     {

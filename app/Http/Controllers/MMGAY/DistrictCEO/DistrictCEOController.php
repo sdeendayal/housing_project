@@ -16,9 +16,6 @@ class DistrictCEOController extends Controller
     public function dashboard(Request $request, $phase = 'all')
     {
         $user = auth()->user();
-
-
-
         /*
         |--------------------------------------------------------------------------
         | Logged-in User District
@@ -31,9 +28,6 @@ class DistrictCEOController extends Controller
         if (!$districtId) {
             abort(404, 'District not found.');
         }
-
-
-
         /*
         |--------------------------------------------------------------------------
         | Phase Filter
@@ -375,6 +369,57 @@ END) AS RegistryUnmatchedWithoutMobile,
 
         /*
         |--------------------------------------------------------------------------
+        | Possession Totals
+        |--------------------------------------------------------------------------
+        | Only Registry Matched beneficiaries are considered as
+        | "Possession to be given".
+        |--------------------------------------------------------------------------
+        */
+        $possessionCountQuery = DB::table('OwnerMaster as po')
+            ->join('VillageMaster as pv', function ($join) {
+                $join->on('po.VillageId', '=', 'pv.VillageId')
+                    ->on('po.DistrictId', '=', 'pv.DistrictId');
+            })
+            ->join('FlatMaster as pf', 'po.FlatId', '=', 'pf.FlatId')
+            ->join('registary as pr', 'po.MobileNo', '=', 'pr.SecondPartyMobile')
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.owner_id',
+                '=',
+                'po.OwnerId'
+            )
+            ->where('po.DistrictId', $districtId)
+            ->where('pv.DistrictId', $districtId)
+            ->where('pv.plots', '>', 0)
+            ->where('po.IsApproved', 1)
+            ->where('po.IsPaid', 1)
+            ->where('po.IsAllotmentCancelled', 0)
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('po.Phase', $phase)
+                    ->where('pv.phase', $phase);
+            })
+            ->when($isAllPhase, function ($query) {
+                $query->whereColumn('po.Phase', 'pv.phase');
+            })
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where('po.VillageId', $villageId);
+            });
+
+        $totalPossessionGiven = (clone $possessionCountQuery)
+            ->whereRaw(
+                "LOWER(TRIM(COALESCE(pa.physical_possession_status, ''))) = ?",
+                ['verified']
+            )
+            ->distinct()
+            ->count('po.OwnerId');
+
+        $totalPossessionPending = max(
+            0,
+            $totalRegistryMatched - $totalPossessionGiven
+        );
+
+        /*
+        |--------------------------------------------------------------------------
         | Dashboard Totals
         |--------------------------------------------------------------------------
         */
@@ -415,8 +460,8 @@ END) AS RegistryUnmatchedWithoutMobile,
             |----------------------------------------------------------------------
             */
             'totalRegisteredBeneficiaries' => $totalRegistryMatched,
-            'totalPossessionGiven' => null,
-            'totalPossessionPending' => null,
+            'totalPossessionGiven' => $totalPossessionGiven,
+            'totalPossessionPending' => $totalPossessionPending,
 
             /*
             |----------------------------------------------------------------------
@@ -480,6 +525,754 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'reportParams'
             )
         );
+    }
+
+    public function possessionList(Request $request, string $filter = 'all')
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        if (!$districtId) {
+            abort(404, 'District not found.');
+        }
+
+        $allowedFilters = [
+            'all',
+            'schedule_pending',
+            'awaiting_citizen',
+            'field_visit_pending',
+            'possession_pending',
+            'verified',
+        ];
+
+        if (!in_array($filter, $allowedFilters, true)) {
+            abort(404);
+        }
+
+        $phase = (string) $request->query('phase', 'all');
+
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 'all';
+            }
+        }
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->village_id
+            : null;
+
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->when($phase !== 'all', function ($query) use ($phase) {
+                $query->where('v.phase', $phase);
+            })
+            ->select([
+                'v.VillageId',
+                'v.VillageName',
+                'v.phase',
+            ])
+            ->orderBy('v.phase')
+            ->orderBy('v.VillageName')
+            ->get();
+
+        if (
+            $villageId &&
+            !$villages->contains(function ($village) use ($villageId) {
+                return (int) $village->VillageId === $villageId;
+            })
+        ) {
+            $villageId = null;
+        }
+
+        $perPage = (int) $request->query('per_page', 20);
+
+        if (!in_array($perPage, [20, 50, 100, 200], true)) {
+            $perPage = 20;
+        }
+
+        $isPrint = $request->boolean('print');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Eligible Beneficiaries
+        |--------------------------------------------------------------------------
+        | These are the same Registry Matched beneficiaries used by the
+        | dashboard's "Possession to be given" card.
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', function ($join) {
+                $join->on('o.VillageId', '=', 'v.VillageId')
+                    ->on('o.DistrictId', '=', 'v.DistrictId');
+            })
+
+            ->join(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.owner_id',
+                '=',
+                'o.OwnerId'
+            )
+
+            ->where('o.DistrictId', $districtId)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+
+            ->whereNotNull('o.MobileNo')
+            ->where('o.MobileNo', '<>', '')
+
+            /*
+            |--------------------------------------------------------------------------
+            | Registry Matched Beneficiaries
+            |--------------------------------------------------------------------------
+            */
+            ->whereExists(function ($query) {
+                $query
+                    ->selectRaw('1')
+                    ->from('registary as r')
+                    ->whereColumn(
+                        'r.SecondPartyMobile',
+                        'o.MobileNo'
+                    );
+            })
+
+            ->when(
+                $phase !== 'all',
+                function ($query) use ($phase) {
+                    $query
+                        ->where('o.Phase', $phase)
+                        ->where('v.phase', $phase);
+                }
+            )
+
+            ->when(
+                $phase === 'all',
+                function ($query) {
+                    $query->whereColumn(
+                        'o.Phase',
+                        'v.phase'
+                    );
+                }
+            )
+
+            ->when(
+                $villageId,
+                function ($query) use ($villageId) {
+                    $query->where(
+                        'o.VillageId',
+                        $villageId
+                    );
+                }
+            );
+
+        $statusExpression = "
+            LOWER(TRIM(COALESCE(pa.physical_possession_status, '')))
+        ";
+
+        $counts = [
+            'all' => (clone $baseQuery)
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'schedule_pending' => (clone $baseQuery)
+                ->where(function ($query) {
+                    $query->whereNull('pa.id')
+                        ->orWhereNull('pa.physical_possession_status')
+                        ->orWhere('pa.physical_possession_status', '');
+                })
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'awaiting_citizen' => (clone $baseQuery)
+                ->whereRaw($statusExpression . ' = ?', ['visit scheduled'])
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'field_visit_pending' => (clone $baseQuery)
+                ->whereRaw($statusExpression . ' = ?', ['slot selected'])
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'verified' => (clone $baseQuery)
+                ->whereRaw($statusExpression . ' = ?', ['verified'])
+                ->distinct()
+                ->count('o.OwnerId'),
+
+            'possession_pending' => (clone $baseQuery)
+                ->whereNotNull('pa.id')
+                ->whereRaw(
+                    $statusExpression . " NOT IN (?, ?, ?)",
+                    [
+                        'visit scheduled',
+                        'slot selected',
+                        'verified',
+                    ]
+                )
+                ->distinct()
+                ->count('o.OwnerId'),
+        ];
+
+        $applicationsQuery = (clone $baseQuery)
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.Relation',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.FlatId',
+                'o.Phase',
+                'o.OwnerAddress',
+                'o.Caste',
+                'o.DCRemarks',
+
+                'v.VillageName',
+
+                'f.FlatNo',
+
+                'pa.id as application_id',
+                'pa.secure_id',
+                'pa.application_number',
+                'pa.status',
+                'pa.remarks',
+                'pa.physical_possession_status',
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.visit_slot_1',
+                'pa.visit_slot_2',
+                'pa.visit_slot_3',
+                'pa.visit_instructions',
+                'pa.latitude',
+                'pa.longitude',
+                'pa.plot_image',
+                'pa.image_capture_datetime',
+                'pa.possession_certificate',
+                'pa.site_engineer_file',
+                'pa.verified_by',
+                'pa.verified_at',
+                'pa.created_at',
+                'pa.updated_at',
+            ]);
+
+        switch ($filter) {
+            case 'schedule_pending':
+                $applicationsQuery->where(function ($query) {
+                    $query->whereNull('pa.id')
+                        ->orWhereNull('pa.physical_possession_status')
+                        ->orWhere('pa.physical_possession_status', '');
+                });
+                break;
+
+            case 'awaiting_citizen':
+                $applicationsQuery->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['visit scheduled']
+                );
+                break;
+
+            case 'field_visit_pending':
+                $applicationsQuery->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['slot selected']
+                );
+                break;
+
+            case 'possession_pending':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . " NOT IN (?, ?, ?)",
+                        [
+                            'visit scheduled',
+                            'slot selected',
+                            'verified',
+                        ]
+                    );
+                break;
+
+            case 'verified':
+                $applicationsQuery->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['verified']
+                );
+                break;
+        }
+
+        $applications = $applicationsQuery
+            ->orderByRaw(
+                'CASE WHEN pa.updated_at IS NULL THEN 1 ELSE 0 END'
+            )
+            ->orderByDesc('pa.updated_at')
+            ->orderBy('o.OwnerName')
+            ->paginate($isPrint ? 200 : $perPage)
+            ->withQueryString();
+
+        $filterLabels = [
+            'all' => 'Total Eligible',
+            'schedule_pending' => 'Schedule Pending',
+            'awaiting_citizen' => 'Awaiting Citizen',
+            'field_visit_pending' => 'Field Visit Pending',
+            'possession_pending' => 'Possession Pending',
+            'verified' => 'Verified',
+        ];
+
+        return view(
+            'mmgay.district-ceo.possession-list',
+            compact(
+                'applications',
+                'counts',
+                'filter',
+                'filterLabels',
+                'phase',
+                'villageId',
+                'villages',
+                'perPage',
+                'isPrint'
+            )
+        );
+    }
+
+    public function exportPossessionCsv(Request $request)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        abort_unless($districtId, 404, 'District not found.');
+
+        $filter = trim(
+            (string) $request->query('filter', 'all')
+        );
+
+        $allowedFilters = [
+            'all',
+            'schedule_pending',
+            'awaiting_citizen',
+            'field_visit_pending',
+            'possession_pending',
+            'verified',
+        ];
+
+        if (!in_array($filter, $allowedFilters, true)) {
+            $filter = 'all';
+        }
+
+        $phase = (string) $request->query('phase', 'all');
+
+        if ($phase !== 'all') {
+            $phase = (int) $phase;
+
+            if (!in_array($phase, [1, 2, 3], true)) {
+                $phase = 'all';
+            }
+        }
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->query('village_id')
+            : null;
+
+        $query = DB::table('OwnerMaster as o')
+            ->join('VillageMaster as v', function ($join) {
+                $join->on('o.VillageId', '=', 'v.VillageId')
+                    ->on('o.DistrictId', '=', 'v.DistrictId');
+            })
+            ->join(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.owner_id',
+                '=',
+                'o.OwnerId'
+            )
+            ->where('o.DistrictId', $districtId)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+            ->whereNotNull('o.MobileNo')
+            ->where('o.MobileNo', '<>', '')
+            ->whereExists(function ($subQuery) {
+                $subQuery
+                    ->selectRaw('1')
+                    ->from('registary as r')
+                    ->whereColumn(
+                        'r.SecondPartyMobile',
+                        'o.MobileNo'
+                    );
+            })
+            ->when($phase !== 'all', function ($query) use ($phase) {
+                $query
+                    ->where('o.Phase', $phase)
+                    ->where('v.phase', $phase);
+            })
+            ->when($phase === 'all', function ($query) {
+                $query->whereColumn(
+                    'o.Phase',
+                    'v.phase'
+                );
+            })
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where(
+                    'o.VillageId',
+                    $villageId
+                );
+            });
+
+        $statusExpression = "
+        LOWER(
+            TRIM(
+                COALESCE(
+                    pa.physical_possession_status,
+                    ''
+                )
+            )
+        )
+    ";
+
+        switch ($filter) {
+            case 'schedule_pending':
+                $query->where(function ($query) {
+                    $query
+                        ->whereNull('pa.id')
+                        ->orWhereNull(
+                            'pa.physical_possession_status'
+                        )
+                        ->orWhere(
+                            'pa.physical_possession_status',
+                            ''
+                        );
+                });
+                break;
+
+            case 'awaiting_citizen':
+                $query->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['visit scheduled']
+                );
+                break;
+
+            case 'field_visit_pending':
+                $query->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['slot selected']
+                );
+                break;
+
+            case 'possession_pending':
+                $query
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression .
+                        ' NOT IN (?, ?, ?)',
+                        [
+                            'visit scheduled',
+                            'slot selected',
+                            'verified',
+                        ]
+                    );
+                break;
+
+            case 'verified':
+                $query->whereRaw(
+                    $statusExpression . ' = ?',
+                    ['verified']
+                );
+                break;
+        }
+
+        $records = $query
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Phase',
+                'v.VillageName',
+                'f.FlatNo',
+                'pa.application_number',
+                'pa.physical_possession_status',
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.possession_date',
+                'pa.verified_at',
+            ])
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerName')
+            ->get();
+
+        $filename = 'possession-applications-' .
+            $filter .
+            '-' .
+            now()->format('Y-m-d-His') .
+            '.csv';
+
+        return response()->streamDownload(
+            function () use ($records) {
+                $handle = fopen('php://output', 'w');
+
+                // Excel UTF-8 support
+                fwrite($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'Sr. No.',
+                    'Owner ID',
+                    'Applicant Name',
+                    'Father / Husband Name',
+                    'Mobile Number',
+                    'Registration Number',
+                    'PPP ID',
+                    'Member ID',
+                    'Flat Number',
+                    'Village',
+                    'Phase',
+                    'Application Number',
+                    'Possession Status',
+                    'Meeting Slot',
+                    'Citizen Visit Date',
+                    'Possession Date',
+                    'Verified At',
+                ]);
+
+                foreach ($records as $index => $record) {
+                    fputcsv($handle, [
+                        $index + 1,
+                        $record->OwnerId,
+                        $record->OwnerName,
+                        $record->FatherHusbandName,
+                        $record->MobileNo,
+                        $record->RegistrationNo,
+                        $record->PPPId,
+                        $record->MemberId,
+                        $record->FlatNo,
+                        $record->VillageName,
+                        $record->Phase,
+                        $record->application_number,
+                        $record->physical_possession_status
+                        ?: 'Schedule Pending',
+                        $record->meeting_slot,
+                        $record->citizen_visit_date,
+                        $record->possession_date,
+                        $record->verified_at,
+                    ]);
+                }
+
+                fclose($handle);
+            },
+            $filename,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
+
+    private function formatDevelopmentDate($date): ?string
+    {
+        if (blank($date)) {
+            return null;
+        }
+
+        try {
+            return \Carbon\Carbon::parse($date)
+                ->format('d-m-Y h:i A');
+        } catch (\Throwable $exception) {
+            return (string) $date;
+        }
+    }
+
+    public function siteDevelopment(Request $request, int $villageId)
+    {
+        $user = auth()->user();
+
+        $districtId = DB::table('DistrictMaster')
+            ->where('DistrictName', $user->district_name)
+            ->value('DistrictId');
+
+        if (!$districtId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'District not found.',
+                'records' => [],
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Village
+        |--------------------------------------------------------------------------
+        */
+        $village = DB::table('VillageMaster as v')
+            ->where('v.VillageId', $villageId)
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->select([
+                'v.VillageId',
+                'v.VillageName',
+                'v.Phase',
+                'v.DistrictId',
+                'v.BlockId',
+            ])
+            ->first();
+
+        if (!$village) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Village record not found.',
+                'records' => [],
+            ], 404);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Site Development Records
+        |--------------------------------------------------------------------------
+        */
+        $records = DB::table('mmgay_site_developments as sd')
+            ->where('sd.district_id', $districtId)
+            ->where('sd.village_id', $villageId)
+            ->select([
+                'sd.id',
+                'sd.district_id',
+                'sd.block_id',
+                'sd.village_id',
+                'sd.phase',
+
+                'sd.road_status',
+                'sd.water_status',
+                'sd.electricity_status',
+                'sd.sewerage_status',
+
+                'sd.remarks',
+                'sd.updated_by',
+
+                'sd.created_at',
+                'sd.updated_at',
+
+                'sd.road_photo',
+                'sd.water_photo',
+                'sd.electricity_photo',
+                'sd.sewerage_photo',
+            ])
+            ->orderByDesc('sd.id')
+            ->limit(20)
+            ->get();
+
+        $records = $records
+            ->map(function ($record) {
+
+                return [
+
+                    'id' => (int) $record->id,
+
+                    'district_id' => $record->district_id,
+                    'block_id' => $record->block_id,
+                    'village_id' => $record->village_id,
+                    'phase' => $record->phase,
+
+                    'road_status' => filled($record->road_status)
+                        ? $record->road_status
+                        : 'Not Started',
+
+                    'water_status' => filled($record->water_status)
+                        ? $record->water_status
+                        : 'Not Started',
+
+                    'electricity_status' => filled($record->electricity_status)
+                        ? $record->electricity_status
+                        : 'Not Started',
+
+                    'sewerage_status' => filled($record->sewerage_status)
+                        ? $record->sewerage_status
+                        : 'Not Started',
+
+                    'remarks' => $record->remarks ?: 'No remarks available.',
+
+                    'updated_by' => $record->updated_by ?: '-',
+
+                    'created_at' => $this->formatDevelopmentDate($record->created_at),
+
+                    'updated_at' => $this->formatDevelopmentDate($record->updated_at),
+
+                    'road_photo_url' => $this->siteDevelopmentPhotoUrl($record->road_photo),
+
+                    'water_photo_url' => $this->siteDevelopmentPhotoUrl($record->water_photo),
+
+                    'electricity_photo_url' => $this->siteDevelopmentPhotoUrl($record->electricity_photo),
+
+                    'sewerage_photo_url' => $this->siteDevelopmentPhotoUrl($record->sewerage_photo),
+
+                ];
+            })
+            ->values();
+
+        return response()->json([
+
+            'success' => true,
+
+            'village' => [
+                'id' => $village->VillageId,
+                'name' => $village->VillageName,
+                'phase' => $village->Phase,
+            ],
+
+            'total_records' => $records->count(),
+
+            'records' => $records,
+
+        ]);
+    }
+
+    private function siteDevelopmentPhotoUrl(?string $photo): ?string
+    {
+        if (!$photo) {
+            return null;
+        }
+
+        $photo = ltrim($photo, '/');
+
+        if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
+            return $photo;
+        }
+
+        if (str_starts_with($photo, 'storage/')) {
+            return asset($photo);
+        }
+
+        return asset('storage/' . $photo);
     }
 
     public function list($phase, $status)

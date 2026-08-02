@@ -593,6 +593,110 @@
 
         </div>
 
+        <section class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div class="flex items-center gap-3">
+
+                    <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-700">
+                        <span class="material-symbols-outlined">
+                            key
+                        </span>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-800">
+                            Possession
+                        </h2>
+
+                        <p class="text-xs text-slate-500">
+                            Registered beneficiaries eligible for possession
+                        </p>
+                    </div>
+
+                </div>
+
+                <span id="possessionLoader"
+                    class="inline-flex items-center gap-2 rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    <span class="h-3 w-3 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600"></span>
+
+                    Loading
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 bg-slate-50/70 p-5 md:grid-cols-3">
+
+                <a id="possessionEligibleLink" href="#"
+                    class="rounded-xl border border-slate-200 border-l-4 border-l-violet-500 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500">
+                                Possession to be given
+                            </p>
+
+                            <h3 id="possessionEligibleCount" class="mt-1 text-2xl font-bold text-violet-700">
+                                —
+                            </h3>
+                        </div>
+
+                        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                            <span class="material-symbols-outlined">
+                                assignment_turned_in
+                            </span>
+                        </div>
+
+                    </div>
+                </a>
+
+                <a id="possessionGivenLink" href="#"
+                    class="rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500">
+                                Possession Given
+                            </p>
+
+                            <h3 id="possessionGivenCount" class="mt-1 text-2xl font-bold text-emerald-700">
+                                —
+                            </h3>
+                        </div>
+
+                        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                            <span class="material-symbols-outlined">
+                                verified
+                            </span>
+                        </div>
+
+                    </div>
+                </a>
+
+                <a id="possessionPendingLink" href="#"
+                    class="rounded-xl border border-slate-200 border-l-4 border-l-amber-500 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                    <div class="flex items-center justify-between">
+
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500">
+                                Possession Pending
+                            </p>
+
+                            <h3 id="possessionPendingCount" class="mt-1 text-2xl font-bold text-amber-700">
+                                —
+                            </h3>
+                        </div>
+
+                        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                            <span class="material-symbols-outlined">
+                                hourglass_empty
+                            </span>
+                        </div>
+
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
 
 
     </main>

@@ -1,6 +1,540 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    document.addEventListener(
+        'DOMContentLoaded',
+        function() {
+            loadPossessionStats();
+        }
+    );
+
+    function dashboardPossessionParams() {
+        const params = new URLSearchParams();
+
+        const phase =
+            document.getElementById('phase')?.value || '';
+
+        const districtId =
+            document.getElementById('district')?.value || '';
+
+        const blockId =
+            document.getElementById('block')?.value || '';
+
+        const villageId =
+            document.getElementById('village')?.value || '';
+
+        if (phase) {
+            params.set('phase', phase);
+        }
+
+        if (districtId) {
+            params.set('district_id', districtId);
+        }
+
+        if (blockId) {
+            params.set('block_id', blockId);
+        }
+
+        if (villageId) {
+            params.set('village_id', villageId);
+        }
+
+        return params;
+    }
+
+    async function loadPossessionStats() {
+        const loader =
+            document.getElementById('possessionLoader');
+
+        const params =
+            dashboardPossessionParams();
+
+        try {
+            const response = await fetch(
+                "{{ route('admin.possession.stats') }}" +
+                '?' +
+                params.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Possession statistics could not be loaded.'
+                );
+            }
+
+            const result = await response.json();
+
+            document.getElementById(
+                'possessionEligibleCount'
+            ).textContent = Number(
+                result.totals.eligible || 0
+            ).toLocaleString('en-IN');
+
+            document.getElementById(
+                'possessionGivenCount'
+            ).textContent = Number(
+                result.totals.given || 0
+            ).toLocaleString('en-IN');
+
+            document.getElementById(
+                'possessionPendingCount'
+            ).textContent = Number(
+                result.totals.pending || 0
+            ).toLocaleString('en-IN');
+
+            const query = params.toString();
+
+            document.getElementById(
+                    'possessionEligibleLink'
+                ).href =
+                "{{ url('/super-admin/possession/all') }}" +
+                (query ? '?' + query : '');
+
+            document.getElementById(
+                    'possessionGivenLink'
+                ).href =
+                "{{ url('/super-admin/possession/verified') }}" +
+                (query ? '?' + query : '');
+
+            document.getElementById(
+                    'possessionPendingLink'
+                ).href =
+                "{{ url('/super-admin/possession/possession_pending') }}" +
+                (query ? '?' + query : '');
+
+        } catch (error) {
+            console.error(error);
+
+            document.getElementById(
+                'possessionEligibleCount'
+            ).textContent = 'Error';
+
+            document.getElementById(
+                'possessionGivenCount'
+            ).textContent = 'Error';
+
+            document.getElementById(
+                'possessionPendingCount'
+            ).textContent = 'Error';
+        } finally {
+            loader?.classList.add('hidden');
+        }
+    }
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const phase =
+            document.getElementById('possessionPhase');
+
+        const district =
+            document.getElementById('possessionDistrict');
+
+        const block =
+            document.getElementById('possessionBlock');
+
+        const village =
+            document.getElementById('possessionVillage');
+
+        phase?.addEventListener('change', function() {
+            if (district) {
+                district.value = '';
+            }
+
+            if (block) {
+                block.value = '';
+            }
+
+            if (village) {
+                village.value = '';
+            }
+        });
+
+        district?.addEventListener('change', function() {
+            if (block) {
+                block.value = '';
+            }
+
+            if (village) {
+                village.value = '';
+            }
+        });
+
+        block?.addEventListener('change', function() {
+            if (village) {
+                village.value = '';
+            }
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById(
+            'siteDevelopmentModal'
+        );
+
+        const content = document.getElementById(
+            'siteDevelopmentContent'
+        );
+
+        const title = document.getElementById(
+            'siteDevelopmentTitle'
+        );
+
+        const subtitle = document.getElementById(
+            'siteDevelopmentSubtitle'
+        );
+
+        const closeButton = document.getElementById(
+            'closeSiteDevelopmentModal'
+        );
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+
+            document.body.classList.remove('overflow-hidden');
+
+            content.innerHTML = '';
+        }
+
+        function showModal() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function statusCard(label, status, icon) {
+            return `
+            <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700">
+                        <span class="material-symbols-outlined">
+                            ${icon}
+                        </span>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-semibold uppercase text-slate-500">
+                            ${label}
+                        </p>
+
+                        <p class="mt-1 font-bold text-slate-800">
+                            ${escapeHtml(status || 'Not Updated')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        function photoCard(label, url) {
+            if (!url) {
+                return `
+                <div class="rounded-2xl border border-slate-200 bg-white p-3">
+                    <div class="flex h-36 items-center justify-center rounded-xl bg-slate-100 text-slate-400">
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-3xl">
+                                image_not_supported
+                            </span>
+
+                            <p class="mt-1 text-xs">
+                                No ${escapeHtml(label)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            }
+
+            return `
+            <a
+                href="${escapeHtml(url)}"
+                target="_blank"
+                rel="noopener"
+                class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+                <img
+                    src="${escapeHtml(url)}"
+                    alt="${escapeHtml(label)}"
+                    loading="lazy"
+                    class="h-36 w-full object-cover transition group-hover:scale-105"
+                >
+
+                <div class="px-3 py-2 text-sm font-semibold text-slate-700">
+                    ${escapeHtml(label)}
+                </div>
+            </a>
+        `;
+        }
+
+        function renderRecord(record, index) {
+            return `
+            <article class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+                <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-5 py-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800">
+                            Development Record #${index + 1}
+                        </h3>
+
+                        <p class="mt-1 text-xs text-slate-500">
+                            Updated:
+                            ${escapeHtml(
+                                record.updated_at
+                                || record.created_at
+                                || '-'
+                            )}
+                        </p>
+                    </div>
+
+                    <span class="rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700">
+                        Phase ${escapeHtml(record.phase || '-')}
+                    </span>
+                </div>
+
+                <div class="p-5">
+
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        ${statusCard(
+                            'Road Connectivity',
+                            record.road_status,
+                            'add_road'
+                        )}
+
+                        ${statusCard(
+                            'Drinking Water Supply (PHED)',
+                            record.water_status,
+                            'water_drop'
+                        )}
+
+                        ${statusCard(
+                            'Electricity',
+                            record.electricity_status,
+                            'electric_bolt'
+                        )}
+
+                        ${statusCard(
+                            'Sewerage',
+                            record.sewerage_status,
+                            'plumbing'
+                        )}
+                    </div>
+
+                    <div class="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        ${photoCard(
+                            'Road Photo',
+                            record.road_photo_url
+                        )}
+
+                        ${photoCard(
+                            'Water Photo',
+                            record.water_photo_url
+                        )}
+
+                        ${photoCard(
+                            'Electricity Photo',
+                            record.electricity_photo_url
+                        )}
+
+                        ${photoCard(
+                            'Sewerage Photo',
+                            record.sewerage_photo_url
+                        )}
+                    </div>
+
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                        <p class="text-xs font-semibold uppercase text-slate-500">
+                            Remarks
+                        </p>
+
+                        <p class="mt-2 whitespace-pre-line text-sm leading-6 text-slate-700">
+                            ${escapeHtml(
+                                record.remarks
+                                || 'No remarks added.'
+                            )}
+                        </p>
+                    </div>
+
+                </div>
+            </article>
+        `;
+        }
+
+        document.addEventListener(
+            'click',
+            async function(event) {
+                const button = event.target.closest(
+                    '.site-development-button'
+                );
+
+                if (!button) {
+                    return;
+                }
+
+                const url = button.dataset.url;
+
+                title.textContent =
+                    button.dataset.villageName ||
+                    'Site Development';
+
+                subtitle.textContent =
+                    `Phase ${button.dataset.phase || '-'}`;
+
+                content.innerHTML = `
+                <div class="flex min-h-[300px] items-center justify-center">
+                    <div class="text-center">
+                        <svg
+                            class="mx-auto h-11 w-11 animate-spin text-cyan-600"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                        >
+                            <circle
+                                class="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                stroke-width="4"
+                            ></circle>
+
+                            <path
+                                class="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8v4a4 4
+                                   0 00-4 4H4z"
+                            ></path>
+                        </svg>
+
+                        <p class="mt-3 text-sm text-slate-500">
+                            Loading development records...
+                        </p>
+                    </div>
+                </div>
+            `;
+
+                showModal();
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+
+                        credentials: 'same-origin',
+
+                        cache: 'no-store',
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok || !data.success) {
+                        throw new Error(
+                            data.message ||
+                            'Unable to load records.'
+                        );
+                    }
+
+                    if (
+                        !Array.isArray(data.records) ||
+                        data.records.length === 0
+                    ) {
+                        content.innerHTML = `
+                        <div class="flex min-h-[300px] items-center justify-center">
+                            <div class="text-center">
+                                <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-200 text-slate-500">
+                                    <span class="material-symbols-outlined text-3xl">
+                                        construction
+                                    </span>
+                                </div>
+
+                                <h3 class="mt-4 font-bold text-slate-700">
+                                    No development record found
+                                </h3>
+
+                                <p class="mt-1 text-sm text-slate-500">
+                                    No development records are available for this village.
+                                </p>
+                            </div>
+                        </div>
+                    `;
+
+                        return;
+                    }
+
+                    content.innerHTML = `
+                    <div class="space-y-5">
+                        ${data.records
+                            .map(renderRecord)
+                            .join('')}
+                    </div>
+                `;
+                } catch (error) {
+                    console.error(error);
+
+                    content.innerHTML = `
+                    <div class="flex min-h-[300px] items-center justify-center">
+                        <div class="text-center">
+                            <span class="material-symbols-outlined text-4xl text-rose-600">
+                                error
+                            </span>
+
+                            <h3 class="mt-3 font-bold text-slate-700">
+                                Development data load नहीं हुआ
+                            </h3>
+
+                            <p class="mt-1 text-sm text-slate-500">
+                                ${escapeHtml(error.message)}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                }
+            }
+        );
+
+        closeButton?.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            closeModal();
+        });
+
+        modal?.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (
+                event.key === 'Escape' &&
+                !modal.classList.contains('hidden')
+            ) {
+                closeModal();
+            }
+        });
+    });
+</script>
+
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const button = document.getElementById('excelExportButton');
         const loader = document.getElementById('excelLoader');

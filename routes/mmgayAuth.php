@@ -55,6 +55,42 @@ Route::middleware(['auth', 'mmgay'])->group(function () {
         ->where('phase', 'all|1|2|3')
         ->name('district.dashboard');
 
+    Route::get(
+        '/district-ceo/dashboard/site-development/{villageId}',
+        [DistrictCEOController::class, 'siteDevelopment']
+    )
+        ->whereNumber('villageId')
+        ->name('district.site-development.show');
+
+    Route::get(
+        '/district-ceo/possession/{filter?}',
+        [DistrictCEOController::class, 'possessionList']
+    )
+        ->where(
+            'filter',
+            'all|schedule_pending|awaiting_citizen|field_visit_pending|possession_pending|verified'
+        )
+        ->name('district.possession.list');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Existing possession detail route
+    |--------------------------------------------------------------------------
+    | Point this route to your existing detail method. That method and its
+    | verified/non-verified Blade design do not need to be changed.
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/district-ceo/possession-export/csv',
+        [DistrictCEOController::class, 'exportPossessionCsv']
+    )->name('district.possession.export.csv');
+
+    Route::get(
+        '/district-ceo/physical-possession/{secure_id}',
+        [DistrictCEOController::class, 'physicalPossessionView']
+    )->name('district.possession.show');
+
     /*
     |--------------------------------------------------------------------------
     | District CEO Reports
@@ -259,15 +295,27 @@ Route::prefix('super-admin')
         Route::get('/district-report/pdf', [SuperAdminController::class, 'districtReportPdf'])
             ->name('admin.district.report.pdf');
 
-        Route::get('/village-report', [SuperAdminController::class, 'villageWiseReport'])
-            ->name('admin.village.report');
+        //  Village Report Routes Start
+    
+        Route::get('/village-report', [SuperAdminController::class, 'villageWiseReport'])->name('admin.village.report');
 
-        Route::get('/village-report/excel', [SuperAdminController::class, 'villageReportExcel'])
-            ->name('admin.village.report.excel');
+        Route::get('/village-report/excel', [SuperAdminController::class, 'villageReportExcel'])->name('admin.village.report.excel');
 
-        Route::get('/village-report/pdf', [SuperAdminController::class, 'villageReportPdf'])
-            ->name('admin.village.report.pdf');
+        Route::get('/village-report/pdf', [SuperAdminController::class, 'villageReportPdf'])->name('admin.village.report.pdf');
 
+        Route::get('/village-report/csv', [SuperAdminController::class, 'villageReportCsv'])->name('admin.village.report.csv');
+
+        Route::get('/village-report/print', [SuperAdminController::class, 'villageReportPrint'])->name('admin.village.report.print');
+
+        Route::get(
+            '/village-report/site-development/{villageId}',
+            [SuperAdminController::class, 'villageSiteDevelopment']
+        )
+            ->whereNumber('villageId')
+            ->name('admin.village.site-development');
+
+        //  Village Report Routes End    
+    
         Route::get('/applicants', [SuperAdminController::class, 'applicants'])
             ->name('superadmin.applicants.index');
 
@@ -298,6 +346,45 @@ Route::prefix('super-admin')
 
         Route::get('/registration/export/pdf', [SuperAdminController::class, 'exportRegistrationPdf'])
             ->name('admin.registration.export.pdf');
+
+        // Possession Routes Start
+    
+        Route::get(
+            '/possession/stats',
+            [SuperAdminController::class, 'possessionStats']
+        )->name('admin.possession.stats');
+
+        Route::get(
+            '/possession/{filter?}',
+            [SuperAdminController::class, 'possessionList']
+        )
+            ->where(
+                'filter',
+                'all|schedule_pending|awaiting_citizen|field_visit_pending|document_verification|verified'
+            )
+            ->name('admin.possession.list');
+
+        Route::get(
+            '/possession-print/{filter?}',
+            [SuperAdminController::class, 'possessionPrint']
+        )
+            ->where(
+                'filter',
+                'all|schedule_pending|awaiting_citizen|field_visit_pending|document_verification|verified'
+            )
+            ->name('admin.possession.print');
+
+        Route::get(
+            '/possession/application/{secureId}',
+            [SuperAdminController::class, 'possessionView']
+        )
+            ->name('admin.possession.show');
+
+        Route::get(
+            '/possession-export/csv',
+            [SuperAdminController::class, 'possessionExportCsv']
+        )
+            ->name('admin.possession.export.csv');
 
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');

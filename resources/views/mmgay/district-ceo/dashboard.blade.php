@@ -650,13 +650,20 @@
         {{-- ================================================================ --}}
         {{-- 4. Possession --}}
         {{-- ================================================================ --}}
+        @php
+            $possessionParams = array_filter(
+                [
+                    'phase' => $phase ?? 'all',
+                    'village_id' => $villageId ?? null,
+                ],
+                static fn($value) => $value !== null && $value !== '',
+            );
+        @endphp
+
         <section class="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
-            {{-- Section Header --}}
             <div class="flex items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-
                 <div class="flex items-center gap-3">
-
                     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-100">
                         <span class="material-symbols-outlined text-[22px] text-purple-700">
                             key
@@ -669,114 +676,107 @@
                         </h2>
 
                         <p class="mt-0.5 text-xs text-slate-500">
-                            Beneficiary possession statistics
+                            Registered beneficiaries eligible for possession
                         </p>
                     </div>
-
                 </div>
-
-                <span
-                    class="shrink-0 rounded-full border border-purple-200 bg-purple-50 px-3 py-1 text-[11px] font-semibold text-purple-700">
-                    Coming Soon
-                </span>
-
             </div>
 
-            {{-- Possession Cards --}}
             <div class="bg-slate-50/70 p-4">
-
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-                    {{-- Registered Beneficiaries --}}
-                    <div
-                        class="group rounded-xl border border-slate-200 border-l-4 border-l-violet-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
-
+                    <a
+                        id="possessionEligibleLink"
+                        href="{{ route(
+                            'district.possession.list',
+                            array_merge(['filter' => 'all'], $possessionParams),
+                        ) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-violet-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    >
                         <div class="flex items-center justify-between gap-3">
-
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession to be given
                                 </p>
 
-                                <h3 id="registeredBeneficiaries" class="mt-1 text-2xl font-bold text-violet-700">
+                                <h3
+                                    id="registeredBeneficiaries"
+                                    class="mt-1 text-2xl font-bold text-violet-700"
+                                >
                                     {{ number_format($totals['totalRegisteredBeneficiaries'] ?? 0) }}
                                 </h3>
                             </div>
 
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50">
                                 <span class="material-symbols-outlined text-[23px] text-violet-600">
                                     assignment_turned_in
                                 </span>
                             </div>
-
                         </div>
+                    </a>
 
-                    </div>
-
-                    {{-- Possession Given --}}
-                    <div
-                        class="group rounded-xl border border-dashed border-slate-300 border-l-4 border-l-purple-400 bg-white px-4 py-3 shadow-sm">
-
+                    <a
+                        id="possessionGivenLink"
+                        href="{{ route(
+                            'district.possession.list',
+                            array_merge(['filter' => 'verified'], $possessionParams),
+                        ) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    >
                         <div class="flex items-center justify-between gap-3">
-
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession Given
                                 </p>
 
-                                <h3 id="possessionGiven" class="mt-1 text-2xl font-bold text-slate-500">
-                                    @if (is_null($totals['totalPossessionGiven'] ?? null))
-                                        —
-                                    @else
-                                        {{ number_format($totals['totalPossessionGiven']) }}
-                                    @endif
+                                <h3
+                                    id="possessionGiven"
+                                    class="mt-1 text-2xl font-bold text-emerald-700"
+                                >
+                                    {{ number_format($totals['totalPossessionGiven'] ?? 0) }}
                                 </h3>
                             </div>
 
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-purple-100">
-                                <span class="material-symbols-outlined text-[23px] text-purple-600">
-                                    vpn_key
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                                <span class="material-symbols-outlined text-[23px] text-emerald-600">
+                                    verified
                                 </span>
                             </div>
-
                         </div>
+                    </a>
 
-                    </div>
-
-                    {{-- Possession Pending --}}
-                    <div
-                        class="group rounded-xl border border-dashed border-slate-300 border-l-4 border-l-amber-400 bg-white px-4 py-3 shadow-sm">
-
+                    <a
+                        id="possessionPendingLink"
+                        href="{{ route(
+                            'district.possession.list',
+                            array_merge(['filter' => 'possession_pending'], $possessionParams),
+                        ) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-amber-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                    >
                         <div class="flex items-center justify-between gap-3">
-
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession Pending
                                 </p>
 
-                                <h3 id="possessionPending" class="mt-1 text-2xl font-bold text-slate-500">
-                                    @if (is_null($totals['totalPossessionPending'] ?? null))
-                                        —
-                                    @else
-                                        {{ number_format($totals['totalPossessionPending']) }}
-                                    @endif
+                                <h3
+                                    id="possessionPending"
+                                    class="mt-1 text-2xl font-bold text-amber-700"
+                                >
+                                    {{ number_format($totals['totalPossessionPending'] ?? 0) }}
                                 </h3>
                             </div>
 
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
                                 <span class="material-symbols-outlined text-[23px] text-amber-600">
                                     hourglass_empty
                                 </span>
                             </div>
-
                         </div>
-
-                    </div>
+                    </a>
 
                 </div>
-
             </div>
-
         </section>
 
         {{-- ================================================================ --}}
@@ -899,15 +899,34 @@
                                 </td>
 
                                 {{-- Village --}}
+                                {{-- Village --}}
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <a href="{{ route('district.dashboard.applicants', [
-                                        'phase' => $phase,
-                                        'village_id' => $row->VillageId,
-                                        'status' => 'all_applicants',
-                                    ]) }}"
-                                        class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md">
-                                        {{ $row->VillageName ?? '-' }}
-                                    </a>
+
+                                    <div class="flex items-center gap-2">
+
+                                        <button type="button" title="Site Development"
+                                            class="siteDevelopmentBtn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 transition hover:bg-cyan-600 hover:text-white"
+                                            data-village-id="{{ $row->VillageId }}"
+                                            data-village-name="{{ $row->VillageName }}"
+                                            data-phase="{{ $row->Phase }}">
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                construction
+                                            </span>
+                                        </button>
+
+                                        <a href="{{ route('district.dashboard.applicants', [
+                                            'phase' => $phase,
+                                            'village_id' => $row->VillageId,
+                                            'status' => 'all_applicants',
+                                        ]) }}"
+                                            class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md">
+                                            {{ $row->VillageName ?? '-' }}
+                                        </a>
+
+
+
+                                    </div>
+
                                 </td>
 
                                 {{-- Total Plots (Not Clickable) --}}
@@ -1070,5 +1089,87 @@
         </section>
 
     </main>
+    {{-- ================================================================ --}}
+    {{-- Site Development Modal --}}
+    {{-- ================================================================ --}}
+    <div id="siteDevelopmentModal" class="fixed inset-0 z-[9999] hidden bg-slate-900/70 p-3 backdrop-blur-sm">
+        <div class="flex min-h-full items-center justify-center">
 
+            <div id="siteDevelopmentModalPanel"
+                class="w-full max-w-5xl overflow-hidden rounded-3xl bg-slate-50 shadow-2xl">
+
+                {{-- Header --}}
+                <div
+                    class="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-700 px-5 py-4 text-white">
+                    <div class="flex items-center gap-3">
+
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                            <span class="material-symbols-outlined text-[25px]">
+                                construction
+                            </span>
+                        </div>
+
+                        <div>
+                            <h2 id="siteDevelopmentVillageName" class="text-lg font-bold">
+                                Village
+                            </h2>
+
+                            <p id="siteDevelopmentPhase" class="mt-0.5 text-xs font-medium text-white/90">
+                                Phase
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <button type="button" id="closeSiteDevelopmentModal"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 transition hover:bg-white/25">
+                        <span class="material-symbols-outlined text-[25px]">
+                            close
+                        </span>
+                    </button>
+                </div>
+
+                {{-- Loading --}}
+                <div id="siteDevelopmentLoading" class="hidden px-6 py-12 text-center">
+                    <div class="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600">
+                    </div>
+
+                    <p class="mt-3 text-sm font-semibold text-slate-600">
+                        Loading site development details...
+                    </p>
+                </div>
+
+                {{-- Error --}}
+                <div id="siteDevelopmentError" class="hidden px-6 py-12 text-center">
+                    <span class="material-symbols-outlined text-[42px] text-red-400">
+                        error
+                    </span>
+
+                    <p id="siteDevelopmentErrorMessage" class="mt-2 text-sm font-semibold text-red-600">
+                        Unable to load data.
+                    </p>
+                </div>
+
+                {{-- Empty --}}
+                <div id="siteDevelopmentEmpty" class="hidden px-6 py-12 text-center">
+                    <span class="material-symbols-outlined text-[46px] text-slate-300">
+                        construction
+                    </span>
+
+                    <h3 class="mt-2 text-base font-bold text-slate-700">
+                        No Development Record
+                    </h3>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        No Site Development data is currently available for this village.
+                    </p>
+                </div>
+
+                {{-- Records --}}
+                <div id="siteDevelopmentRecords" class="space-y-4 p-4 sm:p-5"></div>
+
+            </div>
+
+        </div>
+    </div>
 @endsection

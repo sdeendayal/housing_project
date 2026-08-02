@@ -188,6 +188,9 @@
     const applicantReportBaseUrl =
         @json(route('district.dashboard.applicants'));
 
+    const siteDevelopmentBaseUrl =
+        "{{ url('/district-ceo/dashboard/site-development') }}";
+
     /*
     |--------------------------------------------------------------------------
     | Export Links
@@ -588,8 +591,31 @@
                             ${index + 1}
                         </td>
 
-                        <td class="px-4 py-3 font-medium text-slate-800">
-                            ${row.VillageName ?? '-'}
+                        <td class="px-4 py-3">
+
+                            <div class="flex items-center gap-2">
+
+                                <button
+                                    type="button"
+                                    title="Site Development"
+                                    class="siteDevelopmentBtn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 transition hover:bg-cyan-600 hover:text-white"
+                                    data-village-id="${row.VillageId}"
+                                    data-village-name="${escapeHtml(row.VillageName ?? '')}"
+                                    data-phase="${row.Phase ?? ''}"
+                                >
+                                    <span class="material-symbols-outlined text-[18px]">
+                                        construction
+                                    </span>
+                                </button>
+
+                                <a
+                                    href="${applicantReportBaseUrl}?phase=${encodeURIComponent(row.Phase ?? 'all')}&village_id=${encodeURIComponent(row.VillageId)}&status=all_applicants"
+                                    class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md"
+                                >
+                                    ${escapeHtml(row.VillageName ?? '-')}
+                                </a>  
+                            </div>
+
                         </td>
 
                         <td class="px-4 py-3 text-center">
@@ -634,6 +660,16 @@
             });
 
             $('#villageTableBody').html(tbody);
+        }
+
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
         }
 
         /*
@@ -876,6 +912,419 @@
                 }
             );
         }
+
+        /*
+|--------------------------------------------------------------------------
+| Development Status Class
+|--------------------------------------------------------------------------
+*/
+        function developmentStatusClass(status) {
+            const normalizedStatus =
+                String(status ?? '').toLowerCase();
+
+            if (normalizedStatus === 'completed') {
+                return 'bg-emerald-100 text-emerald-700';
+            }
+
+            if (
+                normalizedStatus === 'work in progress' ||
+                normalizedStatus === 'in progress'
+            ) {
+                return 'bg-amber-100 text-amber-700';
+            }
+
+            return 'bg-slate-100 text-slate-700';
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Development Photo
+        |--------------------------------------------------------------------------
+        */
+        function developmentPhoto(
+            imageUrl,
+            label
+        ) {
+            if (imageUrl) {
+                return `
+            <button
+                type="button"
+                class="siteDevelopmentPhoto block w-full overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                data-image="${escapeHtml(imageUrl)}"
+                data-label="${escapeHtml(label)}"
+            >
+                <img
+                    src="${escapeHtml(imageUrl)}"
+                    alt="${escapeHtml(label)}"
+                    class="h-44 w-full object-cover"
+                >
+
+                <div class="px-4 py-3 text-sm font-bold text-slate-800">
+                    ${escapeHtml(label)}
+                </div>
+            </button>
+        `;
+            }
+
+            return `
+        <div
+            class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+        >
+            <div
+                class="flex h-44 items-center justify-center bg-slate-100"
+            >
+                <span
+                    class="material-symbols-outlined text-[58px] text-slate-300"
+                >
+                    image
+                </span>
+            </div>
+
+            <div class="px-4 py-3 text-sm font-bold text-slate-800">
+                ${escapeHtml(label)}
+            </div>
+        </div>
+    `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Development Status Card
+        |--------------------------------------------------------------------------
+        */
+        function developmentStatusCard(icon, label, status) {
+            return `
+        <div
+            class="rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+        >
+            <div class="flex items-center gap-3">
+
+                <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-700"
+                >
+                    <span class="material-symbols-outlined text-[22px]">
+                        ${icon}
+                    </span>
+                </div>
+
+                <div class="min-w-0">
+                    <p
+                        class="text-[11px] font-bold uppercase leading-4 tracking-wide text-slate-500"
+                    >
+                        ${escapeHtml(label)}
+                    </p>
+
+                    <span
+                        class="mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-bold ${developmentStatusClass(status)}"
+                    >
+                        ${escapeHtml(status || 'Not Started')}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    `;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Render Development Records
+        |--------------------------------------------------------------------------
+        */
+        function renderSiteDevelopmentRecords(records) {
+            let html = '';
+
+            $.each(records, function(index, record) {
+                html += `
+            <article
+                class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            >
+                <div
+                    class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3"
+                >
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">
+                            Development Record #${index + 1}
+                        </h3>
+
+                        <p class="mt-0.5 text-xs text-slate-500">
+                            Updated:
+                            ${escapeHtml(record.updated_at || '-')}
+                        </p>
+                    </div>
+
+                    <span
+                        class="inline-flex rounded-full bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700"
+                    >
+                        Phase ${escapeHtml(record.phase || '-')}
+                    </span>
+                </div>
+
+                <div class="p-4">
+
+                    <div
+                        class="grid grid-cols-2 gap-3 lg:grid-cols-4"
+                    >
+                        ${developmentStatusCard(
+                            'add_road',
+                            'Road Connectivity',
+                            record.road_status
+                        )}
+
+                        ${developmentStatusCard(
+                            'water_drop',
+                            'Drinking Water',
+                            record.water_status
+                        )}
+
+                        ${developmentStatusCard(
+                            'electric_bolt',
+                            'Electricity',
+                            record.electricity_status
+                        )}
+
+                        ${developmentStatusCard(
+                            'plumbing',
+                            'Sewerage',
+                            record.sewerage_status
+                        )}
+                    </div>
+
+                    <div
+                        class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4"
+                    >
+                        ${developmentPhoto(
+                            record.road_photo_url,
+                            'Road Photo'
+                        )}
+
+                        ${developmentPhoto(
+                            record.water_photo_url,
+                            'Water Photo'
+                        )}
+
+                        ${developmentPhoto(
+                            record.electricity_photo_url,
+                            'Electricity Photo'
+                        )}
+
+                        ${developmentPhoto(
+                            record.sewerage_photo_url,
+                            'Sewerage Photo'
+                        )}
+                    </div>
+
+                    <div
+                        class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+                    >
+                        <p
+                            class="text-[11px] font-bold uppercase tracking-wide text-slate-500"
+                        >
+                            Remarks
+                        </p>
+
+                        <p
+                            class="mt-2 text-sm leading-6 text-slate-700"
+                        >
+                            ${escapeHtml(record.remarks || 'No remarks available.')}
+                        </p>
+                    </div>
+
+                </div>
+            </article>
+        `;
+            });
+
+            $('#siteDevelopmentRecords').html(html);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Open Site Development Popup
+        |--------------------------------------------------------------------------
+        */
+        $(document).on(
+            'click',
+            '.siteDevelopmentBtn',
+            function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const villageId =
+                    $(this).data('village-id');
+
+                const villageName =
+                    $(this).data('village-name');
+
+                const phase =
+                    $(this).data('phase');
+
+                $('#siteDevelopmentVillageName').text(
+                    villageName || 'Village'
+                );
+
+                $('#siteDevelopmentPhase').text(
+                    'Phase ' + (phase || '-')
+                );
+
+                $('#siteDevelopmentRecords').empty();
+                $('#siteDevelopmentError').addClass('hidden');
+                $('#siteDevelopmentEmpty').addClass('hidden');
+                $('#siteDevelopmentLoading').removeClass('hidden');
+
+                $('#siteDevelopmentModal').removeClass('hidden');
+
+                $('body').addClass('overflow-hidden');
+
+                $.ajax({
+                    url: siteDevelopmentBaseUrl +
+                        '/' +
+                        villageId,
+
+                    type: 'GET',
+
+                    dataType: 'json',
+
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+
+                    success: function(response) {
+                        $('#siteDevelopmentLoading')
+                            .addClass('hidden');
+
+                        if (!response.success) {
+                            $('#siteDevelopmentErrorMessage')
+                                .text(
+                                    response.message ||
+                                    'Data load नहीं हो सका।'
+                                );
+
+                            $('#siteDevelopmentError')
+                                .removeClass('hidden');
+
+                            return;
+                        }
+
+                        $('#siteDevelopmentVillageName')
+                            .text(response.village.name);
+
+                        $('#siteDevelopmentPhase')
+                            .text('Phase ' + response.village.phase);
+
+                        if (
+                            !response.records ||
+                            response.records.length === 0
+                        ) {
+                            $('#siteDevelopmentEmpty')
+                                .removeClass('hidden');
+
+                            return;
+                        }
+
+                        renderSiteDevelopmentRecords(
+                            response.records
+                        );
+                    },
+
+                    error: function(xhr) {
+                        $('#siteDevelopmentLoading')
+                            .addClass('hidden');
+
+                        const message =
+                            xhr.responseJSON &&
+                            xhr.responseJSON.message ?
+                            xhr.responseJSON.message :
+                            'Site Development data load नहीं हो सका।';
+
+                        $('#siteDevelopmentErrorMessage')
+                            .text(message);
+
+                        $('#siteDevelopmentError')
+                            .removeClass('hidden');
+                    }
+                });
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Site Development Popup
+        |--------------------------------------------------------------------------
+        */
+        function closeSiteDevelopmentModal() {
+            $('#siteDevelopmentModal')
+                .addClass('hidden');
+
+            $('body')
+                .removeClass('overflow-hidden');
+        }
+
+        $(document).on(
+            'click',
+            '#closeSiteDevelopmentModal',
+            closeSiteDevelopmentModal
+        );
+
+        $(document).on(
+            'click',
+            '#siteDevelopmentModal',
+            function(event) {
+                if (
+                    event.target.id ===
+                    'siteDevelopmentModal'
+                ) {
+                    closeSiteDevelopmentModal();
+                }
+            }
+        );
+
+        $(document).on(
+            'keydown',
+            function(event) {
+                if (
+                    event.key === 'Escape' &&
+                    !$('#siteDevelopmentModal')
+                    .hasClass('hidden')
+                ) {
+                    closeSiteDevelopmentModal();
+                }
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Photo Preview
+        |--------------------------------------------------------------------------
+        */
+        $(document).on(
+            'click',
+            '.siteDevelopmentPhoto',
+            function() {
+                const imageUrl =
+                    $(this).data('image');
+
+                const label =
+                    $(this).data('label');
+
+                Swal.fire({
+                    title: label || 'Site Photo',
+
+                    imageUrl: imageUrl,
+
+                    imageAlt: label ||
+                        'Site Development Photo',
+
+                    width: '900px',
+
+                    showCloseButton: true,
+
+                    showConfirmButton: false,
+
+                    background: '#ffffff'
+                });
+            }
+        );
     });
 </script>
 
