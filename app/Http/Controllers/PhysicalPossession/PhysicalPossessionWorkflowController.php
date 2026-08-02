@@ -69,7 +69,6 @@ class PhysicalPossessionWorkflowController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")
@@ -197,19 +196,13 @@ class PhysicalPossessionWorkflowController extends Controller
             $initialDeposit = (float) ($property->ReceivedAmount ?? 0);
             $assetId = $property->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -582,19 +575,13 @@ class PhysicalPossessionWorkflowController extends Controller
             $initialDeposit = (float) ($property->ReceivedAmount ?? 0);
             $assetId = $property->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -888,13 +875,8 @@ class PhysicalPossessionWorkflowController extends Controller
             ->where('IsDeleted', 0)
             ->where('IsActive', 1)
             ->sum('total_paid_amount');
-        $ledgerPaid = DB::table('ledger')
-            ->where('AssetId', $application->asset_id)
-            ->where('Is_Deleted', 0)
-            ->where('Is_Active', 1)
-            ->sum('Payment');
 
-        $totalPaid = $initialDeposit + max($installmentPaid, $ledgerPaid);
+        $totalPaid = $initialDeposit + $installmentPaid;
         $pendingAmount = max(0, $flatCost - $totalPaid);
 
         // Base64 Plot Image for DOMPDF compatibility
@@ -987,7 +969,6 @@ class PhysicalPossessionWorkflowController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")

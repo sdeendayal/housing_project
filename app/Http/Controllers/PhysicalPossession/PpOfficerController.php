@@ -56,7 +56,6 @@ class PpOfficerController extends Controller
         ])->selectRaw('
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ')->having('total_paid', '>=', 60000)->toSql()}) as sub"))
@@ -135,7 +134,6 @@ class PpOfficerController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")
@@ -296,19 +294,13 @@ class PpOfficerController extends Controller
             $initialDeposit = (float) ($purchaser->ReceivedAmount ?? 0);
             $assetId = $purchaser->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -820,7 +812,6 @@ class PpOfficerController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")

@@ -319,27 +319,38 @@ class PropertyManagementController extends Controller
 
         $dueEmiQuery->groupBy('due.AssetId');
 
-        $paidEmiQuery = DB::table('ledger as ledger')
+        $receiptSumsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $paidEmiQuery = DB::table('property_auction_detail as pad')
             ->join(
                 'property_registration as pr_paid',
                 'pr_paid.AssetId',
                 '=',
-                'ledger.AssetId'
+                'pad.AssetId'
             )
+            ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
+            ->join('installment_due as due', function($join) {
+                $join->on('due.AssetId', '=', 'pad.AssetId')
+                     ->where('due.InstallmentNumber', '=', 1);
+            })
             ->selectRaw('
-            ledger.AssetId,
-            COUNT(DISTINCT ledger.InstallmentNumber) AS paid_emi
-        ')
-            ->where('ledger.Is_Deleted', 0)
-            ->where('ledger.Is_Active', 1)
-            ->where('ledger.Payment', '>', 0)
+                pad.AssetId,
+                LEAST(
+                    (SELECT COUNT(*) FROM installment_due WHERE AssetId = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                    FLOOR((COALESCE(pad.ReceivedAmount, 0) + COALESCE(cr_sum.total_receipts, 0)) / COALESCE(NULLIF(due.EMIAmount, 0), due.DueAmount, 1))
+                ) as paid_emi
+            ')
             ->where('pr_paid.IsDeleted', 0)
             ->where('pr_paid.IsActive', 1);
 
-        // Apply the dashboard location filter before aggregating the ledger.
+        // Apply the dashboard location filter before aggregating.
         $applyLocationFilters($paidEmiQuery, 'pr_paid');
 
-        $paidEmiQuery->groupBy('ledger.AssetId');
+        $paidEmiQuery->groupBy('pad.AssetId', 'pad.ReceivedAmount', 'due.EMIAmount', 'due.DueAmount', 'cr_sum.total_receipts');
 
         $emiData = DB::query()
             ->fromSub($dueEmiQuery, 'due_summary')
