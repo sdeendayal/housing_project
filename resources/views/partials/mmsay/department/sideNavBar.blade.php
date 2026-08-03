@@ -117,13 +117,33 @@
         </p>
 
         {{-- Property Registration --}}
-        <a href="{{ $propertyUrl('registration') }}"
-            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5 text-[12px] font-medium transition-all duration-200
-           {{ $propertyMenuClass('registration') }}">
+        @php
+            $oldRegistrationActive =
+                request()->routeIs('old-registrations.*') || request()->is('mmsay-department-old-registrations*');
+
+            $oldRegistrationUrl = route(
+                'old-registrations.index',
+                array_filter([
+                    'district_id' => request('district_id'),
+                    'city_id' => request('city_id'),
+                    'sector_id' => request('sector_id'),
+                ]),
+            );
+        @endphp
+
+        <a href="{{ $oldRegistrationUrl }}"
+            class="group mb-1 flex items-center gap-3 rounded-xl border px-3 py-2.5
+           text-[12px] font-medium transition-all duration-200
+           {{ $oldRegistrationActive
+               ? 'border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm'
+               : 'border-transparent text-slate-600 hover:border-slate-100 hover:bg-slate-50 hover:text-slate-900' }}">
 
             <span
-                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-               {{ $propertyIconClass('registration') }}">
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center
+               justify-center rounded-lg text-[18px] transition
+               {{ $oldRegistrationActive
+                   ? 'bg-indigo-600 text-white shadow-sm'
+                   : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600' }}">
                 app_registration
             </span>
 
@@ -131,7 +151,7 @@
                 Property Registration
             </span>
 
-            @if (request()->is('mmsay-department-property-registration*') && $propertyView === 'registration')
+            @if ($oldRegistrationActive)
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             @endif
         </a>

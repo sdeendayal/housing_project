@@ -2,6 +2,41 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const district = document.getElementById('district_id');
+        const city = document.getElementById('city_id');
+        const sector = document.getElementById('sector_id');
+        const optionsUrl = @json(route('old-registrations.filter-options'));
+
+        const resetSelect = (element, label, disabled = true) => {
+            element.innerHTML = `<option value="">${label}</option>`;
+            element.disabled = disabled;
+        };
+
+        district.addEventListener('change', async () => {
+            resetSelect(city, district.value ? 'Loading cities...' : 'Select district first');
+            resetSelect(sector, 'Select city first');
+            if (!district.value) return;
+
+            const response = await fetch(
+                `${optionsUrl}?district_id=${encodeURIComponent(district.value)}`);
+            const data = await response.json();
+            resetSelect(city, 'All Cities', false);
+            (data.cities || []).forEach(item => city.add(new Option(item.name, item.id)));
+        });
+
+        city.addEventListener('change', async () => {
+            resetSelect(sector, city.value ? 'Loading sectors...' : 'Select city first');
+            if (!city.value) return;
+
+            const response = await fetch(`${optionsUrl}?city_id=${encodeURIComponent(city.value)}`);
+            const data = await response.json();
+            resetSelect(sector, 'All Sectors', false);
+            (data.sectors || []).forEach(item => sector.add(new Option(item.name, item.id)));
+        });
+    });
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterForm = document.getElementById('dashboardFilterForm');
         const district = document.getElementById('district_id');

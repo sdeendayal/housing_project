@@ -246,6 +246,26 @@ Route::middleware(['auth', 'role:department'])->group(function () {
 
     Route::get('/mmsay-department-property-registration', [PropertyManagementController::class, 'propertyRegistration']);
 
+    Route::get(
+        'mmsay-department-old-registrations/filter-options',
+        [PropertyManagementController::class, 'oldRegistrationFilterOptions']
+    )->name('old-registrations.filter-options');
+
+    Route::get(
+        'mmsay-department-old-registrations/csv',
+        [PropertyManagementController::class, 'oldRegistrationsCsv']
+    )->name('old-registrations.csv');
+
+    Route::get(
+        'mmsay-department-old-registrations/print',
+        [PropertyManagementController::class, 'oldRegistrationsPrint']
+    )->name('old-registrations.print');
+
+    Route::get(
+        'mmsay-department-old-registrations',
+        [PropertyManagementController::class, 'oldRegistrations']
+    )->name('old-registrations.index');
+
     // Total filtered records print
     Route::get(
         '/mmsay-department-property-registration/print-records',

@@ -145,20 +145,60 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Total registered properties
+        | Total registrations (old registration data)
         |--------------------------------------------------------------------------
+        | The old registration table stores location names instead of IDs.
+        | Resolve the selected dashboard IDs once and filter the old table by
+        | districtName, btName and wvName without adding any join to its count.
         */
 
-        $totalApplicationsQuery = DB::table('property_registration')
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1);
+        $selectedDistrictName = $districtId
+            ? optional(
+                $districts->firstWhere('DistrictId', $districtId)
+            )->DistrictName
+            : null;
 
-        $applyLocationFilters($totalApplicationsQuery);
+        $selectedCityName = $cityId
+            ? optional(
+                $cities->firstWhere('CityId', $cityId)
+            )->CityName
+            : null;
+
+        $selectedSectorName = $sectorId
+            ? optional(
+                $sectors->firstWhere('SectorId', $sectorId)
+            )->SectorName
+            : null;
+
+        $oldRegistrationCountQuery = DB::table(
+            'hfa.mmsay_old_registration_data'
+        )
+            ->when(
+                $selectedDistrictName,
+                fn($query) => $query->where(
+                    'districtName',
+                    $selectedDistrictName
+                )
+            )
+            ->when(
+                $selectedCityName,
+                fn($query) => $query->where(
+                    'btName',
+                    $selectedCityName
+                )
+            )
+            ->when(
+                $selectedSectorName,
+                fn($query) => $query->where(
+                    'wvName',
+                    $selectedSectorName
+                )
+            );
 
         $totalApplications = cache()->remember(
-            $dashboardCacheKey . ':applications',
+            $dashboardCacheKey . ':old-registration-total',
             $dashboardCacheSeconds,
-            fn() => (clone $totalApplicationsQuery)->count('AssetId')
+            fn() => (clone $oldRegistrationCountQuery)->count('id')
         );
 
         /*
@@ -378,9 +418,9 @@ class PropertyManagementController extends Controller
                 'pad.AssetId'
             )
             ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
-            ->join('installment_due as due', function($join) {
+            ->join('installment_due as due', function ($join) {
                 $join->on('due.AssetId', '=', 'pad.AssetId')
-                     ->where('due.InstallmentNumber', '=', 1);
+                    ->where('due.InstallmentNumber', '=', 1);
             })
             ->selectRaw('
                 pad.AssetId,
@@ -490,6 +530,292 @@ class PropertyManagementController extends Controller
             'latestPhysicalApplications'
         ));
     }
+
+    // OLD property registration listing. This is a legacy view and will be removed in future releases.
+
+    private function oldRegistrationFilters(Request $request): array
+    {
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+        $sectorId = $request->integer('sector_id') ?: null;
+
+        return [
+            'district_id' => $districtId,
+            'city_id' => $cityId,
+            'sector_id' => $sectorId,
+            'district_name' => $districtId
+                ? DB::table('districts')->where('DistrictId', $districtId)->value('DistrictName')
+                : null,
+            'city_name' => $cityId
+                ? DB::table('cities')->where('CityId', $cityId)->value('CityName')
+                : null,
+            'sector_name' => $sectorId
+                ? DB::table('sectors')->where('SectorId', $sectorId)->value('SectorName')
+                : null,
+            'search' => trim((string) $request->input('search')),
+        ];
+    }
+
+    private function oldRegistrationQuery(Request $request)
+    {
+        $filters = $this->oldRegistrationFilters($request);
+
+        return DB::table('hfa.mmsay_old_registration_data')
+            ->select([
+                'id',
+                'application_number',
+                'family_id',
+                'memberID',
+                'fullName',
+                'fatherFullName',
+                'mobileNo',
+                'gender',
+                'age',
+                'casteCategoryName',
+                'occupationName',
+                'familyIncome',
+                'ruralUrban',
+                'pinCode',
+                'property_category',
+                'property_details',
+                'districtName',
+                'btName',
+                'wvName',
+                'created_at',
+            ])
+            ->when(
+                $filters['district_name'],
+                fn($query, $name) =>
+                $query->where('districtName', $name)
+            )
+            ->when(
+                $filters['city_name'],
+                fn($query, $name) =>
+                $query->where('btName', $name)
+            )
+            ->when(
+                $filters['sector_name'],
+                fn($query, $name) =>
+                $query->where('wvName', $name)
+            )
+            ->when($filters['search'] !== '', function ($query) use ($filters) {
+                $search = $filters['search'];
+                $like = '%' . addcslashes($search, '%_\\') . '%';
+
+                $query->where(function ($subQuery) use ($search, $like) {
+                    $subQuery->where('application_number', 'like', $like)
+                        ->orWhere('fullName', 'like', $like)
+                        ->orWhere('fatherFullName', 'like', $like)
+                        ->orWhere('mobileNo', 'like', $like)
+                        ->orWhere('family_id', 'like', $like)
+                        ->orWhere('memberID', 'like', $like);
+
+                    if (ctype_digit($search)) {
+                        $subQuery->orWhere('id', (int) $search);
+                    }
+                });
+            });
+    }
+
+    public function oldRegistrations(Request $request)
+    {
+        $filters = $this->oldRegistrationFilters($request);
+
+        $districts = DB::table('districts')
+            ->select('DistrictId', 'DistrictName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+        $cities = $filters['district_id']
+            ? DB::table('cities')
+                ->select('CityId', 'CityName')
+                ->where('DistrictId', $filters['district_id'])
+                ->where('Is_Deleted', 0)
+                ->where('Is_Active', 1)
+                ->orderBy('CityName')
+                ->get()
+            : collect();
+
+        $sectors = $filters['city_id']
+            ? DB::table('city_sector_associations as csa')
+                ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                ->select('s.SectorId', 's.SectorName')
+                ->where('csa.CityId', $filters['city_id'])
+                ->where('csa.Is_Deleted', 0)
+                ->where('csa.Is_Active', 1)
+                ->where('s.Is_Deleted', 0)
+                ->where('s.Is_Active', 1)
+                ->distinct()
+                ->orderBy('s.SectorName')
+                ->get()
+            : collect();
+
+        $registrations = $this->oldRegistrationQuery($request)
+            ->orderByDesc('id')
+            ->paginate(50)
+            ->withQueryString();
+
+        return view('mmsay.oldRegistrations', compact(
+            'registrations',
+            'districts',
+            'cities',
+            'sectors',
+            'filters'
+        ));
+    }
+
+    public function oldRegistrationFilterOptions(Request $request)
+    {
+        if ($request->filled('district_id')) {
+            return response()->json([
+                'cities' => DB::table('cities')
+                    ->select('CityId as id', 'CityName as name')
+                    ->where('DistrictId', $request->integer('district_id'))
+                    ->where('Is_Deleted', 0)
+                    ->where('Is_Active', 1)
+                    ->orderBy('CityName')
+                    ->get(),
+            ]);
+        }
+
+        if ($request->filled('city_id')) {
+            return response()->json([
+                'sectors' => DB::table('city_sector_associations as csa')
+                    ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                    ->select('s.SectorId as id', 's.SectorName as name')
+                    ->where('csa.CityId', $request->integer('city_id'))
+                    ->where('csa.Is_Deleted', 0)
+                    ->where('csa.Is_Active', 1)
+                    ->where('s.Is_Deleted', 0)
+                    ->where('s.Is_Active', 1)
+                    ->distinct()
+                    ->orderBy('s.SectorName')
+                    ->get(),
+            ]);
+        }
+
+        return response()->json(['cities' => [], 'sectors' => []]);
+    }
+
+    public function oldRegistrationsCsv(Request $request)
+    {
+        $fileName = 'old-registrations-' . now()->format('Ymd-His') . '.csv';
+
+        return response()->streamDownload(function () use ($request) {
+            $handle = fopen('php://output', 'w');
+            fwrite($handle, "\xEF\xBB\xBF");
+
+            $propertyDetailsText = static function ($value): string {
+                $decoded = json_decode((string) $value, true);
+
+                if (!is_array($decoded)) {
+                    return trim((string) $value);
+                }
+
+                $parts = [];
+                foreach ($decoded as $key => $item) {
+                    if ($key === 'id' || $item === null || $item === '') {
+                        continue;
+                    }
+
+                    $label = ucwords(str_replace(['_', '-'], ' ', (string) $key));
+                    $displayValue = is_array($item)
+                        ? implode(', ', array_filter(array_map('strval', $item)))
+                        : (string) $item;
+
+                    if ($displayValue !== '') {
+                        $parts[] = $label . ': ' . $displayValue;
+                    }
+                }
+
+                return implode(' | ', $parts);
+            };
+
+            fputcsv($handle, [
+                'S.No.',
+                'Application No.',
+                'Family ID',
+                'Member ID',
+                'Applicant',
+                'Father Name',
+                'Mobile',
+                'Property Category',
+                'Property Details',
+                'Gender',
+                'Age',
+                'Caste Category',
+                'Occupation',
+                'Family Income',
+                'Rural/Urban',
+                'District',
+                'Block/Town',
+                'Village/Ward',
+                'PIN Code',
+                'Registration Date',
+            ]);
+
+            $serial = 1;
+
+            $this->oldRegistrationQuery($request)
+                ->orderBy('id')
+                ->chunkById(1000, function ($rows) use ($handle, &$serial, $propertyDetailsText) {
+                    foreach ($rows as $row) {
+                        fputcsv($handle, [
+                            $serial++,
+                            $row->application_number,
+                            $row->family_id,
+                            $row->memberID,
+                            $row->fullName,
+                            $row->fatherFullName,
+                            $row->mobileNo,
+                            $row->property_category,
+                            $propertyDetailsText($row->property_details),
+                            $row->gender,
+                            $row->age,
+                            $row->casteCategoryName,
+                            $row->occupationName,
+                            $row->familyIncome,
+                            $row->ruralUrban,
+                            $row->districtName,
+                            $row->btName,
+                            $row->wvName,
+                            $row->pinCode,
+                            $row->created_at,
+                        ]);
+                    }
+                }, 'id', 'id');
+
+            fclose($handle);
+        }, $fileName, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    public function oldRegistrationsPrint(Request $request)
+    {
+        $perChunk = 1000;
+        $afterId = max(0, $request->integer('after_id'));
+
+        $rows = $this->oldRegistrationQuery($request)
+            ->when($afterId, fn($query) => $query->where('id', '<', $afterId))
+            ->orderByDesc('id')
+            ->limit($perChunk + 1)
+            ->get();
+
+        $hasMore = $rows->count() > $perChunk;
+        $registrations = $rows->take($perChunk)->values();
+        $nextAfterId = $hasMore ? $registrations->last()->id : null;
+
+        return view('mmsay.oldRegistrationsPrint', compact(
+            'registrations',
+            'hasMore',
+            'nextAfterId'
+        ));
+    }
+
+    // OLD property registration listing. This is a legacy view and will be removed in future releases.
+
+
 
     public function propertyRegistration(Request $request)
     {
