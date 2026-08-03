@@ -11,6 +11,10 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (auth()->check()) {
+            $user = auth()->user();
+            if ($user->role == 'ews_department') {
+                return redirect('/ews/department/dashboard');
+            }
             return redirect('/mmsay-department-dashboard');
         }
 
@@ -52,14 +56,22 @@ class AuthController extends Controller
         if (Auth::loginUsingId($user->id)) {
             $request->session()->regenerate();
             
-            // ROLE CHECK (optional)
+            // ROLE CHECK
             if ($user->role == 'department') {
-
                 return redirect('/mmsay-department-dashboard')
+                    ->with('success', 'Login Successful');
+            } elseif ($user->role == 'ews_department') {
+                return redirect('/ews/department/dashboard')
                     ->with('success', 'Login Successful');
             }
 
-            return redirect('/dashboard');
+            try {
+                return redirect($user->dashboardRoute())
+                    ->with('success', 'Login Successful');
+            } catch (\Exception $e) {
+                return redirect('/mmsay-department-dashboard')
+                    ->with('success', 'Login Successful');
+            }
         }
 
         return back()->with('error', '❌ Login failed');

@@ -344,19 +344,25 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $totalEmiQuery = DB::table('installment_due as due')
+        $dueEmiQuery = DB::table('installment_due as due')
             ->join(
                 'property_registration as pr',
                 'pr.AssetId',
                 '=',
                 'due.AssetId'
             )
+            ->selectRaw('
+            due.AssetId,
+            COUNT(DISTINCT due.InstallmentNumber) AS total_emi
+        ')
             ->where('due.IsDeleted', 0)
             ->where('due.IsActive', 1)
             ->where('pr.IsDeleted', 0)
             ->where('pr.IsActive', 1);
 
-        $applyLocationFilters($totalEmiQuery, 'pr');
+        $applyLocationFilters($dueEmiQuery, 'pr');
+
+        $dueEmiQuery->groupBy('due.AssetId');
 
         $receiptSumsQuery = DB::table('cash_receipt_details')
             ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
@@ -391,55 +397,51 @@ class PropertyManagementController extends Controller
 
         $paidEmiQuery->groupBy('pad.AssetId', 'pad.ReceivedAmount', 'due.EMIAmount', 'due.DueAmount', 'cr_sum.total_receipts');
 
-        $emiData = DB::query()
-            ->fromSub($dueEmiQuery, 'due_summary')
-            ->leftJoinSub(
-                $paidEmiQuery,
-                'paid_summary',
-                function ($join) {
-                    $join->on(
-                        'paid_summary.AssetId',
-                        '=',
-                        'due_summary.AssetId'
-                    );
-                }
-            )
-            ->selectRaw('
-            COALESCE(
-                SUM(due_summary.total_emi),
-                0
-            ) AS total_emi,
+        $emiData = cache()->remember(
+            $dashboardCacheKey . ':emi-stats',
+            $dashboardCacheSeconds,
+            function () use ($dueEmiQuery, $paidEmiQuery) {
+                return DB::query()
+                    ->fromSub($dueEmiQuery, 'due_summary')
+                    ->leftJoinSub(
+                        $paidEmiQuery,
+                        'paid_summary',
+                        function ($join) {
+                            $join->on(
+                                'paid_summary.AssetId',
+                                '=',
+                                'due_summary.AssetId'
+                            );
+                        }
+                    )
+                    ->selectRaw('
+                    COALESCE(
+                        SUM(due_summary.total_emi),
+                        0
+                    ) AS total_emi,
 
-            COALESCE(
-                SUM(
-                    COALESCE(paid_summary.paid_emi, 0)
-                ),
-                0
-            ) AS paid_emi,
-
-            COALESCE(
-                SUM(
-                    GREATEST(
-                        due_summary.total_emi
-                        - COALESCE(
-                            paid_summary.paid_emi,
-                            0
+                    COALESCE(
+                        SUM(
+                            COALESCE(paid_summary.paid_emi, 0)
                         ),
                         0
-                    )
-                    ->value('aggregate');
+                    ) AS paid_emi,
 
-                $paidEmi = (int) (clone $paidEmiQuery)
-                    ->selectRaw(
-                        'COUNT(DISTINCT ledger.AssetId, ledger.InstallmentNumber) AS aggregate'
-                    )
-                    ->value('aggregate');
-
-                return (object) [
-                    'total_emi' => $totalEmi,
-                    'paid_emi' => min($paidEmi, $totalEmi),
-                    'pending_emi' => max($totalEmi - $paidEmi, 0),
-                ];
+                    COALESCE(
+                        SUM(
+                            GREATEST(
+                                due_summary.total_emi
+                                - COALESCE(
+                                    paid_summary.paid_emi,
+                                    0
+                                ),
+                                0
+                            )
+                        ),
+                        0
+                    ) AS pending_emi
+                ')
+                    ->first();
             }
         );
 
