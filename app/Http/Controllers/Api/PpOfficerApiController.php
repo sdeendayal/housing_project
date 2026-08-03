@@ -917,6 +917,8 @@ class PpOfficerApiController extends Controller
             'physical_possession_status' => 'Visit Scheduled',
         ]);
 
+        $officer = Auth::user();
+
         \App\Models\ApplicationStatusLog::create([
             'application_id' => $application->id,
             'asset_id' => $application->asset_id,
@@ -924,7 +926,18 @@ class PpOfficerApiController extends Controller
             'new_status' => 'Visit Scheduled',
             'remarks' => 'Visit scheduled by Site Engineer (API). Offered slots: Slot 1: ' . $dateTime1->format('d M Y - h:i A') . ', Slot 2: ' . $dateTime2->format('d M Y - h:i A') . ', Slot 3: ' . $dateTime3->format('d M Y - h:i A'),
             'changed_by_type' => 'officer',
-            'changed_by_id' => Auth::id(),
+            'changed_by_id' => $officer->id,
+        ]);
+
+        \App\Models\SiteEnggStatus::create([
+            'application_id' => $application->id,
+            'application_number' => $application->application_number,
+            'site_engg_user_id' => $officer->id,
+            'site_engg_name' => $officer->name,
+            'site_engg_email' => $officer->email,
+            'site_engg_mobile' => $officer->mobile ?? null,
+            'status' => 'Visit Scheduled',
+            'remarks' => $request->visit_instructions ?? 'Visit scheduled by Site Engineer (API).',
         ]);
 
         // Send SMS notification
