@@ -741,19 +741,13 @@ class PpUserController extends Controller
             $initialDeposit = (float) ($purchaser->ReceivedAmount ?? 0);
             $assetId = $purchaser->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -1131,19 +1125,13 @@ class PpUserController extends Controller
         $installmentPaid = 0.0;
 
         if ($assetId) {
-            $ledgerPaid = (float) DB::table('ledger')
-                ->where('AssetId', $assetId)
-                ->where('Is_Deleted', 0)
-                ->where('Is_Active', 1)
-                ->sum('Payment');
-
             $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                 ->where('asset_number', $assetId)
                 ->where('IsDeleted', 0)
                 ->where('IsActive', 1)
                 ->sum('total_paid_amount');
 
-            $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+            $installmentPaid = $cashReceiptPaid;
         }
 
         return [

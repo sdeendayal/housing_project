@@ -231,8 +231,8 @@
                             <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->FlatNo }}">{{ $ownerInfo->FlatNo }}</span>
                         </div>
                         <div class="flex justify-between pt-1">
-                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Village:</span>
-                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->VillageName }}">{{ $ownerInfo->VillageName }}</span>
+                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Village ID:</span>
+                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->VillageId }}">{{ $ownerInfo->VillageId }}</span>
                         </div>
                     </div>
                 </div>
@@ -1149,16 +1149,16 @@
                                         <span class="font-bold text-slate-700 block mt-1.5 font-mono">{{ $ownerInfo->FlatNo ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->VillageName ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village ID</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->VillageId ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->BlockName ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block ID</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->BlockId ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictName ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District ID</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictId ?? '—' }}</span>
                                     </div>
                                 </div>
                             </div>

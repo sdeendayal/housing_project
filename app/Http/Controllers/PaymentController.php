@@ -761,13 +761,6 @@ class PaymentController extends Controller
             ];
         }
 
-        $ledgerByNumber = DB::table('ledger')
-            ->where('AssetId', $assetId)
-            ->where('Is_Deleted', 0)
-            ->where('Is_Active', 1)
-            ->get()
-            ->keyBy('InstallmentNumber');
-
         $installmentRows = DB::table('installment_due')
             ->where('AssetId', $assetId)
             ->where('IsDeleted', 0)
@@ -785,25 +778,22 @@ class PaymentController extends Controller
             $lastInstallmentTargetEmi = max(0.0, $flatCost - $receivedAmount - $firstInstallmentsEmiSum);
         }
 
-        $paymentPool = $this->resolveInstallmentPaymentPool($assetId, $ledgerByNumber);
+        $paymentPool = $this->resolveInstallmentPaymentPool($assetId);
         $installmentPaidTotal = $paymentPool['pool'];
         
         $allocations = $this->allocateInstallmentsFromPayments(
             $installmentRows,
             $paymentPool['receiptRows'],
-            $ledgerByNumber,
             $lastInstallmentTargetEmi
         );
-        $remainingBalance = $this->remainingFlatBalance($flatCost, $receivedAmount, $ledgerByNumber);
+        $remainingBalance = $this->remainingFlatBalance($flatCost, $receivedAmount, $installmentPaidTotal);
 
         $installments = $installmentRows->map(function ($row) use (
-            $ledgerByNumber,
             $remainingBalance,
             $lastInstallmentNumber,
             $allocations,
             $lastInstallmentTargetEmi
         ) {
-            $ledger = $ledgerByNumber->get($row->InstallmentNumber);
             $dueDate = Carbon::parse($row->DueDate);
             $today = Carbon::today();
             $installmentNumber = (int) $row->InstallmentNumber;
@@ -842,7 +832,6 @@ class PaymentController extends Controller
 
             $emiAmount = $this->emiAmountForInstallment(
                 $row,
-                $ledger,
                 $remainingBalance,
                 $lastInstallmentNumber,
                 $status === 'paid',
@@ -876,7 +865,7 @@ class PaymentController extends Controller
         ];
     }
 
-    private function resolveInstallmentPaymentPool(int $assetId, $ledgerByNumber): array
+    private function resolveInstallmentPaymentPool(int $assetId): array
     {
         $receiptRows = DB::table('cash_receipt_details')
             ->where('asset_number', $assetId)
@@ -886,11 +875,9 @@ class PaymentController extends Controller
             ->get(['total_paid_amount', 'created_date']);
 
         $receiptTotal = (float) $receiptRows->sum(fn ($row) => (float) $row->total_paid_amount);
-        $ledgerTotal = (float) $ledgerByNumber->sum(fn ($row) => (float) $row->Payment);
-        $pool = $receiptTotal > 0 ? $receiptTotal : $ledgerTotal;
 
         return [
-            'pool' => $pool,
+            'pool' => $receiptTotal,
             'receiptRows' => $receiptRows,
         ];
     }
@@ -898,31 +885,18 @@ class PaymentController extends Controller
     private function allocateInstallmentsFromPayments(
         $installmentRows,
         $receiptRows,
-        $ledgerByNumber,
         float $lastInstallmentTargetEmi = 0.0
     ): array {
         $chunks = [];
 
-        if ($receiptRows->isNotEmpty()) {
-            foreach ($receiptRows as $receipt) {
-                $amount = (float) $receipt->total_paid_amount;
-                if ($amount <= 0) continue;
+        foreach ($receiptRows as $receipt) {
+            $amount = (float) $receipt->total_paid_amount;
+            if ($amount <= 0) continue;
 
-                $chunks[] = [
-                    'remaining' => $amount,
-                    'date' => $receipt->created_date ? Carbon::parse($receipt->created_date) : null,
-                ];
-            }
-        } else {
-            foreach ($ledgerByNumber->sortKeys() as $ledger) {
-                $amount = (float) $ledger->Payment;
-                if ($amount <= 0) continue;
-
-                $chunks[] = [
-                    'remaining' => $amount,
-                    'date' => $ledger->CreateDate ? Carbon::parse($ledger->CreateDate) : null,
-                ];
-            }
+            $chunks[] = [
+                'remaining' => $amount,
+                'date' => $receipt->created_date ? Carbon::parse($receipt->created_date) : null,
+            ];
         }
 
         $chunkIndex = 0;
@@ -1010,28 +984,23 @@ class PaymentController extends Controller
         return 'upcoming';
     }
 
-    private function remainingFlatBalance(float $flatCost, float $receivedAmount, $ledgerRows): float
+    private function remainingFlatBalance(float $flatCost, float $receivedAmount, float $receiptsTotal): float
     {
         if ($flatCost <= 0) {
             return 0.0;
         }
-        $installmentPayments = (float) collect($ledgerRows)->sum(fn ($row) => (float) $row->Payment);
-        return max(0.0, round($flatCost - $receivedAmount - $installmentPayments, 2));
+        return max(0.0, round($flatCost - $receivedAmount - $receiptsTotal, 2));
     }
 
     private function emiAmountForInstallment(
         $row,
-        $ledger,
         float $remainingBalance,
         int $lastInstallmentNumber,
         bool $isPaid,
         float $lastInstallmentTargetEmi = 0.0
     ): float {
         if ((int) $row->InstallmentNumber === $lastInstallmentNumber) {
-            if ($isPaid) {
-                return $ledger ? (float) $ledger->Payment : $lastInstallmentTargetEmi;
-            }
-            return $remainingBalance;
+            return $lastInstallmentTargetEmi;
         }
         return (float) $row->EMIAmount;
     }

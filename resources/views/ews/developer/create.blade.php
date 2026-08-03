@@ -427,7 +427,7 @@
     </div>
 
     <script>
-        function switchMode(mode) {
+        function switchMode(mode, isInitial = false) {
             const bulkModeInput = document.getElementById('bulk_mode');
             const tabSingle = document.getElementById('tab-single');
             const tabBulk = document.getElementById('tab-bulk');
@@ -458,6 +458,25 @@
                 
                 floorBulk.required = true;
                 floorBulk.disabled = false;
+
+                if (!isInitial) {
+                    // Clear Single mode fields on switch
+                    floorSingle.value = "0";
+                    flatNumInput.value = "";
+
+                    // Clear shared select2/text inputs
+                    $('#town_id').val('').trigger('change.select2');
+                    document.getElementById('new_town_name').value = '';
+                    document.getElementById('new_town_container').classList.add('hidden');
+
+                    $('#project_id').val('').trigger('change.select2');
+                    document.getElementById('new_project_name').value = '';
+                    document.getElementById('new_project_container').classList.add('hidden');
+
+                    $('#block_id').val('').trigger('change.select2');
+                    document.getElementById('new_block_name').value = '';
+                    document.getElementById('new_block_container').classList.add('hidden');
+                }
                 
                 toggleFlatInputType(document.querySelector('input[name="flat_number_type"]:checked').value);
             } else {
@@ -478,6 +497,28 @@
                 fromFlat.required = false;
                 toFlat.required = false;
                 customFlats.required = false;
+
+                if (!isInitial) {
+                    // Clear/Reset Bulk mode fields on switch
+                    floorBulk.value = "0";
+                    fromFlat.value = "";
+                    toFlat.value = "";
+                    customFlats.value = "";
+                    document.getElementById('floor_prefix_enabled').checked = true;
+
+                    // Clear shared select2/text inputs
+                    $('#town_id').val('').trigger('change.select2');
+                    document.getElementById('new_town_name').value = '';
+                    document.getElementById('new_town_container').classList.add('hidden');
+
+                    $('#project_id').val('').trigger('change.select2');
+                    document.getElementById('new_project_name').value = '';
+                    document.getElementById('new_project_container').classList.add('hidden');
+
+                    $('#block_id').val('').trigger('change.select2');
+                    document.getElementById('new_block_name').value = '';
+                    document.getElementById('new_block_container').classList.add('hidden');
+                }
             }
         }
 
@@ -586,7 +627,7 @@
                 });
             @endif
             // Initialize form mode
-            switchMode('single');
+            switchMode('single', true);
         });
 
         function fetchTowns(districtId, selectedTownId = null) {
@@ -758,6 +799,10 @@
         townSelect.addEventListener('change', handleTownChange);
         projectSelect.addEventListener('change', handleProjectChange);
         blockSelect.addEventListener('change', handleBlockChange);
+
+        document.getElementById('custom_flat_numbers').addEventListener('input', function() {
+            this.value = this.value.replace(/[^0-9,\s]/g, '');
+        });
 
         // Initial trigger on load
         if (districtSelect.value) {

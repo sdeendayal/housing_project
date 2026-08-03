@@ -234,7 +234,7 @@
                     <!-- ADC Verification outcomes -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">7. ADC Eligibility Status</span>
+                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">7. Eligibility verified by ADC</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
                                 <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
@@ -262,7 +262,7 @@
                     <!-- Final Draw Outcomes -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">8. Allocation Outcomes</span>
+                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">8. Flat allocation status</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1">
                                 <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">

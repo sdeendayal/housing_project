@@ -1020,112 +1020,19 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const modal = document.getElementById('downloadModal');
-        const message = document.getElementById('downloadMessage');
         const buttons = document.querySelectorAll('.download-btn');
 
-        function showLoader(type) {
-            message.textContent =
-                type === 'excel' ?
-                'Preparing the Excel file...' :
-                'Preparing the PDF file...';
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            buttons.forEach(function(button) {
-                button.disabled = true;
-                button.classList.add('cursor-not-allowed', 'opacity-60');
-            });
-        }
-
-        function hideLoader() {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-
-            buttons.forEach(function(button) {
-                button.disabled = false;
-                button.classList.remove('cursor-not-allowed', 'opacity-60');
-            });
-        }
-
-        function getFileName(response, type) {
-            const disposition = response.headers.get('Content-Disposition');
-
-            if (disposition) {
-                const utfMatch = disposition.match(/filename\*=UTF-8''([^;]+)/i);
-
-                if (utfMatch && utfMatch[1]) {
-                    return decodeURIComponent(utfMatch[1]);
-                }
-
-                const normalMatch = disposition.match(/filename="?([^"]+)"?/i);
-
-                if (normalMatch && normalMatch[1]) {
-                    return normalMatch[1];
-                }
-            }
-
-            const extension = type === 'excel' ? 'csv' : 'pdf';
-
-            return `applicants-${Date.now()}.${extension}`;
-        }
-
         buttons.forEach(function(button) {
-            button.addEventListener('click', async function() {
+            button.addEventListener('click', function(e) {
                 const url = this.dataset.downloadUrl;
                 const type = this.dataset.downloadType;
-
-                showLoader(type);
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'GET',
-                        credentials: 'same-origin',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    if (!response.ok) {
-                        let errorMessage = 'The download could not be generated.';
-
-                        try {
-                            const errorData = await response.json();
-
-                            if (errorData.message) {
-                                errorMessage = errorData.message;
-                            }
-                        } catch (error) {
-                            // Response JSON nahi hai.
-                        }
-
-                        throw new Error(errorMessage);
+                if (url) {
+                    e.preventDefault();
+                    if (type === 'pdf') {
+                        window.open(url, '_blank');
+                    } else {
+                        window.location.href = url;
                     }
-
-                    const blob = await response.blob();
-                    const fileName = getFileName(response, type);
-
-                    const downloadUrl = window.URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-
-                    link.href = downloadUrl;
-                    link.download = fileName;
-
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-
-                    window.URL.revokeObjectURL(downloadUrl);
-                } catch (error) {
-                    console.error(error);
-
-                    alert(
-                        error.message ||
-                        'An error occurred during the download. Please try again.'
-                    );
-                } finally {
-                    hideLoader();
                 }
             });
         });
@@ -1143,7 +1050,7 @@
 
         window.allotmentDownloadHandlerInitialized = true;
 
-        document.addEventListener('click', async function(event) {
+        document.addEventListener('click', function(event) {
             const button = event.target.closest('.allotment-download-btn');
 
             if (!button) {
@@ -1153,150 +1060,20 @@
             event.preventDefault();
             event.stopImmediatePropagation();
 
-            // Double-click / duplicate execution guard
-            if (button.dataset.downloading === 'true') {
-                return;
-            }
-
-            const modal = document.getElementById('downloadModal');
-            const message = document.getElementById('downloadMessage');
-            const buttons = document.querySelectorAll('.allotment-download-btn');
-
             const url = button.dataset.downloadUrl;
             const type = button.dataset.downloadType;
 
-            if (!url || !type) {
-                alert('The download URL or file type was not found.');
+            if (!url) {
+                alert('The download URL was not found.');
                 return;
             }
 
-            button.dataset.downloading = 'true';
-
-            function showLoader() {
-                message.textContent = type === 'excel' ?
-                    'Preparing the Excel file...' :
-                    'Preparing the PDF file...';
-
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-
-                buttons.forEach(function(item) {
-                    item.disabled = true;
-                    item.classList.add(
-                        'cursor-not-allowed',
-                        'opacity-60'
-                    );
-                });
+            if (type === 'pdf') {
+                window.open(url, '_blank');
+            } else {
+                window.location.href = url;
             }
-
-            function hideLoader() {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-
-                buttons.forEach(function(item) {
-                    item.disabled = false;
-                    item.classList.remove(
-                        'cursor-not-allowed',
-                        'opacity-60'
-                    );
-                });
-            }
-
-            function getFileName(response) {
-                const disposition =
-                    response.headers.get('Content-Disposition');
-
-                if (disposition) {
-                    const utfMatch = disposition.match(
-                        /filename\*=UTF-8''([^;]+)/i
-                    );
-
-                    if (utfMatch?.[1]) {
-                        return decodeURIComponent(utfMatch[1]);
-                    }
-
-                    const normalMatch = disposition.match(
-                        /filename="?([^";]+)"?/i
-                    );
-
-                    if (normalMatch?.[1]) {
-                        return normalMatch[1].trim();
-                    }
-                }
-
-                return type === 'excel' ?
-                    `allotment-report-${Date.now()}.xlsx` :
-                    `allotment-report-${Date.now()}.pdf`;
-            }
-
-            showLoader();
-
-            try {
-                const response = await fetch(url, {
-                    method: 'GET',
-                    credentials: 'same-origin',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-
-                if (!response.ok) {
-                    let errorMessage =
-                        'The report could not be generated.';
-
-                    try {
-                        const errorData = await response.json();
-                        errorMessage =
-                            errorData.message || errorMessage;
-                    } catch (_) {
-                        // Response JSON nahi hai.
-                    }
-
-                    throw new Error(errorMessage);
-                }
-
-                const blob = await response.blob();
-
-                if (blob.size === 0) {
-                    throw new Error('The generated file is empty.');
-                }
-
-                const objectUrl = URL.createObjectURL(blob);
-                const downloadLink = document.createElement('a');
-
-                downloadLink.href = objectUrl;
-                downloadLink.download = getFileName(response);
-                downloadLink.hidden = true;
-
-                document.body.appendChild(downloadLink);
-
-                // Sirf ek baar browser download trigger
-                downloadLink.dispatchEvent(
-                    new MouseEvent('click', {
-                        bubbles: false,
-                        cancelable: true,
-                        view: window
-                    })
-                );
-
-                downloadLink.remove();
-
-                setTimeout(function() {
-                    URL.revokeObjectURL(objectUrl);
-                }, 2000);
-
-            } catch (error) {
-                console.error(error);
-
-                alert(
-                    error.message ||
-                    'An error occurred during the download.'
-                );
-            } finally {
-                button.dataset.downloading = 'false';
-                hideLoader();
-            }
-        }, true);
+        });
     })();
 </script>
 

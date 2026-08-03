@@ -183,6 +183,9 @@
                                 @if($type === 'allotted')
                                     <th>Flat Number</th>
                                 @endif
+                                @if($type === 'pending')
+                                    <th>Waiting Number</th>
+                                @endif
                                 @if($type !== 'ppt_members' && $type !== 'not_in_survey')
                                     <th>Status</th>
                                 @endif
@@ -232,6 +235,10 @@
             ];
 
             if (currentType === 'allotted') {
+                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
+            }
+
+            if (currentType === 'pending') {
                 columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
             }
 

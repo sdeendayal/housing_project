@@ -358,38 +358,74 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalEmiQuery, 'pr');
 
-        $paidEmiQuery = DB::table('ledger as ledger')
-            ->join('installment_due as due_paid', function ($join) {
-                $join->on('due_paid.AssetId', '=', 'ledger.AssetId')
-                    ->on(
-                        'due_paid.InstallmentNumber',
-                        '=',
-                        'ledger.InstallmentNumber'
-                    )
-                    ->where('due_paid.IsDeleted', 0)
-                    ->where('due_paid.IsActive', 1);
-            })
+        $receiptSumsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $paidEmiQuery = DB::table('property_auction_detail as pad')
             ->join(
                 'property_registration as pr_paid',
                 'pr_paid.AssetId',
                 '=',
-                'ledger.AssetId'
+                'pad.AssetId'
             )
-            ->where('ledger.Is_Deleted', 0)
-            ->where('ledger.Is_Active', 1)
-            ->where('ledger.Payment', '>', 0)
+            ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
+            ->join('installment_due as due', function($join) {
+                $join->on('due.AssetId', '=', 'pad.AssetId')
+                     ->where('due.InstallmentNumber', '=', 1);
+            })
+            ->selectRaw('
+                pad.AssetId,
+                LEAST(
+                    (SELECT COUNT(*) FROM installment_due WHERE AssetId = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
+                    FLOOR((COALESCE(pad.ReceivedAmount, 0) + COALESCE(cr_sum.total_receipts, 0)) / COALESCE(NULLIF(due.EMIAmount, 0), due.DueAmount, 1))
+                ) as paid_emi
+            ')
             ->where('pr_paid.IsDeleted', 0)
             ->where('pr_paid.IsActive', 1);
 
+        // Apply the dashboard location filter before aggregating.
         $applyLocationFilters($paidEmiQuery, 'pr_paid');
 
-        $emiData = cache()->remember(
-            $dashboardCacheKey . ':emi-stats',
-            $dashboardCacheSeconds,
-            function () use ($totalEmiQuery, $paidEmiQuery) {
-                $totalEmi = (int) (clone $totalEmiQuery)
-                    ->selectRaw(
-                        'COUNT(DISTINCT due.AssetId, due.InstallmentNumber) AS aggregate'
+        $paidEmiQuery->groupBy('pad.AssetId', 'pad.ReceivedAmount', 'due.EMIAmount', 'due.DueAmount', 'cr_sum.total_receipts');
+
+        $emiData = DB::query()
+            ->fromSub($dueEmiQuery, 'due_summary')
+            ->leftJoinSub(
+                $paidEmiQuery,
+                'paid_summary',
+                function ($join) {
+                    $join->on(
+                        'paid_summary.AssetId',
+                        '=',
+                        'due_summary.AssetId'
+                    );
+                }
+            )
+            ->selectRaw('
+            COALESCE(
+                SUM(due_summary.total_emi),
+                0
+            ) AS total_emi,
+
+            COALESCE(
+                SUM(
+                    COALESCE(paid_summary.paid_emi, 0)
+                ),
+                0
+            ) AS paid_emi,
+
+            COALESCE(
+                SUM(
+                    GREATEST(
+                        due_summary.total_emi
+                        - COALESCE(
+                            paid_summary.paid_emi,
+                            0
+                        ),
+                        0
                     )
                     ->value('aggregate');
 

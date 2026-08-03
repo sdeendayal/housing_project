@@ -69,7 +69,6 @@ class PhysicalPossessionWorkflowController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")
@@ -197,19 +196,13 @@ class PhysicalPossessionWorkflowController extends Controller
             $initialDeposit = (float) ($property->ReceivedAmount ?? 0);
             $assetId = $property->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -403,7 +396,25 @@ class PhysicalPossessionWorkflowController extends Controller
             'remarks' => $request->visit_instructions ?? 'Visit scheduled by Site Engineer.',
         ]);
 
-        // Mock/Log Citizen notification
+        // Send SMS notification
+        $smsService = app(\App\Services\LoginOtpSmsService::class);
+        $smsConfig = config('otp-login.mmsay_possession_scheduled_sms');
+        if ($smsConfig && !empty($application->mobile)) {
+            $message = $smsConfig['message'];
+            // Replace the {#alp#} with the application number
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->application_number, $pos, strlen('{#alp#}'));
+            }
+
+            $smsService->sendCustomMessage(
+                $application->mobile,
+                $message,
+                $smsConfig['template_id'],
+                'MMSAY Possession Schedule '.$application->application_number
+            );
+        }
+
         Log::info("SMS Notification: Physical Possession visit scheduled for applicant {$application->applicant_name} (Mobile: {$application->mobile}) with slots: {$dateTime1}, {$dateTime2}, {$dateTime3}. Status: Visit Scheduled.");
 
         return redirect()->route('pp.officer.eligibility-list')->with('success', 'Physical Possession visit has been successfully scheduled.');
@@ -564,19 +575,13 @@ class PhysicalPossessionWorkflowController extends Controller
             $initialDeposit = (float) ($property->ReceivedAmount ?? 0);
             $assetId = $property->AssetId;
             if ($assetId) {
-                $ledgerPaid = (float) DB::table('ledger')
-                    ->where('AssetId', $assetId)
-                    ->where('Is_Deleted', 0)
-                    ->where('Is_Active', 1)
-                    ->sum('Payment');
-
                 $cashReceiptPaid = (float) DB::table('cash_receipt_details')
                     ->where('asset_number', $assetId)
                     ->where('IsDeleted', 0)
                     ->where('IsActive', 1)
                     ->sum('total_paid_amount');
 
-                $installmentPaid = $ledgerPaid > 0 ? $ledgerPaid : $cashReceiptPaid;
+                $installmentPaid = $cashReceiptPaid;
             }
         }
         $totalReceived = $initialDeposit + $installmentPaid;
@@ -610,9 +615,30 @@ class PhysicalPossessionWorkflowController extends Controller
 
             // Capture the previous slot time before resetting
             $prevSlotInfo = "N/A";
+            $visitDateStr = "N/A";
             if ($application->possession_date) {
                 $dateFormatted = date('d M Y', strtotime($application->possession_date));
                 $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
+                $visitDateStr = $dateFormatted;
+            }
+
+            // Send absent SMS
+            $smsService = app(\App\Services\LoginOtpSmsService::class);
+            $smsConfig = config('otp-login.mmsay_possession_absent_sms');
+            if ($smsConfig && !empty($application->mobile)) {
+                $message = $smsConfig['message'];
+                // Replace the {#alp#} with the visit date
+                $pos = strpos($message, '{#alp#}');
+                if ($pos !== false) {
+                    $message = substr_replace($message, $visitDateStr, $pos, strlen('{#alp#}'));
+                }
+
+                $smsService->sendCustomMessage(
+                    $application->mobile,
+                    $message,
+                    $smsConfig['template_id'],
+                    'MMSAY Possession Absent Reset '.$application->application_number
+                );
             }
 
             $application->physical_possession_status = 'Eligible for Physical Possession';
@@ -849,13 +875,8 @@ class PhysicalPossessionWorkflowController extends Controller
             ->where('IsDeleted', 0)
             ->where('IsActive', 1)
             ->sum('total_paid_amount');
-        $ledgerPaid = DB::table('ledger')
-            ->where('AssetId', $application->asset_id)
-            ->where('Is_Deleted', 0)
-            ->where('Is_Active', 1)
-            ->sum('Payment');
 
-        $totalPaid = $initialDeposit + max($installmentPaid, $ledgerPaid);
+        $totalPaid = $initialDeposit + $installmentPaid;
         $pendingAmount = max(0, $flatCost - $totalPaid);
 
         // Base64 Plot Image for DOMPDF compatibility
@@ -948,7 +969,6 @@ class PhysicalPossessionWorkflowController extends Controller
         ->selectRaw("
             COALESCE(pad.ReceivedAmount, 0) + COALESCE(
                 (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                (SELECT SUM(Payment) FROM ledger WHERE AssetId = pad.AssetId AND Is_Deleted = 0 AND Is_Active = 1),
                 0
             ) as total_paid
         ")

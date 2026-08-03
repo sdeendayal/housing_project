@@ -37,6 +37,16 @@ class LoginOtpSmsService
         $this->dispatchSms($mobile, $message, $templateId, $logLabel, $serviceType, 'Notification SMS');
     }
 
+    public function sendCustomMessage(
+        string $mobile,
+        string $message,
+        string $templateId,
+        ?string $logLabel = null,
+        string $serviceType = 'singlemsg'
+    ): void {
+        $this->dispatchSms($mobile, $message, $templateId, $logLabel, $serviceType, 'Notification SMS');
+    }
+
     private function dispatchSms(
         string $mobile,
         string $message,

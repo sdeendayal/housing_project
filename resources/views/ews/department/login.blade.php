@@ -28,7 +28,7 @@
 
             <!-- Top Brand -->
             <div class="relative z-10 flex items-center gap-3">
-                <img src="{{ asset('Haryana_emblem.png') }}" class="w-10 h-10 object-contain invert brightness-200" alt="Haryana Govt Emblem">
+                <img src="{{ asset('Haryana_emblem.png') }}" class="w-10 h-10 object-contain" alt="Haryana Govt Emblem">
                 <div>
                     <h3 class="text-xs font-black tracking-widest uppercase text-orange-400">Department of Housing</h3>
                     <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Government of Haryana</p>

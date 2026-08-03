@@ -300,7 +300,14 @@ class EwsDeveloperDashboardController extends Controller
                 'flat_number_type' => 'required|in:range,custom',
                 'from_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1',
                 'to_flat' => 'required_if:flat_number_type,range|nullable|integer|min:1|gte:from_flat',
-                'custom_flat_numbers' => 'required_if:flat_number_type,custom|nullable|string',
+                'custom_flat_numbers' => [
+                    'required_if:flat_number_type,custom',
+                    'nullable',
+                    'string',
+                    'regex:/^[0-9,\s]*$/'
+                ],
+            ], [
+                'custom_flat_numbers.regex' => 'The flat numbers list must only contain numbers, commas, and spaces.',
             ]);
 
             if ($request->flat_number_type === 'custom') {

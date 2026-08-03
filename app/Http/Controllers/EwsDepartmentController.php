@@ -973,6 +973,9 @@ class EwsDepartmentController extends Controller
         if ($type === 'allotted') {
             $headers[] = 'Flat Number';
         }
+        if ($type === 'pending') {
+            $headers[] = 'Waiting Number';
+        }
 
         $typeTitle = $type;
         if ($type === 'ppt_members') $typeTitle = 'Total registration';
@@ -1015,6 +1018,9 @@ class EwsDepartmentController extends Controller
                     $row->mobile_number ?? 'N/A',
                 ];
                 if ($type === 'allotted') {
+                    $item[] = $row->flat_no ?? 'N/A';
+                }
+                if ($type === 'pending') {
                     $item[] = $row->flat_no ?? 'N/A';
                 }
                 fputcsv($file, $item);
@@ -1326,6 +1332,9 @@ class EwsDepartmentController extends Controller
                         $row->mobile_number ?? 'N/A',
                     ];
                     if ($type === 'allotted') {
+                        $cells[] = $row->flat_no ?? 'N/A';
+                    }
+                    if ($type === 'pending') {
                         $cells[] = $row->flat_no ?? 'N/A';
                     }
                 }

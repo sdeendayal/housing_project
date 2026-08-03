@@ -502,7 +502,30 @@ class MmgayBdoApiController extends Controller
             'remarks' => $request->visit_instructions ?? 'Visit scheduled by BDO.',
         ]);
 
-        Log::info("MMGAY SMS Mock: Physical Possession slots scheduled for {$application->applicant_name} via API.");
+        $smsService = app(\App\Services\LoginOtpSmsService::class);
+        $smsConfig = config('otp-login.mmgay_possession_scheduled_sms');
+        if ($smsConfig && !empty($application->mobile)) {
+            $message = $smsConfig['message'];
+            // Replace the first {#alp#} with the applicant's name
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->applicant_name, $pos, strlen('{#alp#}'));
+            }
+            // Replace the second {#alp#} with the application number
+            $pos = strpos($message, '{#alp#}');
+            if ($pos !== false) {
+                $message = substr_replace($message, $application->application_number, $pos, strlen('{#alp#}'));
+            }
+
+            $smsService->sendCustomMessage(
+                $application->mobile,
+                $message,
+                $smsConfig['template_id'],
+                'MMGAY Possession Schedule API '.$application->application_number
+            );
+        }
+
+        Log::info("MMGAY SMS Notification via API: Physical Possession slots scheduled for {$application->applicant_name} (Mobile: {$application->mobile}).");
 
         return response()->json([
             'success' => true,
@@ -655,9 +678,35 @@ class MmgayBdoApiController extends Controller
 
             // Capture the previous slot time before resetting
             $prevSlotInfo = "N/A";
+            $visitDateStr = "N/A";
             if ($application->possession_date) {
                 $dateFormatted = date('d M Y', strtotime($application->possession_date));
                 $prevSlotInfo = $dateFormatted . " (" . ($application->meeting_slot ?? 'N/A') . ")";
+                $visitDateStr = $dateFormatted;
+            }
+
+            // Send absent SMS
+            $smsService = app(\App\Services\LoginOtpSmsService::class);
+            $smsConfig = config('otp-login.mmgay_possession_absent_sms');
+            if ($smsConfig && !empty($application->mobile)) {
+                $message = $smsConfig['message'];
+                // Replace the first {#alp#} with the applicant's name
+                $pos = strpos($message, '{#alp#}');
+                if ($pos !== false) {
+                    $message = substr_replace($message, $application->applicant_name, $pos, strlen('{#alp#}'));
+                }
+                // Replace the second {#alp#} with the visit date
+                $pos = strpos($message, '{#alp#}');
+                if ($pos !== false) {
+                    $message = substr_replace($message, $visitDateStr, $pos, strlen('{#alp#}'));
+                }
+
+                $smsService->sendCustomMessage(
+                    $application->mobile,
+                    $message,
+                    $smsConfig['template_id'],
+                    'MMGAY Possession Absent Reset API '.$application->application_number
+                );
             }
 
             $application->physical_possession_status = 'Eligible for Physical Possession';

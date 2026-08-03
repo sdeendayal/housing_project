@@ -91,7 +91,7 @@
                     </button>
                     @endif
 
-                    @if(!$pppExclusion && !$propertyReject && !$houseReject && $eligibleDraw && $booking)
+                    @if(!$pppExclusion && !$propertyReject && !$houseReject && $eligibleDraw && $booking && $eligibleFinal)
                     <button onclick="switchTab('allotment')" id="nav-allotment" class="w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left">
                         <i class="bi bi-house-check-fill text-slate-400"></i>
                         <span>Allotment Status</span>
@@ -468,7 +468,7 @@
                     </div>
 
                     <!-- Selection workflow logs -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 {{ $booking ? 'md:grid-cols-3' : 'md:grid-cols-2' }} gap-3">
                         
                         <!-- Eligible in Draw List -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
@@ -521,6 +521,7 @@
                             </div>
                         </div>
 
+                        @if($booking)
                         <!-- ADC Level Verification Check -->
                         <div class="glass-widget p-3.5 rounded-xl flex flex-col justify-between space-y-2.5">
                             <div class="space-y-1">
@@ -552,11 +553,13 @@
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                     </div>
                 </div>
 
                 <!-- 4. ALLOTMENT STATUS SECTION -->
+                @if(!$pppExclusion && !$propertyReject && !$houseReject && $eligibleDraw && $booking && $eligibleFinal)
                 <div id="section-allotment" class="space-y-3 hidden">
                     <!-- Heading -->
                     <div class="p-3.5 bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/20 rounded-xl text-slate-900 flex justify-between items-center">
@@ -616,7 +619,7 @@
                                 <div class="text-[10px] text-slate-500 leading-relaxed font-light mt-1">
                                     @if($waiting)
                                         <strong class="text-amber-600 font-bold block mb-1">Status: Waiting List Active</strong>
-                                        "Flat will be allotted, but currently your application is in the Pending/Waiting list queue." (makan milegi par abhi pending me h)
+                                        "Flat will be allotted, but currently your application is in the Pending/Waiting list queue."
                                     @else
                                         <strong class="text-slate-500 font-bold block mb-1">Status: No Queue Record</strong>
                                         Citizen is not registered in the active EWS waiting list queue.
@@ -628,6 +631,7 @@
 
                     </div>
                 </div>
+                @endif
 
             </main>
         </div>
@@ -638,28 +642,32 @@
     <script>
         function switchTab(tabId) {
             // Hide all sections
-            document.getElementById('section-dashboard').classList.add('hidden');
-            document.getElementById('section-rejections').classList.add('hidden');
-            document.getElementById('section-bookings').classList.add('hidden');
-            document.getElementById('section-allotment').classList.add('hidden');
+            var sections = ['dashboard', 'rejections', 'bookings', 'allotment'];
+            sections.forEach(function(s) {
+                var el = document.getElementById('section-' + s);
+                if (el) el.classList.add('hidden');
+            });
 
             // Show selected section
-            document.getElementById('section-' + tabId).classList.remove('hidden');
+            var targetEl = document.getElementById('section-' + tabId);
+            if (targetEl) targetEl.classList.remove('hidden');
 
             // Reset all buttons style
             var buttons = ['dashboard', 'rejections', 'bookings', 'allotment'];
             buttons.forEach(function(b) {
                 var btn = document.getElementById('nav-' + b);
-                if (b === tabId) {
-                    btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-indigo-500 to-purple-600 text-[10px] font-extrabold uppercase tracking-wider shadow-sm transition-all text-left";
-                    // Reset icon color to white inside active button
-                    var icon = btn.querySelector('i');
-                    if (icon) icon.className = icon.className.replace('text-slate-400', 'text-white');
-                } else {
-                    btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left";
-                    // Reset icon color to slate inside inactive button
-                    var icon = btn.querySelector('i');
-                    if (icon) icon.className = icon.className.replace('text-white', 'text-slate-400');
+                if (btn) {
+                    if (b === tabId) {
+                        btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-white bg-gradient-to-r from-indigo-500 to-purple-600 text-[10px] font-extrabold uppercase tracking-wider shadow-sm transition-all text-left";
+                        // Reset icon color to white inside active button
+                        var icon = btn.querySelector('i');
+                        if (icon) icon.className = icon.className.replace('text-slate-400', 'text-white');
+                    } else {
+                        btn.className = "w-full flex items-center gap-2 px-3 py-1.5 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 text-[10px] font-bold uppercase tracking-wider transition-all text-left";
+                        // Reset icon color to slate inside inactive button
+                        var icon = btn.querySelector('i');
+                        if (icon) icon.className = icon.className.replace('text-white', 'text-slate-400');
+                    }
                 }
             });
         }
