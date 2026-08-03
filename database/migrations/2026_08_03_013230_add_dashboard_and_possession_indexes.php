@@ -14,7 +14,7 @@ return new class extends Migration
         */
 
         $this->addIndexIfMissing(
-            'OwnerMaster',
+            'ownermaster',
             'idx_owner_block_phase_village',
             ['BlockId', 'Phase', 'VillageId']
         );
@@ -26,7 +26,7 @@ return new class extends Migration
         */
 
         $this->addIndexIfMissing(
-            'VillageMaster',
+            'villagemaster',
             'idx_village_dashboard_filters',
             [
                 'DistrictId',
@@ -88,7 +88,7 @@ return new class extends Migration
         */
 
         $this->addIndexIfMissing(
-            'FlatMaster',
+            'flatmaster',
             'idx_flatmaster_flat_id',
             ['FlatId']
         );
@@ -97,12 +97,12 @@ return new class extends Migration
     public function down(): void
     {
         $this->dropIndexIfExists(
-            'OwnerMaster',
+            'ownermaster',
             'idx_owner_block_phase_village'
         );
 
         $this->dropIndexIfExists(
-            'VillageMaster',
+            'villagemaster',
             'idx_village_dashboard_filters'
         );
 
@@ -127,7 +127,7 @@ return new class extends Migration
         );
 
         $this->dropIndexIfExists(
-            'FlatMaster',
+            'flatmaster',
             'idx_flatmaster_flat_id'
         );
     }
