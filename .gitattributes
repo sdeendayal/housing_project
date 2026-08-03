@@ -5,7 +5,7 @@
 *.html diff=html
 *.md diff=markdown
 *.php diff=php
-
 /.github export-ignore
 CHANGELOG.md export-ignore
 .styleci.yml export-ignore
+public/MMGAY[[:space:]]1st[[:space:]]2nd[[:space:]]3rd[[:space:]]Layout[[:space:]]Plans.zip filter=lfs diff=lfs merge=lfs -text
