@@ -735,7 +735,7 @@ class SuperAdminController extends Controller
                 COUNT(DISTINCT o.OwnerId) AS all_count,
 
                 COUNT(DISTINCT CASE
-                    WHEN pa.id IS NULL
+                    WHEN pa.id IS NULL OR LOWER(TRIM(COALESCE(pa.physical_possession_status, ''))) = 'eligible for physical possession'
                     THEN o.OwnerId
                 END) AS schedule_pending_count,
 
@@ -843,8 +843,10 @@ class SuperAdminController extends Controller
         */
         switch ($filter) {
             case 'schedule_pending':
-                $applicationsQuery
-                    ->whereNull('pa.id');
+                $applicationsQuery->where(function ($q) use ($statusExpression) {
+                    $q->whereNull('pa.id')
+                      ->orWhereRaw($statusExpression . " = ?", ['eligible for physical possession']);
+                });
                 break;
 
             case 'awaiting_citizen':
@@ -928,6 +930,46 @@ class SuperAdminController extends Controller
         );
     }
 
+    public function possessionView($secureId)
+    {
+        $application = DB::table('mmgay_possession_applications as p')
+            ->leftJoin('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->where('p.secure_id', $secureId)
+            ->select(
+                'p.*',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.OwnerAddress as Address',
+                'o.OwnerAddress',
+                'o.PPPId',
+                'o.Caste',
+                'o.Remarks as OwnerRemarks',
+                'd.DistrictName',
+                'b.BlockName',
+                'v.VillageName',
+                'f.FlatNo'
+            )
+            ->first();
+
+        abort_if(!$application, 404);
+
+        $timeline = DB::table('mmgay_possession_status_logs')
+            ->where('application_id', $application->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return view(
+            'mmgay.super-admin.physical-possession.view',
+            compact('application', 'timeline')
+        );
+    }
+
     private function applyPossessionStatusFilter(
         $query,
         string $filter
@@ -945,7 +987,10 @@ class SuperAdminController extends Controller
 
         switch ($filter) {
             case 'schedule_pending':
-                $query->whereNull('pa.id');
+                $query->where(function ($q) use ($statusExpression) {
+                    $q->whereNull('pa.id')
+                      ->orWhereRaw($statusExpression . " = ?", ['eligible for physical possession']);
+                });
                 break;
 
             case 'awaiting_citizen':
