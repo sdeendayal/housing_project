@@ -13,9 +13,32 @@ use App\Exports\PropertyExport;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\PropertiesExport;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use RuntimeException;
 
 class PropertyManagementController extends Controller
 {
+    private const LIST_PAGE_SIZE = 50;
+    private const EXPORT_CHUNK_SIZE = 1000;
+    private const PRINT_CHUNK_SIZE = 500;
+
+    /**
+     * Indexed receipt total for one asset.
+     *
+     * This avoids materialising and grouping the complete receipt table on
+     * every filtered listing request. The existing composite index beginning
+     * with cash_receipt_details.asset_number is used for every lookup.
+     */
+    private function receiptTotalSql(string $assetColumn = 'pad.AssetId'): string
+    {
+        return "COALESCE((
+            SELECT SUM(cr_sum.total_paid_amount)
+            FROM cash_receipt_details AS cr_sum
+            WHERE cr_sum.asset_number = {$assetColumn}
+              AND cr_sum.IsDeleted = 0
+              AND cr_sum.IsActive = 1
+        ), 0)";
+    }
+
     public function dashboard(Request $request)
     {
         $districtId = $request->filled('district_id')
@@ -29,6 +52,17 @@ class PropertyManagementController extends Controller
         $sectorId = $request->filled('sector_id')
             ? $request->integer('sector_id')
             : null;
+
+        $dashboardCacheKey = 'mmsay:department-dashboard:' . md5(
+            json_encode([
+                'district_id' => $districtId,
+                'city_id' => $cityId,
+                'sector_id' => $sectorId,
+            ])
+        );
+
+        // Cache is separated for every filter combination.
+        $dashboardCacheSeconds = 600;
 
         /*
         |--------------------------------------------------------------------------
@@ -121,8 +155,11 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalApplicationsQuery);
 
-        $totalApplications = $totalApplicationsQuery
-            ->count('AssetId');
+        $totalApplications = cache()->remember(
+            $dashboardCacheKey . ':applications',
+            $dashboardCacheSeconds,
+            fn() => (clone $totalApplicationsQuery)->count('AssetId')
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -136,9 +173,13 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($allottedUnitsQuery);
 
-        $allottedUnits = $allottedUnitsQuery
-            ->distinct()
-            ->count('AssetId');
+        $allottedUnits = cache()->remember(
+            $dashboardCacheKey . ':allotted',
+            $dashboardCacheSeconds,
+            fn() => (clone $allottedUnitsQuery)
+                ->distinct()
+                ->count('AssetId')
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -152,8 +193,11 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalRevenueQuery);
 
-        $totalRevenue = (float) $totalRevenueQuery
-            ->sum('total_paid_amount');
+        $totalRevenue = (float) cache()->remember(
+            $dashboardCacheKey . ':revenue',
+            $dashboardCacheSeconds,
+            fn() => (clone $totalRevenueQuery)->sum('total_paid_amount')
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -169,8 +213,13 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalPurchasersQuery);
 
-        $totalPurchasers = $totalPurchasersQuery
-            ->count('PrivatePurchaserId');
+        $totalPurchasers = cache()->remember(
+            $dashboardCacheKey . ':purchasers',
+            $dashboardCacheSeconds,
+            fn() => (clone $totalPurchasersQuery)->count(
+                'PrivatePurchaserId'
+            )
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -181,30 +230,20 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
+        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+
         $assetPaymentsQuery = DB::table(
             'property_auction_detail as pad'
         )
-            ->leftJoin(
-                'cash_receipt_details as cr',
-                function ($join) {
-                    $join->on(
-                        'cr.asset_number',
-                        '=',
-                        'pad.AssetId'
-                    )
-                        ->where('cr.IsDeleted', 0)
-                        ->where('cr.IsActive', 1);
-                }
-            )
-            ->selectRaw('
+            ->selectRaw("
             pad.AssetId,
             pad.FlatCost,
             pad.ReceivedAmount,
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + COALESCE(SUM(cr.total_paid_amount), 0)
+                + {$receiptTotalSql}
             ) AS total_received
-        ')
+        ")
             ->where('pad.IsDeleted', 0)
             ->where('pad.IsActive', 1);
 
@@ -222,9 +261,13 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $dashboardPaymentStats = DB::query()
-            ->fromSub($assetPaymentsQuery, 'payments')
-            ->selectRaw('
+        $dashboardPaymentStats = cache()->remember(
+            $dashboardCacheKey . ':payment-stats',
+            $dashboardCacheSeconds,
+            function () use ($assetPaymentsQuery) {
+                return DB::query()
+                    ->fromSub(clone $assetPaymentsQuery, 'payments')
+                    ->selectRaw('
             COUNT(*) AS total_candidates,
 
             SUM(
@@ -261,7 +304,9 @@ class PropertyManagementController extends Controller
                 END
             ) AS pending_properties
         ')
-            ->first();
+                    ->first();
+            }
+        );
 
         $eligiblePhysicalPossession = (int) (
             $dashboardPaymentStats->eligible_candidates ?? 0
@@ -299,89 +344,68 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $dueEmiQuery = DB::table('installment_due as due')
+        $totalEmiQuery = DB::table('installment_due as due')
             ->join(
                 'property_registration as pr',
                 'pr.AssetId',
                 '=',
                 'due.AssetId'
             )
-            ->selectRaw('
-            due.AssetId,
-            COUNT(DISTINCT due.InstallmentNumber) AS total_emi
-        ')
             ->where('due.IsDeleted', 0)
             ->where('due.IsActive', 1)
             ->where('pr.IsDeleted', 0)
             ->where('pr.IsActive', 1);
 
-        $applyLocationFilters($dueEmiQuery, 'pr');
-
-        $dueEmiQuery->groupBy('due.AssetId');
+        $applyLocationFilters($totalEmiQuery, 'pr');
 
         $paidEmiQuery = DB::table('ledger as ledger')
+            ->join('installment_due as due_paid', function ($join) {
+                $join->on('due_paid.AssetId', '=', 'ledger.AssetId')
+                    ->on(
+                        'due_paid.InstallmentNumber',
+                        '=',
+                        'ledger.InstallmentNumber'
+                    )
+                    ->where('due_paid.IsDeleted', 0)
+                    ->where('due_paid.IsActive', 1);
+            })
             ->join(
                 'property_registration as pr_paid',
                 'pr_paid.AssetId',
                 '=',
                 'ledger.AssetId'
             )
-            ->selectRaw('
-            ledger.AssetId,
-            COUNT(DISTINCT ledger.InstallmentNumber) AS paid_emi
-        ')
             ->where('ledger.Is_Deleted', 0)
             ->where('ledger.Is_Active', 1)
             ->where('ledger.Payment', '>', 0)
             ->where('pr_paid.IsDeleted', 0)
             ->where('pr_paid.IsActive', 1);
 
-        // Apply the dashboard location filter before aggregating the ledger.
         $applyLocationFilters($paidEmiQuery, 'pr_paid');
 
-        $paidEmiQuery->groupBy('ledger.AssetId');
-
-        $emiData = DB::query()
-            ->fromSub($dueEmiQuery, 'due_summary')
-            ->leftJoinSub(
-                $paidEmiQuery,
-                'paid_summary',
-                function ($join) {
-                    $join->on(
-                        'paid_summary.AssetId',
-                        '=',
-                        'due_summary.AssetId'
-                    );
-                }
-            )
-            ->selectRaw('
-            COALESCE(
-                SUM(due_summary.total_emi),
-                0
-            ) AS total_emi,
-
-            COALESCE(
-                SUM(
-                    COALESCE(paid_summary.paid_emi, 0)
-                ),
-                0
-            ) AS paid_emi,
-
-            COALESCE(
-                SUM(
-                    GREATEST(
-                        due_summary.total_emi
-                        - COALESCE(
-                            paid_summary.paid_emi,
-                            0
-                        ),
-                        0
+        $emiData = cache()->remember(
+            $dashboardCacheKey . ':emi-stats',
+            $dashboardCacheSeconds,
+            function () use ($totalEmiQuery, $paidEmiQuery) {
+                $totalEmi = (int) (clone $totalEmiQuery)
+                    ->selectRaw(
+                        'COUNT(DISTINCT due.AssetId, due.InstallmentNumber) AS aggregate'
                     )
-                ),
-                0
-            ) AS pending_emi
-        ')
-            ->first();
+                    ->value('aggregate');
+
+                $paidEmi = (int) (clone $paidEmiQuery)
+                    ->selectRaw(
+                        'COUNT(DISTINCT ledger.AssetId, ledger.InstallmentNumber) AS aggregate'
+                    )
+                    ->value('aggregate');
+
+                return (object) [
+                    'total_emi' => $totalEmi,
+                    'paid_emi' => min($paidEmi, $totalEmi),
+                    'pending_emi' => max($totalEmi - $paidEmi, 0),
+                ];
+            }
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -389,14 +413,20 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $latestPhysicalApplications = $this->eligiblePossessionSelect(
-            $this->eligiblePossessionQuery($request)
-        )
-            ->whereNotNull('ppa.id')
-            ->whereNotNull('ppa.citizen_visit_date')
-            ->orderByDesc('ppa.id')
-            ->limit(10)
-            ->get();
+        $latestPhysicalApplications = cache()->remember(
+            $dashboardCacheKey . ':latest-possession',
+            $dashboardCacheSeconds,
+            function () use ($request) {
+                return $this->eligiblePossessionSelect(
+                    $this->eligiblePossessionQuery($request)
+                )
+                    ->whereNotNull('ppa.id')
+                    ->whereNotNull('ppa.citizen_visit_date')
+                    ->orderByDesc('ppa.id')
+                    ->limit(10)
+                    ->get();
+            }
+        );
         /*
         |--------------------------------------------------------------------------
         | Dashboard view
@@ -434,14 +464,7 @@ class PropertyManagementController extends Controller
             ? $sortOrder
             : 'desc';
 
-        $receiptTotals = DB::table('cash_receipt_details')
-            ->selectRaw('
-            asset_number,
-            SUM(total_paid_amount) AS receipt_paid
-        ')
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1)
-            ->groupBy('asset_number');
+        $receiptTotalSql = $this->receiptTotalSql('pr.AssetId');
 
         $properties = DB::table('property_registration as pr')
             ->leftJoin('districts as d', 'd.DistrictId', '=', 'pr.DistrictId')
@@ -461,9 +484,6 @@ class PropertyManagementController extends Controller
                     // Historical/inactive purchasers must still be displayed.
                     ->where('ppp.IsDeleted', 0);
             })
-            ->leftJoinSub($receiptTotals, 'cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pr.AssetId');
-            })
             ->select([
                 'pr.AssetId',
                 'pr.AssetName',
@@ -480,23 +500,23 @@ class PropertyManagementController extends Controller
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
             ])
-            ->selectRaw('
-            COALESCE(cr.receipt_paid, 0) AS receipt_paid,
+            ->selectRaw("
+            {$receiptTotalSql} AS receipt_paid,
 
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + COALESCE(cr.receipt_paid, 0)
+                + {$receiptTotalSql}
             ) AS total_received,
 
             GREATEST(
                 COALESCE(pad.FlatCost, 0)
                 - (
                     COALESCE(pad.ReceivedAmount, 0)
-                    + COALESCE(cr.receipt_paid, 0)
+                    + {$receiptTotalSql}
                 ),
                 0
             ) AS pending_amount
-        ')
+        ")
             ->where('pr.IsDeleted', 0)
             ->where('pr.IsActive', 1)
             ->when(
@@ -529,7 +549,7 @@ class PropertyManagementController extends Controller
                 });
             })
             ->orderBy('pr.AssetId', $sortOrder)
-            ->paginate(50)
+            ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
         $districts = DB::table('districts')
@@ -1387,14 +1407,7 @@ class PropertyManagementController extends Controller
             ? $sortOrder
             : 'desc';
 
-        $receiptTotals = DB::table('cash_receipt_details')
-            ->selectRaw('
-            asset_number,
-            SUM(total_paid_amount) AS receipt_paid
-        ')
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1)
-            ->groupBy('asset_number');
+        $receiptTotalSql = $this->receiptTotalSql('pr.AssetId');
 
         return DB::table('property_registration as pr')
             ->leftJoin('districts as d', 'd.DistrictId', '=', 'pr.DistrictId')
@@ -1414,9 +1427,6 @@ class PropertyManagementController extends Controller
                     // Print/export must use the same purchaser rule as listing.
                     ->where('ppp.IsDeleted', 0);
             })
-            ->leftJoinSub($receiptTotals, 'cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pr.AssetId');
-            })
             ->select([
                 'pr.AssetId',
                 'pr.AssetName',
@@ -1430,21 +1440,21 @@ class PropertyManagementController extends Controller
                 'ppp.MobileNo',
                 'pad.FlatCost',
             ])
-            ->selectRaw('
+            ->selectRaw("
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + COALESCE(cr.receipt_paid, 0)
+                + {$receiptTotalSql}
             ) AS total_received,
 
             GREATEST(
                 COALESCE(pad.FlatCost, 0)
                 - (
                     COALESCE(pad.ReceivedAmount, 0)
-                    + COALESCE(cr.receipt_paid, 0)
+                    + {$receiptTotalSql}
                 ),
                 0
             ) AS pending_amount
-        ')
+        ")
             ->where('pr.IsDeleted', 0)
             ->where('pr.IsActive', 1)
             ->when(
@@ -1791,11 +1801,10 @@ class PropertyManagementController extends Controller
                 'd.DistrictName'
             );
 
-        // total records
-        $totalRecords = $query->count();
-
-        // pagination (20 per page)
+        // paginate() already performs the exact count query. Reusing its total
+        // avoids executing the same filtered count twice.
         $data = $query->paginate(10);
+        $totalRecords = $data->total();
 
         $districtName = DB::table('districts')
             ->where('DistrictId', $id)
@@ -2525,18 +2534,14 @@ class PropertyManagementController extends Controller
     {
         $filters = $this->possessionFilters($request);
         $statusSql = $this->possessionStatusSql();
+        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
 
         /*
         | Dashboard uses this exact payment calculation.
         | Do not filter through property_registration before eligibility is decided.
         */
         $assetPayments = DB::table('property_auction_detail as pad')
-            ->leftJoin('cash_receipt_details as cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pad.AssetId')
-                    ->where('cr.IsDeleted', 0)
-                    ->where('cr.IsActive', 1);
-            })
-            ->selectRaw('
+            ->selectRaw("
             MAX(pad.PropertyAuctionId) AS PropertyAuctionId,
             pad.AssetId,
             pad.FlatCost,
@@ -2546,12 +2551,12 @@ class PropertyManagementController extends Controller
             MAX(pad.DistrictId) AS DistrictId,
             MAX(pad.CityId) AS CityId,
             MAX(pad.SectorId) AS SectorId,
-            COALESCE(SUM(cr.total_paid_amount), 0) AS receipt_total,
+            {$receiptTotalSql} AS receipt_total,
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + COALESCE(SUM(cr.total_paid_amount), 0)
+                + {$receiptTotalSql}
             ) AS total_received
-        ')
+        ")
             ->where('pad.IsDeleted', 0)
             ->where('pad.IsActive', 1)
             ->when($filters['district_id'], fn($q, $id) => $q->where('pad.DistrictId', $id))
@@ -2699,7 +2704,7 @@ class PropertyManagementController extends Controller
             $this->eligiblePossessionQuery($request)
         )
             ->orderByDesc('payments.PropertyAuctionId')
-            ->paginate(50)
+            ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
         $districts = DB::table('districts')
@@ -2897,7 +2902,7 @@ class PropertyManagementController extends Controller
 
     public function physicalPossessionPrint(Request $request)
     {
-        $perChunk = 500;
+        $perChunk = self::PRINT_CHUNK_SIZE;
         $afterId = max(0, $request->integer('after_id'));
 
         $rows = $this->eligiblePossessionSelect(
@@ -2921,12 +2926,9 @@ class PropertyManagementController extends Controller
 
     private function notEligiblePossessionQuery(Request $request)
     {
+        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+
         $paymentSummary = DB::table('property_auction_detail as pad')
-            ->leftJoin('cash_receipt_details as cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pad.AssetId')
-                    ->where('cr.IsDeleted', 0)
-                    ->where('cr.IsActive', 1);
-            })
             ->where('pad.IsDeleted', 0)
             ->where('pad.IsActive', 1)
             // ReceivedAmount is NOT NULL; plain comparison can use the composite index.
@@ -2962,26 +2964,13 @@ class PropertyManagementController extends Controller
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
             ])
-            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
-            ->selectRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0)
-            AS total_received
-        ')
-            ->groupBy([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->havingRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0) < 60000
-        ');
+            ->selectRaw("{$receiptTotalSql} AS cash_received")
+            ->selectRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) AS total_received")
+            ->whereRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) < 60000");
 
         $query = DB::query()
             ->fromSub($paymentSummary, 'ps')
@@ -3088,7 +3077,7 @@ class PropertyManagementController extends Controller
         // Length-aware pagination is required for page numbers and total records.
         $applications = $this->notEligiblePossessionQuery($request)
             ->orderByDesc('ps.PropertyAuctionId')
-            ->paginate(50)
+            ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
         return view('mmsay.physicalPossessionNotEligible', compact(
@@ -3131,7 +3120,7 @@ class PropertyManagementController extends Controller
 
             $this->notEligiblePossessionQuery($request)
                 ->orderByDesc('ps.PropertyAuctionId')
-                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                ->chunkByIdDesc(self::EXPORT_CHUNK_SIZE, function ($rows) use ($handle, &$serial) {
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $serial++,
@@ -3158,7 +3147,7 @@ class PropertyManagementController extends Controller
 
     public function physicalPossessionNotEligiblePrint(Request $request)
     {
-        $perChunk = 500000;
+        $perChunk = self::PRINT_CHUNK_SIZE;
         $afterId = max(0, $request->integer('after_id'));
 
         $rows = $this->notEligiblePossessionQuery($request)
@@ -3185,12 +3174,9 @@ class PropertyManagementController extends Controller
 
     private function fullPaidPropertiesQuery(Request $request)
     {
+        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+
         $paymentSummary = DB::table('property_auction_detail as pad')
-            ->leftJoin('cash_receipt_details as cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pad.AssetId')
-                    ->where('cr.IsDeleted', 0)
-                    ->where('cr.IsActive', 1);
-            })
             ->where('pad.IsDeleted', 0)
             ->where('pad.IsActive', 1)
             ->when(
@@ -3224,27 +3210,13 @@ class PropertyManagementController extends Controller
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
             ])
-            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
-            ->selectRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0)
-            AS total_paid
-        ')
-            ->groupBy([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->havingRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0)
-            >= COALESCE(pad.FlatCost, 0)
-        ');
+            ->selectRaw("{$receiptTotalSql} AS cash_received")
+            ->selectRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) AS total_paid")
+            ->whereRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) >= COALESCE(pad.FlatCost, 0)");
 
         $query = DB::query()
             ->fromSub($paymentSummary, 'ps')
@@ -3336,7 +3308,7 @@ class PropertyManagementController extends Controller
 
         $properties = $this->fullPaidPropertiesQuery($request)
             ->orderByDesc('ps.PropertyAuctionId')
-            ->paginate(50)
+            ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
         return view('mmsay.fullPaidProperties', compact(
@@ -3380,7 +3352,7 @@ class PropertyManagementController extends Controller
 
             $this->fullPaidPropertiesQuery($request)
                 ->orderByDesc('ps.PropertyAuctionId')
-                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                ->chunkByIdDesc(self::EXPORT_CHUNK_SIZE, function ($rows) use ($handle, &$serial) {
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $serial++,
@@ -3407,7 +3379,7 @@ class PropertyManagementController extends Controller
 
     public function fullPaidPropertiesPrint(Request $request)
     {
-        $perChunk = 500;
+        $perChunk = self::PRINT_CHUNK_SIZE;
         $afterId = max(0, $request->integer('after_id'));
 
         $rows = $this->fullPaidPropertiesQuery($request)
@@ -3432,12 +3404,9 @@ class PropertyManagementController extends Controller
 
     private function partialPaidPropertiesQuery(Request $request)
     {
+        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+
         $paymentSummary = DB::table('property_auction_detail as pad')
-            ->leftJoin('cash_receipt_details as cr', function ($join) {
-                $join->on('cr.asset_number', '=', 'pad.AssetId')
-                    ->where('cr.IsDeleted', 0)
-                    ->where('cr.IsActive', 1);
-            })
             ->where('pad.IsDeleted', 0)
             ->where('pad.IsActive', 1)
             ->when(
@@ -3471,27 +3440,13 @@ class PropertyManagementController extends Controller
                 'pad.FlatCost',
                 'pad.ReceivedAmount',
             ])
-            ->selectRaw('COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received')
-            ->selectRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0)
-            AS total_paid
-        ')
-            ->groupBy([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->havingRaw('
-            COALESCE(pad.ReceivedAmount, 0)
-            + COALESCE(SUM(cr.total_paid_amount), 0)
-            < COALESCE(pad.FlatCost, 0)
-        ');
+            ->selectRaw("{$receiptTotalSql} AS cash_received")
+            ->selectRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) AS total_paid")
+            ->whereRaw("(
+                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
+            ) < COALESCE(pad.FlatCost, 0)");
 
         $query = DB::query()
             ->fromSub($paymentSummary, 'ps')
@@ -3586,7 +3541,7 @@ class PropertyManagementController extends Controller
 
         $properties = $this->partialPaidPropertiesQuery($request)
             ->orderByDesc('ps.PropertyAuctionId')
-            ->paginate(50)
+            ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
         return view('mmsay.pendingProperties', compact(
@@ -3630,7 +3585,7 @@ class PropertyManagementController extends Controller
 
             $this->partialPaidPropertiesQuery($request)
                 ->orderByDesc('ps.PropertyAuctionId')
-                ->chunkByIdDesc(500, function ($rows) use ($handle, &$serial) {
+                ->chunkByIdDesc(self::EXPORT_CHUNK_SIZE, function ($rows) use ($handle, &$serial) {
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $serial++,
@@ -3657,7 +3612,7 @@ class PropertyManagementController extends Controller
 
     public function partialPaidPropertiesPrint(Request $request)
     {
-        $perChunk = 500;
+        $perChunk = self::PRINT_CHUNK_SIZE;
         $afterId = max(0, $request->integer('after_id'));
 
         $rows = $this->partialPaidPropertiesQuery($request)

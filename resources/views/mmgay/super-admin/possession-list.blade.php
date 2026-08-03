@@ -419,8 +419,16 @@
             </div>
 
             @if ($applications->hasPages())
-                <div class="border-t border-slate-200 px-5 py-4">
-                    {{ $applications->links() }}
+                <div class="border-t border-slate-200 bg-white px-6 py-4">
+                    <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
+
+                        <div class="text-sm text-slate-600">
+                            
+                        </div>
+
+                        {{ $applications->onEachSide(1)->links('pagination::tailwind') }}
+
+                    </div>
                 </div>
             @endif
 

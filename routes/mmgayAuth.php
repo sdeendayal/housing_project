@@ -324,6 +324,22 @@ Route::prefix('super-admin')
             'applicantsExcel'
         ])->name('superadmin.applicants.excel');
 
+        Route::get(
+            '/applicants/export/csv',
+            [
+                SuperAdminController::class,
+                'applicantsCsv'
+            ]
+        )->name('superadmin.applicants.csv');
+
+        Route::get(
+            '/applicants/print',
+            [
+                SuperAdminController::class,
+                'applicantsPrint'
+            ]
+        )->name('superadmin.applicants.print');
+
         Route::get('/applicants/export/pdf', [
             SuperAdminController::class,
             'applicantsPdf'
@@ -331,6 +347,16 @@ Route::prefix('super-admin')
 
         Route::get('/allotment-report', [SuperAdminController::class, 'allotmentReport'])
             ->name('admin.allotment.report');
+
+        Route::get(
+            '/allotment-report/export/csv',
+            [SuperAdminController::class, 'allotmentReportCsv']
+        )->name('admin.allotment.export.csv');
+
+        Route::get(
+            '/allotment-report/print',
+            [SuperAdminController::class, 'allotmentReportPrint']
+        )->name('admin.allotment.print');
 
         Route::get('/allotment-report/excel', [SuperAdminController::class, 'exportAllotmentExcel'])
             ->name('admin.allotment.export.excel');
