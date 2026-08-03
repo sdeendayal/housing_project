@@ -139,9 +139,7 @@
                 </div>
             </div>
 
-            <form method="GET"
-                action="{{ route('district.possession.list', ['filter' => $filter]) }}"
-                class="p-4">
+            <form method="GET" action="{{ route('district.possession.list', ['filter' => $filter]) }}" class="p-4">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1.5fr_150px_auto]">
 
                     {{-- Phase --}}
@@ -346,6 +344,9 @@
                             <th class="px-4 py-3 text-left text-xs font-semibold">#</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold">Applicant</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold">Application No.</th>
+                            <th class="px-4 py-3 text-left text-xs font-semibold">
+                                Registry No.
+                            </th>
                             <th class="px-4 py-3 text-left text-xs font-semibold">Village / Phase</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold">Possession Status</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold">Visit / Meeting</th>
@@ -389,6 +390,11 @@
                                     <p class="mt-0.5 text-xs text-slate-500">
                                         Owner ID: {{ $application->OwnerId }}
                                     </p>
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span class="font-semibold text-slate-700">
+                                        {{ $application->RegistaryNumber ?? '-' }}
+                                    </span>
                                 </td>
 
                                 <td class="px-4 py-3">

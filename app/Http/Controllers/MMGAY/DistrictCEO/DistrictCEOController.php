@@ -773,7 +773,27 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'pa.verified_at',
                 'pa.created_at',
                 'pa.updated_at',
-            ]);
+            ])->selectSub(
+                function ($registryQuery) {
+                    $registryQuery
+                        ->from('registary as registry')
+                        ->select('registry.RegistaryNumber')
+                        ->whereColumn(
+                            'registry.SecondPartyMobile',
+                            'o.MobileNo'
+                        )
+                        ->whereNotNull(
+                            'registry.RegistaryNumber'
+                        )
+                        ->where(
+                            'registry.RegistaryNumber',
+                            '<>',
+                            ''
+                        )
+                        ->limit(1);
+                },
+                'RegistaryNumber'
+            );
 
         switch ($filter) {
             case 'schedule_pending':
