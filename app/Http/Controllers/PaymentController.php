@@ -1040,14 +1040,18 @@ class PaymentController extends Controller
     private function formatIndianCurrency(float $amount): string
     {
         if ($amount <= 0) {
-            return '₹ 0';
+            return '₹ 0.00';
         }
-        $rounded = (int) round($amount);
-        $lastThree = substr((string) $rounded, -3);
-        $rest = substr((string) $rounded, 0, -3);
+
+        $amountStr = number_format($amount, 2, '.', '');
+        list($integerPart, $decimalPart) = explode('.', $amountStr);
+
+        $lastThree = substr($integerPart, -3);
+        $rest = substr($integerPart, 0, -3);
         if ($rest !== '') {
             $rest = preg_replace('/\B(?=(\d{2})+(?!\d))/', ',', $rest);
         }
-        return '₹ ' . ($rest ? $rest . ',' : '') . $lastThree;
+
+        return '₹ ' . ($rest ? $rest . ',' : '') . $lastThree . '.' . $decimalPart;
     }
 }
