@@ -54,7 +54,7 @@
                             </h2>
 
                             <p class="mt-0.5 text-xs text-slate-500">
-                                Filter villages by phase and village.
+                                Filter villages by phase, district and village.
                             </p>
                         </div>
 
@@ -62,121 +62,131 @@
 
                 </div>
 
-                <form method="GET" action="{{ route('admin.village.report') }}" class="p-4">
+                <form id="villageReportFilterForm" method="GET" action="{{ route('admin.village.report') }}"
+                    class="space-y-4 p-4">
 
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto]">
+                    <div class="grid grid-cols-12 gap-4 items-end">
 
                         {{-- Filters --}}
-                        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="col-span-5">
 
-                            {{-- Phase --}}
-                            <div>
-                                <label for="phase"
-                                    class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">
-                                    Phase
-                                </label>
+                            <div class="grid grid-cols-3 gap-4">
 
-                                <select id="phase" name="phase"
-                                    class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
-                                    <option value="">
-                                        All Phases
-                                    </option>
+                                {{-- Phase --}}
+                                <div>
+                                    <label for="phase"
+                                        class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">
+                                        Phase
+                                    </label>
 
-                                    <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>
-                                        Phase 1
-                                    </option>
-
-                                    <option value="2" {{ request('phase') == '2' ? 'selected' : '' }}>
-                                        Phase 2
-                                    </option>
-
-                                    <option value="3" {{ request('phase') == '3' ? 'selected' : '' }}>
-                                        Phase 3
-                                    </option>
-                                </select>
-                            </div>
-
-                            {{-- Village --}}
-                            <div>
-                                <label for="village_id"
-                                    class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">
-                                    Village
-                                </label>
-
-                                <select id="village_id" name="village_id"
-                                    class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100">
-                                    <option value="">
-                                        All Villages
-                                    </option>
-
-                                    @foreach ($villages as $village)
-                                        <option value="{{ $village->VillageId }}"
-                                            {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
-                                            {{ $village->VillageName }}
+                                    <select id="phase" name="phase"
+                                        class="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm">
+                                        <option value="">All Phases</option>
+                                        <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>Phase 1
                                         </option>
-                                    @endforeach
-                                </select>
+                                        <option value="2" {{ request('phase') == '2' ? 'selected' : '' }}>Phase 2
+                                        </option>
+                                        <option value="3" {{ request('phase') == '3' ? 'selected' : '' }}>Phase 3
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {{-- District --}}
+                                <div>
+                                    <label for="district_id"
+                                        class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">
+                                        District
+                                    </label>
+
+                                    <select id="district_id" name="district_id"
+                                        class="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm">
+
+                                        <option value="">All Districts</option>
+
+                                        @foreach ($districts as $district)
+                                            <option value="{{ $district->DistrictId }}"
+                                                {{ request('district_id') == $district->DistrictId ? 'selected' : '' }}>
+                                                {{ $district->DistrictName }}
+                                            </option>
+                                        @endforeach
+
+                                    </select>
+                                </div>
+
+                                {{-- Village --}}
+                                <div>
+                                    <label for="village_id"
+                                        class="mb-1.5 block text-xs font-bold uppercase tracking-wide text-slate-600">
+                                        Village
+                                    </label>
+
+                                    <select id="village_id" name="village_id"
+                                        class="h-11 w-full rounded-xl border border-slate-300 px-3 text-sm">
+
+                                        <option value="">All Villages</option>
+
+                                        @foreach ($villages as $village)
+                                            <option value="{{ $village->VillageId }}"
+                                                {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
+                                                {{ $village->VillageName }}
+                                            </option>
+                                        @endforeach
+
+                                    </select>
+                                </div>
+
                             </div>
 
                         </div>
 
-                        {{-- Apply / Reset --}}
-                        <div class="flex items-end gap-2">
+                        {{-- Apply Button --}}
+                        <div class="col-span-3 flex gap-2">
 
                             <button type="submit"
-                                class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus:ring-4 focus:ring-indigo-200">
-                                <span class="material-symbols-outlined text-[19px]">
+                                class="inline-flex h-11 w-52 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white hover:bg-indigo-700">
+
+                                <span class="material-symbols-outlined">
                                     search
                                 </span>
 
-                                Apply Filters
+                                Apply
                             </button>
 
-                            <a href="{{ route('admin.village.report') }}" title="Reset Filters"
-                                class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white text-slate-600 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
-                                <span class="material-symbols-outlined text-[20px]">
+                            <a href="{{ route('admin.village.report') }}"
+                                class="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-slate-300 bg-white hover:bg-red-50">
+
+                                <span class="material-symbols-outlined">
                                     restart_alt
                                 </span>
+
                             </a>
 
                         </div>
 
                         {{-- Export Buttons --}}
-                        <div class="flex items-end justify-start gap-2 xl:justify-end">
+                        <div class="col-span-4 flex justify-end gap-2">
 
-                            <a id="excelExportButton" href="{{ route('admin.village.report.excel', request()->query()) }}"
-                                class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-md">
-                                <span class="material-symbols-outlined text-[19px]">
-                                    table_view
-                                </span>
-
+                            <a href="{{ route('admin.village.report.excel', request()->query()) }}"
+                                class="h-11 rounded-xl bg-emerald-600 px-4 text-white font-semibold inline-flex items-center gap-2 whitespace-nowrap">
+                                <span class="material-symbols-outlined">table_view</span>
                                 Excel
                             </a>
 
                             <a href="{{ route('admin.village.report.csv', request()->query()) }}"
-                                class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-teal-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-teal-700 hover:shadow-md">
-                                <span class="material-symbols-outlined text-[19px]">
-                                    csv
-                                </span>
-
+                                class="h-11 rounded-xl bg-teal-600 px-4 text-white font-semibold inline-flex items-center gap-2 whitespace-nowrap">
+                                <span class="material-symbols-outlined">csv</span>
                                 CSV
                             </a>
 
-                            <a id="pdfExportButton" href="{{ route('admin.village.report.pdf', request()->query()) }}"
-                                class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-rose-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-rose-700 hover:shadow-md">
-                                <span class="material-symbols-outlined text-[19px]">
-                                    picture_as_pdf
-                                </span>
-
+                            <a href="{{ route('admin.village.report.pdf', request()->query()) }}"
+                                class="h-11 rounded-xl bg-rose-600 px-4 text-white font-semibold inline-flex items-center gap-2 whitespace-nowrap">
+                                <span class="material-symbols-outlined">picture_as_pdf</span>
                                 PDF
                             </a>
 
                             <a href="{{ route('admin.village.report.print', request()->query()) }}" target="_blank"
-                                class="inline-flex h-11 items-center justify-center gap-1.5 rounded-xl bg-slate-700 px-4 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-slate-800 hover:shadow-md">
-                                <span class="material-symbols-outlined text-[19px]">
-                                    print
-                                </span>
-
+                                class="h-11 rounded-xl bg-slate-700 px-4 text-white font-semibold inline-flex items-center gap-2 whitespace-nowrap">
+                                <span class="material-symbols-outlined">print</span>
                                 Print
                             </a>
 
@@ -185,8 +195,10 @@
                     </div>
 
                     {{-- Active Filters --}}
-                    @if (request('phase') || request('village_id'))
+                    @if (request('phase') || request('district_id') || request('village_id'))
+
                         <div class="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+
                             <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">
                                 Active Filters
                             </span>
@@ -197,9 +209,24 @@
                                     <span class="material-symbols-outlined text-[15px]">
                                         layers
                                     </span>
-
                                     Phase {{ request('phase') }}
                                 </span>
+                            @endif
+
+                            @if (request('district_id'))
+                                @php
+                                    $selectedDistrict = $districts->firstWhere('DistrictId', request('district_id'));
+                                @endphp
+
+                                @if ($selectedDistrict)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                                        <span class="material-symbols-outlined text-[15px]">
+                                            location_on
+                                        </span>
+                                        {{ $selectedDistrict->DistrictName }}
+                                    </span>
+                                @endif
                             @endif
 
                             @if (request('village_id'))
@@ -213,12 +240,13 @@
                                         <span class="material-symbols-outlined text-[15px]">
                                             holiday_village
                                         </span>
-
                                         {{ $selectedVillage->VillageName }}
                                     </span>
                                 @endif
                             @endif
+
                         </div>
+
                     @endif
 
                 </form>
@@ -388,11 +416,6 @@
 
                                 <th
                                     class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Allotted
-                                </th>
-
-                                <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
                                     Approved Paid
                                 </th>
 
@@ -416,19 +439,23 @@
                                     Cancelled
                                 </th>
 
+                                <th
+                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    Allotted
+                                </th>
                             </tr>
-
                         </thead>
-
-
                         <tbody class="divide-y divide-slate-100 bg-white">
 
                             @forelse ($report as $index => $row)
                                 @php
-                                    $commonFilters = [
+                                    $commonFilters = array_filter([
                                         'phase' => $row->Phase ?? request('phase'),
+
+                                        'district_id' => $row->DistrictId ?? request('district_id'),
+
                                         'village_id' => $row->VillageId,
-                                    ];
+                                    ]);
                                 @endphp
 
                                 <tr class="transition hover:bg-slate-50">
@@ -482,15 +509,6 @@
                                             class="inline-flex min-w-12 items-center justify-center rounded-lg bg-indigo-50 px-3 py-1.5 font-semibold text-indigo-700 transition hover:bg-indigo-100 hover:shadow-sm">
 
                                             {{ number_format($row->RegisteredBeneficiaries ?? 0) }}
-                                        </a>
-                                    </td>
-
-                                    {{-- Allotted --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
-                                        <a href="{{ route('admin.allotment.report', $commonFilters) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
-
-                                            {{ number_format($row->AllottedBeneficiaries ?? 0) }}
                                         </a>
                                     </td>
 
@@ -564,6 +582,15 @@
                                         </a>
                                     </td>
 
+                                    {{-- Allotted --}}
+                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                        <a href="{{ route('admin.allotment.report', $commonFilters) }}"
+                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
+
+                                            {{ number_format($row->AllottedBeneficiaries ?? 0) }}
+                                        </a>
+                                    </td>
+
                                 </tr>
 
                             @empty
@@ -625,10 +652,6 @@
                                         {{ number_format($grossTotal->RegisteredBeneficiaries ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-indigo-700">
-                                        {{ number_format($grossTotal->AllottedBeneficiaries ?? 0) }}
-                                    </td>
-
                                     <td class="px-4 py-3 text-center text-emerald-700">
                                         {{ number_format($grossTotal->ApprovedPaid ?? 0) }}
                                     </td>
@@ -647,6 +670,10 @@
 
                                     <td class="px-4 py-3 text-center text-rose-600">
                                         {{ number_format($grossTotal->AllotmentCancelled ?? 0) }}
+                                    </td>
+
+                                    <td class="px-4 py-3 text-center text-indigo-700">
+                                        {{ number_format($grossTotal->AllottedBeneficiaries ?? 0) }}
                                     </td>
 
                                 </tr>

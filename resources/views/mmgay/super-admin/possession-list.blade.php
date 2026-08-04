@@ -106,7 +106,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('admin.possession.list', ['filter' => $filter]) }}" class="p-4">
+            <form id="possessionFilterForm" method="GET" action="{{ route('admin.possession.list', ['filter' => $filter]) }}" class="p-4">
                 <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-12">
 
                     {{-- Phase --}}
@@ -216,7 +216,7 @@
 
                     {{-- Actions --}}
                     <div class="flex items-end gap-2 xl:col-span-2">
-                        <button type="submit"
+                        <button id="possessionApplyButton" type="submit"
                             class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">
                             <span class="material-symbols-outlined text-[18px]">
                                 filter_alt
@@ -313,7 +313,7 @@
             @endforeach
         </section>
 
-        <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section style="margin-top: 20px;" class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             <div class="border-b border-slate-200 px-5 py-4">
                 <h2 class="font-bold text-slate-800">

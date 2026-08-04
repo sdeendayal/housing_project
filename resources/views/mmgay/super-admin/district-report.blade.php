@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('admin.district.report') }}" class="p-5">
+            <form id="districtReportFilterForm" method="GET" action="{{ route('admin.district.report') }}" class="p-5">
 
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-12">
 
@@ -76,7 +76,7 @@
                     {{-- Filter Buttons --}}
                     <div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
 
-                        <button type="submit"
+                        <button id="districtReportApplyButton" type="submit"
                             class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
@@ -305,7 +305,12 @@
 
                                 {{-- Villages --}}
                                 <td class="p-3 text-center">
-                                    <a href="{{ $districtUrl }}"
+                                    <a href="{{ route(
+                                        'admin.village.report',
+                                        array_merge($commonFilters, [
+                                            'status' => 'all',
+                                        ]),
+                                    ) }}"
                                         class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
 
                                         {{ number_format($d->VillagesWithPlots) }}

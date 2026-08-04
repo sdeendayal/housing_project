@@ -1,6 +1,844 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const phaseSelect = document.getElementById('phase');
+
+    const districtSelect = document.getElementById(
+        'district_id'
+    );
+
+    const villageSelect = document.getElementById(
+        'village_id'
+    );
+
+    const form = document.getElementById(
+        'villageReportFilterForm'
+    );
+
+    const applyButton = document.getElementById(
+        'villageReportApplyButton'
+    );
+
+    if (
+        !phaseSelect
+        || !districtSelect
+        || !villageSelect
+    ) {
+        return;
+    }
+
+    const districtsUrl = @json(
+        route('admin.village.report.filters.districts')
+    );
+
+    const villagesUrl = @json(
+        route('admin.village.report.filters.villages')
+    );
+
+    let districtController = null;
+    let villageController = null;
+
+    function escapeHtml(value) {
+        const element = document.createElement('div');
+        element.textContent = value ?? '';
+
+        return element.innerHTML;
+    }
+
+    function setLoading(select, message) {
+        select.disabled = true;
+
+        select.innerHTML = `
+            <option value="">
+                ${message}
+            </option>
+        `;
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Phase changed → reload District + Village
+    |--------------------------------------------------------------------------
+    */
+    async function loadDistricts() {
+        if (districtController) {
+            districtController.abort();
+        }
+
+        districtController = new AbortController();
+
+        setLoading(
+            districtSelect,
+            'Loading districts...'
+        );
+
+        villageSelect.innerHTML = `
+            <option value="">
+                All Villages
+            </option>
+        `;
+
+        villageSelect.disabled = true;
+
+        try {
+            const params = new URLSearchParams();
+
+            if (phaseSelect.value !== '') {
+                params.set(
+                    'phase',
+                    phaseSelect.value
+                );
+            }
+
+            const response = await fetch(
+                `${districtsUrl}?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal: districtController.signal,
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Districts could not be loaded.'
+                );
+            }
+
+            const data = await response.json();
+
+            let options = `
+                <option value="">
+                    All Districts
+                </option>
+            `;
+
+            data.districts.forEach(function (district) {
+                options += `
+                    <option value="${escapeHtml(
+                        district.DistrictId
+                    )}">
+                        ${escapeHtml(
+                            district.DistrictName
+                        )}
+                    </option>
+                `;
+            });
+
+            districtSelect.innerHTML = options;
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                districtSelect.innerHTML = `
+                    <option value="">
+                        Unable to load districts
+                    </option>
+                `;
+            }
+        } finally {
+            districtSelect.disabled = false;
+            villageSelect.disabled = false;
+        }
+
+        await loadVillages();
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Phase/District changed → reload Villages
+    |--------------------------------------------------------------------------
+    */
+    async function loadVillages() {
+        if (villageController) {
+            villageController.abort();
+        }
+
+        villageController = new AbortController();
+
+        setLoading(
+            villageSelect,
+            'Loading villages...'
+        );
+
+        try {
+            const params = new URLSearchParams();
+
+            if (phaseSelect.value !== '') {
+                params.set(
+                    'phase',
+                    phaseSelect.value
+                );
+            }
+
+            if (districtSelect.value !== '') {
+                params.set(
+                    'district_id',
+                    districtSelect.value
+                );
+            }
+
+            const response = await fetch(
+                `${villagesUrl}?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal: villageController.signal,
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Villages could not be loaded.'
+                );
+            }
+
+            const data = await response.json();
+
+            let options = `
+                <option value="">
+                    All Villages
+                </option>
+            `;
+
+            data.villages.forEach(function (village) {
+                options += `
+                    <option value="${escapeHtml(
+                        village.VillageId
+                    )}">
+                        ${escapeHtml(
+                            village.VillageName
+                        )}
+                    </option>
+                `;
+            });
+
+            villageSelect.innerHTML = options;
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                villageSelect.innerHTML = `
+                    <option value="">
+                        Unable to load villages
+                    </option>
+                `;
+            }
+        } finally {
+            villageSelect.disabled = false;
+        }
+    }
+
+    phaseSelect.addEventListener(
+        'change',
+        loadDistricts
+    );
+
+    districtSelect.addEventListener(
+        'change',
+        loadVillages
+    );
+
+    form?.addEventListener('submit', function () {
+        if (!applyButton) {
+            return;
+        }
+
+        applyButton.disabled = true;
+
+        applyButton.classList.add(
+            'cursor-not-allowed',
+            'opacity-60'
+        );
+
+        applyButton.innerHTML = `
+            <span
+                class="h-4 w-4 animate-spin rounded-full
+                       border-2 border-white/40
+                       border-t-white"
+            ></span>
+
+            Loading...
+        `;
+    });
+});
+</script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const phase = document.getElementById(
+        'possessionPhase'
+    );
+
+    const district = document.getElementById(
+        'possessionDistrict'
+    );
+
+    const block = document.getElementById(
+        'possessionBlock'
+    );
+
+    const village = document.getElementById(
+        'possessionVillage'
+    );
+
+    const form = document.getElementById(
+        'possessionFilterForm'
+    );
+
+    const applyButton = document.getElementById(
+        'possessionApplyButton'
+    );
+
+    if (!phase || !district || !block || !village) {
+        return;
+    }
+
+    const districtUrl = @json(
+        route('admin.possession.filters.districts')
+    );
+
+    const blockUrl = @json(
+        route('admin.possession.filters.blocks')
+    );
+
+    const villageUrl = @json(
+        route('admin.possession.filters.villages')
+    );
+
+    let activeRequest = null;
+
+    function cancelPreviousRequest() {
+        if (activeRequest) {
+            activeRequest.abort();
+        }
+
+        activeRequest = new AbortController();
+
+        return activeRequest.signal;
+    }
+
+    function escapeHtml(value) {
+        const div = document.createElement('div');
+        div.textContent = value ?? '';
+
+        return div.innerHTML;
+    }
+
+    function setLoading(select, label) {
+        select.disabled = true;
+
+        select.innerHTML = `
+            <option value="">
+                ${label}
+            </option>
+        `;
+    }
+
+    function restoreSelect(select) {
+        select.disabled = false;
+    }
+
+    async function loadDistricts() {
+        const signal = cancelPreviousRequest();
+
+        setLoading(
+            district,
+            'Loading districts...'
+        );
+
+        setLoading(
+            block,
+            'Select District First'
+        );
+
+        setLoading(
+            village,
+            'Select Block First'
+        );
+
+        try {
+            const params = new URLSearchParams();
+
+            if (phase.value !== '') {
+                params.set(
+                    'phase',
+                    phase.value
+                );
+            }
+
+            const response = await fetch(
+                `${districtUrl}?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal,
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Districts could not be loaded.'
+                );
+            }
+
+            const data = await response.json();
+
+            district.innerHTML = `
+                <option value="">
+                    All Districts
+                </option>
+            `;
+
+            data.districts.forEach(function (item) {
+                district.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                        <option value="${escapeHtml(
+                            item.DistrictId
+                        )}">
+                            ${escapeHtml(
+                                item.DistrictName
+                            )}
+                        </option>
+                    `
+                );
+            });
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                district.innerHTML = `
+                    <option value="">
+                        Unable to load districts
+                    </option>
+                `;
+            }
+        } finally {
+            restoreSelect(district);
+            restoreSelect(block);
+            restoreSelect(village);
+        }
+    }
+
+    async function loadBlocks() {
+        block.innerHTML = `
+            <option value="">
+                All Blocks
+            </option>
+        `;
+
+        village.innerHTML = `
+            <option value="">
+                All Villages
+            </option>
+        `;
+
+        if (district.value === '') {
+            return;
+        }
+
+        const signal = cancelPreviousRequest();
+
+        setLoading(
+            block,
+            'Loading blocks...'
+        );
+
+        setLoading(
+            village,
+            'Select Block First'
+        );
+
+        try {
+            const params = new URLSearchParams({
+                district_id: district.value,
+            });
+
+            if (phase.value !== '') {
+                params.set(
+                    'phase',
+                    phase.value
+                );
+            }
+
+            const response = await fetch(
+                `${blockUrl}?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal,
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Blocks could not be loaded.'
+                );
+            }
+
+            const data = await response.json();
+
+            block.innerHTML = `
+                <option value="">
+                    All Blocks
+                </option>
+            `;
+
+            data.blocks.forEach(function (item) {
+                block.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                        <option value="${escapeHtml(
+                            item.BlockId
+                        )}">
+                            ${escapeHtml(
+                                item.BlockName
+                            )}
+                        </option>
+                    `
+                );
+            });
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                block.innerHTML = `
+                    <option value="">
+                        Unable to load blocks
+                    </option>
+                `;
+            }
+        } finally {
+            restoreSelect(block);
+            restoreSelect(village);
+        }
+    }
+
+    async function loadVillages() {
+        village.innerHTML = `
+            <option value="">
+                All Villages
+            </option>
+        `;
+
+        if (block.value === '') {
+            return;
+        }
+
+        const signal = cancelPreviousRequest();
+
+        setLoading(
+            village,
+            'Loading villages...'
+        );
+
+        try {
+            const params = new URLSearchParams({
+                block_id: block.value,
+            });
+
+            if (phase.value !== '') {
+                params.set(
+                    'phase',
+                    phase.value
+                );
+            }
+
+            const response = await fetch(
+                `${villageUrl}?${params.toString()}`,
+                {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    signal,
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    'Villages could not be loaded.'
+                );
+            }
+
+            const data = await response.json();
+
+            village.innerHTML = `
+                <option value="">
+                    All Villages
+                </option>
+            `;
+
+            data.villages.forEach(function (item) {
+                village.insertAdjacentHTML(
+                    'beforeend',
+                    `
+                        <option value="${escapeHtml(
+                            item.VillageId
+                        )}">
+                            ${escapeHtml(
+                                item.VillageName
+                            )}
+                        </option>
+                    `
+                );
+            });
+
+        } catch (error) {
+            if (error.name !== 'AbortError') {
+                village.innerHTML = `
+                    <option value="">
+                        Unable to load villages
+                    </option>
+                `;
+            }
+        } finally {
+            restoreSelect(village);
+        }
+    }
+
+    phase.addEventListener(
+        'change',
+        loadDistricts
+    );
+
+    district.addEventListener(
+        'change',
+        loadBlocks
+    );
+
+    block.addEventListener(
+        'change',
+        loadVillages
+    );
+
+    form?.addEventListener('submit', function () {
+        if (!applyButton) {
+            return;
+        }
+
+        applyButton.disabled = true;
+
+        applyButton.classList.add(
+            'cursor-not-allowed',
+            'opacity-60'
+        );
+
+        applyButton.innerHTML = `
+            <span
+                class="h-4 w-4 animate-spin rounded-full
+                       border-2 border-white/40
+                       border-t-white"
+            ></span>
+
+            Loading...
+        `;
+    });
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const phaseSelect = document.getElementById('phase');
+        const districtSelect = document.getElementById('district_id');
+        const filterForm = document.getElementById(
+            'districtReportFilterForm'
+        );
+        const applyButton = document.getElementById(
+            'districtReportApplyButton'
+        );
+
+        if (
+            !phaseSelect ||
+            !districtSelect ||
+            !filterForm
+        ) {
+            return;
+        }
+
+        const districtUrl = @json(route('admin.district.report.districts'));
+
+        let requestController = null;
+
+        function escapeHtml(value) {
+            const element = document.createElement('div');
+            element.textContent = value ?? '';
+            return element.innerHTML;
+        }
+
+        async function loadDistricts() {
+            const phase = phaseSelect.value;
+            const selectedDistrict = districtSelect.value;
+
+            /*
+            |--------------------------------------------------------------------------
+            | Cancel previous request
+            |--------------------------------------------------------------------------
+            */
+            if (requestController) {
+                requestController.abort();
+            }
+
+            requestController = new AbortController();
+
+            districtSelect.disabled = true;
+
+            districtSelect.innerHTML = `
+            <option value="">
+                Loading districts...
+            </option>
+        `;
+
+            if (applyButton) {
+                applyButton.disabled = true;
+                applyButton.classList.add(
+                    'cursor-not-allowed',
+                    'opacity-60'
+                );
+            }
+
+            try {
+                const params = new URLSearchParams();
+
+                if (phase !== '') {
+                    params.set('phase', phase);
+                }
+
+                const response = await fetch(
+                    `${districtUrl}?${params.toString()}`, {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        signal: requestController.signal,
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        'Districts could not be loaded.'
+                    );
+                }
+
+                const data = await response.json();
+
+                let options = `
+                <option value="">
+                    All Districts
+                </option>
+            `;
+
+                data.districts.forEach(function(district) {
+                    const selected =
+                        String(selectedDistrict) ===
+                        String(district.DistrictId) ?
+                        'selected' :
+                        '';
+
+                    options += `
+                    <option
+                        value="${escapeHtml(
+                            district.DistrictId
+                        )}"
+                        ${selected}
+                    >
+                        ${escapeHtml(
+                            district.DistrictName
+                        )}
+                    </option>
+                `;
+                });
+
+                districtSelect.innerHTML = options;
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    return;
+                }
+
+                districtSelect.innerHTML = `
+                <option value="">
+                    Unable to load districts
+                </option>
+            `;
+
+                console.error(error);
+
+            } finally {
+                districtSelect.disabled = false;
+
+                if (applyButton) {
+                    applyButton.disabled = false;
+                    applyButton.classList.remove(
+                        'cursor-not-allowed',
+                        'opacity-60'
+                    );
+                }
+            }
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phase → District dependency
+        |--------------------------------------------------------------------------
+        */
+        phaseSelect.addEventListener(
+            'change',
+            loadDistricts
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Prevent repeated submit
+        |--------------------------------------------------------------------------
+        */
+        filterForm.addEventListener(
+            'submit',
+            function() {
+                if (!applyButton) {
+                    return;
+                }
+
+                applyButton.disabled = true;
+
+                applyButton.classList.add(
+                    'cursor-not-allowed',
+                    'opacity-60'
+                );
+
+                applyButton.innerHTML = `
+                <svg
+                    class="h-4 w-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                >
+                    <circle
+                        class="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        stroke-width="4"
+                    ></circle>
+
+                    <path
+                        class="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                    ></path>
+                </svg>
+
+                Loading...
+            `;
+            }
+        );
+    });
+</script>
+<script>
     document.addEventListener(
         'DOMContentLoaded',
         function() {
