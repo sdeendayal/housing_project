@@ -70,12 +70,6 @@ class MmgayBdoSeeder extends Seeder
                 'block_name' => 'Barara',
             ],
             [
-                'email' => 'bdpo.barara@gmail.com',
-                'district_id' => 1,
-                'district_name' => 'AMBALA',
-                'block_name' => 'Barara',
-            ],
-            [
                 'email' => 'ambalacitybdpo@gmail.com',
                 'district_id' => 1,
                 'district_name' => 'AMBALA',
@@ -118,22 +112,10 @@ class MmgayBdoSeeder extends Seeder
                 'block_name' => 'Gurugram',
             ],
             [
-                'email' => 'bdpo.gurgaon@hry.nic.in',
-                'district_id' => 14,
-                'district_name' => 'GURUGRAM',
-                'block_name' => 'Gurugram',
-            ],
-            [
                 'email' => 'bdpo.sohna86@gmail.com',
                 'district_id' => 14,
                 'district_name' => 'GURUGRAM',
                 'block_name' => 'Sohna',
-            ],
-            [
-                'email' => 'bdpo.hisar2@hry.nic.in',
-                'district_id' => 15,
-                'district_name' => 'HISAR',
-                'block_name' => 'HISAR-II',
             ],
             [
                 'email' => 'bdpo.hisar2@hry.nic.in',
@@ -368,12 +350,6 @@ class MmgayBdoSeeder extends Seeder
                 'district_id' => 2,
                 'district_name' => 'PANIPAT',
                 'block_name' => 'Israna',
-            ],
-            [
-                'email' => 'bdpo.panipat@hry.nic.in',
-                'district_id' => 2,
-                'district_name' => 'PANIPAT',
-                'block_name' => 'Panipat',
             ],
             [
                 'email' => 'bdpo.panipat@hry.nic.in',
