@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 \Illuminate\Support\Facades\Schedule::command('mmgay:sync-land-registrations')->daily();
 \Illuminate\Support\Facades\Schedule::command('mmgay:sync-registary-table')->dailyAt('00:00');
+\Illuminate\Support\Facades\Schedule::command('app:process-due-installments')->dailyAt('00:00');
+

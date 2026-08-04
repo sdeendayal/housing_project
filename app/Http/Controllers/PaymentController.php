@@ -453,6 +453,9 @@ class PaymentController extends Controller
                             'CreatedBy' => $userId ?: null,
                             'CompanyId' => $property->CompanyId ?? 544,
                         ]);
+
+                        // Record payment in ledger
+                        \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
                     }
                 }
 
@@ -656,6 +659,9 @@ class PaymentController extends Controller
                                     'CreatedBy' => $userId ?: null,
                                     'CompanyId' => $property->CompanyId ?? 544,
                                 ]);
+
+                                // Record payment in ledger
+                                \App\Services\LedgerService::recordPayment($assetId, (float)$tx->amount);
                             }
                         }
 
