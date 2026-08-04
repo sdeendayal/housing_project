@@ -1875,6 +1875,7 @@ class SuperAdminController extends Controller
     public function districtWiseReport(Request $request)
     {
         DB::disableQueryLog();
+
         /*
         |--------------------------------------------------------------------------
         | Filters
@@ -2364,190 +2365,6 @@ class SuperAdminController extends Controller
         );
     }
 
-    public function districtReportCsv(Request $request)
-    {
-        DB::disableQueryLog();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Existing district report का same filtered cached data
-        |--------------------------------------------------------------------------
-        */
-        $districtReportView = $this->districtWiseReport($request);
-
-        $viewData = $districtReportView->getData();
-
-        $report = collect($viewData['report'] ?? []);
-        $grossTotal = $viewData['grossTotal'] ?? (object) [];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Same stable order as screen and print
-        |--------------------------------------------------------------------------
-        */
-        $report = $report
-            ->sortBy(function ($row) {
-                return mb_strtolower(
-                    trim((string) ($row->DistrictName ?? ''))
-                );
-            })
-            ->values();
-
-        $phase = $request->filled('phase')
-            ? 'Phase-' . (int) $request->input('phase')
-            : 'All-Phases';
-
-        $district = $request->filled('district_id')
-            ? 'District-' . (int) $request->input('district_id')
-            : 'All-Districts';
-
-        $fileName = 'District_Report_'
-            . $phase
-            . '_'
-            . $district
-            . '_'
-            . now()->format('d-m-Y_H-i-s')
-            . '.csv';
-
-        return response()->streamDownload(
-            function () use ($report, $grossTotal) {
-                $handle = fopen('php://output', 'w');
-
-                if ($handle === false) {
-                    throw new \RuntimeException(
-                        'CSV stream could not be opened.'
-                    );
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM — Excel compatible
-                |--------------------------------------------------------------------------
-                */
-                fwrite($handle, "\xEF\xBB\xBF");
-
-                fputcsv($handle, [
-                    'Sr. No.',
-                    'District',
-                    'Villages',
-                    'Applicants',
-                    'Allotted',
-                    'Approved & Paid',
-                    'Approved & Unpaid',
-                    'Yet to be Approved',
-                    'Rejected',
-                    'Cancelled',
-                ]);
-
-                foreach ($report as $index => $row) {
-                    fputcsv($handle, [
-                        $index + 1,
-                        $row->DistrictName ?? '-',
-                        (int) ($row->VillagesWithPlots ?? 0),
-                        (int) ($row->RegisteredBeneficiaries ?? 0),
-                        (int) ($row->AllottedBeneficiaries ?? 0),
-                        (int) ($row->ApprovedPaid ?? 0),
-                        (int) ($row->ApprovedUnpaid ?? 0),
-                        (int) ($row->PendingApprovalPayment ?? 0),
-                        (int) ($row->Rejected ?? 0),
-                        (int) ($row->AllotmentCancelled ?? 0),
-                    ]);
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Separator
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, []);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Gross total
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, [
-                    '',
-                    'GROSS TOTAL',
-                    (int) ($grossTotal->VillagesWithPlots ?? 0),
-                    (int) ($grossTotal->RegisteredBeneficiaries ?? 0),
-                    (int) ($grossTotal->AllottedBeneficiaries ?? 0),
-                    (int) ($grossTotal->ApprovedPaid ?? 0),
-                    (int) ($grossTotal->ApprovedUnpaid ?? 0),
-                    (int) ($grossTotal->PendingApprovalPayment ?? 0),
-                    (int) ($grossTotal->Rejected ?? 0),
-                    (int) ($grossTotal->AllotmentCancelled ?? 0),
-                ]);
-
-                fclose($handle);
-            },
-            $fileName,
-            [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate',
-
-                'Pragma' => 'no-cache',
-
-                'Expires' => '0',
-            ]
-        );
-    }
-
-    public function districtReportPrint(Request $request)
-    {
-        DB::disableQueryLog();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Existing screen function का same filtered cached data
-        |--------------------------------------------------------------------------
-        */
-        $districtReportView = $this->districtWiseReport($request);
-
-        $viewData = $districtReportView->getData();
-
-        $report = collect($viewData['report'] ?? [])
-            ->sortBy(function ($row) {
-                return mb_strtolower(
-                    trim((string) ($row->DistrictName ?? ''))
-                );
-            })
-            ->values();
-
-        $grossTotal = $viewData['grossTotal'] ?? (object) [];
-        $districts = $viewData['districts'] ?? collect();
-
-        $selectedDistrict = null;
-
-        if ($request->filled('district_id')) {
-            $selectedDistrict = $districts->firstWhere(
-                'DistrictId',
-                (int) $request->input('district_id')
-            );
-        }
-
-        $filters = (object) [
-            'phase' => $request->filled('phase')
-                ? (int) $request->input('phase')
-                : null,
-
-            'districtName' =>
-                $selectedDistrict->DistrictName ?? null,
-        ];
-
-        return view(
-            'mmgay.super-admin.district-report-print',
-            compact(
-                'report',
-                'grossTotal',
-                'filters'
-            )
-        );
-    }
-
     public function districtReportDistricts(
         Request $request
     ) {
@@ -2598,6 +2415,29 @@ class SuperAdminController extends Controller
             'success' => true,
             'districts' => $districts,
         ]);
+    }
+
+    public function districtReportPdf(Request $request)
+    {
+        $data = $this->districtReportData($request);
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.district-report-pdf',
+            $data
+        );
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('District_Report.pdf');
+    }
+
+
+    public function districtReportExcel(Request $request)
+    {
+        return Excel::download(
+            new DistrictReportExport($request),
+            'District_Report.xlsx'
+        );
     }
 
     public function districtReportData(Request $request)
@@ -3373,6 +3213,36 @@ class SuperAdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Village Report PDF
+    |--------------------------------------------------------------------------
+    | paginate=false होने के कारण सभी matching villages आएंगे।
+    | बिना filters के केवल plots > 0 वाले 260 villages आएंगे।
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportPdf(Request $request)
+    {
+        $data = $this->villageReportData($request, false);
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.village-report-pdf',
+            $data
+        )
+            ->setPaper('a4', 'landscape')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->download(
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.pdf'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Village Report Print
     |--------------------------------------------------------------------------
     */
@@ -3468,26 +3338,49 @@ class SuperAdminController extends Controller
     */
     public function villageReportCsv(Request $request)
     {
-        DB::disableQueryLog();
-
-        @set_time_limit(0);
-
         $fileName = 'Village_Report_'
             . now()->format('d-m-Y_H-i-s')
             . '.csv';
 
         /*
         |--------------------------------------------------------------------------
-        | Query builder only
-        |--------------------------------------------------------------------------
-        | यहां get() नहीं चलेगा। Actual records stream callback में cursor()
-        | द्वारा एक-एक करके पढ़े जाएंगे।
+        | Query केवल एक बार
         |--------------------------------------------------------------------------
         */
-        $rowsQuery = $this->villageReportQuery($request);
+        $rows = $this->villageReportQuery($request)->get();
+
+        $allotmentStats = $this->dashboardAllotmentStats($request);
+
+        $grossTotal = [
+            'TotalPlots' => (int) $rows->sum(
+                fn($row) => (int) ($row->TotalPlots ?? 0)
+            ),
+
+            'RegisteredBeneficiaries' => (int) $rows->sum(
+                fn($row) => (int) ($row->RegisteredBeneficiaries ?? 0)
+            ),
+
+            'AllottedBeneficiaries' =>
+                (int) ($allotmentStats->AllottedBeneficiaries ?? 0),
+
+            'ApprovedPaid' =>
+                (int) ($allotmentStats->ApprovedPaid ?? 0),
+
+            'ApprovedUnpaid' =>
+                (int) ($allotmentStats->ApprovedUnpaid ?? 0),
+
+            'PendingApprovalPayment' =>
+                (int) ($allotmentStats->PendingApprovalPayment ?? 0),
+
+            'Rejected' =>
+                (int) ($allotmentStats->Rejected ?? 0),
+
+            'AllotmentCancelled' =>
+                (int) ($allotmentStats->AllotmentCancelled ?? 0),
+        ];
 
         return response()->streamDownload(
-            function () use ($rowsQuery, $request) {
+            function () use ($rows, $grossTotal) {
                 $handle = fopen('php://output', 'w');
 
                 if ($handle === false) {
@@ -3496,22 +3389,8 @@ class SuperAdminController extends Controller
                     );
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM
-                |--------------------------------------------------------------------------
-                | Excel में Hindi/Unicode text सही खुलेगा।
-                |--------------------------------------------------------------------------
-                */
                 fwrite($handle, "\xEF\xBB\xBF");
 
-                /*
-                |--------------------------------------------------------------------------
-                | CSV headings पहले भेजें
-                |--------------------------------------------------------------------------
-                | इससे click के तुरंत बाद browser download शुरू कर सकता है।
-                |--------------------------------------------------------------------------
-                */
                 fputcsv($handle, [
                     'Sr. No.',
                     'Village',
@@ -3526,95 +3405,21 @@ class SuperAdminController extends Controller
                     'Cancelled',
                 ]);
 
-                fflush($handle);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Running totals
-                |--------------------------------------------------------------------------
-                | Total plots और applicants streaming के साथ calculate होंगे।
-                |--------------------------------------------------------------------------
-                */
-                $serialNumber = 1;
-                $totalPlots = 0;
-                $registeredBeneficiaries = 0;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Stream rows
-                |--------------------------------------------------------------------------
-                | get() के बजाय cursor() memory usage बहुत कम रखेगा।
-                |--------------------------------------------------------------------------
-                */
-                foreach ($rowsQuery->cursor() as $row) {
-                    $rowTotalPlots = (int) (
-                        $row->TotalPlots ?? 0
-                    );
-
-                    $rowRegistered = (int) (
-                        $row->RegisteredBeneficiaries ?? 0
-                    );
-
-                    $totalPlots += $rowTotalPlots;
-                    $registeredBeneficiaries += $rowRegistered;
-
+                foreach ($rows as $index => $row) {
                     fputcsv($handle, [
-                        $serialNumber++,
+                        $index + 1,
                         $row->VillageName ?? '-',
                         $row->Phase ?? '-',
-                        $rowTotalPlots,
-                        $rowRegistered,
-                        (int) (
-                            $row->AllottedBeneficiaries ?? 0
-                        ),
-                        (int) (
-                            $row->ApprovedPaid ?? 0
-                        ),
-                        (int) (
-                            $row->ApprovedUnpaid ?? 0
-                        ),
-                        (int) (
-                            $row->PendingApprovalPayment ?? 0
-                        ),
-                        (int) (
-                            $row->Rejected ?? 0
-                        ),
-                        (int) (
-                            $row->AllotmentCancelled ?? 0
-                        ),
+                        (int) ($row->TotalPlots ?? 0),
+                        (int) ($row->RegisteredBeneficiaries ?? 0),
+                        (int) ($row->AllottedBeneficiaries ?? 0),
+                        (int) ($row->ApprovedPaid ?? 0),
+                        (int) ($row->ApprovedUnpaid ?? 0),
+                        (int) ($row->PendingApprovalPayment ?? 0),
+                        (int) ($row->Rejected ?? 0),
+                        (int) ($row->AllotmentCancelled ?? 0),
                     ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Output flush
-                    |--------------------------------------------------------------------------
-                    | हर 200 records के बाद buffered output browser को भेजें।
-                    |--------------------------------------------------------------------------
-                    */
-                    if (($serialNumber - 1) % 200 === 0) {
-                        fflush($handle);
-
-                        if (
-                            function_exists('ob_get_level')
-                            && ob_get_level() > 0
-                        ) {
-                            @ob_flush();
-                        }
-
-                        flush();
-                    }
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Dashboard-matching allotment totals
-                |--------------------------------------------------------------------------
-                | Cursor पूरा consume होने के बाद query चलेगी, ताकि unbuffered query
-                | connection conflict न हो और existing total logic भी न बदले।
-                |--------------------------------------------------------------------------
-                */
-                $allotmentStats = $this
-                    ->dashboardAllotmentStats($request);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -3632,65 +3437,39 @@ class SuperAdminController extends Controller
                     '',
                     'Gross Total',
                     '',
-                    $totalPlots,
-                    $registeredBeneficiaries,
-
-                    (int) (
-                        $allotmentStats->AllottedBeneficiaries
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->ApprovedPaid
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->ApprovedUnpaid
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->PendingApprovalPayment
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->Rejected
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->AllotmentCancelled
-                        ?? 0
-                    ),
+                    $grossTotal['TotalPlots'],
+                    $grossTotal['RegisteredBeneficiaries'],
+                    $grossTotal['AllottedBeneficiaries'],
+                    $grossTotal['ApprovedPaid'],
+                    $grossTotal['ApprovedUnpaid'],
+                    $grossTotal['PendingApprovalPayment'],
+                    $grossTotal['Rejected'],
+                    $grossTotal['AllotmentCancelled'],
                 ]);
 
-                fflush($handle);
                 fclose($handle);
             },
             $fileName,
             [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Content-Disposition' =>
-                    'attachment; filename="' . $fileName . '"',
-
+                'Content-Type' => 'text/csv; charset=UTF-8',
                 'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate, max-age=0',
-
-                'Pragma' => 'no-cache',
-
-                'Expires' => '0',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Disable proxy buffering
-                |--------------------------------------------------------------------------
-                */
-                'X-Accel-Buffering' => 'no',
+                    'no-store, no-cache, must-revalidate',
             ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Excel
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportExcel(Request $request)
+    {
+        return Excel::download(
+            new VillageReportExport($request),
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.xlsx'
         );
     }
 
@@ -3895,119 +3674,6 @@ class SuperAdminController extends Controller
 
     // VIllage Function End
 
-    // Applicant Filters
-
-    private function applicantsBaseQuery(Request $request)
-    {
-        $query = DB::table('OwnerMaster as o')
-            ->join(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('v.plots', '>', 0);
-
-        return $this->applyApplicantFilters(
-            $query,
-            $request
-        );
-    }
-
-    private function applicantsQuery(Request $request)
-    {
-        return $this
-            ->applicantsBaseQuery($request)
-            ->select([
-                'o.OwnerId',
-                'o.secure_id',
-                'o.OwnerName',
-                'o.Relation',
-                'o.FatherHusbandName',
-                'o.Gender',
-
-                'o.DistrictId',
-                'o.BlockId',
-                'o.VillageId',
-
-                'o.OwnerAddress',
-                'o.RegistrationNo',
-                'o.PPPId',
-                'o.MemberId',
-                'o.Caste',
-                'o.MobileNo',
-
-                'o.CompanyId',
-                'o.Phase',
-
-                'o.IsApproved',
-                'o.IsRejected',
-                'o.IsPaid',
-                'o.IsPaymentApproved',
-                'o.IsAllotmentCancelled',
-
-                'o.Remarks',
-                'o.DCRemarks',
-                'o.CreatedDate',
-
-                'v.VillageName',
-
-                'f.FlatId',
-                'f.FlatNo',
-            ])
-            ->selectRaw("
-            CASE
-                WHEN o.IsAllotmentCancelled = 1
-                    THEN 'Cancelled'
-
-                WHEN o.IsRejected = 1
-                    THEN 'Rejected'
-
-                WHEN o.IsApproved = 1
-                 AND o.IsPaid = 1
-                    THEN 'Approved & Paid'
-
-                WHEN o.IsApproved = 1
-                 AND (
-                    o.IsPaid = 0
-                    OR o.IsPaid IS NULL
-                 )
-                    THEN 'Approved & Unpaid'
-
-                WHEN (
-                    o.IsApproved = 0
-                    OR o.IsApproved IS NULL
-                )
-                    THEN 'Yet to be Approved'
-
-                ELSE 'Allotted'
-            END AS ApplicantStatus
-        ");
-    }
-
-    private function applicantsCountCacheKey(
-        Request $request
-    ): string {
-        return 'superadmin_applicants_count_v2_' . md5(
-            json_encode([
-                'search' => trim(
-                    (string) $request->query('search', '')
-                ),
-                'phase' => $request->query('phase'),
-                'district_id' => $request->query('district_id'),
-                'block_id' => $request->query('block_id'),
-                'village_id' => $request->query('village_id'),
-                'status' => $request->query('status'),
-            ])
-        );
-    }
-
     private function applyApplicantFilters(
         $query,
         Request $request
@@ -4169,20 +3835,22 @@ class SuperAdminController extends Controller
         return $query;
     }
 
+
+
     public function applicants(Request $request)
     {
         DB::disableQueryLog();
 
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
             : null;
 
         $perPage = (int) $request->query(
@@ -4200,259 +3868,90 @@ class SuperAdminController extends Controller
             $perPage = 20;
         }
 
-        $currentPage = max(
-            1,
-            (int) $request->query('page', 1)
-        );
-
         /*
         |--------------------------------------------------------------------------
-        | Cached total
+        | Applicant Records
         |--------------------------------------------------------------------------
-        | Heavy count हर page load पर नहीं चलेगा।
-        |--------------------------------------------------------------------------
-        */
-        $totalApplicants = Cache::remember(
-            $this->applicantsCountCacheKey($request),
-            now()->addMinutes(2),
-            function () use ($request) {
-                return (int) $this
-                    ->applicantsBaseQuery($request)
-                    ->distinct()
-                    ->count('o.OwnerId');
-            }
-        );
-
-        $lastPage = max(
-            1,
-            (int) ceil(
-                $totalApplicants / $perPage
-            )
-        );
-
-        $currentPage = min(
-            $currentPage,
-            $lastPage
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Current page IDs only
-        |--------------------------------------------------------------------------
-        | पहले सिर्फ indexed OwnerId fetch होंगे।
+        | Indexed OwnerId DESC ordering.
         |--------------------------------------------------------------------------
         */
-        $ownerIds = $this
-            ->applicantsBaseQuery($request)
-            ->select('o.OwnerId')
-            ->distinct()
+        $applicants = $this
+            ->applicantsQuery($request)
             ->orderByDesc('o.OwnerId')
-            ->forPage(
-                $currentPage,
-                $perPage
+            ->paginate(
+                $perPage,
+                ['*'],
+                'page'
             )
-            ->pluck('o.OwnerId')
-            ->map(
-                static fn($id) => (int) $id
-            )
-            ->all();
+            ->withQueryString();
 
         /*
         |--------------------------------------------------------------------------
-        | Current page details
+        | Village Dropdown
+        |--------------------------------------------------------------------------
+        | OwnerMaster को JOIN करके DISTINCT करने के बजाय VillageMaster से query
+        | चलती है और EXISTS से matching owner check होता है।
         |--------------------------------------------------------------------------
         */
-        $rows = collect();
-
-        if (!empty($ownerIds)) {
-            $rows = DB::table('OwnerMaster as o')
-                ->join(
-                    'VillageMaster as v',
-                    'v.VillageId',
-                    '=',
-                    'o.VillageId'
+        $villages = DB::table('VillageMaster as v')
+            ->where('v.plots', '>', 0)
+            ->when(
+                $districtId,
+                fn($q) => $q->where(
+                    'v.DistrictId',
+                    $districtId
                 )
-                ->leftJoin(
-                    'FlatMaster as f',
-                    'f.FlatId',
-                    '=',
-                    'o.FlatId'
+            )
+            ->when(
+                $blockId,
+                fn($q) => $q->where(
+                    'v.BlockId',
+                    $blockId
                 )
-                ->whereIn(
-                    'o.OwnerId',
-                    $ownerIds
+            )
+            ->when(
+                $phase,
+                fn($q) => $q->where(
+                    'v.Phase',
+                    $phase
                 )
-                ->select([
-                    'o.OwnerId',
-                    'o.secure_id',
-                    'o.OwnerName',
-                    'o.Relation',
-                    'o.FatherHusbandName',
-                    'o.Gender',
-
-                    'o.DistrictId',
-                    'o.BlockId',
-                    'o.VillageId',
-
-                    'o.OwnerAddress',
-                    'o.RegistrationNo',
-                    'o.PPPId',
-                    'o.MemberId',
-                    'o.Caste',
-                    'o.MobileNo',
-
-                    'o.CompanyId',
-                    'o.Phase',
-
-                    'o.IsApproved',
-                    'o.IsRejected',
-                    'o.IsPaid',
-                    'o.IsPaymentApproved',
-                    'o.IsAllotmentCancelled',
-
-                    'o.Remarks',
-                    'o.DCRemarks',
-                    'o.CreatedDate',
-
-                    'v.VillageName',
-
-                    'f.FlatId',
-                    'f.FlatNo',
-                ])
-                ->selectRaw("
-                CASE
-                    WHEN o.IsAllotmentCancelled = 1
-                        THEN 'Cancelled'
-
-                    WHEN o.IsRejected = 1
-                        THEN 'Rejected'
-
-                    WHEN o.IsApproved = 1
-                     AND o.IsPaid = 1
-                        THEN 'Approved & Paid'
-
-                    WHEN o.IsApproved = 1
-                     AND (
-                        o.IsPaid = 0
-                        OR o.IsPaid IS NULL
-                     )
-                        THEN 'Approved & Unpaid'
-
-                    WHEN (
-                        o.IsApproved = 0
-                        OR o.IsApproved IS NULL
+            )
+            ->whereExists(function ($query) use ($phase, $districtId, $blockId) {
+                $query
+                    ->selectRaw('1')
+                    ->from('OwnerMaster as vo')
+                    ->whereColumn(
+                        'vo.VillageId',
+                        'v.VillageId'
                     )
-                        THEN 'Yet to be Approved'
-
-                    ELSE 'Allotted'
-                END AS ApplicantStatus
-            ")
-                ->orderByDesc('o.OwnerId')
-                ->get();
-        }
-
-        $applicants = new LengthAwarePaginator(
-            $rows,
-            $totalApplicants,
-            $perPage,
-            $currentPage,
-            [
-                'path' => $request->url(),
-                'pageName' => 'page',
-                'query' => $request->except('page'),
-            ]
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Village dropdown
-        |--------------------------------------------------------------------------
-        */
-        $villageCacheKey = 'applicant_villages_v2_' . md5(
-            json_encode([
-                'phase' => $phase,
-                'district_id' => $districtId,
-                'block_id' => $blockId,
-            ])
-        );
-
-        $villages = Cache::remember(
-            $villageCacheKey,
-            now()->addMinutes(20),
-            function () use ($phase, $districtId, $blockId) {
-                return DB::table('VillageMaster as v')
-                    ->where('v.plots', '>', 0)
-
                     ->when(
-                        $districtId !== null,
-                        fn($query) => $query->where(
-                            'v.DistrictId',
-                            $districtId
-                        )
-                    )
-
-                    ->when(
-                        $blockId !== null,
-                        fn($query) => $query->where(
-                            'v.BlockId',
-                            $blockId
-                        )
-                    )
-
-                    ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
-                            'v.Phase',
+                        $phase,
+                        fn($q) => $q->where(
+                            'vo.Phase',
                             $phase
                         )
                     )
-
-                    ->whereExists(function ($query) use ($phase, $districtId, $blockId) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('OwnerMaster as vo')
-                            ->whereColumn(
-                                'vo.VillageId',
-                                'v.VillageId'
-                            )
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.Phase',
-                                    $phase
-                                )
-                            )
-
-                            ->when(
-                                $districtId !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.DistrictId',
-                                    $districtId
-                                )
-                            )
-
-                            ->when(
-                                $blockId !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.BlockId',
-                                    $blockId
-                                )
-                            );
-                    })
-
-                    ->select([
-                        'v.VillageId',
-                        'v.VillageName',
-                    ])
-
-                    ->orderBy('v.VillageName')
-                    ->get();
-            }
-        );
+                    ->when(
+                        $districtId,
+                        fn($q) => $q->where(
+                            'vo.DistrictId',
+                            $districtId
+                        )
+                    )
+                    ->when(
+                        $blockId,
+                        fn($q) => $q->where(
+                            'vo.BlockId',
+                            $blockId
+                        )
+                    );
+            })
+            ->select([
+                'v.VillageId',
+                'v.VillageName',
+            ])
+            ->orderBy('v.VillageName')
+            ->get();
 
         return view(
             'mmgay.super-admin.applicants.index',
@@ -4461,6 +3960,101 @@ class SuperAdminController extends Controller
                 'villages',
                 'perPage'
             )
+        );
+    }
+
+    private function applicantsQuery(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Main Query
+        |--------------------------------------------------------------------------
+        | VillageMaster INNER JOIN पुराने logic जैसा ही रखा गया है।
+        | FlatMaster LEFT JOIN display और flat search के लिए जरूरी है।
+        |--------------------------------------------------------------------------
+        */
+        $query = DB::table('OwnerMaster as o')
+            ->join(
+                'VillageMaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+            ->where('v.plots', '>', 0)
+            ->select([
+                'o.OwnerId',
+                'o.secure_id',
+                'o.OwnerName',
+                'o.Relation',
+                'o.FatherHusbandName',
+                'o.Gender',
+
+                'o.DistrictId',
+                'o.BlockId',
+                'o.VillageId',
+
+                'o.OwnerAddress',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Caste',
+                'o.MobileNo',
+                'o.CompanyId',
+                'o.Phase',
+
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
+
+                'o.Remarks',
+                'o.DCRemarks',
+                'o.CreatedDate',
+
+                'v.VillageName',
+
+                'f.FlatId',
+                'f.FlatNo',
+            ])
+            ->selectRaw("
+            CASE
+                WHEN o.IsAllotmentCancelled = 1
+                    THEN 'Cancelled'
+
+                WHEN o.IsRejected = 1
+                    THEN 'Rejected'
+
+                WHEN o.IsApproved = 1
+                 AND o.IsPaid = 1
+                    THEN 'Approved & Paid'
+
+                WHEN o.IsApproved = 1
+                 AND (
+                    o.IsPaid = 0
+                    OR o.IsPaid IS NULL
+                 )
+                    THEN 'Approved & Unpaid'
+
+                WHEN (
+                    o.IsApproved = 0
+                    OR o.IsApproved IS NULL
+                )
+                    THEN 'Yet to be Approved'
+
+                ELSE 'Allotted'
+            END AS ApplicantStatus
+        ");
+
+        return $this->applyApplicantFilters(
+            $query,
+            $request
         );
     }
 
@@ -4598,340 +4192,105 @@ class SuperAdminController extends Controller
 
     public function applicantsCsv(Request $request)
     {
-        DB::disableQueryLog();
-
-        set_time_limit(0);
-
-        $fileName = 'Applicants_'
-            . now()->format('Ymd_His')
-            . '.csv';
-
-        /*
-        |--------------------------------------------------------------------------
-        | Lightweight export query
-        |--------------------------------------------------------------------------
-        | केवल CSV में इस्तेमाल होने वाले columns लिए गए हैं।
-        |--------------------------------------------------------------------------
-        */
-        $query = DB::table('OwnerMaster as o')
-            ->join(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('v.plots', '>', 0);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Existing filters
-        |--------------------------------------------------------------------------
-        */
-        $query = $this->applyApplicantFilters(
-            $query,
-            $request
-        );
-
-        $query
-            ->select([
-                'o.OwnerId',
-                'o.RegistrationNo',
-                'o.OwnerName',
-                'o.FatherHusbandName',
-                'o.MobileNo',
-                'o.PPPId',
-                'o.Phase',
-
-                'o.IsApproved',
-                'o.IsRejected',
-                'o.IsPaid',
-                'o.IsAllotmentCancelled',
-
-                'v.VillageName',
-
-                'f.FlatNo',
-            ])
+        $query = $this->applicantsQuery($request)
             ->orderByDesc('o.OwnerId');
 
-        return response()->streamDownload(
-            function () use ($query) {
-                /*
-                |--------------------------------------------------------------------------
-                | Remove existing output buffers
-                |--------------------------------------------------------------------------
-                */
-                while (ob_get_level() > 0) {
-                    @ob_end_clean();
-                }
+        return response()->streamDownload(function () use ($query) {
 
-                $handle = fopen('php://output', 'w');
+            $file = fopen('php://output', 'w');
 
-                if ($handle === false) {
-                    throw new \RuntimeException(
-                        'CSV output stream could not be opened.'
-                    );
-                }
+            fwrite($file, "\xEF\xBB\xBF");
 
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM
-                |--------------------------------------------------------------------------
-                */
-                fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($file, [
+                'Sr.',
+                'Owner ID',
+                'Application No.',
+                'Applicant',
+                'Father/Husband',
+                'Mobile',
+                'PPP ID',
+                'Village',
+                'Phase',
+                'Flat No.',
+                'Status'
+            ]);
 
-                /*
-                |--------------------------------------------------------------------------
-                | Header immediately output करें
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, [
-                    'Sr. No.',
-                    'Owner ID',
-                    'Application No.',
-                    'Applicant',
-                    'Father / Husband',
-                    'Mobile',
-                    'PPP ID',
-                    'Village',
-                    'Phase',
-                    'Flat No.',
-                    'Status',
+            $sr = 1;
+
+            foreach ($query->cursor() as $row) {
+
+                fputcsv($file, [
+
+                    $sr++,
+
+                    $row->OwnerId,
+
+                    $row->RegistrationNo,
+
+                    $row->OwnerName,
+
+                    $row->FatherHusbandName,
+
+                    $row->MobileNo,
+
+                    $row->PPPId,
+
+                    $row->VillageName,
+
+                    $row->Phase,
+
+                    $row->FlatNo,
+
+                    $row->ApplicantStatus
+
                 ]);
+            }
 
-                fflush($handle);
+            fclose($file);
 
-                if (function_exists('flush')) {
-                    flush();
-                }
-
-                $serialNumber = 1;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Single SQL query streaming
-                |--------------------------------------------------------------------------
-                | lazyByIdDesc() नहीं है, इसलिए repeated database queries नहीं चलेंगी।
-                |--------------------------------------------------------------------------
-                */
-                foreach ($query->cursor() as $applicant) {
-                    if (
-                        (int) $applicant->IsAllotmentCancelled === 1
-                    ) {
-                        $status = 'Cancelled';
-                    } elseif (
-                        (int) $applicant->IsRejected === 1
-                    ) {
-                        $status = 'Rejected';
-                    } elseif (
-                        (int) $applicant->IsApproved === 1
-                        && (int) $applicant->IsPaid === 1
-                    ) {
-                        $status = 'Approved & Paid';
-                    } elseif (
-                        (int) $applicant->IsApproved === 1
-                        && (int) $applicant->IsPaid === 0
-                    ) {
-                        $status = 'Approved & Unpaid';
-                    } elseif (
-                        (int) $applicant->IsApproved === 0
-                    ) {
-                        $status = 'Yet to be Approved';
-                    } else {
-                        $status = 'Allotted';
-                    }
-
-                    fputcsv($handle, [
-                        $serialNumber++,
-                        $applicant->OwnerId ?? '',
-                        $applicant->RegistrationNo ?? '',
-                        $applicant->OwnerName ?? '',
-                        $applicant->FatherHusbandName ?? '',
-                        $applicant->MobileNo ?? '',
-                        $applicant->PPPId ?? '',
-                        $applicant->VillageName ?? '',
-                        $applicant->Phase ?? '',
-                        $applicant->FlatNo ?? '',
-                        $status,
-                    ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Periodic browser flush
-                    |--------------------------------------------------------------------------
-                    */
-                    if (($serialNumber - 1) % 200 === 0) {
-                        fflush($handle);
-
-                        if (function_exists('flush')) {
-                            flush();
-                        }
-                    }
-                }
-
-                fflush($handle);
-                fclose($handle);
-            },
-            $fileName,
-            [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Content-Disposition' =>
-                    'attachment; filename="' . $fileName . '"',
-
-                'Cache-Control' =>
-                    'no-cache, no-store, must-revalidate, max-age=0',
-
-                'Pragma' =>
-                    'no-cache',
-
-                'Expires' =>
-                    '0',
-
-                'X-Accel-Buffering' =>
-                    'no',
-            ]
-        );
+        }, 'Applicants_' . now()->format('Ymd_His') . '.csv');
     }
 
     public function applicantsPrint(Request $request)
     {
-        DB::disableQueryLog();
+        $perBatch = (int) $request->query('print_limit', 500);
 
-        $perBatch = (int) $request->query(
-            'print_limit',
-            500
-        );
-
-        if (
-            !in_array(
-                $perBatch,
-                [200, 500, 1000, 2000],
-                true
-            )
-        ) {
+        if (!in_array($perBatch, [200, 500, 1000, 2000], true)) {
             $perBatch = 500;
         }
 
         $printPage = max(
             1,
-            (int) $request->query(
-                'print_page',
-                1
-            )
+            (int) $request->query('print_page', 1)
         );
 
-        $countCacheKey =
-            $this->applicantsCountCacheKey($request)
-            . '_print';
+        $query = $this->applicantsQuery($request)
+            ->orderByDesc('o.OwnerId');
 
-        $totalRecords = Cache::remember(
-            $countCacheKey,
-            now()->addMinutes(2),
-            function () use ($request) {
-                return (int) $this
-                    ->applicantsBaseQuery($request)
-                    ->distinct()
-                    ->count('o.OwnerId');
-            }
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Count once for print navigation
+        |--------------------------------------------------------------------------
+        */
+        $totalRecords = (clone $query)->count();
 
         $totalPrintPages = max(
             1,
-            (int) ceil(
-                $totalRecords / $perBatch
-            )
+            (int) ceil($totalRecords / $perBatch)
         );
 
-        $printPage = min(
-            $printPage,
-            $totalPrintPages
-        );
-
-        $ownerIds = $this
-            ->applicantsBaseQuery($request)
-            ->select('o.OwnerId')
-            ->distinct()
-            ->orderByDesc('o.OwnerId')
-            ->forPage(
-                $printPage,
-                $perBatch
-            )
-            ->pluck('o.OwnerId')
-            ->map(
-                static fn($id) => (int) $id
-            )
-            ->all();
-
-        $records = collect();
-
-        if (!empty($ownerIds)) {
-            $records = DB::table('OwnerMaster as o')
-                ->join(
-                    'VillageMaster as v',
-                    'v.VillageId',
-                    '=',
-                    'o.VillageId'
-                )
-                ->leftJoin(
-                    'FlatMaster as f',
-                    'f.FlatId',
-                    '=',
-                    'o.FlatId'
-                )
-                ->whereIn(
-                    'o.OwnerId',
-                    $ownerIds
-                )
-                ->select([
-                    'o.OwnerId',
-                    'o.OwnerName',
-                    'o.FatherHusbandName',
-                    'o.MobileNo',
-                    'o.RegistrationNo',
-                    'o.PPPId',
-                    'o.Phase',
-                    'v.VillageName',
-                    'f.FlatId',
-                    'f.FlatNo',
-                ])
-                ->selectRaw("
-                CASE
-                    WHEN o.IsAllotmentCancelled = 1
-                        THEN 'Cancelled'
-
-                    WHEN o.IsRejected = 1
-                        THEN 'Rejected'
-
-                    WHEN o.IsApproved = 1
-                     AND o.IsPaid = 1
-                        THEN 'Approved & Paid'
-
-                    WHEN o.IsApproved = 1
-                     AND (
-                        o.IsPaid = 0
-                        OR o.IsPaid IS NULL
-                     )
-                        THEN 'Approved & Unpaid'
-
-                    WHEN (
-                        o.IsApproved = 0
-                        OR o.IsApproved IS NULL
-                    )
-                        THEN 'Yet to be Approved'
-
-                    ELSE 'Allotted'
-                END AS ApplicantStatus
-            ")
-                ->orderByDesc('o.OwnerId')
-                ->get();
+        if ($printPage > $totalPrintPages) {
+            $printPage = $totalPrintPages;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Only current print batch
+        |--------------------------------------------------------------------------
+        */
+        $records = $query
+            ->forPage($printPage, $perBatch)
+            ->get();
 
         $startSerial =
             (($printPage - 1) * $perBatch) + 1;
@@ -4949,6 +4308,12 @@ class SuperAdminController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | PDF Export
+    |--------------------------------------------------------------------------
+    */
+
     public function applicantsPdf(Request $request)
     {
         ini_set('memory_limit', '1024M');
@@ -4963,8 +4328,6 @@ class SuperAdminController extends Controller
             compact('applicants')
         );
     }
-
-    // Applicants Function End
 
     private function allotmentReportBaseQuery(Request $request)
     {

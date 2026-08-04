@@ -155,7 +155,7 @@
                                 restart_alt
                             </span>
 
-                            Reset
+
                         </a>
                     </div>
                 </div>
@@ -211,50 +211,41 @@
             </form>
 
             {{-- Export Footer --}}
+            {{-- Export Footer --}}
             <div
                 class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+
                 <div class="flex flex-wrap items-center gap-2">
-                    <button type="button"
-                        data-download-url="{{ route('superadmin.applicants.excel', request()->except('page')) }}"
-                        data-download-type="excel"
-                        class="download-btn inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
-                        <span class="material-symbols-outlined text-[19px]">
+
+                    {{-- CSV --}}
+                    <a href="{{ route('superadmin.applicants.csv', request()->except('page')) }}"
+                        class="inline-flex h-10 items-center justify-center gap-2 rounded-xl
+           bg-emerald-600 px-4 text-sm font-semibold text-white
+           shadow-sm transition hover:bg-emerald-700">
+
+                        <span class="material-symbols-outlined">
                             table_view
                         </span>
 
                         Excel
-                    </button>
+                    </a>
 
-                    <button type="button"
-                        data-download-url="{{ route('superadmin.applicants.pdf', request()->except('page')) }}"
-                        data-download-type="pdf"
-                        class="download-btn inline-flex items-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700">
-                        <span class="material-symbols-outlined text-[19px]">
+                    {{-- Print --}}
+                    <a href="{{ route('superadmin.applicants.print', request()->except('page')) }}" target="_blank"
+                        rel="noopener"
+                        class="inline-flex h-10 items-center justify-center gap-2 rounded-xl
+                   border border-slate-300 bg-white px-4
+                   text-sm font-semibold text-slate-700 shadow-sm
+                   transition hover:-translate-y-0.5
+                   hover:bg-slate-700 hover:text-white hover:shadow-md">
+
+                        <span class="material-symbols-outlined">
                             picture_as_pdf
                         </span>
 
                         PDF
-                    </button>
-
-                    <a href="{{ route('superadmin.applicants.csv', request()->except('page')) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white">
-
-                        <span class="material-symbols-outlined">
-                            csv
-                        </span>
-
-                        CSV
                     </a>
 
-                    <a href="{{ route('superadmin.applicants.print', request()->except('page')) }}" target="_blank"
-                        class="inline-flex items-center gap-2 rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-semibold text-white">
-
-                        <span class="material-symbols-outlined">
-                            print
-                        </span>
-
-                        Print
-                    </a>
                 </div>
 
                 <div
@@ -315,10 +306,6 @@
                             </th>
 
                             <th class="p-3 text-left">
-                                Aadhaar
-                            </th>
-
-                            <th class="p-3 text-left">
                                 Village
                             </th>
 
@@ -360,10 +347,6 @@
 
                                     default => 'bg-blue-100 text-blue-700 ring-blue-200',
                                 };
-
-                                $aadhaar = preg_replace('/\D/', '', $applicant->AadhaarNo ?? '');
-
-                                $maskedAadhaar = strlen($aadhaar) >= 4 ? 'XXXX XXXX ' . substr($aadhaar, -4) : '-';
                             @endphp
 
                             <tr class="transition-colors hover:bg-slate-50">
@@ -414,10 +397,6 @@
                                         <span class="text-slate-400">-</span>
                                     @endif
 
-                                </td>
-
-                                <td class="p-3 font-mono text-xs text-slate-600">
-                                    {{ $maskedAadhaar }}
                                 </td>
 
                                 <td class="p-3 text-slate-700">

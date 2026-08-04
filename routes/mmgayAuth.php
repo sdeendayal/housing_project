@@ -290,26 +290,26 @@ Route::prefix('super-admin')
             ->name('admin.district.report');
 
         Route::get(
+            '/district-report/export/csv',
+            [SuperAdminController::class, 'districtReportCsv']
+        )->name('admin.district.report.csv');
+
+        Route::get(
+            '/district-report/print',
+            [SuperAdminController::class, 'districtReportPrint']
+        )->name('admin.district.report.print');
+
+        Route::get(
             '/district-report/districts',
             [
                 SuperAdminController::class,
                 'districtReportDistricts',
             ]
-        )->name('admin.district.report.districts');
-
-        Route::get('/district-report/excel', [SuperAdminController::class, 'districtReportExcel'])
-            ->name('admin.district.report.excel');
-
-        Route::get('/district-report/pdf', [SuperAdminController::class, 'districtReportPdf'])
-            ->name('admin.district.report.pdf');
+        )->name('admin.district.report.districts');              
 
         //  Village Report Routes Start
     
         Route::get('/village-report', [SuperAdminController::class, 'villageWiseReport'])->name('admin.village.report');
-
-        Route::get('/village-report/excel', [SuperAdminController::class, 'villageReportExcel'])->name('admin.village.report.excel');
-
-        Route::get('/village-report/pdf', [SuperAdminController::class, 'villageReportPdf'])->name('admin.village.report.pdf');
 
         Route::get('/village-report/csv', [SuperAdminController::class, 'villageReportCsv'])->name('admin.village.report.csv');
 
@@ -343,10 +343,7 @@ Route::prefix('super-admin')
         Route::get('/applicants', [SuperAdminController::class, 'applicants'])
             ->name('superadmin.applicants.index');
 
-        Route::get('/applicants/export/excel', [
-            SuperAdminController::class,
-            'applicantsExcel'
-        ])->name('superadmin.applicants.excel');
+        
 
         Route::get(
             '/applicants/export/csv',
@@ -362,12 +359,7 @@ Route::prefix('super-admin')
                 SuperAdminController::class,
                 'applicantsPrint'
             ]
-        )->name('superadmin.applicants.print');
-
-        Route::get('/applicants/export/pdf', [
-            SuperAdminController::class,
-            'applicantsPdf'
-        ])->name('superadmin.applicants.pdf');
+        )->name('superadmin.applicants.print');        
 
         Route::get('/allotment-report', [SuperAdminController::class, 'allotmentReport'])
             ->name('admin.allotment.report');

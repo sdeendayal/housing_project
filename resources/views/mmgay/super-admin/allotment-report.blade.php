@@ -36,7 +36,7 @@
                             table_view
                         </span>
 
-                        Download Excel
+                         Excel
                     </button>
 
                     <button type="button"
@@ -50,19 +50,19 @@
                             picture_as_pdf
                         </span>
 
-                        Download PDF
+                         PDF
                     </button>
 
-                    <a href="{{ route('admin.allotment.export.csv', request()->except('page')) }}"
+                    {{-- <a href="{{ route('admin.allotment.export.csv', request()->except('page')) }}"
                         class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
                         <span class="material-symbols-outlined text-[20px]">
                             csv
                         </span>
 
-                        Download CSV
-                    </a>
+                        CSV
+                    </a> --}}
 
-                    <a href="{{ route(
+                    {{-- <a href="{{ route(
                         'admin.allotment.print',
                         array_merge(request()->except('page'), [
                             'print_page' => 1,
@@ -76,7 +76,7 @@
                         </span>
 
                         Print
-                    </a>
+                    </a> --}}
 
                 </div>
 
