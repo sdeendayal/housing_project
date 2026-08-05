@@ -26,3 +26,5 @@ Thumbs.db
 /storage/framework/views/*
 /storage/framework/cache/*
 /storage/logs/*
+/storage/app/public/*
+!/storage/app/public/.gitkeep
