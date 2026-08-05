@@ -432,9 +432,13 @@
 
                                 <td class="p-3 text-center">
 
-                                    <a href="#"
-                                        class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white p-2 text-slate-600 transition hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                                    <a href="{{ route('superadmin.applicants.show', $applicant->secure_id) }}"
+                                        class="inline-flex items-center justify-center rounded-lg border
+           border-slate-300 bg-white p-2 text-slate-600 shadow-sm
+           transition hover:border-indigo-300 hover:bg-indigo-50
+           hover:text-indigo-700"
                                         title="View Applicant">
+
                                         <span class="material-symbols-outlined text-[19px]">
                                             visibility
                                         </span>

@@ -791,6 +791,20 @@
                                             {{ $registryStatus }}
                                         </span>
 
+                                        @if ($registryStatus === 'Registry Done')
+                                            @if (!empty($applicant->RegistaryNumber))
+                                                <div class="mt-2 text-xs font-bold text-slate-800">
+                                                    Reg. No. : {{ $applicant->RegistaryNumber }}
+                                                </div>
+                                            @endif
+
+                                            @if (!empty($applicant->RegistaryDate))
+                                                <div class="text-[11px] text-slate-500">
+                                                    {{ \Carbon\Carbon::parse($applicant->RegistaryDate)->format('d-m-Y') }}
+                                                </div>
+                                            @endif
+                                        @endif
+
                                     </td>
 
                                     <td class="max-w-[320px] border-r border-slate-100 px-4 py-3 text-slate-700">

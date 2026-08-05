@@ -305,7 +305,7 @@ Route::prefix('super-admin')
                 SuperAdminController::class,
                 'districtReportDistricts',
             ]
-        )->name('admin.district.report.districts');              
+        )->name('admin.district.report.districts');
 
         //  Village Report Routes Start
     
@@ -343,7 +343,7 @@ Route::prefix('super-admin')
         Route::get('/applicants', [SuperAdminController::class, 'applicants'])
             ->name('superadmin.applicants.index');
 
-        
+
 
         Route::get(
             '/applicants/export/csv',
@@ -359,7 +359,12 @@ Route::prefix('super-admin')
                 SuperAdminController::class,
                 'applicantsPrint'
             ]
-        )->name('superadmin.applicants.print');        
+        )->name('superadmin.applicants.print');
+
+        Route::get(
+            '/applicants/{secureId}',
+            [SuperAdminController::class, 'applicantView']
+        )->name('superadmin.applicants.show');
 
         Route::get('/allotment-report', [SuperAdminController::class, 'allotmentReport'])
             ->name('admin.allotment.report');

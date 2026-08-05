@@ -36,7 +36,7 @@
                             table_view
                         </span>
 
-                         Excel
+                        Excel
                     </button>
 
                     <button type="button"
@@ -50,36 +50,9 @@
                             picture_as_pdf
                         </span>
 
-                         PDF
+                        PDF
                     </button>
-
-                    {{-- <a href="{{ route('admin.allotment.export.csv', request()->except('page')) }}"
-                        class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
-                        <span class="material-symbols-outlined text-[20px]">
-                            csv
-                        </span>
-
-                        CSV
-                    </a> --}}
-
-                    {{-- <a href="{{ route(
-                        'admin.allotment.print',
-                        array_merge(request()->except('page'), [
-                            'print_page' => 1,
-                            'print_limit' => 500,
-                        ]),
-                    ) }}"
-                        target="_blank"
-                        class="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900">
-                        <span class="material-symbols-outlined text-[20px]">
-                            print
-                        </span>
-
-                        Print
-                    </a> --}}
-
                 </div>
-
             </div>
         </div>
 
@@ -359,6 +332,10 @@
                                 class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Status
                             </th>
+                            <th
+                                class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase text-slate-500">
+                                Action
+                            </th>
                         </tr>
                     </thead>
 
@@ -440,6 +417,33 @@
                                         class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
                                         {{ $statusText }}
                                     </span>
+                                </td>
+                                <td class="whitespace-nowrap px-4 py-4 text-center">
+
+                                    @if (!empty($allotment->secure_id))
+                                        <a href="{{ route('superadmin.applicants.show', $allotment->secure_id) }}"
+                                            title="View Applicant"
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg
+                   border border-slate-300 bg-white text-slate-600 shadow-sm
+                   transition hover:border-indigo-300 hover:bg-indigo-50
+                   hover:text-indigo-700">
+
+                                            <span class="material-symbols-outlined text-[19px]">
+                                                visibility
+                                            </span>
+                                        </a>
+                                    @else
+                                        <span
+                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg
+                   border border-slate-200 bg-slate-50 text-slate-300"
+                                            title="Secure ID not available">
+
+                                            <span class="material-symbols-outlined text-[19px]">
+                                                visibility_off
+                                            </span>
+                                        </span>
+                                    @endif
+
                                 </td>
 
                             </tr>

@@ -942,7 +942,7 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById(
                     'possessionPendingLink'
                 ).href =
-                "{{ url('/super-admin/possession/possession_pending') }}" +
+                "{{ url('/super-admin/possession/field_visit_pending') }}" +
                 (query ? '?' + query : '');
 
         } catch (error) {
