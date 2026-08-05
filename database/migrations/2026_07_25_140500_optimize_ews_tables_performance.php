@@ -14,11 +14,13 @@ return new class extends Migration
     {
         // 1. Optimize all_ews_data_1
         try {
-            Schema::table('all_ews_data_1', function (Blueprint $table) {
-                try {
+            if (Schema::hasIndex('all_ews_data_1', 'idx_all_ews_mobile')) {
+                Schema::table('all_ews_data_1', function (Blueprint $table) {
                     $table->dropIndex('idx_all_ews_mobile');
-                } catch (\Exception $e) {}
+                });
+            }
 
+            Schema::table('all_ews_data_1', function (Blueprint $table) {
                 $table->string('application_number', 255)->nullable()->change();
                 $table->string('mobile_number', 255)->nullable()->change();
                 $table->string('full_name', 255)->nullable()->change();
@@ -119,10 +121,18 @@ return new class extends Migration
 
         try {
             Schema::table('ews_bookings_7', function (Blueprint $table) {
-                $table->dropIndex('ews_bookings_7_app_num_idx');
-                $table->dropIndex('ews_bookings_7_mobile_idx');
-                $table->dropIndex('ews_bookings_7_full_name_idx');
-                $table->dropIndex('ews_bookings_7_dist_id_idx');
+                if (Schema::hasIndex('ews_bookings_7', 'ews_bookings_7_app_num_idx')) {
+                    $table->dropIndex('ews_bookings_7_app_num_idx');
+                }
+                if (Schema::hasIndex('ews_bookings_7', 'ews_bookings_7_mobile_idx')) {
+                    $table->dropIndex('ews_bookings_7_mobile_idx');
+                }
+                if (Schema::hasIndex('ews_bookings_7', 'ews_bookings_7_full_name_idx')) {
+                    $table->dropIndex('ews_bookings_7_full_name_idx');
+                }
+                if (Schema::hasIndex('ews_bookings_7', 'ews_bookings_7_dist_id_idx')) {
+                    $table->dropIndex('ews_bookings_7_dist_id_idx');
+                }
 
                 $table->text('application_number')->nullable()->change();
                 $table->text('mobile_number')->nullable()->change();
@@ -132,11 +142,21 @@ return new class extends Migration
 
         try {
             Schema::table('ppt_members', function (Blueprint $table) {
-                $table->dropIndex('ppt_members_member_id_idx');
-                $table->dropIndex('ppt_members_family_id_idx');
-                $table->dropIndex('ppt_members_mobile_no_idx');
-                $table->dropIndex('ppt_members_full_name_idx');
-                $table->dropIndex('ppt_members_district_id_idx');
+                if (Schema::hasIndex('ppt_members', 'ppt_members_member_id_idx')) {
+                    $table->dropIndex('ppt_members_member_id_idx');
+                }
+                if (Schema::hasIndex('ppt_members', 'ppt_members_family_id_idx')) {
+                    $table->dropIndex('ppt_members_family_id_idx');
+                }
+                if (Schema::hasIndex('ppt_members', 'ppt_members_mobile_no_idx')) {
+                    $table->dropIndex('ppt_members_mobile_no_idx');
+                }
+                if (Schema::hasIndex('ppt_members', 'ppt_members_full_name_idx')) {
+                    $table->dropIndex('ppt_members_full_name_idx');
+                }
+                if (Schema::hasIndex('ppt_members', 'ppt_members_district_id_idx')) {
+                    $table->dropIndex('ppt_members_district_id_idx');
+                }
 
                 $table->text('memberID')->nullable()->change();
                 $table->text('familyID')->nullable()->change();
@@ -147,16 +167,26 @@ return new class extends Migration
 
         try {
             Schema::table('all_ews_data_1', function (Blueprint $table) {
-                $table->dropIndex('all_ews_data_1_app_num_idx');
-                $table->dropIndex('all_ews_data_1_mobile_idx');
-                $table->dropIndex('all_ews_data_1_full_name_idx');
-                $table->dropIndex('all_ews_data_1_dist_id_idx');
+                if (Schema::hasIndex('all_ews_data_1', 'all_ews_data_1_app_num_idx')) {
+                    $table->dropIndex('all_ews_data_1_app_num_idx');
+                }
+                if (Schema::hasIndex('all_ews_data_1', 'all_ews_data_1_mobile_idx')) {
+                    $table->dropIndex('all_ews_data_1_mobile_idx');
+                }
+                if (Schema::hasIndex('all_ews_data_1', 'all_ews_data_1_full_name_idx')) {
+                    $table->dropIndex('all_ews_data_1_full_name_idx');
+                }
+                if (Schema::hasIndex('all_ews_data_1', 'all_ews_data_1_dist_id_idx')) {
+                    $table->dropIndex('all_ews_data_1_dist_id_idx');
+                }
 
                 $table->text('application_number')->nullable()->change();
                 $table->text('mobile_number')->nullable()->change();
                 $table->text('full_name')->nullable()->change();
 
-                $table->index('mobile_number', 'idx_all_ews_mobile');
+                if (!Schema::hasIndex('all_ews_data_1', 'idx_all_ews_mobile')) {
+                    $table->index('mobile_number', 'idx_all_ews_mobile');
+                }
             });
         } catch (\Exception $e) {}
     }

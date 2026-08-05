@@ -15,63 +15,76 @@
                 <span class="material-symbols-outlined text-blue-600 text-lg">person</span>
                 Beneficiary details
             </h3>
-            <div class="space-y-2 text-xs">
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Name</span>
-                    <span class="font-extrabold text-slate-800 block">{{ $owner->OwnerName }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Father / Husband</span>
-                    <span class="font-medium text-slate-700 block">{{ $owner->FatherHusbandName ?? '—' }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Mobile Number</span>
-                    <span class="font-mono text-slate-700 block">{{ $owner->MobileNo }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Registration No</span>
-                    <span class="font-bold text-slate-700 block">{{ $owner->RegistrationNo }}</span>
-                </div>
-                <div class="border-t border-slate-100 pt-2">
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Flat No & Address</span>
-                    <span class="text-slate-600 leading-tight block">{{ $owner->FlatNo ?? '—' }}, {{ $owner->OwnerAddress ?? '—' }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Block & Village</span>
-                    <span class="text-slate-600 block">{{ $owner->BlockName ?? '—' }}, {{ $owner->VillageName ?? '—' }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">District</span>
-                    <span class="text-slate-800 font-bold block">{{ $owner->DistrictName }}</span>
-                </div>
-                <div class="border-t border-slate-100 pt-2">
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Family ID (PPP ID)</span>
-                    <span class="font-mono text-slate-800 block font-bold">{{ $owner->PPPId ?? '—' }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Caste / Category</span>
-                    <span class="text-slate-700 block font-semibold">{{ $owner->Caste ?? '—' }}</span>
-                </div>
-                <div>
-                    <span class="text-slate-400 font-bold uppercase text-[9px] block">Payment Status</span>
-                    @if($owner->IsPaid)
-                        @if($owner->IsPaymentApproved)
-                            <span class="inline-block mt-0.5 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-extrabold border border-emerald-100">Paid & Approved</span>
+            <div class="space-y-3 text-xs">
+                <!-- PERSONAL DETAILS SECTION -->
+                <div class="space-y-2 pb-2 border-b border-slate-100">
+                    <h4 class="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Personal Details</h4>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Name</span>
+                        <span class="font-extrabold text-slate-800 block">{{ $owner->OwnerName }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Father / Husband</span>
+                        <span class="font-medium text-slate-700 block">{{ $owner->FatherHusbandName ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Mobile Number</span>
+                        <span class="font-mono text-slate-700 block">{{ $owner->MobileNo }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Registration No</span>
+                        <span class="font-bold text-slate-700 block">{{ $owner->RegistrationNo }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Correspondence Address</span>
+                        <span class="text-slate-600 leading-tight block">{{ $owner->OwnerAddress ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Family ID (PPP ID)</span>
+                        <span class="font-mono text-slate-800 block font-bold">{{ $owner->PPPId ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Caste / Category</span>
+                        <span class="text-slate-700 block font-semibold">{{ $owner->Caste ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Payment Status</span>
+                        @if($owner->IsPaid)
+                            @if($owner->IsPaymentApproved)
+                                <span class="inline-block mt-0.5 text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-extrabold border border-emerald-100">Paid & Approved</span>
+                            @else
+                                <span class="inline-block mt-0.5 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-extrabold border border-amber-100">Paid (Awaiting Approval)</span>
+                            @endif
                         @else
-                            <span class="inline-block mt-0.5 text-xs text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-extrabold border border-amber-100">Paid (Awaiting Approval)</span>
+                            <span class="inline-block mt-0.5 text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded font-extrabold border border-rose-100 font-bold">Unpaid / Payment Pending</span>
                         @endif
-                    @else
-                        <span class="inline-block mt-0.5 text-xs text-rose-700 bg-rose-50 px-2 py-0.5 rounded font-extrabold border border-rose-100 font-bold">Unpaid / Payment Pending</span>
+                    </div>
+                    @if($owner->Remarks || $owner->DCRemarks)
+                        <div>
+                            <span class="text-slate-400 font-bold uppercase text-[9px] block">Office / DC Remarks</span>
+                            <p class="text-slate-600 leading-normal block mt-0.5 italic">
+                                {{ $owner->DCRemarks ?? $owner->Remarks }}
+                            </p>
+                        </div>
                     @endif
                 </div>
-                @if($owner->Remarks || $owner->DCRemarks)
-                    <div class="border-t border-slate-100 pt-2">
-                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Office / DC Remarks</span>
-                        <p class="text-slate-600 leading-normal block mt-0.5 italic">
-                            {{ $owner->DCRemarks ?? $owner->Remarks }}
-                        </p>
+
+                <!-- PROPERTY ALLOTTED DETAILS SECTION -->
+                <div class="space-y-2 pb-2">
+                    <h4 class="text-[10px] font-black text-blue-600 uppercase tracking-wider mb-2">Property Allotted Details</h4>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Flat No</span>
+                        <span class="font-bold text-slate-800 block">{{ $owner->FlatNo ?? '—' }}</span>
                     </div>
-                @endif
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">Block & Village</span>
+                        <span class="text-slate-600 block">{{ $owner->BlockName ?? '—' }}, {{ $owner->VillageName ?? '—' }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 font-bold uppercase text-[9px] block">District</span>
+                        <span class="text-slate-850 font-bold block">{{ $owner->DistrictName ?? '—' }}</span>
+                    </div>
+                </div>
             </div>
         </div>
 

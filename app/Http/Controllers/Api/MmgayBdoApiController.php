@@ -266,12 +266,18 @@ class MmgayBdoApiController extends Controller
 
         // 1. Fetch the owner details by secure_id
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as fb', 'f.BlockId', '=', 'fb.BlockId')
+            ->leftJoin('villagemaster as fv', 'f.VillageId', '=', 'fv.VillageId')
+            ->leftJoin('districtmaster as fd', 'f.DistrictId', '=', 'fd.DistrictId')
             ->where('o.secure_id', $secureId)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
+            ->select(
+                'o.*',
+                'f.FlatNo',
+                'fb.BlockName as BlockName',
+                'fv.VillageName as VillageName',
+                'fd.DistrictName as DistrictName'
+            )
             ->first();
 
         if (!$owner) {
@@ -621,12 +627,18 @@ class MmgayBdoApiController extends Controller
         }
 
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as fb', 'f.BlockId', '=', 'fb.BlockId')
+            ->leftJoin('villagemaster as fv', 'f.VillageId', '=', 'fv.VillageId')
+            ->leftJoin('districtmaster as fd', 'f.DistrictId', '=', 'fd.DistrictId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
+            ->select(
+                'o.*',
+                'f.FlatNo',
+                'fb.BlockName as BlockName',
+                'fv.VillageName as VillageName',
+                'fd.DistrictName as DistrictName'
+            )
             ->first();
 
         if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
@@ -884,13 +896,15 @@ class MmgayBdoApiController extends Controller
         }
 
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
             ->where('o.OwnerId', $application->owner_id)
             ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
             ->first();
+
+        $owner = $this->formatLocationDetails($owner);
 
         if (!$owner) {
             return response()->json(['success' => false, 'message' => 'Owner details not found.'], 404);
@@ -1327,9 +1341,10 @@ class MmgayBdoApiController extends Controller
             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
 
             $query = DB::table('ownermaster as o')
-                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
                 ->where('o.IsApproved', 1)
                 ->where('o.IsPaid', 1)
                 ->whereExists(function ($query) {
@@ -1376,6 +1391,7 @@ class MmgayBdoApiController extends Controller
                 'o.secure_id',
                 'd.DistrictName',
                 'b.BlockName',
+                'v.VillageName',
                 'f.FlatNo',
                 DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
                 'ppa.application_number',
@@ -1385,6 +1401,10 @@ class MmgayBdoApiController extends Controller
             )
             ->orderBy('o.OwnerName', 'asc')
             ->paginate(10);
+
+            $beneficiariesPaginated->through(function ($ben) {
+                return $this->formatLocationDetails($ben);
+            });
             
             $beneficiaries = $beneficiariesPaginated;
         }
@@ -1419,5 +1439,23 @@ class MmgayBdoApiController extends Controller
         }
 
         return null;
+    }
+
+    private function formatLocationDetails($owner)
+    {
+        if (!$owner) return $owner;
+
+        $owner->BlockName = "Property Allotted Block: " . ($owner->BlockName ?? '—');
+        $owner->VillageName = "Property Allotted Village: " . ($owner->VillageName ?? '—');
+        $owner->DistrictName = "Property Allotted District: " . ($owner->DistrictName ?? '—');
+
+        if (isset($owner->FlatNo)) {
+            $owner->FlatNo = "Property Allotted Flat No: " . $owner->FlatNo;
+        }
+        if (isset($owner->OwnerAddress)) {
+            $owner->OwnerAddress = "Applicant Address: " . $owner->OwnerAddress;
+        }
+
+        return $owner;
     }
 }
