@@ -263,7 +263,7 @@
                                                 </div>
                                                 <div class="flex justify-between border-b border-slate-200/50 pb-1">
                                                     <span class="text-slate-400 uppercase font-black tracking-wider text-[8px]">Village/Block</span>
-                                                    <span class="font-bold text-slate-700 uppercase">{{ $selectedVillageName }} / {{ $ben->BlockName }}</span>
+                                                    <span class="font-bold text-slate-700 uppercase">{{ $ben->VillageName }} / {{ $ben->BlockName }}</span>
                                                 </div>
                                                 <div class="flex justify-between border-b border-slate-200/50 pb-1">
                                                     <span class="text-slate-400 uppercase font-black tracking-wider text-[8px]">District</span>

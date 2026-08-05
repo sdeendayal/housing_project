@@ -20,8 +20,8 @@ class VillageMasterSeeder extends Seeder
 
         $file = fopen($filePath, 'r');
         
-        // Read header
-        $header = fgetcsv($file);
+        // Read header with semicolon delimiter
+        $header = fgetcsv($file, 0, ';');
         if (!$header) {
             fclose($file);
             throw new \Exception("CSV file is empty: " . $filePath);
@@ -34,7 +34,7 @@ class VillageMasterSeeder extends Seeder
 
         $data = [];
         
-        while (($row = fgetcsv($file)) !== false) {
+        while (($row = fgetcsv($file, 0, ';')) !== false) {
             if (count($header) !== count($row)) {
                 continue;
             }
@@ -54,12 +54,8 @@ class VillageMasterSeeder extends Seeder
                 'BlockId' => $cleanVal($rowData['BlockId'], true),
                 'DistrictId' => $cleanVal($rowData['DistrictId'], true),
                 'VillageName' => trim($rowData['VillageName'] ?? ''),
-                'TotalPlots' => $cleanVal($rowData['TotalPlots'] ?? null, true),
-                'Phase1' => $cleanVal($rowData['Phase1'] ?? null),
-                'totalPlotsPhase2' => $cleanVal($rowData['totalPlotsPhase2'] ?? null, true),
-                'Phase2' => $cleanVal($rowData['Phase2'] ?? null),
-                'totalPlotsPhase3' => $cleanVal($rowData['totalPlotsPhase3'] ?? null, true),
-                'Phase3' => $cleanVal($rowData['Phase3'] ?? null),
+                'plots' => $cleanVal($rowData['plots'] ?? null, true),
+                'phase' => $cleanVal($rowData['phase'] ?? null, true),
             ];
         }
 
