@@ -271,8 +271,10 @@ class MmgayBdoApiController extends Controller
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
             ->where('o.secure_id', $secureId)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
+            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
             ->first();
+
+        $owner = $this->formatLocationDetails($owner);
 
         if (!$owner) {
             return response()->json(['success' => false, 'message' => 'Beneficiary record not found.'], 404);
@@ -626,8 +628,10 @@ class MmgayBdoApiController extends Controller
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
+            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
             ->first();
+
+        $owner = $this->formatLocationDetails($owner);
 
         if ($res = $this->checkSiteDevelopmentRestriction($owner)) {
             return $res;
@@ -889,8 +893,10 @@ class MmgayBdoApiController extends Controller
             ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
+            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
             ->first();
+
+        $owner = $this->formatLocationDetails($owner);
 
         if (!$owner) {
             return response()->json(['success' => false, 'message' => 'Owner details not found.'], 404);
@@ -1329,6 +1335,7 @@ class MmgayBdoApiController extends Controller
             $query = DB::table('ownermaster as o')
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
                 ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
                 ->where('o.IsApproved', 1)
                 ->where('o.IsPaid', 1)
@@ -1376,6 +1383,10 @@ class MmgayBdoApiController extends Controller
                 'o.secure_id',
                 'd.DistrictName',
                 'b.BlockName',
+                'v.VillageName',
+                'f.BlockId as FlatBlockId',
+                'f.VillageId as FlatVillageId',
+                'f.DistrictId as FlatDistrictId',
                 'f.FlatNo',
                 DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
                 'ppa.application_number',
@@ -1385,6 +1396,10 @@ class MmgayBdoApiController extends Controller
             )
             ->orderBy('o.OwnerName', 'asc')
             ->paginate(10);
+
+            $beneficiariesPaginated->through(function ($ben) {
+                return $this->formatLocationDetails($ben);
+            });
             
             $beneficiaries = $beneficiariesPaginated;
         }
@@ -1419,5 +1434,27 @@ class MmgayBdoApiController extends Controller
         }
 
         return null;
+    }
+
+    private function formatLocationDetails($owner)
+    {
+        if (!$owner) return $owner;
+
+        $flatBlockId = $owner->FlatBlockId ?? '—';
+        $flatVillageId = $owner->FlatVillageId ?? '—';
+        $flatDistrictId = $owner->FlatDistrictId ?? '—';
+
+        $owner->BlockName = "Personal Details: " . ($owner->BlockName ?? '—') . " | Property Allotted: {$flatBlockId}";
+        $owner->VillageName = "Personal Details: " . ($owner->VillageName ?? '—') . " | Property Allotted: {$flatVillageId}";
+        $owner->DistrictName = "Personal Details: " . ($owner->DistrictName ?? '—') . " | Property Allotted: {$flatDistrictId}";
+
+        if (isset($owner->FlatNo)) {
+            $owner->FlatNo = "Property Allotted Flat No: " . $owner->FlatNo;
+        }
+        if (isset($owner->OwnerAddress)) {
+            $owner->OwnerAddress = "Personal Details Address: " . $owner->OwnerAddress;
+        }
+
+        return $owner;
     }
 }
