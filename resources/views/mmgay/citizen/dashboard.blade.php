@@ -181,10 +181,7 @@
                                 <span class="material-symbols-outlined text-[18px]">person</span>
                                 <span class="tab-label">Applicant Identity</span>
                             </button>
-                            <button onclick="switchTab('location')" id="tab-btn-location" class="tab-btn w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all hover:bg-slate-800/30 hover:text-white text-left">
-                                <span class="material-symbols-outlined text-[18px]">location_on</span>
-                                <span class="tab-label">Location Mapping</span>
-                            </button>
+
                             <button onclick="switchTab('property')" id="tab-btn-property" class="tab-btn w-full flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-xs font-bold tracking-wide transition-all hover:bg-slate-800/30 hover:text-white text-left">
                                 <span class="material-symbols-outlined text-[18px]">real_estate_agent</span>
                                 <span class="tab-label">Property Allotted Details</span>
@@ -231,8 +228,8 @@
                             <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->FlatNo }}">{{ $ownerInfo->FlatNo }}</span>
                         </div>
                         <div class="flex justify-between pt-1">
-                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Village ID:</span>
-                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->VillageId }}">{{ $ownerInfo->VillageId }}</span>
+                            <span class="text-slate-500 text-[8px] uppercase tracking-wider">Village:</span>
+                            <span class="truncate max-w-[100px] text-slate-300" title="{{ $ownerInfo->AllottedVillageName }}">{{ $ownerInfo->AllottedVillageName }}</span>
                         </div>
                     </div>
                 </div>
@@ -741,42 +738,7 @@
                         </div>
                     </div>
 
-                    <!-- 3. LOCATION MAPPING TAB -->
-                    <div id="tab-location" class="tab-content space-y-5 hidden">
-                        <div class="glass-card overflow-hidden rounded-2xl">
-                            <div class="px-5 py-3.5 bg-slate-50/50 border-b border-slate-200/50">
-                                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Location & Area Mapping</h3>
-                            </div>
-                            <div class="p-5 space-y-4">
-                                <div class="grid grid-cols-2 md:grid-cols-5 gap-3.5 text-xs">
-                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictName ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->BlockName ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village Name</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->VillageName ?? 'N/A' }}</span>
-                                    </div>
-                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat / Plot ID</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->FlatId ?? '0' }}</span>
-                                    </div>
-                                    <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Flat Number</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->FlatNo ?? 'N/A' }}</span>
-                                    </div>
-                                </div>
-                                <div class="bg-blue-50/10 p-4 rounded-xl border border-blue-100/50 text-xs">
-                                    <span class="text-blue-500 font-extrabold uppercase text-[8px] block tracking-wider">Complete Registered Address</span>
-                                    <span class="font-semibold text-slate-800 block mt-1.5 leading-relaxed">{{ $ownerInfo->OwnerAddress ?? 'N/A' }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+
 
                     <!-- 4. AUDIT & REMARKS TAB -->
                     <div id="tab-audit" class="tab-content space-y-5 hidden">
@@ -1149,16 +1111,16 @@
                                         <span class="font-bold text-slate-700 block mt-1.5 font-mono">{{ $ownerInfo->FlatNo ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village ID</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->VillageId ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Village</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->AllottedVillageName ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block ID</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->BlockId ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">Block</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->AllottedBlockName ?? '—' }}</span>
                                     </div>
                                     <div class="bg-slate-50/30 p-3 rounded-xl border border-slate-200/40">
-                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District ID</span>
-                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->DistrictId ?? '—' }}</span>
+                                        <span class="text-slate-400 font-extrabold uppercase text-[8px] block tracking-wider">District</span>
+                                        <span class="font-bold text-slate-700 block mt-1.5">{{ $ownerInfo->AllottedDistrictName ?? '—' }}</span>
                                     </div>
                                 </div>
                             </div>

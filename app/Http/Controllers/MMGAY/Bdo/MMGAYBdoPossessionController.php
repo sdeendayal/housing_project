@@ -289,10 +289,10 @@ class MMGAYBdoPossessionController extends Controller
             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
 
             $query = DB::table('ownermaster as o')
-                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-                ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
                 ->where('o.IsApproved', 1)
                 ->where('o.IsPaid', 1)
                 ->whereExists(function ($query) {
@@ -342,9 +342,6 @@ class MMGAYBdoPossessionController extends Controller
                 'd.DistrictName',
                 'b.BlockName',
                 'v.VillageName',
-                'f.BlockId as FlatBlockId',
-                'f.VillageId as FlatVillageId',
-                'f.DistrictId as FlatDistrictId',
                 'f.FlatNo',
                 DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
                 'ppa.application_number',
@@ -470,15 +467,19 @@ class MMGAYBdoPossessionController extends Controller
 
         // 1. Fetch the owner details by secure_id
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as fb', 'f.BlockId', '=', 'fb.BlockId')
+            ->leftJoin('villagemaster as fv', 'f.VillageId', '=', 'fv.VillageId')
+            ->leftJoin('districtmaster as fd', 'f.DistrictId', '=', 'fd.DistrictId')
             ->where('o.secure_id', $secureId)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
+            ->select(
+                'o.*',
+                'f.FlatNo',
+                'fb.BlockName as BlockName',
+                'fv.VillageName as VillageName',
+                'fd.DistrictName as DistrictName'
+            )
             ->first();
-
-        $owner = $this->formatLocationDetails($owner);
 
         if (!$owner) {
             abort(404, 'Beneficiary record not found.');
@@ -820,15 +821,19 @@ class MMGAYBdoPossessionController extends Controller
 
         // Get owner details from ownermaster
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as fb', 'f.BlockId', '=', 'fb.BlockId')
+            ->leftJoin('villagemaster as fv', 'f.VillageId', '=', 'fv.VillageId')
+            ->leftJoin('districtmaster as fd', 'f.DistrictId', '=', 'fd.DistrictId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
+            ->select(
+                'o.*',
+                'f.FlatNo',
+                'fb.BlockName as BlockName',
+                'fv.VillageName as VillageName',
+                'fd.DistrictName as DistrictName'
+            )
             ->first();
-
-        $owner = $this->formatLocationDetails($owner);
 
         if ($check = $this->restrictBySiteDevelopment($owner)) {
             return $check;
@@ -1081,12 +1086,12 @@ class MMGAYBdoPossessionController extends Controller
 
         // Get owner details from ownermaster
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
+            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
             ->first();
 
         $owner = $this->formatLocationDetails($owner);
@@ -1267,12 +1272,12 @@ class MMGAYBdoPossessionController extends Controller
 
         // Get owner details from ownermaster
         $owner = DB::table('ownermaster as o')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
             ->where('o.OwnerId', $application->owner_id)
-            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.BlockId as FlatBlockId', 'f.VillageId as FlatVillageId', 'f.DistrictId as FlatDistrictId', 'f.FlatNo')
+            ->select('o.*', 'b.BlockName', 'v.VillageName', 'd.DistrictName', 'f.FlatNo')
             ->first();
 
         $owner = $this->formatLocationDetails($owner);
@@ -1400,9 +1405,6 @@ class MMGAYBdoPossessionController extends Controller
                 'd.DistrictName',
                 'b.BlockName',
                 'v.VillageName',
-                'f.BlockId as FlatBlockId',
-                'f.VillageId as FlatVillageId',
-                'f.DistrictId as FlatDistrictId',
                 'f.FlatNo',
                 DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
                 'ppa.application_number',
@@ -2012,10 +2014,10 @@ class MMGAYBdoPossessionController extends Controller
         $activeTab = $request->input('status', 'approved_paid');
 
         $listQuery = DB::table('ownermaster as o')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
             ->where('o.BlockId', $blockMasterId)
             ->whereNotNull('o.FlatId')
             ->where('o.FlatId', '>', 0)
@@ -2080,9 +2082,6 @@ class MMGAYBdoPossessionController extends Controller
             'd.DistrictName',
             'b.BlockName',
             'v.VillageName',
-            'f.BlockId as FlatBlockId',
-            'f.VillageId as FlatVillageId',
-            'f.DistrictId as FlatDistrictId',
             'f.FlatNo'
         )
         ->paginate(25)
@@ -2130,10 +2129,10 @@ class MMGAYBdoPossessionController extends Controller
         $activeTab = $request->input('status', 'approved_paid');
 
         $query = DB::table('ownermaster as o')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
             ->where('o.BlockId', $blockMasterId)
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
@@ -2221,9 +2220,6 @@ class MMGAYBdoPossessionController extends Controller
                 'd.DistrictName',
                 'b.BlockName',
                 'v.VillageName',
-                'f.BlockId as FlatBlockId',
-                'f.VillageId as FlatVillageId',
-                'f.DistrictId as FlatDistrictId',
                 'f.FlatNo'
             )->orderBy('o.OwnerId', 'asc')
             ->chunk(1000, function($rows) use (&$sr, $file) {
@@ -2268,10 +2264,10 @@ class MMGAYBdoPossessionController extends Controller
         $activeTab = $request->input('status', 'approved_paid');
 
         $query = DB::table('ownermaster as o')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
             ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
             ->where('o.BlockId', $blockMasterId)
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
@@ -2332,9 +2328,6 @@ class MMGAYBdoPossessionController extends Controller
             'd.DistrictName',
             'b.BlockName',
             'v.VillageName',
-            'f.BlockId as FlatBlockId',
-            'f.VillageId as FlatVillageId',
-            'f.DistrictId as FlatDistrictId',
             'f.FlatNo'
         )
         ->orderBy('o.OwnerName', 'asc')
@@ -2362,19 +2355,15 @@ class MMGAYBdoPossessionController extends Controller
     {
         if (!$owner) return $owner;
 
-        $flatBlockId = $owner->FlatBlockId ?? '—';
-        $flatVillageId = $owner->FlatVillageId ?? '—';
-        $flatDistrictId = $owner->FlatDistrictId ?? '—';
-
-        $owner->BlockName = "Personal Details: " . ($owner->BlockName ?? '—') . " | Property Allotted: {$flatBlockId}";
-        $owner->VillageName = "Personal Details: " . ($owner->VillageName ?? '—') . " | Property Allotted: {$flatVillageId}";
-        $owner->DistrictName = "Personal Details: " . ($owner->DistrictName ?? '—') . " | Property Allotted: {$flatDistrictId}";
+        $owner->BlockName = "Property Allotted Block: " . ($owner->BlockName ?? '—');
+        $owner->VillageName = "Property Allotted Village: " . ($owner->VillageName ?? '—');
+        $owner->DistrictName = "Property Allotted District: " . ($owner->DistrictName ?? '—');
 
         if (isset($owner->FlatNo)) {
             $owner->FlatNo = "Property Allotted Flat No: " . $owner->FlatNo;
         }
         if (isset($owner->OwnerAddress)) {
-            $owner->OwnerAddress = "Personal Details Address: " . $owner->OwnerAddress;
+            $owner->OwnerAddress = "Applicant Address: " . $owner->OwnerAddress;
         }
 
         return $owner;

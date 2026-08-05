@@ -26,12 +26,18 @@ class MMGAYCitizenController extends Controller
                 ->leftJoin('villagemaster', 'ownermaster.VillageId', '=', 'villagemaster.VillageId')
                 ->leftJoin('districtmaster', 'ownermaster.DistrictId', '=', 'districtmaster.DistrictId')
                 ->leftJoin('flatmaster', 'ownermaster.FlatId', '=', 'flatmaster.FlatId')
+                ->leftJoin('blockmaster as fb', 'flatmaster.BlockId', '=', 'fb.BlockId')
+                ->leftJoin('villagemaster as fv', 'flatmaster.VillageId', '=', 'fv.VillageId')
+                ->leftJoin('districtmaster as fd', 'flatmaster.DistrictId', '=', 'fd.DistrictId')
                 ->select(
                     'ownermaster.*',
                     'blockmaster.BlockName',
                     'villagemaster.VillageName',
                     'districtmaster.DistrictName',
-                    'flatmaster.FlatNo'
+                    'flatmaster.FlatNo',
+                    'fb.BlockName as AllottedBlockName',
+                    'fv.VillageName as AllottedVillageName',
+                    'fd.DistrictName as AllottedDistrictName'
                 )
                 ->where('ownermaster.MobileNo', $user->mobile)
                 ->first();
