@@ -263,9 +263,7 @@ body.pp-body-auth {
 
 
 .pp-sidebar-link-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
 }
 
 .pp-sidebar-foot {

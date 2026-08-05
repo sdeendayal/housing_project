@@ -361,42 +361,42 @@
     <a href="{{ route('pp.officer.possession-applications') }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon indigo"><i class="bi bi-collection"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">Total Applications</div>
+            <div class="pp-dash-stat-label">Total Eligible</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['total'] }}">0</div>
         </div>
     </a>
     <a href="{{ route('pp.officer.eligibility-list') }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon blue"><i class="bi bi-person-check"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">Awaiting Schedule</div>
+            <div class="pp-dash-stat-label">Schedule Pending</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['awaiting_schedule'] }}">0</div>
         </div>
     </a>
     <a href="{{ route('pp.officer.possession-applications', ['status' => 'Visit Scheduled']) }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon purple"><i class="bi bi-calendar-event"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">Visits Scheduled</div>
+            <div class="pp-dash-stat-label">Confirmation Pending From Citizen</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['scheduled'] }}">0</div>
         </div>
     </a>
     <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon orange"><i class="bi bi-hourglass-split"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">Pending Verify</div>
+            <div class="pp-dash-stat-label">Physical/Site Visit Pending</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['submitted'] }}">0</div>
         </div>
     </a>
     <a href="{{ route('pp.officer.possession-applications', ['status' => 'Site Verified']) }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon teal"><i class="bi bi-file-earmark-check"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">E-Possession Pending</div>
+            <div class="pp-dash-stat-label">Registry Documentation, Verify</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['site_verified'] }}">0</div>
         </div>
     </a>
     <a href="{{ route('pp.officer.possession-applications', ['status' => 'Verified']) }}" class="pp-dash-stat">
         <div class="pp-dash-stat-icon green"><i class="bi bi-check-circle"></i></div>
         <div class="min-w-0">
-            <div class="pp-dash-stat-label">Verified</div>
+            <div class="pp-dash-stat-label">Possession Given</div>
             <div class="pp-dash-stat-value pp-counter" data-target="{{ $stats['verified'] }}">0</div>
         </div>
     </a>
