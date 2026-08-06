@@ -27,8 +27,7 @@
     <!-- Interactive Villages Card Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
         @forelse($villages as $vil)
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['village_id' => $vil->VillageId]) }}" 
-               class="group relative flex items-center p-5 bg-white border border-slate-100 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
+            <div class="group relative flex items-center p-5 bg-white border border-slate-100 rounded-2xl hover:border-blue-300 hover:shadow-md transition-all duration-300 transform hover:-translate-y-1">
                 <!-- Circular Serial Number Badge -->
                 <div class="absolute top-4 right-4 text-[10px] font-black text-slate-350 bg-slate-50 px-2.5 py-0.5 rounded-full uppercase tracking-wider group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
                     #{{ str_pad($loop->iteration, 2, '0', STR_PAD_LEFT) }}
@@ -37,16 +36,31 @@
                 <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-100 flex items-center justify-center text-blue-600 mr-4 group-hover:from-blue-600 group-hover:to-indigo-600 group-hover:text-white transition-all duration-300 shadow-sm">
                     <span class="material-symbols-outlined text-xl">holiday_village</span>
                 </div>
-                <!-- Village Details -->
-                <div class="min-w-0 flex-1">
+                <!-- Village Details Link -->
+                <a href="{{ route('mmgay.bdo.owner-status-report', ['village_id' => $vil->VillageId]) }}" class="min-w-0 flex-1">
                     <p class="text-[9px] uppercase text-slate-400 font-extrabold tracking-wider">Village</p>
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide group-hover:text-blue-700 transition-colors mt-0.5">{{ $vil->VillageName }}</h3>
+                </a>
+                <!-- Actions and Arrow Container -->
+                <div class="flex items-center gap-3 z-10 ml-2">
+                    @if(!empty($vil->map_pdf))
+                        <a href="{{ asset('phase1_plans_gps_map/' . $vil->map_pdf) }}" target="_blank" 
+                           class="inline-flex items-center gap-0.5 px-2 py-1 text-[8px] font-black text-red-650 hover:text-red-755 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-all shadow-sm hover:shadow" 
+                           title="Open Village GPS Map PDF">
+                            <span class="material-symbols-outlined text-[10px] font-black">picture_as_pdf</span>
+                            <span>MAP PDF</span>
+                        </a>
+                    @else
+                        <span class="inline-flex items-center gap-0.5 px-2 py-1 text-[8px] font-extrabold text-slate-400 bg-slate-50 border border-slate-150 rounded cursor-default" title="Map not available">
+                            <span class="material-symbols-outlined text-[10px] font-black">info</span>
+                            <span>MAP NOT AVAILABLE</span>
+                        </span>
+                    @endif
+                    <a href="{{ route('mmgay.bdo.owner-status-report', ['village_id' => $vil->VillageId]) }}" class="text-slate-300 group-hover:text-blue-600 transition-colors">
+                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                    </a>
                 </div>
-                <!-- Arrow Indicator -->
-                <div class="text-slate-300 group-hover:text-blue-600 transition-colors ml-2">
-                    <span class="material-symbols-outlined text-lg">arrow_forward</span>
-                </div>
-            </a>
+            </div>
         @empty
             <div class="col-span-full py-16 text-center bg-white border border-slate-100 rounded-2xl text-slate-450 font-bold shadow-sm">
                 <span class="material-symbols-outlined text-4xl block mb-2 text-slate-350">holiday_village</span>
