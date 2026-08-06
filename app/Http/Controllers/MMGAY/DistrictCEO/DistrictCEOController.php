@@ -160,7 +160,7 @@ class DistrictCEOController extends Controller
             v.VillageName,
             v.phase AS Phase,
             v.plots AS TotalPlots,
-
+            v.pdf AS PdfFile,
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
 
             COUNT(DISTINCT CASE
@@ -280,7 +280,8 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'v.VillageId',
                 'v.VillageName',
                 'v.phase',
-                'v.plots'
+                'v.plots',
+                'v.pdf'
             )
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
@@ -1118,8 +1119,6 @@ END) AS RegistryUnmatchedWithoutMobile,
             ]
         );
     }
-
-
     private function formatDevelopmentDate($date): ?string
     {
         if (blank($date)) {

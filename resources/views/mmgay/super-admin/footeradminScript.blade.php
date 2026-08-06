@@ -1,6 +1,161 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById(
+                'villagePdfModal'
+            );
+
+            const frame = document.getElementById(
+                'villagePdfFrame'
+            );
+
+            const loader = document.getElementById(
+                'villagePdfLoader'
+            );
+
+            const title = document.getElementById(
+                'villagePdfTitle'
+            );
+
+            const subtitle = document.getElementById(
+                'villagePdfSubtitle'
+            );
+
+            const downloadLink = document.getElementById(
+                'villagePdfDownload'
+            );
+
+            const openNewLink = document.getElementById(
+                'villagePdfOpenNew'
+            );
+
+            const closeButton = document.getElementById(
+                'closeVillagePdfModal'
+            );
+
+            const mapButtons = document.querySelectorAll(
+                '.village-map-button'
+            );
+
+            if (
+                !modal ||
+                !frame ||
+                !loader ||
+                !closeButton
+            ) {
+                return;
+            }
+
+            function openPdfModal(button) {
+                const pdfUrl = button.dataset.pdfUrl;
+                const downloadUrl =
+                    button.dataset.downloadUrl || pdfUrl;
+
+                const pdfName =
+                    button.dataset.pdfName || 'Village Map.pdf';
+
+                const villageName =
+                    button.dataset.villageName || 'Village';
+
+                const phase =
+                    button.dataset.phase || '-';
+
+                if (!pdfUrl) {
+                    return;
+                }
+
+                title.textContent =
+                    villageName + ' - Site Development Map';
+
+                subtitle.textContent =
+                    'Phase ' + phase + ' • ' + pdfName;
+
+                downloadLink.href = downloadUrl;
+                downloadLink.setAttribute(
+                    'download',
+                    pdfName
+                );
+
+                openNewLink.href = pdfUrl;
+
+                loader.classList.remove('hidden');
+
+                /*
+                 * #toolbar=1:
+                 * Native PDF toolbar visible रहेगा।
+                 *
+                 * #view=FitH:
+                 * PDF width के अनुसार open होगी।
+                 */
+                frame.src =
+                    pdfUrl + '#toolbar=1&navpanes=0&view=FitH';
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+
+                document.body.classList.add(
+                    'overflow-hidden'
+                );
+            }
+
+            function closePdfModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+
+                /*
+                 * iframe clear करने से PDF memory release होगी।
+                 */
+                frame.src = '';
+
+                loader.classList.remove('hidden');
+
+                document.body.classList.remove(
+                    'overflow-hidden'
+                );
+            }
+
+            mapButtons.forEach(function (button) {
+                button.addEventListener(
+                    'click',
+                    function () {
+                        openPdfModal(button);
+                    }
+                );
+            });
+
+            frame.addEventListener('load', function () {
+                loader.classList.add('hidden');
+            });
+
+            closeButton.addEventListener(
+                'click',
+                closePdfModal
+            );
+
+            modal.addEventListener(
+                'click',
+                function (event) {
+                    if (event.target === modal) {
+                        closePdfModal();
+                    }
+                }
+            );
+
+            document.addEventListener(
+                'keydown',
+                function (event) {
+                    if (
+                        event.key === 'Escape' &&
+                        !modal.classList.contains('hidden')
+                    ) {
+                        closePdfModal();
+                    }
+                }
+            );
+        });
+    </script>
+<script>
 document.addEventListener('DOMContentLoaded', function () {
     const phaseSelect = document.getElementById('phase');
 

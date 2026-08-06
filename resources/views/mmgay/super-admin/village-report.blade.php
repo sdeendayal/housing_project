@@ -360,218 +360,348 @@
 
                 </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-hidden">
 
-                    <table class="min-w-full divide-y divide-slate-200">
+                    <table class="w-full table-fixed divide-y divide-slate-200 text-xs">
+
+                        <colgroup>
+                            <col class="w-[4%]">
+                            <col class="w-[15%]">
+                            <col class="w-[13%]">
+                            <col class="w-[5%]">
+                            <col class="w-[7%]">
+                            <col class="w-[8%]">
+                            <col class="w-[8%]">
+                            <col class="w-[8%]">
+                            <col class="w-[9%]">
+                            <col class="w-[7%]">
+                            <col class="w-[7%]">
+                            <col class="w-[9%]">
+                        </colgroup>
 
                         <thead class="bg-slate-50">
 
                             <tr>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Sr. No.
-                                </th>
-                                <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Site Development
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Sr.<br>No.
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Site<br>Development
+                                </th>
+
+                                <th
+                                    class="px-1.5 py-2 text-left text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Village
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Phase
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Total Plots
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Total<br>Plots
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Applicants
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Approved Paid
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Approved<br>Paid
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Approved Unpaid
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Approved<br>Unpaid
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
-                                    Yet to be Approved
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
+                                    Yet to be<br>Approved
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Rejected
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Cancelled
                                 </th>
 
                                 <th
-                                    class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide text-slate-600">
+                                    class="px-1.5 py-2 text-center text-[10px] font-bold uppercase leading-4 tracking-wide text-slate-600">
                                     Allotted
                                 </th>
+
                             </tr>
+
                         </thead>
+
                         <tbody class="divide-y divide-slate-100 bg-white">
 
                             @forelse ($report as $index => $row)
                                 @php
                                     $commonFilters = array_filter([
                                         'phase' => $row->Phase ?? request('phase'),
-
                                         'district_id' => $row->DistrictId ?? request('district_id'),
-
                                         'village_id' => $row->VillageId,
                                     ]);
+
+                                    $pdfUrl = !empty($row->pdf)
+                                        ? asset('phase1_plans_gps_map/' . ltrim($row->pdf, '/'))
+                                        : null;
                                 @endphp
 
                                 <tr class="transition hover:bg-slate-50">
 
                                     {{-- Serial Number --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-slate-600">
-                                        {{ $report->firstItem() + $index }}
+                                    <td class="px-1.5 py-2 text-center text-xs text-slate-600">
+                                        {{ ($report->firstItem() ?? 1) + $index }}
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
 
-                                        <button type="button"
-                                            data-url="{{ route('admin.village.site-development', ['villageId' => $row->VillageId]) }}"
-                                            data-village-name="{{ $row->VillageName }}" data-phase="{{ $row->Phase }}"
-                                            class="site-development-button inline-flex items-center justify-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-600 hover:text-white">
-                                            <span class="material-symbols-outlined text-[17px]">
-                                                construction
+                                    {{-- Site Development / View Map --}}
+                                    <td class="px-1 py-2 text-center">
+
+                                        <div class="flex flex-wrap items-center justify-center gap-1">
+
+                                            <button type="button"
+                                                data-url="{{ route('admin.village.site-development', ['villageId' => $row->VillageId]) }}"
+                                                data-village-name="{{ $row->VillageName }}"
+                                                data-phase="{{ $row->Phase }}"
+                                                class="site-development-button inline-flex h-8
+                                       items-center justify-center gap-1
+                                       rounded-md border border-cyan-300
+                                       bg-cyan-50 px-2 text-[10px]
+                                       font-semibold text-cyan-700
+                                       transition hover:bg-cyan-600
+                                       hover:text-white">
+
+                                                <span class="material-symbols-outlined text-[14px]">
+                                                    construction
+                                                </span>
+
+                                                Site
+                                            </button>
+
+                                            @if ($pdfUrl)
+                                                <button type="button" data-pdf-url="{{ $pdfUrl }}"
+                                                    data-pdf-name="{{ $row->pdf }}"
+                                                    data-village-name="{{ $row->VillageName }}"
+                                                    data-phase="{{ $row->Phase }}"
+                                                    class="village-map-button inline-flex h-8
+                                           items-center justify-center gap-1
+                                           rounded-md border border-indigo-300
+                                           bg-indigo-50 px-2 text-[10px]
+                                           font-semibold text-indigo-700
+                                           transition hover:bg-indigo-600
+                                           hover:text-white">
+
+                                                    <span class="material-symbols-outlined text-[14px]">
+                                                        map
+                                                    </span>
+
+                                                    Map
+                                                </button>
+                                            @else
+                                                <span title="Map PDF not available"
+                                                    class="inline-flex h-8 cursor-not-allowed
+                                           items-center justify-center gap-1
+                                           rounded-md border border-slate-200
+                                           bg-slate-50 px-2 text-[10px]
+                                           font-semibold text-slate-400">
+
+                                                    <span class="material-symbols-outlined text-[14px]">
+                                                        map
+                                                    </span>
+
+                                                    No Map
+                                                </span>
+                                            @endif
+
+                                        </div>
+
+                                    </td>
+
+                                    {{-- Village --}}
+                                    <td class="px-1.5 py-2 text-xs font-semibold">
+
+                                        <a href="{{ route('superadmin.applicants.index', $commonFilters) }}"
+                                            class="inline-flex max-w-full items-start gap-0.5
+                                   break-words leading-4 text-indigo-700
+                                   transition hover:text-indigo-900
+                                   hover:underline">
+
+                                            <span class="break-words">
+                                                {{ $row->VillageName }}
                                             </span>
 
-                                            View
-                                        </button>
-
-                                    </td>
-
-                                    {{-- Village Name --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm font-semibold">
-                                        <a href="{{ route('superadmin.applicants.index', $commonFilters) }}"
-                                            class="inline-flex items-center gap-1 text-indigo-700 transition hover:text-indigo-900 hover:underline">
-
-                                            {{ $row->VillageName }}
-
-                                            <span class="material-symbols-outlined text-[16px]">
+                                            <span
+                                                class="material-symbols-outlined mt-0.5
+                                       shrink-0 text-[13px]">
                                                 open_in_new
                                             </span>
+
                                         </a>
+
                                     </td>
 
                                     {{-- Phase --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm text-slate-600">
+                                    <td class="px-1.5 py-2 text-center text-xs text-slate-600">
                                         {{ $row->Phase ?? '-' }}
                                     </td>
 
                                     {{-- Total Plots --}}
                                     <td
-                                        class="whitespace-nowrap px-4 py-3 text-center text-sm font-semibold text-slate-700">
+                                        class="px-1.5 py-2 text-center text-xs font-semibold
+                               text-slate-700">
                                         {{ number_format($row->TotalPlots ?? 0) }}
                                     </td>
 
                                     {{-- Applicants --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route('superadmin.applicants.index', $commonFilters) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-indigo-50 px-3 py-1.5 font-semibold text-indigo-700 transition hover:bg-indigo-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-indigo-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-indigo-700 transition
+                                   hover:bg-indigo-100">
 
                                             {{ number_format($row->RegisteredBeneficiaries ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Approved Paid --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route(
                                             'admin.allotment.report',
                                             array_merge($commonFilters, [
                                                 'status' => 'approved_paid',
                                             ]),
                                         ) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-emerald-50 px-3 py-1.5 font-semibold text-emerald-700 transition hover:bg-emerald-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-emerald-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-emerald-700 transition
+                                   hover:bg-emerald-100">
 
                                             {{ number_format($row->ApprovedPaid ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Approved Unpaid --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route(
                                             'admin.allotment.report',
                                             array_merge($commonFilters, [
                                                 'status' => 'approved_unpaid',
                                             ]),
                                         ) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-amber-50 px-3 py-1.5 font-semibold text-amber-700 transition hover:bg-amber-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-amber-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-amber-700 transition
+                                   hover:bg-amber-100">
 
                                             {{ number_format($row->ApprovedUnpaid ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Yet to be Approved --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route(
                                             'admin.allotment.report',
                                             array_merge($commonFilters, [
                                                 'status' => 'pending',
                                             ]),
                                         ) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-700 transition hover:bg-blue-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-blue-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-blue-700 transition
+                                   hover:bg-blue-100">
 
                                             {{ number_format($row->PendingApprovalPayment ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Rejected --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route(
                                             'admin.allotment.report',
                                             array_merge($commonFilters, [
                                                 'status' => 'rejected',
                                             ]),
                                         ) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-rose-50 px-3 py-1.5 font-semibold text-rose-700 transition hover:bg-rose-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-rose-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-rose-700 transition
+                                   hover:bg-rose-100">
 
                                             {{ number_format($row->Rejected ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Cancelled --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route(
                                             'admin.allotment.report',
                                             array_merge($commonFilters, [
                                                 'status' => 'cancelled',
                                             ]),
                                         ) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-slate-100 px-3 py-1.5 font-semibold text-slate-700 transition hover:bg-slate-200 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-slate-100
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-slate-700 transition
+                                   hover:bg-slate-200">
 
                                             {{ number_format($row->AllotmentCancelled ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                     {{-- Allotted --}}
-                                    <td class="whitespace-nowrap px-4 py-3 text-center text-sm">
+                                    <td class="px-1 py-2 text-center">
+
                                         <a href="{{ route('admin.allotment.report', $commonFilters) }}"
-                                            class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
+                                            class="inline-flex min-w-9 items-center
+                                   justify-center rounded-md bg-violet-50
+                                   px-1.5 py-1 text-xs font-semibold
+                                   text-violet-700 transition
+                                   hover:bg-violet-100">
 
                                             {{ number_format($row->AllottedBeneficiaries ?? 0) }}
+
                                         </a>
+
                                     </td>
 
                                 </tr>
@@ -584,10 +714,14 @@
                                         <div class="flex flex-col items-center">
 
                                             <div
-                                                class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                                                class="flex h-14 w-14 items-center
+                                       justify-center rounded-full
+                                       bg-slate-100 text-slate-400">
+
                                                 <span class="material-symbols-outlined text-3xl">
                                                     holiday_village
                                                 </span>
+
                                             </div>
 
                                             <h3 class="mt-4 font-semibold text-slate-700">
@@ -606,56 +740,50 @@
 
                         </tbody>
 
-
                         @if ($report->isNotEmpty())
-                            <tfoot class="bg-slate-100 border-t-2 border-slate-300">
+                            <tfoot class="border-t-2 border-slate-300 bg-slate-100">
 
                                 <tr class="font-bold text-slate-800">
-                                    <td class="px-4 py-3 text-center">
 
-                                    </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-1 py-2"></td>
 
-                                    </td>
+                                    <td class="px-1 py-2"></td>
 
-                                    {{-- Sr + Site Development + Village + Phase --}}
-                                    <td class="px-4 py-3 text-lg font-bold whitespace-nowrap">
+                                    <td class="px-1.5 py-2 text-xs font-bold">
                                         Gross Total
                                     </td>
-                                    <td class="px-4 py-3 text-center">
 
-                                    </td>
+                                    <td class="px-1 py-2"></td>
 
-
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-1 py-2 text-center text-xs">
                                         {{ number_format($grossTotal->TotalPlots ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-1 py-2 text-center text-xs">
                                         {{ number_format($grossTotal->RegisteredBeneficiaries ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-emerald-700">
+                                    <td class="px-1 py-2 text-center text-xs text-emerald-700">
                                         {{ number_format($grossTotal->ApprovedPaid ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-amber-700">
+                                    <td class="px-1 py-2 text-center text-xs text-amber-700">
                                         {{ number_format($grossTotal->ApprovedUnpaid ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-blue-700">
+                                    <td class="px-1 py-2 text-center text-xs text-blue-700">
                                         {{ number_format($grossTotal->PendingApprovalPayment ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-red-600">
+                                    <td class="px-1 py-2 text-center text-xs text-red-600">
                                         {{ number_format($grossTotal->Rejected ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-rose-600">
+                                    <td class="px-1 py-2 text-center text-xs text-rose-600">
                                         {{ number_format($grossTotal->AllotmentCancelled ?? 0) }}
                                     </td>
 
-                                    <td class="px-4 py-3 text-center text-indigo-700">
+                                    <td class="px-1 py-2 text-center text-xs text-indigo-700">
                                         {{ number_format($grossTotal->AllottedBeneficiaries ?? 0) }}
                                     </td>
 
@@ -788,5 +916,125 @@
             </p>
 
         </div>
+    </div>
+    {{-- Village PDF Map Modal --}}
+    <div id="villagePdfModal"
+        class="fixed inset-0 z-[10000] hidden items-center justify-center
+           bg-slate-950/70 p-3 backdrop-blur-sm sm:p-5">
+
+        <div
+            class="flex h-[95vh] w-full max-w-7xl flex-col overflow-hidden
+               rounded-2xl bg-white shadow-2xl">
+
+            {{-- Header --}}
+            <div
+                class="flex shrink-0 flex-col gap-3 border-b border-slate-200
+                   bg-gradient-to-r from-indigo-700 via-blue-700
+                   to-cyan-600 px-5 py-4 text-white
+                   sm:flex-row sm:items-center sm:justify-between">
+
+                <div class="flex min-w-0 items-center gap-3">
+
+                    <div
+                        class="flex h-11 w-11 shrink-0 items-center
+                           justify-center rounded-xl bg-white/15">
+
+                        <span class="material-symbols-outlined text-[23px]">
+                            map
+                        </span>
+                    </div>
+
+                    <div class="min-w-0">
+
+                        <h2 id="villagePdfTitle" class="truncate text-lg font-bold">
+                            Village Map
+                        </h2>
+
+                        <p id="villagePdfSubtitle" class="mt-0.5 truncate text-sm text-blue-100">
+                            Site plan and GPS map
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <div class="flex shrink-0 items-center gap-2">
+
+                    {{-- Download --}}
+                    <a id="villagePdfDownload" href="#" download
+                        class="inline-flex h-10 items-center justify-center
+                           gap-2 rounded-xl border border-white/30
+                           bg-white/15 px-4 text-sm font-semibold
+                           text-white backdrop-blur-sm transition
+                           hover:bg-white/25">
+
+                        <span class="material-symbols-outlined text-[19px]">
+                            download
+                        </span>
+
+                        Download
+                    </a>
+
+                    {{-- Open in new tab --}}
+                    <a id="villagePdfOpenNew" href="#" target="_blank" rel="noopener"
+                        class="inline-flex h-10 items-center justify-center
+                           gap-2 rounded-xl border border-white/30
+                           bg-white/15 px-4 text-sm font-semibold
+                           text-white backdrop-blur-sm transition
+                           hover:bg-white/25">
+
+                        <span class="material-symbols-outlined text-[19px]">
+                            open_in_new
+                        </span>
+
+                        Open
+                    </a>
+
+                    {{-- Close --}}
+                    <button type="button" id="closeVillagePdfModal" aria-label="Close PDF"
+                        class="flex h-10 w-10 items-center justify-center
+                           rounded-xl bg-white/15 text-white transition
+                           hover:bg-white/25">
+
+                        <span class="material-symbols-outlined text-[24px]">
+                            close
+                        </span>
+                    </button>
+
+                </div>
+
+            </div>
+
+            {{-- PDF Viewer --}}
+            <div class="relative min-h-0 flex-1 bg-slate-200">
+
+                {{-- Loader --}}
+                <div id="villagePdfLoader"
+                    class="absolute inset-0 z-10 flex items-center
+                       justify-center bg-slate-100">
+
+                    <div class="text-center">
+
+                        <div
+                            class="mx-auto h-12 w-12 animate-spin rounded-full
+                               border-4 border-indigo-200
+                               border-t-indigo-600">
+                        </div>
+
+                        <p class="mt-4 text-sm font-semibold text-slate-600">
+                            Loading PDF map...
+                        </p>
+
+                    </div>
+
+                </div>
+
+                <iframe id="villagePdfFrame" src="" class="h-full w-full border-0" title="Village PDF Map">
+                </iframe>
+
+            </div>
+
+        </div>
+
     </div>
 @endsection

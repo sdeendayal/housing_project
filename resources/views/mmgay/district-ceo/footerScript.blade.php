@@ -191,6 +191,9 @@
     const siteDevelopmentBaseUrl =
         "{{ url('/district-ceo/dashboard/site-development') }}";
 
+    const villageMapPdfBaseUrl =
+        @json(asset('phase1_plans_gps_map'));
+
     /*
     |--------------------------------------------------------------------------
     | Export Links
@@ -582,6 +585,47 @@
             }
 
             $.each(rows, function(index, row) {
+                const pdfFile =
+                    row.PdfFile ?
+                    String(row.PdfFile) :
+                    '';
+
+                const pdfUrl = pdfFile ?
+                    villageMapPdfBaseUrl +
+                    '/' +
+                    pdfFile
+                    .split('/')
+                    .map(encodeURIComponent)
+                    .join('/') :
+                    '';
+
+                const mapButton = pdfUrl ?
+                    `
+        <button
+            type="button"
+            title="View Village Map"
+            class="villageMapBtn inline-flex h-8
+                   items-center justify-center gap-1
+                   rounded-lg border border-indigo-200
+                   bg-indigo-50 px-2.5 text-xs
+                   font-semibold text-indigo-700
+                   transition hover:border-indigo-600
+                   hover:bg-indigo-600 hover:text-white"
+            data-pdf-url="${escapeHtml(pdfUrl)}"
+            data-pdf-name="${escapeHtml(pdfFile)}"
+            data-village-name="${escapeHtml(row.VillageName ?? '')}"
+            data-phase="${escapeHtml(row.Phase ?? '')}"
+        >
+            <span
+                class="material-symbols-outlined text-[17px]"
+            >
+                map
+            </span>
+
+            Map
+        </button>
+    ` :
+                    '';
                 tbody += `
                     <tr
                         class="border-b border-slate-100
@@ -593,30 +637,49 @@
 
                         <td class="px-4 py-3">
 
-                            <div class="flex items-center gap-2">
+    <div class="flex flex-wrap items-center gap-2">
 
-                                <button
-                                    type="button"
-                                    title="Site Development"
-                                    class="siteDevelopmentBtn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 transition hover:bg-cyan-600 hover:text-white"
-                                    data-village-id="${row.VillageId}"
-                                    data-village-name="${escapeHtml(row.VillageName ?? '')}"
-                                    data-phase="${row.Phase ?? ''}"
-                                >
-                                    <span class="material-symbols-outlined text-[18px]">
-                                        construction
-                                    </span>
-                                </button>
+        <button
+            type="button"
+            title="Site Development"
+            class="siteDevelopmentBtn inline-flex h-8 w-8
+                   shrink-0 items-center justify-center
+                   rounded-lg bg-cyan-100 text-cyan-700
+                   transition hover:bg-cyan-600
+                   hover:text-white"
+            data-village-id="${row.VillageId}"
+            data-village-name="${escapeHtml(row.VillageName ?? '')}"
+            data-phase="${row.Phase ?? ''}"
+        >
+            <span
+                class="material-symbols-outlined text-[18px]"
+            >
+                construction
+            </span>
+        </button>
 
-                                <a
-                                    href="${applicantReportBaseUrl}?phase=${encodeURIComponent(row.Phase ?? 'all')}&village_id=${encodeURIComponent(row.VillageId)}&status=all_applicants"
-                                    class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md"
-                                >
-                                    ${escapeHtml(row.VillageName ?? '-')}
-                                </a>  
-                            </div>
+        ${mapButton}
 
-                        </td>
+        <a
+            href="${applicantReportBaseUrl}?phase=${
+                encodeURIComponent(row.Phase ?? 'all')
+            }&village_id=${
+                encodeURIComponent(row.VillageId)
+            }&status=all_applicants"
+            class="inline-flex items-center rounded-md
+                   px-2 py-1 font-semibold text-slate-800
+                   transition-all duration-200
+                   hover:bg-slate-800 hover:text-white
+                   hover:shadow-md"
+        >
+            ${escapeHtml(row.VillageName ?? '-')}
+        </a>
+
+        
+
+    </div>
+
+</td>
 
                         <td class="px-4 py-3 text-center">
                             ${formatNumber(row.TotalPlots)}
@@ -1247,6 +1310,136 @@
             }
         );
 
+
+        /*
+|--------------------------------------------------------------------------
+| Open Village Map PDF
+|--------------------------------------------------------------------------
+*/
+        $(document).on(
+            'click',
+            '.villageMapBtn',
+            function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const button = $(this);
+
+                const pdfUrl =
+                    String(button.data('pdf-url') || '');
+
+                const pdfName =
+                    String(button.data('pdf-name') || 'Village Map.pdf');
+
+                const villageName =
+                    String(button.data('village-name') || 'Village');
+
+                const phase =
+                    String(button.data('phase') || '-');
+
+                if (!pdfUrl) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Map unavailable',
+                        text: 'Village map PDF is not available.',
+                        confirmButtonColor: '#2563eb'
+                    });
+
+                    return;
+                }
+
+                $('#villageMapTitle').text(
+                    villageName + ' - Village Map'
+                );
+
+                $('#villageMapSubtitle').text(
+                    'Phase ' + phase + ' • ' + pdfName
+                );
+
+                $('#downloadVillageMap')
+                    .attr('href', pdfUrl)
+                    .attr('download', pdfName);
+
+                $('#openVillageMap')
+                    .attr('href', pdfUrl);
+
+                $('#villageMapLoader')
+                    .removeClass('hidden');
+
+                $('#villageMapFrame')
+                    .attr(
+                        'src',
+                        pdfUrl +
+                        '#toolbar=1&navpanes=0&view=FitH'
+                    );
+
+                $('#villageMapModal')
+                    .removeClass('hidden');
+
+                $('body')
+                    .addClass('overflow-hidden');
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | PDF loaded
+        |--------------------------------------------------------------------------
+        */
+        $('#villageMapFrame').on(
+            'load',
+            function() {
+                $('#villageMapLoader')
+                    .addClass('hidden');
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Close Village Map PDF
+        |--------------------------------------------------------------------------
+        */
+        function closeVillageMapModal() {
+            $('#villageMapModal')
+                .addClass('hidden');
+
+            $('#villageMapFrame')
+                .attr('src', '');
+
+            $('#villageMapLoader')
+                .removeClass('hidden');
+
+            $('body')
+                .removeClass('overflow-hidden');
+        }
+
+        $(document).on(
+            'click',
+            '#closeVillageMapModal',
+            closeVillageMapModal
+        );
+
+        $(document).on(
+            'click',
+            '#villageMapModal',
+            function(event) {
+                if (event.target.id === 'villageMapModal') {
+                    closeVillageMapModal();
+                }
+            }
+        );
+
+        $(document).on(
+            'keydown',
+            function(event) {
+                if (
+                    event.key === 'Escape' &&
+                    !$('#villageMapModal').hasClass('hidden')
+                ) {
+                    closeVillageMapModal();
+                }
+            }
+        );
         /*
         |--------------------------------------------------------------------------
         | Close Site Development Popup

@@ -685,24 +685,16 @@
             <div class="bg-slate-50/70 p-4">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 
-                    <a
-                        id="possessionEligibleLink"
-                        href="{{ route(
-                            'district.possession.list',
-                            array_merge(['filter' => 'all'], $possessionParams),
-                        ) }}"
-                        class="group rounded-xl border border-slate-200 border-l-4 border-l-violet-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    >
+                    <a id="possessionEligibleLink"
+                        href="{{ route('district.possession.list', array_merge(['filter' => 'all'], $possessionParams)) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-violet-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession to be given
                                 </p>
 
-                                <h3
-                                    id="registeredBeneficiaries"
-                                    class="mt-1 text-2xl font-bold text-violet-700"
-                                >
+                                <h3 id="registeredBeneficiaries" class="mt-1 text-2xl font-bold text-violet-700">
                                     {{ number_format($totals['totalRegisteredBeneficiaries'] ?? 0) }}
                                 </h3>
                             </div>
@@ -715,24 +707,16 @@
                         </div>
                     </a>
 
-                    <a
-                        id="possessionGivenLink"
-                        href="{{ route(
-                            'district.possession.list',
-                            array_merge(['filter' => 'verified'], $possessionParams),
-                        ) }}"
-                        class="group rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    >
+                    <a id="possessionGivenLink"
+                        href="{{ route('district.possession.list', array_merge(['filter' => 'verified'], $possessionParams)) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-emerald-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession Given
                                 </p>
 
-                                <h3
-                                    id="possessionGiven"
-                                    class="mt-1 text-2xl font-bold text-emerald-700"
-                                >
+                                <h3 id="possessionGiven" class="mt-1 text-2xl font-bold text-emerald-700">
                                     {{ number_format($totals['totalPossessionGiven'] ?? 0) }}
                                 </h3>
                             </div>
@@ -745,24 +729,16 @@
                         </div>
                     </a>
 
-                    <a
-                        id="possessionPendingLink"
-                        href="{{ route(
-                            'district.possession.list',
-                            array_merge(['filter' => 'possession_pending'], $possessionParams),
-                        ) }}"
-                        class="group rounded-xl border border-slate-200 border-l-4 border-l-amber-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                    >
+                    <a id="possessionPendingLink"
+                        href="{{ route('district.possession.list', array_merge(['filter' => 'possession_pending'], $possessionParams)) }}"
+                        class="group rounded-xl border border-slate-200 border-l-4 border-l-amber-500 bg-white px-4 py-3 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:shadow-md">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-xs font-semibold text-slate-500">
                                     Possession Pending
                                 </p>
 
-                                <h3
-                                    id="possessionPending"
-                                    class="mt-1 text-2xl font-bold text-amber-700"
-                                >
+                                <h3 id="possessionPending" class="mt-1 text-2xl font-bold text-amber-700">
                                     {{ number_format($totals['totalPossessionPending'] ?? 0) }}
                                 </h3>
                             </div>
@@ -897,33 +873,69 @@
                                 <td class="whitespace-nowrap px-4 py-3 text-slate-500">
                                     {{ $loop->iteration }}
                                 </td>
-
                                 {{-- Village --}}
                                 {{-- Village --}}
-                                <td class="whitespace-nowrap px-4 py-3">
+                                <td class="px-4 py-3">
 
-                                    <div class="flex items-center gap-2">
+                                    @php
+                                        $mapPdfUrl = !empty($row->PdfFile)
+                                            ? asset('phase1_plans_gps_map/' . ltrim($row->PdfFile, '/'))
+                                            : null;
 
+                                        $applicantUrl = route('district.dashboard.applicants', [
+                                            'phase' => $row->Phase ?? 'all',
+                                            'village_id' => $row->VillageId,
+                                            'status' => 'all_applicants',
+                                        ]);
+                                    @endphp
+
+                                    <div class="flex flex-wrap items-center gap-2">
+
+                                        {{-- Site Development --}}
                                         <button type="button" title="Site Development"
-                                            class="siteDevelopmentBtn inline-flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 transition hover:bg-cyan-600 hover:text-white"
+                                            class="siteDevelopmentBtn inline-flex h-8 w-8 shrink-0
+                   items-center justify-center rounded-lg bg-cyan-100
+                   text-cyan-700 transition hover:bg-cyan-600
+                   hover:text-white"
                                             data-village-id="{{ $row->VillageId }}"
                                             data-village-name="{{ $row->VillageName }}"
                                             data-phase="{{ $row->Phase }}">
+
                                             <span class="material-symbols-outlined text-[18px]">
                                                 construction
                                             </span>
                                         </button>
 
-                                        <a href="{{ route('district.dashboard.applicants', [
-                                            'phase' => $phase,
-                                            'village_id' => $row->VillageId,
-                                            'status' => 'all_applicants',
-                                        ]) }}"
-                                            class="inline-flex items-center rounded-md px-2 py-1 font-semibold text-slate-800 transition-all duration-200 hover:bg-slate-800 hover:text-white hover:shadow-md">
-                                            {{ $row->VillageName ?? '-' }}
+                                        {{-- Map PDF --}}
+                                        @if ($mapPdfUrl)
+                                            <button type="button" title="View Village Map"
+                                                class="villageMapBtn inline-flex h-8 items-center
+                       justify-center gap-1 rounded-lg border
+                       border-indigo-200 bg-indigo-50 px-2.5
+                       text-xs font-semibold text-indigo-700
+                       transition hover:border-indigo-600
+                       hover:bg-indigo-600 hover:text-white"
+                                                data-pdf-url="{{ $mapPdfUrl }}" data-pdf-name="{{ $row->PdfFile }}"
+                                                data-village-name="{{ $row->VillageName }}"
+                                                data-phase="{{ $row->Phase }}">
+
+                                                <span class="material-symbols-outlined text-[17px]">
+                                                    map
+                                                </span>
+
+                                                Map
+                                            </button>
+                                        @endif
+
+                                        {{-- Village Name --}}
+                                        <a href="{{ $applicantUrl }}"
+                                            class="inline-flex items-center rounded-md px-2 py-1
+                   font-semibold text-slate-800 transition-all
+                   duration-200 hover:bg-slate-800 hover:text-white
+                   hover:shadow-md">
+
+                                            {{ $row->VillageName }}
                                         </a>
-
-
 
                                     </div>
 
@@ -1171,5 +1183,131 @@
             </div>
 
         </div>
+    </div>
+    {{-- ================================================================ --}}
+    {{-- Village Map PDF Modal --}}
+    {{-- ================================================================ --}}
+    <div id="villageMapModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/75
+           p-3 backdrop-blur-sm">
+
+        <div class="flex min-h-full items-center justify-center">
+
+            <div
+                class="flex h-[94vh] w-full max-w-7xl flex-col
+                   overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                {{-- Header --}}
+                <div
+                    class="flex shrink-0 flex-col gap-3
+                       bg-gradient-to-r from-indigo-700
+                       via-blue-700 to-cyan-600 px-5 py-4
+                       text-white sm:flex-row sm:items-center
+                       sm:justify-between">
+
+                    <div class="flex min-w-0 items-center gap-3">
+
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center
+                               justify-center rounded-xl bg-white/15">
+
+                            <span class="material-symbols-outlined text-[24px]">
+                                map
+                            </span>
+                        </div>
+
+                        <div class="min-w-0">
+
+                            <h2 id="villageMapTitle" class="truncate text-lg font-bold">
+                                Village Map
+                            </h2>
+
+                            <p id="villageMapSubtitle"
+                                class="mt-0.5 truncate text-xs
+                                   font-medium text-white/90">
+                                Site plan PDF
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-center gap-2">
+
+                        <a id="downloadVillageMap" href="#" download
+                            class="inline-flex h-10 items-center
+                               justify-center gap-2 rounded-xl
+                               bg-white px-4 text-sm font-semibold
+                               text-blue-700 transition
+                               hover:bg-blue-50">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                download
+                            </span>
+
+                            Download
+                        </a>
+
+                        <a id="openVillageMap" href="#" target="_blank" rel="noopener"
+                            class="inline-flex h-10 items-center
+                               justify-center gap-2 rounded-xl
+                               border border-white/30 bg-white/15
+                               px-4 text-sm font-semibold text-white
+                               transition hover:bg-white/25">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                open_in_new
+                            </span>
+
+                            Open
+                        </a>
+
+                        <button type="button" id="closeVillageMapModal"
+                            class="inline-flex h-10 w-10 items-center
+                               justify-center rounded-xl bg-white/15
+                               transition hover:bg-white/25">
+
+                            <span class="material-symbols-outlined text-[24px]">
+                                close
+                            </span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {{-- Viewer --}}
+                <div class="relative min-h-0 flex-1 bg-slate-200">
+
+                    <div id="villageMapLoader"
+                        class="absolute inset-0 z-10 flex items-center
+                           justify-center bg-slate-100">
+
+                        <div class="text-center">
+
+                            <div
+                                class="mx-auto h-11 w-11 animate-spin
+                                   rounded-full border-4
+                                   border-indigo-200
+                                   border-t-indigo-600">
+                            </div>
+
+                            <p class="mt-3 text-sm font-semibold
+                                   text-slate-600">
+                                Loading village map...
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <iframe id="villageMapFrame" src="" title="Village Map PDF" class="h-full w-full border-0">
+                    </iframe>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
 @endsection
