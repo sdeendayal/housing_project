@@ -571,22 +571,73 @@
 
             if (!rows || rows.length === 0) {
                 $('#villageTableBody').html(`
-                    <tr>
-                        <td
-                            colspan="10"
-                            class="px-6 py-12 text-center text-slate-500"
-                        >
-                            No village records found.
-                        </td>
-                    </tr>
-                `);
+            <tr>
+                <td
+                    colspan="10"
+                    class="px-6 py-12 text-center text-slate-500"
+                >
+                    No village records found.
+                </td>
+            </tr>
+        `);
 
                 return;
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Applicant report URL
+            |--------------------------------------------------------------------------
+            | Har filtered row ke phase + village + status ko URL me bhejega.
+            |--------------------------------------------------------------------------
+            */
+            function applicantUrl(row, filters = {}) {
+                const params = new URLSearchParams();
+
+                params.set(
+                    'phase',
+                    String(row.Phase ?? 'all')
+                );
+
+                params.set(
+                    'village_id',
+                    String(row.VillageId ?? '')
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Status
+                |--------------------------------------------------------------------------
+                */
+                params.set(
+                    'status',
+                    String(filters.status ?? 'all_applicants')
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Caste / Category
+                |--------------------------------------------------------------------------
+                */
+                if (filters.caste) {
+                    params.set(
+                        'caste',
+                        String(filters.caste)
+                    );
+                }
+
+                return applicantReportBaseUrl +
+                    '?' +
+                    params.toString();
+            }
+
             $.each(rows, function(index, row) {
-                const pdfFile =
-                    row.PdfFile ?
+                /*
+                |--------------------------------------------------------------------------
+                | Village map
+                |--------------------------------------------------------------------------
+                */
+                const pdfFile = row.PdfFile ?
                     String(row.PdfFile) :
                     '';
 
@@ -601,130 +652,263 @@
 
                 const mapButton = pdfUrl ?
                     `
-        <button
-            type="button"
-            title="View Village Map"
-            class="villageMapBtn inline-flex h-8
-                   items-center justify-center gap-1
-                   rounded-lg border border-indigo-200
-                   bg-indigo-50 px-2.5 text-xs
-                   font-semibold text-indigo-700
-                   transition hover:border-indigo-600
-                   hover:bg-indigo-600 hover:text-white"
-            data-pdf-url="${escapeHtml(pdfUrl)}"
-            data-pdf-name="${escapeHtml(pdfFile)}"
-            data-village-name="${escapeHtml(row.VillageName ?? '')}"
-            data-phase="${escapeHtml(row.Phase ?? '')}"
-        >
-            <span
-                class="material-symbols-outlined text-[17px]"
-            >
-                map
-            </span>
-
-            Map
-        </button>
-    ` :
-                    '';
-                tbody += `
-                    <tr
-                        class="border-b border-slate-100
-                        transition hover:bg-blue-50"
+                <button
+                    type="button"
+                    title="View Village Map"
+                    class="villageMapBtn inline-flex h-8
+                           items-center justify-center gap-1
+                           rounded-lg border border-indigo-200
+                           bg-indigo-50 px-2.5 text-xs
+                           font-semibold text-indigo-700
+                           transition hover:border-indigo-600
+                           hover:bg-indigo-600 hover:text-white"
+                    data-pdf-url="${escapeHtml(pdfUrl)}"
+                    data-pdf-name="${escapeHtml(pdfFile)}"
+                    data-village-name="${
+                        escapeHtml(row.VillageName ?? '')
+                    }"
+                    data-phase="${
+                        escapeHtml(row.Phase ?? '')
+                    }"
+                >
+                    <span
+                        class="material-symbols-outlined text-[17px]"
                     >
-                        <td class="px-4 py-3">
-                            ${index + 1}
-                        </td>
+                        map
+                    </span>
 
-                        <td class="px-4 py-3">
+                    Map
+                </button>
+            ` :
+                    '';
 
-    <div class="flex flex-wrap items-center gap-2">
-
-        <button
-            type="button"
-            title="Site Development"
-            class="siteDevelopmentBtn inline-flex h-8 w-8
-                   shrink-0 items-center justify-center
-                   rounded-lg bg-cyan-100 text-cyan-700
-                   transition hover:bg-cyan-600
-                   hover:text-white"
-            data-village-id="${row.VillageId}"
-            data-village-name="${escapeHtml(row.VillageName ?? '')}"
-            data-phase="${row.Phase ?? ''}"
-        >
-            <span
-                class="material-symbols-outlined text-[18px]"
+                tbody += `
+            <tr
+                class="border-b border-slate-100
+                       transition hover:bg-blue-50"
             >
-                construction
-            </span>
-        </button>
+                {{-- Sr. No. --}}
+                <td class="px-4 py-3 text-slate-500">
+                    ${index + 1}
+                </td>
 
-        ${mapButton}
+                {{-- Village --}}
+                <td class="px-4 py-3">
 
-        <a
-            href="${applicantReportBaseUrl}?phase=${
-                encodeURIComponent(row.Phase ?? 'all')
-            }&village_id=${
-                encodeURIComponent(row.VillageId)
-            }&status=all_applicants"
-            class="inline-flex items-center rounded-md
-                   px-2 py-1 font-semibold text-slate-800
-                   transition-all duration-200
-                   hover:bg-slate-800 hover:text-white
-                   hover:shadow-md"
-        >
-            ${escapeHtml(row.VillageName ?? '-')}
-        </a>
+                    <div class="flex flex-wrap items-center gap-2">
 
-        
-
-    </div>
-
-</td>
-
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.TotalPlots)}
-                        </td>
-
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.TotalApplicants)}
-                        </td>
-
-                        <td
-                            class="px-4 py-3 text-center
-                            font-semibold text-emerald-600"
+                        <button
+                            type="button"
+                            title="Site Development"
+                            class="siteDevelopmentBtn inline-flex h-8 w-8
+                                   shrink-0 items-center justify-center
+                                   rounded-lg bg-cyan-100 text-cyan-700
+                                   transition hover:bg-cyan-600
+                                   hover:text-white"
+                            data-village-id="${
+                                escapeHtml(row.VillageId ?? '')
+                            }"
+                            data-village-name="${
+                                escapeHtml(row.VillageName ?? '')
+                            }"
+                            data-phase="${
+                                escapeHtml(row.Phase ?? '')
+                            }"
                         >
-                            ${formatNumber(row.ApprovedPaid)}
-                        </td>
+                            <span
+                                class="material-symbols-outlined
+                                       text-[18px]"
+                            >
+                                construction
+                            </span>
+                        </button>
 
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.SC)}
-                        </td>
+                        ${mapButton}
 
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.Ghumantu)}
-                        </td>
-
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.Widow)}
-                        </td>
-
-                        <td class="px-4 py-3 text-center">
-                            ${formatNumber(row.Others)}
-                        </td>
-
-                        <td
-                            class="px-4 py-3 text-center
-                            font-semibold text-blue-600"
+                        <a
+                            href="${
+                                applicantUrl(row, { status: 'all_applicants' })
+                            }"
+                            class="inline-flex items-center rounded-md
+                                   px-2 py-1 font-semibold text-slate-800
+                                   transition-all duration-200
+                                   hover:bg-slate-800 hover:text-white
+                                   hover:shadow-md"
                         >
-                            ${formatNumber(row.TotalAllotment)}
-                        </td>
-                    </tr>
-                `;
+                            ${
+                                escapeHtml(
+                                    row.VillageName ?? '-'
+                                )
+                            }
+                        </a>
+
+                    </div>
+
+                </td>
+
+                {{-- Total Plots: not clickable --}}
+                <td class="px-4 py-3 text-center text-slate-700">
+                    ${formatNumber(row.TotalPlots)}
+                </td>
+
+                {{-- Applicants --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(
+                                row,
+                                'all_applicants'
+                            )
+                        }"
+                        class="inline-flex min-w-[60px]
+                               justify-center rounded-md bg-blue-50
+                               px-2 py-1 font-semibold text-blue-600
+                               transition-all duration-200
+                               hover:bg-blue-600 hover:text-white
+                               hover:shadow-md"
+                    >
+                        ${formatNumber(row.TotalApplicants)}
+                    </a>
+
+                </td>
+
+                {{-- Approved Paid --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'approved_paid'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                               justify-center rounded-md bg-emerald-50
+                               px-2 py-1 font-semibold
+                               text-emerald-600 transition-all
+                               duration-200 hover:bg-emerald-600
+                               hover:text-white hover:shadow-md"
+                    >
+                        ${formatNumber(row.ApprovedPaid)}
+                    </a>
+
+                </td>
+
+                {{-- SC --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'all_applicants',
+                                caste: 'SC'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                            justify-center rounded-md bg-indigo-50
+                            px-2 py-1 font-semibold
+                            text-indigo-600 transition-all
+                            duration-200 hover:bg-indigo-600
+                            hover:text-white hover:shadow-md"
+                    >
+                        ${formatNumber(row.SC)}
+                    </a>
+
+                </td>
+
+                {{-- Ghumantu --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'all_applicants',
+                                caste: 'Ghumantu'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                            justify-center rounded-md bg-violet-50
+                            px-2 py-1 font-semibold
+                            text-violet-600 transition-all
+                            duration-200 hover:bg-violet-600
+                            hover:text-white hover:shadow-md"
+                    >
+                        ${formatNumber(row.Ghumantu)}
+                    </a>
+
+                </td>
+
+                {{-- Widow --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'all_applicants',
+                                caste: 'Widow'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                            justify-center rounded-md bg-pink-50
+                            px-2 py-1 font-semibold text-pink-600
+                            transition-all duration-200
+                            hover:bg-pink-600 hover:text-white
+                            hover:shadow-md"
+                    >
+                        ${formatNumber(row.Widow)}
+                    </a>
+
+                </td>
+
+                {{-- Others --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'all_applicants',
+                                caste: 'Others'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                            justify-center rounded-md bg-amber-50
+                            px-2 py-1 font-semibold text-amber-700
+                            transition-all duration-200
+                            hover:bg-amber-600 hover:text-white
+                            hover:shadow-md"
+                    >
+                        ${formatNumber(row.Others)}
+                    </a>
+
+                </td>
+
+                {{-- Allotted --}}
+                <td class="px-4 py-3 text-center">
+
+                    <a
+                        href="${
+                            applicantUrl(row, {
+                                status: 'allotted'
+                            })
+                        }"
+                        class="inline-flex min-w-[60px]
+                               justify-center rounded-md bg-cyan-50
+                               px-2 py-1 font-bold text-cyan-700
+                               transition-all duration-200
+                               hover:bg-cyan-700 hover:text-white
+                               hover:shadow-md"
+                    >
+                        ${formatNumber(row.TotalAllotment)}
+                    </a>
+
+                </td>
+
+            </tr>
+        `;
             });
 
             $('#villageTableBody').html(tbody);
         }
-
 
         function escapeHtml(value) {
             return String(value ?? '')
