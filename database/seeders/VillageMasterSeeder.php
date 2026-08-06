@@ -56,6 +56,7 @@ class VillageMasterSeeder extends Seeder
                 'VillageName' => trim($rowData['VillageName'] ?? ''),
                 'plots' => $cleanVal($rowData['plots'] ?? null, true),
                 'phase' => $cleanVal($rowData['phase'] ?? null, true),
+                'map_pdf' => $cleanVal($rowData['pdf'] ?? null),
             ];
         }
 
