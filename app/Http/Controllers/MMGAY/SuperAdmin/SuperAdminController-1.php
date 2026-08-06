@@ -19,27 +19,37 @@ use Illuminate\Support\Facades\Storage;
 
 class SuperAdminController extends Controller
 {
+    private const REPORT_CACHE_SECONDS = 300;
+
+    private function reportCacheSeconds(): int
+    {
+        return max(1, (int) env(
+            'REPORT_CACHE_SECONDS',
+            self::REPORT_CACHE_SECONDS
+        ));
+    }
+
+    /**
+     * Build a stable cache key from current request filters.
+     */
+    private function reportCacheKey(string $prefix, Request $request, array $keys): string
+    {
+        $values = [];
+
+        foreach ($keys as $key) {
+            $value = $request->query($key);
+            $values[$key] = is_string($value) ? trim($value) : $value;
+        }
+
+        return $prefix . '_' . md5(json_encode($values));
+    }
+
+    /**
+     * Large report endpoints should not keep Laravel's SQL query log in memory.
+     */
     private function prepareLargeReportRequest(): void
     {
         DB::disableQueryLog();
-
-        @ini_set('memory_limit', '-1');
-        @set_time_limit(0);
-    }
-
-    private function reportCacheKey(
-        string $prefix,
-        Request $request,
-        array $keys = []
-    ): string {
-
-        $filters = [];
-
-        foreach ($keys as $key) {
-            $filters[$key] = $request->input($key);
-        }
-
-        return $prefix . '_' . md5(json_encode($filters));
     }
 
     private function applyOwnerDashboardFilters(
@@ -490,22 +500,45 @@ class SuperAdminController extends Controller
     private function possessionBaseQuery(Request $request)
     {
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
             : null;
 
         $villageId = $request->filled('village_id')
-            ? (int) $request->input('village_id')
+            ? (int) $request->village_id
             : null;
 
         return DB::table('OwnerMaster as o')
+
+            /*
+            |--------------------------------------------------------------------------
+            | Display-only joins
+            |--------------------------------------------------------------------------
+            | LEFT JOIN रखा है, इसलिए missing village/flat के कारण eligible record
+            | exclude नहीं होगा।
+            |--------------------------------------------------------------------------
+            */
+            ->leftJoin(
+                'VillageMaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+
             ->leftJoin(
                 'mmgay_possession_applications as pa',
                 'pa.owner_id',
@@ -515,12 +548,14 @@ class SuperAdminController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | Existing eligibility logic
+            | Registry matched + approved + paid
             |--------------------------------------------------------------------------
             */
             ->where('o.IsApproved', 1)
             ->where('o.IsPaid', 1)
-            ->where('o.IsAllotmentCancelled', 0)
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
 
             ->whereNotNull('o.MobileNo')
             ->where('o.MobileNo', '<>', '')
@@ -535,59 +570,73 @@ class SuperAdminController extends Controller
                     );
             })
 
-            ->when(
-                $phase !== null,
-                fn($query) => $query->where(
-                    'o.Phase',
-                    $phase
-                )
-            )
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('o.Phase', $phase);
+            })
 
-            ->when(
-                $districtId !== null,
-                fn($query) => $query->where(
+            ->when($districtId, function ($query) use ($districtId) {
+                $query->where(
                     'o.DistrictId',
                     $districtId
-                )
-            )
+                );
+            })
 
-            ->when(
-                $blockId !== null,
-                fn($query) => $query->where(
+            ->when($blockId, function ($query) use ($blockId) {
+                $query->where(
                     'o.BlockId',
                     $blockId
-                )
-            )
+                );
+            })
 
-            ->when(
-                $villageId !== null,
-                fn($query) => $query->where(
+            ->when($villageId, function ($query) use ($villageId) {
+                $query->where(
                     'o.VillageId',
                     $villageId
-                )
-            );
+                );
+            });
     }
 
     public function possessionStats(Request $request)
     {
-        DB::disableQueryLog();
+        $this->prepareLargeReportRequest();
 
-        $counts = $this->possessionCounts($request);
+        $cacheKey = $this->reportCacheKey(
+            'super_admin_possession_stats',
+            $request,
+            ['phase', 'district_id', 'block_id', 'village_id']
+        );
 
-        $eligible = (int) ($counts['all'] ?? 0);
-        $given = (int) ($counts['verified'] ?? 0);
+        $totals = Cache::remember(
+            $cacheKey,
+            now()->addSeconds($this->reportCacheSeconds()),
+            function () use ($request) {
+                $row = $this->possessionBaseQuery($request)
+                    ->selectRaw("
+                        COUNT(DISTINCT o.OwnerId) AS eligible_count,
+                        COUNT(DISTINCT CASE
+                            WHEN LOWER(TRIM(COALESCE(
+                                pa.physical_possession_status,
+                                ''
+                            ))) = 'verified'
+                            THEN o.OwnerId
+                        END) AS given_count
+                    ")
+                    ->first();
+
+                $eligible = (int) ($row->eligible_count ?? 0);
+                $given = (int) ($row->given_count ?? 0);
+
+                return [
+                    'eligible' => $eligible,
+                    'given' => $given,
+                    'pending' => max(0, $eligible - $given),
+                ];
+            }
+        );
 
         return response()->json([
             'success' => true,
-
-            'totals' => [
-                'eligible' => $eligible,
-                'given' => $given,
-                'pending' => max(
-                    0,
-                    $eligible - $given
-                ),
-            ],
+            'totals' => $totals,
         ]);
     }
 
@@ -612,302 +661,309 @@ class SuperAdminController extends Controller
         );
 
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
             : null;
 
         $villageId = $request->filled('village_id')
-            ? (int) $request->input('village_id')
+            ? (int) $request->village_id
             : null;
 
-        $perPage = (int) $request->query(
-            'per_page',
-            20
-        );
+        $perPage = (int) $request->query('per_page', 20);
 
-        if (
-            !in_array(
-                $perPage,
-                [20, 50, 100, 200],
-                true
-            )
-        ) {
+        if (!in_array($perPage, [20, 50, 100, 200], true)) {
             $perPage = 20;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Dependent dropdowns
+        | Dropdown Data
         |--------------------------------------------------------------------------
         */
-        $districts = Cache::remember(
-            'possession_districts_v3_'
-            . ($phase ?? 'all'),
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->where('v.plots', '>', 0)
+        $districts = DB::table('DistrictMaster as d')
+            ->join(
+                'VillageMaster as v',
+                'v.DistrictId',
+                '=',
+                'd.DistrictId'
+            )
+            ->where('v.plots', '>', 0)
+            ->when($phase, function ($query) use ($phase) {
+                $query->where('v.Phase', $phase);
+            })
+            ->select([
+                'd.DistrictId',
+                'd.DistrictName',
+            ])
+            ->distinct()
+            ->orderBy('d.DistrictName')
+            ->get();
 
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-                    ->orderBy('d.DistrictName')
-                    ->get();
+        $blocks = $districtId
+            ? DB::table('BlockMaster as b')
+                ->join(
+                    'VillageMaster as v',
+                    'v.BlockId',
+                    '=',
+                    'b.BlockId'
+                )
+                ->where('b.DistrictId', $districtId)
+                ->where('v.plots', '>', 0)
+                ->when($phase, function ($query) use ($phase) {
+                    $query->where('v.Phase', $phase);
+                })
+                ->select([
+                    'b.BlockId',
+                    'b.BlockName',
+                ])
+                ->distinct()
+                ->orderBy('b.BlockName')
+                ->get()
+            : collect();
+
+        $villages = $blockId
+            ? DB::table('VillageMaster as v')
+                ->where('v.BlockId', $blockId)
+                ->where('v.plots', '>', 0)
+                ->when($phase, function ($query) use ($phase) {
+                    $query->where('v.Phase', $phase);
+                })
+                ->select([
+                    'v.VillageId',
+                    'v.VillageName',
+                    'v.Phase',
+                ])
+                ->orderBy('v.VillageName')
+                ->get()
+            : collect();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registry Matched + Approved + Paid + Not Cancelled
+        |--------------------------------------------------------------------------
+        */
+        $baseQuery = $this->possessionBaseQuery($request);
+
+        $statusExpression = "
+        LOWER(
+            TRIM(
+                COALESCE(
+                    pa.physical_possession_status,
+                    ''
+                )
+            )
+        )
+    ";
+
+        /*
+        |--------------------------------------------------------------------------
+        | Counts — single aggregate query
+        |--------------------------------------------------------------------------
+        | Previously six separate COUNT queries were executed. This keeps the
+        | exact same status mapping while scanning the eligible result once.
+        |--------------------------------------------------------------------------
+        */
+        $countCacheKey = $this->reportCacheKey(
+            'super_admin_possession_counts',
+            $request,
+            ['phase', 'district_id', 'block_id', 'village_id']
+        );
+
+        $countRow = Cache::remember(
+            $countCacheKey,
+            now()->addSeconds($this->reportCacheSeconds()),
+            function () use ($baseQuery) {
+                return (clone $baseQuery)
+                    ->selectRaw("
+                COUNT(DISTINCT o.OwnerId) AS all_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN pa.id IS NULL OR LOWER(TRIM(COALESCE(pa.physical_possession_status, ''))) = 'eligible for physical possession'
+                    THEN o.OwnerId
+                END) AS schedule_pending_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(COALESCE(
+                        pa.physical_possession_status,
+                        ''
+                    ))) = 'visit scheduled'
+                    THEN o.OwnerId
+                END) AS awaiting_citizen_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(COALESCE(
+                        pa.physical_possession_status,
+                        ''
+                    ))) = 'slot selected'
+                    THEN o.OwnerId
+                END) AS field_visit_pending_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(COALESCE(
+                        pa.physical_possession_status,
+                        ''
+                    ))) = 'site verified'
+                    THEN o.OwnerId
+                END) AS document_verification_count,
+
+                COUNT(DISTINCT CASE
+                    WHEN LOWER(TRIM(COALESCE(
+                        pa.physical_possession_status,
+                        ''
+                    ))) = 'verified'
+                    THEN o.OwnerId
+                END) AS verified_count
+                    ")
+                    ->first();
             }
         );
 
-        $blocks = $districtId !== null
-            ? Cache::remember(
-                'possession_blocks_v3_'
-                . $districtId
-                . '_'
-                . ($phase ?? 'all'),
-                now()->addMinutes(30),
-                function () use ($districtId, $phase) {
-                    return DB::table('BlockMaster as b')
-                        ->where(
-                            'b.DistrictId',
-                            $districtId
-                        )
-                        ->whereExists(
-                            function ($query) use ($phase) {
-                                $query
-                                    ->selectRaw('1')
-                                    ->from('VillageMaster as v')
-                                    ->whereColumn(
-                                        'v.BlockId',
-                                        'b.BlockId'
-                                    )
-                                    ->where('v.plots', '>', 0)
+        $counts = [
+            'all' => (int) ($countRow->all_count ?? 0),
+            'schedule_pending' =>
+                (int) ($countRow->schedule_pending_count ?? 0),
+            'awaiting_citizen' =>
+                (int) ($countRow->awaiting_citizen_count ?? 0),
+            'field_visit_pending' =>
+                (int) ($countRow->field_visit_pending_count ?? 0),
+            'document_verification' =>
+                (int) ($countRow->document_verification_count ?? 0),
+            'verified' =>
+                (int) ($countRow->verified_count ?? 0),
+        ];
 
-                                    ->when(
-                                        $phase !== null,
-                                        fn($subQuery) =>
-                                        $subQuery->where(
-                                            'v.Phase',
-                                            $phase
-                                        )
-                                    );
-                            }
-                        )
-                        ->select([
-                            'b.BlockId',
-                            'b.BlockName',
-                        ])
-                        ->orderBy('b.BlockName')
-                        ->get();
-                }
+        /*
+        |--------------------------------------------------------------------------
+        | Applications Query
+        |--------------------------------------------------------------------------
+        */
+        $applicationsQuery = (clone $baseQuery)
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Phase',
+                'o.OwnerAddress',
+                'o.Caste',
+
+                'v.VillageName',
+                'f.FlatNo',
+
+                'pa.id as application_id',
+                'pa.secure_id',
+                'pa.application_number',
+                'pa.status',
+                'pa.remarks',
+                'pa.physical_possession_status',
+
+                'pa.meeting_slot',
+                'pa.citizen_visit_date',
+                'pa.visit_slot_1',
+                'pa.visit_slot_2',
+                'pa.visit_slot_3',
+                'pa.visit_instructions',
+
+                'pa.latitude',
+                'pa.longitude',
+                'pa.plot_image',
+                'pa.image_capture_datetime',
+
+                'pa.possession_certificate',
+                'pa.site_engineer_file',
+
+                'pa.verified_by',
+                'pa.verified_at',
+                'pa.created_at',
+                'pa.updated_at',
+            ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Selected Filter
+        |--------------------------------------------------------------------------
+        */
+        switch ($filter) {
+            case 'schedule_pending':
+                $applicationsQuery->where(function ($q) use ($statusExpression) {
+                    $q->whereNull('pa.id')
+                        ->orWhereRaw($statusExpression . " = ?", ['eligible for physical possession']);
+                });
+                break;
+
+            case 'awaiting_citizen':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['visit scheduled']
+                    );
+                break;
+
+            case 'field_visit_pending':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['slot selected']
+                    );
+                break;
+
+            case 'document_verification':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['site verified']
+                    );
+                break;
+
+            case 'verified':
+                $applicationsQuery
+                    ->whereNotNull('pa.id')
+                    ->whereRaw(
+                        $statusExpression . ' = ?',
+                        ['verified']
+                    );
+                break;
+        }
+
+        $currentPage = max(1, (int) $request->query('page', 1));
+
+        $filterCountKey = match ($filter) {
+            'schedule_pending' => 'schedule_pending',
+            'awaiting_citizen' => 'awaiting_citizen',
+            'field_visit_pending' => 'field_visit_pending',
+            'document_verification' => 'document_verification',
+            'verified' => 'verified',
+            default => 'all',
+        };
+
+        $totalApplications = (int) ($counts[$filterCountKey] ?? 0);
+        $lastPage = max(1, (int) ceil($totalApplications / $perPage));
+        $currentPage = min($currentPage, $lastPage);
+
+        $applicationRows = $applicationsQuery
+            ->orderByRaw(
+                'CASE
+                    WHEN pa.updated_at IS NULL THEN 1
+                    ELSE 0
+                END'
             )
-            : collect();
-
-        $villages = $blockId !== null
-            ? Cache::remember(
-                'possession_villages_v3_'
-                . $blockId
-                . '_'
-                . ($phase ?? 'all'),
-                now()->addMinutes(30),
-                function () use ($blockId, $phase) {
-                    return DB::table('VillageMaster as v')
-                        ->where('v.BlockId', $blockId)
-                        ->where('v.plots', '>', 0)
-
-                        ->when(
-                            $phase !== null,
-                            fn($query) => $query->where(
-                                'v.Phase',
-                                $phase
-                            )
-                        )
-
-                        ->select([
-                            'v.VillageId',
-                            'v.VillageName',
-                            'v.Phase',
-                        ])
-                        ->orderBy('v.VillageName')
-                        ->get();
-                }
-            )
-            : collect();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Card counts
-        |--------------------------------------------------------------------------
-        */
-        $counts = $this->possessionCounts($request);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filtered query
-        |--------------------------------------------------------------------------
-        */
-        $filteredQuery = $this
-            ->applyPossessionStatusFilter(
-                $this->possessionBaseQuery($request),
-                $filter
-            );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Manual pagination
-        |--------------------------------------------------------------------------
-        | paginate() की additional COUNT query नहीं चलेगी।
-        |--------------------------------------------------------------------------
-        */
-        $currentPage = max(
-            1,
-            (int) $request->query('page', 1)
-        );
-
-        $totalApplications = (int) (
-            $counts[$filter] ?? $counts['all']
-        );
-
-        $lastPage = max(
-            1,
-            (int) ceil(
-                $totalApplications / $perPage
-            )
-        );
-
-        $currentPage = min(
-            $currentPage,
-            $lastPage
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Current page owner IDs
-        |--------------------------------------------------------------------------
-        */
-        $pageOwnerIds = (clone $filteredQuery)
-            ->select('o.OwnerId')
-            ->orderByRaw("
-            CASE
-                WHEN pa.updated_at IS NULL
-                THEN 1
-                ELSE 0
-            END
-        ")
             ->orderByDesc('pa.updated_at')
             ->orderBy('o.OwnerName')
-            ->forPage(
-                $currentPage,
-                $perPage
-            )
-            ->pluck('o.OwnerId')
-            ->map(
-                fn($id) => (int) $id
-            )
-            ->all();
-
-        $applicationRows = collect();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Fetch only current page details
-        |--------------------------------------------------------------------------
-        */
-        if (!empty($pageOwnerIds)) {
-            $applicationRows = DB::table('OwnerMaster as o')
-                ->leftJoin(
-                    'VillageMaster as v',
-                    'v.VillageId',
-                    '=',
-                    'o.VillageId'
-                )
-                ->leftJoin(
-                    'FlatMaster as f',
-                    'f.FlatId',
-                    '=',
-                    'o.FlatId'
-                )
-                ->leftJoin(
-                    'mmgay_possession_applications as pa',
-                    'pa.owner_id',
-                    '=',
-                    'o.OwnerId'
-                )
-                ->whereIn(
-                    'o.OwnerId',
-                    $pageOwnerIds
-                )
-                ->select([
-                    'o.OwnerId',
-                    'o.OwnerName',
-                    'o.FatherHusbandName',
-                    'o.MobileNo',
-                    'o.RegistrationNo',
-                    'o.PPPId',
-                    'o.MemberId',
-                    'o.Phase',
-                    'o.OwnerAddress',
-                    'o.Caste',
-
-                    'v.VillageName',
-                    'f.FlatNo',
-
-                    'pa.id as application_id',
-                    'pa.secure_id',
-                    'pa.application_number',
-                    'pa.status',
-                    'pa.remarks',
-                    'pa.physical_possession_status',
-                    'pa.meeting_slot',
-                    'pa.citizen_visit_date',
-                    'pa.visit_slot_1',
-                    'pa.visit_slot_2',
-                    'pa.visit_slot_3',
-                    'pa.visit_instructions',
-                    'pa.latitude',
-                    'pa.longitude',
-                    'pa.plot_image',
-                    'pa.image_capture_datetime',
-                    'pa.possession_certificate',
-                    'pa.site_engineer_file',
-                    'pa.verified_by',
-                    'pa.verified_at',
-                    'pa.created_at',
-                    'pa.updated_at',
-                ])
-                ->orderByRaw("
-                CASE
-                    WHEN pa.updated_at IS NULL
-                    THEN 1
-                    ELSE 0
-                END
-            ")
-                ->orderByDesc('pa.updated_at')
-                ->orderBy('o.OwnerName')
-                ->get();
-        }
+            ->forPage($currentPage, $perPage)
+            ->get();
 
         $applications = new LengthAwarePaginator(
             $applicationRows,
@@ -996,18 +1052,22 @@ class SuperAdminController extends Controller
         $query,
         string $filter
     ) {
+        $statusExpression = "
+        LOWER(
+            TRIM(
+                COALESCE(
+                    pa.physical_possession_status,
+                    ''
+                )
+            )
+        )
+    ";
+
         switch ($filter) {
             case 'schedule_pending':
-                $query->where(function ($subQuery) {
-                    $subQuery
-                        ->whereNull('pa.id')
-                        ->orWhereRaw(
-                            "LOWER(TRIM(COALESCE(
-                            pa.physical_possession_status,
-                            ''
-                        ))) = ?",
-                            ['eligible for physical possession']
-                        );
+                $query->where(function ($q) use ($statusExpression) {
+                    $q->whereNull('pa.id')
+                        ->orWhereRaw($statusExpression . " = ?", ['eligible for physical possession']);
                 });
                 break;
 
@@ -1015,9 +1075,7 @@ class SuperAdminController extends Controller
                 $query
                     ->whereNotNull('pa.id')
                     ->whereRaw(
-                        "LOWER(TRIM(
-                        pa.physical_possession_status
-                    )) = ?",
+                        $statusExpression . ' = ?',
                         ['visit scheduled']
                     );
                 break;
@@ -1026,9 +1084,7 @@ class SuperAdminController extends Controller
                 $query
                     ->whereNotNull('pa.id')
                     ->whereRaw(
-                        "LOWER(TRIM(
-                        pa.physical_possession_status
-                    )) = ?",
+                        $statusExpression . ' = ?',
                         ['slot selected']
                     );
                 break;
@@ -1037,9 +1093,7 @@ class SuperAdminController extends Controller
                 $query
                     ->whereNotNull('pa.id')
                     ->whereRaw(
-                        "LOWER(TRIM(
-                        pa.physical_possession_status
-                    )) = ?",
+                        $statusExpression . ' = ?',
                         ['site verified']
                     );
                 break;
@@ -1048,9 +1102,7 @@ class SuperAdminController extends Controller
                 $query
                     ->whereNotNull('pa.id')
                     ->whereRaw(
-                        "LOWER(TRIM(
-                        pa.physical_possession_status
-                    )) = ?",
+                        $statusExpression . ' = ?',
                         ['verified']
                     );
                 break;
@@ -1059,124 +1111,8 @@ class SuperAdminController extends Controller
         return $query;
     }
 
-    private function possessionCacheKey(
-        string $prefix,
-        Request $request
-    ): string {
-        return $prefix . '_' . md5(
-            json_encode([
-                'phase' =>
-                    $request->query('phase'),
-
-                'district_id' =>
-                    $request->query('district_id'),
-
-                'block_id' =>
-                    $request->query('block_id'),
-
-                'village_id' =>
-                    $request->query('village_id'),
-            ])
-        );
-    }
-
-    private function possessionCounts(
-        Request $request
-    ): array {
-        $cacheKey = $this->possessionCacheKey(
-            'super_admin_possession_counts_v4',
-            $request
-        );
-
-        return Cache::remember(
-            $cacheKey,
-            now()->addMinutes(3),
-            function () use ($request) {
-                $row = $this
-                    ->possessionBaseQuery($request)
-                    ->selectRaw("
-                    COUNT(DISTINCT o.OwnerId)
-                        AS all_count,
-
-                    COUNT(DISTINCT CASE
-                        WHEN pa.id IS NULL
-                          OR LOWER(TRIM(COALESCE(
-                                pa.physical_possession_status,
-                                ''
-                             ))) =
-                             'eligible for physical possession'
-                        THEN o.OwnerId
-                    END) AS schedule_pending_count,
-
-                    COUNT(DISTINCT CASE
-                        WHEN LOWER(TRIM(COALESCE(
-                            pa.physical_possession_status,
-                            ''
-                        ))) = 'visit scheduled'
-                        THEN o.OwnerId
-                    END) AS awaiting_citizen_count,
-
-                    COUNT(DISTINCT CASE
-                        WHEN LOWER(TRIM(COALESCE(
-                            pa.physical_possession_status,
-                            ''
-                        ))) = 'slot selected'
-                        THEN o.OwnerId
-                    END) AS field_visit_pending_count,
-
-                    COUNT(DISTINCT CASE
-                        WHEN LOWER(TRIM(COALESCE(
-                            pa.physical_possession_status,
-                            ''
-                        ))) = 'site verified'
-                        THEN o.OwnerId
-                    END) AS document_verification_count,
-
-                    COUNT(DISTINCT CASE
-                        WHEN LOWER(TRIM(COALESCE(
-                            pa.physical_possession_status,
-                            ''
-                        ))) = 'verified'
-                        THEN o.OwnerId
-                    END) AS verified_count
-                ")
-                    ->first();
-
-                return [
-                    'all' =>
-                        (int) ($row->all_count ?? 0),
-
-                    'schedule_pending' =>
-                        (int) (
-                            $row->schedule_pending_count ?? 0
-                        ),
-
-                    'awaiting_citizen' =>
-                        (int) (
-                            $row->awaiting_citizen_count ?? 0
-                        ),
-
-                    'field_visit_pending' =>
-                        (int) (
-                            $row->field_visit_pending_count ?? 0
-                        ),
-
-                    'document_verification' =>
-                        (int) (
-                            $row->document_verification_count ?? 0
-                        ),
-
-                    'verified' =>
-                        (int) ($row->verified_count ?? 0),
-                ];
-            }
-        );
-    }
-
     public function possessionExportCsv(Request $request)
     {
-        DB::disableQueryLog();
-
         $filter = (string) $request->query(
             'filter',
             'all'
@@ -1195,31 +1131,14 @@ class SuperAdminController extends Controller
             $filter = 'all';
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Same filters and status logic
-        |--------------------------------------------------------------------------
-        */
-        $recordsQuery = $this
-            ->applyPossessionStatusFilter(
-                $this->possessionBaseQuery($request),
-                $filter
-            )
+        $query = $this->possessionBaseQuery($request);
 
-            ->leftJoin(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
+        $query = $this->applyPossessionStatusFilter(
+            $query,
+            $filter
+        );
 
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-
+        $recordsQuery = $query
             ->select([
                 'o.OwnerId',
                 'o.OwnerName',
@@ -1239,16 +1158,9 @@ class SuperAdminController extends Controller
                 'pa.citizen_visit_date',
                 'pa.possession_date',
                 'pa.verified_at',
-            ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Same stable ordering as Print
-        |--------------------------------------------------------------------------
-        */
-        $recordsQuery = $this->applyPossessionExportOrder(
-            $recordsQuery
-        );
+            ])
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerName');
 
         $fileName = 'Possession_Report_'
             . now()->format('d-m-Y_H-i-s')
@@ -1256,10 +1168,7 @@ class SuperAdminController extends Controller
 
         return response()->streamDownload(
             function () use ($recordsQuery) {
-                $handle = fopen(
-                    'php://output',
-                    'w'
-                );
+                $handle = fopen('php://output', 'w');
 
                 if ($handle === false) {
                     throw new \RuntimeException(
@@ -1267,15 +1176,7 @@ class SuperAdminController extends Controller
                     );
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | Excel-compatible UTF-8
-                |--------------------------------------------------------------------------
-                */
-                fwrite(
-                    $handle,
-                    "\xEF\xBB\xBF"
-                );
+                fwrite($handle, "\xEF\xBB\xBF");
 
                 fputcsv($handle, [
                     'Sr. No.',
@@ -1297,38 +1198,29 @@ class SuperAdminController extends Controller
                     'Verified At',
                 ]);
 
-                $serialNumber = 1;
+                $index = 0;
 
                 foreach ($recordsQuery->cursor() as $record) {
                     fputcsv($handle, [
-                        $serialNumber++,
-                        $record->OwnerId ?? '',
-                        $record->OwnerName ?? '',
-                        $record->FatherHusbandName ?? '',
-                        $record->MobileNo ?? '',
-                        $record->RegistrationNo ?? '',
-                        $record->PPPId ?? '',
-                        $record->MemberId ?? '',
-                        $record->FlatNo ?? '',
-                        $record->VillageName ?? '',
-                        $record->Phase ?? '',
-                        $record->application_number ?? '',
+                        ++$index,
+                        $record->OwnerId,
+                        $record->OwnerName,
+                        $record->FatherHusbandName,
+                        $record->MobileNo,
+                        $record->RegistrationNo,
+                        $record->PPPId,
+                        $record->MemberId,
+                        $record->FlatNo,
+                        $record->VillageName,
+                        $record->Phase,
+                        $record->application_number,
                         $record->physical_possession_status
                         ?: 'Schedule Pending',
-                        $record->meeting_slot ?? '',
-                        $record->citizen_visit_date ?? '',
-                        $record->possession_date ?? '',
-                        $record->verified_at ?? '',
+                        $record->meeting_slot,
+                        $record->citizen_visit_date,
+                        $record->possession_date,
+                        $record->verified_at,
                     ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Periodically flush output
-                    |--------------------------------------------------------------------------
-                    */
-                    if ($serialNumber % 500 === 0) {
-                        fflush($handle);
-                    }
                 }
 
                 fclose($handle);
@@ -1337,61 +1229,14 @@ class SuperAdminController extends Controller
             [
                 'Content-Type' =>
                     'text/csv; charset=UTF-8',
-
-                'Content-Disposition' =>
-                    'attachment; filename="' . $fileName . '"',
-
-                'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate',
-
-                'Pragma' =>
-                    'no-cache',
-
-                'Expires' =>
-                    '0',
             ]
         );
-    }
-
-    private function applyPossessionExportOrder($query)
-    {
-        return $query
-
-            // Meeting slot wale sabse upar
-            ->orderByRaw("
-            CASE
-                WHEN pa.meeting_slot IS NULL
-                AND pa.visit_slot_1 IS NULL
-                AND pa.visit_slot_2 IS NULL
-                AND pa.visit_slot_3 IS NULL
-                THEN 1
-                ELSE 0
-            END ASC
-        ")
-
-            // Latest updated first
-            ->orderByDesc('pa.updated_at')
-
-            // Latest meeting first
-            ->orderByDesc(DB::raw("
-            COALESCE(
-                pa.meeting_slot,
-                pa.visit_slot_1,
-                pa.visit_slot_2,
-                pa.visit_slot_3
-            )
-        "))
-
-            ->orderBy('o.OwnerName')
-            ->orderBy('o.OwnerId');
     }
 
     public function possessionPrint(
         Request $request,
         string $filter = 'all'
     ) {
-        DB::disableQueryLog();
-
         $allowedFilters = [
             'all',
             'schedule_pending',
@@ -1406,31 +1251,14 @@ class SuperAdminController extends Controller
             404
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Same filters and status logic as CSV
-        |--------------------------------------------------------------------------
-        */
-        $applicationsQuery = $this
-            ->applyPossessionStatusFilter(
-                $this->possessionBaseQuery($request),
-                $filter
-            )
+        $query = $this->possessionBaseQuery($request);
 
-            ->leftJoin(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
+        $query = $this->applyPossessionStatusFilter(
+            $query,
+            $filter
+        );
 
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-
+        $applications = $query
             ->select([
                 'o.OwnerId',
                 'o.OwnerName',
@@ -1450,37 +1278,21 @@ class SuperAdminController extends Controller
                 'pa.citizen_visit_date',
                 'pa.possession_date',
                 'pa.verified_at',
-            ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Same stable ordering as CSV
-        |--------------------------------------------------------------------------
-        */
-        $applications = $this
-            ->applyPossessionExportOrder(
-                $applicationsQuery
-            )
+            ])
+            ->orderBy('v.VillageName')
+            ->orderBy('o.OwnerName')
             ->get();
 
         $filterLabels = [
-            'all' =>
-                'Total Eligible',
-
-            'schedule_pending' =>
-                'Schedule Pending',
-
+            'all' => 'Total Eligible',
+            'schedule_pending' => 'Schedule Pending',
             'awaiting_citizen' =>
                 'Confirmation Pending From Citizen',
-
             'field_visit_pending' =>
                 'Physical/Site Visit Pending',
-
             'document_verification' =>
                 'Document Verification',
-
-            'verified' =>
-                'Possession Given',
+            'verified' => 'Possession Given',
         ];
 
         return view(
@@ -1492,169 +1304,6 @@ class SuperAdminController extends Controller
             )
         );
     }
-
-    public function possessionFilterDistricts(
-        Request $request
-    ) {
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $districts = Cache::remember(
-            'possession_ajax_districts_v2_'
-            . ($phase ?? 'all'),
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->where('v.plots', '>', 0)
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-                    ->orderBy('d.DistrictName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'districts' => $districts,
-        ]);
-    }
-
-    public function possessionFilterBlocks(
-        Request $request
-    ) {
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
-            : null;
-
-        if ($districtId === null) {
-            return response()->json([
-                'success' => true,
-                'blocks' => [],
-            ]);
-        }
-
-        $blocks = Cache::remember(
-            'possession_ajax_blocks_v2_'
-            . $districtId
-            . '_'
-            . ($phase ?? 'all'),
-            now()->addMinutes(30),
-            function () use ($districtId, $phase) {
-                return DB::table('BlockMaster as b')
-                    ->where('b.DistrictId', $districtId)
-
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.BlockId',
-                                'b.BlockId'
-                            )
-                            ->where('v.plots', '>', 0)
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-
-                    ->select([
-                        'b.BlockId',
-                        'b.BlockName',
-                    ])
-                    ->orderBy('b.BlockName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'blocks' => $blocks,
-        ]);
-    }
-
-    public function possessionFilterVillages(
-        Request $request
-    ) {
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
-            : null;
-
-        if ($blockId === null) {
-            return response()->json([
-                'success' => true,
-                'villages' => [],
-            ]);
-        }
-
-        $villages = Cache::remember(
-            'possession_ajax_villages_v2_'
-            . $blockId
-            . '_'
-            . ($phase ?? 'all'),
-            now()->addMinutes(30),
-            function () use ($blockId, $phase) {
-                return DB::table('VillageMaster as v')
-                    ->where('v.BlockId', $blockId)
-                    ->where('v.plots', '>', 0)
-
-                    ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
-                            'v.Phase',
-                            $phase
-                        )
-                    )
-
-                    ->select([
-                        'v.VillageId',
-                        'v.VillageName',
-                    ])
-                    ->orderBy('v.VillageName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'villages' => $villages,
-        ]);
-    }
-
     public function getDistricts($phase = null)
     {
         $villageQuery = DB::table('VillageMaster')
@@ -1774,6 +1423,7 @@ class SuperAdminController extends Controller
 
     public function dashboardData(Request $request)
     {
+        $this->prepareLargeReportRequest();
         $phase = $request->phase;
         $districtId = $request->district_id;
         $blockId = $request->block_id;
@@ -1874,392 +1524,285 @@ class SuperAdminController extends Controller
 
     public function districtWiseReport(Request $request)
     {
-        DB::disableQueryLog();
+        $this->prepareLargeReportRequest();
+
         /*
         |--------------------------------------------------------------------------
         | Filters
         |--------------------------------------------------------------------------
         */
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         /*
         |--------------------------------------------------------------------------
-        | Cache key
+        | Filter-based cache key
+        |--------------------------------------------------------------------------
+        | Same phase/district खोलने पर heavy aggregation दोबारा नहीं चलेगी।
         |--------------------------------------------------------------------------
         */
-        $cacheKey = 'district_report_v5_' . md5(
+        $reportCacheKey = 'district_wise_report_' . md5(
             json_encode([
                 'phase' => $phase,
                 'district_id' => $districtId,
             ])
         );
 
-        $reportData = Cache::remember(
-            $cacheKey,
+        $data = Cache::remember(
+            $reportCacheKey,
             now()->addMinutes(5),
             function () use ($phase, $districtId) {
 
                 /*
                 |--------------------------------------------------------------------------
-                | Relevant districts and village count
-                |--------------------------------------------------------------------------
-                | केवल plots > 0 वाले villages और selected phase consider होंगे।
+                | Village counts directly district-wise
                 |--------------------------------------------------------------------------
                 */
-                $villageRows = DB::table('VillageMaster as v')
+                $villageStats = DB::table('VillageMaster as v')
                     ->where('v.plots', '>', 0)
 
                     ->when(
                         $phase !== null,
-                        fn($query) => $query->where(
-                            'v.Phase',
-                            $phase
-                        )
+                        function ($query) use ($phase) {
+                            $query->where('v.Phase', $phase);
+                        }
                     )
 
                     ->when(
                         $districtId !== null,
-                        fn($query) => $query->where(
-                            'v.DistrictId',
-                            $districtId
-                        )
+                        function ($query) use ($districtId) {
+                            $query->where(
+                                'v.DistrictId',
+                                $districtId
+                            );
+                        }
                     )
 
-                    ->select([
-                        'v.DistrictId',
-                    ])
+                    ->select('v.DistrictId')
 
-                    ->selectRaw("
-                    COUNT(DISTINCT v.VillageId)
-                        AS VillagesWithPlots
-                ")
+                    ->selectRaw(
+                        'COUNT(DISTINCT v.VillageId)
+                        AS VillagesWithPlots'
+                    )
 
-                    ->groupBy('v.DistrictId')
-                    ->get();
+                    ->groupBy('v.DistrictId');
 
                 /*
                 |--------------------------------------------------------------------------
-                | Only districts having villages with plots
+                | Owner statistics directly district-wise
+                |--------------------------------------------------------------------------
+                | पहले Village-wise aggregate करके फिर District-wise SUM नहीं होगा।
+                | केवल plots > 0 वाले villages के owners consider होंगे।
                 |--------------------------------------------------------------------------
                 */
-                $reportDistrictIds = $villageRows
-                    ->pluck('DistrictId')
-                    ->filter()
-                    ->map(
-                        fn($id) => (int) $id
-                    )
-                    ->unique()
-                    ->values();
+                $ownerStats = DB::table('OwnerMaster as o')
 
-                /*
-                |--------------------------------------------------------------------------
-                | No matching district
-                |--------------------------------------------------------------------------
-                */
-                if ($reportDistrictIds->isEmpty()) {
-                    return [
-                        'report' => collect(),
-
-                        'grossTotal' => (object) [
-                            'VillagesWithPlots' => 0,
-                            'RegisteredBeneficiaries' => 0,
-                            'AllottedBeneficiaries' => 0,
-                            'ApprovedPaid' => 0,
-                            'ApprovedUnpaid' => 0,
-                            'PendingApprovalPayment' => 0,
-                            'Rejected' => 0,
-                            'AllotmentCancelled' => 0,
-                        ],
-                    ];
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Registered beneficiaries
-                |--------------------------------------------------------------------------
-                | Dashboard applicants logic same:
-                |
-                | OwnerMaster.Phase filter
-                | Owner का village plots > 0 होना चाहिए
-                |--------------------------------------------------------------------------
-                */
-                $registeredRows = DB::table('OwnerMaster as o')
-                    ->whereIn(
-                        'o.DistrictId',
-                        $reportDistrictIds->all()
-                    )
-
-                    ->whereExists(function ($query) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as rv')
-                            ->whereColumn(
-                                'rv.VillageId',
-                                'o.VillageId'
-                            )
-                            ->where('rv.plots', '>', 0);
-                    })
-
-                    ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
-                            'o.Phase',
-                            $phase
-                        )
-                    )
-
-                    ->when(
-                        $districtId !== null,
-                        fn($query) => $query->where(
-                            'o.DistrictId',
-                            $districtId
-                        )
-                    )
-
-                    ->select([
-                        'o.DistrictId',
-                    ])
-
-                    ->selectRaw("
-                    COUNT(o.OwnerId)
-                        AS RegisteredBeneficiaries
-                ")
-
-                    ->groupBy('o.DistrictId')
-                    ->get();
-
-                /*
-                |--------------------------------------------------------------------------
-                | Allotment statistics
-                |--------------------------------------------------------------------------
-                | Dashboard के exact allotment logic के अनुसार:
-                |
-                | OwnerMaster INNER JOIN FlatMaster
-                | OwnerMaster.Phase filter
-                |
-                | Village phase/plots condition यहां जानबूझकर नहीं लगाई गई,
-                | इसलिए dashboard के counts match रहेंगे।
-                |--------------------------------------------------------------------------
-                */
-                $allotmentRows = DB::table('OwnerMaster as o')
                     ->join(
+                        'VillageMaster as v',
+                        function ($join) {
+                            $join
+                                ->on(
+                                    'v.VillageId',
+                                    '=',
+                                    'o.VillageId'
+                                )
+                                ->on(
+                                    'v.DistrictId',
+                                    '=',
+                                    'o.DistrictId'
+                                );
+                        }
+                    )
+
+                    ->leftJoin(
                         'FlatMaster as f',
                         'f.FlatId',
                         '=',
                         'o.FlatId'
                     )
 
-                    ->whereIn(
-                        'o.DistrictId',
-                        $reportDistrictIds->all()
-                    )
+                    ->where('v.plots', '>', 0)
 
                     ->when(
                         $phase !== null,
-                        fn($query) => $query->where(
-                            'o.Phase',
-                            $phase
-                        )
+                        function ($query) use ($phase) {
+                            $query
+                                ->where('o.Phase', $phase)
+                                ->where('v.Phase', $phase);
+                        }
                     )
 
                     ->when(
                         $districtId !== null,
-                        fn($query) => $query->where(
-                            'o.DistrictId',
-                            $districtId
-                        )
+                        function ($query) use ($districtId) {
+                            $query
+                                ->where(
+                                    'o.DistrictId',
+                                    $districtId
+                                )
+                                ->where(
+                                    'v.DistrictId',
+                                    $districtId
+                                );
+                        }
                     )
 
-                    ->select([
-                        'o.DistrictId',
-                    ])
+                    ->select('o.DistrictId')
 
                     ->selectRaw("
-                    COUNT(*) AS AllottedBeneficiaries,
+                    COUNT(DISTINCT o.OwnerId)
+                        AS RegisteredBeneficiaries,
 
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN o.IsApproved = 1
-                                 AND o.IsPaid = 1
-                                 AND o.IsAllotmentCancelled = 0
-                                THEN 1
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS ApprovedPaid,
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                        THEN o.OwnerId
+                    END) AS AllottedBeneficiaries,
 
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN o.IsApproved = 1
-                                 AND o.IsPaid = 0
-                                 AND o.IsAllotmentCancelled = 0
-                                THEN 1
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS ApprovedUnpaid,
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                         AND o.IsApproved = 1
+                         AND o.IsPaid = 1
+                         AND o.IsAllotmentCancelled = 0
+                        THEN o.OwnerId
+                    END) AS ApprovedPaid,
 
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN o.IsApproved = 0
-                                 AND o.IsPaid = 0
-                                 AND o.IsRejected = 0
-                                THEN 1
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS PendingApprovalPayment,
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                         AND o.IsApproved = 1
+                         AND o.IsPaid = 0
+                         AND o.IsAllotmentCancelled = 0
+                        THEN o.OwnerId
+                    END) AS ApprovedUnpaid,
 
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN o.IsRejected = 1
-                                THEN 1
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS Rejected,
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                         AND o.IsApproved = 0
+                         AND o.IsPaid = 0
+                         AND o.IsRejected = 0
+                        THEN o.OwnerId
+                    END) AS PendingApprovalPayment,
 
-                    COALESCE(
-                        SUM(
-                            CASE
-                                WHEN o.IsAllotmentCancelled = 1
-                                THEN 1
-                                ELSE 0
-                            END
-                        ),
-                        0
-                    ) AS AllotmentCancelled
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                         AND o.IsRejected = 1
+                        THEN o.OwnerId
+                    END) AS Rejected,
+
+                    COUNT(DISTINCT CASE
+                        WHEN f.FlatId IS NOT NULL
+                         AND o.IsAllotmentCancelled = 1
+                        THEN o.OwnerId
+                    END) AS AllotmentCancelled
                 ")
 
-                    ->groupBy('o.DistrictId')
-                    ->get();
+                    ->groupBy('o.DistrictId');
 
                 /*
                 |--------------------------------------------------------------------------
-                | Convert aggregate collections into indexed maps
+                | Final district report
                 |--------------------------------------------------------------------------
                 */
-                $villageMap = $villageRows->keyBy(
-                    fn($row) => (int) $row->DistrictId
-                );
+                $report = DB::table('DistrictMaster as d')
 
-                $registeredMap = $registeredRows->keyBy(
-                    fn($row) => (int) $row->DistrictId
-                );
+                    ->leftJoinSub(
+                        $villageStats,
+                        'vs',
+                        function ($join) {
+                            $join->on(
+                                'vs.DistrictId',
+                                '=',
+                                'd.DistrictId'
+                            );
+                        }
+                    )
 
-                $allotmentMap = $allotmentRows->keyBy(
-                    fn($row) => (int) $row->DistrictId
-                );
-
-                /*
-                |--------------------------------------------------------------------------
-                | District names
-                |--------------------------------------------------------------------------
-                | केवल villages with plots वाले districts fetch होंगे।
-                |--------------------------------------------------------------------------
-                */
-                $districtRows = DB::table('DistrictMaster as d')
-                    ->whereIn(
-                        'd.DistrictId',
-                        $reportDistrictIds->all()
+                    ->leftJoinSub(
+                        $ownerStats,
+                        'os',
+                        function ($join) {
+                            $join->on(
+                                'os.DistrictId',
+                                '=',
+                                'd.DistrictId'
+                            );
+                        }
                     )
 
                     ->when(
                         $districtId !== null,
-                        fn($query) => $query->where(
-                            'd.DistrictId',
-                            $districtId
-                        )
+                        function ($query) use ($districtId) {
+                            $query->where(
+                                'd.DistrictId',
+                                $districtId
+                            );
+                        }
                     )
+
+                    /*
+                    |--------------------------------------------------------------------------
+                    | बिना district filter केवल relevant districts
+                    |--------------------------------------------------------------------------
+                    | Original report के सभी districts रखने हैं तो यह where हटाएं।
+                    | अभी zero-value districts भी output में बने रहेंगे क्योंकि यह block
+                    | जानबूझकर नहीं लगाया गया है।
+                    |--------------------------------------------------------------------------
+                    */
 
                     ->select([
                         'd.DistrictId',
                         'd.DistrictName',
                     ])
 
+                    ->selectRaw("
+                    COALESCE(
+                        vs.VillagesWithPlots,
+                        0
+                    ) AS VillagesWithPlots,
+
+                    COALESCE(
+                        os.RegisteredBeneficiaries,
+                        0
+                    ) AS RegisteredBeneficiaries,
+
+                    COALESCE(
+                        os.AllottedBeneficiaries,
+                        0
+                    ) AS AllottedBeneficiaries,
+
+                    COALESCE(
+                        os.ApprovedPaid,
+                        0
+                    ) AS ApprovedPaid,
+
+                    COALESCE(
+                        os.ApprovedUnpaid,
+                        0
+                    ) AS ApprovedUnpaid,
+
+                    COALESCE(
+                        os.PendingApprovalPayment,
+                        0
+                    ) AS PendingApprovalPayment,
+
+                    COALESCE(
+                        os.Rejected,
+                        0
+                    ) AS Rejected,
+
+                    COALESCE(
+                        os.AllotmentCancelled,
+                        0
+                    ) AS AllotmentCancelled
+                ")
+
                     ->orderBy('d.DistrictName')
+
                     ->get();
-
-                /*
-                |--------------------------------------------------------------------------
-                | Merge district records
-                |--------------------------------------------------------------------------
-                */
-                $report = $districtRows
-                    ->map(function ($district) use ($villageMap, $registeredMap, $allotmentMap) {
-                        $id = (int) $district->DistrictId;
-
-                        $village = $villageMap->get($id);
-                        $registered = $registeredMap->get($id);
-                        $allotment = $allotmentMap->get($id);
-
-                        return (object) [
-                            'DistrictId' =>
-                                $id,
-
-                            'DistrictName' =>
-                                $district->DistrictName,
-
-                            'VillagesWithPlots' =>
-                                (int) (
-                                    $village->VillagesWithPlots ?? 0
-                                ),
-
-                            'RegisteredBeneficiaries' =>
-                                (int) (
-                                    $registered->RegisteredBeneficiaries
-                                    ?? 0
-                                ),
-
-                            'AllottedBeneficiaries' =>
-                                (int) (
-                                    $allotment->AllottedBeneficiaries
-                                    ?? 0
-                                ),
-
-                            'ApprovedPaid' =>
-                                (int) (
-                                    $allotment->ApprovedPaid ?? 0
-                                ),
-
-                            'ApprovedUnpaid' =>
-                                (int) (
-                                    $allotment->ApprovedUnpaid ?? 0
-                                ),
-
-                            'PendingApprovalPayment' =>
-                                (int) (
-                                    $allotment->PendingApprovalPayment
-                                    ?? 0
-                                ),
-
-                            'Rejected' =>
-                                (int) (
-                                    $allotment->Rejected ?? 0
-                                ),
-
-                            'AllotmentCancelled' =>
-                                (int) (
-                                    $allotment->AllotmentCancelled
-                                    ?? 0
-                                ),
-                        ];
-                    })
-                    ->values();
 
                 /*
                 |--------------------------------------------------------------------------
@@ -2309,50 +1852,24 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Phase-dependent district dropdown
-        |--------------------------------------------------------------------------
-        | केवल plots > 0 वाले village districts आएँगे।
+        | District dropdown
         |--------------------------------------------------------------------------
         */
-        $districtCacheKey = 'district_report_dropdown_v3_'
-            . ($phase ?? 'all');
-
         $districts = Cache::remember(
-            $districtCacheKey,
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->where('v.plots', '>', 0)
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) => $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-
-                    ->orderBy('d.DistrictName')
-                    ->get();
+            'super_admin_district_report_dropdown',
+            now()->addHours(1),
+            function () {
+                return DB::table('DistrictMaster')
+                    ->orderBy('DistrictName')
+                    ->get([
+                        'DistrictId',
+                        'DistrictName',
+                    ]);
             }
         );
 
-        $report = $reportData['report'];
-        $grossTotal = $reportData['grossTotal'];
+        $report = $data['report'];
+        $grossTotal = $data['grossTotal'];
 
         return view(
             'mmgay.super-admin.district-report',
@@ -2364,244 +1881,32 @@ class SuperAdminController extends Controller
         );
     }
 
-    public function districtReportCsv(Request $request)
+    public function districtReportPdf(Request $request)
     {
-        DB::disableQueryLog();
+        $data = $this->districtReportData($request);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Existing district report का same filtered cached data
-        |--------------------------------------------------------------------------
-        */
-        $districtReportView = $this->districtWiseReport($request);
-
-        $viewData = $districtReportView->getData();
-
-        $report = collect($viewData['report'] ?? []);
-        $grossTotal = $viewData['grossTotal'] ?? (object) [];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Same stable order as screen and print
-        |--------------------------------------------------------------------------
-        */
-        $report = $report
-            ->sortBy(function ($row) {
-                return mb_strtolower(
-                    trim((string) ($row->DistrictName ?? ''))
-                );
-            })
-            ->values();
-
-        $phase = $request->filled('phase')
-            ? 'Phase-' . (int) $request->input('phase')
-            : 'All-Phases';
-
-        $district = $request->filled('district_id')
-            ? 'District-' . (int) $request->input('district_id')
-            : 'All-Districts';
-
-        $fileName = 'District_Report_'
-            . $phase
-            . '_'
-            . $district
-            . '_'
-            . now()->format('d-m-Y_H-i-s')
-            . '.csv';
-
-        return response()->streamDownload(
-            function () use ($report, $grossTotal) {
-                $handle = fopen('php://output', 'w');
-
-                if ($handle === false) {
-                    throw new \RuntimeException(
-                        'CSV stream could not be opened.'
-                    );
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM — Excel compatible
-                |--------------------------------------------------------------------------
-                */
-                fwrite($handle, "\xEF\xBB\xBF");
-
-                fputcsv($handle, [
-                    'Sr. No.',
-                    'District',
-                    'Villages',
-                    'Applicants',
-                    'Allotted',
-                    'Approved & Paid',
-                    'Approved & Unpaid',
-                    'Yet to be Approved',
-                    'Rejected',
-                    'Cancelled',
-                ]);
-
-                foreach ($report as $index => $row) {
-                    fputcsv($handle, [
-                        $index + 1,
-                        $row->DistrictName ?? '-',
-                        (int) ($row->VillagesWithPlots ?? 0),
-                        (int) ($row->RegisteredBeneficiaries ?? 0),
-                        (int) ($row->AllottedBeneficiaries ?? 0),
-                        (int) ($row->ApprovedPaid ?? 0),
-                        (int) ($row->ApprovedUnpaid ?? 0),
-                        (int) ($row->PendingApprovalPayment ?? 0),
-                        (int) ($row->Rejected ?? 0),
-                        (int) ($row->AllotmentCancelled ?? 0),
-                    ]);
-                }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Separator
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, []);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Gross total
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, [
-                    '',
-                    'GROSS TOTAL',
-                    (int) ($grossTotal->VillagesWithPlots ?? 0),
-                    (int) ($grossTotal->RegisteredBeneficiaries ?? 0),
-                    (int) ($grossTotal->AllottedBeneficiaries ?? 0),
-                    (int) ($grossTotal->ApprovedPaid ?? 0),
-                    (int) ($grossTotal->ApprovedUnpaid ?? 0),
-                    (int) ($grossTotal->PendingApprovalPayment ?? 0),
-                    (int) ($grossTotal->Rejected ?? 0),
-                    (int) ($grossTotal->AllotmentCancelled ?? 0),
-                ]);
-
-                fclose($handle);
-            },
-            $fileName,
-            [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate',
-
-                'Pragma' => 'no-cache',
-
-                'Expires' => '0',
-            ]
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.district-report-pdf',
+            $data
         );
+
+        $pdf->setPaper('A4', 'landscape');
+
+        return $pdf->download('District_Report.pdf');
     }
 
-    public function districtReportPrint(Request $request)
+
+    public function districtReportExcel(Request $request)
     {
-        DB::disableQueryLog();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Existing screen function का same filtered cached data
-        |--------------------------------------------------------------------------
-        */
-        $districtReportView = $this->districtWiseReport($request);
-
-        $viewData = $districtReportView->getData();
-
-        $report = collect($viewData['report'] ?? [])
-            ->sortBy(function ($row) {
-                return mb_strtolower(
-                    trim((string) ($row->DistrictName ?? ''))
-                );
-            })
-            ->values();
-
-        $grossTotal = $viewData['grossTotal'] ?? (object) [];
-        $districts = $viewData['districts'] ?? collect();
-
-        $selectedDistrict = null;
-
-        if ($request->filled('district_id')) {
-            $selectedDistrict = $districts->firstWhere(
-                'DistrictId',
-                (int) $request->input('district_id')
-            );
-        }
-
-        $filters = (object) [
-            'phase' => $request->filled('phase')
-                ? (int) $request->input('phase')
-                : null,
-
-            'districtName' =>
-                $selectedDistrict->DistrictName ?? null,
-        ];
-
-        return view(
-            'mmgay.super-admin.district-report-print',
-            compact(
-                'report',
-                'grossTotal',
-                'filters'
-            )
+        return Excel::download(
+            new DistrictReportExport($request),
+            'District_Report.xlsx'
         );
-    }
-
-    public function districtReportDistricts(
-        Request $request
-    ) {
-        DB::disableQueryLog();
-
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $cacheKey = 'district_report_ajax_districts_v2_'
-            . ($phase ?? 'all');
-
-        $districts = Cache::remember(
-            $cacheKey,
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->where('v.plots', '>', 0)
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) => $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-
-                    ->orderBy('d.DistrictName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'districts' => $districts,
-        ]);
     }
 
     public function districtReportData(Request $request)
     {
+        $this->prepareLargeReportRequest();
         $phase = $request->phase;
 
         $districtId = $request->district_id;
@@ -2781,12 +2086,7 @@ class SuperAdminController extends Controller
     private function villageReportQuery(Request $request)
     {
         $phase = $this->villageReportPhase($request);
-        $villageId = $request->filled('village_id')
-            ? (int) $request->input('village_id')
-            : null;
-        $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
-            : null;
+        $villageId = $this->villageReportVillageId($request);
 
         /*
         |--------------------------------------------------------------------------
@@ -2890,28 +2190,12 @@ class SuperAdminController extends Controller
                 }
             )
             ->where('v.plots', '>', 0)
-
             ->when($phase !== null, function ($query) use ($phase) {
                 $query->where('v.Phase', $phase);
             })
-            ->when(
-                $districtId !== null,
-                function ($query) use ($districtId) {
-                    $query->where(
-                        'v.DistrictId',
-                        $districtId
-                    );
-                }
-            )
-            ->when(
-                $villageId !== null,
-                function ($query) use ($villageId) {
-                    $query->where(
-                        'v.VillageId',
-                        $villageId
-                    );
-                }
-            )
+            ->when($villageId !== null, function ($query) use ($villageId) {
+                $query->where('v.VillageId', $villageId);
+            })
             ->selectRaw("
             v.VillageId,
             v.VillageName,
@@ -2955,118 +2239,6 @@ class SuperAdminController extends Controller
         ")
             ->orderBy('v.Phase')
             ->orderBy('v.VillageName');
-    }
-
-    public function villageReportFilterDistricts(
-        Request $request
-    ) {
-        DB::disableQueryLog();
-
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $cacheKey = 'village_report_ajax_districts_v2_'
-            . ($phase ?? 'all');
-
-        $districts = Cache::remember(
-            $cacheKey,
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->whereNotNull('v.plots')
-                            ->where('v.plots', '>', 0)
-
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
-
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-
-                    ->orderBy('d.DistrictName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'districts' => $districts,
-        ]);
-    }
-
-    public function villageReportFilterVillages(
-        Request $request
-    ) {
-        DB::disableQueryLog();
-
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
-        $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
-            : null;
-
-        $cacheKey = 'village_report_ajax_villages_v2_'
-            . ($phase ?? 'all')
-            . '_'
-            . ($districtId ?? 'all');
-
-        $villages = Cache::remember(
-            $cacheKey,
-            now()->addMinutes(30),
-            function () use ($phase, $districtId) {
-                return DB::table('VillageMaster as v')
-                    ->whereNotNull('v.plots')
-                    ->where('v.plots', '>', 0)
-
-                    ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
-                            'v.Phase',
-                            $phase
-                        )
-                    )
-
-                    ->when(
-                        $districtId !== null,
-                        fn($query) => $query->where(
-                            'v.DistrictId',
-                            $districtId
-                        )
-                    )
-
-                    ->select([
-                        'v.VillageId',
-                        'v.VillageName',
-                    ])
-
-                    ->orderBy('v.VillageName')
-                    ->get();
-            }
-        );
-
-        return response()->json([
-            'success' => true,
-            'villages' => $villages,
-        ]);
     }
 
     /*
@@ -3166,22 +2338,14 @@ class SuperAdminController extends Controller
         Request $request,
         bool $paginate = true
     ): array {
-        DB::disableQueryLog();
-
         $phase = $this->villageReportPhase($request);
-
-        $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
-            : null;
 
         /*
         |--------------------------------------------------------------------------
-        | Main report query
+        | केवल एक database query
         |--------------------------------------------------------------------------
         */
-        $allReportRows = $this
-            ->villageReportQuery($request)
-            ->get();
+        $allReportRows = $this->villageReportQuery($request)->get();
 
         /*
         |--------------------------------------------------------------------------
@@ -3229,14 +2393,13 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         | Screen Pagination
         |--------------------------------------------------------------------------
+        | केवल 260 villages हैं, इसलिए collection pagination fast रहेगी।
+        |--------------------------------------------------------------------------
         */
         if ($paginate) {
             $perPage = 50;
 
-            $currentPage = max(
-                1,
-                LengthAwarePaginator::resolveCurrentPage()
-            );
+            $currentPage = LengthAwarePaginator::resolveCurrentPage();
 
             $currentItems = $allReportRows
                 ->forPage($currentPage, $perPage)
@@ -3253,106 +2416,40 @@ class SuperAdminController extends Controller
                 ]
             );
         } else {
+            /*
+            |--------------------------------------------------------------------------
+            | Print और PDF में सभी 260 villages
+            |--------------------------------------------------------------------------
+            */
             $report = $allReportRows;
         }
 
         /*
         |--------------------------------------------------------------------------
-        | Phase-dependent District Dropdown
-        |--------------------------------------------------------------------------
-        | केवल plots > 0 वाले villages के districts आएंगे।
+        | Village Dropdown
         |--------------------------------------------------------------------------
         */
-        $districtCacheKey = 'village_report_districts_v2_'
-            . ($phase ?? 'all');
+        $villages = DB::table('VillageMaster as v')
+            ->whereNotNull('v.plots')
+            ->where('v.plots', '>', 0)
 
-        $districts = Cache::remember(
-            $districtCacheKey,
-            now()->addMinutes(30),
-            function () use ($phase) {
-                return DB::table('DistrictMaster as d')
-                    ->whereExists(function ($query) use ($phase) {
-                        $query
-                            ->selectRaw('1')
-                            ->from('VillageMaster as v')
-                            ->whereColumn(
-                                'v.DistrictId',
-                                'd.DistrictId'
-                            )
-                            ->whereNotNull('v.plots')
-                            ->where('v.plots', '>', 0)
+            ->when($phase !== null, function ($query) use ($phase) {
+                $query->where('v.Phase', $phase);
+            })
 
-                            ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
-                            );
-                    })
+            ->select([
+                'v.VillageId',
+                'v.VillageName',
+                'v.Phase',
+            ])
 
-                    ->select([
-                        'd.DistrictId',
-                        'd.DistrictName',
-                    ])
-
-                    ->orderBy('d.DistrictName')
-                    ->get();
-            }
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Phase + District-dependent Village Dropdown
-        |--------------------------------------------------------------------------
-        */
-        $villageCacheKey = 'village_report_villages_v2_'
-            . ($phase ?? 'all')
-            . '_'
-            . ($districtId ?? 'all');
-
-        $villages = Cache::remember(
-            $villageCacheKey,
-            now()->addMinutes(30),
-            function () use ($phase, $districtId) {
-                return DB::table('VillageMaster as v')
-                    ->whereNotNull('v.plots')
-                    ->where('v.plots', '>', 0)
-
-                    ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
-                            'v.Phase',
-                            $phase
-                        )
-                    )
-
-                    ->when(
-                        $districtId !== null,
-                        fn($query) => $query->where(
-                            'v.DistrictId',
-                            $districtId
-                        )
-                    )
-
-                    ->select([
-                        'v.VillageId',
-                        'v.VillageName',
-                        'v.Phase',
-                        'v.DistrictId',
-                    ])
-
-                    ->orderBy('v.Phase')
-                    ->orderBy('v.VillageName')
-                    ->get();
-            }
-        );
+            ->orderBy('v.Phase')
+            ->orderBy('v.VillageName')
+            ->get();
 
         return [
             'report' => $report,
             'grossTotal' => $grossTotal,
-            'districts' => $districts,
             'villages' => $villages,
         ];
     }
@@ -3364,6 +2461,7 @@ class SuperAdminController extends Controller
     */
     public function villageWiseReport(Request $request)
     {
+        $this->prepareLargeReportRequest();
         return view(
             'mmgay.super-admin.village-report',
             $this->villageReportData($request, true)
@@ -3373,11 +2471,43 @@ class SuperAdminController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Village Report PDF
+    |--------------------------------------------------------------------------
+    | paginate=false होने के कारण सभी matching villages आएंगे।
+    | बिना filters के केवल plots > 0 वाले 260 villages आएंगे।
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportPdf(Request $request)
+    {
+        $this->prepareLargeReportRequest();
+        $data = $this->villageReportData($request, false);
+
+        $pdf = Pdf::loadView(
+            'mmgay.super-admin.village-report-pdf',
+            $data
+        )
+            ->setPaper('a4', 'landscape')
+            ->setOptions([
+                'defaultFont' => 'DejaVu Sans',
+                'isHtml5ParserEnabled' => true,
+                'isRemoteEnabled' => true,
+            ]);
+
+        return $pdf->download(
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.pdf'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Village Report Print
     |--------------------------------------------------------------------------
     */
     public function villageReportPrint(Request $request)
     {
+        $this->prepareLargeReportRequest();
         $data = $this->villageReportData($request, false);
 
         /*
@@ -3468,26 +2598,50 @@ class SuperAdminController extends Controller
     */
     public function villageReportCsv(Request $request)
     {
-        DB::disableQueryLog();
-
-        @set_time_limit(0);
-
+        $this->prepareLargeReportRequest();
         $fileName = 'Village_Report_'
             . now()->format('d-m-Y_H-i-s')
             . '.csv';
 
         /*
         |--------------------------------------------------------------------------
-        | Query builder only
-        |--------------------------------------------------------------------------
-        | यहां get() नहीं चलेगा। Actual records stream callback में cursor()
-        | द्वारा एक-एक करके पढ़े जाएंगे।
+        | Query केवल एक बार
         |--------------------------------------------------------------------------
         */
-        $rowsQuery = $this->villageReportQuery($request);
+        $rows = $this->villageReportQuery($request)->get();
+
+        $allotmentStats = $this->dashboardAllotmentStats($request);
+
+        $grossTotal = [
+            'TotalPlots' => (int) $rows->sum(
+                fn($row) => (int) ($row->TotalPlots ?? 0)
+            ),
+
+            'RegisteredBeneficiaries' => (int) $rows->sum(
+                fn($row) => (int) ($row->RegisteredBeneficiaries ?? 0)
+            ),
+
+            'AllottedBeneficiaries' =>
+                (int) ($allotmentStats->AllottedBeneficiaries ?? 0),
+
+            'ApprovedPaid' =>
+                (int) ($allotmentStats->ApprovedPaid ?? 0),
+
+            'ApprovedUnpaid' =>
+                (int) ($allotmentStats->ApprovedUnpaid ?? 0),
+
+            'PendingApprovalPayment' =>
+                (int) ($allotmentStats->PendingApprovalPayment ?? 0),
+
+            'Rejected' =>
+                (int) ($allotmentStats->Rejected ?? 0),
+
+            'AllotmentCancelled' =>
+                (int) ($allotmentStats->AllotmentCancelled ?? 0),
+        ];
 
         return response()->streamDownload(
-            function () use ($rowsQuery, $request) {
+            function () use ($rows, $grossTotal) {
                 $handle = fopen('php://output', 'w');
 
                 if ($handle === false) {
@@ -3496,22 +2650,8 @@ class SuperAdminController extends Controller
                     );
                 }
 
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM
-                |--------------------------------------------------------------------------
-                | Excel में Hindi/Unicode text सही खुलेगा।
-                |--------------------------------------------------------------------------
-                */
                 fwrite($handle, "\xEF\xBB\xBF");
 
-                /*
-                |--------------------------------------------------------------------------
-                | CSV headings पहले भेजें
-                |--------------------------------------------------------------------------
-                | इससे click के तुरंत बाद browser download शुरू कर सकता है।
-                |--------------------------------------------------------------------------
-                */
                 fputcsv($handle, [
                     'Sr. No.',
                     'Village',
@@ -3526,95 +2666,21 @@ class SuperAdminController extends Controller
                     'Cancelled',
                 ]);
 
-                fflush($handle);
-
-                /*
-                |--------------------------------------------------------------------------
-                | Running totals
-                |--------------------------------------------------------------------------
-                | Total plots और applicants streaming के साथ calculate होंगे।
-                |--------------------------------------------------------------------------
-                */
-                $serialNumber = 1;
-                $totalPlots = 0;
-                $registeredBeneficiaries = 0;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Stream rows
-                |--------------------------------------------------------------------------
-                | get() के बजाय cursor() memory usage बहुत कम रखेगा।
-                |--------------------------------------------------------------------------
-                */
-                foreach ($rowsQuery->cursor() as $row) {
-                    $rowTotalPlots = (int) (
-                        $row->TotalPlots ?? 0
-                    );
-
-                    $rowRegistered = (int) (
-                        $row->RegisteredBeneficiaries ?? 0
-                    );
-
-                    $totalPlots += $rowTotalPlots;
-                    $registeredBeneficiaries += $rowRegistered;
-
+                foreach ($rows as $index => $row) {
                     fputcsv($handle, [
-                        $serialNumber++,
+                        $index + 1,
                         $row->VillageName ?? '-',
                         $row->Phase ?? '-',
-                        $rowTotalPlots,
-                        $rowRegistered,
-                        (int) (
-                            $row->AllottedBeneficiaries ?? 0
-                        ),
-                        (int) (
-                            $row->ApprovedPaid ?? 0
-                        ),
-                        (int) (
-                            $row->ApprovedUnpaid ?? 0
-                        ),
-                        (int) (
-                            $row->PendingApprovalPayment ?? 0
-                        ),
-                        (int) (
-                            $row->Rejected ?? 0
-                        ),
-                        (int) (
-                            $row->AllotmentCancelled ?? 0
-                        ),
+                        (int) ($row->TotalPlots ?? 0),
+                        (int) ($row->RegisteredBeneficiaries ?? 0),
+                        (int) ($row->AllottedBeneficiaries ?? 0),
+                        (int) ($row->ApprovedPaid ?? 0),
+                        (int) ($row->ApprovedUnpaid ?? 0),
+                        (int) ($row->PendingApprovalPayment ?? 0),
+                        (int) ($row->Rejected ?? 0),
+                        (int) ($row->AllotmentCancelled ?? 0),
                     ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Output flush
-                    |--------------------------------------------------------------------------
-                    | हर 200 records के बाद buffered output browser को भेजें।
-                    |--------------------------------------------------------------------------
-                    */
-                    if (($serialNumber - 1) % 200 === 0) {
-                        fflush($handle);
-
-                        if (
-                            function_exists('ob_get_level')
-                            && ob_get_level() > 0
-                        ) {
-                            @ob_flush();
-                        }
-
-                        flush();
-                    }
                 }
-
-                /*
-                |--------------------------------------------------------------------------
-                | Dashboard-matching allotment totals
-                |--------------------------------------------------------------------------
-                | Cursor पूरा consume होने के बाद query चलेगी, ताकि unbuffered query
-                | connection conflict न हो और existing total logic भी न बदले।
-                |--------------------------------------------------------------------------
-                */
-                $allotmentStats = $this
-                    ->dashboardAllotmentStats($request);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -3632,65 +2698,39 @@ class SuperAdminController extends Controller
                     '',
                     'Gross Total',
                     '',
-                    $totalPlots,
-                    $registeredBeneficiaries,
-
-                    (int) (
-                        $allotmentStats->AllottedBeneficiaries
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->ApprovedPaid
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->ApprovedUnpaid
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->PendingApprovalPayment
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->Rejected
-                        ?? 0
-                    ),
-
-                    (int) (
-                        $allotmentStats->AllotmentCancelled
-                        ?? 0
-                    ),
+                    $grossTotal['TotalPlots'],
+                    $grossTotal['RegisteredBeneficiaries'],
+                    $grossTotal['AllottedBeneficiaries'],
+                    $grossTotal['ApprovedPaid'],
+                    $grossTotal['ApprovedUnpaid'],
+                    $grossTotal['PendingApprovalPayment'],
+                    $grossTotal['Rejected'],
+                    $grossTotal['AllotmentCancelled'],
                 ]);
 
-                fflush($handle);
                 fclose($handle);
             },
             $fileName,
             [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Content-Disposition' =>
-                    'attachment; filename="' . $fileName . '"',
-
+                'Content-Type' => 'text/csv; charset=UTF-8',
                 'Cache-Control' =>
-                    'no-store, no-cache, must-revalidate, max-age=0',
-
-                'Pragma' => 'no-cache',
-
-                'Expires' => '0',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Disable proxy buffering
-                |--------------------------------------------------------------------------
-                */
-                'X-Accel-Buffering' => 'no',
+                    'no-store, no-cache, must-revalidate',
             ]
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Village Report Excel
+    |--------------------------------------------------------------------------
+    */
+    public function villageReportExcel(Request $request)
+    {
+        return Excel::download(
+            new VillageReportExport($request),
+            'Village_Report_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.xlsx'
         );
     }
 
@@ -3895,119 +2935,6 @@ class SuperAdminController extends Controller
 
     // VIllage Function End
 
-    // Applicant Filters
-
-    private function applicantsBaseQuery(Request $request)
-    {
-        $query = DB::table('OwnerMaster as o')
-            ->join(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('v.plots', '>', 0);
-
-        return $this->applyApplicantFilters(
-            $query,
-            $request
-        );
-    }
-
-    private function applicantsQuery(Request $request)
-    {
-        return $this
-            ->applicantsBaseQuery($request)
-            ->select([
-                'o.OwnerId',
-                'o.secure_id',
-                'o.OwnerName',
-                'o.Relation',
-                'o.FatherHusbandName',
-                'o.Gender',
-
-                'o.DistrictId',
-                'o.BlockId',
-                'o.VillageId',
-
-                'o.OwnerAddress',
-                'o.RegistrationNo',
-                'o.PPPId',
-                'o.MemberId',
-                'o.Caste',
-                'o.MobileNo',
-
-                'o.CompanyId',
-                'o.Phase',
-
-                'o.IsApproved',
-                'o.IsRejected',
-                'o.IsPaid',
-                'o.IsPaymentApproved',
-                'o.IsAllotmentCancelled',
-
-                'o.Remarks',
-                'o.DCRemarks',
-                'o.CreatedDate',
-
-                'v.VillageName',
-
-                'f.FlatId',
-                'f.FlatNo',
-            ])
-            ->selectRaw("
-            CASE
-                WHEN o.IsAllotmentCancelled = 1
-                    THEN 'Cancelled'
-
-                WHEN o.IsRejected = 1
-                    THEN 'Rejected'
-
-                WHEN o.IsApproved = 1
-                 AND o.IsPaid = 1
-                    THEN 'Approved & Paid'
-
-                WHEN o.IsApproved = 1
-                 AND (
-                    o.IsPaid = 0
-                    OR o.IsPaid IS NULL
-                 )
-                    THEN 'Approved & Unpaid'
-
-                WHEN (
-                    o.IsApproved = 0
-                    OR o.IsApproved IS NULL
-                )
-                    THEN 'Yet to be Approved'
-
-                ELSE 'Allotted'
-            END AS ApplicantStatus
-        ");
-    }
-
-    private function applicantsCountCacheKey(
-        Request $request
-    ): string {
-        return 'superadmin_applicants_count_v2_' . md5(
-            json_encode([
-                'search' => trim(
-                    (string) $request->query('search', '')
-                ),
-                'phase' => $request->query('phase'),
-                'district_id' => $request->query('district_id'),
-                'block_id' => $request->query('block_id'),
-                'village_id' => $request->query('village_id'),
-                'status' => $request->query('status'),
-            ])
-        );
-    }
-
     private function applyApplicantFilters(
         $query,
         Request $request
@@ -4169,20 +3096,22 @@ class SuperAdminController extends Controller
         return $query;
     }
 
+
+
     public function applicants(Request $request)
     {
         DB::disableQueryLog();
 
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
             : null;
 
         $perPage = (int) $request->query(
@@ -4200,159 +3129,38 @@ class SuperAdminController extends Controller
             $perPage = 20;
         }
 
-        $currentPage = max(
-            1,
-            (int) $request->query('page', 1)
-        );
-
         /*
         |--------------------------------------------------------------------------
-        | Cached total
+        | Applicant Records
         |--------------------------------------------------------------------------
-        | Heavy count हर page load पर नहीं चलेगा।
-        |--------------------------------------------------------------------------
-        */
-        $totalApplicants = Cache::remember(
-            $this->applicantsCountCacheKey($request),
-            now()->addMinutes(2),
-            function () use ($request) {
-                return (int) $this
-                    ->applicantsBaseQuery($request)
-                    ->distinct()
-                    ->count('o.OwnerId');
-            }
-        );
-
-        $lastPage = max(
-            1,
-            (int) ceil(
-                $totalApplicants / $perPage
-            )
-        );
-
-        $currentPage = min(
-            $currentPage,
-            $lastPage
-        );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Current page IDs only
-        |--------------------------------------------------------------------------
-        | पहले सिर्फ indexed OwnerId fetch होंगे।
+        | Indexed OwnerId DESC ordering.
         |--------------------------------------------------------------------------
         */
-        $ownerIds = $this
-            ->applicantsBaseQuery($request)
-            ->select('o.OwnerId')
-            ->distinct()
+        $applicantQuery = $this->applicantsQuery($request);
+
+        $applicantTotalKey = $this->reportCacheKey(
+            'super_admin_applicants_total',
+            $request,
+            ['phase', 'district_id', 'block_id', 'village_id', 'status', 'search']
+        );
+
+        $totalApplicants = (int) Cache::remember(
+            $applicantTotalKey,
+            now()->addSeconds($this->reportCacheSeconds()),
+            fn() => (clone $applicantQuery)->count('o.OwnerId')
+        );
+
+        $currentPage = max(1, (int) $request->query('page', 1));
+        $lastPage = max(1, (int) ceil($totalApplicants / $perPage));
+        $currentPage = min($currentPage, $lastPage);
+
+        $applicantRows = (clone $applicantQuery)
             ->orderByDesc('o.OwnerId')
-            ->forPage(
-                $currentPage,
-                $perPage
-            )
-            ->pluck('o.OwnerId')
-            ->map(
-                static fn($id) => (int) $id
-            )
-            ->all();
-
-        /*
-        |--------------------------------------------------------------------------
-        | Current page details
-        |--------------------------------------------------------------------------
-        */
-        $rows = collect();
-
-        if (!empty($ownerIds)) {
-            $rows = DB::table('OwnerMaster as o')
-                ->join(
-                    'VillageMaster as v',
-                    'v.VillageId',
-                    '=',
-                    'o.VillageId'
-                )
-                ->leftJoin(
-                    'FlatMaster as f',
-                    'f.FlatId',
-                    '=',
-                    'o.FlatId'
-                )
-                ->whereIn(
-                    'o.OwnerId',
-                    $ownerIds
-                )
-                ->select([
-                    'o.OwnerId',
-                    'o.secure_id',
-                    'o.OwnerName',
-                    'o.Relation',
-                    'o.FatherHusbandName',
-                    'o.Gender',
-
-                    'o.DistrictId',
-                    'o.BlockId',
-                    'o.VillageId',
-
-                    'o.OwnerAddress',
-                    'o.RegistrationNo',
-                    'o.PPPId',
-                    'o.MemberId',
-                    'o.Caste',
-                    'o.MobileNo',
-
-                    'o.CompanyId',
-                    'o.Phase',
-
-                    'o.IsApproved',
-                    'o.IsRejected',
-                    'o.IsPaid',
-                    'o.IsPaymentApproved',
-                    'o.IsAllotmentCancelled',
-
-                    'o.Remarks',
-                    'o.DCRemarks',
-                    'o.CreatedDate',
-
-                    'v.VillageName',
-
-                    'f.FlatId',
-                    'f.FlatNo',
-                ])
-                ->selectRaw("
-                CASE
-                    WHEN o.IsAllotmentCancelled = 1
-                        THEN 'Cancelled'
-
-                    WHEN o.IsRejected = 1
-                        THEN 'Rejected'
-
-                    WHEN o.IsApproved = 1
-                     AND o.IsPaid = 1
-                        THEN 'Approved & Paid'
-
-                    WHEN o.IsApproved = 1
-                     AND (
-                        o.IsPaid = 0
-                        OR o.IsPaid IS NULL
-                     )
-                        THEN 'Approved & Unpaid'
-
-                    WHEN (
-                        o.IsApproved = 0
-                        OR o.IsApproved IS NULL
-                    )
-                        THEN 'Yet to be Approved'
-
-                    ELSE 'Allotted'
-                END AS ApplicantStatus
-            ")
-                ->orderByDesc('o.OwnerId')
-                ->get();
-        }
+            ->forPage($currentPage, $perPage)
+            ->get();
 
         $applicants = new LengthAwarePaginator(
-            $rows,
+            $applicantRows,
             $totalApplicants,
             $perPage,
             $currentPage,
@@ -4365,48 +3173,45 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Village dropdown
+        | Village Dropdown
+        |--------------------------------------------------------------------------
+        | OwnerMaster को JOIN करके DISTINCT करने के बजाय VillageMaster से query
+        | चलती है और EXISTS से matching owner check होता है।
         |--------------------------------------------------------------------------
         */
-        $villageCacheKey = 'applicant_villages_v2_' . md5(
-            json_encode([
-                'phase' => $phase,
-                'district_id' => $districtId,
-                'block_id' => $blockId,
-            ])
+        $villageDropdownKey = $this->reportCacheKey(
+            'super_admin_applicant_villages',
+            $request,
+            ['phase', 'district_id', 'block_id']
         );
 
         $villages = Cache::remember(
-            $villageCacheKey,
-            now()->addMinutes(20),
+            $villageDropdownKey,
+            now()->addSeconds($this->reportCacheSeconds()),
             function () use ($phase, $districtId, $blockId) {
                 return DB::table('VillageMaster as v')
                     ->where('v.plots', '>', 0)
-
                     ->when(
-                        $districtId !== null,
-                        fn($query) => $query->where(
+                        $districtId,
+                        fn($q) => $q->where(
                             'v.DistrictId',
                             $districtId
                         )
                     )
-
                     ->when(
-                        $blockId !== null,
-                        fn($query) => $query->where(
+                        $blockId,
+                        fn($q) => $q->where(
                             'v.BlockId',
                             $blockId
                         )
                     )
-
                     ->when(
-                        $phase !== null,
-                        fn($query) => $query->where(
+                        $phase,
+                        fn($q) => $q->where(
                             'v.Phase',
                             $phase
                         )
                     )
-
                     ->whereExists(function ($query) use ($phase, $districtId, $blockId) {
                         $query
                             ->selectRaw('1')
@@ -4415,40 +3220,32 @@ class SuperAdminController extends Controller
                                 'vo.VillageId',
                                 'v.VillageId'
                             )
-
                             ->when(
-                                $phase !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
+                                $phase,
+                                fn($q) => $q->where(
                                     'vo.Phase',
                                     $phase
                                 )
                             )
-
                             ->when(
-                                $districtId !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
+                                $districtId,
+                                fn($q) => $q->where(
                                     'vo.DistrictId',
                                     $districtId
                                 )
                             )
-
                             ->when(
-                                $blockId !== null,
-                                fn($subQuery) =>
-                                $subQuery->where(
+                                $blockId,
+                                fn($q) => $q->where(
                                     'vo.BlockId',
                                     $blockId
                                 )
                             );
                     })
-
                     ->select([
                         'v.VillageId',
                         'v.VillageName',
                     ])
-
                     ->orderBy('v.VillageName')
                     ->get();
             }
@@ -4464,8 +3261,104 @@ class SuperAdminController extends Controller
         );
     }
 
+    private function applicantsQuery(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Main Query
+        |--------------------------------------------------------------------------
+        | VillageMaster INNER JOIN पुराने logic जैसा ही रखा गया है।
+        | FlatMaster LEFT JOIN display और flat search के लिए जरूरी है।
+        |--------------------------------------------------------------------------
+        */
+        $query = DB::table('OwnerMaster as o')
+            ->join(
+                'VillageMaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+            ->where('v.plots', '>', 0)
+            ->select([
+                'o.OwnerId',
+                'o.secure_id',
+                'o.OwnerName',
+                'o.Relation',
+                'o.FatherHusbandName',
+                'o.Gender',
+
+                'o.DistrictId',
+                'o.BlockId',
+                'o.VillageId',
+
+                'o.OwnerAddress',
+                'o.RegistrationNo',
+                'o.PPPId',
+                'o.MemberId',
+                'o.Caste',
+                'o.MobileNo',
+                'o.CompanyId',
+                'o.Phase',
+
+                'o.IsApproved',
+                'o.IsRejected',
+                'o.IsPaid',
+                'o.IsPaymentApproved',
+                'o.IsAllotmentCancelled',
+
+                'o.Remarks',
+                'o.DCRemarks',
+                'o.CreatedDate',
+
+                'v.VillageName',
+
+                'f.FlatId',
+                'f.FlatNo',
+            ])
+            ->selectRaw("
+            CASE
+                WHEN o.IsAllotmentCancelled = 1
+                    THEN 'Cancelled'
+
+                WHEN o.IsRejected = 1
+                    THEN 'Rejected'
+
+                WHEN o.IsApproved = 1
+                 AND o.IsPaid = 1
+                    THEN 'Approved & Paid'
+
+                WHEN o.IsApproved = 1
+                 AND (
+                    o.IsPaid = 0
+                    OR o.IsPaid IS NULL
+                 )
+                    THEN 'Approved & Unpaid'
+
+                WHEN (
+                    o.IsApproved = 0
+                    OR o.IsApproved IS NULL
+                )
+                    THEN 'Yet to be Approved'
+
+                ELSE 'Allotted'
+            END AS ApplicantStatus
+        ");
+
+        return $this->applyApplicantFilters(
+            $query,
+            $request
+        );
+    }
+
     public function applicantsExcel(Request $request)
     {
+        $this->prepareLargeReportRequest();
         $fileName = 'applicants-'
             . now()->format('Y-m-d-H-i-s')
             . '.csv';
@@ -4598,475 +3491,107 @@ class SuperAdminController extends Controller
 
     public function applicantsCsv(Request $request)
     {
-        DB::disableQueryLog();
-
-        set_time_limit(0);
-
-        $fileName = 'Applicants_'
-            . now()->format('Ymd_His')
-            . '.csv';
-
-        /*
-        |--------------------------------------------------------------------------
-        | Lightweight export query
-        |--------------------------------------------------------------------------
-        | केवल CSV में इस्तेमाल होने वाले columns लिए गए हैं।
-        |--------------------------------------------------------------------------
-        */
-        $query = DB::table('OwnerMaster as o')
-            ->join(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('v.plots', '>', 0);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Existing filters
-        |--------------------------------------------------------------------------
-        */
-        $query = $this->applyApplicantFilters(
-            $query,
-            $request
-        );
-
-        $query
-            ->select([
-                'o.OwnerId',
-                'o.RegistrationNo',
-                'o.OwnerName',
-                'o.FatherHusbandName',
-                'o.MobileNo',
-                'o.PPPId',
-                'o.Phase',
-
-                'o.IsApproved',
-                'o.IsRejected',
-                'o.IsPaid',
-                'o.IsAllotmentCancelled',
-
-                'v.VillageName',
-
-                'f.FlatNo',
-            ])
+        $this->prepareLargeReportRequest();
+        $query = $this->applicantsQuery($request)
             ->orderByDesc('o.OwnerId');
 
-        return response()->streamDownload(
-            function () use ($query) {
-                /*
-                |--------------------------------------------------------------------------
-                | Remove existing output buffers
-                |--------------------------------------------------------------------------
-                */
-                while (ob_get_level() > 0) {
-                    @ob_end_clean();
-                }
+        return response()->streamDownload(function () use ($query) {
 
-                $handle = fopen('php://output', 'w');
+            $file = fopen('php://output', 'w');
 
-                if ($handle === false) {
-                    throw new \RuntimeException(
-                        'CSV output stream could not be opened.'
-                    );
-                }
+            fwrite($file, "\xEF\xBB\xBF");
 
-                /*
-                |--------------------------------------------------------------------------
-                | UTF-8 BOM
-                |--------------------------------------------------------------------------
-                */
-                fwrite($handle, "\xEF\xBB\xBF");
+            fputcsv($file, [
+                'Sr.',
+                'Owner ID',
+                'Application No.',
+                'Applicant',
+                'Father/Husband',
+                'Mobile',
+                'PPP ID',
+                'Village',
+                'Phase',
+                'Flat No.',
+                'Status'
+            ]);
 
-                /*
-                |--------------------------------------------------------------------------
-                | Header immediately output करें
-                |--------------------------------------------------------------------------
-                */
-                fputcsv($handle, [
-                    'Sr. No.',
-                    'Owner ID',
-                    'Application No.',
-                    'Applicant',
-                    'Father / Husband',
-                    'Mobile',
-                    'PPP ID',
-                    'Village',
-                    'Phase',
-                    'Flat No.',
-                    'Status',
+            $sr = 1;
+
+            foreach ($query->cursor() as $row) {
+
+                fputcsv($file, [
+
+                    $sr++,
+
+                    $row->OwnerId,
+
+                    $row->RegistrationNo,
+
+                    $row->OwnerName,
+
+                    $row->FatherHusbandName,
+
+                    $row->MobileNo,
+
+                    $row->PPPId,
+
+                    $row->VillageName,
+
+                    $row->Phase,
+
+                    $row->FlatNo,
+
+                    $row->ApplicantStatus
+
                 ]);
+            }
 
-                fflush($handle);
+            fclose($file);
 
-                if (function_exists('flush')) {
-                    flush();
-                }
-
-                $serialNumber = 1;
-
-                /*
-                |--------------------------------------------------------------------------
-                | Single SQL query streaming
-                |--------------------------------------------------------------------------
-                | lazyByIdDesc() नहीं है, इसलिए repeated database queries नहीं चलेंगी।
-                |--------------------------------------------------------------------------
-                */
-                foreach ($query->cursor() as $applicant) {
-                    if (
-                        (int) $applicant->IsAllotmentCancelled === 1
-                    ) {
-                        $status = 'Cancelled';
-                    } elseif (
-                        (int) $applicant->IsRejected === 1
-                    ) {
-                        $status = 'Rejected';
-                    } elseif (
-                        (int) $applicant->IsApproved === 1
-                        && (int) $applicant->IsPaid === 1
-                    ) {
-                        $status = 'Approved & Paid';
-                    } elseif (
-                        (int) $applicant->IsApproved === 1
-                        && (int) $applicant->IsPaid === 0
-                    ) {
-                        $status = 'Approved & Unpaid';
-                    } elseif (
-                        (int) $applicant->IsApproved === 0
-                    ) {
-                        $status = 'Yet to be Approved';
-                    } else {
-                        $status = 'Allotted';
-                    }
-
-                    fputcsv($handle, [
-                        $serialNumber++,
-                        $applicant->OwnerId ?? '',
-                        $applicant->RegistrationNo ?? '',
-                        $applicant->OwnerName ?? '',
-                        $applicant->FatherHusbandName ?? '',
-                        $applicant->MobileNo ?? '',
-                        $applicant->PPPId ?? '',
-                        $applicant->VillageName ?? '',
-                        $applicant->Phase ?? '',
-                        $applicant->FlatNo ?? '',
-                        $status,
-                    ]);
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | Periodic browser flush
-                    |--------------------------------------------------------------------------
-                    */
-                    if (($serialNumber - 1) % 200 === 0) {
-                        fflush($handle);
-
-                        if (function_exists('flush')) {
-                            flush();
-                        }
-                    }
-                }
-
-                fflush($handle);
-                fclose($handle);
-            },
-            $fileName,
-            [
-                'Content-Type' =>
-                    'text/csv; charset=UTF-8',
-
-                'Content-Disposition' =>
-                    'attachment; filename="' . $fileName . '"',
-
-                'Cache-Control' =>
-                    'no-cache, no-store, must-revalidate, max-age=0',
-
-                'Pragma' =>
-                    'no-cache',
-
-                'Expires' =>
-                    '0',
-
-                'X-Accel-Buffering' =>
-                    'no',
-            ]
-        );
-    }
-
-    public function applicantView(string $secureId)
-    {
-        DB::disableQueryLog();
-
-        $applicant = DB::table('OwnerMaster as o')
-            ->leftJoin(
-                'DistrictMaster as d',
-                'd.DistrictId',
-                '=',
-                'o.DistrictId'
-            )
-            ->leftJoin(
-                'BlockMaster as b',
-                'b.BlockId',
-                '=',
-                'o.BlockId'
-            )
-            ->leftJoin(
-                'VillageMaster as v',
-                'v.VillageId',
-                '=',
-                'o.VillageId'
-            )
-            ->leftJoin(
-                'FlatMaster as f',
-                'f.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('o.secure_id', $secureId)
-            ->select([
-                /*
-                |--------------------------------------------------------------------------
-                | Applicant identity
-                |--------------------------------------------------------------------------
-                */
-                'o.OwnerId',
-                'o.secure_id',
-                'o.OwnerName',
-                'o.Relation',
-                'o.FatherHusbandName',
-                'o.Gender',
-                'o.Caste',
-                'o.MobileNo',
-                'o.OwnerAddress',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Application identifiers
-                |--------------------------------------------------------------------------
-                */
-                'o.RegistrationNo',
-                'o.PPPId',
-                'o.MemberId',
-                'o.CompanyId',
-                'o.Phase',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Location and property
-                |--------------------------------------------------------------------------
-                */
-                'o.DistrictId',
-                'o.BlockId',
-                'o.VillageId',
-                'o.FlatId',
-
-                'd.DistrictName',
-                'b.BlockName',
-                'v.VillageName',
-                'v.plots as VillagePlots',
-
-                'f.FlatNo',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Status fields
-                |--------------------------------------------------------------------------
-                */
-                'o.IsApproved',
-                'o.IsRejected',
-                'o.IsDcReconsidered',
-                'o.DCReOpenedCount',
-                'o.IsPaid',
-                'o.IsPaymentApproved',
-                'o.IsAllotmentCancelled',
-
-                /*
-                |--------------------------------------------------------------------------
-                | Remarks and audit information
-                |--------------------------------------------------------------------------
-                */
-                'o.Remarks',
-                'o.DCRemarks',
-                'o.CreatedBy',
-                'o.CreatedDate',
-                'o.UpdatedBy',
-                'o.UpdatedDate',
-            ])
-            ->selectRaw("
-            CASE
-                WHEN o.IsAllotmentCancelled = 1
-                    THEN 'Cancelled'
-
-                WHEN o.IsRejected = 1
-                    THEN 'Rejected'
-
-                WHEN o.IsApproved = 1
-                 AND o.IsPaid = 1
-                    THEN 'Approved & Paid'
-
-                WHEN o.IsApproved = 1
-                 AND o.IsPaid = 0
-                    THEN 'Approved & Unpaid'
-
-                WHEN o.IsApproved = 0
-                    THEN 'Yet to be Approved'
-
-                ELSE 'Allotted'
-            END AS ApplicantStatus
-        ")
-            ->first();
-
-        abort_if(
-            $applicant === null,
-            404,
-            'Applicant record not found.'
-        );
-
-        return view(
-            'mmgay.super-admin.applicants.show',
-            compact('applicant')
-        );
+        }, 'Applicants_' . now()->format('Ymd_His') . '.csv');
     }
 
     public function applicantsPrint(Request $request)
     {
-        DB::disableQueryLog();
+        $this->prepareLargeReportRequest();
+        $perBatch = (int) $request->query('print_limit', 500);
 
-        $perBatch = (int) $request->query(
-            'print_limit',
-            500
-        );
-
-        if (
-            !in_array(
-                $perBatch,
-                [200, 500, 1000, 2000],
-                true
-            )
-        ) {
+        if (!in_array($perBatch, [200, 500, 1000, 2000], true)) {
             $perBatch = 500;
         }
 
         $printPage = max(
             1,
-            (int) $request->query(
-                'print_page',
-                1
-            )
+            (int) $request->query('print_page', 1)
         );
 
-        $countCacheKey =
-            $this->applicantsCountCacheKey($request)
-            . '_print';
+        $query = $this->applicantsQuery($request)
+            ->orderByDesc('o.OwnerId');
 
-        $totalRecords = Cache::remember(
-            $countCacheKey,
-            now()->addMinutes(2),
-            function () use ($request) {
-                return (int) $this
-                    ->applicantsBaseQuery($request)
-                    ->distinct()
-                    ->count('o.OwnerId');
-            }
-        );
+        /*
+        |--------------------------------------------------------------------------
+        | Count once for print navigation
+        |--------------------------------------------------------------------------
+        */
+        $totalRecords = (clone $query)->count();
 
         $totalPrintPages = max(
             1,
-            (int) ceil(
-                $totalRecords / $perBatch
-            )
+            (int) ceil($totalRecords / $perBatch)
         );
 
-        $printPage = min(
-            $printPage,
-            $totalPrintPages
-        );
-
-        $ownerIds = $this
-            ->applicantsBaseQuery($request)
-            ->select('o.OwnerId')
-            ->distinct()
-            ->orderByDesc('o.OwnerId')
-            ->forPage(
-                $printPage,
-                $perBatch
-            )
-            ->pluck('o.OwnerId')
-            ->map(
-                static fn($id) => (int) $id
-            )
-            ->all();
-
-        $records = collect();
-
-        if (!empty($ownerIds)) {
-            $records = DB::table('OwnerMaster as o')
-                ->join(
-                    'VillageMaster as v',
-                    'v.VillageId',
-                    '=',
-                    'o.VillageId'
-                )
-                ->leftJoin(
-                    'FlatMaster as f',
-                    'f.FlatId',
-                    '=',
-                    'o.FlatId'
-                )
-                ->whereIn(
-                    'o.OwnerId',
-                    $ownerIds
-                )
-                ->select([
-                    'o.OwnerId',
-                    'o.OwnerName',
-                    'o.FatherHusbandName',
-                    'o.MobileNo',
-                    'o.RegistrationNo',
-                    'o.PPPId',
-                    'o.Phase',
-                    'v.VillageName',
-                    'f.FlatId',
-                    'f.FlatNo',
-                ])
-                ->selectRaw("
-                CASE
-                    WHEN o.IsAllotmentCancelled = 1
-                        THEN 'Cancelled'
-
-                    WHEN o.IsRejected = 1
-                        THEN 'Rejected'
-
-                    WHEN o.IsApproved = 1
-                     AND o.IsPaid = 1
-                        THEN 'Approved & Paid'
-
-                    WHEN o.IsApproved = 1
-                     AND (
-                        o.IsPaid = 0
-                        OR o.IsPaid IS NULL
-                     )
-                        THEN 'Approved & Unpaid'
-
-                    WHEN (
-                        o.IsApproved = 0
-                        OR o.IsApproved IS NULL
-                    )
-                        THEN 'Yet to be Approved'
-
-                    ELSE 'Allotted'
-                END AS ApplicantStatus
-            ")
-                ->orderByDesc('o.OwnerId')
-                ->get();
+        if ($printPage > $totalPrintPages) {
+            $printPage = $totalPrintPages;
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Only current print batch
+        |--------------------------------------------------------------------------
+        */
+        $records = $query
+            ->forPage($printPage, $perBatch)
+            ->get();
 
         $startSerial =
             (($printPage - 1) * $perBatch) + 1;
@@ -5084,8 +3609,15 @@ class SuperAdminController extends Controller
         );
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | PDF Export
+    |--------------------------------------------------------------------------
+    */
+
     public function applicantsPdf(Request $request)
     {
+        $this->prepareLargeReportRequest();
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
@@ -5099,24 +3631,22 @@ class SuperAdminController extends Controller
         );
     }
 
-    // Applicants Function End
-
     private function allotmentReportBaseQuery(Request $request)
     {
         $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
+            ? (int) $request->phase
             : null;
 
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
             : null;
 
         $villageId = $request->filled('village_id')
-            ? (int) $request->input('village_id')
+            ? (int) $request->village_id
             : null;
 
         $search = trim(
@@ -5125,35 +3655,28 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Lightweight base
+        | VillageMaster INNER JOIN
         |--------------------------------------------------------------------------
-        | FlatMaster one-to-one join है, इसलिए flat search direct और fast रहेगा।
-        | Village को EXISTS से verify किया गया है, duplicate join नहीं होगा।
+        | Correlated whereExists की जगह indexed join रखा गया है।
         |--------------------------------------------------------------------------
         */
         $query = DB::table('OwnerMaster as o')
-            ->leftJoin(
-                'FlatMaster as sf',
-                'sf.FlatId',
-                '=',
-                'o.FlatId'
-            )
-            ->where('o.FlatId', '>', 0)
-
-            ->whereExists(function ($subQuery) {
-                $subQuery
-                    ->selectRaw('1')
-                    ->from('VillageMaster as vm')
-                    ->whereColumn(
-                        'vm.VillageId',
-                        'o.VillageId'
-                    )
-                    ->where('vm.plots', '>', 0);
+            ->join('VillageMaster as vm', function ($join) {
+                $join->on(
+                    'vm.VillageId',
+                    '=',
+                    'o.VillageId'
+                );
             })
+            ->where('vm.plots', '>', 0)
+            ->where('o.FlatId', '>', 0)
 
             ->when(
                 $phase !== null,
-                fn($q) => $q->where('o.Phase', $phase)
+                fn($q) => $q->where(
+                    'o.Phase',
+                    $phase
+                )
             )
 
             ->when(
@@ -5186,79 +3709,95 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Exact numeric search
+        | Numeric search
+        |--------------------------------------------------------------------------
+        | Exact search index-friendly रहेगी।
         |--------------------------------------------------------------------------
         */
         if (ctype_digit($search)) {
-            return $query->where(
-                function ($subQuery) use ($search) {
-                    $subQuery
-                        ->where(
-                            'o.OwnerId',
-                            (int) $search
-                        )
-                        ->orWhere(
-                            'o.MobileNo',
-                            $search
-                        )
-                        ->orWhere(
-                            'o.RegistrationNo',
-                            $search
-                        )
-                        ->orWhere(
-                            'o.PPPId',
-                            $search
-                        )
-                        ->orWhere(
-                            'sf.FlatNo',
-                            $search
-                        );
-                }
-            );
+            return $query->where(function ($subQuery) use ($search) {
+                $subQuery
+                    ->where(
+                        'o.OwnerId',
+                        (int) $search
+                    )
+                    ->orWhere(
+                        'o.MobileNo',
+                        $search
+                    )
+                    ->orWhere(
+                        'o.RegistrationNo',
+                        $search
+                    )
+                    ->orWhere(
+                        'o.PPPId',
+                        $search
+                    )
+                    ->orWhereExists(function ($flatQuery) use ($search) {
+                        $flatQuery
+                            ->selectRaw('1')
+                            ->from('FlatMaster as sf')
+                            ->whereColumn(
+                                'sf.FlatId',
+                                'o.FlatId'
+                            )
+                            ->where(
+                                'sf.FlatNo',
+                                $search
+                            );
+                    });
+            });
         }
 
         /*
         |--------------------------------------------------------------------------
-        | General contains search
+        | General text search
         |--------------------------------------------------------------------------
         */
         $likeSearch = '%' . $search . '%';
 
-        return $query->where(
-            function ($subQuery) use ($likeSearch) {
-                $subQuery
-                    ->where(
-                        'o.OwnerName',
-                        'like',
-                        $likeSearch
-                    )
-                    ->orWhere(
-                        'o.FatherHusbandName',
-                        'like',
-                        $likeSearch
-                    )
-                    ->orWhere(
-                        'o.RegistrationNo',
-                        'like',
-                        $likeSearch
-                    )
-                    ->orWhere(
-                        'o.MobileNo',
-                        'like',
-                        $likeSearch
-                    )
-                    ->orWhere(
-                        'o.PPPId',
-                        'like',
-                        $likeSearch
-                    )
-                    ->orWhere(
-                        'sf.FlatNo',
-                        'like',
-                        $likeSearch
-                    );
-            }
-        );
+        return $query->where(function ($subQuery) use ($likeSearch) {
+            $subQuery
+                ->where(
+                    'o.OwnerName',
+                    'like',
+                    $likeSearch
+                )
+                ->orWhere(
+                    'o.RegistrationNo',
+                    'like',
+                    $likeSearch
+                )
+                ->orWhere(
+                    'o.MobileNo',
+                    'like',
+                    $likeSearch
+                )
+                ->orWhere(
+                    'o.PPPId',
+                    'like',
+                    $likeSearch
+                )
+                ->orWhere(
+                    'o.FatherHusbandName',
+                    'like',
+                    $likeSearch
+                )
+                ->orWhereExists(function ($flatQuery) use ($likeSearch) {
+                    $flatQuery
+                        ->selectRaw('1')
+                        ->from('FlatMaster as sf')
+                        ->whereColumn(
+                            'sf.FlatId',
+                            'o.FlatId'
+                        )
+                        ->where(
+                            'sf.FlatNo',
+                            'like',
+                            $likeSearch
+                        );
+                });
+        });
     }
 
     private function applyAllotmentReportStatus(
@@ -5345,17 +3884,19 @@ class SuperAdminController extends Controller
                 '=',
                 'o.VillageId'
             )
+            ->leftJoin(
+                'FlatMaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
             ->select([
                 'o.OwnerId',
-                'o.secure_id',
                 'o.RegistrationNo',
                 'o.OwnerName',
                 'o.FatherHusbandName',
                 'o.MobileNo',
                 'o.PPPId',
-                'o.MemberId',
-                'o.Gender',
-                'o.Caste',
                 'o.Phase',
                 'o.FlatId',
 
@@ -5367,8 +3908,7 @@ class SuperAdminController extends Controller
                 'd.DistrictName',
                 'b.BlockName',
                 'v.VillageName',
-
-                'sf.FlatNo',
+                'f.FlatNo',
             ])
             ->selectRaw("
             CASE
@@ -5394,7 +3934,7 @@ class SuperAdminController extends Controller
     private function allotmentSummaryCacheKey(
         Request $request
     ): string {
-        return 'allotment_summary_v8_' . md5(
+        return 'allotment_summary_' . md5(
             json_encode([
                 'phase' =>
                     $request->query('phase'),
@@ -5421,7 +3961,7 @@ class SuperAdminController extends Controller
     private function allotmentTotalCacheKey(
         Request $request
     ): string {
-        return 'allotment_total_v8_' . md5(
+        return 'allotment_total_' . md5(
             json_encode([
                 'phase' =>
                     $request->query('phase'),
@@ -5448,36 +3988,6 @@ class SuperAdminController extends Controller
         );
     }
 
-    // private function allotmentTotalCacheKey(
-    //     Request $request
-    // ): string {
-    //     return 'allotment_total_' . md5(
-    //         json_encode([
-    //             'phase' =>
-    //                 $request->query('phase'),
-
-    //             'district_id' =>
-    //                 $request->query('district_id'),
-
-    //             'block_id' =>
-    //                 $request->query('block_id'),
-
-    //             'village_id' =>
-    //                 $request->query('village_id'),
-
-    //             'search' => trim(
-    //                 (string) $request->query(
-    //                     'search',
-    //                     ''
-    //                 )
-    //             ),
-
-    //             'status' =>
-    //                 $request->query('status'),
-    //         ])
-    //     );
-    // }
-
     private function paginateAllotmentReport(
         Request $request,
         int $perPage = 25
@@ -5487,6 +3997,11 @@ class SuperAdminController extends Controller
             (int) $request->query('page', 1)
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Lightweight filtered query
+        |--------------------------------------------------------------------------
+        */
         $filteredQuery = $this->allotmentReportBaseQuery(
             $request
         );
@@ -5498,12 +4013,14 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Cached total
+        | Filtered total cache
+        |--------------------------------------------------------------------------
+        | Laravel paginate की COUNT query हर page/card click पर नहीं चलेगी।
         |--------------------------------------------------------------------------
         */
         $total = (int) Cache::remember(
             $this->allotmentTotalCacheKey($request),
-            now()->addMinutes(5),
+            now()->addMinutes(10),
             function () use ($filteredQuery) {
                 return (clone $filteredQuery)
                     ->count('o.OwnerId');
@@ -5515,32 +4032,35 @@ class SuperAdminController extends Controller
             (int) ceil($total / $perPage)
         );
 
-        $currentPage = min(
-            $currentPage,
-            $lastPage
-        );
+        if ($currentPage > $lastPage) {
+            $currentPage = $lastPage;
+        }
 
         /*
         |--------------------------------------------------------------------------
-        | केवल current page IDs
+        | Current page Owner IDs only
         |--------------------------------------------------------------------------
         */
         $ownerIds = (clone $filteredQuery)
-            ->reorder()
             ->select('o.OwnerId')
             ->orderByDesc('o.OwnerId')
-            ->forPage(
-                $currentPage,
-                $perPage
+            ->offset(
+                ($currentPage - 1) * $perPage
             )
+            ->limit($perPage)
             ->pluck('o.OwnerId')
             ->map(
-                static fn($ownerId) => (int) $ownerId
+                fn($ownerId) => (int) $ownerId
             )
             ->all();
 
         $records = collect();
 
+        /*
+        |--------------------------------------------------------------------------
+        | Current 25 records details only
+        |--------------------------------------------------------------------------
+        */
         if (!empty($ownerIds)) {
             $records = DB::table('OwnerMaster as o')
                 ->leftJoin(
@@ -5573,7 +4093,6 @@ class SuperAdminController extends Controller
                 )
                 ->select([
                     'o.OwnerId',
-                    'o.secure_id',
                     'o.RegistrationNo',
                     'o.OwnerName',
                     'o.FatherHusbandName',
@@ -5602,48 +4121,65 @@ class SuperAdminController extends Controller
             $perPage,
             $currentPage,
             [
-                'path' => $request->url(),
-                'pageName' => 'page',
-                'query' => $request->except('page'),
+                'path' =>
+                    $request->url(),
+
+                'pageName' =>
+                    'page',
+
+                'query' =>
+                    $request->except('page'),
             ]
         );
     }
 
     public function allotmentReport(Request $request)
     {
+        $this->prepareLargeReportRequest();
         DB::disableQueryLog();
 
-        $phase = $request->filled('phase')
-            ? (int) $request->input('phase')
-            : null;
-
+        /*
+        |--------------------------------------------------------------------------
+        | Selected filters
+        |--------------------------------------------------------------------------
+        */
         $districtId = $request->filled('district_id')
-            ? (int) $request->input('district_id')
+            ? (int) $request->district_id
             : null;
 
         $blockId = $request->filled('block_id')
-            ? (int) $request->input('block_id')
+            ? (int) $request->block_id
+            : null;
+
+        $phase = $request->filled('phase')
+            ? (int) $request->phase
             : null;
 
         /*
         |--------------------------------------------------------------------------
-        | Dropdowns
+        | Phases
         |--------------------------------------------------------------------------
         */
         $phases = Cache::remember(
-            'allotment_report_phases_v2',
+            'allotment_report_phases',
             now()->addHours(1),
             function () {
                 return DB::table('OwnerMaster')
                     ->whereNotNull('Phase')
+                    ->where('Phase', '<>', '')
                     ->distinct()
                     ->orderBy('Phase')
                     ->pluck('Phase');
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Districts
+        |--------------------------------------------------------------------------
+        */
         $districts = Cache::remember(
-            'allotment_report_districts_v2',
+            'allotment_report_districts',
             now()->addHours(1),
             function () {
                 return DB::table('DistrictMaster')
@@ -5656,9 +4192,17 @@ class SuperAdminController extends Controller
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Blocks
+        |--------------------------------------------------------------------------
+        */
+        $blocksCacheKey =
+            'allotment_report_blocks_'
+            . ($districtId ?? 'all');
+
         $blocks = Cache::remember(
-            'allotment_report_blocks_v2_'
-            . ($districtId ?? 'all'),
+            $blocksCacheKey,
             now()->addHours(1),
             function () use ($districtId) {
                 return DB::table('BlockMaster')
@@ -5679,13 +4223,20 @@ class SuperAdminController extends Controller
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Villages
+        |--------------------------------------------------------------------------
+        */
+        $villagesCacheKey = sprintf(
+            'allotment_report_villages_%s_%s_%s',
+            $districtId ?? 'all',
+            $blockId ?? 'all',
+            $phase ?? 'all'
+        );
+
         $villages = Cache::remember(
-            sprintf(
-                'allotment_report_villages_v2_%s_%s_%s',
-                $districtId ?? 'all',
-                $blockId ?? 'all',
-                $phase ?? 'all'
-            ),
+            $villagesCacheKey,
             now()->addHours(1),
             function () use ($districtId, $blockId, $phase) {
                 return DB::table('VillageMaster as v')
@@ -5728,72 +4279,97 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Summary
+        | Summary cards
         |--------------------------------------------------------------------------
         */
         $summary = Cache::remember(
             $this->allotmentSummaryCacheKey($request),
-            now()->addMinutes(5),
+            now()->addMinutes(10),
             function () use ($request) {
                 return $this
                     ->allotmentReportBaseQuery($request)
                     ->selectRaw("
                     COUNT(o.OwnerId) AS Total,
 
-                    COALESCE(SUM(
-                        CASE
-                            WHEN o.IsApproved = 1
-                             AND o.IsPaid = 1
-                             AND o.IsRejected = 0
-                             AND o.IsAllotmentCancelled = 0
-                            THEN 1 ELSE 0
-                        END
-                    ), 0) AS ApprovedPaid,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN o.IsApproved = 1
+                                 AND o.IsPaid = 1
+                                 AND o.IsRejected = 0
+                                 AND o.IsAllotmentCancelled = 0
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS ApprovedPaid,
 
-                    COALESCE(SUM(
-                        CASE
-                            WHEN o.IsApproved = 1
-                             AND (
-                                o.IsPaid = 0
-                                OR o.IsPaid IS NULL
-                             )
-                             AND o.IsRejected = 0
-                             AND o.IsAllotmentCancelled = 0
-                            THEN 1 ELSE 0
-                        END
-                    ), 0) AS ApprovedUnpaid,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN o.IsApproved = 1
+                                 AND (
+                                    o.IsPaid = 0
+                                    OR o.IsPaid IS NULL
+                                 )
+                                 AND o.IsRejected = 0
+                                 AND o.IsAllotmentCancelled = 0
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS ApprovedUnpaid,
 
-                    COALESCE(SUM(
-                        CASE
-                            WHEN (
-                                o.IsApproved = 0
-                                OR o.IsApproved IS NULL
-                            )
-                             AND o.IsRejected = 0
-                             AND o.IsAllotmentCancelled = 0
-                            THEN 1 ELSE 0
-                        END
-                    ), 0) AS PendingApproval,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN (
+                                    o.IsApproved = 0
+                                    OR o.IsApproved IS NULL
+                                )
+                                 AND o.IsRejected = 0
+                                 AND o.IsAllotmentCancelled = 0
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS PendingApproval,
 
-                    COALESCE(SUM(
-                        CASE
-                            WHEN o.IsRejected = 1
-                             AND o.IsAllotmentCancelled = 0
-                            THEN 1 ELSE 0
-                        END
-                    ), 0) AS Rejected,
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN o.IsRejected = 1
+                                 AND o.IsAllotmentCancelled = 0
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS Rejected,
 
-                    COALESCE(SUM(
-                        CASE
-                            WHEN o.IsAllotmentCancelled = 1
-                            THEN 1 ELSE 0
-                        END
-                    ), 0) AS Cancelled
+                    COALESCE(
+                        SUM(
+                            CASE
+                                WHEN o.IsAllotmentCancelled = 1
+                                THEN 1
+                                ELSE 0
+                            END
+                        ),
+                        0
+                    ) AS Cancelled
                 ")
                     ->first();
             }
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Fast filtered pagination
+        |--------------------------------------------------------------------------
+        */
         $allotments = $this->paginateAllotmentReport(
             $request,
             25
@@ -5812,12 +4388,10 @@ class SuperAdminController extends Controller
         );
     }
 
-    public function allotmentReportCsv(Request $request)
-    {
-        DB::disableQueryLog();
-
-        @set_time_limit(0);
-
+    public function allotmentReportCsv(
+        Request $request
+    ) {
+        $this->prepareLargeReportRequest();
         $fileName = 'Allotment_Report_'
             . now()->format('d-m-Y_H-i-s')
             . '.csv';
@@ -5828,7 +4402,10 @@ class SuperAdminController extends Controller
 
         return response()->streamDownload(
             function () use ($query) {
-                $handle = fopen('php://output', 'w');
+                $handle = fopen(
+                    'php://output',
+                    'w'
+                );
 
                 if ($handle === false) {
                     throw new \RuntimeException(
@@ -5836,7 +4413,15 @@ class SuperAdminController extends Controller
                     );
                 }
 
-                fwrite($handle, "\xEF\xBB\xBF");
+                /*
+                |--------------------------------------------------------------------------
+                | UTF-8 BOM for Excel
+                |--------------------------------------------------------------------------
+                */
+                fwrite(
+                    $handle,
+                    "\xEF\xBB\xBF"
+                );
 
                 fputcsv($handle, [
                     'Sr. No.',
@@ -5854,8 +4439,6 @@ class SuperAdminController extends Controller
                     'Flat No.',
                     'Status',
                 ]);
-
-                fflush($handle);
 
                 $serialNumber = 1;
 
@@ -5877,9 +4460,8 @@ class SuperAdminController extends Controller
                         $record->AllotmentStatus ?? '',
                     ]);
 
-                    if (($serialNumber - 1) % 250 === 0) {
+                    if ($serialNumber % 500 === 0) {
                         fflush($handle);
-                        flush();
                     }
                 }
 
@@ -5893,19 +4475,19 @@ class SuperAdminController extends Controller
                 'Cache-Control' =>
                     'no-store, no-cache, must-revalidate',
 
-                'Pragma' => 'no-cache',
+                'Pragma' =>
+                    'no-cache',
 
-                'Expires' => '0',
-
-                'X-Accel-Buffering' => 'no',
+                'Expires' =>
+                    '0',
             ]
         );
     }
 
-    public function allotmentReportPrint(Request $request)
-    {
-        DB::disableQueryLog();
-
+    public function allotmentReportPrint(
+        Request $request
+    ) {
+        $this->prepareLargeReportRequest();
         $printLimit = (int) $request->query(
             'print_limit',
             500
@@ -5929,6 +4511,11 @@ class SuperAdminController extends Controller
             )
         );
 
+        /*
+        |--------------------------------------------------------------------------
+        | Lightweight count
+        |--------------------------------------------------------------------------
+        */
         $countQuery = $this->allotmentReportBaseQuery(
             $request
         );
@@ -5938,13 +4525,8 @@ class SuperAdminController extends Controller
             $request->query('status')
         );
 
-        $totalRecords = (int) Cache::remember(
-            $this->allotmentTotalCacheKey($request)
-            . '_print',
-            now()->addMinutes(5),
-            fn() => (clone $countQuery)
-                ->count('o.OwnerId')
-        );
+        $totalRecords = (int) $countQuery
+            ->count('o.OwnerId');
 
         $totalPrintPages = max(
             1,
@@ -5953,11 +4535,15 @@ class SuperAdminController extends Controller
             )
         );
 
-        $printPage = min(
-            $printPage,
-            $totalPrintPages
-        );
+        if ($printPage > $totalPrintPages) {
+            $printPage = $totalPrintPages;
+        }
 
+        /*
+        |--------------------------------------------------------------------------
+        | Current print batch only
+        |--------------------------------------------------------------------------
+        */
         $records = $this
             ->allotmentReportDetailsQuery($request)
             ->forPage(
@@ -5984,6 +4570,7 @@ class SuperAdminController extends Controller
 
     public function exportAllotmentExcel(Request $request)
     {
+        $this->prepareLargeReportRequest();
         set_time_limit(600);
         ini_set('memory_limit', '512M');
 
@@ -6164,6 +4751,7 @@ class SuperAdminController extends Controller
 
     public function exportAllotmentPdf(Request $request)
     {
+        $this->prepareLargeReportRequest();
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 
@@ -6368,6 +4956,7 @@ class SuperAdminController extends Controller
 
     public function registration(Request $request)
     {
+        $this->prepareLargeReportRequest();
         DB::disableQueryLog();
 
         $phase = $request->input('phase');
@@ -6399,72 +4988,64 @@ class SuperAdminController extends Controller
         | These counts do not change with dashboard filters or search.
         */
 
-        $totalRegistrations = DB::table('registary')->count();
+        $globalRegistrationStats = Cache::remember(
+            'super_admin_registration_global_stats',
+            now()->addSeconds($this->reportCacheSeconds()),
+            function () {
+                $basic = DB::table('registary as r')
+                    ->selectRaw("
+                        COUNT(*) AS total_registrations,
+                        SUM(CASE
+                            WHEN r.RegistaryNumber IS NULL
+                              OR TRIM(r.RegistaryNumber) = ''
+                            THEN 1 ELSE 0
+                        END) AS blank_registry_numbers,
+                        COUNT(DISTINCT NULLIF(TRIM(r.RegistaryNumber), ''))
+                            AS unique_registrations
+                    ")
+                    ->first();
 
-        $blankRegistryNumbers = DB::table('registary as r')
-            ->where(function ($query) {
-                $query
-                    ->whereNull('r.RegistaryNumber')
-                    ->orWhereRaw("TRIM(r.RegistaryNumber) = ''");
-            })
-            ->count();
+                $matched = DB::table('registary as r')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->where('r.SecondPartyMobile', '<>', '')
+                    ->whereExists(function ($query) {
+                        $query
+                            ->selectRaw('1')
+                            ->from('OwnerMaster as o')
+                            ->whereColumn('o.MobileNo', 'r.SecondPartyMobile');
+                    })
+                    ->selectRaw("
+                        COUNT(*) AS matched_registrations,
+                        COUNT(DISTINCT r.SecondPartyMobile)
+                            AS unique_matched_mobiles,
+                        COUNT(DISTINCT NULLIF(TRIM(r.RegistaryNumber), ''))
+                            AS unique_matched_registrations
+                    ")
+                    ->first();
 
-        $uniqueRegistrations = DB::table('registary as r')
-            ->whereNotNull('r.RegistaryNumber')
-            ->whereRaw("TRIM(r.RegistaryNumber) != ''")
-            ->distinct()
-            ->count('r.RegistaryNumber');
+                return (object) [
+                    'totalRegistrations' => (int) ($basic->total_registrations ?? 0),
+                    'blankRegistryNumbers' => (int) ($basic->blank_registry_numbers ?? 0),
+                    'uniqueRegistrations' => (int) ($basic->unique_registrations ?? 0),
+                    'matchedRegistrations' => (int) ($matched->matched_registrations ?? 0),
+                    'uniqueMatchedMobiles' => (int) ($matched->unique_matched_mobiles ?? 0),
+                    'uniqueMatchedRegistrations' => (int) ($matched->unique_matched_registrations ?? 0),
+                ];
+            }
+        );
 
+        $totalRegistrations = $globalRegistrationStats->totalRegistrations;
+        $blankRegistryNumbers = $globalRegistrationStats->blankRegistryNumbers;
+        $uniqueRegistrations = $globalRegistrationStats->uniqueRegistrations;
         $duplicateRegistrations = max(
             0,
-            $totalRegistrations
-            - $uniqueRegistrations
-            - $blankRegistryNumbers
+            $totalRegistrations - $uniqueRegistrations - $blankRegistryNumbers
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Global matched rows
-        |--------------------------------------------------------------------------
-        | EXISTS prevents duplicate OwnerMaster mobile rows from increasing count.
-        */
-
-        $globalMatchedQuery = DB::table('registary as r')
-            ->whereNotNull('r.SecondPartyMobile')
-            ->whereRaw("TRIM(r.SecondPartyMobile) != ''")
-            ->whereExists(function ($query) {
-                $query
-                    ->selectRaw('1')
-                    ->from('OwnerMaster as o')
-                    ->whereNotNull('o.MobileNo')
-                    ->whereRaw("TRIM(o.MobileNo) != ''")
-                    ->whereColumn(
-                        'o.MobileNo',
-                        'r.SecondPartyMobile'
-                    );
-            });
-
-        $matchedRegistrations = (clone $globalMatchedQuery)->count();
-
-        $unmatchedRegistrations = max(
-            0,
-            $totalRegistrations - $matchedRegistrations
-        );
-
-        $uniqueMatchedMobiles = (clone $globalMatchedQuery)
-            ->distinct()
-            ->count('r.SecondPartyMobile');
-
-        $repeatedMatchedMobileRows = max(
-            0,
-            $matchedRegistrations - $uniqueMatchedMobiles
-        );
-
-        $uniqueMatchedRegistrations = (clone $globalMatchedQuery)
-            ->whereNotNull('r.RegistaryNumber')
-            ->whereRaw("TRIM(r.RegistaryNumber) != ''")
-            ->distinct()
-            ->count('r.RegistaryNumber');
+        $matchedRegistrations = $globalRegistrationStats->matchedRegistrations;
+        $unmatchedRegistrations = max(0, $totalRegistrations - $matchedRegistrations);
+        $uniqueMatchedMobiles = $globalRegistrationStats->uniqueMatchedMobiles;
+        $repeatedMatchedMobileRows = max(0, $matchedRegistrations - $uniqueMatchedMobiles);
+        $uniqueMatchedRegistrations = $globalRegistrationStats->uniqueMatchedRegistrations;
 
         /*
         |--------------------------------------------------------------------------
@@ -6670,7 +5251,17 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $filteredRegistrations = (clone $registrationsQuery)->count();
+        $filteredCountKey = $this->reportCacheKey(
+            'super_admin_registration_filtered_total',
+            $request,
+            ['phase', 'district_id', 'block_id', 'village_id', 'search', 'type']
+        );
+
+        $filteredRegistrations = (int) Cache::remember(
+            $filteredCountKey,
+            now()->addSeconds($this->reportCacheSeconds()),
+            fn() => (clone $registrationsQuery)->count()
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -6678,7 +5269,12 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $registrations = $registrationsQuery
+        $currentPage = max(1, (int) $request->query('page', 1));
+        $perPage = 25;
+        $lastPage = max(1, (int) ceil($filteredRegistrations / $perPage));
+        $currentPage = min($currentPage, $lastPage);
+
+        $registrationRows = $registrationsQuery
             ->select(
                 'r.District',
                 'r.TehsilName',
@@ -6713,8 +5309,20 @@ class SuperAdminController extends Controller
             )
             ->orderByDesc('r.RegistaryDate')
             ->orderByDesc('r.Token')
-            ->paginate(25)
-            ->withQueryString();
+            ->forPage($currentPage, $perPage)
+            ->get();
+
+        $registrations = new LengthAwarePaginator(
+            $registrationRows,
+            $filteredRegistrations,
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'pageName' => 'page',
+                'query' => $request->except('page'),
+            ]
+        );
 
         return view(
             'mmgay.super-admin.registration',
@@ -6737,6 +5345,7 @@ class SuperAdminController extends Controller
 
     public function exportRegistrationExcel(Request $request)
     {
+        $this->prepareLargeReportRequest();
         set_time_limit(600);
         ini_set('memory_limit', '512M');
 
@@ -6873,6 +5482,7 @@ class SuperAdminController extends Controller
 
     public function exportRegistrationPdf(Request $request)
     {
+        $this->prepareLargeReportRequest();
         ini_set('memory_limit', '1024M');
         set_time_limit(300);
 

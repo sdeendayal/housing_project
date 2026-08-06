@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            <form method="GET" action="{{ route('admin.district.report') }}" class="p-5">
+            <form id="districtReportFilterForm" method="GET" action="{{ route('admin.district.report') }}" class="p-5">
 
                 <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-12">
 
@@ -74,25 +74,41 @@
                     </div>
 
                     {{-- Filter Buttons --}}
-                    <div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
+                    <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-3">
 
-                        <button type="submit"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-200">
+                        <button id="districtReportApplyButton" type="submit"
+                            class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl
+        bg-gradient-to-r from-blue-600 to-indigo-600
+        px-4 text-sm font-semibold text-white
+        shadow-lg shadow-blue-200/50
+        transition-all duration-200
+        hover:-translate-y-0.5 hover:shadow-xl hover:from-blue-700 hover:to-indigo-700">
+
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
+
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L14 13.5V19a1 1 0 01-.553.894l-4 2A1 1 0 018 21v-7.5L3.2 4.6A1 1 0 013 4z" />
+
                             </svg>
 
                             Apply
                         </button>
 
                         <a href="{{ route('admin.district.report') }}"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-200">
+                            class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl
+        border border-slate-300/70
+        bg-white/60 backdrop-blur-md
+        px-4 text-sm font-semibold text-slate-700
+        shadow-md transition-all duration-200
+        hover:-translate-y-0.5 hover:bg-white hover:shadow-lg">
+
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
+
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+
                             </svg>
 
                             Reset
@@ -101,75 +117,41 @@
                     </div>
 
                     {{-- Export Buttons --}}
-                    <div class="flex items-end gap-3 sm:col-span-2 lg:col-span-3">
+                    <div class="flex items-end gap-2 sm:col-span-2 lg:col-span-3">
 
-                        <a id="districtExcelExportButton"
-                            href="{{ route('admin.district.report.excel', request()->query()) }}"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200">
+                        {{-- Excel --}}
+                        <a id="districtCsvExportButton" href="{{ route('admin.district.report.csv', request()->query()) }}"
+                            class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl
+        border border-emerald-200
+        bg-emerald-500/10 backdrop-blur-md
+        px-4 text-sm font-semibold text-emerald-700
+        shadow-md transition-all duration-200
+        hover:-translate-y-0.5
+        hover:bg-emerald-600 hover:text-white hover:border-emerald-600 hover:shadow-xl">
 
-                            <!-- Default Icon -->
-                            <span id="districtExcelIcon">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 10v6m0 0l-3-3m3 3l3-3m5 5H4a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v8a2 2 0 01-2 2z" />
-
-                                </svg>
+                            <span class="material-symbols-outlined text-[19px]">
+                                table_view
                             </span>
 
-                            <!-- Loader -->
-                            <svg id="districtExcelLoader" class="hidden h-5 w-5 animate-spin"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4">
-                                </circle>
-
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                                </path>
-
-                            </svg>
-
-                            <!-- Button Text -->
-                            <span id="districtExcelText">
-                                Excel
-                            </span>
-
+                            Excel
                         </a>
 
-                        <a id="districtPdfExportButton" href="{{ route('admin.district.report.pdf', request()->query()) }}"
-                            class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 focus:outline-none focus:ring-4 focus:ring-rose-200">
+                        {{-- PDF --}}
+                        <a href="{{ route('admin.district.report.print', request()->query()) }}" target="_blank"
+                            rel="noopener"
+                            class="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-xl
+        border border-rose-200
+        bg-rose-500/10 backdrop-blur-md
+        px-4 text-sm font-semibold text-rose-700
+        shadow-md transition-all duration-200
+        hover:-translate-y-0.5
+        hover:bg-rose-600 hover:text-white hover:border-rose-600 hover:shadow-xl">
 
-                            <!-- Default Icon -->
-                            <span id="districtPdfIcon">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 10v6m0 0l-3-3m3 3l3-3m5 5H4a2 2 0 01-2-2V6a2 2 0 012-2h5l2 2h9a2 2 0 012 2v8a2 2 0 01-2 2z" />
-
-                                </svg>
+                            <span class="material-symbols-outlined text-[19px]">
+                                picture_as_pdf
                             </span>
 
-                            <!-- Loader -->
-                            <svg id="districtPdfLoader" class="hidden h-5 w-5 animate-spin"
-                                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4">
-                                </circle>
-
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z">
-                                </path>
-
-                            </svg>
-
-                            <!-- Button Text -->
-                            <span id="districtPdfText">
-                                PDF
-                            </span>
-
+                            PDF
                         </a>
 
                     </div>
@@ -218,6 +200,7 @@
                 <table class="w-full text-sm">
                     <thead class="bg-blue-600 text-white text-xs uppercase">
                         <tr>
+                            <th class="w-16 p-3 text-center">S. No.</th>
                             <th class="p-3 text-left">District</th>
                             <th class="p-3 text-center">Villages</th>
                             <th class="p-3 text-center">Applicants</th>
@@ -231,23 +214,14 @@
                     </thead>
 
                     <tbody class="divide-y divide-gray-200">
-                        @forelse ($report as $d)
+                        @forelse ($report as $index => $d)
                             @php
-                                /*
-            |--------------------------------------------------------------------------
-            | Common filters
-            |--------------------------------------------------------------------------
-            */
+
                                 $commonFilters = array_filter([
                                     'phase' => request('phase'),
                                     'district_id' => $d->DistrictId,
                                 ]);
 
-                                /*
-            |--------------------------------------------------------------------------
-            | Report URLs
-            |--------------------------------------------------------------------------
-            */
                                 $districtUrl = route('admin.district.report', $commonFilters);
 
                                 $allottedUrl = route('admin.allotment.report', array_merge($commonFilters));
@@ -289,6 +263,9 @@
                             @endphp
 
                             <tr class="transition-colors hover:bg-blue-50/50">
+                                <td class="p-3 text-center font-semibold text-slate-700">
+                                    {{ $index + 1 }}
+                                </td>
 
                                 {{-- District --}}
                                 <td class="p-3">
@@ -305,7 +282,12 @@
 
                                 {{-- Villages --}}
                                 <td class="p-3 text-center">
-                                    <a href="{{ $districtUrl }}"
+                                    <a href="{{ route(
+                                        'admin.village.report',
+                                        array_merge($commonFilters, [
+                                            'status' => 'all',
+                                        ]),
+                                    ) }}"
                                         class="inline-flex min-w-12 items-center justify-center rounded-lg bg-violet-50 px-3 py-1.5 font-semibold text-violet-700 transition hover:bg-violet-100 hover:shadow-sm">
 
                                         {{ number_format($d->VillagesWithPlots) }}
@@ -392,6 +374,7 @@
 
                     <tfoot class="bg-gray-100 font-bold border-t-2">
                         <tr>
+                            <td></td>
                             <td class="p-3">GROSS TOTAL</td>
                             <td class="text-center">{{ number_format($grossTotal->VillagesWithPlots) }}</td>
                             <td class="text-center">{{ number_format($grossTotal->RegisteredBeneficiaries) }}</td>

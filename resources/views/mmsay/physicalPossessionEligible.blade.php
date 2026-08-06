@@ -111,7 +111,7 @@
                     ],
                     [
                         'key' => 'scheduled',
-                        'label' => 'Scheduled',
+                        'label' => 'Confirmation Pending from Citizen',
                         'value' => $statusStats->scheduled ?? 0,
                         'icon' => 'event_available',
                         'icon_class' => 'bg-blue-50 text-blue-600',
@@ -120,7 +120,7 @@
                     ],
                     [
                         'key' => 'pending_verification',
-                        'label' => 'Pending Verification',
+                        'label' => 'Physical/Site Visit Pending',
                         'value' => $statusStats->pending_verification ?? 0,
                         'icon' => 'fact_check',
                         'icon_class' => 'bg-orange-50 text-orange-600',
@@ -129,7 +129,7 @@
                     ],
                     [
                         'key' => 'possession_pending',
-                        'label' => 'Possession Pending',
+                        'label' => 'Document Verification',
                         'value' => $statusStats->possession_pending ?? 0,
                         'icon' => 'key_off',
                         'icon_class' => 'bg-rose-50 text-rose-600',
@@ -138,7 +138,7 @@
                     ],
                     [
                         'key' => 'verified',
-                        'label' => 'Verified',
+                        'label' => 'Possession Given',
                         'value' => $statusStats->verified ?? 0,
                         'icon' => 'verified',
                         'icon_class' => 'bg-emerald-50 text-emerald-600',

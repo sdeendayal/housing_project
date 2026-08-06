@@ -2613,6 +2613,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                 '=',
                 'f.FlatId'
             )
+            ->leftJoin('registary as rg', function ($join) {
+                $join->on('rg.SecondPartyMobile', '=', 'o.MobileNo');
+            })
             ->where('o.DistrictId', $districtId)
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
@@ -2951,6 +2954,8 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'o.CreatedDate',
                 'v.VillageName',
                 'f.FlatNo',
+                'rg.RegistaryNumber',
+                'rg.RegistaryDate',
             ])
             ->selectRaw("
             CASE
