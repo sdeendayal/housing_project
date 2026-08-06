@@ -12,7 +12,7 @@ class VillageMasterSeeder extends Seeder
 
     public function run(): void
     {
-        $filePath = database_path('seeders/data/owners/villagemaster.csv');
+        $filePath = database_path('seeders/data/owners/villagemaster (1) (2).csv');
         
         if (!file_exists($filePath)) {
             throw new \Exception("File not found: " . $filePath);
