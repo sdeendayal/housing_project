@@ -1,0 +1,651 @@
+"id";"VillageId";"BlockId";"DistrictId";"VillageName";"plots";"phase";"pdf"
+"1";"1";"1";"1";"Dhamoli Bichli";"95";"1";"Ambala Dhamoli Bichli.pdf"
+"2";"2";"1";"1";"Korwa Kalan";NULL;NULL;NULL
+"3";"3";"2";"1";"Haldri";"104";"1";"Ambala Haldri.pdf"
+"4";"4";"2";"1";"Toba";"147";"1";"Ambala Toba.pdf"
+"5";"5";"10";"15";"CHIKANWAS";"128";"1";"Hisar chikanwas.pdf"
+"6";"6";"10";"15";"KHASA MAHAJANAN";"145";"1";"Hisar Khas Mahajana.pdf"
+"7";"7";"10";"15";"KIRARA";"140";"1";"Hisar Kirara.pdf"
+"8";"8";"10";"15";"SARANGPUR";"165";"1";"Hisar Sarangpur.pdf"
+"9";"9";"14";"8";"DEHOLA";"275";"1";"Jind Dahola.pdf"
+"10";"10";"22";"19";"Chochra";"196";"1";"Karnal Chochra.pdf"
+"11";"11";"4";"17";"LADAWAS";"84";"1";"Charkhi Dadri Ladawas.pdf"
+"12";"12";"31";"2";"Matnoli";"157";"1";"Panipat Matnauli.pdf"
+"13";"13";"39";"13";"Surtia";"130";"1";"Sirsa Surtiya.pdf"
+"14";"14";"11";"15";"GURANA";"98";"1";"Hisar Gurana.pdf"
+"15";"15";"34";"3";"Pranpura";"70";"1";"Rewari pranpura.pdf"
+"16";"16";"6";"18";"Bodiwali";"112";"1";"Ftb Badiwali.pdf"
+"17";"17";"3";"9";"Kohar";"135";"1";"Bhiwani Kohar.pdf"
+"18";"18";"3";"9";"Kount";"78";"1";"Bhiwani Kount.pdf"
+"19";"19";"5";"17";"CHHAPAR";"143";"1";"Charkhi Dadri Chapar.pdf"
+"20";"20";"35";"3";"NANDRAMPUR BAS";"134";"1";"Rewari Nandrampur Bas.pdf"
+"21";"21";"40";"13";"Mojukhera";"161";"1";"Sirsa Moju Khera.pdf"
+"22";"22";"7";"18";"Dhanger";"101";"1";"Ftb Dhangar.pdf"
+"23";"23";"43";"10";"KHIZARUR AHIR";"127";"1";"Sonipat Khizarur Ahir.pdf"
+"24";"24";"23";"19";"Hassnpur";"140";"1";"Karnal Hasanpur.pdf"
+"25";"25";"30";"6";"Swamika";"178";"1";"Palwal Swamika.pdf"
+"26";"26";"12";"15";"DAYA";"157";"1";"Hisar Daya.pdf"
+"27";"27";"25";"12";"TANGOLI";"132";"1";"KUK Tangoli.pdf"
+"28";"28";"13";"16";"Talao";"96";"1";"Jhajjar Talao.pdf"
+"29";"29";"15";"8";"Khareinti";"120";"1";"Jind Kharanti.pdf"
+"30";"30";"19";"7";"MANAS";"104";"1";"Kaithal Manas.pdf"
+"31";"31";"19";"7";"PATTI AFGAN";"61";"1";"Kaithal Patti Afgan.pdf"
+"32";"32";"44";"10";"KHANDA";"307";"1";"Sonipat Khanda.pdf"
+"33";"33";"44";"10";"SOHTI";"205";"1";"Sonipat Sohti.pdf"
+"34";"34";"44";"10";"THANA KALAN";"262";"1";"Sonipat Thana Kalan.pdf"
+"35";"35";"24";"19";"Chand Samand";"116";"1";"Karnal Chand Samad.pdf"
+"36";"36";"26";"12";"MEHRA";"143";"1";"Kuk Mehra.pdf"
+"37";"37";"32";"2";"Dahramgarh";"262";"1";"Panipat Dharamgarh.pdf"
+"38";"38";"45";"10";"Larsouli";"91";"1";"sonipat Larsauli.pdf"
+"39";"39";"28";"11";"SHEHBAJPUR";"95";"1";"M. garh Shahbazpur.pdf"
+"40";"40";"8";"18";"Alikan";"130";"1";"Ftb Alikan.pdf"
+"41";"41";"8";"18";"Jallopur";"89";"1";"Ftb Jallopur.pdf"
+"42";"42";"36";"3";"RATTANTHAL";"99";"1";"Rewari Rattanthal.pdf"
+"43";"43";"29";"5";"TAIN";"127";"1";"Nuh Tain.pdf"
+"44";"44";"41";"13";"NUHIANWALI";"103";"1";"Sirsa Nuhianwali.pdf"
+"45";"45";"9";"14";"Mao";"73";"1";"Gurugram Mau.pdf"
+"46";"46";"16";"8";"Kalawati";"93";"1";"Jind Kalawati.pdf"
+"47";"47";"16";"8";"Retoli";"87";"1";"Jind Ritoli.pdf"
+"48";"48";"27";"12";"SIRSALA";"118";"1";"Kuk Sursala.pdf"
+"49";"49";"20";"7";"Hajwana";"104";"1";"Kaithal Hajwana.pdf"
+"50";"50";"21";"7";"Rohera";"73";"1";"Kaithal Rohera.pdf"
+"51";"51";"37";"3";"GOKAL GARH";"81";"1";"Rewari Gokal Garh.pdf"
+"52";"52";"38";"4";"Jasia";"226";"1";"Rohtak Jasia.pdf"
+"53";"53";"17";"8";"Malar";"79";"1";"Jind Malar.pdf"
+"54";"54";"17";"8";"Siwanamal";"120";"1";"Jind Siwanamal.pdf"
+"55";"55";"33";"2";"Biholi";"132";"1";"Panipat Beholi.pdf"
+"56";"56";"47";"20";"kanhari kalan";"102";"1";"Ymnngr Khankari Kalan.pdf"
+"57";"57";"42";"13";"Bansudhar";"111";"1";"Sirsa Bansudhar.pdf"
+"58";"58";"46";"10";"RATTAN GARH";"90";"1";"Sonipat Rattangarh or Bagru.pdf"
+"59";"59";"18";"8";"KABARCHA";"108";"1";"Jind Kabarcha.pdf"
+"60";"60";"48";"9";"Bahal (Mahagram)";"498";"1";"Bhiwani Behal.pdf"
+"61";"61";"49";"13";"Rupana Bishnoya";"102";"1";"Sirsa Rupana Bishnoia.pdf"
+"62";"62";"50";"11";"Guwani";"79";"1";"M. Garh Guwani.pdf"
+"63";"63";"69";"12";"JANDHERI";NULL;NULL;NULL
+"64";"64";"1";"1";"MAJRA";NULL;NULL;NULL
+"65";"65";"48";"9";"Bairan";"97";"2";NULL
+"66";"66";"3";"9";"Bamla-1";NULL;NULL;NULL
+"67";"67";"3";"9";"Bamla-2";NULL;NULL;NULL
+"68";"68";"69";"12";"Haripur";NULL;NULL;NULL
+"69";"69";"3";"9";"Kaluwas";NULL;NULL;NULL
+"70";"70";"3";"9";"Mandhana";"124";"2";NULL
+"71";"71";"3";"9";"Neemriwali";NULL;NULL;NULL
+"72";"72";"3";"9";"Paluwas";NULL;NULL;NULL
+"73";"73";"3";"9";"Phoolpura";NULL;NULL;NULL
+"74";"74";"3";"9";"Sarsa Ghogra";NULL;NULL;NULL
+"75";"75";"64";"9";"Jitwanwas";NULL;NULL;NULL
+"76";"76";"64";"9";"Leghan Bhanan";NULL;NULL;NULL
+"77";"77";"64";"9";"Leghan Hetwan";"22";"2";NULL
+"78";"78";"65";"9";"Kural Bass";NULL;NULL;NULL
+"79";"79";"66";"9";"Dariyapur";NULL;NULL;NULL
+"80";"80";"56";"3";"NANDHA";NULL;NULL;NULL
+"81";"81";"13";"16";"MEHRANA";NULL;NULL;NULL
+"82";"82";"9";"14";"Bhora Khurd";NULL;NULL;NULL
+"83";"83";"9";"14";"Gwalior";NULL;NULL;NULL
+"84";"84";"9";"14";"Lokari";NULL;NULL;NULL
+"85";"85";"9";"14";"Shahpur-Jat";NULL;NULL;NULL
+"86";"86";"71";"15";"BAGLA";NULL;NULL;NULL
+"87";"87";"71";"15";"CHULI BAGRIAN";NULL;NULL;NULL
+"88";"88";"71";"15";"KHAIRAMPUR";NULL;NULL;NULL
+"89";"89";"71";"15";"TELANWALI";NULL;NULL;NULL
+"90";"90";"10";"15";"DURJANPUR";"113";"2";NULL
+"91";"91";"10";"15";"KALIRAWAN";"229";"2";NULL
+"92";"92";"10";"15";"KIRMARA";"110";"2";NULL
+"93";"93";"10";"15";"KULERI";NULL;NULL;NULL
+"94";"94";"10";"15";"SIWANI BOLAN";"186";"2";NULL
+"95";"95";"10";"15";"THASKA";"99";"2";NULL
+"96";"96";"11";"15";"GIANPURA";NULL;NULL;NULL
+"97";"97";"72";"15";"MUZADPUR";NULL;NULL;NULL
+"98";"98";"73";"15";"BASS AKABARPUR";NULL;NULL;NULL
+"99";"99";"12";"15";"BURE";NULL;NULL;NULL
+"100";"100";"74";"15";"BHERIAN";NULL;NULL;NULL
+"101";"101";"74";"15";"DOBHI";NULL;NULL;NULL
+"102";"102";"74";"15";"SHAHPUR";"79";"2";NULL
+"103";"103";"75";"15";"KOTH KHURD";NULL;NULL;NULL
+"104";"104";"75";"15";"MADHA";NULL;NULL;NULL
+"105";"105";"75";"15";"MAJRA";NULL;NULL;NULL
+"106";"106";"75";"15";"NARA";NULL;NULL;NULL
+"107";"107";"75";"15";"RAKHI SHAHPUR";NULL;NULL;NULL
+"108";"108";"76";"16";"FATEHPUR";NULL;NULL;NULL
+"109";"109";"76";"16";"GOYLA KALAN";"191";"3";NULL
+"110";"110";"76";"16";"GUBHANA";NULL;NULL;NULL
+"111";"111";"76";"16";"JAHANGIRPUR";NULL;NULL;NULL
+"112";"112";"76";"16";"KHERKA GUJJAR";"119";"2";NULL
+"113";"113";"76";"16";"LUKSAR";"116";"3";NULL
+"114";"114";"70";"12";"MUNDA KHERA";NULL;NULL;NULL
+"115";"115";"98";"16";"Dekhora";"70";"2";NULL
+"116";"116";"98";"16";"Dulhera";"104";"2";NULL
+"117";"117";"98";"16";"Kharman";"91";"2";NULL
+"118";"118";"98";"16";"Lowa Khurd";NULL;NULL;NULL
+"119";"119";"98";"16";"Mandothi";NULL;NULL;NULL
+"120";"120";"98";"16";"Silothi";NULL;NULL;NULL
+"121";"121";"78";"16";"Bakra";"154";"3";NULL
+"122";"122";"78";"16";"Chimni";NULL;NULL;NULL
+"123";"123";"78";"16";"Siwana";"135";"3";NULL
+"124";"124";"68";"12";"Bilochpura";NULL;NULL;NULL
+"125";"125";"13";"16";"Birdhana";"119";"3";NULL
+"126";"126";"13";"16";"Boria";NULL;NULL;NULL
+"127";"127";"13";"16";"Gizarod";NULL;NULL;NULL
+"128";"128";"13";"16";"Jondhi *";NULL;NULL;NULL
+"129";"129";"13";"16";"Kaloi";NULL;NULL;NULL
+"130";"130";"13";"16";"Nangla";NULL;NULL;NULL
+"131";"131";"13";"16";"Silana";"114";"2";NULL
+"132";"132";"13";"16";"Silani Jalim";NULL;NULL;NULL
+"133";"133";"13";"16";"Suhra *";NULL;NULL;NULL
+"134";"134";"13";"16";"Ukhalchana";"101";"3";NULL
+"135";"135";"13";"16";"Zahidpur Alias Azadpur";NULL;NULL;NULL
+"136";"136";"79";"16";"Machhrouli";NULL;NULL;NULL
+"137";"137";"79";"16";"Patoda";"131";"2";NULL
+"138";"138";"79";"16";"Sarola";NULL;NULL;NULL
+"139";"139";"80";"16";"Chadhwana";NULL;NULL;NULL
+"140";"140";"81";"16";"Kondrawali";NULL;NULL;NULL
+"141";"141";"81";"16";"Nilaheri";NULL;NULL;NULL
+"142";"142";"81";"16";"Niwada";NULL;NULL;NULL
+"143";"143";"19";"7";"CHANDANA";NULL;NULL;NULL
+"144";"144";"19";"7";"NOUCH";"84";"2";NULL
+"145";"145";"56";"3";"PADLA";NULL;NULL;NULL
+"146";"146";"20";"7";"Habri";NULL;NULL;NULL
+"147";"147";"25";"12";"AJRANA KHURD";"135";"2";NULL
+"148";"148";"25";"12";"BHUSTALA";NULL;NULL;NULL
+"149";"149";"25";"12";"GORKHA";NULL;NULL;NULL
+"150";"150";"25";"12";"MEGHA MAJRA";"135";"3";NULL
+"151";"151";"26";"12";"BADAR PUR";NULL;NULL;NULL
+"152";"152";"26";"12";"BAHLOLPUR";"184";"2";NULL
+"153";"153";"26";"12";"BANI";"120";"2";NULL
+"154";"154";"26";"12";"BAPDI";"110";"2";NULL
+"155";"155";"26";"12";"BARHAN";"113";"2";NULL
+"156";"156";"26";"12";"BARONDI";"118";"2";NULL
+"157";"157";"26";"12";"CHHAILONDI";"263";"2";NULL
+"158";"158";"26";"12";"DHANORA JATTAN";"131";"2";NULL
+"159";"159";"26";"12";"DUDA";"203";"2";NULL
+"160";"160";"26";"12";"DUDHI";NULL;NULL;NULL
+"161";"161";"26";"12";"GOBINDGARH";NULL;NULL;NULL
+"162";"162";"26";"12";"HALAL PUR";NULL;NULL;NULL
+"163";"163";"26";"12";"JOGI MAJRA";"107";"2";NULL
+"164";"164";"26";"12";"LATHI DHANORA";"145";"2";NULL
+"165";"165";"26";"12";"MURAD NAGAR";NULL;NULL;NULL
+"166";"166";"26";"12";"NIWARSI";"136";"2";NULL
+"167";"167";"26";"12";"SHAHJAD PUR";NULL;NULL;NULL
+"168";"168";"26";"12";"SURA";"87";"2";NULL
+"169";"169";"68";"12";"Jakhwala";NULL;NULL;NULL
+"170";"170";"68";"12";"Asmanpur";NULL;NULL;NULL
+"171";"171";"68";"12";"Batheri";NULL;NULL;NULL
+"172";"172";"68";"12";"Bherian";NULL;NULL;NULL
+"173";"173";"68";"12";"Dhulgarh";NULL;NULL;NULL
+"174";"174";"68";"12";"Harigarh Bhorkh";"164";"2";NULL
+"175";"175";"68";"12";"Ishak";NULL;NULL;NULL
+"176";"176";"68";"12";"Karah Sahib";NULL;NULL;NULL
+"177";"177";"68";"12";"Ramgarh Road";"320";"2";NULL
+"178";"178";"68";"12";"Ruan";NULL;NULL;NULL
+"179";"179";"68";"12";"Sainsa";NULL;NULL;NULL
+"180";"180";"68";"12";"Saraswati Khera Colony";NULL;NULL;NULL
+"181";"181";"27";"12";"ANTEHRI";NULL;NULL;NULL
+"182";"182";"27";"12";"DHERPUR";NULL;NULL;NULL
+"183";"183";"27";"12";"GADLI";"90";"2";NULL
+"184";"184";"27";"12";"KANIPALA";NULL;NULL;NULL
+"185";"185";"27";"12";"MATHANA";"200";"2";NULL
+"186";"186";"27";"12";"PALWAL";NULL;NULL;NULL
+"187";"187";"27";"12";"RATTAN DERA";NULL;NULL;NULL
+"188";"188";"27";"12";"SANWLA";NULL;NULL;NULL
+"189";"189";"27";"12";"SARAI SUKHI";"124";"3";NULL
+"190";"190";"27";"12";"UMRI";NULL;NULL;NULL
+"191";"191";"27";"12";"UNTSAL+Bangro";NULL;NULL;NULL
+"192";"192";"69";"12";"Atwan";"79";"2";NULL
+"193";"193";"69";"12";"Baram";"97";"2";NULL
+"194";"194";"69";"12";"Chanarthal";NULL;NULL;NULL
+"195";"195";"69";"12";"Charuni Jattan";"106";"2";NULL
+"196";"196";"69";"12";"Sambhalkhi";"81";"2";NULL
+"197";"197";"69";"12";"Tangori";NULL;NULL;NULL
+"198";"198";"70";"12";"Adhon";"126";"2";NULL
+"199";"199";"70";"12";"Ajrana Kalan";"151";"3";NULL
+"200";"200";"70";"12";"Alampur";NULL;NULL;NULL
+"201";"201";"70";"12";"Bahri";"163";"2";NULL
+"202";"202";"70";"12";"Barna";"128";"2";NULL
+"203";"203";"70";"12";"Barwa";NULL;NULL;NULL
+"204";"204";"70";"12";"Dayal pur";NULL;NULL;NULL
+"205";"205";"70";"12";"Fattupur";"150";"2";NULL
+"206";"206";"70";"12";"Ghamur kheri";NULL;NULL;NULL
+"207";"207";"70";"12";"Jogna khera";"95";"3";NULL
+"208";"208";"70";"12";"Kanwar kheri";"130";"2";NULL
+"209";"209";"70";"12";"Samaspur";NULL;NULL;NULL
+"210";"210";"31";"2";"TAJPUR";NULL;NULL;NULL
+"211";"211";"34";"3";"SHEKHPUR";"113";"3";NULL
+"212";"212";"58";"5";"Atta";NULL;NULL;NULL
+"213";"213";"58";"5";"Basai";NULL;NULL;NULL
+"214";"214";"58";"5";"Bhirawati";NULL;NULL;NULL
+"215";"215";"58";"5";"Gangoli";NULL;NULL;NULL
+"216";"216";"58";"5";"Indri";NULL;NULL;NULL
+"217";"217";"58";"5";"Jai Singh Pur";NULL;NULL;NULL
+"218";"218";"58";"5";"Kanwarsika";NULL;NULL;NULL
+"219";"219";"58";"5";"Kurthala";"100";"2";NULL
+"220";"220";"58";"5";"Kutubgarh";NULL;NULL;NULL
+"221";"221";"58";"5";"Mahrola";NULL;NULL;NULL
+"222";"222";"58";"5";"Rewasan";NULL;NULL;NULL
+"223";"223";"58";"5";"Sudaka";NULL;NULL;NULL
+"224";"224";"58";"5";"Uleta";NULL;NULL;NULL
+"225";"225";"59";"5";"Aklimpur Firozpur(Saral)";NULL;NULL;NULL
+"226";"226";"59";"5";"Balai";"150";"2";NULL
+"227";"227";"59";"5";"Ghagas";"161";"2";NULL
+"228";"228";"59";"5";"Ghagas (Shahpur)";NULL;NULL;NULL
+"229";"229";"59";"5";"Gohana";NULL;NULL;NULL
+"230";"230";"59";"5";"Hasanpur- Nuh";"98";"2";NULL
+"231";"231";"59";"5";"Jalalpur- Nuh";NULL;NULL;NULL
+"232";"232";"59";"5";"Kansali";NULL;NULL;NULL
+"233";"233";"59";"5";"Kherli-Nuh";NULL;NULL;NULL
+"234";"234";"59";"5";"Nangal-Mubarikpur";NULL;NULL;NULL
+"235";"235";"29";"5";"ADBAR";NULL;NULL;NULL
+"236";"236";"29";"5";"AKERA";"326";"3";NULL
+"237";"237";"29";"5";"ALAWAL PUR";"90";"3";NULL
+"238";"238";"29";"5";"BAI";NULL;NULL;NULL
+"239";"239";"29";"5";"BARKA ALIMUDIAN";NULL;NULL;NULL
+"240";"240";"29";"5";"DEVLA NAGLI";"226";"2";NULL
+"241";"241";"29";"5";"MALAB";"255";"2";NULL
+"242";"242";"29";"5";"MARORA";NULL;NULL;NULL
+"243";"243";"29";"5";"MURADBAS";NULL;NULL;NULL
+"244";"244";"29";"5";"RAHANA";NULL;NULL;NULL
+"245";"245";"29";"5";"RAI PURI";NULL;NULL;NULL
+"246";"246";"29";"5";"RANIKA";NULL;NULL;NULL
+"247";"247";"29";"5";"SADAI";NULL;NULL;NULL
+"248";"248";"29";"5";"SAHPUR NANGLI";"77";"2";NULL
+"249";"249";"29";"5";"SALAMBA";NULL;NULL;NULL
+"250";"250";"29";"5";"SANGAIL";NULL;NULL;NULL
+"251";"251";"29";"5";"UJINA";NULL;NULL;NULL
+"252";"252";"60";"5";"Anchwari";NULL;NULL;NULL
+"253";"253";"60";"5";"Baded";NULL;NULL;NULL
+"254";"254";"60";"5";"Bubalheri";NULL;NULL;NULL
+"255";"255";"60";"5";"Dhadoli Kalan";NULL;NULL;NULL
+"256";"256";"60";"5";"Dungeja";NULL;NULL;NULL
+"257";"257";"60";"5";"Falendi";NULL;NULL;NULL
+"258";"258";"60";"5";"Jharpuri";NULL;NULL;NULL
+"259";"259";"60";"5";"Manota";NULL;NULL;NULL
+"260";"260";"60";"5";"Neemkhera";NULL;NULL;NULL
+"261";"261";"60";"5";"Otha";"463";"3";NULL
+"262";"262";"60";"5";"Papra";"113";"3";NULL
+"263";"263";"60";"5";"Pingwan";NULL;NULL;NULL
+"264";"264";"60";"5";"Raniyala Patakpur";NULL;NULL;NULL
+"265";"265";"60";"5";"Shikrawa";NULL;NULL;NULL
+"266";"266";"61";"5";"Badli";"204";"3";NULL
+"267";"267";"61";"5";"Bichhor";NULL;NULL;NULL
+"268";"268";"61";"5";"Bisru";NULL;NULL;NULL
+"269";"269";"61";"5";"Godhola";NULL;NULL;NULL
+"270";"270";"61";"5";"Jaiwant";NULL;NULL;NULL
+"271";"271";"61";"5";"Jakhokar";NULL;NULL;NULL
+"272";"272";"61";"5";"Jharokari";NULL;NULL;NULL
+"273";"273";"61";"5";"Kherla Punhana";NULL;NULL;NULL
+"274";"274";"61";"5";"Leharwadi";NULL;NULL;NULL
+"275";"275";"61";"5";"Luhingakala";NULL;NULL;NULL
+"276";"276";"61";"5";"Naheda";NULL;NULL;NULL
+"277";"277";"61";"5";"Nawalgarh";NULL;NULL;NULL
+"278";"278";"61";"5";"Neemka";NULL;NULL;NULL
+"279";"279";"61";"5";"Pema Kheda";NULL;NULL;NULL
+"280";"280";"61";"5";"Sunheda";NULL;NULL;NULL
+"281";"281";"61";"5";"Tirwada";NULL;NULL;NULL
+"282";"282";"62";"5";"Buraka Tauru";NULL;NULL;NULL
+"283";"283";"62";"5";"Cheela";NULL;NULL;NULL
+"284";"284";"62";"5";"Jaurasi";"136";"2";NULL
+"285";"285";"62";"5";"Kalwari";NULL;NULL;NULL
+"286";"286";"62";"5";"Mandarka";NULL;NULL;NULL
+"287";"287";"62";"5";"Sehsola";NULL;NULL;NULL
+"288";"288";"62";"5";"Sunari";NULL;NULL;NULL
+"289";"289";"54";"3";"Lohana";NULL;NULL;NULL
+"290";"290";"85";"20";"Bapoli";NULL;NULL;NULL
+"291";"291";"31";"2";"Garhi Ballor";NULL;NULL;NULL
+"292";"292";"31";"2";"Pasina Kalan";NULL;NULL;NULL
+"293";"293";"53";"2";"Chamrada";NULL;NULL;NULL
+"294";"294";"53";"2";"Hadtadi";NULL;NULL;NULL
+"295";"295";"53";"2";"Naultha";NULL;NULL;NULL
+"296";"296";"53";"2";"Pardana";NULL;NULL;NULL
+"297";"297";"32";"2";"Rair Kalan";NULL;NULL;NULL
+"298";"298";"32";"2";"Waiser";"133";"2";NULL
+"299";"299";"33";"2";"Dhodpur";NULL;NULL;NULL
+"300";"300";"33";"2";"Wazirpur Titana";NULL;NULL;NULL
+"301";"301";"34";"3";"Deodhai";NULL;NULL;NULL
+"302";"302";"34";"3";"Jaisinghpur Khera";NULL;NULL;NULL
+"303";"303";"34";"3";"Khandora";NULL;NULL;NULL
+"304";"304";"34";"3";"Nangal Ugra";NULL;NULL;NULL
+"305";"305";"34";"3";"Saban";NULL;NULL;NULL
+"306";"306";"54";"3";"BUROLI";NULL;NULL;NULL
+"307";"307";"54";"3";"NANGAL MUNDI";NULL;NULL;NULL
+"308";"308";"54";"3";"SIHA";NULL;NULL;NULL
+"309";"309";"35";"3";"BAGTHALA";NULL;NULL;NULL
+"310";"310";"35";"3";"BHATSANA";NULL;NULL;NULL
+"311";"311";"35";"3";"GHATAL MAHANIAWAS";NULL;NULL;NULL
+"312";"312";"35";"3";"JARTHAL";NULL;NULL;NULL
+"313";"313";"35";"3";"KASOLA";NULL;NULL;NULL
+"314";"314";"35";"3";"MAHESHWARI";NULL;NULL;NULL
+"315";"315";"35";"3";"MALPURA";NULL;NULL;NULL
+"316";"316";"55";"3";"Kanhori";NULL;NULL;NULL
+"317";"317";"55";"3";"Karawra Manakpur";NULL;NULL;NULL
+"318";"318";"55";"3";"Nanglia Ranmokh";NULL;NULL;NULL
+"319";"319";"55";"3";"Parkhotampur";NULL;NULL;NULL
+"320";"320";"55";"3";"Rohrai";NULL;NULL;NULL
+"321";"321";"56";"3";"AHROD";NULL;NULL;NULL
+"322";"322";"56";"3";"BAHALKHI";NULL;NULL;NULL
+"323";"323";"56";"3";"KHOL";NULL;NULL;NULL
+"324";"324";"56";"3";"MAYAN";NULL;NULL;NULL
+"325";"325";"56";"3";"NANGAL JAMALPUR";NULL;NULL;NULL
+"326";"326";"56";"3";"TINT";NULL;NULL;NULL
+"327";"327";"82";"20";"KHADRI";"106";"2";NULL
+"328";"328";"82";"20";"MANAKPUR 1";NULL;NULL;NULL
+"329";"329";"82";"20";"MUKARIBPUR";NULL;NULL;NULL
+"330";"330";"83";"20";"KUNJAL KAMBOYAN";"73";"2";NULL
+"331";"331";"83";"20";"SABHAPUR";NULL;NULL;NULL
+"332";"332";"84";"20";"LAKAR-MAI- PARTAP PUR";NULL;NULL;NULL
+"333";"333";"84";"20";"MUZAFAT KHURD";NULL;NULL;NULL
+"334";"334";"85";"20";"Charri";NULL;NULL;NULL
+"335";"335";"85";"20";"Radauri";"92";"2";NULL
+"336";"336";"85";"20";"Sagri";NULL;NULL;NULL
+"337";"337";"85";"20";"Topra Kalan";NULL;NULL;NULL
+"338";"338";"86";"20";"Kotla";NULL;NULL;NULL
+"339";"339";"86";"20";"Nanheri";NULL;NULL;NULL
+"340";"340";"86";"20";"Salempur";NULL;NULL;NULL
+"341";"341";"47";"20";"Uncha Chandna";NULL;NULL;NULL
+"342";"342";"56";"3";"MAJRA";NULL;NULL;NULL
+"343";"343";"14";"8";"RAI CHANDWALA";"108";"3";NULL
+"344";"344";"52";"1";"KANGWAL";"105";"3";NULL
+"345";"345";"52";"1";"BHURANGPUR";NULL;NULL;NULL
+"346";"346";"22";"19";"Bhari";"83";"3";NULL
+"347";"347";"22";"19";"Bilona";NULL;NULL;NULL
+"348";"348";"22";"19";"Mundh";NULL;NULL;NULL
+"349";"349";"22";"19";"Thari";NULL;NULL;NULL
+"350";"350";"22";"19";"Rislawa";"50";"3";NULL
+"351";"351";"67";"11";"KANTI";NULL;NULL;NULL
+"352";"352";"114";"6";"Rasulpur";"143";"3";NULL
+"353";"353";"91";"22";"Dayalpur";"201";"2";NULL
+"354";"354";"91";"22";"Chhainsa";NULL;NULL;NULL
+"355";"355";"91";"22";"Sagarpur";NULL;NULL;NULL
+"356";"356";"91";"22";"Piayla";NULL;NULL;NULL
+"357";"357";"91";"22";"Pehladpur Majra Deeg";NULL;NULL;NULL
+"358";"358";"91";"22";"Nariyal";NULL;NULL;NULL
+"359";"359";"91";"22";"Hirapur";NULL;NULL;NULL
+"360";"360";"91";"22";"Garkhera";NULL;NULL;NULL
+"361";"361";"91";"22";"Ahamdpur";NULL;NULL;NULL
+"362";"362";"91";"22";"Sikrona";NULL;NULL;NULL
+"363";"363";"91";"22";"Sahapur Kalan";NULL;NULL;NULL
+"364";"364";"39";"13";"Alikan";NULL;NULL;NULL
+"365";"365";"39";"13";"Fatehpuria Niyamat Khan";NULL;NULL;NULL
+"366";"366";"39";"13";"Malri";"130";"2";NULL
+"367";"367";"39";"13";"Dhaban";"106";"2";NULL
+"368";"368";"39";"13";"Karamgarh";"128";"2";NULL
+"369";"369";"39";"13";"Jhorar Rohi";"158";"2";NULL
+"370";"370";"39";"13";"Chatariyan";"130";"2";NULL
+"371";"371";"39";"13";"Thiraj";"109";"2";NULL
+"372";"372";"39";"13";"Saharni";"156";"2";NULL
+"373";"373";"39";"13";"Sukhchain";"115";"2";NULL
+"374";"374";"39";"13";"Rohan";"79";"2";NULL
+"375";"375";"39";"13";"Bhadra";"78";"2";NULL
+"376";"376";"39";"13";"Daulatpur Khera";NULL;NULL;NULL
+"377";"377";"39";"13";"Bhiwan";"155";"2";NULL
+"378";"378";"39";"13";"Suba Khera";NULL;NULL;NULL
+"379";"379";"132";"21";"Khairwali Parwala";NULL;NULL;NULL
+"380";"380";"6";"18";"Kukranwali";NULL;NULL;NULL
+"381";"381";"94";"18";"Khasa Pathana";"135";"2";NULL
+"382";"382";"94";"18";"Ghotru";"98";"3";NULL
+"383";"383";"103";"19";"Baraota";"86";"3";NULL
+"384";"384";"103";"19";"Agondh";NULL;NULL;NULL
+"385";"385";"103";"19";"Dadupur Roran";NULL;NULL;NULL
+"386";"386";"103";"19";"Manjoora";NULL;NULL;NULL
+"387";"387";"103";"19";"Ghogharipur";NULL;NULL;NULL
+"388";"388";"125";"13";"Lambi";"80";"2";NULL
+"389";"389";"125";"13";"Banwala";"230";"2";NULL
+"390";"390";"125";"13";"Sukherawala";NULL;NULL;NULL
+"391";"391";"125";"13";"Khuiyan Malkana";NULL;NULL;NULL
+"392";"392";"125";"13";"Alikan";NULL;NULL;NULL
+"393";"393";"125";"13";"Kaluana";"306";"2";NULL
+"394";"394";"125";"13";"Phullo";NULL;NULL;NULL
+"395";"395";"5";"17";"RASIWAS";NULL;NULL;NULL
+"396";"396";"40";"13";"Menakhera";"107";"2";NULL
+"397";"397";"40";"13";"Mithanpura";NULL;NULL;NULL
+"398";"398";"40";"13";"Umedpura";NULL;NULL;NULL
+"399";"399";"40";"13";"Kishanpura/Dhani Jatan";"97";"2";NULL
+"400";"400";"92";"22";"Pawta";NULL;NULL;NULL
+"401";"401";"92";"22";"Dhauj";NULL;NULL;NULL
+"402";"402";"92";"22";"Tikri Khera";NULL;NULL;NULL
+"403";"403";"92";"22";"Khori Jamalpur";NULL;NULL;NULL
+"404";"404";"92";"22";"Sarurpur";NULL;NULL;NULL
+"405";"405";"92";"22";"Pakhal";NULL;NULL;NULL
+"406";"406";"92";"22";"Fatehpur Tagga";NULL;NULL;NULL
+"407";"407";"92";"22";"Tajupur";NULL;NULL;NULL
+"408";"408";"92";"22";"Sirohi";NULL;NULL;NULL
+"409";"409";"7";"18";"Kajal heri";NULL;NULL;NULL
+"410";"410";"7";"18";"Jhalniya";"88";"2";NULL
+"411";"411";"7";"18";"Manawali";"114";"2";NULL
+"412";"412";"43";"10";"AGWANPUR";NULL;NULL;NULL
+"413";"413";"43";"10";"AHULANA";"187";"3";NULL
+"414";"414";"43";"10";"CHIRASMI";"106";"3";NULL
+"415";"415";"43";"10";"BHOGIPUR";NULL;NULL;NULL
+"416";"416";"43";"10";"PANCHI JATAN";"113";"2";NULL
+"417";"417";"43";"10";"NAYA BANS";"207";"3";NULL
+"418";"418";"43";"10";"KHERI GUJJAR";"108";"3";NULL
+"419";"419";"43";"10";"BARI";"179";"2";NULL
+"420";"420";"43";"10";"GUMAR";NULL;NULL;NULL
+"421";"421";"43";"10";"GHASAULI";"120";"3";NULL
+"422";"422";"43";"10";"ATAIL";NULL;NULL;NULL
+"423";"423";"43";"10";"BAJANA KHURD";"75";"3";NULL
+"424";"424";"43";"10";"UDESHIPUR";"94";"3";NULL
+"425";"425";"43";"10";"MAHMUDPUR MAJRA";"148";"2";NULL
+"426";"426";"23";"19";"Garh Multan";NULL;NULL;NULL
+"427";"427";"23";"19";"Rasin";NULL;NULL;NULL
+"428";"428";"23";"19";"Kutail";NULL;NULL;NULL
+"429";"429";"23";"19";"Garh Bharal";NULL;NULL;NULL
+"430";"430";"127";"10";"Barota";"288";"2";NULL
+"431";"431";"127";"10";"Bidhal";NULL;NULL;NULL
+"432";"432";"127";"10";"Bilbilan";NULL;NULL;NULL
+"433";"433";"127";"10";"Riwara";NULL;NULL;NULL
+"434";"434";"127";"10";"Bali Bhraman";"76";"2";NULL
+"435";"435";"115";"6";"Attba";NULL;NULL;NULL
+"436";"436";"115";"6";"Ghasera";"126";"3";NULL
+"437";"437";"115";"6";"Bela";NULL;NULL;NULL
+"438";"438";"30";"6";"Bahin";NULL;NULL;NULL
+"439";"439";"30";"6";"Ali Meo";NULL;NULL;NULL
+"440";"440";"30";"6";"Gehlab";NULL;NULL;NULL
+"441";"441";"30";"6";"Man Pur";"106";"3";NULL
+"442";"442";"30";"6";"Firozpur Rajput";NULL;NULL;NULL
+"443";"443";"30";"6";"Goh Pur";NULL;NULL;NULL
+"444";"444";"30";"6";"Kondal";NULL;NULL;NULL
+"445";"445";"30";"6";"Pondri";NULL;NULL;NULL
+"446";"446";"30";"6";"Saroli";NULL;NULL;NULL
+"447";"447";"30";"6";"Raniyala Khurd";NULL;NULL;NULL
+"448";"448";"30";"6";"Uttawar";NULL;NULL;NULL
+"449";"449";"30";"6";"Bajada Pahari";NULL;NULL;NULL
+"450";"450";"30";"6";"Pawsar";"80";"3";NULL
+"451";"451";"30";"6";"Kot Mithaka";NULL;NULL;NULL
+"452";"452";"30";"6";"Bhimsika";NULL;NULL;NULL
+"453";"453";"30";"6";"Khilluka";NULL;NULL;NULL
+"454";"454";"30";"6";"Reebad";NULL;NULL;NULL
+"455";"455";"30";"6";"Malai";"136";"3";NULL
+"456";"456";"30";"6";"Jainpur";NULL;NULL;NULL
+"457";"457";"30";"6";"Roopnagar Natoli";NULL;NULL;NULL
+"458";"458";"30";"6";"Kumrehda";NULL;NULL;NULL
+"459";"459";"30";"6";"Pahadpur";NULL;NULL;NULL
+"460";"460";"30";"6";"Pachanka";NULL;NULL;NULL
+"461";"461";"30";"6";"Khaika";NULL;NULL;NULL
+"462";"462";"30";"6";"Lakhnaka";NULL;NULL;NULL
+"463";"463";"30";"6";"Jarari";NULL;NULL;NULL
+"464";"464";"30";"6";"Mandnaka";NULL;NULL;NULL
+"465";"465";"63";"6";"Gudrana";NULL;NULL;NULL
+"466";"466";"131";"19";"Muradgarh";NULL;NULL;NULL
+"467";"467";"131";"19";"Tussang";NULL;NULL;NULL
+"468";"468";"131";"19";"Gorgarh";"102";"2";NULL
+"469";"469";"131";"19";"Danokhari";NULL;NULL;NULL
+"470";"470";"131";"19";"Kalri Khalsa";NULL;NULL;NULL
+"471";"471";"131";"19";"Udana";"229";"3";NULL
+"472";"472";"131";"19";"Badapur";NULL;NULL;NULL
+"473";"473";"131";"19";"Ghari Sadhan";"100";"2";NULL
+"474";"474";"131";"19";"Umarpur";NULL;NULL;NULL
+"475";"475";"131";"19";"Rampura";NULL;NULL;NULL
+"476";"476";"131";"19";"Buttan Khari";NULL;NULL;NULL
+"477";"477";"131";"19";"Hinori";"79";"2";NULL
+"478";"478";"131";"19";"Bhadson";"254";"2";NULL
+"479";"479";"131";"19";"Dumsi";NULL;NULL;NULL
+"480";"480";"131";"19";"Patehra";"84";"2";NULL
+"481";"481";"131";"19";"Raith Khana";"77";"2";NULL
+"482";"482";"90";"17";"JHOJHU KALAN";NULL;NULL;NULL
+"483";"483";"90";"17";"PICHOPA KHURD";NULL;NULL;NULL
+"484";"484";"90";"17";"BINDRABAN";NULL;NULL;NULL
+"485";"485";"15";"8";"Shamlo Kalan";"88";"3";NULL
+"486";"486";"15";"8";"Budha Khera Lather";"112";"3";NULL
+"487";"487";"109";"11";"Aghiyar";NULL;NULL;NULL
+"488";"488";"109";"11";"Sehlang";"134";"2";NULL
+"489";"489";"109";"11";"Sundrah";NULL;NULL;NULL
+"490";"490";"109";"11";"Chelawas";NULL;NULL;NULL
+"491";"491";"109";"11";"Gudha";"213";"2";NULL
+"492";"492";"109";"11";"Kheri";"287";"2";NULL
+"493";"493";"44";"10";"GARHI SISANA";NULL;NULL;NULL
+"494";"494";"44";"10";"GOPALPUR (RAJANPANNA)";"29";"2";NULL
+"495";"495";"44";"10";"KHANDA ALMAN PANA";"173";"2";NULL
+"496";"496";"44";"10";"RIDHAU";"120";"3";NULL
+"497";"497";"44";"10";"NIJAMPUR MAJRA";NULL;NULL;NULL
+"498";"498";"44";"10";"JHAROTHI";"130";"3";NULL
+"499";"499";"44";"10";"NAKLOI";"160";"2";NULL
+"500";"500";"44";"10";"ROHAT";"427";"3";NULL
+"501";"501";"44";"10";"KHERI DAHIYA";NULL;NULL;NULL
+"502";"502";"44";"10";"FATEHPUR";NULL;NULL;NULL
+"503";"503";"24";"19";"Bazidpur";NULL;NULL;NULL
+"504";"504";"24";"19";"Rindal";"88";"2";NULL
+"505";"505";"24";"19";"Nagla roran";"90";"2";NULL
+"506";"506";"24";"19";"Kamalpura Roran";NULL;NULL;NULL
+"507";"507";"123";"4";"Sisroli";NULL;NULL;NULL
+"508";"508";"123";"4";"Kaharainti";"115";"2";NULL
+"509";"509";"110";"11";"DULOTH AHIR";NULL;NULL;NULL
+"510";"510";"110";"11";"SISOTH";"104";"2";NULL
+"511";"511";"110";"11";"DAROLI JAT";"93";"2";NULL
+"512";"512";"124";"4";"Kharkara Chajjan";"329";"2";NULL
+"513";"513";"124";"4";"Bharan Shekhpur Titri";NULL;NULL;NULL
+"514";"514";"124";"4";"Farmana Badshapur";NULL;NULL;NULL
+"515";"515";"124";"4";"Nidana";NULL;NULL;NULL
+"516";"516";"124";"4";"Gorawar";"1082";"2";NULL
+"517";"517";"105";"19";"BALLAH";"295";"3";NULL
+"518";"518";"105";"19";"STAUNDI";"160";"3";NULL
+"519";"519";"105";"19";"JANI";"117";"2";NULL
+"520";"520";"105";"19";"PABANA HASANPUR";"263";"2";NULL
+"521";"521";"105";"19";"KUTANA";NULL;NULL;NULL
+"522";"522";"105";"19";"PICHOLIA";NULL;NULL;NULL
+"523";"523";"105";"19";"MUNAK";"623";"3";NULL
+"524";"524";"129";"10";"Shamri Buran";"108";"2";NULL
+"525";"525";"129";"10";"Busana";"77";"2";NULL
+"526";"526";"129";"10";"Siwanka";"113";"2";NULL
+"527";"527";"129";"10";"Sirshad";NULL;NULL;NULL
+"528";"528";"45";"10";"Murthal";NULL;NULL;NULL
+"529";"529";"45";"10";"Khewra";NULL;NULL;NULL
+"530";"530";"45";"10";"Kami";NULL;NULL;NULL
+"531";"531";"45";"10";"Joshi Chauhan";NULL;NULL;NULL
+"532";"532";"45";"10";"Dhaturi";NULL;NULL;NULL
+"533";"533";"45";"10";"Basodi";NULL;NULL;NULL
+"534";"534";"28";"11";"DONGLI";NULL;NULL;NULL
+"535";"535";"28";"11";"DOKHERA";"85";"2";NULL
+"536";"536";"28";"11";"NANGAL SODA";NULL;NULL;NULL
+"537";"537";"28";"11";"KAMANIYA";"112";"2";NULL
+"538";"538";"111";"11";"Mandhana";"77";"2";NULL
+"539";"539";"100";"8";"Hatho";"104";"3";NULL
+"540";"540";"49";"13";"SHERPURA";NULL;NULL;NULL
+"541";"541";"49";"13";"SAHUWALA-IIND";NULL;NULL;NULL
+"542";"542";"49";"13";"MODIA KHERA";"80";"2";NULL
+"543";"543";"49";"13";"BAKRIANWALI";"177";"2";NULL
+"544";"544";"49";"13";"KUKARTHANA";"78";"2";NULL
+"545";"545";"49";"13";"NARAIN KHERA";NULL;NULL;NULL
+"546";"546";"49";"13";"JAMAL";NULL;NULL;NULL
+"547";"547";"49";"13";"HANJIRA";NULL;NULL;NULL
+"548";"548";"49";"13";"CHOUBURJA";NULL;NULL;NULL
+"549";"549";"49";"13";"DARBA KALAN / MANAK DIWAN";NULL;NULL;NULL
+"550";"550";"49";"13";"ARNIA WALI";"110";"2";NULL
+"551";"551";"49";"13";"LUDESAR";NULL;NULL;NULL
+"552";"552";"49";"13";"RUPANA / DARBA KHURD";"88";"2";NULL
+"553";"553";"49";"13";"GUSAIANA";NULL;NULL;NULL
+"554";"554";"49";"13";"MAKHOSARANI";"83";"2";NULL
+"555";"555";"49";"13";"KUTIANA";"107";"2";NULL
+"556";"556";"49";"13";"SHAKKAR MANDORI";"105";"2";NULL
+"557";"557";"49";"13";"KAGDANA";"133";"2";NULL
+"558";"558";"49";"13";"DHUKRA";NULL;NULL;NULL
+"559";"559";"49";"13";"BARASARI";"111";"2";NULL
+"560";"560";"49";"13";"NIRBAN";NULL;NULL;NULL
+"561";"561";"49";"13";"CHAHAR WALA";"89";"2";NULL
+"562";"562";"49";"13";"RAMPURA DHILLON";"135";"2";NULL
+"563";"563";"49";"13";"GUDIA KHERA";"131";"2";NULL
+"564";"564";"49";"13";"GIGORANI";"106";"2";NULL
+"565";"565";"49";"13";"TAJIA KHERA";"105";"2";NULL
+"566";"566";"49";"13";"TARKANWALI";NULL;NULL;NULL
+"567";"567";"49";"13";"Ali Mohamad";NULL;NULL;NULL
+"568";"568";"49";"13";"RAMPURA NAWABAD";"105";"3";NULL
+"569";"569";"106";"19";"BOHLA KHALSA";"176";"3";NULL
+"570";"570";"106";"19";"PADWALA";NULL;NULL;NULL
+"571";"571";"106";"19";"ANJANTHALI";"333";"3";NULL
+"572";"572";"106";"19";"BHUKHA PURI";NULL;NULL;NULL
+"573";"573";"106";"19";"SAGGA";NULL;NULL;NULL
+"574";"574";"106";"19";"UNISPUR";"98";"2";NULL
+"575";"575";"106";"19";"KARSA DOD";"171";"2";NULL
+"576";"576";"106";"19";"SEEDPUR";"108";"3";NULL
+"577";"577";"106";"19";"SIKRI";"98";"2";NULL
+"578";"578";"106";"19";"DADUPUR";"64";"2";NULL
+"579";"579";"106";"19";"BARSALU";"202";"2";NULL
+"580";"580";"106";"19";"JAMBA";"104";"2";NULL
+"581";"581";"106";"19";"BUDHERA KHALSA";NULL;NULL;NULL
+"582";"582";"112";"11";"Ajmabad Mokhuta";NULL;NULL;NULL
+"583";"583";"112";"11";"Rambass";NULL;NULL;NULL
+"584";"584";"41";"13";"TAPPI";NULL;NULL;NULL
+"585";"585";"41";"13";"GHUKANWALI";"112";"2";NULL
+"586";"586";"41";"13";"LAKARANWALI";NULL;NULL;NULL
+"587";"587";"116";"6";"Teharki";NULL;NULL;NULL
+"588";"588";"116";"6";"Rajpura";NULL;NULL;NULL
+"589";"589";"116";"6";"Gailpur";NULL;NULL;NULL
+"590";"590";"116";"6";"Paroli";NULL;NULL;NULL
+"591";"591";"116";"6";"Dungarpur";NULL;NULL;NULL
+"592";"592";"116";"6";"Adupur";NULL;NULL;NULL
+"593";"593";"120";"2";"Jattipur";NULL;NULL;NULL
+"594";"594";"117";"6";"Janoli";NULL;NULL;NULL
+"595";"595";"117";"6";"Baghola";NULL;NULL;NULL
+"596";"596";"117";"6";"Gadpuri";NULL;NULL;NULL
+"597";"597";"117";"6";"Amru";NULL;NULL;NULL
+"598";"598";"117";"6";"Chaprola";NULL;NULL;NULL
+"599";"599";"117";"6";"Sehrala";NULL;NULL;NULL
+"600";"600";"117";"6";"Nangla bhiku";NULL;NULL;NULL
+"601";"601";"117";"6";"Sikanderpur";NULL;NULL;NULL
+"602";"602";"117";"6";"Mandpuri";NULL;NULL;NULL
+"603";"603";"130";"10";"PABSARA";NULL;NULL;NULL
+"604";"604";"130";"10";"AKBARPUR BAROTA";NULL;NULL;NULL
+"605";"605";"130";"10";"SERSA";NULL;NULL;NULL
+"606";"607";"119";"21";"Bagwali";NULL;NULL;NULL
+"607";"608";"126";"13";"Jodhpuria";"91";"2";NULL
+"608";"609";"126";"13";"Abutgarh";NULL;NULL;NULL
+"609";"610";"126";"13";"Gindran";"118";"2";NULL
+"610";"611";"95";"18";"Mehmara";NULL;NULL;NULL
+"611";"612";"95";"18";"Kamana";NULL;NULL;NULL
+"612";"613";"95";"18";"Chimmo";NULL;NULL;NULL
+"613";"614";"95";"18";"Ratta Khera";"139";"3";NULL
+"614";"615";"95";"18";"Kanwalgarh";NULL;NULL;NULL
+"615";"616";"2";"1";"DHURALA";NULL;NULL;NULL
+"616";"617";"2";"1";"LANDA";"105";"3";NULL
+"617";"618";"51";"4";"Gijji";NULL;NULL;NULL
+"618";"619";"113";"11";"Satnali";"199";"2";NULL
+"619";"620";"1";"1";"MAJRA";NULL;NULL;NULL
+"620";"621";"1";"1";"DHAMOLI MAJRI";NULL;NULL;NULL
+"621";"622";"1";"1";"KHERKI MANAKPUR";NULL;NULL;NULL
+"622";"623";"42";"13";"Nejadela Kalan";"85";"2";NULL
+"623";"624";"42";"13";"Fathehpur Vaidwala";NULL;NULL;NULL
+"624";"625";"42";"13";"Kusumbi";"84";"2";NULL
+"625";"626";"42";"13";"Baruwali-I";NULL;NULL;NULL
+"626";"627";"42";"13";"Phulkan";NULL;NULL;NULL
+"627";"628";"42";"13";"Baguwali";"96";"2";NULL
+"628";"629";"46";"10";"ROLAD LATIFPUR";NULL;NULL;NULL
+"629";"630";"46";"10";"BHADANA";NULL;NULL;NULL
+"630";"631";"46";"10";"DODVA";"102";"2";NULL
+"631";"632";"46";"10";"CHITANA";NULL;NULL;NULL
+"632";"633";"46";"10";"GARHI HAKIKAT";"75";"3";NULL
+"633";"634";"46";"10";"KILOHRAD";"105";"2";NULL
+"634";"635";"46";"10";"JAHRI";NULL;NULL;NULL
+"635";"636";"18";"8";"BUDAIN";"112";"3";NULL
+"636";"637";"18";"8";"KHARK BURAH";NULL;NULL;NULL
+"637";"638";"101";"8";"Kharal";"93";"3";NULL
+"638";"639";"107";"19";"Bastali";NULL;NULL;NULL
+"639";"640";"107";"19";"Dachar";"125";"2";NULL
+"640";"641";"107";"19";"Sambhali";"190";"2";NULL
+"641";"642";"93";"22";"Imammudinpur";NULL;NULL;NULL
+"642";"643";"107";"19";"Amupur";"227";"2";NULL
+"643";"644";"107";"19";"Chakda";"131";"2";NULL
+"644";"645";"104";"19";"Subhri";"120";"2";NULL
+"645";"646";"104";"19";"Rasulpur Kalan";NULL;NULL;NULL
+"646";"647";"104";"19";"Chundipur";"101";"2";NULL
+"647";"648";"104";"19";"Mohindinpur";"79";"3";NULL
+"648";"649";"104";"19";"Bhusali";"85";"3";NULL
+"649";"650";"107";"19";"Guniyana";"121";"2";NULL
+"650";"651";"51";"4";"Samchana";"75";"1";"Rohtak Samchana.pdf"

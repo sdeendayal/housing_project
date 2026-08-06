@@ -1924,8 +1924,6 @@ END) AS RegistryUnmatchedWithoutMobile,
 
     public function report(Request $request, string $type)
     {
-
-
         $allowedTypes = [
             'villages',
             'plots',
@@ -1943,7 +1941,6 @@ END) AS RegistryUnmatchedWithoutMobile,
         if (!$user) {
             return redirect()->route('mmgay.login');
         }
-
         /*
         |--------------------------------------------------------------------------
         | District
@@ -1956,7 +1953,6 @@ END) AS RegistryUnmatchedWithoutMobile,
         if (!$districtId) {
             abort(404, 'District not found.');
         }
-
         /*
         |--------------------------------------------------------------------------
         | Phase Filter
@@ -2065,6 +2061,15 @@ END) AS RegistryUnmatchedWithoutMobile,
 
         /*
         |--------------------------------------------------------------------------
+        | Registry mobile summary
+        |--------------------------------------------------------------------------
+        | One row per mobile prevents duplicate Owner rows when the registry table
+        | contains multiple entries for the same mobile number.
+        */
+        $registrySummary = $this->registryMobileSummaryQuery();
+
+        /*
+        |--------------------------------------------------------------------------
         | Main Report Query
         |--------------------------------------------------------------------------
         */
@@ -2102,11 +2107,16 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'f.FlatId'
             )
 
-            ->leftJoin(
-                'registary as r',
-                'o.MobileNo',
-                '=',
-                'r.SecondPartyMobile'
+            ->leftJoinSub(
+                $registrySummary,
+                'r',
+                function ($join) {
+                    $join->on(
+                        'r.SecondPartyMobile',
+                        '=',
+                        'o.MobileNo'
+                    );
+                }
             )
 
             ->where('o.DistrictId', $districtId)
@@ -2138,6 +2148,12 @@ END) AS RegistryUnmatchedWithoutMobile,
             |--------------------------------------------------------------------------
             */
             ->when($caste, function ($query) use ($caste) {
+                if ($caste === 'Others') {
+                    $query->whereIn('o.Caste', ['General', 'Others']);
+
+                    return;
+                }
+
                 $query->where('o.Caste', $caste);
             });
 
@@ -2193,6 +2209,10 @@ END) AS RegistryUnmatchedWithoutMobile,
             case 'registry_done':
                 $query
                     ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereNotNull('o.MobileNo')
                     ->where('o.MobileNo', '<>', '')
                     ->whereNotNull('r.SecondPartyMobile');
@@ -2201,6 +2221,10 @@ END) AS RegistryUnmatchedWithoutMobile,
             case 'registry_pending':
                 $query
                     ->whereNotNull('f.FlatId')
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->where(function ($query) {
                         $query
                             ->whereNull('o.MobileNo')
@@ -2222,6 +2246,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             v.VillageName,
             v.phase AS Phase,
             v.plots AS TotalPlots,
+            v.pdf AS PdfFile,
 
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
 
@@ -2278,6 +2303,10 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             COUNT(DISTINCT CASE
                 WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
                     AND o.MobileNo IS NOT NULL
                     AND o.MobileNo <> ''
                     AND r.SecondPartyMobile IS NOT NULL
@@ -2286,6 +2315,10 @@ END) AS RegistryUnmatchedWithoutMobile,
 
             COUNT(DISTINCT CASE
                 WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
                     AND (
                         o.MobileNo IS NULL
                         OR o.MobileNo = ''
@@ -2346,7 +2379,14 @@ END) AS RegistryUnmatchedWithoutMobile,
             END) AS Others,
 
             COUNT(DISTINCT CASE
-                WHEN o.IsPaymentApproved = 1
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND o.MobileNo IS NOT NULL
+                    AND o.MobileNo <> ''
+                    AND r.SecondPartyMobile IS NOT NULL
                 THEN o.OwnerId
             END) AS Possession
         ")
@@ -2355,7 +2395,8 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'v.VillageId',
                 'v.VillageName',
                 'v.phase',
-                'v.plots'
+                'v.plots',
+                'v.pdf'
             )
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
@@ -2459,6 +2500,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             )
         );
     }
+
 
     public function applicantReport(Request $request)
     {
@@ -2590,6 +2632,8 @@ END) AS RegistryUnmatchedWithoutMobile,
             $villageId = null;
         }
 
+        $registrySummary = $this->registryMobileSummaryQuery();
+
         /*
         |--------------------------------------------------------------------------
         | Base Query — Same Logic As Dashboard
@@ -2598,7 +2642,8 @@ END) AS RegistryUnmatchedWithoutMobile,
         $baseQuery = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
-                    ->on('o.DistrictId', '=', 'v.DistrictId');
+                    ->on('o.DistrictId', '=', 'v.DistrictId')
+                    ->on('o.Phase', '=', 'v.phase');
             })
             ->join(
                 'DistrictMaster as d',
@@ -2612,9 +2657,17 @@ END) AS RegistryUnmatchedWithoutMobile,
                 '=',
                 'f.FlatId'
             )
-            ->leftJoin('registary as rg', function ($join) {
-                $join->on('rg.SecondPartyMobile', '=', 'o.MobileNo');
-            })
+            ->leftJoinSub(
+                $registrySummary,
+                'rg',
+                function ($join) {
+                    $join->on(
+                        'rg.SecondPartyMobile',
+                        '=',
+                        'o.MobileNo'
+                    );
+                }
+            )
             ->where('o.DistrictId', $districtId)
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
@@ -2648,16 +2701,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             */
             ->when($caste, function ($query) use ($caste) {
                 if ($caste === 'Others') {
-                    $query->where(function ($query) {
-                        $query
-                            ->whereNull('o.Caste')
-                            ->orWhereNotIn('o.Caste', [
-                                'SC',
-                                'Ghumantu',
-                                'Widow',
-                                'General',
-                            ]);
-                    });
+                    $query->whereIn('o.Caste', ['General', 'Others']);
 
                     return;
                 }
@@ -2881,20 +2925,11 @@ END) AS RegistryUnmatchedWithoutMobile,
                     ->whereNotNull('f.FlatId')
                     ->where('o.IsApproved', 1)
                     ->where('o.IsPaid', 1)
-                    ->whereRaw(
-                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
-                    )
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereNotNull('o.MobileNo')
                     ->where('o.MobileNo', '<>', '')
-                    ->whereExists(function ($subQuery) {
-                        $subQuery
-                            ->selectRaw('1')
-                            ->from('registary as r')
-                            ->whereColumn(
-                                'r.SecondPartyMobile',
-                                'o.MobileNo'
-                            );
-                    });
+                    ->whereNotNull('rg.SecondPartyMobile');
                 break;
 
             case 'registry_pending':
@@ -2902,22 +2937,13 @@ END) AS RegistryUnmatchedWithoutMobile,
                     ->whereNotNull('f.FlatId')
                     ->where('o.IsApproved', 1)
                     ->where('o.IsPaid', 1)
-                    ->whereRaw(
-                        'COALESCE(o.IsAllotmentCancelled, 0) = 0'
-                    )
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->where(function ($query) {
                         $query
                             ->whereNull('o.MobileNo')
                             ->orWhere('o.MobileNo', '')
-                            ->orWhereNotExists(function ($subQuery) {
-                                $subQuery
-                                    ->selectRaw('1')
-                                    ->from('registary as r')
-                                    ->whereColumn(
-                                        'r.SecondPartyMobile',
-                                        'o.MobileNo'
-                                    );
-                            });
+                            ->orWhereNull('rg.SecondPartyMobile');
                     });
                 break;
         }
@@ -3042,6 +3068,7 @@ END) AS RegistryUnmatchedWithoutMobile,
                 )
             END AS StatusRemark
         ")
+            ->distinct()
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
             ->orderBy('o.OwnerId')
@@ -3139,12 +3166,15 @@ END) AS RegistryUnmatchedWithoutMobile,
         $query = DB::table('OwnerMaster as o')
             ->join('VillageMaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
-                    ->on('o.DistrictId', '=', 'v.DistrictId');
+                    ->on('o.DistrictId', '=', 'v.DistrictId')
+                    ->on('o.Phase', '=', 'v.phase');
             })
-            ->leftJoin('FlatMaster as f', function ($join) {
-                $join->on('o.FlatId', '=', 'f.FlatId')
-                    ->on('o.VillageId', '=', 'f.VillageId');
-            })
+            ->leftJoin(
+                'FlatMaster as f',
+                'o.FlatId',
+                '=',
+                'f.FlatId'
+            )
             ->where('o.DistrictId', $districtId)
             ->where('v.DistrictId', $districtId)
 
@@ -3181,16 +3211,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             */
             ->when($caste, function ($query) use ($caste) {
                 if ($caste === 'Others') {
-                    $query->where(function ($subQuery) {
-                        $subQuery
-                            ->whereNull('o.Caste')
-                            ->orWhere('o.Caste', '')
-                            ->orWhereNotIn('o.Caste', [
-                                'SC',
-                                'Ghumantu',
-                                'Widow',
-                            ]);
-                    });
+                    $query->whereIn('o.Caste', ['General', 'Others']);
 
                     return;
                 }
@@ -3296,9 +3317,12 @@ END) AS RegistryUnmatchedWithoutMobile,
                     ->whereNotNull('f.FlatId')
                     ->whereNotNull('f.FlatNo')
                     ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
+                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereNotNull('o.MobileNo')
                     ->where('o.MobileNo', '<>', '')
-                    ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->whereExists(function ($registryQuery) {
                         $registryQuery
                             ->selectRaw('1')
@@ -3315,6 +3339,9 @@ END) AS RegistryUnmatchedWithoutMobile,
                     ->whereNotNull('f.FlatId')
                     ->whereNotNull('f.FlatNo')
                     ->whereRaw("TRIM(f.FlatNo) <> ''")
+                    ->where('o.IsApproved', 1)
+                    ->where('o.IsPaid', 1)
+                    ->whereRaw('COALESCE(o.IsRejected, 0) = 0')
                     ->whereRaw('COALESCE(o.IsAllotmentCancelled, 0) = 0')
                     ->where(function ($registryQuery) {
                         $registryQuery
@@ -3479,6 +3506,10 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN f.FlatId IS NOT NULL
                     AND f.FlatNo IS NOT NULL
                     AND TRIM(f.FlatNo) <> ''
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
                     AND o.MobileNo IS NOT NULL
                     AND o.MobileNo <> ''
                     AND EXISTS (
@@ -3491,11 +3522,16 @@ END) AS RegistryUnmatchedWithoutMobile,
                 WHEN f.FlatId IS NOT NULL
                     AND f.FlatNo IS NOT NULL
                     AND TRIM(f.FlatNo) <> ''
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
                     THEN 'Registry Pending'
 
                 ELSE 'Not Applicable'
             END AS RegistryStatus
-        ");
+        ")
+            ->distinct();
     }
 
     public function exportApplicantReportExcel(Request $request)
@@ -3545,6 +3581,27 @@ END) AS RegistryUnmatchedWithoutMobile,
             'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.csv',
             ExcelFormat::CSV
         );
+    }
+
+    private function registryMobileSummaryQuery()
+    {
+        return DB::table('registary as registry_source')
+            ->whereNotNull('registry_source.SecondPartyMobile')
+            ->where('registry_source.SecondPartyMobile', '<>', '')
+            ->selectRaw("
+                registry_source.SecondPartyMobile,
+                SUBSTRING_INDEX(
+                    GROUP_CONCAT(
+                        registry_source.RegistaryNumber
+                        ORDER BY registry_source.RegistaryDate DESC, registry_source.id DESC
+                        SEPARATOR '||'
+                    ),
+                    '||',
+                    1
+                ) AS RegistaryNumber,
+                MAX(registry_source.RegistaryDate) AS RegistaryDate
+            ")
+            ->groupBy('registry_source.SecondPartyMobile');
     }
 
 }
