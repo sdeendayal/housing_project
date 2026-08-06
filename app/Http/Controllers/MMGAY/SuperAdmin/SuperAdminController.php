@@ -9,10 +9,6 @@ use Illuminate\Support\Facades\Cache;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Exports\DashboardExport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Exports\DistrictReportExport;
-use App\Exports\VillageReportExport;
-use App\Exports\AllotmentReportExport;
-use App\Exports\RegistrationReportExport;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Storage;
 
@@ -2916,6 +2912,7 @@ class SuperAdminController extends Controller
             v.VillageId,
             v.VillageName,
             v.Phase,
+            v.pdf,
             COALESCE(v.plots, 0) AS TotalPlots,
 
             COALESCE(
@@ -3161,6 +3158,7 @@ class SuperAdminController extends Controller
             ->first();
     }
 
+    // ---------------------------Village Report Data-----------------------------------------------|
 
     private function villageReportData(
         Request $request,
@@ -3356,35 +3354,18 @@ class SuperAdminController extends Controller
             'villages' => $villages,
         ];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Village Report Page
-    |--------------------------------------------------------------------------
-    */
+   
     public function villageWiseReport(Request $request)
     {
         return view(
             'mmgay.super-admin.village-report',
             $this->villageReportData($request, true)
         );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Village Report Print
-    |--------------------------------------------------------------------------
-    */
+    }    
     public function villageReportPrint(Request $request)
     {
         $data = $this->villageReportData($request, false);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Keep only valid villages with plots
-        |--------------------------------------------------------------------------
-        */
+        
         $report = collect($data['report'] ?? [])
             ->filter(function ($row) {
                 return !empty($row->VillageId)
@@ -3458,14 +3439,7 @@ class SuperAdminController extends Controller
             $data
         );
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Village Report CSV
-    |--------------------------------------------------------------------------
-    | cursor() से records stream होंगे और memory कम लगेगी।
-    |--------------------------------------------------------------------------
-    */
+    
     public function villageReportCsv(Request $request)
     {
         DB::disableQueryLog();
@@ -3692,16 +3666,7 @@ class SuperAdminController extends Controller
                 'X-Accel-Buffering' => 'no',
             ]
         );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Village Site Development
-    |--------------------------------------------------------------------------
-    | यहां phase filter जानबूझकर development query पर नहीं लगाया गया है।
-    | VillageId से उस village के सभी development updates दिखेंगे।
-    |--------------------------------------------------------------------------
-    */
+    }    
     public function villageSiteDevelopment(
         Request $request,
         int $villageId
