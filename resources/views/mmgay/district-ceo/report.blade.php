@@ -229,263 +229,649 @@
 
         </div>
 
-        {{-- Summary Cards --}}
-        {{-- <div class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Villages
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-blue-700">
-                    {{ number_format($totals['totalVillages'] ?? 0) }}
-                </h3>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Plots
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-emerald-700">
-                    {{ number_format($totals['totalPlots'] ?? 0) }}
-                </h3>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Applicants
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-indigo-700">
-                    {{ number_format($totals['totalApplicants'] ?? 0) }}
-                </h3>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Approved Paid
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-green-700">
-                    {{ number_format($totals['approvedPaid'] ?? 0) }}
-                </h3>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Allotment
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-amber-700">
-                    {{ number_format($totals['totalAllotment'] ?? 0) }}
-                </h3>
-            </div>
-
-            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Possession
-                </p>
-
-                <h3 class="mt-2 text-2xl font-bold text-violet-700">
-                    {{ number_format($totals['totalPossession'] ?? 0) }}
-                </h3>
-            </div>
-
-        </div> --}}
-
         {{-- Report Table --}}
-        <section class="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {{-- Report Table --}}
+        <section class="mt-5 overflow-hidden rounded-2xl border
+           border-slate-200 bg-white shadow-sm">
 
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            {{-- Header --}}
+            <div
+                class="flex flex-col gap-4 border-b border-slate-200
+               px-5 py-4 sm:flex-row sm:items-center
+               sm:justify-between">
 
-                <div>
-                    <h2 class="text-base font-bold text-slate-800">
-                        Village Status Table
-                    </h2>
+                <div class="flex items-center gap-3">
 
-                    <p class="mt-1 text-xs text-slate-500">
-                        All dashboard statuses merged village-wise
-                    </p>
+                    <div
+                        class="flex h-11 w-11 items-center justify-center
+                       rounded-xl bg-blue-100 text-blue-700">
+
+                        <span class="material-symbols-outlined text-[24px]">
+                            table_chart
+                        </span>
+                    </div>
+
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">
+                            Village Wise Summary
+                        </h2>
+
+                        <p class="mt-0.5 text-xs text-slate-500">
+                            {{ $phase === 'all' ? 'All Phases Village Statistics' : 'Phase ' . $phase . ' Village Statistics' }}
+                        </p>
+                    </div>
+
                 </div>
 
-                <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                <span
+                    class="inline-flex w-fit items-center rounded-full
+                   bg-blue-100 px-3 py-1 text-xs font-semibold
+                   text-blue-700">
 
                     {{ number_format($reportData->count()) }} Records
-
                 </span>
 
             </div>
 
             <div class="overflow-x-auto">
 
-                <table class="min-w-[2300px] w-full border-collapse text-sm">
+                <table class="min-w-[1750px] w-full text-sm">
 
-                    <thead class="bg-slate-800 text-xs uppercase tracking-wide text-white">
+                    <thead>
+                        <tr class="bg-slate-800 text-white">
 
-                        <tr>
-
-                            <th class="w-16 border-r border-slate-700 px-4 py-4 text-center">
+                            <th class="w-14 px-3 py-3 text-left
+                               text-xs font-semibold">
                                 #
                             </th>
 
-                            <th class="w-24 border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[250px] px-3 py-3 text-left
+                               text-xs font-semibold">
+                                Village
+                            </th>
+
+                            <th
+                                class="min-w-[85px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Phase
                             </th>
 
                             <th
-                                class="sticky left-0 z-20 min-w-[220px] border-r border-slate-700 bg-slate-800 px-4 py-4 text-left">
-                                Village
+                                class="min-w-[90px] px-3 py-3 text-center
+                               text-xs font-semibold">
+                                Total<br>Plots
                             </th>
 
-                            <th class="min-w-[100px] border-r border-slate-700 px-4 py-4 text-center">
-                                Plots
-                            </th>
-
-                            <th class="min-w-[120px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[105px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Applicants
                             </th>
 
-                            <th class="min-w-[120px] border-r border-slate-700 px-4 py-4 text-center">
-                                Allotment
+                            <th
+                                class="min-w-[100px] px-3 py-3 text-center
+                               text-xs font-semibold">
+                                Allotted
                             </th>
 
-                            <th class="min-w-[145px] border-r border-slate-700 px-4 py-4 text-center">
-                                Approved & Paid
+                            <th
+                                class="min-w-[115px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Approved<br>Paid
                             </th>
 
-                            <th class="min-w-[155px] border-r border-slate-700 px-4 py-4 text-center">
-                                Approved & Unpaid
+                            <th
+                                class="min-w-[120px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Approved<br>Unpaid
                             </th>
 
-                            <th class="min-w-[165px] border-r border-slate-700 px-4 py-4 text-center">
-                                Yet to be Approved
+                            <th
+                                class="min-w-[130px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Yet to be<br>Approved
                             </th>
 
-                            <th class="min-w-[110px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[95px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Rejected
                             </th>
 
-                            <th class="min-w-[110px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[95px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Cancelled
                             </th>
 
-                            <th class="min-w-[160px] border-r border-slate-700 px-4 py-4 text-center">
-                                Registry to be done
+                            <th
+                                class="min-w-[110px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Registry<br>Done
                             </th>
 
-                            <th class="min-w-[125px] border-r border-slate-700 px-4 py-4 text-center">
-                                Registry Done
+                            <th
+                                class="min-w-[130px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Registry<br>Pending
                             </th>
 
-                            <th class="min-w-[180px] border-r border-slate-700 px-4 py-4 text-center">
-                                Registry yet to be done
+                            <th
+                                class="min-w-[125px] px-3 py-3 text-center
+                               text-xs font-semibold leading-4">
+                                Possession<br>Eligible
                             </th>
 
-                            <th class="min-w-[175px] border-r border-slate-700 px-4 py-4 text-center">
-                                Possession to be Given
-                            </th>
-
-                            <th class="min-w-[90px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[75px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 SC
                             </th>
 
-                            <th class="min-w-[110px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[90px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Ghumantu
                             </th>
 
-                            <th class="min-w-[90px] border-r border-slate-700 px-4 py-4 text-center">
+                            <th
+                                class="min-w-[80px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Widow
                             </th>
 
-                            <th class="min-w-[90px] px-4 py-4 text-center">
+                            <th
+                                class="min-w-[80px] px-3 py-3 text-center
+                               text-xs font-semibold">
                                 Others
                             </th>
 
                         </tr>
-
                     </thead>
 
-                    <tbody class="divide-y divide-slate-200 bg-white">
+                    <tbody class="divide-y divide-slate-100 bg-white">
 
                         @forelse ($reportData as $row)
-                            <tr class="transition hover:bg-blue-50">
+                            @php
+                                /*
+                        |--------------------------------------------------------------------------
+                        | Common row parameters
+                        |--------------------------------------------------------------------------
+                        */
+                                $rowParams = [
+                                    'phase' => $row->Phase ?? 'all',
+                                    'village_id' => $row->VillageId,
+                                ];
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center text-slate-500">
+                                /*
+                        |--------------------------------------------------------------------------
+                        | Village map PDF
+                        |--------------------------------------------------------------------------
+                        */
+                                $mapPdfUrl = !empty($row->PdfFile)
+                                    ? asset('phase1_plans_gps_map/' . ltrim($row->PdfFile, '/'))
+                                    : null;
+
+                                /*
+                        |--------------------------------------------------------------------------
+                        | Applicants links
+                        |--------------------------------------------------------------------------
+                        */
+                                $allApplicantsUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'all_applicants',
+                                    ]),
+                                );
+
+                                $allottedUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'allotted',
+                                    ]),
+                                );
+
+                                $approvedPaidUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'approved_paid',
+                                    ]),
+                                );
+
+                                $approvedUnpaidUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'approved_unpaid',
+                                    ]),
+                                );
+
+                                $pendingUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'pending',
+                                    ]),
+                                );
+
+                                $rejectedUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'rejected',
+                                    ]),
+                                );
+
+                                $cancelledUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'cancelled',
+                                    ]),
+                                );
+
+                                $registryDoneUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'registry_done',
+                                    ]),
+                                );
+
+                                $registryPendingUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'registry_pending',
+                                    ]),
+                                );
+
+                                $scUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'sc',
+                                    ]),
+                                );
+
+                                $ghumantuUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'ghumantu',
+                                    ]),
+                                );
+
+                                $widowUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'widow',
+                                    ]),
+                                );
+
+                                $othersUrl = route(
+                                    'district.dashboard.applicants',
+                                    array_merge($rowParams, [
+                                        'status' => 'others',
+                                    ]),
+                                );
+
+                                /*
+                        |--------------------------------------------------------------------------
+                        | Possession link
+                        |--------------------------------------------------------------------------
+                        */
+                                $possessionUrl = route(
+                                    'district.possession.list',
+                                    array_merge(
+                                        [
+                                            'filter' => 'all',
+                                        ],
+                                        $rowParams,
+                                    ),
+                                );
+
+                                /*
+                        |--------------------------------------------------------------------------
+                        | Village report link for plots
+                        |--------------------------------------------------------------------------
+                        */
+                                $plotsUrl = route('district.dashboard.report', [
+                                    'type' => 'villages',
+                                    'phase' => $row->Phase ?? 'all',
+                                    'village_id' => $row->VillageId,
+                                ]);
+                            @endphp
+
+                            <tr class="transition hover:bg-blue-50/70">
+
+                                {{-- Sr. No. --}}
+                                <td class="px-3 py-3 text-slate-500">
                                     {{ $loop->iteration }}
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-medium text-slate-700">
-                                    Phase {{ $row->Phase }}
+                                {{-- Village + Site Development + Map --}}
+                                <td class="px-3 py-3">
+
+                                    <div class="flex items-center gap-2">
+
+                                        {{-- Site Development --}}
+                                        <button type="button" title="Site Development"
+                                            class="siteDevelopmentBtn inline-flex
+                                           h-9 w-9 shrink-0 items-center
+                                           justify-center rounded-lg
+                                           bg-cyan-100 text-cyan-700
+                                           transition hover:bg-cyan-600
+                                           hover:text-white"
+                                            data-village-id="{{ $row->VillageId }}"
+                                            data-village-name="{{ $row->VillageName }}" data-phase="{{ $row->Phase }}">
+
+                                            <span
+                                                class="material-symbols-outlined
+                                               text-[18px]">
+                                                construction
+                                            </span>
+                                        </button>
+
+                                        {{-- Map --}}
+                                        @if ($mapPdfUrl)
+                                            <button type="button" title="View Village Map"
+                                                class="villageMapBtn inline-flex h-9
+                                               shrink-0 items-center
+                                               justify-center gap-1
+                                               rounded-lg border
+                                               border-indigo-200
+                                               bg-indigo-50 px-2.5
+                                               text-xs font-semibold
+                                               text-indigo-700 transition
+                                               hover:border-indigo-600
+                                               hover:bg-indigo-600
+                                               hover:text-white"
+                                                data-pdf-url="{{ $mapPdfUrl }}" data-pdf-name="{{ $row->PdfFile }}"
+                                                data-village-name="{{ $row->VillageName }}"
+                                                data-phase="{{ $row->Phase }}">
+
+                                                <span
+                                                    class="material-symbols-outlined
+                                                   text-[17px]">
+                                                    map
+                                                </span>
+
+                                                Map
+                                            </button>
+                                        @endif
+
+                                        {{-- Village name --}}
+                                        <a href="{{ $allApplicantsUrl }}"
+                                            class="min-w-0 rounded-md px-2 py-1
+                                           font-bold text-slate-800
+                                           transition hover:bg-slate-800
+                                           hover:text-white">
+
+                                            {{ $row->VillageName ?? '-' }}
+                                        </a>
+
+                                    </div>
+
                                 </td>
 
+                                {{-- Phase --}}
                                 <td
-                                    class="sticky left-0 z-10 border-r border-slate-200 bg-white px-4 py-3 font-semibold text-slate-800 transition group-hover:bg-blue-50">
-                                    {{ $row->VillageName ?? '-' }}
+                                    class="px-3 py-3 text-center
+                                   font-medium text-slate-600">
+                                    {{ $row->Phase ?? '-' }}
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center">
-                                    {{ number_format($row->TotalPlots ?? 0) }}
+                                {{-- Total Plots --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $plotsUrl }}"
+                                        class="inline-flex min-w-[58px]
+                                       justify-center rounded-md
+                                       bg-slate-100 px-2 py-1
+                                       font-semibold text-slate-700
+                                       transition hover:bg-slate-700
+                                       hover:text-white">
+
+                                        {{ number_format($row->TotalPlots ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-indigo-700">
-                                    {{ number_format($row->TotalApplicants ?? 0) }}
+                                {{-- Applicants --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $allApplicantsUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-blue-50 px-2 py-1
+                                       font-semibold text-blue-600
+                                       transition hover:bg-blue-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->TotalApplicants ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-blue-700">
-                                    {{ number_format($row->TotalAllotment ?? 0) }}
+                                {{-- Allotted --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $allottedUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-cyan-50 px-2 py-1
+                                       font-bold text-cyan-700
+                                       transition hover:bg-cyan-700
+                                       hover:text-white">
+
+                                        {{ number_format($row->TotalAllotment ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-emerald-700">
-                                    {{ number_format($row->ApprovedPaid ?? 0) }}
+                                {{-- Approved Paid --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $approvedPaidUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-emerald-50 px-2 py-1
+                                       font-semibold text-emerald-700
+                                       transition hover:bg-emerald-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->ApprovedPaid ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-cyan-700">
-                                    {{ number_format($row->ApprovedUnpaid ?? 0) }}
+                                {{-- Approved Unpaid --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $approvedUnpaidUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-sky-50 px-2 py-1
+                                       font-semibold text-sky-700
+                                       transition hover:bg-sky-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->ApprovedUnpaid ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-amber-700">
-                                    {{ number_format($row->PendingApproval ?? 0) }}
+                                {{-- Pending --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $pendingUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-amber-50 px-2 py-1
+                                       font-semibold text-amber-700
+                                       transition hover:bg-amber-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->PendingApproval ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-rose-700">
-                                    {{ number_format($row->Rejected ?? 0) }}
+                                {{-- Rejected --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $rejectedUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-rose-50 px-2 py-1
+                                       font-semibold text-rose-700
+                                       transition hover:bg-rose-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->Rejected ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-slate-700">
-                                    {{ number_format($row->Cancelled ?? 0) }}
+                                {{-- Cancelled --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $cancelledUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-slate-100 px-2 py-1
+                                       font-semibold text-slate-700
+                                       transition hover:bg-slate-700
+                                       hover:text-white">
+
+                                        {{ number_format($row->Cancelled ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-blue-700">
-                                    {{ number_format($row->TotalAllotment ?? 0) }}
+                                {{-- Registry Done --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $registryDoneUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-green-50 px-2 py-1
+                                       font-semibold text-green-700
+                                       transition hover:bg-green-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->RegistryDone ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-emerald-700">
-                                    {{ number_format($row->RegistryDone ?? 0) }}
+                                {{-- Registry Pending --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $registryPendingUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-orange-50 px-2 py-1
+                                       font-semibold text-orange-700
+                                       transition hover:bg-orange-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->RegistryPending ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-orange-700">
-                                    {{ number_format($row->RegistryPending ?? 0) }}
+                                {{-- Possession --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ $possessionUrl }}"
+                                        class="inline-flex min-w-[60px]
+                                       justify-center rounded-md
+                                       bg-violet-50 px-2 py-1
+                                       font-semibold text-violet-700
+                                       transition hover:bg-violet-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->Possession ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center font-semibold text-violet-700">
-                                    {{ number_format($row->Possession ?? 0) }}
+                                {{-- SC --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $row->Phase ?? 'all',
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                        'caste' => 'SC',
+                                    ]) }}"
+                                        class="inline-flex min-w-[50px]
+                                       justify-center rounded-md
+                                       bg-indigo-50 px-2 py-1
+                                       font-semibold text-indigo-700
+                                       transition hover:bg-indigo-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->SC ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center">
-                                    {{ number_format($row->SC ?? 0) }}
+                                {{-- Ghumantu --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $row->Phase ?? 'all',
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                        'caste' => 'Ghumantu',
+                                    ]) }}"
+                                        class="inline-flex min-w-[50px]
+                                       justify-center rounded-md
+                                       bg-purple-50 px-2 py-1
+                                       font-semibold text-purple-700
+                                       transition hover:bg-purple-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->Ghumantu ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center">
-                                    {{ number_format($row->Ghumantu ?? 0) }}
+                                {{-- Widow --}}
+                                <td class="px-3 py-3 text-center">
+
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $row->Phase ?? 'all',
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                        'caste' => 'Widow',
+                                    ]) }}"
+                                        class="inline-flex min-w-[50px]
+                                       justify-center rounded-md
+                                       bg-pink-50 px-2 py-1
+                                       font-semibold text-pink-700
+                                       transition hover:bg-pink-600
+                                       hover:text-white">
+
+                                        {{ number_format($row->Widow ?? 0) }}
+                                    </a>
+
                                 </td>
 
-                                <td class="border-r border-slate-200 px-4 py-3 text-center">
-                                    {{ number_format($row->Widow ?? 0) }}
-                                </td>
+                                {{-- Others --}}
+                                <td class="px-3 py-3 text-center">
 
-                                <td class="px-4 py-3 text-center">
-                                    {{ number_format($row->Others ?? 0) }}
+                                    <a href="{{ route('district.dashboard.applicants', [
+                                        'phase' => $row->Phase ?? 'all',
+                                        'village_id' => $row->VillageId,
+                                        'status' => 'all_applicants',
+                                        'caste' => 'Others',
+                                    ]) }}"
+                                        class="inline-flex min-w-[50px] justify-center rounded-md
+                                                bg-yellow-50 px-2 py-1
+                                                font-semibold text-yellow-700
+                                                transition hover:bg-yellow-600
+                                                hover:text-white">
+
+                                        {{ number_format($row->Others ?? 0) }}
+                                    </a>
+
                                 </td>
 
                             </tr>
@@ -493,18 +879,22 @@
                         @empty
 
                             <tr>
-                                <td colspan="19" class="px-6 py-14 text-center">
+                                <td colspan="18" class="px-6 py-14 text-center">
 
                                     <div
-                                        class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100">
+                                        class="mx-auto flex h-14 w-14
+                                       items-center justify-center
+                                       rounded-full bg-slate-100">
 
-                                        <span class="material-symbols-outlined text-[30px] text-slate-400">
+                                        <span
+                                            class="material-symbols-outlined
+                                           text-[30px] text-slate-400">
                                             folder_off
                                         </span>
-
                                     </div>
 
-                                    <p class="mt-3 font-semibold text-slate-700">
+                                    <p class="mt-3 font-semibold
+                                       text-slate-700">
                                         No village records found
                                     </p>
 
@@ -515,76 +905,79 @@
                     </tbody>
 
                     @if ($reportData->isNotEmpty())
-                        <tfoot class="border-t-2 border-slate-300 bg-slate-100 font-bold text-slate-800">
+                        <tfoot
+                            class="border-t-2 border-slate-300
+                           bg-slate-100 font-bold text-slate-800">
 
                             <tr>
 
-                                <td colspan="3"
-                                    class="sticky left-0 z-20 border-r border-slate-300 bg-slate-100 px-4 py-4 text-left">
+                                <td colspan="3" class="px-3 py-3">
                                     Grand Total
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['totalPlots'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['totalApplicants'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-blue-700">
+                                <td class="px-3 py-3 text-center text-cyan-700">
                                     {{ number_format($totals['totalAllotment'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-emerald-700">
+                                <td class="px-3 py-3 text-center
+                                   text-emerald-700">
                                     {{ number_format($totals['approvedPaid'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-cyan-700">
+                                <td class="px-3 py-3 text-center text-sky-700">
                                     {{ number_format($totals['approvedUnpaid'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-amber-700">
+                                <td class="px-3 py-3 text-center
+                                   text-amber-700">
                                     {{ number_format($totals['pending'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-rose-700">
+                                <td class="px-3 py-3 text-center
+                                   text-rose-700">
                                     {{ number_format($totals['rejected'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['cancelled'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-blue-700">
-                                    {{ number_format($totals['totalAllotment'] ?? 0) }}
-                                </td>
-
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-emerald-700">
+                                <td class="px-3 py-3 text-center
+                                   text-green-700">
                                     {{ number_format($totals['registryDone'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-orange-700">
+                                <td class="px-3 py-3 text-center
+                                   text-orange-700">
                                     {{ number_format($totals['registryPending'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center text-violet-700">
+                                <td class="px-3 py-3 text-center
+                                   text-violet-700">
                                     {{ number_format($totals['totalPossession'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['sc'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['ghumantu'] ?? 0) }}
                                 </td>
 
-                                <td class="border-r border-slate-300 px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['widow'] ?? 0) }}
                                 </td>
 
-                                <td class="px-4 py-4 text-center">
+                                <td class="px-3 py-3 text-center">
                                     {{ number_format($totals['others'] ?? 0) }}
                                 </td>
 
@@ -600,5 +993,215 @@
         </section>
 
     </main>
+
+    {{-- ================================================================ --}}
+    {{-- Site Development Modal --}}
+    {{-- ================================================================ --}}
+    <div id="siteDevelopmentModal" class="fixed inset-0 z-[9999] hidden bg-slate-900/70 p-3 backdrop-blur-sm">
+        <div class="flex min-h-full items-center justify-center">
+
+            <div id="siteDevelopmentModalPanel"
+                class="w-full max-w-5xl overflow-hidden rounded-3xl bg-slate-50 shadow-2xl">
+
+                {{-- Header --}}
+                <div
+                    class="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-700 px-5 py-4 text-white">
+                    <div class="flex items-center gap-3">
+
+                        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                            <span class="material-symbols-outlined text-[25px]">
+                                construction
+                            </span>
+                        </div>
+
+                        <div>
+                            <h2 id="siteDevelopmentVillageName" class="text-lg font-bold">
+                                Village
+                            </h2>
+
+                            <p id="siteDevelopmentPhase" class="mt-0.5 text-xs font-medium text-white/90">
+                                Phase
+                            </p>
+                        </div>
+
+                    </div>
+
+                    <button type="button" id="closeSiteDevelopmentModal"
+                        class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/15 transition hover:bg-white/25">
+                        <span class="material-symbols-outlined text-[25px]">
+                            close
+                        </span>
+                    </button>
+                </div>
+
+                {{-- Loading --}}
+                <div id="siteDevelopmentLoading" class="hidden px-6 py-12 text-center">
+                    <div class="mx-auto h-9 w-9 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600">
+                    </div>
+
+                    <p class="mt-3 text-sm font-semibold text-slate-600">
+                        Loading site development details...
+                    </p>
+                </div>
+
+                {{-- Error --}}
+                <div id="siteDevelopmentError" class="hidden px-6 py-12 text-center">
+                    <span class="material-symbols-outlined text-[42px] text-red-400">
+                        error
+                    </span>
+
+                    <p id="siteDevelopmentErrorMessage" class="mt-2 text-sm font-semibold text-red-600">
+                        Unable to load data.
+                    </p>
+                </div>
+
+                {{-- Empty --}}
+                <div id="siteDevelopmentEmpty" class="hidden px-6 py-12 text-center">
+                    <span class="material-symbols-outlined text-[46px] text-slate-300">
+                        construction
+                    </span>
+
+                    <h3 class="mt-2 text-base font-bold text-slate-700">
+                        No Development Record
+                    </h3>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        No Site Development data is currently available for this village.
+                    </p>
+                </div>
+
+                {{-- Records --}}
+                <div id="siteDevelopmentRecords" class="space-y-4 p-4 sm:p-5"></div>
+
+            </div>
+
+        </div>
+    </div>
+    {{-- ================================================================ --}}
+    {{-- Village Map PDF Modal --}}
+    {{-- ================================================================ --}}
+    <div id="villageMapModal" class="fixed inset-0 z-[10000] hidden bg-slate-950/75
+           p-3 backdrop-blur-sm">
+
+        <div class="flex min-h-full items-center justify-center">
+
+            <div
+                class="flex h-[94vh] w-full max-w-7xl flex-col
+                   overflow-hidden rounded-2xl bg-white shadow-2xl">
+
+                {{-- Header --}}
+                <div
+                    class="flex shrink-0 flex-col gap-3
+                       bg-gradient-to-r from-indigo-700
+                       via-blue-700 to-cyan-600 px-5 py-4
+                       text-white sm:flex-row sm:items-center
+                       sm:justify-between">
+
+                    <div class="flex min-w-0 items-center gap-3">
+
+                        <div
+                            class="flex h-11 w-11 shrink-0 items-center
+                               justify-center rounded-xl bg-white/15">
+
+                            <span class="material-symbols-outlined text-[24px]">
+                                map
+                            </span>
+                        </div>
+
+                        <div class="min-w-0">
+
+                            <h2 id="villageMapTitle" class="truncate text-lg font-bold">
+                                Village Map
+                            </h2>
+
+                            <p id="villageMapSubtitle"
+                                class="mt-0.5 truncate text-xs
+                                   font-medium text-white/90">
+                                Site plan PDF
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <div class="flex items-center gap-2">
+
+                        <a id="downloadVillageMap" href="#" download
+                            class="inline-flex h-10 items-center
+                               justify-center gap-2 rounded-xl
+                               bg-white px-4 text-sm font-semibold
+                               text-blue-700 transition
+                               hover:bg-blue-50">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                download
+                            </span>
+
+                            Download
+                        </a>
+
+                        <a id="openVillageMap" href="#" target="_blank" rel="noopener"
+                            class="inline-flex h-10 items-center
+                               justify-center gap-2 rounded-xl
+                               border border-white/30 bg-white/15
+                               px-4 text-sm font-semibold text-white
+                               transition hover:bg-white/25">
+
+                            <span class="material-symbols-outlined text-[19px]">
+                                open_in_new
+                            </span>
+
+                            Open
+                        </a>
+
+                        <button type="button" id="closeVillageMapModal"
+                            class="inline-flex h-10 w-10 items-center
+                               justify-center rounded-xl bg-white/15
+                               transition hover:bg-white/25">
+
+                            <span class="material-symbols-outlined text-[24px]">
+                                close
+                            </span>
+                        </button>
+
+                    </div>
+
+                </div>
+
+                {{-- Viewer --}}
+                <div class="relative min-h-0 flex-1 bg-slate-200">
+
+                    <div id="villageMapLoader"
+                        class="absolute inset-0 z-10 flex items-center
+                           justify-center bg-slate-100">
+
+                        <div class="text-center">
+
+                            <div
+                                class="mx-auto h-11 w-11 animate-spin
+                                   rounded-full border-4
+                                   border-indigo-200
+                                   border-t-indigo-600">
+                            </div>
+
+                            <p class="mt-3 text-sm font-semibold
+                                   text-slate-600">
+                                Loading village map...
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                    <iframe id="villageMapFrame" src="" title="Village Map PDF" class="h-full w-full border-0">
+                    </iframe>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 
 @endsection

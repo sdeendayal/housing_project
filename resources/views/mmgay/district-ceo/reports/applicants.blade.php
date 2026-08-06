@@ -5,6 +5,10 @@
 @section('content')
 
     @php
+        $rowParams = request()->only(['phase', 'district_id', 'block_id', 'village_id', 'status', 'caste']);
+    @endphp
+
+    @php
         $currentFilters = array_filter(
             [
                 'phase' => $phase ?? 'all',
@@ -20,6 +24,46 @@
         $exportFilters = array_merge($currentFilters, [
             'type' => 'applicants',
         ]);
+    @endphp
+
+    @php
+        $scUrl = route(
+            'district.dashboard.applicants',
+            array_merge($rowParams, [
+                'status' => 'all_applicants',
+                'caste' => 'SC',
+            ]),
+        );
+    @endphp
+
+    @php
+        $ghumantuUrl = route(
+            'district.dashboard.applicants',
+            array_merge($rowParams, [
+                'status' => 'all_applicants',
+                'caste' => 'Ghumantu',
+            ]),
+        );
+    @endphp
+
+    @php
+        $widowUrl = route(
+            'district.dashboard.applicants',
+            array_merge($rowParams, [
+                'status' => 'all_applicants',
+                'caste' => 'Widow',
+            ]),
+        );
+    @endphp
+
+    @php
+        $othersUrl = route(
+            'district.dashboard.applicants',
+            array_merge($rowParams, [
+                'status' => 'all_applicants',
+                'caste' => 'Others',
+            ]),
+        );
     @endphp
 
     <main class="mt-[68px] min-h-screen bg-slate-50 p-4
@@ -121,9 +165,6 @@
 
                             <span>CSV</span>
                         </a>
-
-
-
                         <div id="exportLoader"
                             class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm">
 
@@ -143,17 +184,6 @@
 
                             </div>
                         </div>
-
-
-                        {{-- <a href="{{ route('district.dashboard.report', array_merge($exportFilters, ['format' => 'pdf'])) }}"
-                            class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100">
-
-                            <span class="material-symbols-outlined text-[19px]">
-                                picture_as_pdf
-                            </span>
-
-                            PDF
-                        </a> --}}
 
                         <a href="{{ route('district.dashboard.applicants.print', $exportFilters) }}" target="_blank"
                             class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 transition hover:bg-red-100">
