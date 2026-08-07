@@ -90,7 +90,7 @@ return new class extends Migration
             $table->unsignedBigInteger('ppt_member_id')->nullable()->index();
             $table->string('property_type', 100)->default('flat');
             $table->string('verify_In_survey_app', 10)->nullable()->index();
-            $table->tinyInteger('ppp_exclusion')->default(0)->index();
+            $table->tinyInteger('ppp_exclusion')->nullable()->index();
             $table->tinyInteger('property_in_india')->nullable()->index();
             $table->tinyInteger('house_ownership')->nullable()->index();
             $table->timestamps();
