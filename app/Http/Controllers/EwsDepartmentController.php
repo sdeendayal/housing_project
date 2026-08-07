@@ -439,7 +439,7 @@ class EwsDepartmentController extends Controller
             return DB::table($tableName)->where('secure_id', $secureId)->first();
         };
 
-        if ($type === 'ppt_members') {
+        if ($type === 'ppt_members' || $type === 'not_in_survey') {
             $beneficiary = DB::table('ppt_members')->where('id', $secureId)->first();
             if ($beneficiary) {
                 $beneficiary->application_number = $beneficiary->familyID;
@@ -536,6 +536,7 @@ class EwsDepartmentController extends Controller
 
         $beneficiary->status = match ($type) {
             'ppt_members' => 'Total registration',
+            'not_in_survey' => 'Rejected in survey app',
             'registered' => 'Verify in survey app',
             'allotted' => 'Allotted',
             'pending' => 'Waiting',

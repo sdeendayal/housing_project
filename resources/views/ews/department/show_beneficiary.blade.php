@@ -60,6 +60,7 @@
                      elseif ($typeTitle === 'adc_passed') $typeTitle = 'Eligible';
                      elseif ($typeTitle === 'adc_failed') $typeTitle = 'Not Eligible';
                      elseif ($typeTitle === 'ppt_members') $typeTitle = 'Total registration';
+                     elseif ($typeTitle === 'not_in_survey') $typeTitle = 'Rejected in survey app';
 
                     $statusClass = 'bg-blue-50 border-blue-200 text-blue-700';
                     $statusDot = 'bg-blue-500';
@@ -135,7 +136,7 @@
                 </div>
 
                 <!-- Dynamic Rich Details (Compact Side-by-Side Grid) -->
-                @if($beneficiary->type === 'ppt_members')
+                @if($beneficiary->type === 'ppt_members' || $beneficiary->type === 'not_in_survey')
                     <!-- PPT Members Custom Rich Details -->
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 py-4">
                         <!-- Left Column -->
