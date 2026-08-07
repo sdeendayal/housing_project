@@ -1036,38 +1036,16 @@ class EwsDepartmentController extends Controller
         $format = strtolower($request->input('format', 'csv'));
 
         if ($type === 'ppt_members') {
-            $query = DB::table('ppt_members')
-                ->select(
-                    DB::raw('MIN(id) as id'),
-                    DB::raw('MIN(familyID) as application_number'),
-                    DB::raw('MIN(fullName) as full_name'),
-                    DB::raw('NULL as aadhar_no'),
-                    DB::raw('MIN(mobileNo) as mobile_number'),
-                    DB::raw("'N/A' as flat_no"),
-                    DB::raw("'Total registration' as status"),
-                    DB::raw('MIN(district) as dist_name')
-                )
-                ->when($districtId, fn($q) => $q->where('district_id', $districtId))
-                ->groupBy('memberID');
+            $query = DB::table('all_ews_data_1')
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Total registration' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'not_in_survey') {
-            $query = DB::table('ppt_members')
-                ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-                ->whereNull('all_ews_data_1.member_id')
-                ->select(
-                    DB::raw('MIN(ppt_members.id) as id'),
-                    DB::raw('MIN(ppt_members.familyID) as application_number'),
-                    DB::raw('MIN(ppt_members.fullName) as full_name'),
-                    DB::raw('NULL as aadhar_no'),
-                    DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
-                    DB::raw("'N/A' as flat_no"),
-                    DB::raw("'Not in survey' as status"),
-                    DB::raw('MIN(ppt_members.district) as dist_name')
-                )
-                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-                ->groupBy('ppt_members.memberID');
+            $query = DB::table('all_ews_data_1')
+                ->where('verify_In_survey_app', 'No')
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected in survey app' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Verify in survey app' as status"), 'dist_name');
+                ->where('verify_In_survey_app', 'yes')
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Verify in survey app' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'allotted') {
             $query = DB::table('all_ews_data_544')
                 ->where('Allotment', 'alloted')
@@ -1081,20 +1059,35 @@ class EwsDepartmentController extends Controller
             $query = DB::table('ews_waiting_list_9')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
-            $query = DB::table('ews_reject_ppp_exclusion_2')
-                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
-                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
-                      ->from('ews_reject_ppp_exclusion_2')
-                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+            $query = DB::table('all_ews_data_1')
+                ->where('ppp_exclusion', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('ppp_exclusion', 1)
+                      ->groupBy('application_number');
                 })
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'rejected_property') {
-            $query = DB::table('ews_reject_property_in_india_3')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
+            $query = DB::table('all_ews_data_1')
+                ->where('property_in_india', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('property_in_india', 1)
+                      ->groupBy('application_number');
+                })
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'rejected_ownership') {
-            $query = DB::table('ews_house_ownership_reject_4')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name');
+            $query = DB::table('all_ews_data_1')
+                ->where('house_ownership', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('house_ownership', 1)
+                      ->groupBy('application_number');
+                })
+                ->select('id', 'application_number', 'full_name', DB::raw('NULL as aadhar_no'), 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'eligible_draw') {
             $query = DB::table('ews_eligible_draw_list_5')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Eligible for booking' as status"), 'dist_name');
@@ -1152,27 +1145,18 @@ class EwsDepartmentController extends Controller
             ) as beneficiaries"));
         }
 
-        if ($districtId && $type !== 'ppt_members' && $type !== 'not_in_survey') {
+        if ($districtId) {
             $query->where('dist_id', $districtId);
         }
 
         if ($search) {
-            if ($type === 'ppt_members' || $type === 'not_in_survey') {
-                $query->where(function($q) use ($search) {
-                    $q->where('ppt_members.familyID', 'like', "%{$search}%")
-                      ->orWhere('ppt_members.fullName', 'like', "%{$search}%")
-                      ->orWhere('ppt_members.mobileNo', 'like', "%{$search}%")
-                      ->orWhere('ppt_members.district', 'like', "%{$search}%");
-                });
-            } else {
-                $query->where(function($q) use ($search) {
-                    $q->where('application_number', 'like', "%{$search}%")
-                      ->orWhere('full_name', 'like', "%{$search}%")
-                      ->orWhere('aadhar_no', 'like', "%{$search}%")
-                      ->orWhere('mobile_number', 'like', "%{$search}%")
-                      ->orWhere('dist_name', 'like', "%{$search}%");
-                });
-            }
+            $query->where(function($q) use ($search) {
+                $q->where('application_number', 'like', "%{$search}%")
+                  ->orWhere('full_name', 'like', "%{$search}%")
+                  ->orWhere('aadhar_no', 'like', "%{$search}%")
+                  ->orWhere('mobile_number', 'like', "%{$search}%")
+                  ->orWhere('dist_name', 'like', "%{$search}%");
+            });
         }
 
         $headers = ['S.No.', 'Application Number', 'Full Name', 'District', 'Aadhar Number', 'Mobile Number'];
