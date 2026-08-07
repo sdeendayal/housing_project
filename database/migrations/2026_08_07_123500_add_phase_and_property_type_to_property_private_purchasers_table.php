@@ -11,8 +11,12 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('property_private_purchasers', function (Blueprint $table) {
-            $table->string('phase', 50)->nullable()->after('CompanyId');
-            $table->string('property_type', 100)->nullable()->after('phase');
+            if (!Schema::hasColumn('property_private_purchasers', 'phase')) {
+                $table->string('phase', 50)->nullable()->after('CompanyId');
+            }
+            if (!Schema::hasColumn('property_private_purchasers', 'property_type')) {
+                $table->string('property_type', 100)->nullable()->after('phase');
+            }
         });
     }
 
@@ -22,7 +26,16 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('property_private_purchasers', function (Blueprint $table) {
-            $table->dropColumn(['phase', 'property_type']);
+            $columnsToDrop = [];
+            if (Schema::hasColumn('property_private_purchasers', 'phase')) {
+                $columnsToDrop[] = 'phase';
+            }
+            if (Schema::hasColumn('property_private_purchasers', 'property_type')) {
+                $columnsToDrop[] = 'property_type';
+            }
+            if (!empty($columnsToDrop)) {
+                $table->dropColumn($columnsToDrop);
+            }
         });
     }
 };

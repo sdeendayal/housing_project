@@ -11,7 +11,9 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('ownermaster', function (Blueprint $table) {
-            $table->string('property_type', 100)->nullable();
+            if (!Schema::hasColumn('ownermaster', 'property_type')) {
+                $table->string('property_type', 100)->nullable();
+            }
         });
     }
 
@@ -21,7 +23,9 @@ return new class extends Migration {
     public function down(): void
     {
         Schema::table('ownermaster', function (Blueprint $table) {
-            $table->dropColumn('property_type');
+            if (Schema::hasColumn('ownermaster', 'property_type')) {
+                $table->dropColumn('property_type');
+            }
         });
     }
 };
