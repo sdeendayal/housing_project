@@ -99,6 +99,7 @@ return new class extends Migration
                 $table->dateTime('CreatedDate')->nullable();
                 $table->integer('UpdatedBy')->nullable();
                 $table->dateTime('UpdatedDate')->nullable();
+                $table->string('property_type', 100)->nullable();
             });
         }
 

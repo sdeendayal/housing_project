@@ -85,6 +85,7 @@ class OwnerMasterSeeder extends Seeder
                     'CreatedDate' => $this->parseDateTime($this->getValue($row, $headerMap, 'CreatedDate')),
                     'UpdatedBy' => $this->nullableInt($this->getValue($row, $headerMap, 'UpdatedBy')),
                     'UpdatedDate' => $this->parseDateTime($this->getValue($row, $headerMap, 'UpdatedDate')),
+                    'property_type' => 'plot',
                 ];
 
                 if (count($buffer) >= self::CHUNK_SIZE) {
