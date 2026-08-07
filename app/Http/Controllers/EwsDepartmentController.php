@@ -75,6 +75,7 @@ class EwsDepartmentController extends Controller
             ->count('memberID');
 
         $registeredCount = DB::table('all_ews_data_1')
+            ->where('verify_In_survey_app', 'yes')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $allottedCount = DB::table('all_ews_data_544')
@@ -87,19 +88,34 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $pendingCount = 0;
-        $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
-                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
-                  ->from('ews_reject_ppp_exclusion_2')
-                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+        $rejectedPppCount = DB::table('all_ews_data_1')
+            ->where('ppp_exclusion', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('ppp_exclusion', 1)
+                  ->groupBy('application_number');
             })
-            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
-            ->count();
-        $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $rejectedOwnershipCount = DB::table('ews_house_ownership_reject_4')
+        $rejectedPropertyCount = DB::table('all_ews_data_1')
+            ->where('property_in_india', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('property_in_india', 1)
+                  ->groupBy('application_number');
+            })
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
+        $rejectedOwnershipCount = DB::table('all_ews_data_1')
+            ->where('house_ownership', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('house_ownership', 1)
+                  ->groupBy('application_number');
+            })
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $eligibleDrawCount = DB::table('ews_eligible_draw_list_5')
@@ -161,12 +177,10 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
-        $notInSurveyCount = DB::table('ppt_members')
-            ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-            ->whereNull('all_ews_data_1.member_id')
-            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->distinct('ppt_members.memberID')
-            ->count('ppt_members.memberID');
+        $notInSurveyCount = DB::table('all_ews_data_1')
+            ->where('verify_In_survey_app', 'No')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
 
         return view('ews.department.dashboard', compact(
             'user', 
@@ -209,6 +223,7 @@ class EwsDepartmentController extends Controller
             ->count('memberID');
 
         $registeredCount = DB::table('all_ews_data_1')
+            ->where('verify_In_survey_app', 'yes')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $allottedCount = DB::table('all_ews_data_544')
@@ -221,19 +236,34 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $pendingCount = 0;
-        $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
-            ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
-                $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
-                  ->from('ews_reject_ppp_exclusion_2')
-                  ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                  ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+        $rejectedPppCount = DB::table('all_ews_data_1')
+            ->where('ppp_exclusion', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('ppp_exclusion', 1)
+                  ->groupBy('application_number');
             })
-            ->when($districtId, fn($q) => $q->where('ews_reject_ppp_exclusion_2.dist_id', $districtId))
-            ->count();
-        $rejectedPropertyCount = DB::table('ews_reject_property_in_india_3')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $rejectedOwnershipCount = DB::table('ews_house_ownership_reject_4')
+        $rejectedPropertyCount = DB::table('all_ews_data_1')
+            ->where('property_in_india', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('property_in_india', 1)
+                  ->groupBy('application_number');
+            })
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
+        $rejectedOwnershipCount = DB::table('all_ews_data_1')
+            ->where('house_ownership', 1)
+            ->whereIn('id', function($q) {
+                $q->select(DB::raw('MIN(id)'))
+                  ->from('all_ews_data_1')
+                  ->where('house_ownership', 1)
+                  ->groupBy('application_number');
+            })
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $eligibleDrawCount = DB::table('ews_eligible_draw_list_5')
@@ -295,12 +325,10 @@ class EwsDepartmentController extends Controller
         $developerCount = User::where('role', 'ews_developer')->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
-        $notInSurveyCount = DB::table('ppt_members')
-            ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-            ->whereNull('all_ews_data_1.member_id')
-            ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-            ->distinct('ppt_members.memberID')
-            ->count('ppt_members.memberID');
+        $notInSurveyCount = DB::table('all_ews_data_1')
+            ->where('verify_In_survey_app', 'No')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
 
         return view('ews.department.list', compact(
             'user', 
@@ -351,26 +379,31 @@ class EwsDepartmentController extends Controller
                 ->when($districtId, fn($q) => $q->where('district_id', $districtId))
                 ->groupBy('memberID');
         } elseif ($type === 'not_in_survey') {
-            $query = DB::table('ppt_members')
-                ->leftJoin('all_ews_data_1', 'ppt_members.memberID', '=', 'all_ews_data_1.member_id')
-                ->whereNull('all_ews_data_1.member_id')
+            $query = DB::table('all_ews_data_1')
+                ->where('verify_In_survey_app', 'No')
                 ->select(
-                    DB::raw('MIN(ppt_members.id) as secure_id'),
-                    DB::raw('MIN(ppt_members.id) as id'),
-                    DB::raw('MIN(ppt_members.familyID) as application_number'),
-                    DB::raw('MIN(ppt_members.fullName) as full_name'),
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
                     DB::raw('NULL as aadhar_no'),
-                    DB::raw('MIN(ppt_members.mobileNo) as mobile_number'),
+                    'mobile_number',
                     DB::raw("'N/A' as flat_no"),
                     DB::raw("'not_in_survey' as type"),
-                    DB::raw("'Not in survey' as status"),
-                    DB::raw('MIN(ppt_members.district) as dist_name'),
-                    DB::raw('MIN(ppt_members.district_id) as dist_id')
+                    DB::raw("'Rejected in survey app' as status"),
+                    'dist_name',
+                    'dist_id'
                 )
-                ->when($districtId, fn($q) => $q->where('ppt_members.district_id', $districtId))
-                ->groupBy('ppt_members.memberID');
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'registered') {
             $query = DB::table('all_ews_data_1')
+                ->where('verify_In_survey_app', 'yes')
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('verify_In_survey_app', 'yes')
+                      ->groupBy('member_id');
+                })
                 ->select(
                     'secure_id',
                     'id',
@@ -398,20 +431,74 @@ class EwsDepartmentController extends Controller
             $query = DB::table('ews_waiting_list_9')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
-            $query = DB::table('ews_reject_ppp_exclusion_2')
-                ->whereIn('ews_reject_ppp_exclusion_2.id', function($q) {
-                    $q->select(DB::raw('MIN(ews_reject_ppp_exclusion_2.id)'))
-                      ->from('ews_reject_ppp_exclusion_2')
-                      ->leftJoin('all_ews_data_1', 'ews_reject_ppp_exclusion_2.application_number', '=', 'all_ews_data_1.application_number')
-                      ->groupBy(DB::raw('COALESCE(all_ews_data_1.member_id, ews_reject_ppp_exclusion_2.id)'));
+            $query = DB::table('all_ews_data_1')
+                ->where('ppp_exclusion', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('ppp_exclusion', 1)
+                      ->groupBy('application_number');
                 })
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ppp' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+                ->select(
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
+                    DB::raw('NULL as aadhar_no'),
+                    'mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'rejected_ppp' as type"),
+                    DB::raw("'Rejected' as status"),
+                    'dist_name',
+                    'dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'rejected_property') {
-            $query = DB::table('ews_reject_property_in_india_3')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_property' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+            $query = DB::table('all_ews_data_1')
+                ->where('property_in_india', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('property_in_india', 1)
+                      ->groupBy('application_number');
+                })
+                ->select(
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
+                    DB::raw('NULL as aadhar_no'),
+                    'mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'rejected_property' as type"),
+                    DB::raw("'Rejected' as status"),
+                    'dist_name',
+                    'dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'rejected_ownership') {
-            $query = DB::table('ews_house_ownership_reject_4')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'rejected_ownership' as type"), DB::raw("'Rejected' as status"), 'dist_name');
+            $query = DB::table('all_ews_data_1')
+                ->where('house_ownership', 1)
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('all_ews_data_1')
+                      ->where('house_ownership', 1)
+                      ->groupBy('application_number');
+                })
+                ->select(
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
+                    DB::raw('NULL as aadhar_no'),
+                    'mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'rejected_ownership' as type"),
+                    DB::raw("'Rejected' as status"),
+                    'dist_name',
+                    'dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'eligible_draw') {
             $query = DB::table('ews_eligible_draw_list_5')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible for booking' as status"), 'dist_name');
@@ -518,7 +605,7 @@ class EwsDepartmentController extends Controller
             return DB::table($tableName)->where('secure_id', $secureId)->first();
         };
 
-        if ($type === 'ppt_members' || $type === 'not_in_survey') {
+        if ($type === 'ppt_members') {
             $beneficiary = DB::table('ppt_members')->where('id', $secureId)->first();
             if ($beneficiary) {
                 $beneficiary->application_number = $beneficiary->familyID;
@@ -527,6 +614,11 @@ class EwsDepartmentController extends Controller
                 $beneficiary->mobile_number = $beneficiary->mobileNo;
                 $beneficiary->flat_no = 'N/A';
                 $beneficiary->dist_name = $beneficiary->district;
+            }
+        } elseif ($type === 'not_in_survey') {
+            $beneficiary = $fetchBySecId('all_ews_data_1');
+            if ($beneficiary) {
+                $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'registered') {
             $beneficiary = $fetchBySecId('all_ews_data_1');
@@ -546,17 +638,17 @@ class EwsDepartmentController extends Controller
         } elseif ($type === 'pending') {
             $beneficiary = $fetchBySecId('ews_waiting_list_9');
         } elseif ($type === 'rejected_ppp') {
-            $beneficiary = $fetchBySecId('ews_reject_ppp_exclusion_2');
+            $beneficiary = $fetchBySecId('all_ews_data_1');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'rejected_property') {
-            $beneficiary = $fetchBySecId('ews_reject_property_in_india_3');
+            $beneficiary = $fetchBySecId('all_ews_data_1');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'rejected_ownership') {
-            $beneficiary = $fetchBySecId('ews_house_ownership_reject_4');
+            $beneficiary = $fetchBySecId('all_ews_data_1');
             if ($beneficiary) {
                 $beneficiary->flat_no = 'N/A';
             }

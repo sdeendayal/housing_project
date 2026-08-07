@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('all_ews_data_1', function (Blueprint $table) {
             $table->id();
-            $table->text('aadhar_no')->nullable();
+            $table->string('aadhar_no', 50)->nullable()->index();
             $table->text('address')->nullable();
             $table->text('age')->nullable();
             $table->text('application_number')->nullable();
@@ -89,6 +89,10 @@ return new class extends Migration
             $table->string('member_id', 50)->nullable()->index();
             $table->unsignedBigInteger('ppt_member_id')->nullable()->index();
             $table->string('property_type', 100)->default('flat');
+            $table->string('verify_In_survey_app', 10)->nullable()->index();
+            $table->tinyInteger('ppp_exclusion')->default(0)->index();
+            $table->tinyInteger('property_in_india')->nullable()->index();
+            $table->tinyInteger('house_ownership')->nullable()->index();
             $table->timestamps();
         });
     }

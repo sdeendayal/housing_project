@@ -130,6 +130,7 @@ class AllEwsDataSeeder extends Seeder
             $rowInsert['secure_id'] = $data['secure_id'] ?? $data['secure_id'] ?? \Illuminate\Support\Str::random(32);
             $rowInsert['dist_name'] = $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT';
             $rowInsert['dist_id'] = $data['dist_id'] ?? $data['DistrictId'] ?? $districtId;
+            $rowInsert['verify_In_survey_app'] = 'yes';
             $rowInsert['created_at'] = now();
             $rowInsert['updated_at'] = now();
 

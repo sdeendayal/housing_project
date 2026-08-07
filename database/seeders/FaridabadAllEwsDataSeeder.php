@@ -104,6 +104,7 @@ class FaridabadAllEwsDataSeeder extends Seeder
             $rowInsert['secure_id'] = $data['secure_id'] ?? $data['secure_id'] ?? Str::random(32);
             $rowInsert['dist_name'] = 'FARIDABAD';
             $rowInsert['dist_id'] = 4;
+            $rowInsert['verify_In_survey_app'] = 'yes';
             $rowInsert['created_at'] = now();
             $rowInsert['updated_at'] = now();
 
