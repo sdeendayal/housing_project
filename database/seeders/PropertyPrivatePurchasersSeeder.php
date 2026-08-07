@@ -86,6 +86,8 @@ class PropertyPrivatePurchasersSeeder extends Seeder
                         : null,
                     'ModifiedBy' => ! empty($row[23]) ? (int) $row[23] : null,
                     'CompanyId' => ! empty($row[24]) ? (int) $row[24] : 544,
+                    'phase' => '1',
+                    'property_type' => 'plot',
                 ];
 
                 if (count($buffer) >= self::CHUNK_SIZE) {

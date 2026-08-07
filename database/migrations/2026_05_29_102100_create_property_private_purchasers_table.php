@@ -36,6 +36,9 @@ return new class extends Migration {
             $table->dateTime('ModifiedDate')->nullable();
             $table->integer('ModifiedBy')->nullable();
             $table->integer('CompanyId');
+            $table->string('phase', 50)->nullable();
+            $table->string('property_type', 100)->nullable();
+
 
             $table->foreign('BranchId')->references('BranchId')->on('em_offices')->onDelete('cascade');
             $table->foreign('DistrictId')->references('DistrictId')->on('districts')->onDelete('cascade');
