@@ -5,9 +5,6 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
-use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class EwsAllottedSeeder extends Seeder
 {
@@ -16,113 +13,90 @@ class EwsAllottedSeeder extends Seeder
      */
     public function run(): void
     {
-        ini_set('memory_limit', '-1');
-        $filePath = database_path('seeders/data/final_draw_developers.xlsx');
-
-        if (!file_exists($filePath)) {
-            $this->command->error("Excel file not found at: {$filePath}");
-            return;
-        }
-
-        $this->command->info("Loading Excel file from {$filePath}...");
-        
-        $reader = IOFactory::createReaderForFile($filePath);
-        $reader->setReadDataOnly(true);
-        $spreadsheet = $reader->load($filePath);
-        $sheet = $spreadsheet->getSheetByName('509 fnal draw sheet');
-        if (!$sheet) {
-            $this->command->error("Sheet '509 fnal draw sheet' not found in Excel file.");
-            return;
-        }
-        
-        $highestRow = $sheet->getHighestRow();
-        $highestColumn = $sheet->getHighestColumn();
-        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
-
-        $this->command->info("Excel sheet loaded. Total rows: {$highestRow}, Total columns: {$highestColumnIndex}.");
-
-        // Read header row (row 3)
-        $header = [];
-        for ($col = 1; $col <= $highestColumnIndex; $col++) {
-            $header[] = trim($sheet->getCell([$col, 3])->getValue()); // Row 3 has headers!
-        }
-
-        // Clean headers to avoid any hidden characters
-        $header = array_map(function ($h) {
-            return trim($h, "\xEF\xBB\xBF \t\n\r\0\x0B");
-        }, $header);
-
-        $batch = [];
-        $batchSize = 250; // Batch size to optimize database inserts
-        $count = 0;
+        ini_set('memory_limit', '2G');
 
         $this->command->info("Truncating existing ews_allotted_8 table...");
         DB::table('ews_allotted_8')->truncate();
 
-        $this->command->info("Seeding data into ews_allotted_8 table (starting from row 4)...");
-
-        // Ensure ews_districts table exists
-        if (!Schema::hasTable('ews_districts')) {
-            Schema::create('ews_districts', function (Blueprint $table) {
-                $table->id();
-                $table->string('name')->unique();
-                $table->timestamps();
-            });
+        if (!Schema::hasTable('all_ews_data_544')) {
+            $this->command->error("Source table all_ews_data_544 does not exist.");
+            return;
         }
 
-        // Ensure ews_allotted_8 has the columns
-        if (!Schema::hasColumn('ews_allotted_8', 'secure_id')) {
-            Schema::table('ews_allotted_8', function (Blueprint $table) {
-                $table->string('secure_id', 32)->nullable()->unique();
-                $table->string('dist_name')->nullable();
-                $table->unsignedBigInteger('dist_id')->nullable();
-            });
+        $this->command->info("Fetching source records from all_ews_data_544...");
+        $records = DB::table('all_ews_data_544')->get();
+        $this->command->info("Total records in all_ews_data_544: " . count($records));
+
+        $tableColumns = Schema::getColumnListing('ews_allotted_8');
+        $sourceColumns = Schema::getColumnListing('all_ews_data_544');
+
+        $sourceColMap = [];
+        foreach ($sourceColumns as $col) {
+            $sourceColMap[strtolower($col)] = $col;
         }
 
-        // Fetch Sonipat ID from EWS master districts table
-        $masterDist = DB::table('ews_districts')->where('name', 'SONIPAT')->first();
-        $districtId = $masterDist ? $masterDist->id : 22;
-        $districtName = $masterDist ? $masterDist->name : 'SONIPAT';
+        $batch = [];
+        $batchSize = 250;
+        $count = 0;
+        $seenPurchasers = [];
 
-        // Ensure Sonipat is seeded in ews_districts and fetch the ID
-        $district = DB::table('ews_districts')->where('id', $districtId)->first();
-        if (!$district) {
-            DB::table('ews_districts')->insert([
-                'id' => $districtId,
-                'name' => $districtName,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-        }
-
-        for ($row = 4; $row <= $highestRow; $row++) {
-            $rowData = [];
-            for ($col = 1; $col <= $highestColumnIndex; $col++) {
-                $rowData[] = $sheet->getCell([$col, $row])->getValue();
+        foreach ($records as $row) {
+            // Check for Allotment status (must be 'alloted')
+            $allotmentVal = trim(strtolower($row->Allotment ?? ''));
+            $isAllotted = ($allotmentVal === 'alloted' || $allotmentVal === 'allotted');
+            if (!$isAllotted) {
+                continue;
             }
 
-            // Combine header and row data
-            $data = array_combine($header, $rowData);
+            // Check uniqueness based on PrivatePurchaserId
+            $purchaserId = $row->PrivatePurchaserId ?? null;
+            if ($purchaserId !== null && $purchaserId !== '' && $purchaserId !== 'NULL' && $purchaserId !== 'null') {
+                if (isset($seenPurchasers[$purchaserId])) {
+                    // Skip duplicates
+                    continue;
+                }
+                $seenPurchasers[$purchaserId] = true;
+            }
 
-            // Handle NULL strings in Excel sheets if they are literally written as "NULL"
-            foreach ($data as $key => $val) {
-                if ($val === 'NULL' || $val === 'null' || $val === '') {
-                    $data[$key] = null;
+            $rowInsert = [];
+            foreach ($tableColumns as $dbCol) {
+                if ($dbCol === 'id' || $dbCol === 'created_at' || $dbCol === 'updated_at') {
+                    continue;
+                }
+
+                // Explicit mappings for standard keys
+                if ($dbCol === 'application_number') {
+                    $rowInsert[$dbCol] = $row->ApplicationNo ?? $row->ApplicationNo_2 ?? null;
+                } elseif ($dbCol === 'full_name') {
+                    $rowInsert[$dbCol] = $row->PrivatePurchaserName ?? null;
+                } elseif ($dbCol === 'aadhar_no') {
+                    $rowInsert[$dbCol] = $row->AadhaarNo ?? null;
+                } elseif ($dbCol === 'mobile_number') {
+                    $rowInsert[$dbCol] = $row->MobileNo ?? $row->MobileNo_2 ?? null;
+                } elseif ($dbCol === 'flat_no') {
+                    $rowInsert[$dbCol] = $row->Flat_PlotNo ?? $row->Flat_plotno_2 ?? null;
+                } elseif ($dbCol === 'dist_name') {
+                    $rowInsert[$dbCol] = $row->dist ?? null;
+                } else {
+                    // Match case-insensitively
+                    $lowerCol = strtolower($dbCol);
+                    if (isset($sourceColMap[$lowerCol])) {
+                        $sourceKey = $sourceColMap[$lowerCol];
+                        $val = $row->$sourceKey ?? null;
+                        if ($val === 'NULL' || $val === 'null' || $val === '') {
+                            $val = null;
+                        }
+                        $rowInsert[$dbCol] = $val;
+                    } else {
+                        $rowInsert[$dbCol] = null;
+                    }
                 }
             }
 
-            $batch[] = [
-                'application_number' => $data['Application no'] ?? null,
-                'full_name' => $data['full_name'] ?? null,
-                'aadhar_no' => $data['aadhar_no'] ?? null,
-                'mobile_number' => $data['mobile_number'] ?? null,
-                'flat_no' => $data['flat no.'] ?? null,
-                'secure_id' => $data['secure_id'] ?? \Illuminate\Support\Str::random(32),
-                'dist_name' => $data['dist_name'] ?? $data['DistrictName'] ?? 'SONIPAT',
-                'dist_id' => $data['dist_id'] ?? $data['DistrictId'] ?? $districtId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            $rowInsert['created_at'] = now();
+            $rowInsert['updated_at'] = now();
+
+            $batch[] = $rowInsert;
 
             if (count($batch) >= $batchSize) {
                 DB::table('ews_allotted_8')->insert($batch);
@@ -136,11 +110,6 @@ class EwsAllottedSeeder extends Seeder
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_allotted_8 table.");
-        if (isset($spreadsheet)) {
-            $spreadsheet->disconnectWorksheets();
-            unset($spreadsheet);
-        }
-        gc_collect_cycles();
+        $this->command->info("Successfully seeded {$count} unique allotted records into the ews_allotted_8 table.");
     }
 }

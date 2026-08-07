@@ -291,7 +291,7 @@
                             </div>
                         </div>
                         <div class="text-[9.5px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1">
-                            Sum: {{ number_format($adcPassedCount) }}
+                            Sum: {{ number_format($allottedCount + $pendingCount + $drawRemainingCount) }}
                         </div>
                     </div>
                 </div>

@@ -33,9 +33,24 @@ class EwsDashboardController extends Controller
         $houseReject = DB::table('ews_house_ownership_reject_4')->where('mobile_number', $mobile)->first();
         
         $eligibleDraw = DB::table('ews_eligible_draw_list_5')->where('mobile_number', $mobile)->first();
-        $booking = DB::table('ews_bookings_7')->where('mobile_number', $mobile)->first();
+        $booking = DB::table('all_ews_data_544')
+            ->where('Paid', 'Paid')
+            ->where(function($q) use ($mobile) {
+                $q->where('MobileNo', $mobile)
+                  ->orWhere('MobileNo_2', $mobile);
+            })
+            ->first();
         $eligibleFinal = DB::table('ews_eligible_6')->where('mobile_number', $mobile)->first();
-        $allotted = DB::table('ews_allotted_8')->where('mobile_number', $mobile)->first();
+        $allotted = DB::table('all_ews_data_544')
+            ->where('Allotment', 'alloted')
+            ->where(function($q) use ($mobile) {
+                $q->where('MobileNo', $mobile)
+                  ->orWhere('MobileNo_2', $mobile);
+            })
+            ->first();
+        if ($allotted) {
+            $allotted->flat_no = $allotted->Flat_PlotNo ?? $allotted->Flat_plotno_2 ?? null;
+        }
         $waiting = DB::table('ews_waiting_list_9')->where('mobile_number', $mobile)->first();
 
         return view('ews.dashboard', compact(

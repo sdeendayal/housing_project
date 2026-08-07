@@ -17,17 +17,17 @@ return new class extends Migration
             // Unique fields from the Excel file
             $table->text('LocationnName')->nullable();
             $table->text('BranchId')->nullable();
-            $table->text('PrivatePurchaserId')->nullable();
+            $table->string('PrivatePurchaserId', 100)->nullable()->index();
             $table->text('Flat_PlotNo')->nullable();
-            $table->text('ApplicationNo')->nullable();
+            $table->string('ApplicationNo', 100)->nullable()->index();
             $table->text('PrivatePurchaserName')->nullable();
             $table->text('PurchaserFatherName')->nullable();
             $table->text('PPP_Id')->nullable();
             $table->text('Member_ID')->nullable();
-            $table->text('MobileNo')->nullable();
+            $table->string('MobileNo', 100)->nullable()->index();
             $table->text('BookingOpen')->nullable();
-            $table->text('Paid')->nullable();
-            $table->text('Allotment')->nullable();
+            $table->string('Paid', 50)->nullable()->index();
+            $table->string('Allotment', 50)->nullable()->index();
             $table->text('AccountName')->nullable();
             $table->text('AccountNumber')->nullable();
             $table->text('IFSCCode')->nullable();
@@ -176,7 +176,7 @@ return new class extends Migration
             $table->text('DistrictId_2')->nullable();
             $table->text('StreetName')->nullable();
             $table->text('ZipCode')->nullable();
-            $table->text('MobileNo_2')->nullable();
+            $table->string('MobileNo_2', 100)->nullable()->index();
             $table->text('IsPropertyColonized')->nullable();
             $table->text('TotalIncurredInterestAmount')->nullable();
             $table->text('TotalIncurredPenaltyAmount')->nullable();
@@ -242,7 +242,7 @@ return new class extends Migration
             $table->text('IsBalanceDue')->nullable();
             $table->text('ledgerVerfiedBy')->nullable();
             $table->text('PropertyStatus')->nullable();
-            $table->text('ApplicationNo_2')->nullable();
+            $table->string('ApplicationNo_2', 100)->nullable()->index();
             $table->text('UniqueId')->nullable();
             $table->text('LOI_Status')->nullable();
             $table->text('Allotment_Status')->nullable();
