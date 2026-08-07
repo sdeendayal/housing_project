@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('secure_id', 32)->nullable()->unique();
             $table->string('dist_name')->nullable();
             $table->unsignedBigInteger('dist_id')->nullable();
+            $table->string('property_type', 100)->default('flat');
             $table->timestamps();
         });
     }

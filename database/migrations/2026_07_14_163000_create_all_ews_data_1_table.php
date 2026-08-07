@@ -88,6 +88,7 @@ return new class extends Migration
             $table->unsignedBigInteger('dist_id')->nullable();
             $table->string('member_id', 50)->nullable()->index();
             $table->unsignedBigInteger('ppt_member_id')->nullable()->index();
+            $table->string('property_type', 100)->default('flat');
             $table->timestamps();
         });
     }

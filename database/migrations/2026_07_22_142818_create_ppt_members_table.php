@@ -31,6 +31,7 @@ return new class extends Migration
             
             $table->string('district')->nullable();
             $table->unsignedInteger('district_id')->nullable();
+            $table->string('property_type', 100)->default('flat');
             $table->timestamps();
         });
     }
