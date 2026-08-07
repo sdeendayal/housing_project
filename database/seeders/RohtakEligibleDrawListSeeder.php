@@ -56,6 +56,7 @@ class RohtakEligibleDrawListSeeder extends Seeder
 
         $tableColumns = Schema::getColumnListing('ews_eligible_draw_list_5');
 
+        $seenAadhar = [];
         $batch = [];
         $batchSize = 250; 
         $count = 0;
@@ -99,6 +100,20 @@ class RohtakEligibleDrawListSeeder extends Seeder
                     }
                     $rowInsert[$dbCol] = $val;
                 }
+            }
+
+            // Skip empty rows (where critical fields are empty)
+            if (empty($rowInsert['application_number']) && empty($rowInsert['full_name']) && empty($rowInsert['aadhar_no']) && empty($rowInsert['mobile_number'])) {
+                continue;
+            }
+
+            // Check for duplicate Aadhar number
+            $aadhar = isset($rowInsert['aadhar_no']) ? trim($rowInsert['aadhar_no']) : null;
+            if ($aadhar !== null && $aadhar !== '' && strcasecmp($aadhar, 'NA') !== 0 && strcasecmp($aadhar, 'N/A') !== 0) {
+                if (in_array($aadhar, $seenAadhar)) {
+                    continue;
+                }
+                $seenAadhar[] = $aadhar;
             }
 
             $rowInsert['secure_id'] = $data['secure_id'] ?? $data['secure_id'] ?? Str::random(32);

@@ -101,6 +101,11 @@ class RohtakAllEwsDataSeeder extends Seeder
                 }
             }
 
+            // Skip empty rows (where critical fields are empty)
+            if (empty($rowInsert['application_number']) && empty($rowInsert['full_name']) && empty($rowInsert['aadhar_no']) && empty($rowInsert['mobile_number'])) {
+                continue;
+            }
+
             $rowInsert['secure_id'] = $data['secure_id'] ?? $data['secure_id'] ?? Str::random(32);
             $rowInsert['dist_name'] = 'ROHTAK';
             $rowInsert['dist_id'] = 20;
