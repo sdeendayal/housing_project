@@ -77,7 +77,8 @@ class EwsDepartmentController extends Controller
         $registeredCount = DB::table('all_ews_data_1')
             ->where('verify_In_survey_app', 'yes')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+            ->distinct('member_id')
+            ->count('member_id');
         $allottedCount = DB::table('all_ews_data_544')
             ->where('Allotment', 'alloted')
             ->whereIn('id', function($q) {
@@ -97,9 +98,7 @@ class EwsDepartmentController extends Controller
         $rejectedOwnershipCount = DB::table('ews_house_ownership_reject_4')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $eligibleDrawCount = DB::table('ews_eligible_draw_list_5')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+        $eligibleDrawCount = $registeredCount - ($rejectedPppCount + $rejectedPropertyCount + $rejectedOwnershipCount);
         $bookingCount = DB::table('all_ews_data_544')
             ->where('Paid', 'Paid')
             ->whereIn('id', function($q) {
@@ -159,7 +158,8 @@ class EwsDepartmentController extends Controller
         $notInSurveyCount = DB::table('all_ews_data_1')
             ->where('verify_In_survey_app', 'No')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+            ->distinct('member_id')
+            ->count('member_id');
 
         return view('ews.department.dashboard', compact(
             'user', 
@@ -204,7 +204,8 @@ class EwsDepartmentController extends Controller
         $registeredCount = DB::table('all_ews_data_1')
             ->where('verify_In_survey_app', 'yes')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+            ->distinct('member_id')
+            ->count('member_id');
         $allottedCount = DB::table('all_ews_data_544')
             ->where('Allotment', 'alloted')
             ->whereIn('id', function($q) {
@@ -224,9 +225,7 @@ class EwsDepartmentController extends Controller
         $rejectedOwnershipCount = DB::table('ews_house_ownership_reject_4')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $eligibleDrawCount = DB::table('ews_eligible_draw_list_5')
-            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+        $eligibleDrawCount = $registeredCount - ($rejectedPppCount + $rejectedPropertyCount + $rejectedOwnershipCount);
         $bookingCount = DB::table('all_ews_data_544')
             ->where('Paid', 'Paid')
             ->whereIn('id', function($q) {
@@ -286,7 +285,8 @@ class EwsDepartmentController extends Controller
         $notInSurveyCount = DB::table('all_ews_data_1')
             ->where('verify_In_survey_app', 'No')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->count();
+            ->distinct('member_id')
+            ->count('member_id');
 
         return view('ews.department.list', compact(
             'user', 
@@ -434,8 +434,17 @@ class EwsDepartmentController extends Controller
                     'dist_id'
                 );
         } elseif ($type === 'eligible_draw') {
-            $query = DB::table('ews_eligible_draw_list_5')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'eligible_draw' as type"), DB::raw("'Eligible for booking' as status"), 'dist_name');
+            $query = DB::table(DB::raw("(
+                SELECT e.secure_id, e.id, e.application_number, e.full_name, e.aadhar_no, e.mobile_number, 'N/A' as flat_no, 'eligible_draw' as type, 'Eligible for booking' as status, e.dist_name, e.dist_id 
+                FROM ews_eligible_draw_list_5 e
+                JOIN all_ews_data_1 a ON e.application_number = a.application_number
+                WHERE e.id IN (
+                    SELECT MIN(e2.id) 
+                    FROM ews_eligible_draw_list_5 e2
+                    JOIN all_ews_data_1 a2 ON e2.application_number = a2.application_number
+                    GROUP BY a2.member_id
+                )
+            ) as eligible_beneficiaries"));
         } elseif ($type === 'booking') {
             $query = DB::table('all_ews_data_544')
                 ->where('Paid', 'Paid')
@@ -1005,8 +1014,17 @@ class EwsDepartmentController extends Controller
             $query = DB::table('ews_house_ownership_reject_4')
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Rejected' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'eligible_draw') {
-            $query = DB::table('ews_eligible_draw_list_5')
-                ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'Eligible for booking' as status"), 'dist_name');
+            $query = DB::table(DB::raw("(
+                SELECT e.id, e.application_number, e.full_name, e.aadhar_no, e.mobile_number, 'N/A' as flat_no, 'Eligible for booking' as status, e.dist_name, e.dist_id 
+                FROM ews_eligible_draw_list_5 e
+                JOIN all_ews_data_1 a ON e.application_number = a.application_number
+                WHERE e.id IN (
+                    SELECT MIN(e2.id) 
+                    FROM ews_eligible_draw_list_5 e2
+                    JOIN all_ews_data_1 a2 ON e2.application_number = a2.application_number
+                    GROUP BY a2.member_id
+                )
+            ) as eligible_beneficiaries"));
         } elseif ($type === 'booking') {
             $query = DB::table('all_ews_data_544')
                 ->where('Paid', 'Paid')
