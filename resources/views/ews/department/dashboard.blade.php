@@ -175,7 +175,7 @@
                 <div class="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-650 flex items-center gap-2 shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
                     <span>
-                        Filtration: Verify in survey app ({{ number_format($registeredCount) }}) - Rejections ({{ number_format($rejectedPppCount) }} PPP + {{ number_format($rejectedPropertyCount) }} Prop + {{ number_format($rejectedOwnershipCount) }} House) = Eligible for booking ({{ number_format($eligibleDrawCount) }})
+                        Filtration: Verify in survey app ({{ number_format($eligibleDrawCount + $rejectedPppCount + $rejectedPropertyCount + $rejectedOwnershipCount) }}) - Rejections ({{ number_format($rejectedPppCount) }} PPP + {{ number_format($rejectedPropertyCount) }} Prop + {{ number_format($rejectedOwnershipCount) }} House) = Eligible for booking ({{ number_format($eligibleDrawCount) }})
                     </span>
                 </div>
             </div>
