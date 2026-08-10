@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('all_ews_data_544', function (Blueprint $table) {
+            $table->engine = 'InnoDB ROW_FORMAT=DYNAMIC';
             $table->id();
 
             // Unique fields from the Excel file
