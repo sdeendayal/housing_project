@@ -77,10 +77,10 @@
                                             <td class="text-center py-1.5">
                                                 <div class="d-inline-flex gap-1 justify-content-center align-items-center">
                                                     @if($doc->file_path)
-                                                        <a href="{{ asset('storage/' . $doc->file_path) }}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1 font-semibold px-2 py-0.5 rounded" style="font-size: 0.68rem; line-height: 1.5;">
+                                                        <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-xs btn-outline-primary d-inline-flex align-items-center gap-1 font-semibold px-2 py-0.5 rounded" style="font-size: 0.68rem; line-height: 1.5;">
                                                             <i class="bi bi-eye"></i> View
                                                         </a>
-                                                        <a href="{{ asset('storage/' . $doc->file_path) }}" download class="btn btn-xs btn-primary d-inline-flex align-items-center justify-content-center rounded" style="width: 22px; height: 22px;" title="Download PDF">
+                                                        <a href="{{ asset($doc->file_path) }}" download class="btn btn-xs btn-primary d-inline-flex align-items-center justify-content-center rounded" style="width: 22px; height: 22px;" title="Download PDF">
                                                             <i class="bi bi-download" style="font-size: 0.65rem;"></i>
                                                         </a>
                                                     @else
