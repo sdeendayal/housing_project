@@ -225,9 +225,15 @@
                                                     @php
                                                         // PDFs are stored directly inside:
                                                         // public/draw_documents
+                                                        // Trim accidental spaces and encode characters such as
+                                                        // spaces, &, # and + without changing the real filename.
+                                                        $originalPdfName = trim(
+                                                            str_replace('\\', '/', $document->original_file_name)
+                                                        );
+                                                        $originalPdfName = basename($originalPdfName);
+
                                                         $publicPdfUrl = asset(
-                                                            'draw_documents/'
-                                                            . ltrim($document->original_file_name, '/')
+                                                            'draw_documents/' . rawurlencode($originalPdfName)
                                                         );
 
                                                         // Use the actual PDF filename as its visible title.
@@ -236,7 +242,7 @@
                                                                 '_',
                                                                 ' ',
                                                                 pathinfo(
-                                                                    $document->original_file_name,
+                                                                    $originalPdfName,
                                                                     PATHINFO_FILENAME
                                                                 )
                                                             )
@@ -247,7 +253,7 @@
                                                         class="draw-pdf-trigger inline-flex h-8 max-w-[230px] items-center gap-1 rounded-lg border border-cyan-100 bg-cyan-50 px-2.5 text-[10px] font-semibold text-cyan-700 transition hover:border-cyan-200 hover:bg-cyan-100"
                                                         title="{{ $displayPdfName }}"
                                                         data-title="{{ $displayPdfName }}"
-                                                        data-file-name="{{ $document->original_file_name }}"
+                                                        data-file-name="{{ $originalPdfName }}"
                                                         data-view-url="{{ $publicPdfUrl }}"
                                                         data-download-url="{{ $publicPdfUrl }}">
 
@@ -375,7 +381,5 @@
                 class="min-h-0 flex-1 bg-slate-100"
                 title="Draw PDF document"></iframe>
         </div>
-    </div>
-
-    
+    </div>   
 @endsection
