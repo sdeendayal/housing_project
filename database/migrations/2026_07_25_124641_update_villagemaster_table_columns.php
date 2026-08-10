@@ -40,6 +40,7 @@ return new class extends Migration
             $table->string('VillageName');
             $table->integer('plots')->nullable();
             $table->integer('phase')->nullable();
+            $table->string('map_pdf')->nullable();
         });
 
         Schema::enableForeignKeyConstraints();

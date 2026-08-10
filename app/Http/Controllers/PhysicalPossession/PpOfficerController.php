@@ -858,4 +858,29 @@ class PpOfficerController extends Controller
             ]);
         }
     }
+
+    /**
+     * Web view for Site Engineer to view draw maps/documents filtered by their district.
+     */
+    public function drawDocuments(Request $request)
+    {
+        $officer = Auth::user();
+        $this->ensureDistrictApplications($officer);
+        
+        $districtId = $officer->district_id;
+        
+        if (!$districtId) {
+            return redirect()->route('pp.officer.dashboard')
+                ->with('error', 'District is not assigned to your officer account.');
+        }
+
+        $documents = \App\Models\PropertyDrawDocument::where('district_id', $districtId)
+            ->where('IsActive', true)
+            ->where('IsDeleted', false)
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
+        return view('physical-possession.officer.draw-documents', compact('officer', 'documents'));
+    }
 }
+

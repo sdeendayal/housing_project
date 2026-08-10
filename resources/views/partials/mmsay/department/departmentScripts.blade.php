@@ -2,6 +2,61 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('drawPdfModal');
+        const frame = document.getElementById('drawPdfFrame');
+        const loading = document.getElementById('drawPdfLoading');
+        const title = document.getElementById('drawPdfModalTitle');
+        const fileName = document.getElementById('drawPdfModalFileName');
+        const download = document.getElementById('drawPdfDownload');
+        const open = document.getElementById('drawPdfOpen');
+
+        function openViewer(button) {
+            title.textContent = button.dataset.title || 'Draw Document';
+            fileName.textContent = button.dataset.fileName || 'PDF document';
+            download.href = button.dataset.downloadUrl;
+            download.setAttribute(
+                'download',
+                button.dataset.fileName || 'draw-document.pdf'
+            );
+            open.href = button.dataset.viewUrl;
+            loading.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.classList.add('overflow-hidden');
+            frame.src = button.dataset.viewUrl;
+        }
+
+        function closeViewer() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.classList.remove('overflow-hidden');
+            frame.src = 'about:blank';
+        }
+
+        document.querySelectorAll('.draw-pdf-trigger').forEach(function(button) {
+            button.addEventListener('click', function() {
+                openViewer(button);
+            });
+        });
+
+        frame.addEventListener('load', function() {
+            if (frame.src !== 'about:blank') {
+                loading.classList.add('hidden');
+            }
+        });
+
+        document.getElementById('drawPdfClose').addEventListener('click', closeViewer);
+        document.getElementById('drawPdfBackdrop').addEventListener('click', closeViewer);
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeViewer();
+            }
+        });
+    });
+</script>
+<script>
     document.addEventListener('DOMContentLoaded', () => {
         const district = document.getElementById('district_id');
         const city = document.getElementById('city_id');

@@ -229,7 +229,7 @@
 
         </div>
 
-        {{-- Report Table --}}
+       
         {{-- Report Table --}}
         <section class="mt-5 overflow-hidden rounded-2xl border
            border-slate-200 bg-white shadow-sm">

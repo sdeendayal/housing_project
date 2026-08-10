@@ -33,6 +33,7 @@ class DatabaseSeeder extends Seeder
             DistrictMasterSeeder::class,
             BlockMasterSeeder::class,
             VillageMasterSeeder::class,
+            PropertyDrawDocumentsSeeder::class,
             SocialCategoryMasterSeeder::class,
             FlatMasterSeeder::class,
             OwnerMasterSeeder::class,

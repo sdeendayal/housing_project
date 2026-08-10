@@ -2912,7 +2912,7 @@ class SuperAdminController extends Controller
             v.VillageId,
             v.VillageName,
             v.Phase,
-            v.pdf,
+            v.map_pdf AS pdf,
             COALESCE(v.plots, 0) AS TotalPlots,
 
             COALESCE(

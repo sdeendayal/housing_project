@@ -403,6 +403,9 @@
 </div>
 
 <div class="pp-dash-actions">
+    <a href="{{ route('pp.officer.draw-documents') }}" class="pp-dash-action">
+        <i class="bi bi-map-fill text-success"></i> View Draw Maps / Docs
+    </a>
     @if($stats['submitted'] > 0)
         <a href="{{ route('pp.officer.possession-applications', ['status' => 'Physical Possession Submitted']) }}" class="pp-dash-action warn">
             <i class="bi bi-exclamation-circle"></i> Review {{ $stats['submitted'] }} Submission{{ $stats['submitted'] !== 1 ? 's' : '' }}

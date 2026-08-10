@@ -52,6 +52,11 @@
                 <span class="pp-sidebar-link-label">Total Eligible</span>
             </a>
 
+            <a href="{{ route('pp.officer.draw-documents') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.draw-documents') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon text-success"><i class="bi bi-map-fill"></i></span>
+                <span class="pp-sidebar-link-label">Draw Maps / Docs</span>
+            </a>
+
             <a href="{{ route('pp.officer.possession-applications', ['status' => 'Eligible for Physical Possession']) }}" class="pp-sidebar-link {{ (request()->routeIs('pp.officer.possession-applications') && request()->query('status') === 'Eligible for Physical Possession') || ($isVerifyForm && $appStatus === 'Eligible for Physical Possession') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon danger"><i class="bi bi-calendar-x"></i></span>
                 <span class="pp-sidebar-link-label">Schedule Pending</span>

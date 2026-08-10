@@ -39,17 +39,30 @@
 
             <div class="flex-1 overflow-y-auto space-y-1.5 pr-1">
                 @forelse($villages as $vil)
-                    <a href="{{ route('mmgay.bdo.phase-report') }}?phase={{ $selectedPhase }}&village_id={{ $vil->VillageId }}" 
-                       class="flex items-center justify-between p-3 rounded-lg border transition-all 
+                    <div class="flex items-center justify-between p-3 rounded-lg border transition-all 
                        {{ $selectedVillageId == $vil->VillageId ? 'bg-blue-50 border-blue-200 text-blue-800 font-bold' : 'bg-slate-50 border-slate-150 text-slate-700 hover:bg-slate-100/70' }}">
-                        <div class="flex items-center gap-2">
+                        <a href="{{ route('mmgay.bdo.phase-report') }}?phase={{ $selectedPhase }}&village_id={{ $vil->VillageId }}" class="flex items-center gap-2 flex-1 min-w-0">
                             <span class="material-symbols-outlined text-base {{ $selectedVillageId == $vil->VillageId ? 'text-blue-600' : 'text-slate-400' }}">map</span>
-                            <span class="text-xs uppercase tracking-wide">{{ $vil->VillageName }}</span>
+                            <span class="text-xs uppercase tracking-wide truncate">{{ $vil->VillageName }}</span>
+                        </a>
+                        <div class="flex items-center gap-2 shrink-0">
+                            @if(!empty($vil->map_pdf))
+                                <a href="{{ asset('phase1_plans_gps_map/' . $vil->map_pdf) }}" target="_blank" 
+                                   class="inline-flex items-center gap-0.5 px-1 py-0.5 text-[8px] font-black text-red-650 hover:text-red-755 bg-red-50 hover:bg-red-100 border border-red-200 rounded transition-all" 
+                                   title="Open Village GPS Map PDF">
+                                    <span class="material-symbols-outlined text-[10px] font-black">picture_as_pdf</span>
+                                    <span>MAP</span>
+                                </a>
+                            @else
+                                <span class="inline-flex items-center px-1 py-0.5 text-[7px] font-semibold text-slate-455 bg-slate-50 border border-slate-200 rounded" title="Map not available">
+                                    MAP N/A
+                                </span>
+                            @endif
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded-full {{ $selectedVillageId == $vil->VillageId ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600' }}">
+                                {{ $vil->total_beneficiaries }}
+                            </span>
                         </div>
-                        <span class="text-[10px] font-mono px-2 py-0.5 rounded-full {{ $selectedVillageId == $vil->VillageId ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-600' }}">
-                            {{ $vil->total_beneficiaries }}
-                        </span>
-                    </a>
+                    </div>
                 @empty
                     <div class="py-12 text-center text-slate-400 font-semibold text-xs">
                         No villages found with entries in Phase {{ $selectedPhase }}.
@@ -71,7 +84,15 @@
                     <div>
                         <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-blue-600 text-lg">group</span>
-                            Beneficiaries: {{ $selectedVillageName }}
+                            <span>Beneficiaries: {{ $selectedVillageName }}</span>
+                            @if(!empty($selectedVillagePdf))
+                                <a href="{{ asset('phase1_plans_gps_map/' . $selectedVillagePdf) }}" target="_blank" 
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 text-[9px] font-black text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-all ml-3 shadow-sm hover:shadow" 
+                                   title="Open Village GPS Map PDF">
+                                    <span class="material-symbols-outlined text-xs">picture_as_pdf</span>
+                                    <span>VILLAGE GPS MAP</span>
+                                </a>
+                            @endif
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Click a beneficiary to toggle detail drawer</p>
                     </div>

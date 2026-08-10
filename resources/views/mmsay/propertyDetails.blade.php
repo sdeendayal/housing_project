@@ -349,7 +349,13 @@
                                 @php
                                     $allocatedPayment = (float) ($emi->allocated_payment ?? 0);
                                     $emiPending = (float) ($emi->installment_pending ?? 0);
-                                    $status = $emi->payment_status ?? 'pending';
+                                    $status = $emi->display_status ?? ($emi->payment_status ?? 'pending');
+                                    $statusLabel = match ($status) {
+                                        'advance_paid' => 'Advance Paid',
+                                        'paid' => 'Paid',
+                                        'partial' => 'Partial',
+                                        default => 'Pending',
+                                    };
                                 @endphp
 
                                 <tr class="transition hover:bg-slate-50">
@@ -421,10 +427,12 @@
                                         <span class="inline-flex rounded-full px-2.5 py-1 text-[9px] font-semibold
                                             {{ $status === 'paid'
                                                 ? 'bg-emerald-50 text-emerald-600'
-                                                : ($status === 'partial'
-                                                    ? 'bg-amber-50 text-amber-600'
-                                                    : 'bg-rose-50 text-rose-600') }}">
-                                            {{ ucfirst($status) }}
+                                                : ($status === 'advance_paid'
+                                                    ? 'bg-indigo-50 text-indigo-600'
+                                                    : ($status === 'partial'
+                                                        ? 'bg-amber-50 text-amber-600'
+                                                        : 'bg-rose-50 text-rose-600')) }}">
+                                            {{ $statusLabel }}
                                         </span>
                                     </td>
                                 </tr>
