@@ -16,6 +16,8 @@ return new class extends Migration
 
         Schema::create('all_ews_data_544', function (Blueprint $table) {
             $table->engine = 'InnoDB ROW_FORMAT=DYNAMIC';
+            $table->charset = 'latin1';
+            $table->collation = 'latin1_swedish_ci';
             $table->id();
 
             // Unique fields from the Excel file
