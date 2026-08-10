@@ -32,7 +32,7 @@ class DatabaseSeeder extends Seeder
             InstallmentDueSeeder::class,
             DistrictMasterSeeder::class,
             BlockMasterSeeder::class,
-            // VillageMasterSeeder::class,
+            VillageMasterSeeder::class,
             SocialCategoryMasterSeeder::class,
             FlatMasterSeeder::class,
             OwnerMasterSeeder::class,
@@ -83,7 +83,7 @@ class DatabaseSeeder extends Seeder
             EwsAllottedSeeder::class,
             EwsWaitingListSeeder::class,
             EwsDeveloperSeeder::class,
-            MmgayVillagePlotsSeeder::class,
+            // MmgayVillagePlotsSeeder::class,
             MmsayOldRegistrationDataSeeder::class,
         ]);
 
