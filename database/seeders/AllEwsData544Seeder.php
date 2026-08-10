@@ -74,7 +74,10 @@ class AllEwsData544Seeder extends Seeder
         $this->command->info("Truncating all_ews_data_544 table...");
         DB::table('all_ews_data_544')->truncate();
 
-        // 4. Stream sheet1.xml
+        // 4. Get active table columns list
+        $tableColumns = Schema::getColumnListing('all_ews_data_544');
+
+        // 5. Stream sheet1.xml
         $this->command->info("Streaming sheet1.xml and importing data...");
         $xml = new \XMLReader();
         $xml->open($sheetFile);
@@ -164,20 +167,23 @@ class AllEwsData544Seeder extends Seeder
 
                 // Process data row
                 $rowInsert = [];
-                
-                // Initialize all fields from map with null
+                // Initialize all fields from map with null (only if they exist in DB)
                 foreach ($colMap as $dbCol) {
-                    $rowInsert[$dbCol] = null;
+                    if (in_array($dbCol, $tableColumns)) {
+                        $rowInsert[$dbCol] = null;
+                    }
                 }
 
                 // Map row fields
                 foreach ($rowData as $colIdx => $val) {
                     if (isset($colMap[$colIdx])) {
                         $dbCol = $colMap[$colIdx];
-                        if ($val === 'NULL' || $val === 'null' || $val === '') {
-                            $val = null;
+                        if (in_array($dbCol, $tableColumns)) {
+                            if ($val === 'NULL' || $val === 'null' || $val === '') {
+                                $val = null;
+                            }
+                            $rowInsert[$dbCol] = $val;
                         }
-                        $rowInsert[$dbCol] = $val;
                     }
                 }
 
