@@ -92,7 +92,7 @@ return new class extends Migration
             $table->string('verify_In_survey_app', 10)->nullable()->index();
             $table->tinyInteger('ppp_exclusion')->nullable()->index();
             $table->tinyInteger('property_in_india')->nullable()->index();
-            $table->tinyInteger('house_ownership')->nullable()->index();
+            $table->tinyInteger('house_ownership_reject')->nullable()->index();
             $table->timestamps();
         });
     }
