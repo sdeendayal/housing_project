@@ -12,7 +12,7 @@ class VillageMasterSeeder extends Seeder
 
     public function run(): void
     {
-        $filePath = database_path('seeders/data/owners/villagemaster (2).csv');
+        $filePath = database_path('seeders/data/owners/villagemaster (3).csv');
         
         if (!file_exists($filePath)) {
             throw new \Exception("File not found: " . $filePath);
@@ -20,8 +20,8 @@ class VillageMasterSeeder extends Seeder
 
         $file = fopen($filePath, 'r');
         
-        // Read header with semicolon delimiter
-        $header = fgetcsv($file, 0, ';');
+        // Read header with comma delimiter
+        $header = fgetcsv($file, 0, ',');
         if (!$header) {
             fclose($file);
             throw new \Exception("CSV file is empty: " . $filePath);
@@ -34,7 +34,7 @@ class VillageMasterSeeder extends Seeder
 
         $data = [];
         
-        while (($row = fgetcsv($file, 0, ';')) !== false) {
+        while (($row = fgetcsv($file, 0, ',')) !== false) {
             if (count($header) !== count($row)) {
                 continue;
             }
@@ -50,13 +50,14 @@ class VillageMasterSeeder extends Seeder
             };
 
             $data[] = [
+                'id' => $cleanVal($rowData['id'], true),
                 'VillageId' => $cleanVal($rowData['VillageId'], true),
                 'BlockId' => $cleanVal($rowData['BlockId'], true),
                 'DistrictId' => $cleanVal($rowData['DistrictId'], true),
                 'VillageName' => trim($rowData['VillageName'] ?? ''),
                 'plots' => $cleanVal($rowData['plots'] ?? null, true),
                 'phase' => $cleanVal($rowData['phase'] ?? null, true),
-                'map_pdf' => $cleanVal($rowData['pdf'] ?? null),
+                'map_pdf' => $cleanVal($rowData['map_pdf'] ?? null),
             ];
         }
 

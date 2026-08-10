@@ -85,6 +85,7 @@ Route::prefix('possession')->group(function () {
         Route::post('/logout', [PpOfficerAuthApiController::class, 'logout']);
         
         Route::get('/dashboard', [PpOfficerApiController::class, 'dashboard']);
+        Route::get('/draw-documents', [PpOfficerApiController::class, 'getDrawDocuments']);
 
         Route::get('/slots/capacity', [PpOfficerApiController::class, 'getSlotCapacity']);
 

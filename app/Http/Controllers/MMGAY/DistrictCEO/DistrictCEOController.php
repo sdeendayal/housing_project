@@ -160,7 +160,7 @@ class DistrictCEOController extends Controller
             v.VillageName,
             v.phase AS Phase,
             v.plots AS TotalPlots,
-            v.pdf AS PdfFile,
+            v.map_pdf AS PdfFile,
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
 
             COUNT(DISTINCT CASE
@@ -281,7 +281,7 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'v.VillageName',
                 'v.phase',
                 'v.plots',
-                'v.pdf'
+                'v.map_pdf'
             )
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
@@ -2246,7 +2246,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             v.VillageName,
             v.phase AS Phase,
             v.plots AS TotalPlots,
-            v.pdf AS PdfFile,
+            v.map_pdf AS PdfFile,
 
             COUNT(DISTINCT o.OwnerId) AS TotalApplicants,
 
@@ -2396,7 +2396,7 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'v.VillageName',
                 'v.phase',
                 'v.plots',
-                'v.pdf'
+                'v.map_pdf'
             )
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
@@ -3587,21 +3587,31 @@ END) AS RegistryUnmatchedWithoutMobile,
     {
         return DB::table('registary as registry_source')
             ->whereNotNull('registry_source.SecondPartyMobile')
-            ->where('registry_source.SecondPartyMobile', '<>', '')
+            ->whereRaw("
+            TRIM(registry_source.SecondPartyMobile) <> ''
+        ")
             ->selectRaw("
-                registry_source.SecondPartyMobile,
-                SUBSTRING_INDEX(
-                    GROUP_CONCAT(
-                        registry_source.RegistaryNumber
-                        ORDER BY registry_source.RegistaryDate DESC, registry_source.id DESC
-                        SEPARATOR '||'
-                    ),
-                    '||',
-                    1
-                ) AS RegistaryNumber,
-                MAX(registry_source.RegistaryDate) AS RegistaryDate
-            ")
-            ->groupBy('registry_source.SecondPartyMobile');
+            registry_source.SecondPartyMobile,
+
+            SUBSTRING_INDEX(
+                GROUP_CONCAT(
+                    registry_source.RegistaryNumber
+                    ORDER BY
+                        registry_source.RegistaryDate DESC,
+                        registry_source.id DESC
+                    SEPARATOR '||'
+                ),
+                '||',
+                1
+            ) AS RegistaryNumber,
+
+            MAX(
+                registry_source.RegistaryDate
+            ) AS RegistaryDate
+        ")
+            ->groupBy(
+                'registry_source.SecondPartyMobile'
+            );
     }
 
 }

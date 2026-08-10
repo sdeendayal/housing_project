@@ -82,6 +82,7 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
     // Department officer PP panel (district_officer / department role)
     Route::middleware(['auth', 'role:district_officer,department'])->prefix('officer')->name('officer.')->group(function () {
         Route::get('/dashboard', [PpOfficerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/draw-documents', [PpOfficerController::class, 'drawDocuments'])->name('draw-documents');
         Route::get('/slots/capacity', [PpOfficerController::class, 'getSlotCapacity'])->name('slots.capacity');
         Route::get('/users', [PpOfficerController::class, 'users'])->name('users');
         Route::get('/reports', [PpOfficerController::class, 'reports'])->name('reports');

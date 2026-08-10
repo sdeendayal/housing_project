@@ -1523,8 +1523,46 @@ class PpOfficerApiController extends Controller
             'latitude' => $application->latitude ?? '—',
             'longitude' => $application->longitude ?? '—',
             'remarks' => $application->remarks ?? '—',
-            'verified_at' => $application->image_capture_datetime ? $application->image_capture_datetime->format('d M Y, h:i A') : '—',
             'site_engineer_name' => $siteEngineerName,
         ];
     }
+
+    /**
+     * [Draw Documents API]
+     * Site Engineer's district draw maps/documents.
+     */
+    public function getDrawDocuments(Request $request)
+    {
+        $officer = Auth::user();
+        
+        if (!$officer) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized.'
+            ], 401);
+        }
+
+        $districtId = $officer->district_id;
+        
+        if (!$districtId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'District is not assigned to your officer account.'
+            ], 400);
+        }
+
+        $documents = \App\Models\PropertyDrawDocument::where('district_id', $districtId)
+            ->where('IsActive', true)
+            ->where('IsDeleted', false)
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'district_id' => $districtId,
+            'district_name' => $officer->district_name,
+            'documents' => $documents
+        ]);
+    }
 }
+
