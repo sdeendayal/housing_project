@@ -52,11 +52,7 @@ return new class extends Migration
             $table->text('SettlementDate')->nullable();
             $table->text('UTRNo')->nullable();
             $table->text('CreatedDate')->nullable();
-            $table->text('ModifiedBy')->nullable();
-            $table->text('ModifiedDate')->nullable();
-            $table->text('Is_Active')->nullable();
-            $table->text('Is_Deleted')->nullable();
-            $table->text('Id_3')->nullable();
+
             $table->text('FLAG')->nullable();
             $table->text('ApplicationID')->nullable();
             $table->text('DateOfBenefit')->nullable();
@@ -88,10 +84,7 @@ return new class extends Migration
             $table->text('commcode')->nullable();
             $table->text('SrnNo')->nullable();
             $table->text('SessionYear')->nullable();
-            $table->text('companyid_2')->nullable();
-            $table->text('createddate_2')->nullable();
-            $table->text('createdby')->nullable();
-            $table->text('new_status')->nullable();
+
             $table->text('IsPushed')->nullable();
             $table->text('PushedDate')->nullable();
             $table->text('IsActive')->nullable();
@@ -112,58 +105,29 @@ return new class extends Migration
             $table->text('NPSAccountNo')->nullable();
             $table->text('IsDefaultBank')->nullable();
             $table->text('IsEnabled')->nullable();
-            $table->text('rver')->nullable();
-            $table->text('LangId')->nullable();
-            $table->text('CreatedBy_2')->nullable();
-            $table->text('CreateDate')->nullable();
-            $table->text('AuthoriedBy')->nullable();
-            $table->text('AuthoriedDate')->nullable();
-            $table->text('Is_Active_2')->nullable();
-            $table->text('Is_Deleted_2')->nullable();
+
             $table->text('AccountType')->nullable();
             $table->text('IsDemandDraft')->nullable();
             $table->text('AccountSubType')->nullable();
             $table->text('BankLedgerId')->nullable();
             $table->text('OverdraftInterestRate')->nullable();
             $table->text('OverdraftLimit')->nullable();
-            $table->text('BankId_2')->nullable();
-            $table->text('BankName_2')->nullable();
-            $table->text('IFSCSCodeStartWith')->nullable();
-            $table->text('BankLogo')->nullable();
+
             $table->text('IsBankOnlinePayment')->nullable();
             $table->text('BankCode')->nullable();
             $table->text('BankUId')->nullable();
             $table->text('BankPwd')->nullable();
-            $table->text('CreatedDate_3')->nullable();
-            $table->text('CreatedBy_3')->nullable();
-            $table->text('ModifiedDate_2')->nullable();
-            $table->text('ModifiedBy_2')->nullable();
-            $table->text('IsDeleted')->nullable();
-            $table->text('IsActive_2')->nullable();
-            $table->text('Id_4')->nullable();
-            $table->text('BankId_3')->nullable();
-            $table->text('StateId')->nullable();
-            $table->text('DistrictId')->nullable();
-            $table->text('CityId')->nullable();
+
             $table->text('IFSCCode_3')->nullable();
             $table->text('BranchName')->nullable();
             $table->text('BranchAddress')->nullable();
             $table->text('ContactNo')->nullable();
-            $table->text('Rver_2')->nullable();
-            $table->text('LangId_2')->nullable();
-            $table->text('CreatedBy_4')->nullable();
-            $table->text('CreateDate_2')->nullable();
-            $table->text('AuthoriedBy_2')->nullable();
-            $table->text('AuthoriedDate_2')->nullable();
-            $table->text('Is_Active_3')->nullable();
-            $table->text('Is_Deleted_3')->nullable();
+
             $table->text('IsSysGenerated')->nullable();
             $table->text('AssetId')->nullable();
             $table->text('AssetTypeId')->nullable();
             $table->text('AssetName')->nullable();
-            $table->text('BranchId_2')->nullable();
-            $table->text('MandiId')->nullable();
-            $table->text('MandiTypeId')->nullable();
+
             $table->text('IsAssetVerified')->nullable();
             $table->text('IsAssetAuctioned')->nullable();
             $table->text('PaymentStatus_2')->nullable();
@@ -176,8 +140,7 @@ return new class extends Migration
             $table->text('PurchaserType')->nullable();
             $table->text('PurchaserId')->nullable();
             $table->text('PurchaserName')->nullable();
-            $table->text('CityId_2')->nullable();
-            $table->text('DistrictId_2')->nullable();
+
             $table->text('StreetName')->nullable();
             $table->text('ZipCode')->nullable();
             $table->string('MobileNo_2', 100)->nullable()->index();
@@ -187,12 +150,7 @@ return new class extends Migration
             $table->text('TotalinitialAmount')->nullable();
             $table->text('TotalInstallmentPaymentAmount')->nullable();
             $table->text('TotalSaleAmount')->nullable();
-            $table->text('CreatedDate_4')->nullable();
-            $table->text('CreatedBy_5')->nullable();
-            $table->text('ModifiedDate_3')->nullable();
-            $table->text('ModifiedBy_3')->nullable();
-            $table->text('IsDeleted_2')->nullable();
-            $table->text('IsActive_3')->nullable();
+
             $table->text('ConveyanceDeedDate')->nullable();
             $table->text('ConveyanceDeedDocument')->nullable();
             $table->text('IsConveyanceDeedSubmitted')->nullable();
