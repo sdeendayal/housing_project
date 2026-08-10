@@ -1560,8 +1560,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->from('registary as r')
                     ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
-            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
-            ->groupBy('v.VillageId', 'v.VillageName')
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName', 'v.map_pdf as map_pdf')
+            ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
             ->orderBy('v.VillageName', 'asc')
             ->get();
 
@@ -1579,6 +1579,7 @@ class MMGAYBdoPossessionController extends Controller
         }
 
         $selectedVillageName = '';
+        $selectedVillagePdf = '';
         $siteDev = null;
         $photos = collect();
         $logs = collect();
@@ -1586,6 +1587,7 @@ class MMGAYBdoPossessionController extends Controller
         if ($selectedVillageId) {
             $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+            $selectedVillagePdf = $villageRecord ? $villageRecord->map_pdf : '';
 
             $siteDev = \App\Models\MmgaySiteDevelopment::where('block_id', $blockMasterId)
                 ->where('village_id', $selectedVillageId)
@@ -1607,6 +1609,7 @@ class MMGAYBdoPossessionController extends Controller
             'selectedPhase',
             'selectedVillageId',
             'selectedVillageName',
+            'selectedVillagePdf',
             'siteDev',
             'photos',
             'logs',

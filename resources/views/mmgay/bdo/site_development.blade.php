@@ -64,7 +64,7 @@
                 <p class="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">Select a village to report site progress</p>
             </div>
 
-            <div class="flex-grow overflow-y-auto space-y-1.5 pr-1">
+             <div class="flex-grow overflow-y-auto space-y-1.5 pr-1">
                 @forelse($villages as $vil)
                     <a href="{{ route('mmgay.bdo.site-development') }}?village_id={{ $vil->VillageId }}&phase={{ $selectedPhase }}" 
                        class="flex items-center justify-between p-3 rounded-lg border transition-all 
@@ -72,6 +72,9 @@
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-base {{ $selectedVillageId == $vil->VillageId ? 'text-blue-600' : 'text-slate-400' }}">location_on</span>
                             <span class="text-xs uppercase tracking-wide">{{ $vil->VillageName }}</span>
+                            @if(!empty($vil->map_pdf))
+                                <span class="material-symbols-outlined text-[14px] text-emerald-600" title="Village Map Available">map</span>
+                            @endif
                         </div>
                         <span class="material-symbols-outlined text-sm {{ $selectedVillageId == $vil->VillageId ? 'text-blue-600' : 'text-slate-300' }}">chevron_right</span>
                     </a>
@@ -100,6 +103,13 @@
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Fill status parameters and upload category progress photos</p>
                     </div>
+                    @if(!empty($selectedVillagePdf))
+                        <a href="{{ asset('phase1_plans_gps_map/' . $selectedVillagePdf) }}" target="_blank" 
+                           class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border border-emerald-200 shadow-sm">
+                            <span class="material-symbols-outlined text-sm">map</span>
+                            View Village Map
+                        </a>
+                    @endif
                 </div>
 
                 <!-- Form Wrapper with scrollable container to fit everything perfectly -->

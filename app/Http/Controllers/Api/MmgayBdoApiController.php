@@ -1031,10 +1031,14 @@ class MmgayBdoApiController extends Controller
                     ->from('ownermaster')
                     ->groupBy('FlatId');
             })
-            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName')
-            ->groupBy('v.VillageId', 'v.VillageName')
+            ->select('v.VillageId as VillageId', 'v.VillageName as VillageName', 'v.map_pdf as map_pdf')
+            ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
             ->orderBy('v.VillageName', 'asc')
-            ->get();
+            ->get()
+            ->map(function ($vil) {
+                $vil->map_pdf_url = $vil->map_pdf ? asset('phase1_plans_gps_map/' . $vil->map_pdf) : null;
+                return $vil;
+            });
 
         $selectedVillageId = $request->input('village_id');
         
@@ -1112,6 +1116,8 @@ class MmgayBdoApiController extends Controller
             'selected_phase' => $selectedPhase,
             'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
             'selected_village_name' => $selectedVillageName,
+            'selected_village_map_pdf' => $villageRecord ? $villageRecord->map_pdf : null,
+            'selected_village_map_pdf_url' => ($villageRecord && $villageRecord->map_pdf) ? asset('phase1_plans_gps_map/' . $villageRecord->map_pdf) : null,
             'site_development' => $siteDev,
             'logs' => $logs
         ]);
