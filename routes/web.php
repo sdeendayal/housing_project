@@ -374,6 +374,22 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'mmsayDepartmentDrawPrint']
     )->name('department.draw.print');
 
+    /* Add these routes inside the same authentication middleware group as Draw. */
+    Route::get(
+        '/mmsay-department-draw/documents/{documentId}/view',
+        [PropertyManagementController::class, 'mmsayDepartmentDrawDocumentView']
+    )
+        ->whereNumber('documentId')
+        ->name('department.draw.document.view');
+
+    Route::get(
+        '/mmsay-department-draw/documents/{documentId}/download',
+        [PropertyManagementController::class, 'mmsayDepartmentDrawDocumentDownload']
+    )
+        ->whereNumber('documentId')
+        ->name('department.draw.document.download');
+
+
     Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
 
     Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])

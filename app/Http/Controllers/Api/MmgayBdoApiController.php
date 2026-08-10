@@ -1322,23 +1322,29 @@ class MmgayBdoApiController extends Controller
                     ->from('ownermaster')
                     ->groupBy('FlatId');
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
-            ->groupBy('v.VillageId', 'v.VillageName')
+            ->select('v.VillageId', 'v.VillageName', 'v.map_pdf', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
             ->orderBy('v.VillageName', 'asc')
             ->get();
+
+        $villages->each(function ($v) {
+            $v->map_pdf_url = $v->map_pdf ? asset('phase1_plans_gps_map/' . $v->map_pdf) : null;
+        });
 
         $selectedVillageId = $request->input('village_id');
         if (!$selectedVillageId && $villages->isNotEmpty()) {
             $selectedVillageId = $villages->first()->VillageId;
         }
 
-        $selectedVillageName = '';
-        $beneficiaries = [];
-        $search = $request->input('search');
-
-        if ($selectedVillageId) {
-            $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
-            $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+         $selectedVillageName = '';
+         $selectedVillagePdf = '';
+         $beneficiaries = [];
+         $search = $request->input('search');
+ 
+         if ($selectedVillageId) {
+             $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
+             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+             $selectedVillagePdf = $villageRecord ? $villageRecord->map_pdf : '';
 
             $query = DB::table('ownermaster as o')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
@@ -1416,6 +1422,7 @@ class MmgayBdoApiController extends Controller
             'villages' => $villages,
             'selected_village_id' => $selectedVillageId ? (int)$selectedVillageId : null,
             'selected_village_name' => $selectedVillageName,
+            'selected_village_pdf' => $selectedVillagePdf ? asset('phase1_plans_gps_map/' . $selectedVillagePdf) : null,
             'beneficiaries' => $beneficiaries
         ]);
     }

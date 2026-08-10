@@ -271,8 +271,8 @@ class MMGAYBdoPossessionController extends Controller
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
-            ->groupBy('v.VillageId', 'v.VillageName')
+            ->select('v.VillageId', 'v.VillageName', 'v.map_pdf', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
             ->orderBy('v.VillageName', 'asc')
             ->get();
 
@@ -281,12 +281,14 @@ class MMGAYBdoPossessionController extends Controller
             $selectedVillageId = $villages->first()->VillageId;
         }
         $selectedVillageName = '';
+        $selectedVillagePdf = '';
         $beneficiaries = [];
         $search = $request->input('search');
 
         if ($selectedVillageId) {
             $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+            $selectedVillagePdf = $villageRecord ? $villageRecord->map_pdf : '';
 
             $query = DB::table('ownermaster as o')
                 ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
@@ -368,6 +370,7 @@ class MMGAYBdoPossessionController extends Controller
             'villages',
             'selectedVillageId',
             'selectedVillageName',
+            'selectedVillagePdf',
             'beneficiaries',
             'search'
         ));
@@ -1334,8 +1337,8 @@ class MMGAYBdoPossessionController extends Controller
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
             })
-            ->select('v.VillageId', 'v.VillageName', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
-            ->groupBy('v.VillageId', 'v.VillageName')
+            ->select('v.VillageId', 'v.VillageName', 'v.map_pdf', DB::raw('count(distinct o.OwnerId) as total_beneficiaries'))
+            ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
             ->orderBy('v.VillageName', 'asc')
             ->get();
 
@@ -1344,12 +1347,14 @@ class MMGAYBdoPossessionController extends Controller
             $selectedVillageId = $villages->first()->VillageId;
         }
         $selectedVillageName = '';
+        $selectedVillagePdf = '';
         $beneficiaries = [];
         $search = $request->input('search');
 
         if ($selectedVillageId) {
             $villageRecord = DB::table('villagemaster')->where('VillageId', $selectedVillageId)->first();
             $selectedVillageName = $villageRecord ? $villageRecord->VillageName : '';
+            $selectedVillagePdf = $villageRecord ? $villageRecord->map_pdf : '';
 
             $query = DB::table('ownermaster as o')
                 ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
@@ -1429,6 +1434,7 @@ class MMGAYBdoPossessionController extends Controller
             'villages',
             'selectedVillageId',
             'selectedVillageName',
+            'selectedVillagePdf',
             'beneficiaries',
             'search',
             'activeMenu'
@@ -1460,21 +1466,30 @@ class MMGAYBdoPossessionController extends Controller
             ->orderBy('Phase', 'asc')
             ->pluck('Phase');
 
-        // Fetch villages having allotted flats under this BDO block with their statistics
+        // Fetch villages having allotted flats under this BDO block with physical possession eligibility
         $villagesQuery = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->where('o.BlockId', $blockMasterId)
-            ->whereNotNull('o.FlatId')
-            ->where('o.FlatId', '>', 0)
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereNotNull('v.plots')
+            ->whereNotNull('v.phase')
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+            })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
                     ->from('ownermaster')
                     ->groupBy('FlatId');
+            })
+            ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                $q->where('o.BlockId', $blockMasterId);
             });
 
         if ($selectedPhase) {
@@ -1484,6 +1499,7 @@ class MMGAYBdoPossessionController extends Controller
         $villages = $villagesQuery->select(
             'v.VillageId',
             'v.VillageName',
+            'v.map_pdf',
             DB::raw("COUNT(DISTINCT o.OwnerId) as total_beneficiaries"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND EXISTS (SELECT 1 FROM registary r WHERE r.SecondPartyMobile = o.MobileNo) THEN 1 END) as approved_paid_matched"),
@@ -1493,7 +1509,7 @@ class MMGAYBdoPossessionController extends Controller
             DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
             DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled")
         )
-        ->groupBy('v.VillageId', 'v.VillageName')
+        ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
         ->orderBy('v.VillageName', 'asc')
         ->get();
 

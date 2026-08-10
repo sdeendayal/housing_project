@@ -815,8 +815,6 @@ class PropertyManagementController extends Controller
 
     // OLD property registration listing. This is a legacy view and will be removed in future releases.
 
-
-
     public function propertyRegistration(Request $request)
     {
         $districtId = $request->integer('district_id') ?: null;
@@ -1224,6 +1222,7 @@ class PropertyManagementController extends Controller
         $receiptIndex = 0;
         $receiptCount = $receiptsForAllocation->count();
         $tolerance = $allocationTolerance;
+        $statusAsOfDate = now('Asia/Kolkata')->startOfDay();
 
         foreach ($emiDetails as $emi) {
             $payable = (float) (
@@ -1301,6 +1300,28 @@ class PropertyManagementController extends Controller
             } else {
                 $emi->payment_status = 'pending';
             }
+
+            /*
+             * Display-only status:
+             * A fully paid EMI whose due date is still in the future is shown as
+             * "Advance Paid". On the due date (or afterwards) it automatically
+             * appears as "Paid". Payment allocation and summary counts remain
+             * based on payment_status and are not changed by this label.
+             */
+            $dueDateForStatus = !empty($emi->DueDate)
+                ? \Carbon\Carbon::parse(
+                    $emi->DueDate,
+                    'Asia/Kolkata'
+                )->startOfDay()
+                : null;
+
+            $emi->display_status = (
+                $emi->payment_status === 'paid'
+                && $dueDateForStatus
+                && $dueDateForStatus->gt($statusAsOfDate)
+            )
+                ? 'advance_paid'
+                : $emi->payment_status;
         }
 
         $unallocatedReceiptAmount = (float) $receiptsForAllocation
@@ -2062,10 +2083,49 @@ class PropertyManagementController extends Controller
 
         $grandTotal = (int) $drawDistricts->sum('total_assets');
 
+        /*
+         * Draw PDFs are kept separate from registered asset totals.
+         * This addition does not change the existing district summary query.
+         */
+        $drawDocumentRows = DB::table('property_draw_documents')
+            ->select([
+                'id',
+                'document_code',
+                'title',
+                'district_id',
+                'district_name',
+                'location_label',
+                'sector_label',
+                'total_plots',
+                'original_file_name',
+                'file_path',
+                'published_date',
+            ])
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->when(
+                $districtId,
+                fn($query) => $query->where(
+                    'district_id',
+                    $districtId
+                )
+            )
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        $totalDocuments = $drawDocumentRows->count();
+
+        $drawDocuments = $drawDocumentRows->groupBy(
+            fn($document) => (int) $document->district_id
+        );
+
         return view('mmsay.departmentDraw', compact(
             'districts',
             'drawDistricts',
             'grandTotal',
+            'drawDocuments',
+            'totalDocuments',
             'districtId',
             'sortOrder'
         ));
@@ -2150,6 +2210,72 @@ class PropertyManagementController extends Controller
             'drawDistricts',
             'grandTotal'
         ));
+    }
+
+    public function mmsayDepartmentDrawDocumentView(int $documentId)
+    {
+        $document = DB::table('property_draw_documents')
+            ->select('id', 'original_file_name', 'file_path')
+            ->where('id', $documentId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->first();
+
+        abort_if(!$document, 404, 'Draw document not found.');
+
+        $filePath = ltrim((string) $document->file_path, '/');
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        abort_unless(
+            $filePath !== '' && $disk->exists($filePath),
+            404,
+            'Draw PDF file not found.'
+        );
+
+        $fileName = $document->original_file_name
+            ?: basename($filePath);
+
+        return $disk->response(
+            $filePath,
+            $fileName,
+            [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="'
+                    . addslashes($fileName)
+                    . '"',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
+    }
+
+    public function mmsayDepartmentDrawDocumentDownload(int $documentId)
+    {
+        $document = DB::table('property_draw_documents')
+            ->select('id', 'original_file_name', 'file_path')
+            ->where('id', $documentId)
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->first();
+
+        abort_if(!$document, 404, 'Draw document not found.');
+
+        $filePath = ltrim((string) $document->file_path, '/');
+        $disk = \Illuminate\Support\Facades\Storage::disk('public');
+
+        abort_unless(
+            $filePath !== '' && $disk->exists($filePath),
+            404,
+            'Draw PDF file not found.'
+        );
+
+        return $disk->download(
+            $filePath,
+            $document->original_file_name ?: basename($filePath),
+            [
+                'Content-Type' => 'application/pdf',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
     }
 
     public function districtDetails($id)
