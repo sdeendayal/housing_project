@@ -464,178 +464,250 @@
             <div class="grid grid-cols-3 gap-4 mb-6">
 
                 <!-- MMSAY -->
-                <div class="relative group">
+                @if(Auth::check() && !in_array(Auth::user()->role, ['ews_department', 'ews_user', 'ews_developer']) && Auth::user()->scheme !== 'MMGAY')
+                    <div class="relative">
+                        <a href="{{ Auth::user()->dashboardRoute() }}"
+                            class="relative bg-blue-50/50 border border-blue-200 rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300 overflow-hidden">
+                            
+                            <span class="absolute bottom-0 left-0 w-full h-1 bg-blue-600"></span>
 
-                    <a href="#"
-                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300 overflow-hidden">
+                            <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                apartment
+                            </span>
 
-                        <!-- Bottom Line -->
-                        <span
-                            class="absolute bottom-0 left-0 w-full h-1 bg-blue-200 group-hover:bg-blue-600 transition-all duration-300">
-                        </span>
-
-                        <span
-                            class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
-                            style="font-variation-settings: 'FILL' 0;">
-                            apartment
-                        </span>
-
-                        <div>
-                            <div class="text-sm font-bold text-primary">
-                                MMSAY
+                            <div class="flex flex-col items-start">
+                                <div class="text-sm font-bold text-primary leading-tight">
+                                    MMSAY
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
+                                    <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Dashboard
+                                </span>
                             </div>
+                        </a>
+                    </div>
+                @else
+                    <div class="relative group">
+
+                        <a href="#"
+                            class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-50 transition-all duration-300 overflow-hidden">
+
+                            <!-- Bottom Line -->
+                            <span
+                                class="absolute bottom-0 left-0 w-full h-1 bg-blue-200 group-hover:bg-blue-600 transition-all duration-300">
+                            </span>
+
+                            <span
+                                class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                style="font-variation-settings: 'FILL' 0;">
+                                apartment
+                            </span>
+
+                            <div>
+                                <div class="text-sm font-bold text-primary">
+                                    MMSAY
+                                </div>
+                            </div>
+
+                        </a>
+
+                        <!-- Dropdown -->
+                        <div
+                            class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                            <a href="/mmsay-login"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all"
+                                target="_blank">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    person
+                                </span>
+
+                                Citizen Login
+                            </a>
+
+                            <a href="/mmsay-login"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100"
+                                target="_blank">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    business
+                                </span>
+
+                                Department Login
+                            </a>
+
                         </div>
 
-                    </a>
-
-                    <!-- Dropdown -->
-                    <div
-                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
-
-                        <a href="/mmsay-login"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all"
-                            target="_blank">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                person
-                            </span>
-
-                            Citizen Login
-                        </a>
-
-                        <a href="/mmsay-login"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100"
-                            target="_blank">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                business
-                            </span>
-
-                            Department Login
-                        </a>
-
                     </div>
-
-                </div>
+                @endif
 
 
 
                 <!-- MMGAY -->
-                <div class="relative group">
+                @if(Auth::check() && (Auth::user()->scheme === 'MMGAY' || Auth::user()->role === 'villager'))
+                    <div class="relative">
+                        <a href="{{ Auth::user()->dashboardRoute() }}"
+                            class="relative bg-green-50/50 border border-green-200 rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300 overflow-hidden">
+                            
+                            <span class="absolute bottom-0 left-0 w-full h-1 bg-green-600"></span>
 
-                    <a href="#"
-                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300 overflow-hidden">
+                            <span class="material-symbols-outlined text-secondary text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                domain
+                            </span>
 
-                        <!-- Bottom Line -->
-                        <span
-                            class="absolute bottom-0 left-0 w-full h-1 bg-green-200 group-hover:bg-green-600 transition-all duration-300">
-                        </span>
-
-                        <span
-                            class="material-symbols-outlined text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
-                            style="font-variation-settings: 'FILL' 0;">
-                            domain
-                        </span>
-
-                        <div>
-                            <div class="text-sm font-bold text-primary">
-                                MMGAY
+                            <div class="flex flex-col items-start">
+                                <div class="text-sm font-bold text-primary leading-tight">
+                                    MMGAY
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
+                                    <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Dashboard
+                                </span>
                             </div>
+                        </a>
+                    </div>
+                @else
+                    <div class="relative group">
+
+                        <a href="#"
+                            class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-green-50 transition-all duration-300 overflow-hidden">
+
+                            <!-- Bottom Line -->
+                            <span
+                                class="absolute bottom-0 left-0 w-full h-1 bg-green-200 group-hover:bg-green-600 transition-all duration-300">
+                            </span>
+
+                            <span
+                                class="material-symbols-outlined text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                style="font-variation-settings: 'FILL' 0;">
+                                domain
+                            </span>
+
+                            <div>
+                                <div class="text-sm font-bold text-primary">
+                                    MMGAY
+                                </div>
+                            </div>
+
+                        </a>
+
+                        <!-- Dropdown -->
+                        <div
+                            class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                            <a href="#"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    person
+                                </span>
+
+                                Citizen Login
+                            </a>
+
+                            <a href="#"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    business
+                                </span>
+
+                                Department Login
+                            </a>
+
                         </div>
 
-                    </a>
-
-                    <!-- Dropdown -->
-                    <div
-                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
-
-                        <a href="#"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                person
-                            </span>
-
-                            Citizen Login
-                        </a>
-
-                        <a href="#"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-green-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                business
-                            </span>
-
-                            Department Login
-                        </a>
-
                     </div>
-
-                </div>
+                @endif
 
 
                 <!-- EWS -->
-                <div class="relative group">
+                @if(Auth::check() && in_array(Auth::user()->role, ['ews_department', 'ews_user', 'ews_developer']))
+                    <div class="relative">
+                        <a href="{{ Auth::user()->dashboardRoute() }}"
+                            class="relative bg-orange-50/50 border border-orange-200 rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden">
+                            
+                            <span class="absolute bottom-0 left-0 w-full h-1 bg-orange-600"></span>
 
-                    <a href="#"
-                        class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden">
-
-                        <!-- Bottom Line -->
-                        <span
-                            class="absolute bottom-0 left-0 w-full h-1 bg-orange-200 group-hover:bg-orange-600 transition-all duration-300">
-                        </span>
-
-                        <span
-                            class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
-                            style="font-variation-settings: 'FILL' 0;">
-                            foundation
-                        </span>
-
-                        <div>
-                            <div class="text-sm font-bold text-primary">
-                                EWS
-                            </div>
-                        </div>
-
-                    </a>
-
-                    <!-- Dropdown -->
-                    <div
-                        class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
-
-                        <a href="{{ route('ews.citizen.login') }}"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                person
+                            <span class="material-symbols-outlined text-on-tertiary-container text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                foundation
                             </span>
 
-                            Citizen Login
+                            <div class="flex flex-col items-start">
+                                <div class="text-sm font-bold text-primary leading-tight">
+                                    EWS
+                                </div>
+                                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
+                                    <span class="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Dashboard
+                                </span>
+                            </div>
                         </a>
+                    </div>
+                @else
+                    <div class="relative group">
 
                         <a href="#"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+                            class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden">
 
-                            <span class="material-symbols-outlined text-[18px]">
-                                code
+                            <!-- Bottom Line -->
+                            <span
+                                class="absolute bottom-0 left-0 w-full h-1 bg-orange-200 group-hover:bg-orange-600 transition-all duration-300">
                             </span>
 
-                            Developer Login
-                        </a>
-
-                        <a href="{{ route('ews.department.login') }}"
-                            class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
-
-                            <span class="material-symbols-outlined text-[18px]">
-                                business
+                            <span
+                                class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
+                                style="font-variation-settings: 'FILL' 0;">
+                                foundation
                             </span>
 
-                            Department Login
+                            <div>
+                                <div class="text-sm font-bold text-primary">
+                                    EWS
+                                </div>
+                            </div>
+
                         </a>
+
+                        <!-- Dropdown -->
+                        <div
+                            class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                            <a href="{{ route('ews.citizen.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    person
+                                </span>
+
+                                Citizen Login
+                            </a>
+
+                            <a href="#"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    code
+                                </span>
+
+                                Developer Login
+                            </a>
+
+                            <a href="{{ route('ews.department.login') }}"
+                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                <span class="material-symbols-outlined text-[18px]">
+                                    business
+                                </span>
+
+                                Department Login
+                            </a>
+
+                        </div>
 
                     </div>
-
-                </div>
+                @endif
 
             </div>
             <!-- Main Visual / Carousel Area -->
