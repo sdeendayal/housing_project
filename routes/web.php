@@ -557,4 +557,10 @@ Route::middleware(['auth', 'role:ews_department'])->group(function () {
     Route::get('/ews/department/logout', [\App\Http\Controllers\EwsDepartmentController::class, 'logout'])->name('ews.department.logout');
 });
 
+// Fallback route for handling any unmatched URLs
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});
+
+
 
