@@ -22,11 +22,11 @@
     <style>
         @keyframes float {
             0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-8px); }
+            50% { transform: translateY(-5px); }
         }
         @keyframes pulseGlow {
             0%, 100% { opacity: 0.1; transform: scale(1); }
-            50% { opacity: 0.2; transform: scale(1.05); }
+            50% { opacity: 0.2; transform: scale(1.04); }
         }
         .animate-float {
             animation: float 4s ease-in-out infinite;
@@ -45,94 +45,119 @@
     <!-- Foreground Content Wrapper -->
     <div class="relative w-full max-w-3xl mx-4 z-10">
         
-        <!-- Dual-Panel Card Container -->
-        <div class="bg-white/80 backdrop-blur-md border border-white/80 rounded-[32px] shadow-2xl shadow-slate-900/10 hover:shadow-slate-900/15 transition-all duration-300 flex flex-col md:flex-row overflow-hidden">
+        <!-- CAD Console Window Container -->
+        <div class="bg-white/80 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-2xl shadow-slate-900/10 hover:shadow-slate-900/15 transition-all duration-300 flex flex-col overflow-hidden">
             
-            <!-- LEFT PANEL: Blueprints & Emblem (40% width) -->
-            <div class="w-full md:w-5/12 bg-gradient-to-br from-[#1a365d] to-[#002045] p-6 md:p-8 text-white flex flex-col items-center justify-between text-center relative overflow-hidden min-h-[300px] md:min-h-auto">
-                <!-- Glowing Grid Pattern Overlay -->
-                <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:16px_16px] pointer-events-none"></div>
-                
-                <!-- Haryana Government Emblem -->
-                <div class="relative z-10 flex flex-col items-center">
-                    <img src="{{ asset('Haryana_emblem.png') }}" class="w-10 h-10 mb-2 object-contain filter drop-shadow-[0_2px_4px_rgba(255,255,255,0.1)]" alt="Haryana Government Emblem">
-                    <span class="text-[8px] font-bold text-slate-300 tracking-widest uppercase">Government of Haryana</span>
+            <!-- CONSOLE HEADER BAR (macOS Console Style) -->
+            <div class="h-8 bg-slate-100/90 border-b border-slate-200/60 px-4 flex items-center justify-between select-none">
+                <!-- Window Dots -->
+                <div class="flex items-center gap-1.5">
+                    <div class="w-2.5 h-2.5 rounded-full bg-rose-400"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-amber-400"></div>
+                    <div class="w-2.5 h-2.5 rounded-full bg-emerald-400"></div>
                 </div>
-
-                <!-- 3D Isometric Blueprint House -->
-                <div class="w-36 h-28 my-4 relative animate-float z-10">
-                    <svg class="w-full h-full text-blue-400" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <!-- Blueprint target coordinate lines -->
-                        <line x1="20" y1="115" x2="180" y2="115" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1.2" stroke-dasharray="3 3" />
-                        <line x1="100" y1="10" x2="100" y2="130" stroke="rgba(255, 255, 255, 0.15)" stroke-width="1.2" stroke-dasharray="3 3" />
-                        
-                        <!-- Dotted ground grid floor -->
-                        <ellipse cx="100" cy="115" rx="55" ry="15" stroke="#3b82f6" stroke-width="1" stroke-dasharray="3 3" />
-
-                        <!-- 3D Isometric building parts built with Polygons -->
-                        <!-- Left Wall (Light Shadow) -->
-                        <polygon points="50,105 100,120 100,75 50,60" fill="rgba(239, 246, 255, 0.12)" stroke="#93c5fd" stroke-width="1.5" />
-                        <!-- Right Wall (Darker Shadow) -->
-                        <polygon points="100,120 150,105 150,60 100,75" fill="rgba(239, 246, 255, 0.05)" stroke="#60a5fa" stroke-width="1.5" />
-                        <!-- Left Roof Plane -->
-                        <polygon points="50,60 100,75 100,35 50,20" fill="rgba(96, 165, 250, 0.18)" stroke="#60a5fa" stroke-width="1.8" />
-                        <!-- Right Roof Plane -->
-                        <polygon points="100,75 150,60 150,20 100,35" fill="rgba(59, 130, 246, 0.25)" stroke="#3b82f6" stroke-width="1.8" />
-
-                        <!-- Isometric Windows -->
-                        <polygon points="65,85 78,89 78,75 65,71" fill="#fbbf24" opacity="0.85" />
-                        <polygon points="122,89 135,85 135,71 122,75" fill="#fbbf24" opacity="0.85" />
-
-                        <!-- Isometric Entrance Door -->
-                        <polygon points="90,117 100,120 100,95 90,92" fill="#1e3a8a" stroke="#60a5fa" stroke-width="1" />
-
-                        <!-- Coordinate Target Rings -->
-                        <circle cx="100" cy="35" r="4" stroke="#fbbf24" stroke-width="1" />
-                        <line x1="100" y1="35" x2="100" y2="45" stroke="#fbbf24" stroke-width="1" />
-
-                        <!-- Isometric Grid labels -->
-                        <text x="150" y="112" font-family="monospace" font-size="7" fill="rgba(255, 255, 255, 0.4)">x: 404</text>
-                        <text x="22" y="55" font-family="monospace" font-size="7" fill="rgba(255, 255, 255, 0.4)">y: null</text>
-                    </svg>
-                </div>
-
-                <!-- Glowing 404 Header -->
-                <h1 class="relative z-10 text-5xl font-black tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-300 via-sky-200 to-white filter drop-shadow-[0_0_12px_rgba(255,255,255,0.25)] select-none">
-                    404
-                </h1>
+                <!-- Console Title -->
+                <span class="text-[9px] font-bold text-slate-400 tracking-wider uppercase">
+                    CAD Console - housing_blueprint_404.dwg
+                </span>
+                <!-- Spacer -->
+                <div class="w-12"></div>
             </div>
 
-            <!-- RIGHT PANEL: Action & Details (60% width) -->
-            <div class="w-full md:w-7/12 p-6 md:p-8 flex flex-col justify-between">
-                <div>
-                    <!-- Department & Scheme Headers -->
-                    <span class="inline-block text-[8px] font-bold text-slate-400 tracking-widest uppercase">Government of Haryana</span>
-                    <h3 class="text-[10px] font-extrabold text-[#1960a3] tracking-wide uppercase mt-0.5 mb-4">
-                        Department of Housing For All
-                    </h3>
+            <!-- CONSOLE BODY -->
+            <div class="p-6 md:p-8 flex flex-col md:flex-row gap-6 md:gap-8 items-stretch">
+                
+                <!-- Left Column: Architectural Drawing (5/12 width) -->
+                <div class="w-full md:w-5/12 bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col items-center justify-center text-center relative overflow-hidden group min-h-[220px]">
+                    
+                    <!-- Coordinate Grid in Background -->
+                    <div class="absolute inset-0 bg-[linear-gradient(rgba(25,96,163,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(25,96,163,0.02)_1px,transparent_1px)] bg-[size:12px_12px] pointer-events-none"></div>
 
-                    <!-- Error Header -->
-                    <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight mb-2.5">
-                        Page is Not Available
-                    </h2>
+                    <!-- 3D Blueprint Illustration -->
+                    <div class="w-36 h-28 relative animate-float z-10">
+                        <svg class="w-full h-full text-slate-500" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Target Axis Lines -->
+                            <line x1="15" y1="110" x2="185" y2="110" stroke="rgba(25, 96, 163, 0.15)" stroke-width="1.2" stroke-linecap="round" />
+                            <line x1="100" y1="10" x2="100" y2="125" stroke="rgba(25, 96, 163, 0.15)" stroke-width="1.2" stroke-dasharray="3 3" />
+                            
+                            <!-- Architectural House Blueprint -->
+                            <!-- Ground Base -->
+                            <path d="M30 110 H170" stroke="#1960a3" stroke-width="2" stroke-linecap="round" />
+                            <!-- Villa House walls -->
+                            <path d="M50 110 V65 H150 V110 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" />
+                            <!-- Pitch roof -->
+                            <path d="M40 70 L100 25 L160 70" stroke="#1960a3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            
+                            <!-- Windows -->
+                            <rect x="65" y="75" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+                            <line x1="73" y1="75" x2="73" y2="91" stroke="currentColor" stroke-width="1" />
+                            <line x1="65" y1="83" x2="81" y2="83" stroke="currentColor" stroke-width="1" />
 
-                    <!-- Error Description -->
-                    <p class="text-xs text-slate-500 leading-relaxed mb-6">
-                        The entered URL is not correct. Please check for spelling errors in the address bar or return to the portal homepage.
-                    </p>
+                            <rect x="119" y="75" width="16" height="16" rx="1.5" stroke="currentColor" stroke-width="1.5" />
+                            <line x1="127" y1="75" x2="127" y2="91" stroke="currentColor" stroke-width="1" />
+                            <line x1="119" y1="83" x2="135" y2="83" stroke="currentColor" stroke-width="1" />
+
+                            <!-- Main Door -->
+                            <rect x="92" y="80" width="16" height="30" rx="1" fill="rgba(25, 96, 163, 0.05)" stroke="currentColor" stroke-width="1.5" />
+                            <circle cx="103" cy="95" r="1.5" fill="#f59e0b" />
+
+                            <!-- Blueprint Dimensions and Pointers -->
+                            <!-- Height Dimension Line -->
+                            <line x1="172" y1="25" x2="172" y2="110" stroke="#fbbf24" stroke-width="1" />
+                            <path d="M170 27 L172 25 L174 27 M170 108 L172 110 L174 108" stroke="#fbbf24" stroke-width="1" fill="none" />
+                            <text x="178" y="72" font-family="monospace" font-size="7" fill="#fbbf24" transform="rotate(90 178 72)">H: 4.04m</text>
+
+                            <!-- Width Dimension Line -->
+                            <line x1="50" y1="120" x2="150" y2="120" stroke="#fbbf24" stroke-width="1" />
+                            <path d="M52 118 L50 120 L52 122 M148 118 L150 120 L148 122" stroke="#fbbf24" stroke-width="1" fill="none" />
+                            <text x="90" y="130" font-family="monospace" font-size="7" fill="#fbbf24">W: null</text>
+                        </svg>
+                    </div>
+
+                    <!-- 404 Header Text (Matches CAD Font) -->
+                    <h1 class="relative z-10 text-4xl font-black tracking-widest text-[#1960a3] filter drop-shadow-sm select-none">
+                        404
+                    </h1>
                 </div>
 
-                <!-- Divider & Action Panel -->
-                <div class="border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-center gap-3">
-                    <button onclick="history.back()" class="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold shadow-sm transition-all duration-150 group">
-                        <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-0.5">arrow_back</span>
-                        <span>Go Back</span>
-                    </button>
-                    <a href="{{ route('home') }}" class="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1960a3] to-[#1a365d] hover:from-[#1960a3]/90 hover:to-[#1a365d]/90 text-white text-xs font-bold transition-all duration-150 shadow-md shadow-blue-900/10 hover:shadow-blue-900/25 transform hover:-translate-y-0.5">
-                        <span class="material-symbols-outlined text-[16px]">home</span>
-                        <span>Return Home</span>
-                    </a>
+                <!-- Right Column: Details & Actions (7/12 width) -->
+                <div class="w-full md:w-7/12 flex flex-col justify-between py-1">
+                    <div>
+                        <!-- Header Logos & Branding -->
+                        <div class="flex items-center gap-3 mb-4">
+                            <img src="{{ asset('Haryana_emblem.png') }}" class="w-8 h-8 object-contain" alt="Haryana Government Emblem">
+                            <div>
+                                <span class="block text-[8px] font-bold text-slate-400 tracking-wider uppercase leading-none">Government of Haryana</span>
+                                <h3 class="text-[10px] font-extrabold text-[#1960a3] tracking-wide uppercase mt-1 leading-none">
+                                    Department of Housing For All
+                                </h3>
+                            </div>
+                        </div>
+
+                        <!-- Error Message -->
+                        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight mb-2.5">
+                            Page is Not Available
+                        </h2>
+
+                        <!-- Error Description -->
+                        <p class="text-xs text-slate-500 leading-relaxed mb-6">
+                            The entered URL is not correct. Please check for spelling errors in the address bar or return to the portal homepage.
+                        </p>
+                    </div>
+
+                    <!-- Buttons Panel -->
+                    <div class="border-t border-slate-100 pt-5 flex flex-col sm:flex-row items-center gap-3">
+                        <button onclick="history.back()" class="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-700 text-xs font-semibold shadow-sm transition-all duration-150 group">
+                            <span class="material-symbols-outlined text-[16px] transition-transform group-hover:-translate-x-0.5">arrow_back</span>
+                            <span>Go Back</span>
+                        </button>
+                        <a href="{{ route('home') }}" class="w-full sm:w-auto flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#1960a3] to-[#1a365d] hover:from-[#1960a3]/90 hover:to-[#1a365d]/90 text-white text-xs font-bold transition-all duration-150 shadow-md shadow-blue-900/10 hover:shadow-blue-900/25 transform hover:-translate-y-0.5">
+                            <span class="material-symbols-outlined text-[16px]">home</span>
+                            <span>Return Home</span>
+                        </a>
+                    </div>
                 </div>
+
             </div>
 
         </div>
