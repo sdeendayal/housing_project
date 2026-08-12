@@ -1669,6 +1669,7 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $pendingCount = 0;
+        $totalCount = $allottedCount + $pendingCount;
             
         $drawRemainingCount = DB::table('all_ews_data_544')
             ->where('Allotment', 'not alloted')
