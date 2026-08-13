@@ -620,8 +620,13 @@ class EwsDepartmentController extends Controller
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'eligible_draw') {
-            $beneficiary = $fetchBySecId('ews_eligible_draw_list_5');
+            $beneficiary = DB::table('all_ews_data_544')->where('secure_id', $secureId)->first();
             if ($beneficiary) {
+                $beneficiary->application_number = $beneficiary->ApplicationNo ?? $beneficiary->ApplicationNo_2 ?? null;
+                $beneficiary->full_name = $beneficiary->PrivatePurchaserName ?? null;
+                $beneficiary->aadhar_no = $beneficiary->AadhaarNo ?? null;
+                $beneficiary->mobile_number = $beneficiary->MobileNo ?? $beneficiary->MobileNo_2 ?? null;
+                $beneficiary->dist_name = $beneficiary->dist ?? null;
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'booking') {
@@ -635,8 +640,13 @@ class EwsDepartmentController extends Controller
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'not_visited') {
-            $beneficiary = $fetchBySecId('ews_eligible_draw_list_5');
+            $beneficiary = DB::table('all_ews_data_544')->where('secure_id', $secureId)->first();
             if ($beneficiary) {
+                $beneficiary->application_number = $beneficiary->ApplicationNo ?? $beneficiary->ApplicationNo_2 ?? null;
+                $beneficiary->full_name = $beneficiary->PrivatePurchaserName ?? null;
+                $beneficiary->aadhar_no = $beneficiary->AadhaarNo ?? null;
+                $beneficiary->mobile_number = $beneficiary->MobileNo ?? $beneficiary->MobileNo_2 ?? null;
+                $beneficiary->dist_name = $beneficiary->dist ?? null;
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'adc_passed') {
@@ -655,8 +665,13 @@ class EwsDepartmentController extends Controller
                 $beneficiary->flat_no = 'N/A';
             }
         } elseif ($type === 'draw_remaining') {
-            $beneficiary = $fetchBySecId('ews_eligible_6');
+            $beneficiary = DB::table('all_ews_data_544')->where('secure_id', $secureId)->first();
             if ($beneficiary) {
+                $beneficiary->application_number = $beneficiary->ApplicationNo ?? $beneficiary->ApplicationNo_2 ?? null;
+                $beneficiary->full_name = $beneficiary->PrivatePurchaserName ?? null;
+                $beneficiary->aadhar_no = $beneficiary->AadhaarNo ?? null;
+                $beneficiary->mobile_number = $beneficiary->MobileNo ?? $beneficiary->MobileNo_2 ?? null;
+                $beneficiary->dist_name = $beneficiary->dist ?? null;
                 $beneficiary->flat_no = 'N/A';
             }
         } else {
@@ -845,7 +860,14 @@ class EwsDepartmentController extends Controller
 
     public function updateDeveloper(Request $request, $secureId)
     {
-        $user = User::where('role', 'ews_developer')->where('secure_id', $secureId)->firstOrFail();
+        $user = User::where('role', 'ews_developer')
+            ->where(function($q) use ($secureId) {
+                $q->where('secure_id', $secureId);
+                $decoded = EwsHelper::decodeSecureId($secureId);
+                if ($decoded) {
+                    $q->orWhere('id', $decoded);
+                }
+            })->firstOrFail();
 
         $oldActive = $user->Is_Active;
         $oldName = $user->name;
@@ -906,7 +928,14 @@ class EwsDepartmentController extends Controller
 
     public function destroyDeveloper($secureId)
     {
-        $user = User::where('role', 'ews_developer')->where('secure_id', $secureId)->firstOrFail();
+        $user = User::where('role', 'ews_developer')
+            ->where(function($q) use ($secureId) {
+                $q->where('secure_id', $secureId);
+                $decoded = EwsHelper::decodeSecureId($secureId);
+                if ($decoded) {
+                    $q->orWhere('id', $decoded);
+                }
+            })->firstOrFail();
         $devName = $user->name;
         $devMobile = $user->mobile;
 
@@ -1537,8 +1566,19 @@ class EwsDepartmentController extends Controller
             abort(403);
         }
 
+        // Dynamically assign secure_id if missing
+        if (empty($user->secure_id)) {
+            $user->secure_id = md5(uniqid("dept_" . microtime() . rand(), true));
+            $user->save();
+        }
+
         if ($user->secure_id !== $secureId) {
-            return redirect()->route('ews.department.profile.show', $user->secure_id);
+            $decoded = EwsHelper::decodeSecureId($secureId);
+            if ($decoded && $decoded === $user->id) {
+                // Allow matching the decoded ID
+            } else {
+                return redirect()->route('ews.department.profile.show', $user->secure_id);
+            }
         }
 
         return view('ews.department.profile', compact('user'));
@@ -1546,7 +1586,14 @@ class EwsDepartmentController extends Controller
 
     public function updateProfile(Request $request, $secureId)
     {
-        $user = User::where('role', 'ews_department')->where('secure_id', $secureId)->firstOrFail();
+        $user = User::where('role', 'ews_department')
+            ->where(function($q) use ($secureId) {
+                $q->where('secure_id', $secureId);
+                $decoded = EwsHelper::decodeSecureId($secureId);
+                if ($decoded) {
+                    $q->orWhere('id', $decoded);
+                }
+            })->firstOrFail();
 
         if (Auth::id() !== $user->id) {
             abort(403, 'Unauthorized profile update action.');
@@ -1622,6 +1669,7 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         $pendingCount = 0;
+        $totalCount = $allottedCount + $pendingCount;
             
         $drawRemainingCount = DB::table('all_ews_data_544')
             ->where('Allotment', 'not alloted')

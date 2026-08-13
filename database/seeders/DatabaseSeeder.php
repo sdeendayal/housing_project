@@ -48,6 +48,7 @@ class DatabaseSeeder extends Seeder
             PptRohtakSeeder::class,
             PptRewariSeeder::class,
             AllEwsDataSeeder::class,
+            AllEwsData544Seeder::class,
             GurugramAllEwsDataSeeder::class,
             FaridabadAllEwsDataSeeder::class,
             PanipatAllEwsDataSeeder::class,

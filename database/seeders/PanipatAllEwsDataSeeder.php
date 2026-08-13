@@ -80,7 +80,7 @@ class PanipatAllEwsDataSeeder extends Seeder
 
             $rowInsert = [];
             foreach ($header as $h) {
-                if (empty($h)) {
+                if (empty($h) || strcasecmp($h, 'id') === 0) {
                     continue;
                 }
                 

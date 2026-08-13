@@ -195,11 +195,7 @@ class PropertyManagementController extends Controller
                 )
             );
 
-        $totalApplications = cache()->remember(
-            $dashboardCacheKey . ':old-registration-total',
-            $dashboardCacheSeconds,
-            fn() => (clone $oldRegistrationCountQuery)->count('id')
-        );
+        $totalApplications = (clone $oldRegistrationCountQuery)->count('id');
 
         /*
         |--------------------------------------------------------------------------
@@ -213,13 +209,9 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($allottedUnitsQuery);
 
-        $allottedUnits = cache()->remember(
-            $dashboardCacheKey . ':allotted',
-            $dashboardCacheSeconds,
-            fn() => (clone $allottedUnitsQuery)
-                ->distinct()
-                ->count('AssetId')
-        );
+        $allottedUnits = (clone $allottedUnitsQuery)
+            ->distinct()
+            ->count('AssetId');
 
         /*
         |--------------------------------------------------------------------------
@@ -233,11 +225,7 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalRevenueQuery);
 
-        $totalRevenue = (float) cache()->remember(
-            $dashboardCacheKey . ':revenue',
-            $dashboardCacheSeconds,
-            fn() => (clone $totalRevenueQuery)->sum('total_paid_amount')
-        );
+        $totalRevenue = (float) (clone $totalRevenueQuery)->sum('total_paid_amount');
 
         /*
         |--------------------------------------------------------------------------
@@ -253,12 +241,8 @@ class PropertyManagementController extends Controller
 
         $applyLocationFilters($totalPurchasersQuery);
 
-        $totalPurchasers = cache()->remember(
-            $dashboardCacheKey . ':purchasers',
-            $dashboardCacheSeconds,
-            fn() => (clone $totalPurchasersQuery)->count(
-                'PrivatePurchaserId'
-            )
+        $totalPurchasers = (clone $totalPurchasersQuery)->count(
+            'PrivatePurchaserId'
         );
 
         /*
@@ -270,18 +254,21 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+        $receiptSumsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
 
-        $assetPaymentsQuery = DB::table(
-            'property_auction_detail as pad'
-        )
+        $assetPaymentsQuery = DB::table('property_auction_detail as pad')
+            ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
             ->selectRaw("
             pad.AssetId,
             pad.FlatCost,
             pad.ReceivedAmount,
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + {$receiptTotalSql}
+                + COALESCE(MAX(cr_sum.total_receipts), 0)
             ) AS total_received
         ")
             ->where('pad.IsDeleted', 0)
@@ -301,13 +288,9 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $dashboardPaymentStats = cache()->remember(
-            $dashboardCacheKey . ':payment-stats',
-            $dashboardCacheSeconds,
-            function () use ($assetPaymentsQuery) {
-                return DB::query()
-                    ->fromSub(clone $assetPaymentsQuery, 'payments')
-                    ->selectRaw('
+        $dashboardPaymentStats = DB::query()
+            ->fromSub(clone $assetPaymentsQuery, 'payments')
+            ->selectRaw('
             COUNT(*) AS total_candidates,
 
             SUM(
@@ -344,9 +327,7 @@ class PropertyManagementController extends Controller
                 END
             ) AS pending_properties
         ')
-                    ->first();
-            }
-        );
+            ->first();
 
         $eligiblePhysicalPossession = (int) (
             $dashboardPaymentStats->eligible_candidates ?? 0
@@ -380,24 +361,117 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Optimized EMI statistics
+        |--------------------------------------------------------------------------
+        */
+
+        $dueEmiQuery = DB::table('installment_due as due')
+            ->join(
+                'property_registration as pr',
+                'pr.AssetId',
+                '=',
+                'due.AssetId'
+            )
+            ->selectRaw('
+                due.AssetId,
+                COUNT(due.InstallmentNumber) AS total_emi
+            ')
+            ->where('due.IsDeleted', 0)
+            ->where('due.IsActive', 1)
+            ->where('pr.IsDeleted', 0)
+            ->where('pr.IsActive', 1);
+
+        $applyLocationFilters($dueEmiQuery, 'pr');
+
+        $dueEmiQuery->groupBy('due.AssetId');
+
+        $receiptSumsQueryForEmi = DB::table('cash_receipt_details')
+            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $paidEmiQuery = DB::table('property_auction_detail as pad')
+            ->join(
+                'property_registration as pr_paid',
+                'pr_paid.AssetId',
+                '=',
+                'pad.AssetId'
+            )
+            ->leftJoinSub($receiptSumsQueryForEmi, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
+            ->join('installment_due as due', function ($join) {
+                $join->on('due.AssetId', '=', 'pad.AssetId')
+                    ->where('due.InstallmentNumber', '=', 1)
+                    ->where('due.IsDeleted', '=', 0)
+                    ->where('due.IsActive', '=', 1);
+            })
+            ->selectRaw('
+                pad.AssetId,
+                FLOOR((COALESCE(pad.ReceivedAmount, 0) + COALESCE(MAX(cr_sum.total_receipts), 0)) / COALESCE(NULLIF(due.EMIAmount, 0), due.DueAmount, 1)) as raw_paid_emi
+            ')
+            ->where('pr_paid.IsDeleted', 0)
+            ->where('pr_paid.IsActive', 1);
+
+        // Apply the dashboard location filter before aggregating.
+        $applyLocationFilters($paidEmiQuery, 'pr_paid');
+
+        $paidEmiQuery->groupBy('pad.AssetId', 'pad.ReceivedAmount', 'due.EMIAmount', 'due.DueAmount');
+
+        $emiData = DB::query()
+            ->fromSub($dueEmiQuery, 'due_summary')
+            ->leftJoinSub(
+                $paidEmiQuery,
+                'paid_summary',
+                'paid_summary.AssetId',
+                '=',
+                'due_summary.AssetId'
+            )
+            ->selectRaw('
+                COALESCE(
+                    SUM(due_summary.total_emi),
+                    0
+                ) AS total_emi,
+
+                COALESCE(
+                    SUM(
+                        LEAST(
+                            due_summary.total_emi,
+                            COALESCE(paid_summary.raw_paid_emi, 0)
+                        )
+                    ),
+                    0
+                ) AS paid_emi,
+
+                COALESCE(
+                    SUM(
+                        GREATEST(
+                            due_summary.total_emi
+                            - LEAST(
+                                due_summary.total_emi,
+                                COALESCE(paid_summary.raw_paid_emi, 0)
+                            ),
+                            0
+                        )
+                    ),
+                    0
+                ) AS pending_emi
+            ')
+            ->first();
+
+        /*
+        |--------------------------------------------------------------------------
         | Latest physical possession applications
         |--------------------------------------------------------------------------
         */
 
-        $latestPhysicalApplications = cache()->remember(
-            $dashboardCacheKey . ':latest-possession',
-            $dashboardCacheSeconds,
-            function () use ($request) {
-                return $this->eligiblePossessionSelect(
-                    $this->eligiblePossessionQuery($request)
-                )
-                    ->whereNotNull('ppa.id')
-                    ->whereNotNull('ppa.citizen_visit_date')
-                    ->orderByDesc('ppa.id')
-                    ->limit(10)
-                    ->get();
-            }
-        );
+        $latestPhysicalApplications = $this->eligiblePossessionSelect(
+            $this->eligiblePossessionQuery($request)
+        )
+            ->whereNotNull('ppa.id')
+            ->whereNotNull('ppa.citizen_visit_date')
+            ->orderByDesc('ppa.id')
+            ->limit(10)
+            ->get();
         /*
         |--------------------------------------------------------------------------
         | Dashboard view
@@ -2771,13 +2845,18 @@ class PropertyManagementController extends Controller
     {
         $filters = $this->possessionFilters($request);
         $statusSql = $this->possessionStatusSql();
-        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+        $receiptSumsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
 
         /*
         | Dashboard uses this exact payment calculation.
         | Do not filter through property_registration before eligibility is decided.
         */
         $assetPayments = DB::table('property_auction_detail as pad')
+            ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
             ->selectRaw("
             MAX(pad.PropertyAuctionId) AS PropertyAuctionId,
             pad.AssetId,
@@ -2788,10 +2867,10 @@ class PropertyManagementController extends Controller
             MAX(pad.DistrictId) AS DistrictId,
             MAX(pad.CityId) AS CityId,
             MAX(pad.SectorId) AS SectorId,
-            {$receiptTotalSql} AS receipt_total,
+            COALESCE(MAX(cr_sum.total_receipts), 0) AS receipt_total,
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + {$receiptTotalSql}
+                + COALESCE(MAX(cr_sum.total_receipts), 0)
             ) AS total_received
         ")
             ->where('pad.IsDeleted', 0)
