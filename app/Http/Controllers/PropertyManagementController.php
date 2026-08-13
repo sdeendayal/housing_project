@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use App\Models\EmOffice;
 use App\Models\District;
 use App\Models\City;
@@ -199,22 +200,6 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Total allotted properties
-        |--------------------------------------------------------------------------
-        */
-
-        $allottedUnitsQuery = DB::table('property_auction_detail')
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1);
-
-        $applyLocationFilters($allottedUnitsQuery);
-
-        $allottedUnits = (clone $allottedUnitsQuery)
-            ->distinct()
-            ->count('AssetId');
-
-        /*
-        |--------------------------------------------------------------------------
         | Total revenue
         |--------------------------------------------------------------------------
         */
@@ -248,9 +233,6 @@ class PropertyManagementController extends Controller
         /*
         |--------------------------------------------------------------------------
         | Optimized asset payment aggregation
-        |--------------------------------------------------------------------------
-        | First filter property_auction_detail.
-        | Then join only receipts related to those filtered assets.
         |--------------------------------------------------------------------------
         */
 
@@ -343,6 +325,14 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Total allotted units is equivalent to the candidate count.
+        | Saves one heavy database count query.
+        |--------------------------------------------------------------------------
+        */
+        $allottedUnits = $totalPhysicalPossessionCandidates;
+
+        /*
+        |--------------------------------------------------------------------------
         | Keep existing Blade paymentStats variable compatible
         |--------------------------------------------------------------------------
         */
@@ -358,105 +348,6 @@ class PropertyManagementController extends Controller
                 $dashboardPaymentStats->pending_properties ?? 0
             ),
         ];
-
-        /*
-        |--------------------------------------------------------------------------
-        | Optimized EMI statistics
-        |--------------------------------------------------------------------------
-        */
-
-        $dueEmiQuery = DB::table('installment_due as due')
-            ->join(
-                'property_registration as pr',
-                'pr.AssetId',
-                '=',
-                'due.AssetId'
-            )
-            ->selectRaw('
-                due.AssetId,
-                COUNT(due.InstallmentNumber) AS total_emi
-            ')
-            ->where('due.IsDeleted', 0)
-            ->where('due.IsActive', 1)
-            ->where('pr.IsDeleted', 0)
-            ->where('pr.IsActive', 1);
-
-        $applyLocationFilters($dueEmiQuery, 'pr');
-
-        $dueEmiQuery->groupBy('due.AssetId');
-
-        $receiptSumsQueryForEmi = DB::table('cash_receipt_details')
-            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1)
-            ->groupBy('asset_number');
-
-        $paidEmiQuery = DB::table('property_auction_detail as pad')
-            ->join(
-                'property_registration as pr_paid',
-                'pr_paid.AssetId',
-                '=',
-                'pad.AssetId'
-            )
-            ->leftJoinSub($receiptSumsQueryForEmi, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
-            ->join('installment_due as due', function ($join) {
-                $join->on('due.AssetId', '=', 'pad.AssetId')
-                    ->where('due.InstallmentNumber', '=', 1)
-                    ->where('due.IsDeleted', '=', 0)
-                    ->where('due.IsActive', '=', 1);
-            })
-            ->selectRaw('
-                pad.AssetId,
-                FLOOR((COALESCE(pad.ReceivedAmount, 0) + COALESCE(MAX(cr_sum.total_receipts), 0)) / COALESCE(NULLIF(due.EMIAmount, 0), due.DueAmount, 1)) as raw_paid_emi
-            ')
-            ->where('pr_paid.IsDeleted', 0)
-            ->where('pr_paid.IsActive', 1);
-
-        // Apply the dashboard location filter before aggregating.
-        $applyLocationFilters($paidEmiQuery, 'pr_paid');
-
-        $paidEmiQuery->groupBy('pad.AssetId', 'pad.ReceivedAmount', 'due.EMIAmount', 'due.DueAmount');
-
-        $emiData = DB::query()
-            ->fromSub($dueEmiQuery, 'due_summary')
-            ->leftJoinSub(
-                $paidEmiQuery,
-                'paid_summary',
-                'paid_summary.AssetId',
-                '=',
-                'due_summary.AssetId'
-            )
-            ->selectRaw('
-                COALESCE(
-                    SUM(due_summary.total_emi),
-                    0
-                ) AS total_emi,
-
-                COALESCE(
-                    SUM(
-                        LEAST(
-                            due_summary.total_emi,
-                            COALESCE(paid_summary.raw_paid_emi, 0)
-                        )
-                    ),
-                    0
-                ) AS paid_emi,
-
-                COALESCE(
-                    SUM(
-                        GREATEST(
-                            due_summary.total_emi
-                            - LEAST(
-                                due_summary.total_emi,
-                                COALESCE(paid_summary.raw_paid_emi, 0)
-                            ),
-                            0
-                        )
-                    ),
-                    0
-                ) AS pending_emi
-            ')
-            ->first();
 
         /*
         |--------------------------------------------------------------------------
