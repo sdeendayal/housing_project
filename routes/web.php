@@ -393,21 +393,8 @@ Route::middleware(['auth', 'role:department'])->group(function () {
     Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
 
     Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
-        ->name('mmsay.department.emi.payments');
-
-
-
-    Route::get('/mmsay-department-physical-letter', [PropertyManagementController::class, 'departmentPhysicalLetter'])->name('mmsay.department.physical.letter');
-
-    Route::get(
-        '/allotment-letter/{id}',
-        [PropertyManagementController::class, 'downloadAllotmentLetter']
-    )->name('allotment.letter');
-
-    Route::get(
-        '/allotment-letter-pdf/{id}',
-        [PropertyManagementController::class, 'exportAllotmentLetterPdf']
-    )->name('allotment.letter.pdf');
+        ->name('mmsay.department.emi.payments');   
+    
 
     Route::get(
         'mmsay-department-property-emi-calculation',

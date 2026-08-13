@@ -2,82 +2,89 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // LOGIN PAGE SHOW
     public function showLogin()
     {
-        if (auth()->check()) {
-            $user = auth()->user();
-            if ($user->role == 'ews_department') {
+        $user = Auth::user();
+
+        if ($user) {
+            if ($user->role === 'ews_department') {
                 return redirect('/ews/department/dashboard');
             }
+
             return redirect('/mmsay-department-dashboard');
         }
 
-        $captcha = rand(1000, 9999);
+        $captcha = random_int(1000, 9999);
         session(['captcha' => $captcha]);
 
         return view('mmsay.departmentLogin', compact('captcha'));
     }
 
-    // LOGIN PROCESS
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|string',
-            'password' => 'required',
-            'captcha' => 'required'
+        $credentials = $request->validate([
+            'email'    => ['required', 'string'],
+            'password' => ['required', 'string'],
+            'captcha'  => ['required'],
         ]);
 
-        // CAPTCHA CHECK
-        if ($request->captcha != session('captcha')) {
-            return back()->with('error', '❌ Invalid CAPTCHA');
+        if ((string) $credentials['captcha'] !== (string) session('captcha')) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ Invalid CAPTCHA');
         }
-        
-        // USER CHECK (EXISTS OR NOT BY EMAIL OR MOBILE)
-        $user = \App\Models\User::where('email', $request->email)
-            ->orWhere('mobile', $request->email)
+
+        $login = trim($credentials['email']);
+
+        $user = User::query()
+            ->where('email', $login)
+            ->orWhere('mobile', $login)
             ->first();
 
         if (!$user) {
-            return back()->with('error', '❌ User does not exist');
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ User does not exist');
         }
 
-        // PASSWORD CHECK
-        if (!\Illuminate\Support\Facades\Hash::check($request->password, $user->password)) {
-            return back()->with('error', '❌ Invalid password');
+        if (!Hash::check($credentials['password'], $user->password)) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ Invalid password');
         }
 
-        // LOGIN USER
-        if (Auth::loginUsingId($user->id)) {
-            $request->session()->regenerate();
-            
-            // ROLE CHECK
-            if ($user->role == 'department') {
-                return redirect('/mmsay-department-dashboard')
-                    ->with('success', 'Login Successful');
-            } elseif ($user->role == 'ews_department') {
-                return redirect('/ews/department/dashboard')
-                    ->with('success', 'Login Successful');
-            }
+        // Existing user directly login hoga; loginUsingId ki extra DB query bachegi.
+        Auth::login($user);
 
-            try {
-                return redirect($user->dashboardRoute())
-                    ->with('success', 'Login Successful');
-            } catch (\Exception $e) {
-                return redirect('/mmsay-department-dashboard')
-                    ->with('success', 'Login Successful');
-            }
+        $request->session()->regenerate();
+        $request->session()->forget('captcha');
+
+        if ($user->role === 'department') {
+            return redirect('/mmsay-department-dashboard')
+                ->with('success', 'Login Successful');
         }
 
-        return back()->with('error', '❌ Login failed');
+        if ($user->role === 'ews_department') {
+            return redirect('/ews/department/dashboard')
+                ->with('success', 'Login Successful');
+        }
+
+        try {
+            return redirect($user->dashboardRoute())
+                ->with('success', 'Login Successful');
+        } catch (\Throwable $e) {
+            return redirect('/mmsay-department-dashboard')
+                ->with('success', 'Login Successful');
+        }
     }
 
-    // LOGOUT
     public function logout(Request $request)
     {
         Auth::logout();
