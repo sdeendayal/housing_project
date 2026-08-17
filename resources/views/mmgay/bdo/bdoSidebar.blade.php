@@ -10,7 +10,7 @@
         </div>
     </div>
     <!-- Navigation Links -->
-    <nav class="flex-grow px-sm space-y-1.5 overflow-y-auto">
+    <nav id="sidebar-nav" class="flex-grow px-sm space-y-1.5 overflow-y-auto">
         <!-- 1. Dashboard -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'dashboard') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.dashboard') }}">
@@ -116,6 +116,30 @@
         </form>
     </div>
 </aside>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const nav = document.getElementById("sidebar-nav");
+        if (nav) {
+            // Restore scroll position from localStorage
+            const pos = localStorage.getItem("sidebar-scroll");
+            if (pos !== null) {
+                nav.scrollTop = parseInt(pos, 10);
+            }
+            
+            // Scroll active item into view
+            const activeItem = nav.querySelector('.bg-secondary-container');
+            if (activeItem) {
+                activeItem.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+            }
+
+            // Save scroll position on scroll
+            nav.addEventListener("scroll", function() {
+                localStorage.setItem("sidebar-scroll", nav.scrollTop);
+            });
+        }
+    });
+</script>
 
 <!-- Top Navbar Header mapping -->
 <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-lg bg-surface-container-lowest shadow-sm border-b border-outline-variant">
