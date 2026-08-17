@@ -30,15 +30,24 @@
         </div>
     </div>
 
+    <!-- Section Heading -->
+    <div class="flex items-center justify-between mb-2.5 mt-1 px-1">
+        <div class="flex items-center gap-1.5">
+            <span class="w-1 h-3.5 bg-blue-600 rounded-full"></span>
+            <h3 class="text-[10px] font-black uppercase tracking-wider text-slate-700">Physical Possession Progress Tracker</h3>
+        </div>
+        <span class="text-[8px] font-black uppercase text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded tracking-wider">Live Tracker</span>
+    </div>
+
     <!-- Stats Row - Tighter & More Densely Aligned -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 mb-4">
         <!-- Total Eligible -->
         <a href="{{ route('mmgay.bdo.eligibility-list', ['all' => 1]) }}" class="bg-white rounded-xl shadow-sm border border-slate-100 p-3 flex items-center justify-between hover:shadow hover:border-slate-300 transition">
-            <div class="min-w-0">
-                <p class="text-[9px] uppercase text-slate-400 font-bold tracking-wider truncate">Total Eligible</p>
-                <h2 class="text-lg font-extrabold text-slate-700 mt-0.5">{{ $stats['total_eligible'] }}</h2>
+            <div class="min-w-0 flex-1">
+                <p class="text-[8.5px] uppercase text-slate-400 font-bold tracking-wider whitespace-normal leading-tight">Beneficiary for Physical Possession</p>
+                <h2 class="text-lg font-extrabold text-slate-700 mt-1">{{ $stats['total_eligible'] }}</h2>
             </div>
-            <div class="w-8.5 h-8.5 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+            <div class="w-8.5 h-8.5 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 ml-2">
                 <span class="material-symbols-outlined text-slate-600 text-base">groups</span>
             </div>
         </a>
