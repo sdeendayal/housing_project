@@ -83,7 +83,8 @@
             </a>
 
             <!-- Applicants Card -->
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total']) }}" class="flex items-center p-3 bg-gradient-to-r from-indigo-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'applicants', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-3 bg-gradient-to-r {{ $activeTab === 'applicants' ? 'from-blue-50/50 to-white border-blue-500 bg-blue-50/10' : 'from-indigo-50/50 to-white border-slate-100' }} border rounded-xl hover:shadow-sm transition">
                 <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mr-3 text-indigo-600 shrink-0">
                     <span class="material-symbols-outlined text-lg">groups</span>
                 </div>
@@ -94,7 +95,8 @@
             </a>
 
             <!-- Allotted Card -->
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total']) }}" class="flex items-center p-3 bg-gradient-to-r from-orange-50/50 to-white border border-slate-100 rounded-xl hover:shadow-sm transition">
+            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+               class="flex items-center p-3 bg-gradient-to-r {{ $activeTab === 'total' ? 'from-blue-50/50 to-white border-blue-500 bg-blue-50/10' : 'from-orange-50/50 to-white border-slate-100' }} border rounded-xl hover:shadow-sm transition">
                 <div class="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center mr-3 text-orange-600 shrink-0">
                     <span class="material-symbols-outlined text-lg">cottage</span>
                 </div>

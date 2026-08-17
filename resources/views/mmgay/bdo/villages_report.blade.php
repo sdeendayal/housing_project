@@ -40,6 +40,9 @@
                 <a href="{{ route('mmgay.bdo.owner-status-report', ['village_id' => $vil->VillageId]) }}" class="min-w-0 flex-1">
                     <p class="text-[9px] uppercase text-slate-400 font-extrabold tracking-wider">Village</p>
                     <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide group-hover:text-blue-700 transition-colors mt-0.5">{{ $vil->VillageName }}</h3>
+                    <span class="inline-block bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1.5 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-300">
+                        {{ $vil->total_beneficiaries }} Records
+                    </span>
                 </a>
                 <!-- Actions and Arrow Container -->
                 <div class="flex items-center gap-3 z-10 ml-2">

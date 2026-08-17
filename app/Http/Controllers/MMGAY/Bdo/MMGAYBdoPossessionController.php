@@ -1469,19 +1469,12 @@ class MMGAYBdoPossessionController extends Controller
         // Fetch villages having allotted flats under this BDO block with physical possession eligibility
         $villagesQuery = DB::table('ownermaster as o')
             ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1)
             ->whereNotNull('v.plots')
             ->whereNotNull('v.phase')
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('flatmaster as f')
                     ->whereColumn('f.FlatId', 'o.FlatId');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -2032,31 +2025,47 @@ class MMGAYBdoPossessionController extends Controller
         // 4. Fetch list based on active tab
         $activeTab = $request->input('status', 'approved_paid');
 
-        $listQuery = DB::table('ownermaster as o')
-            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
-            ->where('o.BlockId', $blockMasterId)
-            ->whereNotNull('o.FlatId')
-            ->where('o.FlatId', '>', 0)
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('villagemaster as v2')
-                    ->whereColumn('v2.VillageId', 'o.VillageId')
-                    ->whereNotNull('v2.plots')
-                    ->whereNotNull('v2.phase');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('flatmaster as f')
-                    ->whereColumn('f.FlatId', 'o.FlatId');
-            })
-            ->whereIn('o.OwnerId', function ($q) {
-                $q->select(DB::raw('MIN(OwnerId)'))
-                    ->from('ownermaster')
-                    ->groupBy('FlatId');
-            });
+        if ($activeTab === 'applicants') {
+            $listQuery = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                });
+        } else {
+            $listQuery = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereNotNull('o.FlatId')
+                ->where('o.FlatId', '>', 0)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                });
+        }
 
         if ($selectedPhase) {
             $listQuery->where('o.Phase', $selectedPhase);
@@ -2147,34 +2156,47 @@ class MMGAYBdoPossessionController extends Controller
         $search = $request->input('search');
         $activeTab = $request->input('status', 'approved_paid');
 
-        $query = DB::table('ownermaster as o')
-            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
-            ->where('o.BlockId', $blockMasterId)
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('villagemaster as v2')
-                    ->whereColumn('v2.VillageId', 'o.VillageId')
-                    ->whereNotNull('v2.plots')
-                    ->whereNotNull('v2.phase');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('flatmaster as f')
-                    ->whereColumn('f.FlatId', 'o.FlatId');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
-            })
-            ->whereIn('o.OwnerId', function ($q) {
-                $q->select(DB::raw('MIN(OwnerId)'))
-                    ->from('ownermaster')
-                    ->groupBy('FlatId');
-            });
+        if ($activeTab === 'applicants') {
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                });
+        } else {
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereNotNull('o.FlatId')
+                ->where('o.FlatId', '>', 0)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                });
+        }
 
         if ($selectedPhase) {
             $query->where('o.Phase', $selectedPhase);
@@ -2282,29 +2304,47 @@ class MMGAYBdoPossessionController extends Controller
         $search = $request->input('search');
         $activeTab = $request->input('status', 'approved_paid');
 
-        $query = DB::table('ownermaster as o')
-            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
-            ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
-            ->where('o.BlockId', $blockMasterId)
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('villagemaster as v2')
-                    ->whereColumn('v2.VillageId', 'o.VillageId')
-                    ->whereNotNull('v2.plots')
-                    ->whereNotNull('v2.phase');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('flatmaster as f')
-                    ->whereColumn('f.FlatId', 'o.FlatId');
-            })
-            ->whereIn('o.OwnerId', function ($q) {
-                $q->select(DB::raw('MIN(OwnerId)'))
-                    ->from('ownermaster')
-                    ->groupBy('FlatId');
-            });
+        if ($activeTab === 'applicants') {
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                });
+        } else {
+            $query = DB::table('ownermaster as o')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('districtmaster as d', 'f.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('blockmaster as b', 'f.BlockId', '=', 'b.BlockId')
+                ->leftJoin('villagemaster as v', 'f.VillageId', '=', 'v.VillageId')
+                ->where('o.BlockId', $blockMasterId)
+                ->whereNotNull('o.FlatId')
+                ->where('o.FlatId', '>', 0)
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('villagemaster as v2')
+                        ->whereColumn('v2.VillageId', 'o.VillageId')
+                        ->whereNotNull('v2.plots')
+                        ->whereNotNull('v2.phase');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f')
+                        ->whereColumn('f.FlatId', 'o.FlatId');
+                })
+                ->whereIn('o.OwnerId', function ($q) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->groupBy('FlatId');
+                });
+        }
 
         if ($selectedPhase) {
             $query->where('o.Phase', $selectedPhase);
