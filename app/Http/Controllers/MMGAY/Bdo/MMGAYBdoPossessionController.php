@@ -2140,6 +2140,37 @@ class MMGAYBdoPossessionController extends Controller
     }
 
     /**
+     * Get owner registry details by mobile number.
+     */
+    public function getOwnerRegistryDetails($mobile)
+    {
+        try {
+            $registry = DB::table('registary')
+                ->where('SecondPartyMobile', $mobile)
+                ->first();
+
+            if ($registry) {
+                return response()->json([
+                    'success' => true,
+                    'registry' => $registry
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'registry' => null,
+                'message' => 'No registry details found for this mobile number.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'registry' => null,
+                'message' => 'Error fetching registry details: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Export owner status report to CSV format.
      */
     public function ownerStatusReportExportCsv(Request $request)
