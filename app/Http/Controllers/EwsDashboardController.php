@@ -50,6 +50,8 @@ class EwsDashboardController extends Controller
             ->first();
         if ($allotted) {
             $allotted->flat_no = $allotted->Flat_PlotNo ?? $allotted->Flat_plotno_2 ?? null;
+            $allotted->full_name = $allotted->PrivatePurchaserName ?? null;
+            $allotted->application_number = $allotted->ApplicationNo ?? $allotted->ApplicationNo_2 ?? null;
         }
         $waiting = DB::table('ews_waiting_list_9')->where('mobile_number', $mobile)->first();
 
