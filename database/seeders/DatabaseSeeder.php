@@ -85,8 +85,8 @@ class DatabaseSeeder extends Seeder
             EwsAllottedSeeder::class,
             EwsWaitingListSeeder::class,
             EwsDeveloperSeeder::class,
-            // MmgayVillagePlotsSeeder::class,
             MmsayOldRegistrationDataSeeder::class,
+            MmsayEligibleBeneficiariesSeeder::class,
         ]);
 
         // Sync MMGAY citizen owners into users table
