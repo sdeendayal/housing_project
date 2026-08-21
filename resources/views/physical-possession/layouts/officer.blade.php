@@ -52,6 +52,11 @@
                 <span class="pp-sidebar-link-label">Total Eligible</span>
             </a>
 
+            <a href="{{ route('pp.officer.caste-eligibility') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.caste-eligibility') ? 'active' : '' }}">
+                <span class="pp-sidebar-link-icon text-warning"><i class="bi bi-people-fill"></i></span>
+                <span class="pp-sidebar-link-label">Caste Eligibility</span>
+            </a>
+
             <a href="{{ route('pp.officer.draw-documents') }}" class="pp-sidebar-link {{ request()->routeIs('pp.officer.draw-documents') ? 'active' : '' }}">
                 <span class="pp-sidebar-link-icon text-success"><i class="bi bi-map-fill"></i></span>
                 <span class="pp-sidebar-link-label">Draw Maps / Docs</span>

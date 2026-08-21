@@ -90,6 +90,8 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
 
         // New workflow officer routes
         Route::get('/eligibility-list', [PhysicalPossessionWorkflowController::class, 'officerEligibilityList'])->name('eligibility-list');
+        Route::get('/caste-eligibility', [PhysicalPossessionWorkflowController::class, 'officerCasteEligibility'])->name('caste-eligibility');
+        Route::get('/caste-eligibility/export', [PhysicalPossessionWorkflowController::class, 'downloadCasteEligibilityExcel'])->name('caste-eligibility.export');
         Route::get('/schedule/capacity/check', [PhysicalPossessionWorkflowController::class, 'getSlotCapacityCheck'])->name('schedule.capacity-check');
         Route::get('/schedule/{application}', [PhysicalPossessionWorkflowController::class, 'officerScheduleForm'])->name('schedule-form');
         Route::post('/schedule/{application}', [PhysicalPossessionWorkflowController::class, 'officerScheduleSave'])->name('schedule-save');

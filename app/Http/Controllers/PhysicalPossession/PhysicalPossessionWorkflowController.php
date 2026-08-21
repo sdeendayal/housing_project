@@ -23,7 +23,14 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $officer = Auth::user();
 
-        $this->ensureDistrictApplications($officer);
+        // $this->ensureDistrictApplications($officer);
+
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
 
         $query = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
@@ -34,6 +41,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
                      ->on('pad.AssetId', '=', 'ppa.asset_id');
             })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0);
 
@@ -66,14 +74,9 @@ class PhysicalPossessionWorkflowController extends Controller
             'ppa.id as application_id',
             'ppa.secure_id as application_secure_id',
             'ppa.physical_possession_status',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ])
-        ->selectRaw("
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                0
-            ) as total_paid
-        ")
-        ->having('total_paid', '>=', 60000);
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
         // Search filter
         $search = $request->input('search');
@@ -147,8 +150,13 @@ class PhysicalPossessionWorkflowController extends Controller
     /**
      * Show scheduling form for a purchaser.
      */
-    public function officerScheduleForm(PhysicalPossessionApplication $application)
+    public function officerScheduleForm($applicationIdOrNo)
     {
+        $application = $this->getOrCreateApplication($applicationIdOrNo);
+        if (!$application) {
+            return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
+        }
+
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return redirect()->route('pp.officer.possession-applications')->with('error', 'Cannot schedule or update schedule after slot is confirmed by citizen or verified.');
         }
@@ -220,11 +228,13 @@ class PhysicalPossessionWorkflowController extends Controller
         ));
     }
 
-    /**
-     * Save meeting schedule and mark as "Visit Scheduled".
-     */
-    public function officerScheduleSave(Request $request, PhysicalPossessionApplication $application)
+    public function officerScheduleSave(Request $request, $applicationIdOrNo)
     {
+        $application = $this->getOrCreateApplication($applicationIdOrNo);
+        if (!$application) {
+            return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
+        }
+
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return redirect()->route('pp.officer.possession-applications')->with('error', 'Cannot schedule or update schedule after slot is confirmed by citizen or verified.');
         }
@@ -494,7 +504,7 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $officer = Auth::user();
 
-        $this->ensureDistrictApplications($officer);
+        // $this->ensureDistrictApplications($officer);
 
         $query = PhysicalPossessionApplication::query()
             ->whereNotNull('physical_possession_status');
@@ -929,10 +939,106 @@ class PhysicalPossessionWorkflowController extends Controller
     }
 
     /**
+     * Get or dynamically create a physical possession application on-the-fly.
+     */
+    private function getOrCreateApplication($idOrNo)
+    {
+        $app = PhysicalPossessionApplication::where('id', $idOrNo)
+            ->orWhere('secure_id', $idOrNo)
+            ->orWhere('application_number', $idOrNo)
+            ->first();
+            
+        if ($app) {
+            return $app;
+        }
+
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $p = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->where(function($q) use ($idOrNo) {
+                $q->where('ppp.ApplicationNo', $idOrNo)
+                  ->orWhere('ppp.PrivatePurchaserId', $idOrNo);
+            })
+            ->select([
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pad.BalanceAmount',
+                'ppp.PrivatePurchaserName',
+                'ppp.PurchaserFatherName',
+                'ppp.Address',
+                'ppp.MobileNo',
+                'ppp.ApplicationNo',
+                'ppp.PrivatePurchaserId as PurchaserID',
+                'ppp.DistrictId',
+                'd.DistrictName'
+            ])
+            ->first();
+
+        if (!$p) {
+            return null;
+        }
+
+        $user = User::where('private_purchaser_id', $p->PurchaserID)
+            ->orWhere('mobile', $p->MobileNo)
+            ->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name' => $p->PrivatePurchaserName,
+                'mobile' => $p->MobileNo,
+                'role' => 'citizen',
+                'private_purchaser_id' => $p->PurchaserID,
+            ]);
+        } else {
+            if (empty($user->private_purchaser_id)) {
+                $user->private_purchaser_id = $p->PurchaserID;
+                $user->save();
+            }
+        }
+
+        return PhysicalPossessionApplication::create([
+            'user_id' => $user->id,
+            'private_purchaser_id' => $p->PurchaserID,
+            'asset_id' => $p->AssetId,
+            'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+            'slip_id' => 'SLIP-' . uniqid(),
+            'district_id' => $p->DistrictId,
+            'district_name' => $p->DistrictName,
+            'mobile' => $p->MobileNo,
+            'applicant_name' => $p->PrivatePurchaserName,
+            'father_name' => $p->PurchaserFatherName ?? '',
+            'address' => $p->Address ?? '',
+            'flat_cost' => $p->FlatCost,
+            'received_amount' => $p->ReceivedAmount,
+            'balance_amount' => $p->BalanceAmount,
+            'physical_possession_status' => 'Eligible for Physical Possession',
+            'status' => 'pending',
+        ]);
+    }
+
+    /**
      * Ensure all eligible district purchasers have physical possession application rows.
      */
     private function ensureDistrictApplications($officer)
     {
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
         $query = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
@@ -941,6 +1047,7 @@ class PhysicalPossessionWorkflowController extends Controller
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
                      ->on('pad.AssetId', '=', 'ppa.asset_id');
             })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0)
             ->whereNull('ppa.id');
@@ -967,16 +1074,11 @@ class PhysicalPossessionWorkflowController extends Controller
             'ppp.MemberID',
             'ppp.DistrictId',
             'd.DistrictName',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ])
-        ->selectRaw("
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                0
-            ) as total_paid
-        ")
-        ->having('total_paid', '>=', 60000);
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
-        $missing = $query->get();
+        $missing = $query->limit(15)->get();
 
         foreach ($missing as $p) {
             $user = User::where('private_purchaser_id', $p->PurchaserID)
@@ -1016,5 +1118,327 @@ class PhysicalPossessionWorkflowController extends Controller
                 'status' => 'pending',
             ]);
         }
+    }
+
+    public function officerCasteEligibility(Request $request)
+    {
+        $officer = Auth::user();
+
+        // Dynamic categories query removed because it's not used in view
+        $casteCategories = [];
+
+        $selectedCategory = $request->input('category');
+
+        // 2. Build the query for eligible applicants in the officer's district
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $query = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0);
+
+        if ($officer->district_id) {
+            $query->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($selectedCategory) {
+            if ($selectedCategory === 'GJ') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                });
+            } elseif ($selectedCategory === 'W') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                });
+            } elseif ($selectedCategory === 'SC') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            } elseif ($selectedCategory === 'other') {
+                $query->whereNot(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            }
+        }
+
+        $query->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.CasteCategoryName',
+            'meb.category as mmsay_category',
+            'meb.caste as mmsay_caste',
+            'ppp.DistrictId',
+            'd.DistrictName',
+            'pr.AssetName',
+            'pr.AssetSize',
+            'pr.Unit',
+            'ppa.id as application_id',
+            'ppa.secure_id as application_secure_id',
+            'ppa.physical_possession_status',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
+        ])
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+        $purchasers = $query->paginate(25)->withQueryString();
+
+        return view('physical-possession.workflow.officer-caste-eligibility', compact(
+            'purchasers',
+            'casteCategories',
+            'selectedCategory',
+            'officer'
+        ));
+    }
+
+    public function downloadCasteEligibilityExcel(Request $request)
+    {
+        $officer = Auth::user();
+        $selectedCategory = $request->input('category');
+
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $query = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0);
+
+        if ($officer->district_id) {
+            $query->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($selectedCategory) {
+            if ($selectedCategory === 'GJ') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                });
+            } elseif ($selectedCategory === 'W') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                });
+            } elseif ($selectedCategory === 'SC') {
+                $query->where(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            } elseif ($selectedCategory === 'other') {
+                $query->whereNot(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            }
+        }
+
+        $query->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.CasteCategoryName',
+            'meb.category as mmsay_category',
+            'meb.caste as mmsay_caste',
+            'ppp.DistrictId',
+            'd.DistrictName',
+            'pr.AssetName',
+            'pr.AssetSize',
+            'pr.Unit',
+            'ppa.id as application_id',
+            'ppa.secure_id as application_secure_id',
+            'ppa.physical_possession_status',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
+        ])
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+        $records = $query->get();
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Caste Eligibility List');
+
+        // Set Header
+        $headers = [
+            'S.No.',
+            'Application No.',
+            'PPP ID',
+            'Applicant Name',
+            'Father/Husband Name',
+            'Mobile No.',
+            'Caste Category',
+            'Property Name',
+            'Property Size',
+            'Total Paid (₹)',
+            'Flat Cost (₹)',
+            'Possession Status'
+        ];
+
+        $col = 'A';
+        foreach ($headers as $header) {
+            $sheet->setCellValue($col . '1', $header);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $col++;
+        }
+
+        $row = 2;
+        foreach ($records as $index => $r) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, $r->ApplicationNo ?? '—');
+            $sheet->setCellValue('C' . $row, $r->PPPId ?? '—');
+            $sheet->setCellValue('D' . $row, $r->PrivatePurchaserName);
+            $sheet->setCellValue('E' . $row, $r->PurchaserFatherName ?? '—');
+            $sheet->setCellValue('F' . $row, $r->MobileNo);
+            // Determine category dynamically
+            $isGhumantu = ($r->mmsay_category === 'GJ') || 
+                          (str_contains(strtolower($r->mmsay_caste ?? ''), 'tapriwas')) || 
+                          (str_contains(strtolower($r->mmsay_caste ?? ''), 'ghumantu')) || 
+                          (str_contains(strtolower($r->CasteCategoryName ?? ''), 'tapriwas')) || 
+                          (str_contains(strtolower($r->CasteCategoryName ?? ''), 'ghumantu')) || 
+                          (str_contains(strtolower($r->CasteCategoryName ?? ''), 'de-notified'));
+                          
+            $isWidow = ($r->mmsay_category === 'W') || 
+                       (str_contains(strtolower($r->mmsay_caste ?? ''), 'widow')) || 
+                       (str_contains(strtolower($r->CasteCategoryName ?? ''), 'widow'));
+                       
+            $isSC = ($r->mmsay_category === 'SC') || 
+                    (str_contains(strtolower($r->mmsay_caste ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($r->mmsay_caste ?? ''), 'sc')) || 
+                    (str_contains(strtolower($r->CasteCategoryName ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($r->CasteCategoryName ?? ''), 'sc'));
+                    
+            $mmsaySub = 'Other (' . ($r->CasteCategoryName ?? '—') . ')';
+            if ($isGhumantu) {
+                $mmsaySub = 'Ghumantu Jati';
+            } elseif ($isWidow) {
+                $mmsaySub = 'Widows';
+            } elseif ($isSC) {
+                $mmsaySub = 'Scheduled Caste';
+            }
+            $sheet->setCellValue('G' . $row, $mmsaySub);
+            $sheet->setCellValue('H' . $row, $r->AssetName ?? '—');
+            $sheet->setCellValue('I' . $row, ($r->AssetSize ?? '') . ' ' . ($r->Unit ?? ''));
+            $sheet->setCellValue('J' . $row, $r->total_paid);
+            $sheet->setCellValue('K' . $row, $r->FlatCost);
+            $sheet->setCellValue('L' . $row, $r->physical_possession_status ?? 'Not Initiated');
+            $row++;
+        }
+
+        // Auto size columns
+        foreach (range('A', 'L') as $columnID) {
+            $sheet->getColumnDimension($columnID)->setAutoSize(true);
+        }
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'caste_eligibility_' . strtolower(str_replace(' ', '_', $selectedCategory ?: 'all')) . '_' . now()->format('Ymd_His') . '.xlsx';
+
+        $response = new \Symfony\Component\HttpFoundation\StreamedResponse(function() use ($writer) {
+            $writer->save('php://output');
+        });
+
+        $response->headers->set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->headers->set('Content-Disposition', 'attachment;filename="' . $filename . '"');
+        $response->headers->set('Cache-Control', 'max-age=0');
+
+        return $response;
     }
 }

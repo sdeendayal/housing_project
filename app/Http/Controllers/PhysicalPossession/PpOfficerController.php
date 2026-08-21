@@ -25,11 +25,18 @@ class PpOfficerController extends Controller
     public function dashboard(Request $request)
     {
         $officer = Auth::user();
-        $this->ensureDistrictApplications($officer);
+        // $this->ensureDistrictApplications($officer);
         $query = $this->districtApplicationsQuery($officer);
 
         // Fetch eligibleCount first because we use it in stats
         // Calculate count of eligible applicants who are not yet scheduled/initiated
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
         $eligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
@@ -38,12 +45,14 @@ class PpOfficerController extends Controller
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
                      ->on('pad.AssetId', '=', 'ppa.asset_id');
             })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0)
             ->where(function ($q) {
                 $q->whereNull('ppa.id')
                   ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
-            });
+            })
+            ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
         if ($officer->district_id) {
             $eligibleQuery->where('ppp.DistrictId', $officer->district_id);
@@ -51,35 +60,41 @@ class PpOfficerController extends Controller
             $eligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
-        $eligibleCount = DB::table(DB::raw("({$eligibleQuery->select([
-            'pad.PropertyAuctionId',
-            'pad.AssetId'
-        ])->selectRaw('
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                0
-            ) as total_paid
-        ')->having('total_paid', '>=', 60000)->toSql()}) as sub"))
-            ->mergeBindings($eligibleQuery)
-            ->count();
+        $eligibleCount = $eligibleQuery->count();
+
+        // Aggregate stats in a single database query
+        $statsData = (clone $query)
+            ->select('physical_possession_status', DB::raw('count(*) as cnt'))
+            ->groupBy('physical_possession_status')
+            ->pluck('cnt', 'physical_possession_status')
+            ->toArray();
 
         $stats = [
             'awaiting_schedule' => $eligibleCount,
-            'scheduled' => (clone $query)->where('physical_possession_status', 'Visit Scheduled')->count(),
-            'submitted' => (clone $query)->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted'])->count(),
-            'site_verified' => (clone $query)->where('physical_possession_status', 'Site Verified')->count(),
-            'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
-            'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
+            'scheduled' => $statsData['Visit Scheduled'] ?? 0,
+            'submitted' => ($statsData['Slot Selected'] ?? 0) + ($statsData['Physical Possession Submitted'] ?? 0),
+            'site_verified' => $statsData['Site Verified'] ?? 0,
+            'verified' => $statsData['Verified'] ?? 0,
+            'rejected' => $statsData['Rejected'] ?? 0,
         ];
         $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['site_verified'] + $stats['verified'] + $stats['rejected'];
 
-        // Chart ke liye last 7 days data
+        // Aggregate last 7 days chart data in a single database query
+        $sevenDaysAgo = now()->subDays(6)->startOfDay();
+        $chartDataGrouped = (clone $query)
+            ->where('created_at', '>=', $sevenDaysAgo)
+            ->select(DB::raw('DATE(created_at) as date_key'), DB::raw('count(*) as cnt'))
+            ->groupBy(DB::raw('DATE(created_at)'))
+            ->pluck('cnt', 'date_key')
+            ->toArray();
+
         $chartLabels = [];
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i);
             $chartLabels[] = $date->format('d M');
-            $chartData[] = (clone $query)->whereDate('created_at', $date)->count();
+            $dateKey = $date->toDateString();
+            $chartData[] = $chartDataGrouped[$dateKey] ?? 0;
         }
 
         $recentApplications = (clone $query)->latest()->take(6)->get();
@@ -101,6 +116,7 @@ class PpOfficerController extends Controller
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
                      ->on('pad.AssetId', '=', 'ppa.asset_id');
             })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0);
 
@@ -132,14 +148,9 @@ class PpOfficerController extends Controller
             'ppa.id as application_id',
             'ppa.secure_id as application_secure_id',
             'ppa.physical_possession_status',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ])
-        ->selectRaw("
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                0
-            ) as total_paid
-        ")
-        ->having('total_paid', '>=', 60000);
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
         $search = $request->input('search');
         if ($search) {
@@ -777,6 +788,13 @@ class PpOfficerController extends Controller
      */
     private function ensureDistrictApplications($officer)
     {
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
         $query = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
@@ -785,6 +803,7 @@ class PpOfficerController extends Controller
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
                      ->on('pad.AssetId', '=', 'ppa.asset_id');
             })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
             ->where('pad.IsDeleted', 0)
             ->whereNull('ppa.id');
@@ -811,16 +830,11 @@ class PpOfficerController extends Controller
             'ppp.MemberID',
             'ppp.DistrictId',
             'd.DistrictName',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ])
-        ->selectRaw("
-            COALESCE(pad.ReceivedAmount, 0) + COALESCE(
-                (SELECT SUM(total_paid_amount) FROM cash_receipt_details WHERE asset_number = pad.AssetId AND IsDeleted = 0 AND IsActive = 1),
-                0
-            ) as total_paid
-        ")
-        ->having('total_paid', '>=', 60000);
+        ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
-        $missing = $query->get();
+        $missing = $query->limit(15)->get();
 
         foreach ($missing as $p) {
             $user = User::where('private_purchaser_id', $p->PurchaserID)
@@ -868,7 +882,7 @@ class PpOfficerController extends Controller
     public function drawDocuments(Request $request)
     {
         $officer = Auth::user();
-        $this->ensureDistrictApplications($officer);
+        // $this->ensureDistrictApplications($officer);
         
         $districtId = $officer->district_id;
         
