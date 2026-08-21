@@ -71,7 +71,7 @@ class MmsayEligibleBeneficiariesSeeder extends Seeder
                 // If the row is empty (like a spacer), skip it. We'll check if name or application_number exists.
                 $hasData = false;
                 $rowInsert = [
-                    'sheet_name' => $sheetName,
+                    'mc_name' => $sheetName,
                     'application_number' => null,
                     'registration_number' => null,
                     'pmay_id' => null,
@@ -96,6 +96,7 @@ class MmsayEligibleBeneficiariesSeeder extends Seeder
                     'status_reason' => null,
                     'remarks' => null,
                     'secure_id' => Str::random(32),
+                    'phase' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

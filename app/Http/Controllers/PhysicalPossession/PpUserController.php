@@ -1144,20 +1144,36 @@ class PpUserController extends Controller
     private function ppPaymentEligibilityRedirect(User $user): ?\Illuminate\Http\RedirectResponse
     {
         $payments = $this->resolvePpTotalAmountPaid($user);
+        $purchaser = $this->findPurchaserForUser($user);
+        $inEligibleTable = false;
+        if ($purchaser && !empty($purchaser->ApplicationNo)) {
+            $inEligibleTable = DB::table('mmsay_eligible_beneficiaries')
+                ->where('application_number', $purchaser->ApplicationNo)
+                ->exists();
+        }
 
-        if ($payments['total_paid'] >= self::PP_MIN_TOTAL_PAID) {
+        if ($payments['total_paid'] >= self::PP_MIN_TOTAL_PAID && $inEligibleTable) {
             return null;
+        }
+
+        if ($payments['total_paid'] < self::PP_MIN_TOTAL_PAID) {
+            return redirect()->route('citizen.dashboard')
+                ->with('warning_title', 'Not Eligible')
+                ->with(
+                    'warning',
+                    'To apply for Physical Possession, your total payments (initial registration deposit + installments) must be at least ₹'
+                    .number_format(self::PP_MIN_TOTAL_PAID)
+                    .'. Your total paid: ₹'.number_format($payments['total_paid'])
+                    .' (registration deposit: ₹'.number_format($payments['initial_deposit'])
+                    .', installments: ₹'.number_format($payments['installment_paid']).').'
+                );
         }
 
         return redirect()->route('citizen.dashboard')
             ->with('warning_title', 'Not Eligible')
             ->with(
                 'warning',
-                'To apply for Physical Possession, your total payments (initial registration deposit + installments) must be at least ₹'
-                .number_format(self::PP_MIN_TOTAL_PAID)
-                .'. Your total paid: ₹'.number_format($payments['total_paid'])
-                .' (registration deposit: ₹'.number_format($payments['initial_deposit'])
-                .', installments: ₹'.number_format($payments['installment_paid']).').'
+                'To apply for Physical Possession, your application number must be present in the MMSAY eligible beneficiaries list.'
             );
     }
 

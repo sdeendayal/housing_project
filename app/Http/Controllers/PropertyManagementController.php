@@ -2782,10 +2782,11 @@ class PropertyManagementController extends Controller
         $query = DB::query()
             ->fromSub($assetPayments, 'payments')
             ->leftJoin('property_registration as pr', 'pr.AssetId', '=', 'payments.AssetId')
-            ->leftJoin('property_private_purchasers as ppp', function ($join) {
+            ->join('property_private_purchasers as ppp', function ($join) {
                 $join->on('ppp.PrivatePurchaserId', '=', 'payments.PurchaserID')
                     ->where('ppp.IsDeleted', 0);
             })
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
             ->leftJoin('districts as d', 'd.DistrictId', '=', 'payments.DistrictId')
             ->leftJoin('cities as c', 'c.CityId', '=', 'payments.CityId')
             ->leftJoin('sectors as s', 's.SectorId', '=', 'payments.SectorId')

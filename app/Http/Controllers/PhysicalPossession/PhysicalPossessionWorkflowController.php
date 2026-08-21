@@ -27,6 +27,7 @@ class PhysicalPossessionWorkflowController extends Controller
 
         $query = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
             ->leftJoin('physical_possession_applications as ppa', function ($join) {
@@ -934,6 +935,7 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $query = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
             ->leftJoin('physical_possession_applications as ppa', function ($join) {
                 $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('mmsay_eligible_beneficiaries', function (Blueprint $table) {
             $table->id();
-            $table->string('sheet_name', 100)->nullable()->index();
+            $table->string('mc_name', 100)->nullable()->index();
             $table->string('application_number', 100)->nullable()->index();
             $table->string('registration_number', 100)->nullable()->index();
             $table->string('pmay_id', 150)->nullable()->index();
@@ -38,6 +38,7 @@ return new class extends Migration
             $table->text('status_reason')->nullable();
             $table->text('remarks')->nullable();
             $table->string('secure_id', 32)->nullable()->unique();
+            $table->integer('phase')->default(1);
             $table->timestamps();
         });
     }

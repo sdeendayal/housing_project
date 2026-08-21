@@ -91,7 +91,13 @@ class CitizenAuthController extends Controller
         $ppHasDraftApplication = PhysicalPossessionApplication::where('user_id', $user->id)->where('status', 'draft')->exists();
 
         $ppMinTotalPaidRequired = 60000;
-        $isPpEligible = $totalPaid >= $ppMinTotalPaidRequired;
+        $inEligibleTable = false;
+        if ($applicationNo) {
+            $inEligibleTable = DB::table('mmsay_eligible_beneficiaries')
+                ->where('application_number', $applicationNo)
+                ->exists();
+        }
+        $isPpEligible = $totalPaid >= $ppMinTotalPaidRequired && $inEligibleTable;
 
         $applicationSections = $this->buildApplicationDetailSections(
             $user,
