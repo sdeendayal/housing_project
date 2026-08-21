@@ -1718,6 +1718,82 @@ class EwsDepartmentController extends Controller
                     'category' => 'approved flats'
                 ]
             ];
+        } elseif ($districtName === 'GURUGRAM') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'GURGAON_Completed_24-01-2026.xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
+                    'sheets' => 'GURGAON_Completed_24-01-2026',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => 'GURGAON_Completed_24-01-2026 (3).xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the Gurugram lottery draw.',
+                    'sheets' => 'Eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'PPP Exclusions & Verification Master (2. PPP Exclusion)',
+                    'filename' => 'gurgaon_mc.xlsx',
+                    'description' => 'Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Exclusion data from PPP'
+                ],
+                [
+                    'name' => 'Draw Result Gurugram (7. ADC Verified Eligible)',
+                    'filename' => 'Draw Result Gurugram 2709   (ok) (ADC).xlsx',
+                    'description' => 'Official draw result list containing successfully verified eligible candidates approved by ADC Gurugram.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'ADC Verification Outcomes'
+                ],
+                [
+                    'name' => 'Gurugram Ineligible List (7. ADC Verified Not Eligible)',
+                    'filename' => 'ggn not eli.xlsx',
+                    'description' => 'Official list containing ineligible candidates verified and rejected by ADC Gurugram.',
+                    'sheets' => 'Not_Eligible',
+                    'category' => 'ADC Verification Outcomes'
+                ]
+            ];
+        } elseif ($districtName === 'FARIDABAD') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'FARIDABAD_Completed_MC_22-01-2026 (2).xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data.',
+                    'sheets' => 'FARIDABAD_Completed_MC_22-01-20',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => 'FARIDABAD_Completed_MC_22-01-2026 (2) (3).xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the Faridabad lottery draw.',
+                    'sheets' => 'Eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'PPP Exclusions & Verification Master (2. PPP Exclusion)',
+                    'filename' => 'faridabad_mc.xlsx',
+                    'description' => 'Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Exclusion data from PPP'
+                ],
+                [
+                    'name' => 'Faridabad Eligible Beneficiaries (7. ADC Verified Eligible)',
+                    'filename' => 'Eligible_bene_Faridabad (1)9ADC).xlsx',
+                    'description' => 'Official draw result list containing successfully verified eligible candidates approved by ADC Faridabad.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'ADC Verification Outcomes'
+                ],
+                [
+                    'name' => 'Faridabad Ineligible List (7. ADC Verified Not Eligible)',
+                    'filename' => 'Not_eligible_fbd(ADC).xlsx',
+                    'description' => 'Official list containing ineligible candidates verified and rejected by ADC Faridabad.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'ADC Verification Outcomes'
+                ]
+            ];
         } elseif ($districtName === 'OTHER') {
             $rawFiles = [
                 [
