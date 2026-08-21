@@ -146,11 +146,65 @@ class EwsEligibleSeeder extends Seeder
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_eligible_6 table.");
+        $this->command->info("Successfully seeded {$count} Sonipat records into the ews_eligible_6 table.");
         if (isset($spreadsheet)) {
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
         }
+
+        // Seed Faridabad Data
+        $fbdFilePath = database_path('seeders/data/Eligible_bene_Faridabad (1)9ADC).xlsx');
+        if (file_exists($fbdFilePath)) {
+            $this->command->info("Loading Faridabad Excel file from {$fbdFilePath}...");
+            $fbdReader = IOFactory::createReaderForFile($fbdFilePath);
+            $fbdReader->setReadDataOnly(true);
+            $fbdSpreadsheet = $fbdReader->load($fbdFilePath);
+            $fbdSheet = $fbdSpreadsheet->getActiveSheet();
+            $fbdRows = $fbdSheet->toArray();
+            
+            $fbdBatch = [];
+            $fbdCount = 0;
+            $this->command->info("Seeding Faridabad data into ews_eligible_6 table...");
+            
+            foreach (array_slice($fbdRows, 1) as $r) {
+                $appNo = $r[2] !== null ? trim($r[2]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $fbdBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[3] !== null ? trim($r[3]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => $r[4] !== null ? trim($r[4]) : '',
+                    'status' => $r[5] !== null ? trim($r[5]) : 'Eligible',
+                    'priority' => null,
+                    'category' => null,
+                    'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'FARIDABAD',
+                    'dist_id' => 4,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($fbdBatch) >= $batchSize) {
+                    DB::table('ews_eligible_6')->insert($fbdBatch);
+                    $fbdCount += count($fbdBatch);
+                    $fbdBatch = [];
+                }
+            }
+            
+            if (count($fbdBatch) > 0) {
+                DB::table('ews_eligible_6')->insert($fbdBatch);
+                $fbdCount += count($fbdBatch);
+            }
+            $this->command->info("Successfully seeded {$fbdCount} Faridabad records.");
+            $fbdSpreadsheet->disconnectWorksheets();
+            unset($fbdSpreadsheet);
+        } else {
+            $this->command->error("Faridabad Excel file not found at: {$fbdFilePath}");
+        }
+
         gc_collect_cycles();
     }
 }
