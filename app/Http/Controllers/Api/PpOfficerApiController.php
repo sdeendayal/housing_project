@@ -1318,7 +1318,7 @@ class PpOfficerApiController extends Controller
     {
         $officer = Auth::user();
 
-        $selectedCategory = $request->input('category');
+        $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')

@@ -1127,7 +1127,7 @@ class PhysicalPossessionWorkflowController extends Controller
         // Dynamic categories query removed because it's not used in view
         $casteCategories = [];
 
-        $selectedCategory = $request->input('category');
+        $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
         // 2. Build the query for eligible applicants in the officer's district
         $receiptsQuery = DB::table('cash_receipt_details')
@@ -1246,7 +1246,7 @@ class PhysicalPossessionWorkflowController extends Controller
     public function downloadCasteEligibilityExcel(Request $request)
     {
         $officer = Auth::user();
-        $selectedCategory = $request->input('category');
+        $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')
