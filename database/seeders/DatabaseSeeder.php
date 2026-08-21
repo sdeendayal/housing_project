@@ -289,5 +289,8 @@ class DatabaseSeeder extends Seeder
         } catch (\Exception $e) {
             $this->command->error("Error matching house_ownership: " . $e->getMessage());
         }
+
+        // Initialize Physical Possession Applications for eligible beneficiaries
+        $this->command->call('app:initialize-possession');
     }
 }
