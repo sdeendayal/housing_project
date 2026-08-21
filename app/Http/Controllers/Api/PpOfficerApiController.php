@@ -226,10 +226,6 @@ class PpOfficerApiController extends Controller
      */
     public function eligibilityList(Request $request)
     {
-        // 1. Current officer fetch karein aur missing applications generate karein
-        $officer = Auth::user();
-        
-        $receiptsQuery = DB::table('cash_receipt_details')
         // 1. Current officer fetch karein
         $officer = Auth::user();
 
