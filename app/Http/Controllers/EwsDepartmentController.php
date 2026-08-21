@@ -87,7 +87,9 @@ class EwsDepartmentController extends Controller
             })
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $pendingCount = 0;
+        $pendingCount = DB::table('ews_waiting_list_9')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
@@ -133,19 +135,8 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         
-        $adcFailedCount = DB::table('all_ews_data_544')
-            ->where('Paid', 'Paid')
-            ->whereIn('id', function($q) {
-                $q->select(DB::raw('MIN(id)'))
-                  ->from('all_ews_data_544')
-                  ->where('Paid', 'Paid')
-                  ->groupBy('PrivatePurchaserId');
-            })
+        $adcFailedCount = DB::table('adc_not_verified')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->whereNotIn(DB::raw('COALESCE(ApplicationNo, ApplicationNo_2)'), function($query) use ($districtId) {
-                $query->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
-                    ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
-            })
             ->count();
 
         $drawRemainingCount = DB::table('all_ews_data_544')
@@ -221,7 +212,9 @@ class EwsDepartmentController extends Controller
             })
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
-        $pendingCount = 0;
+        $pendingCount = DB::table('ews_waiting_list_9')
+            ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
+            ->count();
         $rejectedPppCount = DB::table('ews_reject_ppp_exclusion_2')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
@@ -267,19 +260,8 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         
-        $adcFailedCount = DB::table('all_ews_data_544')
-            ->where('Paid', 'Paid')
-            ->whereIn('id', function($q) {
-                $q->select(DB::raw('MIN(id)'))
-                  ->from('all_ews_data_544')
-                  ->where('Paid', 'Paid')
-                  ->groupBy('PrivatePurchaserId');
-            })
+        $adcFailedCount = DB::table('adc_not_verified')
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
-            ->whereNotIn(DB::raw('COALESCE(ApplicationNo, ApplicationNo_2)'), function($query) use ($districtId) {
-                $query->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
-                    ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
-            })
             ->count();
 
         $drawRemainingCount = DB::table('all_ews_data_544')
@@ -395,7 +377,7 @@ class EwsDepartmentController extends Controller
                 ->select('secure_id', 'id', DB::raw('COALESCE(ApplicationNo, ApplicationNo_2) as application_number'), DB::raw('PrivatePurchaserName as full_name'), DB::raw('AadhaarNo as aadhar_no'), DB::raw('COALESCE(MobileNo, MobileNo_2) as mobile_number'), DB::raw('COALESCE(Flat_PlotNo, Flat_plotno_2) as flat_no'), DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), DB::raw('dist as dist_name'), 'dist_id');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
                 ->select(
@@ -489,19 +471,21 @@ class EwsDepartmentController extends Controller
             $query = DB::table('ews_eligible_6')
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Eligible' as status"), 'dist_name');
         } elseif ($type === 'adc_failed') {
-            $query = DB::table('all_ews_data_544')
-                ->where('Paid', 'Paid')
-                ->whereIn('id', function($q) {
-                    $q->select(DB::raw('MIN(id)'))
-                      ->from('all_ews_data_544')
-                      ->where('Paid', 'Paid')
-                      ->groupBy('PrivatePurchaserId');
-                })
-                ->whereNotIn(DB::raw('COALESCE(ApplicationNo, ApplicationNo_2)'), function($q) use ($districtId) {
-                    $q->select('application_number')->from('ews_eligible_6')->whereNotNull('application_number')
-                        ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
-                })
-                ->select('secure_id', 'id', DB::raw('COALESCE(ApplicationNo, ApplicationNo_2) as application_number'), DB::raw('PrivatePurchaserName as full_name'), DB::raw('AadhaarNo as aadhar_no'), DB::raw('COALESCE(MobileNo, MobileNo_2) as mobile_number'), DB::raw("'N/A' as flat_no"), DB::raw("'adc_failed' as type"), DB::raw("'Not Eligible' as status"), DB::raw('dist as dist_name'), 'dist_id');
+            $query = DB::table('adc_not_verified')
+                ->select(
+                    'secure_id',
+                    'id',
+                    'application_number',
+                    'full_name',
+                    'aadhar_no',
+                    'mobile_number',
+                    DB::raw("'N/A' as flat_no"),
+                    DB::raw("'adc_failed' as type"),
+                    DB::raw("'Not Eligible' as status"),
+                    'dist_name',
+                    'dist_id'
+                )
+                ->when($districtId, fn($q) => $q->where('dist_id', $districtId));
         } elseif ($type === 'draw_remaining') {
             $query = DB::table('all_ews_data_544')
                 ->where('Allotment', 'not alloted')
