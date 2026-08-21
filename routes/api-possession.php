@@ -94,6 +94,7 @@ Route::prefix('possession')->group(function () {
         Route::get('/reports', [PpOfficerApiController::class, 'reports']);
 
         Route::get('/eligibility-list', [PpOfficerApiController::class, 'eligibilityList']);
+        Route::get('/caste-eligibility', [PpOfficerApiController::class, 'casteEligibility']);
         
         Route::get('/schedule/capacity/check', [PpOfficerApiController::class, 'getSlotCapacityCheck']);
         

@@ -1306,5 +1306,139 @@ class PpOfficerApiController extends Controller
             'documents' => $documents
         ]);
     }
+
+    /**
+     * [Caste Eligibility API]
+     * Site Engineer ke district ke applicants category-wise return karta hai.
+     */
+    public function casteEligibility(Request $request)
+    {
+        $officer = Auth::user();
+
+        $selectedCategory = $request->input('category');
+
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $tempQuery = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('property_registration as pr', 'pad.AssetId', '=', 'pr.AssetId')
+            ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                     ->on('pad.AssetId', '=', 'ppa.asset_id');
+            })
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0);
+
+        if ($officer->district_id) {
+            $tempQuery->where('ppp.DistrictId', $officer->district_id);
+        } elseif ($officer->district_name) {
+            $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($selectedCategory) {
+            if ($selectedCategory === 'GJ') {
+                $tempQuery->where(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                });
+            } elseif ($selectedCategory === 'W') {
+                $tempQuery->where(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                });
+            } elseif ($selectedCategory === 'SC') {
+                $tempQuery->where(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            } elseif ($selectedCategory === 'other') {
+                $tempQuery->whereNot(function($q) {
+                    $q->where('meb.category', 'GJ')
+                      ->orWhere('meb.caste', 'like', '%tapriwas%')
+                      ->orWhere('meb.caste', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'W')
+                      ->orWhere('meb.caste', 'like', '%widow%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                })
+                ->whereNot(function($q) {
+                    $q->where('meb.category', 'SC')
+                      ->orWhere('meb.caste', 'like', '%scheduled%')
+                      ->orWhere('meb.caste', 'like', '%sc%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
+                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                });
+            }
+        }
+
+        $tempQuery->select([
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.PurchaserID',
+            'pad.FlatCost',
+            'pad.ReceivedAmount',
+            'pad.BalanceAmount',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.Address',
+            'ppp.MobileNo',
+            'ppp.ApplicationNo',
+            'ppp.PPPId',
+            'ppp.MemberID',
+            'ppp.CasteCategoryName',
+            'meb.category as mmsay_category',
+            'meb.caste as mmsay_caste',
+            'ppp.DistrictId',
+            'd.DistrictName',
+            'pr.AssetName',
+            'pr.AssetSize',
+            'pr.Unit',
+            'ppa.id as application_id',
+            'ppa.secure_id as application_secure_id',
+            'ppa.physical_possession_status',
+            DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
+        ]);
+
+        $purchaserQuery = DB::table(DB::raw("({$tempQuery->toSql()}) as temp"))
+            ->mergeBindings($tempQuery)
+            ->where('temp.total_paid', '>=', 60000);
+
+        $search = $request->input('search');
+        if ($search) {
+            $purchaserQuery->where(function($q) use ($search) {
+                $q->where('temp.PrivatePurchaserName', 'like', "%{$search}%")
+                  ->orWhere('temp.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('temp.PPPId', 'like', "%{$search}%")
+                  ->orWhere('temp.ApplicationNo', 'like', "%{$search}%");
+            });
+        }
+
+        $purchasers = $purchaserQuery->paginate(25)->withQueryString();
+
+        return response()->json([
+            'success' => true,
+            'purchasers' => $purchasers,
+        ]);
+    }
 }
 
