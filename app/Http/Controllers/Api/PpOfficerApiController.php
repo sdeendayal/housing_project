@@ -34,6 +34,13 @@ class PpOfficerApiController extends Controller
             $query->where('district_name', 'like', '%' . $officer->district_name . '%');
         }
 
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
         $tempEligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
