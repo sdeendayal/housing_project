@@ -82,6 +82,12 @@ class RoleSeeder extends Seeder
                 'dashboard_route' => 'ews.developer.dashboard',
                 'dashboard_path' => null,
             ],
+            [
+                'name' => 'MMGAY DTP',
+                'slug' => 'mmgay-dtp',
+                'dashboard_route' => 'pp.dtp.dashboard',
+                'dashboard_path' => null,
+            ],
         ];
 
         foreach ($roles as $role) {

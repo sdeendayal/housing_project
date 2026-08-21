@@ -899,5 +899,15 @@ class PpOfficerController extends Controller
 
         return view('physical-possession.officer.draw-documents', compact('officer', 'documents'));
     }
+
+    /**
+     * DTP Officer Dashboard (MMGAY DTP role)
+     */
+    public function dtpDashboard(Request $request)
+    {
+        $officer = Auth::user();
+
+        return view('physical-possession.dtp_dashboard', compact('officer'));
+    }
 }
 

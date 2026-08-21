@@ -46,6 +46,10 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         ->middleware('throttle:5,1')
         ->name('department.login.resend-otp');
 
+    // DTP Officer Login (Email & Password - OtpAuthController)
+    Route::get('/dtp/login', [OtpAuthController::class, 'showDtpLogin'])->name('dtp.login');
+    Route::post('/dtp/login', [OtpAuthController::class, 'dtpLogin'])->name('dtp.login.submit');
+
     // Citizen PP features (uses existing citizen session from /mmsay-citizen-login)
     Route::middleware(['auth', 'role:citizen'])->group(function () {
         Route::get('/dashboard', fn () => redirect()->route('citizen.dashboard'))->name('user.dashboard');
@@ -99,5 +103,11 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifyForm'])->name('verify-form')->where('application', '[a-f0-9]{32}');
         Route::post('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifySave'])->name('verify-save')->where('application', '[a-f0-9]{32}');
         Route::get('/download-certificate/{application}', [PhysicalPossessionWorkflowController::class, 'officerDownloadCertificate'])->name('download-certificate')->where('application', '[a-f0-9]{32}');
+    });
+
+    // DTP officer PP panel (mmgay-dtp role)
+    Route::middleware(['auth', 'role:mmgay-dtp'])->prefix('dtp')->group(function () {
+        Route::get('/dashboard', [PpOfficerController::class, 'dtpDashboard'])->name('dtp.dashboard');
+        Route::post('/logout', [OtpAuthController::class, 'logout'])->name('dtp.logout');
     });
 });

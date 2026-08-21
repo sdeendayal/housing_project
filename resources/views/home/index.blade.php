@@ -277,6 +277,16 @@
                                     Site Engg Login
                                 </a>
 
+                                <a href="{{ route('pp.dtp.login') }}"
+                                    class="flex items-center gap-2 px-4 py-3 hover:bg-blue-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
+
+                                    <span class="material-symbols-outlined text-[18px]">
+                                        account_balance
+                                    </span>
+
+                                    DTP Login
+                                </a>
+
                             </div>
 
                         </div>

@@ -349,6 +349,8 @@ class OtpAuthController extends Controller
                 $loginRoute = 'ews.citizen.login';
             } elseif ($userRole === 'ews_developer') {
                 $loginRoute = 'ews.developer.login';
+            } elseif ($userRole === 'mmgay-dtp') {
+                $loginRoute = 'pp.dtp.login';
             } elseif (!in_array($userRole, ['citizen', 'villager', 'mmgav_bdeo'], true)) {
                 $loginRoute = 'pp.department.login';
             }
@@ -359,5 +361,63 @@ class OtpAuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route($loginRoute)->with('success', 'Logged out successfully.');
+    }
+
+    public function showDtpLogin()
+    {
+        $user = Auth::user();
+        if ($user) {
+            return redirect($user->dashboardRoute());
+        }
+
+        $captcha = random_int(1000, 9999);
+        session(['captcha' => $captcha]);
+
+        return view('physical-possession.dtp_login', compact('captcha'));
+    }
+
+    public function dtpLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'email'    => ['required', 'string'],
+            'password' => ['required', 'string'],
+            'captcha'  => ['required'],
+        ]);
+
+        if ((string) $credentials['captcha'] !== (string) session('captcha')) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ Invalid CAPTCHA');
+        }
+
+        $login = trim($credentials['email']);
+
+        $user = User::where('email', $login)->first();
+
+        if (!$user) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ User does not exist');
+        }
+
+        if ($user->role !== 'mmgay-dtp') {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ Unauthorized role');
+        }
+
+        if (!\Illuminate\Support\Facades\Hash::check($credentials['password'], $user->password)) {
+            return back()
+                ->withInput($request->only('email'))
+                ->with('error', '❌ Invalid password');
+        }
+
+        Auth::login($user);
+
+        $request->session()->regenerate();
+        $request->session()->forget('captcha');
+
+        return redirect($user->dashboardRoute())
+            ->with('success', 'Login successful! Welcome back DTP.');
     }
 }

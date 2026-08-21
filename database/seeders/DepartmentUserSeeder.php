@@ -48,5 +48,24 @@ class DepartmentUserSeeder extends Seeder
                 'scheme' => 'MMGAY',
             ]
         );
+
+        $dtpRole = Role::where('slug', 'mmgay-dtp')->first();
+        if ($dtpRole) {
+            $dtpUser = User::updateOrCreate(
+                ['email' => 'dtp@gmail.com'],
+                [
+                    'name' => 'MMGAY DTP Officer',
+                    'mobile' => '9888877777',
+                    'password' => Hash::make('password'),
+                    'role' => 'mmgay-dtp',
+                    'scheme' => 'MMGAY',
+                ]
+            );
+
+            RoleType::updateOrCreate(
+                ['user_id' => $dtpUser->id],
+                ['role_id' => $dtpRole->id]
+            );
+        }
     }
 }
