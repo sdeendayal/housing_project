@@ -205,6 +205,60 @@ class EwsEligibleSeeder extends Seeder
             $this->command->error("Faridabad Excel file not found at: {$fbdFilePath}");
         }
 
+        // Seed Gurugram Data
+        $ggnFilePath = database_path('seeders/data/Draw Result Gurugram 2709   (ok) (ADC).xlsx');
+        if (file_exists($ggnFilePath)) {
+            $this->command->info("Loading Gurugram Excel file from {$ggnFilePath}...");
+            $ggnReader = IOFactory::createReaderForFile($ggnFilePath);
+            $ggnReader->setReadDataOnly(true);
+            $ggnSpreadsheet = $ggnReader->load($ggnFilePath);
+            $ggnSheet = $ggnSpreadsheet->getSheetByName('Sheet1');
+            $ggnRows = $ggnSheet->toArray();
+            
+            $ggnBatch = [];
+            $ggnCount = 0;
+            $this->command->info("Seeding Gurugram data into ews_eligible_6 table...");
+            
+            // Loop starting from index 2 (row 3 of Excel)
+            foreach (array_slice($ggnRows, 2) as $r) {
+                $appNo = $r[4] !== null ? trim($r[4]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $ggnBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[2] !== null ? trim($r[2]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => null,
+                    'status' => 'Eligible',
+                    'priority' => null,
+                    'category' => null,
+                    'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'GURUGRAM',
+                    'dist_id' => 6,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($ggnBatch) >= $batchSize) {
+                    DB::table('ews_eligible_6')->insert($ggnBatch);
+                    $ggnCount += count($ggnBatch);
+                    $ggnBatch = [];
+                }
+            }
+            
+            if (count($ggnBatch) > 0) {
+                DB::table('ews_eligible_6')->insert($ggnBatch);
+                $ggnCount += count($ggnBatch);
+            }
+            $this->command->info("Successfully seeded {$ggnCount} Gurugram records.");
+            $ggnSpreadsheet->disconnectWorksheets();
+            unset($ggnSpreadsheet);
+        } else {
+            $this->command->error("Gurugram Excel file not found at: {$ggnFilePath}");
+        }
+
         gc_collect_cycles();
     }
 }
