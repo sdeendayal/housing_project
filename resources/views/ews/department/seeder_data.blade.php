@@ -77,7 +77,7 @@
                                     <i class="bi bi-file-earmark-spreadsheet text-xl"></i>
                                 </div>
                                 <div class="space-y-0.5 min-w-0">
-                                    <h3 class="font-extrabold text-slate-800 uppercase tracking-tight text-[10px] leading-snug truncate" title="{{ $file['name'] }}">
+                                    <h3 class="font-extrabold text-slate-800 uppercase tracking-tight text-[10px] leading-snug" title="{{ $file['name'] }}">
                                         {{ $file['name'] }}
                                     </h3>
                                     <p class="text-[8.5px] font-mono text-slate-550 font-semibold truncate text-slate-500" title="{{ $file['filename'] }}">
