@@ -328,6 +328,12 @@ class PpOfficerApiController extends Controller
         }
 
         $purchasers = $purchaserQuery->paginate(25)->withQueryString();
+        $purchasers->getCollection()->transform(function ($item) {
+            if (isset($item->physical_possession_status)) {
+                $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
+            }
+            return $item;
+        });
 
         // 6. JSON output load karein
         return response()->json([
@@ -578,6 +584,7 @@ class PpOfficerApiController extends Controller
         $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
 
         $application->load(['statusLogs.changer']);
+        $application->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status);
 
         return response()->json([
             'success' => true,
@@ -790,6 +797,7 @@ class PpOfficerApiController extends Controller
         }
 
         Log::info("SMS Notification via API: Physical Possession visit scheduled for applicant {$application->applicant_name}");
+        $application->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status);
 
         return response()->json([
             'success' => true,
@@ -845,6 +853,12 @@ class PpOfficerApiController extends Controller
         }
 
         $applications = $query->latest()->paginate(25)->withQueryString();
+        $applications->getCollection()->transform(function ($item) {
+            if (isset($item->physical_possession_status)) {
+                $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
+            }
+            return $item;
+        });
 
         return response()->json([
             'success' => true,
@@ -911,6 +925,7 @@ class PpOfficerApiController extends Controller
         $balanceAmount = $property ? (float) ($property->FlatCost ?? 0) - $totalReceived : 0.0;
 
         $application->load(['statusLogs.changer']);
+        $application->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status);
 
         return response()->json([
             'success' => true,
@@ -1080,6 +1095,7 @@ class PpOfficerApiController extends Controller
                 'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified (API).',
             ]);
 
+            $application->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status);
             return response()->json([
                 'success' => true,
                 'message' => 'Physical Possession application has been successfully verified and approved.',
@@ -1132,6 +1148,7 @@ class PpOfficerApiController extends Controller
                 'remarks' => $request->remarks,
             ]);
 
+            $application->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status);
             return response()->json([
                 'success' => true,
                 'message' => 'Site verification details submitted successfully. Now proceed to Step 2 (E-Possession).',
@@ -1482,6 +1499,12 @@ class PpOfficerApiController extends Controller
         }
 
         $purchasers = $purchaserQuery->paginate(25)->withQueryString();
+        $purchasers->getCollection()->transform(function ($item) {
+            if (isset($item->physical_possession_status)) {
+                $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
+            }
+            return $item;
+        });
 
         return response()->json([
             'success' => true,

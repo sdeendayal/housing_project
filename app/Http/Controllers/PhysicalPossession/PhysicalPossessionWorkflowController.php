@@ -428,6 +428,11 @@ class PhysicalPossessionWorkflowController extends Controller
 
         Log::info("SMS Notification: Physical Possession visit scheduled for applicant {$application->applicant_name} (Mobile: {$application->mobile}) with slots: {$dateTime1}, {$dateTime2}, {$dateTime3}. Status: Visit Scheduled.");
 
+        $from = $request->input('from');
+        if ($from === 'caste') {
+            return redirect()->route('pp.officer.caste-eligibility')->with('success', 'Physical Possession visit has been successfully scheduled.');
+        }
+
         return redirect()->route('pp.officer.eligibility-list')->with('success', 'Physical Possession visit has been successfully scheduled.');
     }
 
@@ -671,6 +676,9 @@ class PhysicalPossessionWorkflowController extends Controller
                 'changed_by_id' => $officer->id,
             ]);
 
+            if ($request->input('from') === 'caste') {
+                return redirect()->route('pp.officer.caste-eligibility')->with('success', 'Visit slot reset successfully. You can now schedule a new visit.');
+            }
             return redirect()->route('pp.officer.dashboard')->with('success', 'Visit slot reset successfully. You can now schedule a new visit from the dashboard.');
         }
 
@@ -735,6 +743,9 @@ class PhysicalPossessionWorkflowController extends Controller
                 'remarks' => 'Final physical possession documents (Citizen Signed & Site Engineer file) uploaded and verified.',
             ]);
 
+            if ($request->input('from') === 'caste') {
+                return redirect()->route('pp.officer.caste-eligibility')->with('success', 'Physical Possession application has been successfully verified and approved.');
+            }
             return redirect()->route('pp.officer.possession-applications')->with('success', 'Physical Possession application has been successfully verified and approved.');
         } else {
             // Step 1 validation
@@ -788,7 +799,11 @@ class PhysicalPossessionWorkflowController extends Controller
                 'remarks' => $request->remarks,
             ]);
 
-            return redirect()->route('pp.officer.verify-form', $application->secure_id)->with('success', 'Site verification submitted successfully. Now proceed to E-Possession step.');
+            $redirectUrl = route('pp.officer.verify-form', $application->secure_id);
+            if ($request->input('from') === 'caste') {
+                $redirectUrl .= '?from=caste';
+            }
+            return redirect($redirectUrl)->with('success', 'Site verification submitted successfully. Now proceed to E-Possession step.');
         }
     }
 
@@ -1157,6 +1172,17 @@ class PhysicalPossessionWorkflowController extends Controller
         $countQuery = clone $query;
         $countQuery->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
+        $search = $request->input('search');
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('ppp.PrivatePurchaserName', 'like', "%{$search}%")
+                  ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
+                  ->orWhere('ppp.PPPId', 'like', "%{$search}%")
+                  ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%")
+                  ->orWhere('pr.AssetName', 'like', "%{$search}%");
+            });
+        }
+
         $categoryCounts = $countQuery->selectRaw("
             SUM(CASE WHEN (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%') THEN 1 ELSE 0 END) as count_gj,
             SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
@@ -1281,7 +1307,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'purchasers',
             'casteCategories',
             'selectedCategory',
-            'officer'
+            'officer',
+            'search'
         ));
     }
 

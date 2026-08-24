@@ -108,9 +108,26 @@
                 
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <form action="{{ route('pp.officer.caste-eligibility') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
+                        @if($selectedCategory)
+                            <input type="hidden" name="category" value="{{ $selectedCategory }}">
+                        @endif
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search fs-8"></i></span>
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" style="min-width: 180px; font-size: 0.72rem; height: 32px;" placeholder="Search name, mobile, app no..." value="{{ $search ?? '' }}">
+                        </div>
+                        <button type="submit" class="btn btn-sm btn-primary py-1 px-2.5 fs-8 fw-bold" style="height: 32px; line-height: 22px; border-radius: 4px;">Search</button>
+                        @if($search)
+                            <a href="{{ route('pp.officer.caste-eligibility', ['category' => $selectedCategory]) }}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fs-8" style="height: 32px; line-height: 22px; border-radius: 4px;">Reset</a>
+                        @endif
+                    </form>
+
+                    <form action="{{ route('pp.officer.caste-eligibility') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
+                        @if($search)
+                            <input type="hidden" name="search" value="{{ $search }}">
+                        @endif
                         <div class="input-group input-group-sm">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-funnel fs-8"></i></span>
-                            <select name="category" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" style="min-width: 160px; font-size: 0.72rem; height: 32px; font-weight: 500;">
+                            <select name="category" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" style="min-width: 150px; font-size: 0.72rem; height: 32px; font-weight: 500;">
                                 <option value="">All Categories</option>
                                 <option value="GJ" {{ $selectedCategory === 'GJ' ? 'selected' : '' }}>Ghumantu Jati</option>
                                 <option value="W" {{ $selectedCategory === 'W' ? 'selected' : '' }}>Widows</option>
@@ -119,11 +136,11 @@
                             </select>
                         </div>
                         @if($selectedCategory)
-                            <a href="{{ route('pp.officer.caste-eligibility') }}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fs-8" style="height: 32px; line-height: 22px;">Reset</a>
+                            <a href="{{ route('pp.officer.caste-eligibility', ['search' => $search]) }}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fs-8" style="height: 32px; line-height: 22px; border-radius: 4px;">Reset Filter</a>
                         @endif
                     </form>
                     
-                    <a href="{{ route('pp.officer.caste-eligibility.export', ['category' => $selectedCategory]) }}" class="btn btn-sm btn-success py-1 px-3 fs-8 d-flex align-items-center gap-1.5" style="height: 32px; font-weight: 600; line-height: 22px; border-radius: 6px; box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);">
+                    <a href="{{ route('pp.officer.caste-eligibility.export', ['category' => $selectedCategory, 'search' => $search]) }}" class="btn btn-sm btn-success py-1 px-3 fs-8 d-flex align-items-center gap-1.5" style="height: 32px; font-weight: 600; line-height: 22px; border-radius: 6px; box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);">
                         <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
                     </a>
                 </div>
@@ -135,7 +152,7 @@
     <div class="row g-3 mb-3">
         <!-- All Categories -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility') }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['search' => $search]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-all {{ !$selectedCategory ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -152,7 +169,7 @@
 
         <!-- Ghumantu Jati -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'GJ']) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'GJ', 'search' => $search]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-gj {{ $selectedCategory === 'GJ' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -169,7 +186,7 @@
 
         <!-- Widows -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'W']) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'W', 'search' => $search]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-w {{ $selectedCategory === 'W' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -186,7 +203,7 @@
 
         <!-- Scheduled Caste -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'SC']) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'SC', 'search' => $search]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-sc {{ $selectedCategory === 'SC' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -203,7 +220,7 @@
 
         <!-- Other -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'other']) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'other', 'search' => $search]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-other {{ $selectedCategory === 'OTHER' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -311,7 +328,7 @@
                                             };
                                         @endphp
                                         <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 fs-9 font-weight-600">
-                                            {{ $p->physical_possession_status }}
+                                            {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($p->physical_possession_status) }}
                                         </span>
                                     @else
                                         <span class="text-muted fs-9 italic">Not Initiated</span>
@@ -323,23 +340,23 @@
                                              <i class="bi bi-slash-circle me-1"></i>Not Initiated
                                          </button>
                                      @elseif($p->physical_possession_status === 'Eligible for Physical Possession')
-                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded shadow-sm">
+                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}?from=caste" class="btn btn-primary btn-action text-nowrap rounded shadow-sm">
                                              <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
                                          </a>
                                      @elseif($p->physical_possession_status === 'Visit Scheduled')
-                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-action text-nowrap rounded">
+                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}?from=caste" class="btn btn-outline-secondary btn-action text-nowrap rounded">
                                              <i class="bi bi-pencil-square me-1"></i>Update
                                          </a>
                                      @elseif($p->physical_possession_status === 'Slot Selected')
-                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-success btn-action text-nowrap rounded text-white shadow-sm">
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}?from=caste" class="btn btn-success btn-action text-nowrap rounded text-white shadow-sm">
                                              <i class="bi bi-shield-check me-1"></i>Perform Visit
                                          </a>
                                      @elseif($p->physical_possession_status === 'Site Verified')
-                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-info btn-action text-nowrap rounded text-white shadow-sm">
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}?from=caste" class="btn btn-info btn-action text-nowrap rounded text-white shadow-sm">
                                              <i class="bi bi-file-earmark-arrow-up me-1"></i>E-Verify
                                          </a>
                                      @else
-                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}" class="btn btn-outline-secondary btn-action text-nowrap rounded">
+                                         <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}?from=caste" class="btn btn-outline-secondary btn-action text-nowrap rounded">
                                              <i class="bi bi-eye me-1"></i>View
                                          </a>
                                      @endif

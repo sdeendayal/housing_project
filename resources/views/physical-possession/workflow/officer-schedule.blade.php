@@ -5,8 +5,8 @@
 
 @section('content')
 <div class="container-fluid py-4">
-    <a href="{{ route('pp.officer.eligibility-list') }}" class="btn btn-link text-decoration-none text-muted mb-3 ps-0">
-        <i class="bi bi-arrow-left me-1"></i>Back to Eligibility List
+    <a href="{{ request()->input('from') === 'caste' ? route('pp.officer.caste-eligibility') : route('pp.officer.eligibility-list') }}" class="btn btn-link text-decoration-none text-muted mb-3 ps-0">
+        <i class="bi bi-arrow-left me-1"></i>Back to {{ request()->input('from') === 'caste' ? 'Caste Eligibility' : 'Eligibility List' }}
     </a>
 
     <div class="row g-4">
@@ -42,7 +42,7 @@
                                         };
                                     @endphp
                                     <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.65rem; white-space: normal; line-height: 1.25;">
-                                        {{ $application->physical_possession_status }}
+                                        {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status) }}
                                     </span>
                                 </div>
                             </div>
@@ -151,7 +151,7 @@
                     <h5 class="fw-bold text-dark mb-0"><i class="bi bi-calendar-check text-primary me-2"></i>Schedule Meeting</h5>
                 </div>
                 <div class="card-body p-3">
-                    <form action="{{ route('pp.officer.schedule-save', $application->secure_id) }}" method="POST">
+                    <form action="{{ route('pp.officer.schedule-save', $application->secure_id) }}{{ request()->input('from') ? '?from='.request()->input('from') : '' }}" method="POST">
                         @csrf
                         
                         <div class="table-responsive mb-2">
@@ -284,7 +284,7 @@
                         </div>
 
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{ route('pp.officer.eligibility-list') }}" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">Cancel</a>
+                            <a href="{{ request()->input('from') === 'caste' ? route('pp.officer.caste-eligibility') : route('pp.officer.eligibility-list') }}" class="btn btn-sm btn-outline-secondary px-3 rounded-pill">Cancel</a>
                             <button type="submit" class="btn btn-sm btn-primary px-3 rounded-pill">
                                 <i class="bi bi-check-circle me-1"></i>Save & Schedule
                             </button>

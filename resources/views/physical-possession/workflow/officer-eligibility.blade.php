@@ -99,7 +99,7 @@
                                             };
                                         @endphp
                                         <span class="badge {{ $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
-                                            {{ $p->physical_possession_status }}
+                                            {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($p->physical_possession_status) }}
                                         </span>
                                     @else
                                         <span class="text-muted small italic">Not Initiated</span>

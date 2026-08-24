@@ -180,4 +180,17 @@ class PhysicalPossessionApplication extends Model
 
         return $secureId;
     }
+
+    public static function getDisplayStatus($status)
+    {
+        return match ($status) {
+            'Eligible for Physical Possession' => 'Schedule Pending',
+            'Visit Scheduled' => 'Confirmation Pending From Citizen',
+            'Slot Selected', 'Physical Possession Submitted' => 'Physical/Site Visit Pending',
+            'Site Verified' => 'Registry Documentation, Verify',
+            'Verified' => 'Possession Given',
+            'Rejected' => 'Rejected',
+            default => $status ?? 'Schedule Pending'
+        };
+    }
 }

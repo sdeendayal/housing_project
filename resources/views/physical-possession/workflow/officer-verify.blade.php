@@ -5,8 +5,8 @@
 
 @section('content')
 <div class="container-fluid pt-2 pb-3">
-    <a href="{{ route('pp.officer.possession-applications') }}" class="btn btn-link text-decoration-none text-muted mb-1 ps-0" style="font-size: 0.85rem;">
-        <i class="bi bi-arrow-left me-1"></i>Back to Applications
+    <a href="{{ request()->input('from') === 'caste' ? route('pp.officer.caste-eligibility') : route('pp.officer.possession-applications') }}" class="btn btn-link text-decoration-none text-muted mb-1 ps-0" style="font-size: 0.85rem;">
+        <i class="bi bi-arrow-left me-1"></i>Back to {{ request()->input('from') === 'caste' ? 'Caste Eligibility' : 'Applications' }}
     </a>
 
     @if($errors->any())
@@ -23,7 +23,7 @@
 
     @if(in_array($application->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted', 'Site Verified']))
         <!-- Perform Verification Flow (Active Submission) -->
-        <form id="verificationForm" action="{{ route('pp.officer.verify-save', $application->secure_id) }}" method="POST" enctype="multipart/form-data">
+        <form id="verificationForm" action="{{ route('pp.officer.verify-save', $application->secure_id) }}{{ request()->input('from') ? '?from='.request()->input('from') : '' }}" method="POST" enctype="multipart/form-data">
             @csrf
             
             <!-- Default status to Verified (automatic site verification) -->
@@ -64,7 +64,7 @@
                                                 };
                                             @endphp
                                             <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.65rem; white-space: normal; line-height: 1.25;">
-                                                {{ $application->physical_possession_status }}
+                                                {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status) }}
                                             </span>
                                         </div>
                                     </div>
@@ -543,7 +543,7 @@
                                             };
                                         @endphp
                                         <span class="badge {{ $badgeClass }} px-2.5 py-1.2 rounded-2 text-wrap text-start d-inline-block" style="font-size: 0.72rem; white-space: normal; line-height: 1.25;">
-                                            {{ $application->physical_possession_status }}
+                                            {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($application->physical_possession_status) }}
                                         </span>
                                     </div>
                                 </div>
