@@ -1,4 +1,4 @@
-@extends('physical-possession.layouts.auth-login', ['loginType' => 'officer'])
+@extends('physical-possession.layouts.auth-login', ['loginType' => 'dtp'])
 
 @section('title', 'DTP Officer Login')
 
