@@ -104,7 +104,6 @@
                         <span class="d-inline-block w-2.5 h-6 bg-warning rounded"></span>
                         Caste Category Filtering
                     </h6>
-                    <span class="text-muted fs-8">Double-check eligible candidates matching both ₹60k limit & MMSAY list.</span>
                 </div>
                 
                 <div class="d-flex flex-wrap align-items-center gap-2">
