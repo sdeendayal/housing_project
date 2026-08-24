@@ -4,7 +4,177 @@
 
 @section('content')
 
-    <main class="ml-[260px] min-h-screen w-[calc(100%-260px)] bg-slate-100 p-6 pt-20">
+    <style>
+        /* =========================================================
+           APPLICANTS PAGE - VISUAL ONLY
+           No route / query / filter / pagination logic changed
+        ========================================================= */
+
+        .applicants-page {
+            background:
+                radial-gradient(circle at 75% 0%, rgba(79,70,229,.055), transparent 24%),
+                #f6f8fc !important;
+        }
+
+        .app-filter-card,
+        .app-table-card {
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 18px !important;
+            background: rgba(255,255,255,.98) !important;
+            box-shadow:
+                0 10px 30px rgba(15,23,42,.055),
+                0 1px 2px rgba(15,23,42,.03) !important;
+        }
+
+        .app-filter-head {
+            background: linear-gradient(180deg,#ffffff 0%,#fbfdff 100%) !important;
+        }
+
+        .filter-with-icon {
+            position: relative;
+        }
+
+        .filter-with-icon .filter-left-icon {
+            position: absolute;
+            left: 9px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 30px;
+            height: 30px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9px;
+            background: linear-gradient(135deg,#eff6ff,#eef2ff);
+            color: #4f46e5;
+            border: 1px solid #e0e7ff;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .filter-with-icon .filter-left-icon svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .filter-with-icon select {
+            height: 46px;
+            padding-left: 48px !important;
+            padding-right: 34px !important;
+            border-color: #dbe3ef !important;
+            border-radius: 12px !important;
+            background-color: #fff !important;
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            color: #334155 !important;
+            transition: .2s ease;
+        }
+
+        .filter-with-icon select:hover {
+            border-color: #a5b4fc !important;
+            background-color: #fafbff !important;
+        }
+
+        .filter-with-icon:focus-within .filter-left-icon {
+            color: #fff;
+            border-color: transparent;
+            background: linear-gradient(135deg,#2563eb,#4f46e5);
+            box-shadow: 0 5px 12px rgba(79,70,229,.18);
+        }
+
+        .filter-with-icon select:focus {
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.10) !important;
+        }
+
+        /* Table fits in one screen - horizontal scroll removed */
+        .app-table-wrap {
+            overflow-x: visible !important;
+            width: 100%;
+        }
+
+        .app-table {
+            width: 100% !important;
+            min-width: 0 !important;
+            table-layout: fixed;
+            font-size: 11px !important;
+        }
+
+        .app-table th {
+            padding: 10px 7px !important;
+            font-size: 9px !important;
+            line-height: 1.15 !important;
+            letter-spacing: .025em;
+            white-space: normal !important;
+            overflow-wrap: anywhere;
+        }
+
+        .app-table td {
+            padding: 9px 7px !important;
+            font-size: 11px !important;
+            line-height: 1.25 !important;
+            vertical-align: middle;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .app-table .applicant-avatar {
+            width: 30px !important;
+            height: 30px !important;
+            min-width: 30px !important;
+            font-size: 11px !important;
+        }
+
+        .app-table .phase-pill,
+        .app-table .flat-pill,
+        .app-table .status-pill {
+            font-size: 10px !important;
+            padding: 4px 7px !important;
+            line-height: 1.15;
+            min-width: 0 !important;
+            white-space: normal !important;
+        }
+
+        .app-table .view-btn {
+            padding: 6px !important;
+        }
+
+        /* Column widths tuned to 10-column layout */
+        .app-table th:nth-child(1), .app-table td:nth-child(1) { width: 4%; }
+        .app-table th:nth-child(2), .app-table td:nth-child(2) { width: 13%; }
+        .app-table th:nth-child(3), .app-table td:nth-child(3) { width: 17%; }
+        .app-table th:nth-child(4), .app-table td:nth-child(4) { width: 13%; }
+        .app-table th:nth-child(5), .app-table td:nth-child(5) { width: 10%; }
+        .app-table th:nth-child(6), .app-table td:nth-child(6) { width: 11%; }
+        .app-table th:nth-child(7), .app-table td:nth-child(7) { width: 7%; }
+        .app-table th:nth-child(8), .app-table td:nth-child(8) { width: 8%; }
+        .app-table th:nth-child(9), .app-table td:nth-child(9) { width: 12%; }
+        .app-table th:nth-child(10), .app-table td:nth-child(10) { width: 5%; }
+
+        @media (max-width: 1280px) {
+            .app-table {
+                font-size: 10px !important;
+            }
+
+            .app-table td {
+                font-size: 10px !important;
+                padding: 8px 5px !important;
+            }
+
+            .app-table th {
+                font-size: 8.5px !important;
+                padding: 9px 5px !important;
+            }
+        }
+    </style>
+
+
+    <main class="applicants-page ml-[260px] min-h-screen w-[calc(100%-260px)] bg-slate-100 p-6 pt-20">
         @if (session('error'))
             <div
                 class="mb-5 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -18,11 +188,11 @@
             </div>
         @endif
         {{-- Filter Card --}}
-        <div class="mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="app-filter-card mb-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             {{-- Header --}}
             <div
-                class="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                class="app-filter-head flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-800">
                         Applicants Filters
@@ -68,8 +238,12 @@
                             Phase
                         </label>
 
-                        <select id="phase" name="phase"
-                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <div class="filter-with-icon">
+                            <span class="filter-left-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                            </span>
+                            <select id="phase" name="phase"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                             <option value="">All Phases</option>
 
                             <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>
@@ -84,6 +258,7 @@
                                 Phase 3
                             </option>
                         </select>
+                        </div>
                     </div>
 
                     {{-- Village --}}
@@ -92,8 +267,12 @@
                             Village
                         </label>
 
-                        <select id="village_id" name="village_id"
-                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <div class="filter-with-icon">
+                            <span class="filter-left-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+                            </span>
+                            <select id="village_id" name="village_id"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                             <option value="">All Villages</option>
 
                             @foreach ($villages as $village)
@@ -103,6 +282,7 @@
                                 </option>
                             @endforeach
                         </select>
+                        </div>
                     </div>
 
                     {{-- Status --}}
@@ -111,8 +291,12 @@
                             Status
                         </label>
 
-                        <select id="status" name="status"
-                            class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
+                        <div class="filter-with-icon">
+                            <span class="filter-left-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M7 10h10"/><path d="M10 15h4"/><path d="M12 19h.01"/></svg>
+                            </span>
+                            <select id="status" name="status"
+                                class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
                             <option value="">All Statuses</option>
 
                             <option value="approved_paid" {{ request('status') === 'approved_paid' ? 'selected' : '' }}>
@@ -136,6 +320,7 @@
                                 Cancelled
                             </option>
                         </select>
+                        </div>
                     </div>
 
                     {{-- Buttons --}}
@@ -257,7 +442,7 @@
         </div>
 
         {{-- Applicants Table --}}
-        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="app-table-card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
             <div
                 class="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
@@ -278,9 +463,9 @@
 
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="app-table-wrap">
 
-                <table class="w-full min-w-[1400px] text-sm">
+                <table class="app-table w-full text-sm">
 
                     <thead class="bg-blue-600 text-xs uppercase text-white">
 
@@ -364,7 +549,7 @@
                                     <div class="flex items-center gap-3">
 
                                         <div
-                                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">
+                                            class="applicant-avatar flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">
                                             {{ strtoupper(substr($applicant->OwnerName ?? 'A', 0, 1)) }}
                                         </div>
 
@@ -406,7 +591,7 @@
                                 <td class="p-3 text-center">
 
                                     <span
-                                        class="inline-flex rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                                        class="phase-pill inline-flex rounded-full bg-violet-100 px-2.5 py-1 text-xs font-semibold text-violet-700">
                                         Phase {{ $applicant->Phase ?? '-' }}
                                     </span>
 
@@ -415,7 +600,7 @@
                                 <td class="p-3 text-center">
 
                                     <span
-                                        class="inline-flex min-w-14 justify-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-700">
+                                        class="flat-pill inline-flex min-w-14 justify-center rounded-lg bg-blue-50 px-3 py-1.5 font-semibold text-blue-700">
                                         {{ $applicant->FlatNo ?? '-' }}
                                     </span>
 
@@ -424,7 +609,7 @@
                                 <td class="p-3 text-center">
 
                                     <span
-                                        class="inline-flex whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset {{ $statusClasses }}">
+                                        class="status-pill inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset {{ $statusClasses }}">
                                         {{ $status }}
                                     </span>
 
@@ -433,7 +618,7 @@
                                 <td class="p-3 text-center">
 
                                     <a href="{{ route('superadmin.applicants.show', $applicant->secure_id) }}"
-                                        class="inline-flex items-center justify-center rounded-lg border
+                                        class="view-btn inline-flex items-center justify-center rounded-lg border
            border-slate-300 bg-white p-2 text-slate-600 shadow-sm
            transition hover:border-indigo-300 hover:bg-indigo-50
            hover:text-indigo-700"

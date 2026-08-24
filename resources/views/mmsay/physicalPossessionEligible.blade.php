@@ -2,6 +2,103 @@
 @section('title', 'Physical Possession Workflow')
 
 @section('content')
+    <style>
+        @property --possession-orbit-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .possession-orbit-card {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .possession-orbit-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            border-radius: inherit;
+            padding: 2px;
+            pointer-events: none;
+            opacity: 0;
+            background: conic-gradient(from var(--possession-orbit-angle),
+                    #7c3aed,
+                    #2563eb,
+                    #06b6d4,
+                    #10b981,
+                    #f59e0b,
+                    #f43f5e,
+                    #7c3aed);
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: opacity 180ms ease;
+        }
+
+        .possession-orbit-card:hover::before,
+        .possession-orbit-card:focus-visible::before {
+            opacity: 1;
+            animation: possession-border-orbit 1.6s linear infinite;
+        }
+
+        @keyframes possession-border-orbit {
+            to {
+                --possession-orbit-angle: 360deg;
+            }
+        }
+
+        #possessionCardTooltip {
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            max-width: 280px;
+            transform: translate(-50%, calc(-100% - 14px)) scale(.96);
+            border: 1px solid rgba(148, 163, 184, .28);
+            border-radius: 10px;
+            padding: 7px 11px;
+            background: rgba(15, 23, 42, .94);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .22);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+        }
+
+        #possessionCardTooltip::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -5px;
+            width: 9px;
+            height: 9px;
+            background: rgba(15, 23, 42, .94);
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        #possessionCardTooltip.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, calc(-100% - 14px)) scale(1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .possession-orbit-card:hover::before,
+            .possession-orbit-card:focus-visible::before {
+                animation: none;
+            }
+        }
+    </style>
+
     <main class="ml-52 min-h-screen bg-slate-50 px-5 pb-6 pt-20">
         <div class="mx-auto max-w-[1800px] space-y-4">
 
@@ -159,7 +256,8 @@
                     @endphp
 
                     <a href="{{ route('physical.possession.index', $query) }}"
-                        class="group rounded-xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md
+                        data-card-name="{{ $card['label'] }}"
+                        class="possession-orbit-card group rounded-xl border bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md
                            {{ $active ? $card['active_class'] : 'border-slate-200' }}">
                         <div class="flex items-start justify-between">
                             <span
@@ -429,4 +527,55 @@
             </section>
         </div>
     </main>
+
+    <div id="possessionCardTooltip" role="tooltip" aria-hidden="true"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tooltip = document.getElementById('possessionCardTooltip');
+            const cards = document.querySelectorAll('.possession-orbit-card[data-card-name]');
+
+            if (!tooltip || !cards.length) return;
+
+            const placeTooltip = (event) => {
+                const padding = 16;
+                const halfWidth = tooltip.offsetWidth / 2;
+                const x = Math.min(
+                    window.innerWidth - halfWidth - padding,
+                    Math.max(halfWidth + padding, event.clientX)
+                );
+
+                tooltip.style.left = `${x}px`;
+                tooltip.style.top = `${Math.max(48, event.clientY)}px`;
+            };
+
+            const showTooltip = (card, event = null) => {
+                tooltip.textContent = card.dataset.cardName || '';
+                tooltip.classList.add('is-visible');
+                tooltip.setAttribute('aria-hidden', 'false');
+
+                if (event) {
+                    placeTooltip(event);
+                    return;
+                }
+
+                const rect = card.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + (rect.width / 2)}px`;
+                tooltip.style.top = `${Math.max(48, rect.top)}px`;
+            };
+
+            const hideTooltip = () => {
+                tooltip.classList.remove('is-visible');
+                tooltip.setAttribute('aria-hidden', 'true');
+            };
+
+            cards.forEach((card) => {
+                card.addEventListener('mouseenter', (event) => showTooltip(card, event));
+                card.addEventListener('mousemove', placeTooltip);
+                card.addEventListener('mouseleave', hideTooltip);
+                card.addEventListener('focusin', () => showTooltip(card));
+                card.addEventListener('focusout', hideTooltip);
+            });
+        });
+    </script>
 @endsection

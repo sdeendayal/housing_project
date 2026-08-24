@@ -266,7 +266,7 @@ class PropertyManagementController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Eligibility and payment statistics in one query
+        | Overall allotted/payment statistics (all 15,256 allotted assets)
         |--------------------------------------------------------------------------
         */
 
@@ -274,23 +274,6 @@ class PropertyManagementController extends Controller
             ->fromSub(clone $assetPaymentsQuery, 'payments')
             ->selectRaw('
             COUNT(*) AS total_candidates,
-
-            SUM(
-                CASE
-                    WHEN payments.total_received >= 60000
-                    THEN 1
-                    ELSE 0
-                END
-            ) AS eligible_candidates,
-
-            SUM(
-                CASE
-                    WHEN payments.total_received < 60000
-                    THEN 1
-                    ELSE 0
-                END
-            ) AS not_eligible_candidates,
-
             SUM(
                 CASE
                     WHEN payments.total_received
@@ -311,25 +294,112 @@ class PropertyManagementController extends Controller
         ')
             ->first();
 
-        $eligiblePhysicalPossession = (int) (
-            $dashboardPaymentStats->eligible_candidates ?? 0
-        );
-
-        $notEligiblePhysicalPossession = (int) (
-            $dashboardPaymentStats->not_eligible_candidates ?? 0
-        );
-
-        $totalPhysicalPossessionCandidates = (int) (
+        $totalAllottedCandidates = (int) (
             $dashboardPaymentStats->total_candidates ?? 0
         );
 
         /*
         |--------------------------------------------------------------------------
-        | Total allotted units is equivalent to the candidate count.
+        | Physical Possession payment eligibility
+        |--------------------------------------------------------------------------
+        | IMPORTANT: this calculation starts from the 11,984 beneficiaries present
+        | in mmsay_eligible_beneficiaries. It does not use all 15,256 allottees.
+        | The indexed generated integer column avoids VARCHAR-to-INT conversion.
+        */
+
+        $verifiedAssetPaymentsQuery = DB::table(
+            'mmsay_eligible_beneficiaries as meb'
+        )
+            ->join('property_private_purchasers as ppp', function ($join) {
+                $join->on(
+                    'ppp.ApplicationNo',
+                    '=',
+                    'meb.application_number_int'
+                )
+                    ->where('ppp.IsDeleted', 0);
+            })
+            ->join('property_auction_detail as pad', function ($join) {
+                $join->on('pad.AssetId', '=', 'ppp.Flat_Id')
+                    ->on(
+                        'pad.PurchaserID',
+                        '=',
+                        'ppp.PrivatePurchaserId'
+                    )
+                    ->where('pad.IsDeleted', 0)
+                    ->where('pad.IsActive', 1);
+            })
+            ->leftJoinSub(
+                clone $receiptSumsQuery,
+                'verified_cr_sum',
+                'verified_cr_sum.asset_number',
+                '=',
+                'pad.AssetId'
+            )
+            ->selectRaw('
+                pad.PropertyAuctionId,
+                pad.AssetId,
+                (
+                    COALESCE(pad.ReceivedAmount, 0)
+                    + COALESCE(MAX(verified_cr_sum.total_receipts), 0)
+                ) AS total_received
+            ');
+
+        $applyLocationFilters(
+            $verifiedAssetPaymentsQuery,
+            'ppp'
+        );
+
+        $verifiedAssetPaymentsQuery->groupBy(
+            'pad.PropertyAuctionId',
+            'pad.AssetId',
+            'pad.ReceivedAmount'
+        );
+
+        $physicalPossessionStats = DB::query()
+            ->fromSub(
+                $verifiedAssetPaymentsQuery,
+                'verified_payments'
+            )
+            ->selectRaw('
+                COUNT(*) AS total_candidates,
+
+                SUM(
+                    CASE
+                        WHEN verified_payments.total_received >= 60000
+                        THEN 1
+                        ELSE 0
+                    END
+                ) AS eligible_candidates,
+
+                SUM(
+                    CASE
+                        WHEN verified_payments.total_received < 60000
+                        THEN 1
+                        ELSE 0
+                    END
+                ) AS not_eligible_candidates
+            ')
+            ->first();
+
+        $eligiblePhysicalPossession = (int) (
+            $physicalPossessionStats->eligible_candidates ?? 0
+        );
+
+        $notEligiblePhysicalPossession = (int) (
+            $physicalPossessionStats->not_eligible_candidates ?? 0
+        );
+
+        $totalPhysicalPossessionCandidates = (int) (
+            $physicalPossessionStats->total_candidates ?? 0
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total allotted units remains based on all allotted properties.
         | Saves one heavy database count query.
         |--------------------------------------------------------------------------
         */
-        $allottedUnits = $totalPhysicalPossessionCandidates;
+        $allottedUnits = $totalAllottedCandidates;
 
         /*
         |--------------------------------------------------------------------------
@@ -338,7 +408,7 @@ class PropertyManagementController extends Controller
         */
 
         $paymentStats = (object) [
-            'total_records' => $totalPhysicalPossessionCandidates,
+            'total_records' => $totalAllottedCandidates,
 
             'total_paid_properties' => (int) (
                 $dashboardPaymentStats->total_paid_properties ?? 0
@@ -363,6 +433,49 @@ class PropertyManagementController extends Controller
             ->orderByDesc('ppa.id')
             ->limit(10)
             ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Physical verification statistics — optimized
+        |--------------------------------------------------------------------------
+        */
+
+        $verificationBaseQuery = DB::table(
+            'property_private_purchasers as ppp'
+        )
+            ->where('ppp.IsDeleted', 0)
+            ->where('ppp.phase', 1)
+            ->where('ppp.property_type', 'plot');
+
+        $applyLocationFilters($verificationBaseQuery, 'ppp');
+
+        /*
+         * Total applicants को इसी table से count करें।
+         */
+        $totalVerificationAllottees = (clone $verificationBaseQuery)
+            ->count('ppp.PrivatePurchaserId');
+
+        /*
+         * Eligible applicants के लिए direct indexed join।
+         */
+        $eligibleAllottees = (clone $verificationBaseQuery)
+            ->join(
+                'mmsay_eligible_beneficiaries as meb',
+                'meb.application_number_int',
+                '=',
+                'ppp.ApplicationNo'
+            )
+            ->count('ppp.PrivatePurchaserId');
+
+        /*
+         * Not Eligible = Total - Eligible
+         */
+        $notEligibleAllottees = max(
+            $totalVerificationAllottees - $eligibleAllottees,
+            0
+        );
+
+
         /*
         |--------------------------------------------------------------------------
         | Dashboard view
@@ -384,8 +497,479 @@ class PropertyManagementController extends Controller
             'eligiblePhysicalPossession',
             'notEligiblePhysicalPossession',
             'totalPhysicalPossessionCandidates',
-            'latestPhysicalApplications'
+            'latestPhysicalApplications',
+            'eligibleAllottees',
+            'notEligibleAllottees'
         ));
+    }
+
+    private function verificationAllotteesQuery(
+        Request $request,
+        string $eligibility
+    ) {
+        // Dono URL formats handle honge
+        $eligibility = str_replace('_', '-', strtolower($eligibility));
+
+        abort_unless(
+            in_array($eligibility, ['eligible', 'not-eligible'], true),
+            404
+        );
+
+        $query = DB::table('property_private_purchasers as ppp')
+            ->join('property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'ppp.Flat_Id')
+                    ->where('pr.IsDeleted', 0);
+            })
+            ->leftJoin('mmsay_eligible_beneficiaries as meb', function ($join) {
+                $join->on(
+                    'meb.application_number_int',
+                    '=',
+                    'ppp.ApplicationNo'
+                );
+            })
+            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ppp.DistrictId')
+            ->leftJoin('cities as c', 'c.CityId', '=', 'ppp.CityId')
+            ->leftJoin('sectors as s', 's.SectorId', '=', 'ppp.SectorId')
+            ->where('ppp.IsDeleted', 0);
+
+        if ($eligibility === 'eligible') {
+            $query->whereNotNull('meb.id');
+        } else {
+            $query->whereNull('meb.id');
+        }
+
+        // Location filters
+        $query
+            ->when(
+                $request->filled('district_id'),
+                fn($builder) => $builder->where(
+                    'ppp.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+            ->when(
+                $request->filled('city_id'),
+                fn($builder) => $builder->where(
+                    'ppp.CityId',
+                    $request->integer('city_id')
+                )
+            )
+            ->when(
+                $request->filled('sector_id'),
+                fn($builder) => $builder->where(
+                    'ppp.SectorId',
+                    $request->integer('sector_id')
+                )
+            );
+
+        // Search
+        $search = trim((string) $request->input('search'));
+
+        if ($search !== '') {
+            $escapedSearch = addcslashes($search, '%_\\');
+            $like = "%{$escapedSearch}%";
+
+            $query->where(function ($searchQuery) use ($search, $like) {
+                // Exact numeric search index use kar sakta hai
+                if (ctype_digit($search)) {
+                    $searchQuery
+                        ->where('ppp.ApplicationNo', $search)
+                        ->orWhere('ppp.MobileNo', $search)
+                        ->orWhere('pr.AssetId', $search);
+                } else {
+                    $searchQuery
+                        ->where('ppp.PrivatePurchaserName', 'like', $like)
+                        ->orWhere('pr.AssetName', 'like', $like)
+                        ->orWhere('ppp.PPPId', 'like', $like)
+                        ->orWhere('ppp.MemberID', 'like', $like);
+                }
+            });
+        }
+
+        return $query->select([
+            'ppp.PrivatePurchaserId as purchaser_id',
+            'ppp.Flat_Id as asset_id',
+            'ppp.ApplicationNo as application_number',
+            'ppp.PrivatePurchaserName as applicant_name',
+            'ppp.PurchaserFatherName as father_name',
+            'ppp.MobileNo as mobile',
+            'ppp.PPPId as ppp_id',
+            'ppp.MemberID as member_id',
+            'ppp.CasteCategoryName as caste_category',
+            'ppp.MaritalStatus as marital_status',
+            'ppp.Address as address',
+
+            'pr.AssetName as asset_name',
+            'pr.AssetSize as asset_size',
+            'pr.Unit as asset_unit',
+
+            'ppp.DistrictId as district_id',
+            'ppp.CityId as city_id',
+            'ppp.SectorId as sector_id',
+
+            'd.DistrictName as district_name',
+            'c.CityName as city_name',
+            's.SectorName as sector_name',
+
+            // Physical-verification report fields. These remain NULL for
+            // not-eligible rows because the beneficiary record is absent.
+            'meb.id as eligibility_record_id',
+            'meb.secure_id as eligibility_secure_id',
+            'meb.physical_verification',
+            'meb.status_reason',
+            'meb.remarks',
+            'meb.own_residence',
+            'meb.pmay_benefit',
+            'meb.category as verification_category',
+        ]);
+    }
+
+    public function verificationAllottees(
+        Request $request,
+        string $eligibility
+    ) {
+        $eligibility = str_replace('_', '-', strtolower($eligibility));
+
+        abort_unless(
+            in_array($eligibility, ['eligible', 'not-eligible'], true),
+            404
+        );
+
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+        $sectorId = $request->integer('sector_id') ?: null;
+        $search = trim((string) $request->input('search'));
+
+        $districts = DB::table('districts')
+            ->select('DistrictId', 'DistrictName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+        $cities = $districtId
+            ? DB::table('cities')
+                ->select('CityId', 'CityName')
+                ->where('DistrictId', $districtId)
+                ->where('Is_Deleted', 0)
+                ->where('Is_Active', 1)
+                ->orderBy('CityName')
+                ->get()
+            : collect();
+
+        $sectors = $cityId
+            ? DB::table('city_sector_associations as csa')
+                ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                ->select('s.SectorId', 's.SectorName')
+                ->where('csa.CityId', $cityId)
+                ->where('csa.Is_Deleted', 0)
+                ->where('csa.Is_Active', 1)
+                ->where('s.Is_Deleted', 0)
+                ->where('s.Is_Active', 1)
+                ->distinct()
+                ->orderBy('s.SectorName')
+                ->get()
+            : collect();
+
+        $applications = $this
+            ->verificationAllotteesQuery($request, $eligibility)
+            ->orderByDesc('ppp.PrivatePurchaserId')
+            ->paginate(50)
+            ->withQueryString();
+
+        $pageTitle = $eligibility === 'eligible'
+            ? 'Eligible Allottees'
+            : 'Not Eligible Allottees';
+
+        $pageDescription = $eligibility === 'eligible'
+            ? 'Applicants found in the eligible beneficiaries report'
+            : 'Applicants not found in the eligible beneficiaries report';
+
+        return view('mmsay.verificationAllottees', compact(
+            'applications',
+            'eligibility',
+            'pageTitle',
+            'pageDescription',
+            'districts',
+            'cities',
+            'sectors',
+            'districtId',
+            'cityId',
+            'sectorId',
+            'search'
+        ));
+    }
+
+    public function verificationAllotteesCsv(
+        Request $request,
+        string $eligibility
+    ) {
+        $eligibility = str_replace(
+            '_',
+            '-',
+            strtolower($eligibility)
+        );
+
+        abort_unless(
+            in_array(
+                $eligibility,
+                ['eligible', 'not-eligible'],
+                true
+            ),
+            404
+        );
+
+        /*
+         * Listing ka selected order.
+         */
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array(
+            $sortOrder,
+            ['asc', 'desc'],
+            true
+        ) ? $sortOrder : 'desc';
+
+        $fileName = $eligibility
+            . '-allottees-'
+            . $sortOrder
+            . '-'
+            . now()->format('Ymd-His')
+            . '.csv';
+
+        return response()->streamDownload(
+            function () use ($request, $eligibility, $sortOrder) {
+                $output = fopen('php://output', 'w');
+
+                if ($output === false) {
+                    throw new RuntimeException(
+                        'Unable to open CSV output stream.'
+                    );
+                }
+
+                // Excel UTF-8 support
+                fwrite($output, "\xEF\xBB\xBF");
+
+                fputcsv($output, [
+                    'S.No.',
+                    'Application No.',
+                    'Applicant',
+                    'Father/Husband Name',
+                    'Mobile',
+                    'Asset ID',
+                    'Property',
+                    'Size',
+                    'District',
+                    'City',
+                    'Sector/Ward',
+                    'Caste Category',
+                    'Marital Status',
+                    'Eligibility',
+                    'Physical Verification',
+                    'Reason',
+                    'Remarks',
+                ]);
+
+                $serial = 1;
+                $chunkSize = 1000;
+                $lastPurchaserId = null;
+
+                /*
+                 * Base query mein current search/location filters
+                 * automatically available rahenge.
+                 */
+                $baseQuery = $this->verificationAllotteesQuery(
+                    $request,
+                    $eligibility
+                );
+
+                while (true) {
+                    $chunkQuery = clone $baseQuery;
+
+                    /*
+                     * Next batch condition sort direction ke according.
+                     */
+                    if ($lastPurchaserId !== null) {
+                        if ($sortOrder === 'asc') {
+                            $chunkQuery->where(
+                                'ppp.PrivatePurchaserId',
+                                '>',
+                                $lastPurchaserId
+                            );
+                        } else {
+                            $chunkQuery->where(
+                                'ppp.PrivatePurchaserId',
+                                '<',
+                                $lastPurchaserId
+                            );
+                        }
+                    }
+
+                    $rows = $chunkQuery
+                        ->orderBy(
+                            'ppp.PrivatePurchaserId',
+                            $sortOrder
+                        )
+                        ->limit($chunkSize)
+                        ->get();
+
+                    if ($rows->isEmpty()) {
+                        break;
+                    }
+
+                    foreach ($rows as $row) {
+                        fputcsv($output, [
+                            $serial++,
+                            $row->application_number ?? '',
+                            $row->applicant_name ?? '',
+                            $row->father_name ?? '',
+                            $row->mobile ?? '',
+                            $row->asset_id ?? '',
+                            $row->asset_name ?? '',
+
+                            trim(
+                                ($row->asset_size ?? '')
+                                . ' '
+                                . ($row->asset_unit ?? '')
+                            ),
+
+                            $row->district_name ?? '',
+                            $row->city_name ?? '',
+                            $row->sector_name ?? '',
+                            $row->caste_category ?? '',
+                            $row->marital_status ?? '',
+
+                            $eligibility === 'eligible'
+                            ? 'Eligible'
+                            : 'Not Eligible',
+
+                            $row->physical_verification ?? '',
+                            $row->status_reason ?? '',
+                            $row->remarks ?? '',
+                        ]);
+                    }
+
+                    $lastPurchaserId = (int) (
+                        $rows->last()->purchaser_id
+                    );
+
+                    /*
+                     * 1000 se kam records mile to last batch hai.
+                     */
+                    if ($rows->count() < $chunkSize) {
+                        break;
+                    }
+
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+
+                    flush();
+                }
+
+                fclose($output);
+            },
+            $fileName,
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+                'Pragma' => 'no-cache',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
+        );
+    }
+
+    public function verificationAllotteesPrint(
+        Request $request,
+        string $eligibility
+    ) {
+        $eligibility = str_replace(
+            '_',
+            '-',
+            strtolower($eligibility)
+        );
+
+        abort_unless(
+            in_array(
+                $eligibility,
+                ['eligible', 'not-eligible'],
+                true
+            ),
+            404
+        );
+
+        /*
+         * Current listing ka sort order.
+         * sort_order nahi mila to latest records first.
+         */
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array(
+            $sortOrder,
+            ['asc', 'desc'],
+            true
+        ) ? $sortOrder : 'desc';
+
+        $perChunk = 1000;
+        $afterId = max(0, $request->integer('after_id'));
+
+        $query = $this->verificationAllotteesQuery(
+            $request,
+            $eligibility
+        );
+
+        /*
+         * Keyset pagination condition sort order ke according
+         * change hogi.
+         */
+        if ($afterId > 0) {
+            if ($sortOrder === 'asc') {
+                $query->where(
+                    'ppp.PrivatePurchaserId',
+                    '>',
+                    $afterId
+                );
+            } else {
+                $query->where(
+                    'ppp.PrivatePurchaserId',
+                    '<',
+                    $afterId
+                );
+            }
+        }
+
+        $rows = $query
+            ->orderBy(
+                'ppp.PrivatePurchaserId',
+                $sortOrder
+            )
+            ->limit($perChunk + 1)
+            ->get();
+
+        $hasMore = $rows->count() > $perChunk;
+
+        $applications = $rows
+            ->take($perChunk)
+            ->values();
+
+        $nextAfterId = $hasMore && $applications->isNotEmpty()
+            ? $applications->last()->purchaser_id
+            : null;
+
+        return view(
+            'mmsay.verificationAllotteesPrint',
+            compact(
+                'applications',
+                'eligibility',
+                'sortOrder',
+                'hasMore',
+                'nextAfterId'
+            )
+        );
     }
 
     // OLD property registration listing. This is a legacy view and will be removed in future releases.
@@ -2236,7 +2820,7 @@ class PropertyManagementController extends Controller
             compact('properties')
         );
     }
-    
+
     public function departmentPropertyEmiCalculation()
     {
         $districts = DB::table('districts')
@@ -2722,32 +3306,35 @@ class PropertyManagementController extends Controller
         ];
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Eligible candidates query
-    |--------------------------------------------------------------------------
-    | Eligibility = property_auction_detail.ReceivedAmount
-    |             + SUM(cash_receipt_details.total_paid_amount) >= 60000
-    |
-    | The latest physical-possession application is joined when it exists.
-    | An eligible asset without an application appears as Awaiting Schedule.
-    */
     private function eligiblePossessionQuery(Request $request, bool $applyStatus = true)
     {
         $filters = $this->possessionFilters($request);
         $statusSql = $this->possessionStatusSql();
-        $receiptSumsQuery = DB::table('cash_receipt_details')
-            ->select('asset_number', DB::raw('SUM(total_paid_amount) as total_receipts'))
-            ->where('IsDeleted', 0)
-            ->where('IsActive', 1)
-            ->groupBy('asset_number');
 
         /*
-        | Dashboard uses this exact payment calculation.
-        | Do not filter through property_registration before eligibility is decided.
+        | Start from the 11,984 verified beneficiaries and aggregate receipts
+        | in the same query. No repeated beneficiary/candidate subqueries.
         */
-        $assetPayments = DB::table('property_auction_detail as pad')
-            ->leftJoinSub($receiptSumsQuery, 'cr_sum', 'cr_sum.asset_number', '=', 'pad.AssetId')
+        $assetPayments = DB::table('mmsay_eligible_beneficiaries as eligible_meb')
+            ->join('property_private_purchasers as eligible_ppp', function ($join) {
+                $join->on(
+                    'eligible_ppp.ApplicationNo',
+                    '=',
+                    'eligible_meb.application_number_int'
+                )
+                    ->where('eligible_ppp.IsDeleted', 0);
+            })
+            ->join('property_auction_detail as pad', function ($join) {
+                $join->on('pad.AssetId', '=', 'eligible_ppp.Flat_Id')
+                    ->on('pad.PurchaserID', '=', 'eligible_ppp.PrivatePurchaserId')
+                    ->where('pad.IsDeleted', 0)
+                    ->where('pad.IsActive', 1);
+            })
+            ->leftJoin('cash_receipt_details as receipt', function ($join) {
+                $join->on('receipt.asset_number', '=', 'pad.AssetId')
+                    ->where('receipt.IsDeleted', 0)
+                    ->where('receipt.IsActive', 1);
+            })
             ->selectRaw("
             MAX(pad.PropertyAuctionId) AS PropertyAuctionId,
             pad.AssetId,
@@ -2758,14 +3345,13 @@ class PropertyManagementController extends Controller
             MAX(pad.DistrictId) AS DistrictId,
             MAX(pad.CityId) AS CityId,
             MAX(pad.SectorId) AS SectorId,
-            COALESCE(MAX(cr_sum.total_receipts), 0) AS receipt_total,
+            COALESCE(SUM(receipt.total_paid_amount), 0) AS receipt_total,
             (
                 COALESCE(pad.ReceivedAmount, 0)
-                + COALESCE(MAX(cr_sum.total_receipts), 0)
+                + COALESCE(SUM(receipt.total_paid_amount), 0)
             ) AS total_received
         ")
-            ->where('pad.IsDeleted', 0)
-            ->where('pad.IsActive', 1)
+            ->whereNotNull('eligible_meb.application_number_int')
             ->when($filters['district_id'], fn($q, $id) => $q->where('pad.DistrictId', $id))
             ->when($filters['city_id'], fn($q, $id) => $q->where('pad.CityId', $id))
             ->when($filters['sector_id'], fn($q, $id) => $q->where('pad.SectorId', $id))
@@ -2786,7 +3372,6 @@ class PropertyManagementController extends Controller
                 $join->on('ppp.PrivatePurchaserId', '=', 'payments.PurchaserID')
                     ->where('ppp.IsDeleted', 0);
             })
-            ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
             ->leftJoin('districts as d', 'd.DistrictId', '=', 'payments.DistrictId')
             ->leftJoin('cities as c', 'c.CityId', '=', 'payments.CityId')
             ->leftJoin('sectors as s', 's.SectorId', '=', 'payments.SectorId')
@@ -2796,16 +3381,21 @@ class PropertyManagementController extends Controller
             ->leftJoin('physical_possession_applications as ppa', 'ppa.id', '=', 'latest_ppa.application_id')
             ->where('payments.total_received', '>=', 60000)
             ->when($filters['search'], function ($q) use ($filters) {
-                $search = '%' . addcslashes($filters['search'], '%_\\') . '%';
+                $rawSearch = $filters['search'];
+                $search = '%' . addcslashes($rawSearch, '%_\\') . '%';
 
-                $q->where(function ($sub) use ($search) {
-                    $sub->where('payments.AssetId', 'like', $search)
-                        ->orWhere('pr.AssetName', 'like', $search)
-                        ->orWhere('ppp.PrivatePurchaserName', 'like', $search)
-                        ->orWhere('ppp.MobileNo', 'like', $search)
-                        ->orWhere('ppp.ApplicationNo', 'like', $search)
-                        ->orWhere('ppa.application_number', 'like', $search)
-                        ->orWhere('ppa.possession_id', 'like', $search);
+                $q->where(function ($sub) use ($rawSearch, $search) {
+                    if (ctype_digit($rawSearch)) {
+                        $sub->where('payments.AssetId', $rawSearch)
+                            ->orWhere('ppp.MobileNo', $rawSearch)
+                            ->orWhere('ppp.ApplicationNo', $rawSearch)
+                            ->orWhere('ppa.possession_id', $rawSearch);
+                    } else {
+                        $sub->where('pr.AssetName', 'like', $search)
+                            ->orWhere('ppp.PrivatePurchaserName', 'like', $search)
+                            ->orWhere('ppa.application_number', 'like', $search)
+                            ->orWhere('ppa.possession_id', 'like', $search);
+                    }
                 });
             });
 
@@ -3134,108 +3724,206 @@ class PropertyManagementController extends Controller
 
     private function notEligiblePossessionQuery(Request $request)
     {
-        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
+        /*
+         * One pass only: beneficiary -> purchaser -> auction -> receipts.
+         */
+        $paymentSummary = DB::table(
+            'mmsay_eligible_beneficiaries as meb'
+        )
+            ->join('property_private_purchasers as ppp', function ($join) {
+                $join->on(
+                    'ppp.ApplicationNo',
+                    '=',
+                    'meb.application_number_int'
+                )
+                    ->where('ppp.IsDeleted', 0);
+            })
+            ->join('property_auction_detail as pad', function ($join) {
+                $join->on('pad.AssetId', '=', 'ppp.Flat_Id')
+                    ->on(
+                        'pad.PurchaserID',
+                        '=',
+                        'ppp.PrivatePurchaserId'
+                    )
+                    ->where('pad.IsDeleted', 0)
+                    ->where('pad.IsActive', 1);
+            })
+            ->join('property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'pad.AssetId')
+                    ->where('pr.IsDeleted', 0);
+            })
+            ->leftJoin('cash_receipt_details as cr', function ($join) {
+                $join->on('cr.asset_number', '=', 'pad.AssetId')
+                    ->where('cr.IsDeleted', 0)
+                    ->where('cr.IsActive', 1);
+            })
+            ->leftJoin(
+                'districts as d',
+                'd.DistrictId',
+                '=',
+                'ppp.DistrictId'
+            )
+            ->leftJoin(
+                'cities as c',
+                'c.CityId',
+                '=',
+                'ppp.CityId'
+            )
+            ->leftJoin(
+                'sectors as s',
+                's.SectorId',
+                '=',
+                'ppp.SectorId'
+            )
+            ->whereNotNull('meb.application_number_int')
 
-        $paymentSummary = DB::table('property_auction_detail as pad')
-            ->where('pad.IsDeleted', 0)
-            ->where('pad.IsActive', 1)
-            // ReceivedAmount is NOT NULL; plain comparison can use the composite index.
-            ->where('pad.ReceivedAmount', '<', 60000)
+            /*
+             * Initial received already ₹60,000+ hai to receipts
+             * calculate karne ke baad bhi Not Eligible nahi hoga.
+             */
+            ->whereRaw(
+                'COALESCE(pad.ReceivedAmount, 0) < 60000'
+            )
+            // Location filters
             ->when(
                 $request->filled('district_id'),
                 fn($query) => $query->where(
-                    'pad.DistrictId',
+                    'ppp.DistrictId',
                     $request->integer('district_id')
                 )
             )
             ->when(
                 $request->filled('city_id'),
                 fn($query) => $query->where(
-                    'pad.CityId',
+                    'ppp.CityId',
                     $request->integer('city_id')
                 )
             )
             ->when(
                 $request->filled('sector_id'),
                 fn($query) => $query->where(
-                    'pad.SectorId',
+                    'ppp.SectorId',
                     $request->integer('sector_id')
                 )
-            )
-            ->select([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->selectRaw("{$receiptTotalSql} AS cash_received")
-            ->selectRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) AS total_received")
-            ->whereRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) < 60000");
-
-        $query = DB::query()
-            ->fromSub($paymentSummary, 'ps')
-            ->join('property_registration as pr', function ($join) {
-                $join->on('pr.AssetId', '=', 'ps.AssetId')
-                    ->where('pr.IsDeleted', 0)
-                    ->where('pr.IsActive', 1);
-            })
-            ->leftJoin('property_private_purchasers as ppp', function ($join) {
-                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
-                    ->where('ppp.IsDeleted', 0);
-            })
-            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
-            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
-            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
+            );
 
         $search = trim((string) $request->input('search'));
 
         if ($search !== '') {
-            $like = '%' . addcslashes($search, '%_\\') . '%';
+            $escapedSearch = addcslashes($search, '%_\\');
+            $like = "%{$escapedSearch}%";
 
-            $query->where(function ($subQuery) use ($like) {
-                $subQuery->where('ps.AssetId', 'like', $like)
-                    ->orWhere('pr.AssetName', 'like', $like)
-                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
-                    ->orWhere('ppp.MobileNo', 'like', $like)
-                    ->orWhere('ppp.ApplicationNo', 'like', $like);
-            });
+            $paymentSummary->where(
+                function ($query) use ($search, $like) {
+                    if (ctype_digit($search)) {
+                        $query
+                            ->where('ppp.ApplicationNo', $search)
+                            ->orWhere('ppp.MobileNo', $search)
+                            ->orWhere('pad.AssetId', $search);
+                    } else {
+                        $query
+                            ->where(
+                                'ppp.PrivatePurchaserName',
+                                'like',
+                                $like
+                            )
+                            ->orWhere(
+                                'pr.AssetName',
+                                'like',
+                                $like
+                            )
+                            ->orWhere('ppp.PPPId', 'like', $like)
+                            ->orWhere('ppp.MemberID', 'like', $like);
+                    }
+                }
+            );
         }
 
-        return $query
+        $paymentSummary
+            ->groupBy(
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pr.AssetName',
+                'pr.AssetSize',
+                'pr.Unit',
+                'ppp.ApplicationNo',
+                'ppp.PrivatePurchaserName',
+                'ppp.PurchaserFatherName',
+                'ppp.MobileNo',
+                'ppp.PPPId',
+                'ppp.MemberID',
+                'ppp.DistrictId',
+                'ppp.CityId',
+                'ppp.SectorId',
+                'd.DistrictName',
+                'c.CityName',
+                's.SectorName'
+            )
+            ->havingRaw('(
+                COALESCE(pad.ReceivedAmount, 0)
+                + COALESCE(SUM(cr.total_paid_amount), 0)
+            ) < 60000');
+
+        $paymentSummary
             ->select([
-                'ps.PropertyAuctionId as property_auction_id',
-                'ps.AssetId as asset_id',
+                'pad.PropertyAuctionId as property_auction_id',
+                'pad.AssetId as asset_id',
+                'pad.FlatCost as flat_cost',
+                'pad.ReceivedAmount as initial_received',
+
                 'pr.AssetName as asset_name',
                 'pr.AssetSize as asset_size',
                 'pr.Unit as asset_unit',
-                'ppp.PrivatePurchaserName as applicant_name',
-                'ppp.MobileNo as mobile',
+
                 'ppp.ApplicationNo as application_number',
-                'ppp.ApplicationNo as purchaser_application_number',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.PurchaserFatherName as father_name',
+                'ppp.MobileNo as mobile',
+                'ppp.PPPId as ppp_id',
+                'ppp.MemberID as member_id',
+
+                'ppp.DistrictId as district_id',
+                'ppp.CityId as city_id',
+                'ppp.SectorId as sector_id',
+
                 'd.DistrictName as district_name',
                 'c.CityName as city_name',
                 's.SectorName as sector_name',
-                'ps.FlatCost as flat_cost',
             ])
-            ->selectRaw('COALESCE(ps.ReceivedAmount, 0) AS initial_received')
-            ->selectRaw('ps.cash_received')
-            ->selectRaw('ps.total_received AS received_amount')
             ->selectRaw(
-                'GREATEST(COALESCE(ps.FlatCost, 0) - ps.total_received, 0)
-             AS pending_amount'
+                'COALESCE(SUM(cr.total_paid_amount), 0) AS cash_received'
             )
-            ->selectRaw(
-                'GREATEST(60000 - ps.total_received, 0)
-             AS eligibility_shortfall'
-            );
+            ->selectRaw('
+            (
+                COALESCE(pad.ReceivedAmount, 0)
+                + COALESCE(SUM(cr.total_paid_amount), 0)
+            ) AS received_amount
+        ')
+            ->selectRaw('
+            GREATEST(
+                COALESCE(pad.FlatCost, 0)
+                - (
+                    COALESCE(pad.ReceivedAmount, 0)
+                    + COALESCE(SUM(cr.total_paid_amount), 0)
+                ),
+                0
+            ) AS pending_amount
+        ')
+            ->selectRaw('
+            GREATEST(
+                60000
+                - (
+                    COALESCE(pad.ReceivedAmount, 0)
+                    + COALESCE(SUM(cr.total_paid_amount), 0)
+                ),
+                0
+            ) AS eligibility_shortfall
+        ');
+
+        return DB::query()
+            ->fromSub($paymentSummary, 'ps');
     }
 
     public function physicalPossessionNotEligible(Request $request)
@@ -3244,11 +3932,23 @@ class PropertyManagementController extends Controller
         $cityId = $request->integer('city_id') ?: null;
         $sectorId = $request->integer('sector_id') ?: null;
         $search = trim((string) $request->input('search'));
+
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array(
+            $sortOrder,
+            ['asc', 'desc'],
+            true
+        ) ? $sortOrder : 'desc';
+
         $filters = [
             'district_id' => $districtId,
             'city_id' => $cityId,
             'sector_id' => $sectorId,
             'search' => $search,
+            'sort_order' => $sortOrder,
         ];
 
         $districts = DB::table('districts')
@@ -3270,7 +3970,12 @@ class PropertyManagementController extends Controller
 
         $sectors = $cityId
             ? DB::table('city_sector_associations as csa')
-                ->join('sectors as s', 's.SectorId', '=', 'csa.SectorId')
+                ->join(
+                    'sectors as s',
+                    's.SectorId',
+                    '=',
+                    'csa.SectorId'
+                )
                 ->select('s.SectorId', 's.SectorName')
                 ->where('csa.CityId', $cityId)
                 ->where('csa.Is_Deleted', 0)
@@ -3282,53 +3987,108 @@ class PropertyManagementController extends Controller
                 ->get()
             : collect();
 
-        // Length-aware pagination is required for page numbers and total records.
-        $applications = $this->notEligiblePossessionQuery($request)
-            ->orderByDesc('ps.PropertyAuctionId')
+        $applications = $this
+            ->notEligiblePossessionQuery($request)
+            ->orderBy('ps.property_auction_id', $sortOrder)
             ->paginate(self::LIST_PAGE_SIZE)
             ->withQueryString();
 
-        return view('mmsay.physicalPossessionNotEligible', compact(
-            'applications',
-            'districts',
-            'cities',
-            'sectors',
-            'districtId',
-            'cityId',
-            'sectorId',
-            'search',
-            'filters'
-        ));
+        return view(
+            'mmsay.physicalPossessionNotEligible',
+            compact(
+                'applications',
+                'districts',
+                'cities',
+                'sectors',
+                'districtId',
+                'cityId',
+                'sectorId',
+                'search',
+                'sortOrder',
+                'filters'
+            )
+        );
     }
 
-    public function physicalPossessionNotEligibleCsv(Request $request)
-    {
-        $fileName = 'physical-possession-not-eligible-' . now()->format('Ymd-His') . '.csv';
+    public function physicalPossessionNotEligibleCsv(
+        Request $request
+    ) {
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
 
-        return response()->streamDownload(function () use ($request) {
-            $handle = fopen('php://output', 'w');
-            fwrite($handle, "\xEF\xBB\xBF");
+        $sortOrder = in_array(
+            $sortOrder,
+            ['asc', 'desc'],
+            true
+        ) ? $sortOrder : 'desc';
 
-            fputcsv($handle, [
-                'S.No.',
-                'Asset ID',
-                'Property',
-                'Application No.',
-                'Applicant',
-                'Mobile',
-                'District',
-                'City',
-                'Sector',
-                'Total Cost',
-                'Total Received',
-                'Total Pending',
-            ]);
+        $fileName = 'physical-possession-not-eligible-'
+            . $sortOrder
+            . '-'
+            . now()->format('Ymd-His')
+            . '.csv';
 
-            $serial = 1;
+        return response()->streamDownload(
+            function () use ($request, $sortOrder) {
+                $handle = fopen('php://output', 'w');
 
-            $this->notEligiblePossessionQuery($request)
-                ->orderByDesc('ps.PropertyAuctionId')
-                ->chunkByIdDesc(self::EXPORT_CHUNK_SIZE, function ($rows) use ($handle, &$serial) {
+                if ($handle === false) {
+                    throw new RuntimeException(
+                        'Unable to open CSV output stream.'
+                    );
+                }
+
+                fwrite($handle, "\xEF\xBB\xBF");
+
+                fputcsv($handle, [
+                    'S.No.',
+                    'Asset ID',
+                    'Property',
+                    'Application No.',
+                    'Applicant',
+                    'Mobile',
+                    'District',
+                    'City',
+                    'Sector',
+                    'Total Cost',
+                    'Initial Received',
+                    'Cash Received',
+                    'Total Received',
+                    'Property Pending',
+                    'Required for ₹60,000',
+                ]);
+
+                $serial = 1;
+                $lastId = null;
+
+                $baseQuery = $this->notEligiblePossessionQuery(
+                    $request
+                );
+
+                while (true) {
+                    $query = clone $baseQuery;
+
+                    if ($lastId !== null) {
+                        $query->where(
+                            'ps.property_auction_id',
+                            $sortOrder === 'asc' ? '>' : '<',
+                            $lastId
+                        );
+                    }
+
+                    $rows = $query
+                        ->orderBy(
+                            'ps.property_auction_id',
+                            $sortOrder
+                        )
+                        ->limit(self::EXPORT_CHUNK_SIZE)
+                        ->get();
+
+                    if ($rows->isEmpty()) {
+                        break;
+                    }
+
                     foreach ($rows as $row) {
                         fputcsv($handle, [
                             $serial++,
@@ -3341,43 +4101,89 @@ class PropertyManagementController extends Controller
                             $row->city_name,
                             $row->sector_name,
                             $row->flat_cost,
+                            $row->initial_received,
+                            $row->cash_received,
                             $row->received_amount,
                             $row->pending_amount,
+                            $row->eligibility_shortfall,
                         ]);
                     }
-                }, 'ps.PropertyAuctionId', 'property_auction_id');
 
-            fclose($handle);
-        }, $fileName, [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-        ]);
+                    $lastId = (int) (
+                        $rows->last()->property_auction_id
+                    );
+
+                    if (
+                        $rows->count()
+                        < self::EXPORT_CHUNK_SIZE
+                    ) {
+                        break;
+                    }
+                }
+
+                fclose($handle);
+            },
+            $fileName,
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+            ]
+        );
     }
 
-    public function physicalPossessionNotEligiblePrint(Request $request)
-    {
+    public function physicalPossessionNotEligiblePrint(
+        Request $request
+    ) {
+        $sortOrder = strtolower(
+            (string) $request->input('sort_order', 'desc')
+        );
+
+        $sortOrder = in_array(
+            $sortOrder,
+            ['asc', 'desc'],
+            true
+        ) ? $sortOrder : 'desc';
+
         $perChunk = self::PRINT_CHUNK_SIZE;
         $afterId = max(0, $request->integer('after_id'));
 
-        $rows = $this->notEligiblePossessionQuery($request)
-            ->when(
-                $afterId > 0,
-                fn($query) => $query->where('ps.PropertyAuctionId', '<', $afterId)
+        $query = $this->notEligiblePossessionQuery($request);
+
+        if ($afterId > 0) {
+            $query->where(
+                'ps.property_auction_id',
+                $sortOrder === 'asc' ? '>' : '<',
+                $afterId
+            );
+        }
+
+        $rows = $query
+            ->orderBy(
+                'ps.property_auction_id',
+                $sortOrder
             )
-            ->orderByDesc('ps.PropertyAuctionId')
             ->limit($perChunk + 1)
             ->get();
 
         $hasMore = $rows->count() > $perChunk;
-        $applications = $rows->take($perChunk)->values();
+
+        $applications = $rows
+            ->take($perChunk)
+            ->values();
+
         $nextAfterId = $hasMore
+            && $applications->isNotEmpty()
             ? $applications->last()->property_auction_id
             : null;
 
-        return view('mmsay.physicalPossessionNotEligiblePrint', compact(
-            'applications',
-            'hasMore',
-            'nextAfterId'
-        ));
+        return view(
+            'mmsay.physicalPossessionNotEligiblePrint',
+            compact(
+                'applications',
+                'hasMore',
+                'nextAfterId',
+                'sortOrder'
+            )
+        );
     }
 
     private function fullPaidPropertiesQuery(Request $request)
