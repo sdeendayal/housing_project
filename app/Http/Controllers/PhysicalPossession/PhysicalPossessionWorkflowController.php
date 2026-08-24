@@ -1171,6 +1171,14 @@ class PhysicalPossessionWorkflowController extends Controller
                     $q->where('meb.category', 'W')
                       ->orWhere('meb.caste', 'like', '%widow%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
                 });
             } elseif ($selectedCategory === 'SC') {
                 $query->where(function($q) {
@@ -1179,27 +1187,40 @@ class PhysicalPossessionWorkflowController extends Controller
                       ->orWhere('meb.caste', 'like', '%sc%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
                 });
-            } elseif ($selectedCategory === 'other') {
+            } elseif ($selectedCategory === 'OTHER') {
                 $query->whereNot(function($q) {
-                    $q->where('meb.category', 'GJ')
-                      ->orWhere('meb.caste', 'like', '%tapriwas%')
-                      ->orWhere('meb.caste', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
                 })
                 ->whereNot(function($q) {
-                    $q->where('meb.category', 'W')
-                      ->orWhere('meb.caste', 'like', '%widow%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
                 })
                 ->whereNot(function($q) {
-                    $q->where('meb.category', 'SC')
-                      ->orWhere('meb.caste', 'like', '%scheduled%')
-                      ->orWhere('meb.caste', 'like', '%sc%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'SC')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%scheduled%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%sc%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%scheduled%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%sc%');
                 });
             }
         }
@@ -1289,6 +1310,14 @@ class PhysicalPossessionWorkflowController extends Controller
                     $q->where('meb.category', 'W')
                       ->orWhere('meb.caste', 'like', '%widow%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
                 });
             } elseif ($selectedCategory === 'SC') {
                 $query->where(function($q) {
@@ -1297,27 +1326,40 @@ class PhysicalPossessionWorkflowController extends Controller
                       ->orWhere('meb.caste', 'like', '%sc%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
+                })
+                ->whereNot(function($q) {
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
                 });
-            } elseif ($selectedCategory === 'other') {
+            } elseif ($selectedCategory === 'OTHER') {
                 $query->whereNot(function($q) {
-                    $q->where('meb.category', 'GJ')
-                      ->orWhere('meb.caste', 'like', '%tapriwas%')
-                      ->orWhere('meb.caste', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
                 })
                 ->whereNot(function($q) {
-                    $q->where('meb.category', 'W')
-                      ->orWhere('meb.caste', 'like', '%widow%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
                 })
                 ->whereNot(function($q) {
-                    $q->where('meb.category', 'SC')
-                      ->orWhere('meb.caste', 'like', '%scheduled%')
-                      ->orWhere('meb.caste', 'like', '%sc%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
+                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'SC')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%scheduled%')
+                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%sc%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%scheduled%')
+                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%sc%');
                 });
             }
         }
