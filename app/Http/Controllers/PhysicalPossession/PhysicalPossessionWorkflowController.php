@@ -1124,9 +1124,6 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $officer = Auth::user();
 
-        // Dynamic categories query removed because it's not used in view
-        $casteCategories = [];
-
         $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
         // 2. Build the query for eligible applicants in the officer's district
@@ -1155,6 +1152,30 @@ class PhysicalPossessionWorkflowController extends Controller
         } elseif ($officer->district_name) {
             $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
+
+        // Clone query to calculate counts for cards
+        $countQuery = clone $query;
+        $countQuery->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+        $categoryCounts = $countQuery->selectRaw("
+            SUM(CASE WHEN (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%') THEN 1 ELSE 0 END) as count_gj,
+            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
+                          AND (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%') THEN 1 ELSE 0 END) as count_w,
+            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
+                          AND NOT (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+                          AND (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_sc,
+            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
+                          AND NOT (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+                          AND NOT (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_other
+        ")->first();
+
+        $casteCategories = [
+            'ALL' => ($categoryCounts->count_gj ?? 0) + ($categoryCounts->count_w ?? 0) + ($categoryCounts->count_sc ?? 0) + ($categoryCounts->count_other ?? 0),
+            'GJ' => $categoryCounts->count_gj ?? 0,
+            'W' => $categoryCounts->count_w ?? 0,
+            'SC' => $categoryCounts->count_sc ?? 0,
+            'OTHER' => $categoryCounts->count_other ?? 0,
+        ];
 
         if ($selectedCategory) {
             if ($selectedCategory === 'GJ') {

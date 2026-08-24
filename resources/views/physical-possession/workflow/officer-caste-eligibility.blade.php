@@ -4,6 +4,83 @@
 @section('page-title', 'Caste Eligibility List')
 
 @section('content')
+<style>
+    .category-card {
+        transition: all 0.25s ease-in-out;
+        border-radius: 12px;
+        cursor: pointer;
+        overflow: hidden;
+        position: relative;
+        border: 2px solid transparent !important;
+    }
+
+    .category-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .category-card.active {
+        border-color: currentColor !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .card-theme-all {
+        background: linear-gradient(135deg, #f8fafd 0%, #eef3fc 100%);
+        color: #0d6efd;
+    }
+    .card-theme-all.active {
+        border-color: #0d6efd !important;
+        background: linear-gradient(135deg, #eef3fc 0%, #dbe7fc 100%);
+    }
+
+    .card-theme-gj {
+        background: linear-gradient(135deg, #fffcf5 0%, #fdf5e2 100%);
+        color: #b27b00;
+    }
+    .card-theme-gj.active {
+        border-color: #ffc107 !important;
+        background: linear-gradient(135deg, #fdf5e2 0%, #fbebc4 100%);
+    }
+
+    .card-theme-w {
+        background: linear-gradient(135deg, #faf6ff 0%, #f3e8ff 100%);
+        color: #6f42c1;
+    }
+    .card-theme-w.active {
+        border-color: #6f42c1 !important;
+        background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    }
+
+    .card-theme-sc {
+        background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);
+        color: #dc3545;
+    }
+    .card-theme-sc.active {
+        border-color: #dc3545 !important;
+        background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+    }
+
+    .card-theme-other {
+        background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+        color: #495057;
+    }
+    .card-theme-other.active {
+        border-color: #6c757d !important;
+        background: linear-gradient(135deg, #f1f3f5 0%, #e9ecef 100%);
+    }
+
+    .category-icon-wrapper {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        background: rgba(255, 255, 255, 0.7);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+</style>
 <div class="container-fluid py-3">
     @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show mb-3 py-2 px-3 fs-7" role="alert">
@@ -52,6 +129,94 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Sleek Caste Category Counts Cards -->
+    <div class="row g-3 mb-3">
+        <!-- All Categories -->
+        <div class="col-lg col-md-4 col-sm-6">
+            <a href="{{ route('pp.officer.caste-eligibility') }}" class="text-decoration-none">
+                <div class="card category-card card-theme-all {{ !$selectedCategory ? 'active' : '' }} h-100 shadow-sm border-0">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-8 fw-semibold text-uppercase tracking-wider opacity-75">All Categories</div>
+                            <div class="fs-4 fw-bold mt-1 text-dark">{{ $casteCategories['ALL'] }}</div>
+                        </div>
+                        <div class="category-icon-wrapper text-primary">
+                            <i class="bi bi-grid-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Ghumantu Jati -->
+        <div class="col-lg col-md-4 col-sm-6">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'GJ']) }}" class="text-decoration-none">
+                <div class="card category-card card-theme-gj {{ $selectedCategory === 'GJ' ? 'active' : '' }} h-100 shadow-sm border-0">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-8 fw-semibold text-uppercase tracking-wider opacity-75">Ghumantu Jati</div>
+                            <div class="fs-4 fw-bold mt-1 text-dark">{{ $casteCategories['GJ'] }}</div>
+                        </div>
+                        <div class="category-icon-wrapper text-warning">
+                            <i class="bi bi-signpost-split-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Widows -->
+        <div class="col-lg col-md-4 col-sm-6">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'W']) }}" class="text-decoration-none">
+                <div class="card category-card card-theme-w {{ $selectedCategory === 'W' ? 'active' : '' }} h-100 shadow-sm border-0">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-8 fw-semibold text-uppercase tracking-wider opacity-75">Widows</div>
+                            <div class="fs-4 fw-bold mt-1 text-dark">{{ $casteCategories['W'] }}</div>
+                        </div>
+                        <div class="category-icon-wrapper text-purple" style="color: #6f42c1;">
+                            <i class="bi bi-person-heart"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Scheduled Caste -->
+        <div class="col-lg col-md-4 col-sm-6">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'SC']) }}" class="text-decoration-none">
+                <div class="card category-card card-theme-sc {{ $selectedCategory === 'SC' ? 'active' : '' }} h-100 shadow-sm border-0">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-8 fw-semibold text-uppercase tracking-wider opacity-75">Scheduled Caste</div>
+                            <div class="fs-4 fw-bold mt-1 text-dark">{{ $casteCategories['SC'] }}</div>
+                        </div>
+                        <div class="category-icon-wrapper text-danger">
+                            <i class="bi bi-shield-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Other -->
+        <div class="col-lg col-md-4 col-sm-6">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'other']) }}" class="text-decoration-none">
+                <div class="card category-card card-theme-other {{ $selectedCategory === 'OTHER' ? 'active' : '' }} h-100 shadow-sm border-0">
+                    <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fs-8 fw-semibold text-uppercase tracking-wider opacity-75">Other</div>
+                            <div class="fs-4 fw-bold mt-1 text-dark">{{ $casteCategories['OTHER'] }}</div>
+                        </div>
+                        <div class="category-icon-wrapper text-secondary">
+                            <i class="bi bi-three-dots"></i>
+                        </div>
+                    </div>
+                </div>
+            </a>
         </div>
     </div>
 
