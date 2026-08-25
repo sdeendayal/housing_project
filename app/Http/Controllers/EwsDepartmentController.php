@@ -1811,6 +1811,113 @@ class EwsDepartmentController extends Controller
                     'description' => 'Official list containing ineligible candidates verified and rejected by ADC Faridabad.',
                     'sheets' => 'Sheet1',
                     'category' => 'ADC Verification Outcomes'
+                ],
+                [
+                    'name' => 'Faridabad Waiting List (9. Waiting)',
+                    'filename' => '4.waiting list 159 faridabad.xls',
+                    'description' => 'Official waiting list of candidates selected in the lottery draw for Faridabad.',
+                    'sheets' => 'Worksheet',
+                    'category' => 'Waiting List'
+                ]
+            ];
+        } elseif ($districtName === 'PANIPAT') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'PANIPAT_MC_Completed_22-01-2026 (2).xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data for Panipat.',
+                    'sheets' => 'PANIPAT_MC_Completed_22-01-2026',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => 'PANIPAT_MC_Completed_22-01-2026 (2) (3).xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the Panipat lottery draw.',
+                    'sheets' => 'Eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'PPP Exclusions & Verification Master (2. PPP Exclusion)',
+                    'filename' => 'panipat_mc.xlsx',
+                    'description' => 'Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry for Panipat.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Exclusion data from PPP'
+                ],
+                [
+                    'name' => 'Panipat Eligible Beneficiaries (7. ADC Verified Eligible)',
+                    'filename' => '3. eligible panipat final ADC.xlsx',
+                    'description' => 'Official draw result list containing successfully verified eligible candidates approved by ADC Panipat.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'ADC Verification Outcomes'
+                ],
+                [
+                    'name' => 'Panipat Waiting List (9. Waiting)',
+                    'filename' => 'Panipat 11 waiting.xlsx',
+                    'description' => 'Official waiting list of candidates selected in the lottery draw for Panipat.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Waiting List'
+                ]
+            ];
+        } elseif ($districtName === 'REWARI') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'REWARI_Completed_25-01-2026.xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data for Rewari.',
+                    'sheets' => 'REWARI_Completed_25-01-2026',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => 'REWARI_Completed_25-01-2026 (3).xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the Rewari lottery draw.',
+                    'sheets' => 'Eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'PPP Exclusions & Verification Master (2. PPP Exclusion)',
+                    'filename' => 'RewariData.xlsx',
+                    'description' => 'Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry for Rewari.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Exclusion data from PPP'
+                ],
+                [
+                    'name' => 'Rewari Eligible Beneficiaries (7. ADC Verified Eligible)',
+                    'filename' => '1. 2 eligible Rewari ADC.xlsx',
+                    'description' => 'Official draw result list containing successfully verified eligible candidates approved by ADC Rewari.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'ADC Verification Outcomes'
+                ]
+            ];
+        } elseif ($districtName === 'ROHTAK') {
+            $rawFiles = [
+                [
+                    'name' => 'Registered Applicants Master (1. Verify in survey app)',
+                    'filename' => 'Rohtak_completed (3).xlsx',
+                    'description' => 'Original master Excel file containing all citizen housing registrations, full applicant details, demographics, and assets data for Rohtak.',
+                    'sheets' => 'Rohtak_MC_Complted_09.01.26',
+                    'category' => 'survey data frm meet monk'
+                ],
+                [
+                    'name' => 'Eligible Draw List Database (5. Eligible for booking)',
+                    'filename' => 'Rohtak_completed (2) (3).xlsx',
+                    'description' => 'Excel registry containing verified candidates qualified for the Rohtak lottery draw.',
+                    'sheets' => 'Eligible',
+                    'category' => 'eligiblity data from sunit'
+                ],
+                [
+                    'name' => 'PPP Exclusions & Verification Master (2. PPP Exclusion)',
+                    'filename' => 'Rohtakcompleterevised_Final (1).xlsx',
+                    'description' => 'Original Excel database containing verification logs and exclusion reasons checked against the Family Information Depot (PPP) registry for Rohtak.',
+                    'sheets' => 'Sheet1',
+                    'category' => 'Exclusion data from PPP'
+                ],
+                [
+                    'name' => 'Rohtak Verified Eligible & Ineligible (7. ADC Verified)',
+                    'filename' => '2. Rohtak eligible and uneligible (ADC).xlsx',
+                    'description' => 'Official list containing both eligible and ineligible candidates verified by ADC Rohtak.',
+                    'sheets' => 'Reason not eligible, BPL flats eligible',
+                    'category' => 'ADC Verification Outcomes'
                 ]
             ];
         } elseif ($districtName === 'OTHER') {
