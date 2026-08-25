@@ -102,9 +102,38 @@ class MmgayPossessionApplication extends Model
             return false;
         }
 
-        // Environment-driven bypass for testing
+        // Environment-driven bypass for testing: Check local database instead of live API
         if (env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'))) {
-            return true;
+            $owner = \Illuminate\Support\Facades\DB::table('ownermaster')
+                ->where('RegistrationNo', $registrationNo)
+                ->first();
+
+            if ($owner) {
+                return \Illuminate\Support\Facades\DB::table('registary')
+                    ->where(function($q) use ($owner) {
+                        $q->where(function($sub) use ($owner) {
+                            if (!empty($owner->FlatId)) {
+                                $sub->where('flatid', $owner->FlatId)
+                                    ->whereNotNull('flatid')
+                                    ->where('flatid', '!=', '');
+                            } else {
+                                $sub->whereRaw('0 = 1');
+                            }
+                        })
+                        ->orWhere(function($sub) use ($owner) {
+                            if (!empty($owner->RegistrationNo)) {
+                                $sub->where('registrationNo', $owner->RegistrationNo)
+                                    ->whereNotNull('registrationNo')
+                                    ->where('registrationNo', '!=', '');
+                            } else {
+                                $sub->whereRaw('0 = 1');
+                            }
+                        });
+                    })
+                    ->exists();
+            }
+
+            return false;
         }
 
         try {

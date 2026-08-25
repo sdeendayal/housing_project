@@ -48,7 +48,18 @@ class MmgayBdoApiController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                ->whereNotNull('r.registrationNo')
+                                ->where('r.registrationNo', '!=', '');
+                        });
+                    });
             })
             ->select('mpa.*');
 
@@ -83,7 +94,18 @@ class MmgayBdoApiController extends Controller
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('registary as r')
-                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                        ->where(function($q) {
+                            $q->where(function($sub) {
+                                $sub->whereColumn('r.flatid', 'o.FlatId')
+                                    ->whereNotNull('r.flatid')
+                                    ->where('r.flatid', '!=', '');
+                            })
+                            ->orWhere(function($sub) {
+                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                    ->whereNotNull('r.registrationNo')
+                                    ->where('r.registrationNo', '!=', '');
+                            });
+                        });
                 });
             if ($blockMasterId) {
                 $totalEligibleQuery->where('o.BlockId', $blockMasterId);
@@ -115,7 +137,18 @@ class MmgayBdoApiController extends Controller
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('registary as r')
-                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                        ->where(function($q) {
+                            $q->where(function($sub) {
+                                $sub->whereColumn('r.flatid', 'o.FlatId')
+                                    ->whereNotNull('r.flatid')
+                                    ->where('r.flatid', '!=', '');
+                            })
+                            ->orWhere(function($sub) {
+                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                    ->whereNotNull('r.registrationNo')
+                                    ->where('r.registrationNo', '!=', '');
+                            });
+                        });
                 });
             if ($blockMasterId) {
                 $notScheduledQuery->where('o.BlockId', $blockMasterId);
@@ -188,7 +221,18 @@ class MmgayBdoApiController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                ->whereNotNull('r.registrationNo')
+                                ->where('r.registrationNo', '!=', '');
+                        });
+                    });
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -567,7 +611,18 @@ class MmgayBdoApiController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                ->whereNotNull('r.registrationNo')
+                                ->where('r.registrationNo', '!=', '');
+                        });
+                    });
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1024,7 +1079,18 @@ class MmgayBdoApiController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                ->whereNotNull('r.registrationNo')
+                                ->where('r.registrationNo', '!=', '');
+                        });
+                    });
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1321,7 +1387,18 @@ class MmgayBdoApiController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                ->whereNotNull('r.registrationNo')
+                                ->where('r.registrationNo', '!=', '');
+                        });
+                    });
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1374,7 +1451,18 @@ class MmgayBdoApiController extends Controller
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('registary as r')
-                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                        ->where(function($q) {
+                            $q->where(function($sub) {
+                                $sub->whereColumn('r.flatid', 'o.FlatId')
+                                    ->whereNotNull('r.flatid')
+                                    ->where('r.flatid', '!=', '');
+                            })
+                            ->orWhere(function($sub) {
+                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                                    ->whereNotNull('r.registrationNo')
+                                    ->where('r.registrationNo', '!=', '');
+                            });
+                        });
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))

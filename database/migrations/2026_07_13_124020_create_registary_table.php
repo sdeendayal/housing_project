@@ -26,6 +26,22 @@ return new class extends Migration
             $table->string('SecondPartyMobile')->nullable()->index();
             $table->string('RegistaryNumber')->nullable();
             $table->dateTime('RegistaryDate')->nullable();
+            
+            // New API fields
+            $table->string('flatid')->nullable();
+            $table->string('flatnumber')->nullable();
+            $table->string('registrationNo')->nullable();
+            $table->string('pppId')->nullable();
+            $table->string('area')->nullable();
+            $table->string('unit')->nullable();
+            $table->string('ownerid')->nullable();
+            $table->string('fullname')->nullable();
+            $table->string('fatherName')->nullable();
+            $table->string('dues')->nullable();
+            $table->string('acceptFlag')->nullable();
+            $table->string('propertyCategory')->nullable();
+            $table->string('transferHissaInMarla')->nullable();
+            
             $table->timestamps();
         });
     }
