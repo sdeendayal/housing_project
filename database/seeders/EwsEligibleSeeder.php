@@ -259,6 +259,220 @@ class EwsEligibleSeeder extends Seeder
             $this->command->error("Gurugram Excel file not found at: {$ggnFilePath}");
         }
 
+        // Seed Rewari Data
+        $rewariFilePath = database_path('seeders/data/1. 2 eligible Rewari ADC.xlsx');
+        if (file_exists($rewariFilePath)) {
+            $this->command->info("Loading Rewari Excel file from {$rewariFilePath}...");
+            $rewariReader = IOFactory::createReaderForFile($rewariFilePath);
+            $rewariReader->setReadDataOnly(true);
+            $rewariSpreadsheet = $rewariReader->load($rewariFilePath);
+            $rewariSheet = $rewariSpreadsheet->getActiveSheet();
+            $rewariRows = $rewariSheet->toArray();
+            
+            $rewariBatch = [];
+            $rewariCount = 0;
+            $this->command->info("Seeding Rewari data into ews_eligible_6 table...");
+            
+            // Loop starting from index 2 (row 3 of Excel)
+            foreach (array_slice($rewariRows, 2) as $r) {
+                $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $rewariBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
+                    'status' => $r[5] !== null ? trim((string)$r[5]) : 'Eligible',
+                    'priority' => null,
+                    'category' => null,
+                    'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'REWARI',
+                    'dist_id' => 19,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($rewariBatch) >= $batchSize) {
+                    DB::table('ews_eligible_6')->insert($rewariBatch);
+                    $rewariCount += count($rewariBatch);
+                    $rewariBatch = [];
+                }
+            }
+            
+            if (count($rewariBatch) > 0) {
+                DB::table('ews_eligible_6')->insert($rewariBatch);
+                $rewariCount += count($rewariBatch);
+            }
+            $this->command->info("Successfully seeded {$rewariCount} Rewari records.");
+            $rewariSpreadsheet->disconnectWorksheets();
+            unset($rewariSpreadsheet);
+        } else {
+            $this->command->error("Rewari Excel file not found at: {$rewariFilePath}");
+        }
+
+        // Seed Rohtak Data
+        $rohtakFilePath = database_path('seeders/data/2. Rohtak eligible and uneligible (ADC).xlsx');
+        if (file_exists($rohtakFilePath)) {
+            $this->command->info("Loading Rohtak Excel file from {$rohtakFilePath}...");
+            $rohtakReader = IOFactory::createReaderForFile($rohtakFilePath);
+            $rohtakReader->setReadDataOnly(true);
+            $rohtakSpreadsheet = $rohtakReader->load($rohtakFilePath);
+            
+            $rohtakBatch = [];
+            $rohtakCount = 0;
+            $seenRohtakAppNos = [];
+            $this->command->info("Seeding Rohtak data into ews_eligible_6 table...");
+            
+            // Sheet 2: BPL flats eligible (Index 1) - Process first so Eligible status takes precedence
+            $rohtakSheet2 = $rohtakSpreadsheet->getSheet(1);
+            if ($rohtakSheet2) {
+                $rows2 = $rohtakSheet2->toArray();
+                // Loop starting from index 2 (row 3 of Excel)
+                foreach (array_slice($rows2, 2) as $r) {
+                    $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
+                    if (empty($appNo)) {
+                        continue;
+                    }
+                    if (isset($seenRohtakAppNos[$appNo])) {
+                        continue;
+                    }
+                    $seenRohtakAppNos[$appNo] = true;
+                    
+                    $rohtakBatch[] = [
+                        'application_number' => $appNo,
+                        'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
+                        'aadhar_no' => null,
+                        'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
+                        'status' => $r[5] !== null ? trim((string)$r[5]) : 'Eligible',
+                        'priority' => null,
+                        'category' => null,
+                        'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                        'dist_name' => 'ROHTAK',
+                        'dist_id' => 20,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    if (count($rohtakBatch) >= $batchSize) {
+                        DB::table('ews_eligible_6')->insert($rohtakBatch);
+                        $rohtakCount += count($rohtakBatch);
+                        $rohtakBatch = [];
+                    }
+                }
+            }
+
+            // Sheet 1: Reason not eligible (Index 0) - Process second, skipping any already seen/seeded
+            $rohtakSheet1 = $rohtakSpreadsheet->getSheet(0);
+            if ($rohtakSheet1) {
+                $rows1 = $rohtakSheet1->toArray();
+                // Loop starting from index 2 (row 3 of Excel)
+                foreach (array_slice($rows1, 2) as $r) {
+                    $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
+                    if (empty($appNo)) {
+                        continue;
+                    }
+                    if (isset($seenRohtakAppNos[$appNo])) {
+                        continue;
+                    }
+                    $seenRohtakAppNos[$appNo] = true;
+                    
+                    $rohtakBatch[] = [
+                        'application_number' => $appNo,
+                        'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
+                        'aadhar_no' => null,
+                        'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
+                        'status' => $r[4] !== null ? trim((string)$r[4]) : 'Not Eligible',
+                        'priority' => null,
+                        'category' => null,
+                        'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                        'dist_name' => 'ROHTAK',
+                        'dist_id' => 20,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    
+                    if (count($rohtakBatch) >= $batchSize) {
+                        DB::table('ews_eligible_6')->insert($rohtakBatch);
+                        $rohtakCount += count($rohtakBatch);
+                        $rohtakBatch = [];
+                    }
+                }
+            }
+            
+            if (count($rohtakBatch) > 0) {
+                DB::table('ews_eligible_6')->insert($rohtakBatch);
+                $rohtakCount += count($rohtakBatch);
+            }
+            $this->command->info("Successfully seeded {$rohtakCount} unique Rohtak records.");
+            $rohtakSpreadsheet->disconnectWorksheets();
+            unset($rohtakSpreadsheet);
+        } else {
+            $this->command->error("Rohtak Excel file not found at: {$rohtakFilePath}");
+        }
+
+        // Seed Panipat Data
+        $panipatFilePath = database_path('seeders/data/3. eligible panipat final ADC.xlsx');
+        if (file_exists($panipatFilePath)) {
+            $this->command->info("Loading Panipat Excel file from {$panipatFilePath}...");
+            $panipatReader = IOFactory::createReaderForFile($panipatFilePath);
+            $panipatReader->setReadDataOnly(true);
+            $panipatSpreadsheet = $panipatReader->load($panipatFilePath);
+            $panipatSheet = $panipatSpreadsheet->getActiveSheet();
+            $panipatRows = $panipatSheet->toArray();
+            
+            $panipatBatch = [];
+            $panipatCount = 0;
+            $this->command->info("Seeding Panipat data into ews_eligible_6 table...");
+            
+            // Loop starting from index 1 (row 2 of Excel)
+            foreach (array_slice($panipatRows, 1) as $r) {
+                $appNo = $r[3] !== null ? trim((string)$r[3]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $excelStatus = $r[14] !== null ? strtoupper(trim((string)$r[14])) : '';
+                $status = 'Eligible';
+                if ($excelStatus === 'NO') {
+                    $status = 'Not Eligible';
+                }
+                
+                $panipatBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[4] !== null ? trim((string)$r[4]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => $r[6] !== null ? trim((string)$r[6]) : '',
+                    'status' => $status,
+                    'priority' => null,
+                    'category' => null,
+                    'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'PANIPAT',
+                    'dist_id' => 18,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($panipatBatch) >= $batchSize) {
+                    DB::table('ews_eligible_6')->insert($panipatBatch);
+                    $panipatCount += count($panipatBatch);
+                    $panipatBatch = [];
+                }
+            }
+            
+            if (count($panipatBatch) > 0) {
+                DB::table('ews_eligible_6')->insert($panipatBatch);
+                $panipatCount += count($panipatBatch);
+            }
+            $this->command->info("Successfully seeded {$panipatCount} Panipat records.");
+            $panipatSpreadsheet->disconnectWorksheets();
+            unset($panipatSpreadsheet);
+        } else {
+            $this->command->error("Panipat Excel file not found at: {$panipatFilePath}");
+        }
+
         gc_collect_cycles();
     }
 }

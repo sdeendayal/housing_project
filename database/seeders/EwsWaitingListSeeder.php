@@ -136,11 +136,119 @@ class EwsWaitingListSeeder extends Seeder
             $count += count($batch);
         }
 
-        $this->command->info("Successfully seeded {$count} records into the ews_waiting_list_9 table.");
+        $this->command->info("Successfully seeded {$count} Sonipat waiting records into the ews_waiting_list_9 table.");
         if (isset($spreadsheet)) {
             $spreadsheet->disconnectWorksheets();
             unset($spreadsheet);
         }
+
+        // Seed Faridabad Waiting List Data
+        $fbdFilePath = database_path('seeders/data/4.waiting list 159 faridabad.xls');
+        if (file_exists($fbdFilePath)) {
+            $this->command->info("Loading Faridabad waiting list Excel file from {$fbdFilePath}...");
+            $fbdReader = IOFactory::createReaderForFile($fbdFilePath);
+            $fbdReader->setReadDataOnly(true);
+            
+            // Temporarily suppress warnings/errors to ignore duplicate ID warnings in HTML-based XLS files
+            set_error_handler(function() { return true; });
+            $fbdSpreadsheet = $fbdReader->load($fbdFilePath);
+            restore_error_handler();
+            
+            $fbdSheet = $fbdSpreadsheet->getActiveSheet();
+            $fbdRows = $fbdSheet->toArray();
+            
+            $fbdBatch = [];
+            $fbdCount = 0;
+            $this->command->info("Seeding Faridabad waiting list data into ews_waiting_list_9 table...");
+            
+            foreach (array_slice($fbdRows, 1) as $r) {
+                $appNo = $r[3] !== null ? trim((string)$r[3]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $fbdBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[1] !== null ? trim((string)$r[1]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => null,
+                    'flat_no' => $r[4] !== null ? trim((string)$r[4]) : '',
+                    'secure_id' => md5('ews_waiting_list_9_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'FARIDABAD',
+                    'dist_id' => 4,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($fbdBatch) >= $batchSize) {
+                    DB::table('ews_waiting_list_9')->insert($fbdBatch);
+                    $fbdCount += count($fbdBatch);
+                    $fbdBatch = [];
+                }
+            }
+            
+            if (count($fbdBatch) > 0) {
+                DB::table('ews_waiting_list_9')->insert($fbdBatch);
+                $fbdCount += count($fbdBatch);
+            }
+            $this->command->info("Successfully seeded {$fbdCount} Faridabad waiting records.");
+            $fbdSpreadsheet->disconnectWorksheets();
+            unset($fbdSpreadsheet);
+        } else {
+            $this->command->error("Faridabad waiting list Excel file not found at: {$fbdFilePath}");
+        }
+
+        // Seed Panipat Waiting List Data
+        $panipatFilePath = database_path('seeders/data/Panipat 11 waiting.xlsx');
+        if (file_exists($panipatFilePath)) {
+            $this->command->info("Loading Panipat waiting list Excel file from {$panipatFilePath}...");
+            $panipatReader = IOFactory::createReaderForFile($panipatFilePath);
+            $panipatReader->setReadDataOnly(true);
+            $panipatSpreadsheet = $panipatReader->load($panipatFilePath);
+            $panipatSheet = $panipatSpreadsheet->getActiveSheet();
+            $panipatRows = $panipatSheet->toArray();
+            
+            $panipatBatch = [];
+            $panipatCount = 0;
+            $this->command->info("Seeding Panipat waiting list data into ews_waiting_list_9 table...");
+            
+            foreach (array_slice($panipatRows, 4) as $r) {
+                $appNo = $r[4] !== null ? trim((string)$r[4]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                
+                $panipatBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => null,
+                    'flat_no' => $r[5] !== null ? trim((string)$r[5]) : '',
+                    'secure_id' => md5('ews_waiting_list_9_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'PANIPAT',
+                    'dist_id' => 18,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($panipatBatch) >= $batchSize) {
+                    DB::table('ews_waiting_list_9')->insert($panipatBatch);
+                    $panipatCount += count($panipatBatch);
+                    $panipatBatch = [];
+                }
+            }
+            
+            if (count($panipatBatch) > 0) {
+                DB::table('ews_waiting_list_9')->insert($panipatBatch);
+                $panipatCount += count($panipatBatch);
+            }
+            $this->command->info("Successfully seeded {$panipatCount} Panipat waiting records.");
+            $panipatSpreadsheet->disconnectWorksheets();
+            unset($panipatSpreadsheet);
+        } else {
+            $this->command->error("Panipat waiting list Excel file not found at: {$panipatFilePath}");
+        }
+
         gc_collect_cycles();
     }
 }

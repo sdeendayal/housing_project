@@ -373,6 +373,11 @@ class EwsDepartmentController extends Controller
                 ->select('secure_id', 'id', DB::raw('COALESCE(ApplicationNo, ApplicationNo_2) as application_number'), DB::raw('PrivatePurchaserName as full_name'), DB::raw('AadhaarNo as aadhar_no'), DB::raw('COALESCE(MobileNo, MobileNo_2) as mobile_number'), DB::raw('COALESCE(Flat_PlotNo, Flat_plotno_2) as flat_no'), DB::raw("'allotted' as type"), DB::raw("'Allotted' as status"), DB::raw('dist as dist_name'), 'dist_id');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('ews_waiting_list_9')
+                      ->groupBy('application_number');
+                })
                 ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'pending' as type"), DB::raw("'Waiting' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
@@ -508,6 +513,7 @@ class EwsDepartmentController extends Controller
                 WHERE Allotment = 'alloted' AND id IN (SELECT MIN(id) FROM all_ews_data_544 GROUP BY PrivatePurchaserId)
                 UNION ALL
                 SELECT secure_id, id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Waiting' as status, dist_name, dist_id FROM ews_waiting_list_9
+                WHERE id IN (SELECT MIN(id) FROM ews_waiting_list_9 GROUP BY application_number)
             ) as beneficiaries"));
         }
 
@@ -1044,6 +1050,11 @@ class EwsDepartmentController extends Controller
                 ->select('id', DB::raw('COALESCE(ApplicationNo, ApplicationNo_2) as application_number'), DB::raw('PrivatePurchaserName as full_name'), DB::raw('AadhaarNo as aadhar_no'), DB::raw('COALESCE(MobileNo, MobileNo_2) as mobile_number'), DB::raw('COALESCE(Flat_PlotNo, Flat_plotno_2) as flat_no'), DB::raw("'Allotted' as status"), DB::raw('dist as dist_name'), 'dist_id');
         } elseif ($type === 'pending') {
             $query = DB::table('ews_waiting_list_9')
+                ->whereIn('id', function($q) {
+                    $q->select(DB::raw('MIN(id)'))
+                      ->from('ews_waiting_list_9')
+                      ->groupBy('application_number');
+                })
                 ->select('id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', 'flat_no', DB::raw("'Waiting' as status"), 'dist_name');
         } elseif ($type === 'rejected_ppp') {
             $query = DB::table('ews_reject_ppp_exclusion_2')
@@ -1128,6 +1139,7 @@ class EwsDepartmentController extends Controller
                 WHERE Allotment = 'alloted' AND id IN (SELECT MIN(id) FROM all_ews_data_544 GROUP BY PrivatePurchaserId)
                 UNION ALL
                 SELECT id, application_number, full_name, aadhar_no, mobile_number, flat_no, 'pending' as type, 'Waiting' as status, dist_name, dist_id FROM ews_waiting_list_9
+                WHERE id IN (SELECT MIN(id) FROM ews_waiting_list_9 GROUP BY application_number)
             ) as beneficiaries"));
         }
 
