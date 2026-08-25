@@ -23,15 +23,22 @@ class PpOfficerApiController extends Controller
     {
         // 1. Current logged-in officer fetch karein
         $officer = Auth::user();
+        $phase = $request->input('phase');
         
         // 3. Officer ke district ki applications ka query builder nikaalein
         $query = PhysicalPossessionApplication::query()
             ->where('status', '!=', 'draft');
 
         if ($officer->district_id) {
-            $query->where('district_id', $officer->district_id);
+            $query->where('physical_possession_applications.district_id', $officer->district_id);
         } elseif ($officer->district_name) {
-            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+            $query->where('physical_possession_applications.district_name', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $query->join('property_private_purchasers as ppp_dashboard', 'physical_possession_applications.private_purchaser_id', '=', 'ppp_dashboard.PrivatePurchaserId')
+                  ->where('ppp_dashboard.phase', $phase)
+                  ->select('physical_possession_applications.*');
         }
 
         $receiptsQuery = DB::table('cash_receipt_details')
@@ -62,6 +69,10 @@ class PpOfficerApiController extends Controller
             $tempEligibleQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $tempEligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $tempEligibleQuery->where('ppp.phase', $phase);
         }
 
         $eligibleCount = $tempEligibleQuery->count();
@@ -228,6 +239,7 @@ class PpOfficerApiController extends Controller
     {
         // 1. Current officer fetch karein
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         // 2. Candidate mapping query generate karein
         $receiptsQuery = DB::table('cash_receipt_details')
@@ -255,6 +267,10 @@ class PpOfficerApiController extends Controller
             $tempQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $tempQuery->where('ppp.phase', $phase);
         }
 
         $search = $request->input('search');
@@ -812,14 +828,21 @@ class PpOfficerApiController extends Controller
     public function applications(Request $request)
     {
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         $query = PhysicalPossessionApplication::query()
             ->whereNotNull('physical_possession_status');
 
         if ($officer->district_id) {
-            $query->where('district_id', $officer->district_id);
+            $query->where('physical_possession_applications.district_id', $officer->district_id);
         } elseif ($officer->district_name) {
-            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+            $query->where('physical_possession_applications.district_name', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $query->join('property_private_purchasers as ppp_apps', 'physical_possession_applications.private_purchaser_id', '=', 'ppp_apps.PrivatePurchaserId')
+                  ->where('ppp_apps.phase', $phase)
+                  ->select('physical_possession_applications.*');
         }
 
         // Status filter
@@ -1334,6 +1357,7 @@ class PpOfficerApiController extends Controller
     public function casteEligibility(Request $request)
     {
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
@@ -1361,6 +1385,10 @@ class PpOfficerApiController extends Controller
             $tempQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $tempQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $tempQuery->where('ppp.phase', $phase);
         }
 
         // Clone query to calculate counts for API response
