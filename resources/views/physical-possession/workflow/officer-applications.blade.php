@@ -20,13 +20,22 @@
                     <p class="text-muted small mb-0">List of physical possession applications currently under verification or scheduled.</p>
                 </div>
                 <form action="{{ route('pp.officer.possession-applications') }}" method="GET" class="d-flex gap-2 align-items-center">
+                    @if(request('status'))
+                        <input type="hidden" name="status" value="{{ request('status') }}">
+                    @endif
+                    <select name="phase" onchange="this.form.submit()" class="form-select form-select-sm border rounded px-3 fw-semibold text-muted" style="font-size: 0.75rem; max-width: 130px; height: 38px;">
+                        <option value="">All Phases</option>
+                        @foreach ([1, 2] as $pOpt)
+                            <option value="{{ $pOpt }}" {{ (string)($phase ?? '') === (string)$pOpt ? 'selected' : '' }}>Phase {{ $pOpt }}</option>
+                        @endforeach
+                    </select>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Name, Mobile, Application No..." value="{{ $search }}">
                     </div>
                     <button type="submit" class="btn btn-primary px-4 btn-action">Search</button>
-                    @if($search)
-                        <a href="{{ route('pp.officer.possession-applications') }}" class="btn btn-outline-secondary btn-action">Reset</a>
+                    @if($search || ($phase ?? ''))
+                        <a href="{{ route('pp.officer.possession-applications', request('status') ? ['status' => request('status')] : []) }}" class="btn btn-outline-secondary btn-action">Reset</a>
                     @endif
                 </form>
             </div>
@@ -52,6 +61,11 @@
                                 </td>
                                 <td>
                                     <span class="fw-bold text-dark">{{ $app->application_number }}</span>
+                                    @if(isset($app->purchaser_phase))
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-1.5 py-0.5 rounded ms-2" style="font-size: 0.6rem;">
+                                            Phase {{ $app->purchaser_phase }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-dark">{{ $app->applicant_name }}</div>

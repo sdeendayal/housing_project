@@ -28,6 +28,15 @@ class PpOfficerController extends Controller
         // $this->ensureDistrictApplications($officer);
         $query = $this->districtApplicationsQuery($officer);
 
+        $phase = $request->input('phase');
+        if ($phase) {
+            $query->whereIn('physical_possession_applications.private_purchaser_id', function ($q) use ($phase) {
+                $q->select('PrivatePurchaserId')
+                  ->from('property_private_purchasers')
+                  ->where('phase', $phase);
+            });
+        }
+
         // Fetch eligibleCount first because we use it in stats
         // Calculate count of eligible applicants who are not yet scheduled/initiated
         $receiptsQuery = DB::table('cash_receipt_details')
@@ -58,6 +67,10 @@ class PpOfficerController extends Controller
             $eligibleQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $eligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $eligibleQuery->where('ppp.phase', $phase);
         }
 
         $eligibleCount = $eligibleQuery->count();
@@ -126,6 +139,10 @@ class PpOfficerController extends Controller
             $purchasersQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
+        if ($phase) {
+            $purchasersQuery->where('ppp.phase', $phase);
+        }
+
         $purchasersQuery->select([
             'pad.PropertyAuctionId',
             'pad.AssetId',
@@ -176,7 +193,8 @@ class PpOfficerController extends Controller
             'weekTotal',
             'eligibleCount',
             'purchasers',
-            'search'
+            'search',
+            'phase'
         ));
     }
 

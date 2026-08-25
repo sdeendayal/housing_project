@@ -26,12 +26,18 @@
                     <p class="text-muted small mb-0">Applicants whose total payments are at least ₹60,000 (auto-aggregated from cash receipts).</p>
                 </div>
                 <form action="{{ route('pp.officer.eligibility-list') }}" method="GET" class="d-flex gap-2 align-items-center">
+                    <select name="phase" onchange="this.form.submit()" class="form-select form-select-sm border rounded px-3 fw-semibold text-muted" style="font-size: 0.75rem; max-width: 130px; height: 38px;">
+                        <option value="">All Phases</option>
+                        @foreach ([1, 2] as $pOpt)
+                            <option value="{{ $pOpt }}" {{ (string)($phase ?? '') === (string)$pOpt ? 'selected' : '' }}>Phase {{ $pOpt }}</option>
+                        @endforeach
+                    </select>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" name="search" class="form-control border-start-0 ps-0" placeholder="Name, Mobile, Application No..." value="{{ $search }}">
                     </div>
                     <button type="submit" class="btn btn-primary px-4 btn-schedule">Search</button>
-                    @if($search)
+                    @if($search || ($phase ?? ''))
                         <a href="{{ route('pp.officer.eligibility-list') }}" class="btn btn-outline-secondary btn-schedule">Reset</a>
                     @endif
                 </form>
@@ -67,7 +73,14 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-slate-700">{{ $p->AssetName }}</div>
-                                    <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
+                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                        <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
+                                        @if(isset($p->phase))
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-1.5 py-0.5 rounded" style="font-size: 0.6rem;">
+                                                Phase {{ $p->phase }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-success">₹ {{ number_format($p->total_paid, 2) }}</div>

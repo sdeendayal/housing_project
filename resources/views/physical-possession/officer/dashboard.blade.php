@@ -421,12 +421,18 @@
                 <p class="text-muted mb-0" style="font-size: 0.7rem;">Applicants with paid amount >= ₹60,000. Action required to propose slot dates.</p>
             </div>
             <form action="{{ route('pp.officer.dashboard') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
+                <select name="phase" onchange="this.form.submit()" class="form-select form-select-sm border rounded-pill px-3 fw-semibold text-muted" style="font-size: 0.7rem; max-width: 120px; height: 31px;">
+                    <option value="">All Phases</option>
+                    @foreach ([1, 2] as $pOpt)
+                        <option value="{{ $pOpt }}" {{ (string)($phase ?? '') === (string)$pOpt ? 'selected' : '' }}>Phase {{ $pOpt }}</option>
+                    @endforeach
+                </select>
                 <div class="input-group input-group-sm" style="max-width: 250px;">
                     <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
                     <input type="text" name="search" class="form-control border-start-0 ps-0" style="font-size: 0.72rem;" placeholder="Search name, mobile..." value="{{ $search ?? '' }}">
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm px-3 rounded-pill fw-bold" style="font-size: 0.7rem;">Search</button>
-                @if($search)
+                @if($search || ($phase ?? ''))
                     <a href="{{ route('pp.officer.dashboard') }}" class="btn btn-outline-secondary btn-sm px-2 rounded-pill" style="font-size: 0.7rem;">Reset</a>
                 @endif
             </form>
@@ -462,7 +468,14 @@
                             </td>
                             <td>
                                 <div class="fw-semibold text-slate-700">{{ $p->AssetName }}</div>
-                                <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
+                                <div class="d-flex align-items-center gap-2 mt-0.5">
+                                    <small class="text-muted">Size: {{ $p->AssetSize }} {{ $p->Unit }}</small>
+                                    @if(isset($p->phase))
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-1.5 py-0.5 rounded" style="font-size: 0.6rem;">
+                                            Phase {{ $p->phase }}
+                                        </span>
+                                    @endif
+                                </div>
                             </td>
                             <td>
                                 <div class="fw-bold text-success">₹ {{ number_format($p->total_paid, 2) }}</div>

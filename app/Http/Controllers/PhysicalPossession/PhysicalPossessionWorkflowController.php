@@ -22,6 +22,7 @@ class PhysicalPossessionWorkflowController extends Controller
     public function officerEligibilityList(Request $request)
     {
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         // $this->ensureDistrictApplications($officer);
 
@@ -50,6 +51,10 @@ class PhysicalPossessionWorkflowController extends Controller
             $query->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $query->where('ppp.phase', $phase);
         }
 
         $query->select([
@@ -91,7 +96,7 @@ class PhysicalPossessionWorkflowController extends Controller
 
         $purchasers = $query->paginate(25)->withQueryString();
 
-        return view('physical-possession.workflow.officer-eligibility', compact('purchasers', 'search', 'officer'));
+        return view('physical-possession.workflow.officer-eligibility', compact('purchasers', 'search', 'officer', 'phase'));
     }
 
     /**
@@ -508,25 +513,28 @@ class PhysicalPossessionWorkflowController extends Controller
     public function officerApplications(Request $request)
     {
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         // $this->ensureDistrictApplications($officer);
 
         $query = PhysicalPossessionApplication::query()
-            ->whereNotNull('physical_possession_status');
+            ->leftJoin('property_private_purchasers as ppp', 'physical_possession_applications.private_purchaser_id', '=', 'ppp.PrivatePurchaserId')
+            ->whereNotNull('physical_possession_applications.physical_possession_status')
+            ->select('physical_possession_applications.*', 'ppp.phase as purchaser_phase');
 
         if ($officer->district_id) {
-            $query->where('district_id', $officer->district_id);
+            $query->where('physical_possession_applications.district_id', $officer->district_id);
         } elseif ($officer->district_name) {
-            $query->where('district_name', 'like', '%' . $officer->district_name . '%');
+            $query->where('physical_possession_applications.district_name', 'like', '%' . $officer->district_name . '%');
         }
 
         // Status filter
         $status = $request->input('status');
         if ($status) {
             if ($status === 'Physical Possession Submitted') {
-                $query->whereIn('physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
+                $query->whereIn('physical_possession_applications.physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
             } else {
-                $query->where('physical_possession_status', $status);
+                $query->where('physical_possession_applications.physical_possession_status', $status);
             }
         }
 
@@ -534,15 +542,24 @@ class PhysicalPossessionWorkflowController extends Controller
         $search = $request->input('search');
         if ($search) {
             $query->where(function ($q) use ($search) {
-                $q->where('applicant_name', 'like', "%{$search}%")
-                  ->orWhere('mobile', 'like', "%{$search}%")
-                  ->orWhere('application_number', 'like', "%{$search}%");
+                $q->where('physical_possession_applications.applicant_name', 'like', "%{$search}%")
+                  ->orWhere('physical_possession_applications.mobile', 'like', "%{$search}%")
+                  ->orWhere('physical_possession_applications.application_number', 'like', "%{$search}%");
             });
         }
 
-        $applications = $query->latest()->paginate(25)->withQueryString();
+        // Phase filter
+        if ($phase) {
+            $query->whereIn('physical_possession_applications.private_purchaser_id', function ($q) use ($phase) {
+                $q->select('PrivatePurchaserId')
+                  ->from('property_private_purchasers')
+                  ->where('phase', $phase);
+            });
+        }
 
-        return view('physical-possession.workflow.officer-applications', compact('applications', 'search', 'officer'));
+        $applications = $query->orderBy('physical_possession_applications.created_at', 'desc')->paginate(25)->withQueryString();
+
+        return view('physical-possession.workflow.officer-applications', compact('applications', 'search', 'officer', 'phase'));
     }
 
     /**
@@ -1138,6 +1155,7 @@ class PhysicalPossessionWorkflowController extends Controller
     public function officerCasteEligibility(Request $request)
     {
         $officer = Auth::user();
+        $phase = $request->input('phase');
 
         $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
 
@@ -1166,6 +1184,10 @@ class PhysicalPossessionWorkflowController extends Controller
             $query->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $query->where('ppp.phase', $phase);
         }
 
         // Clone query to calculate counts for cards
@@ -1308,7 +1330,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'casteCategories',
             'selectedCategory',
             'officer',
-            'search'
+            'search',
+            'phase'
         ));
     }
 
@@ -1316,6 +1339,7 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $officer = Auth::user();
         $selectedCategory = $request->input('category') ? strtoupper($request->input('category')) : null;
+        $phase = $request->input('phase');
 
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')
@@ -1341,6 +1365,10 @@ class PhysicalPossessionWorkflowController extends Controller
             $query->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
             $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+        }
+
+        if ($phase) {
+            $query->where('ppp.phase', $phase);
         }
 
         if ($selectedCategory) {
@@ -1456,6 +1484,7 @@ class PhysicalPossessionWorkflowController extends Controller
             'Father/Husband Name',
             'Mobile No.',
             'Caste Category',
+            'Phase',
             'Property Name',
             'Property Size',
             'Total Paid (₹)',
@@ -1505,16 +1534,17 @@ class PhysicalPossessionWorkflowController extends Controller
                 $mmsaySub = 'Scheduled Caste';
             }
             $sheet->setCellValue('G' . $row, $mmsaySub);
-            $sheet->setCellValue('H' . $row, $r->AssetName ?? '—');
-            $sheet->setCellValue('I' . $row, ($r->AssetSize ?? '') . ' ' . ($r->Unit ?? ''));
-            $sheet->setCellValue('J' . $row, $r->total_paid);
-            $sheet->setCellValue('K' . $row, $r->FlatCost);
-            $sheet->setCellValue('L' . $row, $r->physical_possession_status ?? 'Not Initiated');
+            $sheet->setCellValue('H' . $row, $r->phase ?? '—');
+            $sheet->setCellValue('I' . $row, $r->AssetName ?? '—');
+            $sheet->setCellValue('J' . $row, ($r->AssetSize ?? '') . ' ' . ($r->Unit ?? ''));
+            $sheet->setCellValue('K' . $row, $r->total_paid);
+            $sheet->setCellValue('L' . $row, $r->FlatCost);
+            $sheet->setCellValue('M' . $row, $r->physical_possession_status ?? 'Not Initiated');
             $row++;
         }
 
         // Auto size columns
-        foreach (range('A', 'L') as $columnID) {
+        foreach (range('A', 'M') as $columnID) {
             $sheet->getColumnDimension($columnID)->setAutoSize(true);
         }
 

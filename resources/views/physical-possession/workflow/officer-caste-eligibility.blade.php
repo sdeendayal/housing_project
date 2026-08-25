@@ -106,28 +106,17 @@
                     </h6>
                 </div>
                 
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <form action="{{ route('pp.officer.caste-eligibility') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
-                        @if($selectedCategory)
-                            <input type="hidden" name="category" value="{{ $selectedCategory }}">
-                        @endif
-                        <div class="input-group input-group-sm">
+                <div class="d-flex flex-wrap flex-md-nowrap align-items-center gap-2">
+                    <form action="{{ route('pp.officer.caste-eligibility') }}" method="GET" class="d-flex flex-wrap flex-md-nowrap align-items-center gap-2 mb-0">
+                        <div class="input-group input-group-sm" style="width: 240px;">
                             <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search fs-8"></i></span>
-                            <input type="text" name="search" class="form-control border-start-0 ps-0" style="min-width: 180px; font-size: 0.72rem; height: 32px;" placeholder="Search name, mobile, app no..." value="{{ $search ?? '' }}">
+                            <input type="text" name="search" class="form-control border-start-0 ps-0" style="font-size: 0.72rem; height: 32px;" placeholder="Search name, mobile..." value="{{ $search ?? '' }}">
                         </div>
                         <button type="submit" class="btn btn-sm btn-primary py-1 px-2.5 fs-8 fw-bold" style="height: 32px; line-height: 22px; border-radius: 4px;">Search</button>
-                        @if($search)
-                            <a href="{{ route('pp.officer.caste-eligibility', ['category' => $selectedCategory]) }}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fs-8" style="height: 32px; line-height: 22px; border-radius: 4px;">Reset</a>
-                        @endif
-                    </form>
 
-                    <form action="{{ route('pp.officer.caste-eligibility') }}" method="GET" class="d-flex gap-2 align-items-center mb-0">
-                        @if($search)
-                            <input type="hidden" name="search" value="{{ $search }}">
-                        @endif
-                        <div class="input-group input-group-sm">
+                        <div class="input-group input-group-sm" style="width: 170px;">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-funnel fs-8"></i></span>
-                            <select name="category" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" style="min-width: 150px; font-size: 0.72rem; height: 32px; font-weight: 500;">
+                            <select name="category" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" style="font-size: 0.72rem; height: 32px; font-weight: 500;">
                                 <option value="">All Categories</option>
                                 <option value="GJ" {{ $selectedCategory === 'GJ' ? 'selected' : '' }}>Ghumantu Jati</option>
                                 <option value="W" {{ $selectedCategory === 'W' ? 'selected' : '' }}>Widows</option>
@@ -135,12 +124,22 @@
                                 <option value="other" {{ $selectedCategory === 'other' ? 'selected' : '' }}>Other</option>
                             </select>
                         </div>
-                        @if($selectedCategory)
-                            <a href="{{ route('pp.officer.caste-eligibility', ['search' => $search]) }}" class="btn btn-sm btn-outline-secondary py-1 px-2.5 fs-8" style="height: 32px; line-height: 22px; border-radius: 4px;">Reset Filter</a>
+
+                        <div class="input-group input-group-sm" style="width: 130px;">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar3 fs-8"></i></span>
+                            <select name="phase" class="form-select form-select-sm border-start-0 ps-1" onchange="this.form.submit()" style="font-size: 0.72rem; height: 32px; font-weight: 500;">
+                                <option value="">All Phases</option>
+                                <option value="1" {{ (string)($phase ?? '') === '1' ? 'selected' : '' }}>Phase 1</option>
+                                <option value="2" {{ (string)($phase ?? '') === '2' ? 'selected' : '' }}>Phase 2</option>
+                            </select>
+                        </div>
+
+                        @if($search || $selectedCategory || $phase)
+                            <a href="{{ route('pp.officer.caste-eligibility') }}" class="btn btn-sm btn-outline-secondary py-1 px-2 fs-8" style="height: 32px; line-height: 22px; border-radius: 4px;">Reset</a>
                         @endif
                     </form>
                     
-                    <a href="{{ route('pp.officer.caste-eligibility.export', ['category' => $selectedCategory, 'search' => $search]) }}" class="btn btn-sm btn-success py-1 px-3 fs-8 d-flex align-items-center gap-1.5" style="height: 32px; font-weight: 600; line-height: 22px; border-radius: 6px; box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2);">
+                    <a href="{{ route('pp.officer.caste-eligibility.export', ['category' => $selectedCategory, 'search' => $search, 'phase' => $phase]) }}" class="btn btn-sm btn-success py-1 px-3 fs-8 d-flex align-items-center gap-1.5" style="height: 32px; font-weight: 600; line-height: 22px; border-radius: 6px; box-shadow: 0 2px 4px rgba(25, 135, 84, 0.2); white-space: nowrap;">
                         <i class="bi bi-file-earmark-excel-fill"></i> Download Excel
                     </a>
                 </div>
@@ -152,7 +151,7 @@
     <div class="row g-3 mb-3">
         <!-- All Categories -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['search' => $search]) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['search' => $search, 'phase' => $phase]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-all {{ !$selectedCategory ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -169,7 +168,7 @@
 
         <!-- Ghumantu Jati -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'GJ', 'search' => $search]) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'GJ', 'search' => $search, 'phase' => $phase]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-gj {{ $selectedCategory === 'GJ' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -186,7 +185,7 @@
 
         <!-- Widows -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'W', 'search' => $search]) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'W', 'search' => $search, 'phase' => $phase]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-w {{ $selectedCategory === 'W' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -203,7 +202,7 @@
 
         <!-- Scheduled Caste -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'SC', 'search' => $search]) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'SC', 'search' => $search, 'phase' => $phase]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-sc {{ $selectedCategory === 'SC' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -220,7 +219,7 @@
 
         <!-- Other -->
         <div class="col-lg col-md-4 col-sm-6">
-            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'other', 'search' => $search]) }}" class="text-decoration-none">
+            <a href="{{ route('pp.officer.caste-eligibility', ['category' => 'other', 'search' => $search, 'phase' => $phase]) }}" class="text-decoration-none">
                 <div class="card category-card card-theme-other {{ $selectedCategory === 'OTHER' ? 'active' : '' }} h-100 shadow-sm border-0">
                     <div class="card-body p-3 d-flex align-items-center justify-content-between">
                         <div>
@@ -307,7 +306,14 @@
                                 </td>
                                 <td>
                                     <div class="fw-semibold text-slate-700 fs-7.5 lh-sm">{{ $p->AssetName }}</div>
-                                    <div class="text-muted fs-9">Size: {{ $p->AssetSize }} {{ $p->Unit }}</div>
+                                    <div class="d-flex align-items-center gap-2 mt-0.5">
+                                        <div class="text-muted fs-9">Size: {{ $p->AssetSize }} {{ $p->Unit }}</div>
+                                        @if(isset($p->phase))
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-1.5 py-0.5 rounded" style="font-size: 0.6rem;">
+                                                Phase {{ $p->phase }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <div class="fw-bold text-success fs-7.5 lh-sm">₹ {{ number_format($p->total_paid) }}</div>
