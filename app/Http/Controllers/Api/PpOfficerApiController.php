@@ -414,8 +414,13 @@ class PpOfficerApiController extends Controller
     /**
      * Show scheduling details for a purchaser.
      */
-    public function scheduleForm(PhysicalPossessionApplication $application)
+    public function scheduleForm($idOrNo)
     {
+        $application = $this->getOrBuildApplication($idOrNo, false);
+        if (!$application) {
+            return response()->json(['success' => false, 'message' => 'Applicant and property details not found.'], 404);
+        }
+
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return response()->json([
                 'success' => false,
@@ -577,7 +582,7 @@ class PpOfficerApiController extends Controller
             $applicationDirty = true;
         }
 
-        if ($applicationDirty) {
+        if ($applicationDirty && $application->exists) {
             $application->save();
         }
 
@@ -620,7 +625,10 @@ class PpOfficerApiController extends Controller
      */
     public function scheduleSave(Request $request, $secure_id)
     {
-        $application = PhysicalPossessionApplication::where('secure_id', $secure_id)->firstOrFail();
+        $application = $this->getOrBuildApplication($secure_id, true);
+        if (!$application) {
+            return response()->json(['success' => false, 'message' => 'Application not found.'], 404);
+        }
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return response()->json([
                 'success' => false,
@@ -1612,6 +1620,112 @@ class PpOfficerApiController extends Controller
             'purchasers' => $purchasers,
             'casteCategories' => $casteCategories,
         ]);
+    }
+
+    /**
+     * Get or build a physical possession application on-the-fly.
+     */
+    private function getOrBuildApplication($idOrNo, $persist = false)
+    {
+        $app = PhysicalPossessionApplication::where('id', $idOrNo)
+            ->orWhere('secure_id', $idOrNo)
+            ->orWhere('application_number', $idOrNo)
+            ->first();
+            
+        if ($app) {
+            return $app;
+        }
+
+        $receiptsQuery = DB::table('cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(total_paid_amount) as receipt_total')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        $p = DB::table('property_auction_detail as pad')
+            ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+            ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+            ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+            ->where('pad.IsActive', 1)
+            ->where('pad.IsDeleted', 0)
+            ->where(function($q) use ($idOrNo) {
+                $q->where('ppp.ApplicationNo', $idOrNo)
+                  ->orWhere('ppp.PrivatePurchaserId', $idOrNo);
+            })
+            ->select([
+                'pad.AssetId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pad.BalanceAmount',
+                'ppp.PrivatePurchaserName',
+                'ppp.PurchaserFatherName',
+                'ppp.Address',
+                'ppp.MobileNo',
+                'ppp.ApplicationNo',
+                'ppp.PrivatePurchaserId as PurchaserID',
+                'ppp.DistrictId',
+                'd.DistrictName'
+            ])
+            ->first();
+
+        if (!$p) {
+            return null;
+        }
+
+        if ($persist) {
+            $user = User::where('private_purchaser_id', $p->PurchaserID)
+                ->orWhere('mobile', $p->MobileNo)
+                ->first();
+
+            if (!$user) {
+                $user = User::create([
+                    'name' => $p->PrivatePurchaserName,
+                    'mobile' => $p->MobileNo,
+                    'role' => 'citizen',
+                    'private_purchaser_id' => $p->PurchaserID,
+                ]);
+            } else {
+                if (empty($user->private_purchaser_id)) {
+                    $user->private_purchaser_id = $p->PurchaserID;
+                    $user->save();
+                }
+            }
+
+            return PhysicalPossessionApplication::create([
+                'user_id' => $user->id,
+                'private_purchaser_id' => $p->PurchaserID,
+                'asset_id' => $p->AssetId,
+                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                'slip_id' => 'SLIP-' . uniqid(),
+                'district_id' => $p->DistrictId,
+                'district_name' => $p->DistrictName,
+                'mobile' => $p->MobileNo,
+                'applicant_name' => $p->PrivatePurchaserName,
+                'father_name' => $p->PurchaserFatherName ?? '',
+                'address' => $p->Address ?? '',
+                'flat_cost' => $p->FlatCost,
+                'received_amount' => $p->ReceivedAmount,
+                'balance_amount' => $p->BalanceAmount,
+                'physical_possession_status' => 'Eligible for Physical Possession',
+                'status' => 'pending',
+            ]);
+        }
+
+        $app = new PhysicalPossessionApplication();
+        $app->private_purchaser_id = $p->PurchaserID;
+        $app->asset_id = $p->AssetId;
+        $app->mobile = $p->MobileNo;
+        $app->applicant_name = $p->PrivatePurchaserName;
+        $app->father_name = $p->PurchaserFatherName ?? '';
+        $app->address = $p->Address ?? '';
+        $app->flat_cost = $p->FlatCost;
+        $app->received_amount = $p->ReceivedAmount;
+        $app->balance_amount = $p->BalanceAmount;
+        $app->physical_possession_status = 'Eligible for Physical Possession';
+        $app->status = 'pending';
+        $app->secure_id = $p->PurchaserID;
+        return $app;
     }
 }
 
