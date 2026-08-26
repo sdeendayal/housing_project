@@ -76,122 +76,112 @@ class MmgayBdoApiController extends Controller
             $ppaQuery->where('mpa.block_id', $blockMasterId);
         }
 
-        $bypassApi = env('MMGAY_POSSESSION_BYPASS_API', app()->environment('local'));
-
-        if ($bypassApi) {
-            // 1. Total Eligible (All registered owners in BDO block)
-            $totalEligibleQuery = DB::table('ownermaster as o')
-                ->where('o.IsApproved', 1)
-                ->where('o.IsPaid', 1)
-                ->whereIn('o.OwnerId', function ($q) {
-                    $q->select(DB::raw('MIN(OwnerId)'))
-                        ->from('ownermaster')
-                        ->groupBy('FlatId');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('villagemaster as v')
-                        ->whereColumn('v.VillageId', 'o.VillageId')
-                        ->whereNotNull('v.plots')
-                        ->whereNotNull('v.phase');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('flatmaster as f')
-                        ->whereColumn('f.FlatId', 'o.FlatId');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function($q) {
-                            $q->where(function($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
+        // 1. Total Eligible (All registered owners in BDO block)
+        $totalEligibleQuery = DB::table('ownermaster as o')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
-                });
-            if ($blockMasterId) {
-                $totalEligibleQuery->where('o.BlockId', $blockMasterId);
-            }
-            $totalEligibleCount = $totalEligibleQuery->count();
-
-            // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
-            $notScheduledQuery = DB::table('ownermaster as o')
-                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
-                ->where('o.IsApproved', 1)
-                ->where('o.IsPaid', 1)
-                ->whereIn('o.OwnerId', function ($q) {
-                    $q->select(DB::raw('MIN(OwnerId)'))
-                        ->from('ownermaster')
-                        ->groupBy('FlatId');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('villagemaster as v')
-                        ->whereColumn('v.VillageId', 'o.VillageId')
-                        ->whereNotNull('v.plots')
-                        ->whereNotNull('v.phase');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('flatmaster as f')
-                        ->whereColumn('f.FlatId', 'o.FlatId');
-                })
-                ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function($q) {
-                            $q->where(function($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
-                });
-            if ($blockMasterId) {
-                $notScheduledQuery->where('o.BlockId', $blockMasterId);
-            }
-            $notScheduledQuery->where(function($q) {
-                $q->whereNull('ppa.id')
-                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+                    });
             });
-            $notScheduledCount = $notScheduledQuery->count();
-        } else {
-            // 1. Total Eligible (All owners verified/synced from HFA API in BDO block)
-            $totalEligibleCount = (clone $ppaQuery)->count();
-
-            // 2. Not Scheduled (Synced owners whose schedule is pending)
-            $notScheduledCount = (clone $ppaQuery)->where('mpa.physical_possession_status', 'Eligible for Physical Possession')->count();
+        if ($blockMasterId) {
+            $totalEligibleQuery->where('o.BlockId', $blockMasterId);
         }
+        $totalEligibleCount = $totalEligibleQuery->count();
+
+        // 2. Not Scheduled (All registered owners in BDO block who do not have scheduled physical possession)
+        $notScheduledQuery = DB::table('ownermaster as o')
+            ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereIn('o.OwnerId', function ($q) {
+                $q->select(DB::raw('MIN(OwnerId)'))
+                    ->from('ownermaster')
+                    ->groupBy('FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('villagemaster as v')
+                    ->whereColumn('v.VillageId', 'o.VillageId')
+                    ->whereNotNull('v.plots')
+                    ->whereNotNull('v.phase');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('flatmaster as f')
+                    ->whereColumn('f.FlatId', 'o.FlatId');
+            })
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('registary as r')
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
+                        });
+                    });
+            });
+        if ($blockMasterId) {
+            $notScheduledQuery->where('o.BlockId', $blockMasterId);
+        }
+        $notScheduledQuery->where(function($q) {
+            $q->whereNull('ppa.id')
+              ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+        });
+        $notScheduledCount = $notScheduledQuery->count();
 
 
 
@@ -273,7 +263,7 @@ class MmgayBdoApiController extends Controller
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
                     ->from('ownermaster')
-                    ->groupBy('MobileNo');
+                    ->groupBy('FlatId');
             })
             ->leftJoin('mmgay_possession_applications as ppa', function ($join) {
                 $join->on('o.OwnerId', '=', 'ppa.owner_id');
@@ -676,7 +666,7 @@ class MmgayBdoApiController extends Controller
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
                     ->from('ownermaster')
-                    ->groupBy('MobileNo');
+                    ->groupBy('FlatId');
             })
             ->select('mmgay_possession_applications.*')
             ->where('mmgay_possession_applications.physical_possession_status', '!=', 'Eligible for Physical Possession');
