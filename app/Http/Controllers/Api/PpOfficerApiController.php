@@ -1724,6 +1724,7 @@ class PpOfficerApiController extends Controller
         }
 
         $app = new PhysicalPossessionApplication();
+        $app->id = 0;
         $app->private_purchaser_id = $p->PurchaserID;
         $app->asset_id = $p->AssetId;
         $app->district_id = $p->DistrictId;
@@ -1737,7 +1738,8 @@ class PpOfficerApiController extends Controller
         $app->balance_amount = $p->BalanceAmount;
         $app->physical_possession_status = 'Eligible for Physical Possession';
         $app->status = 'pending';
-        $app->secure_id = $p->PurchaserID;
+        $app->secure_id = (string) $p->PurchaserID;
+        $app->application_secure_id = (string) $p->PurchaserID;
         return $app;
     }
 }
