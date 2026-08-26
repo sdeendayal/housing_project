@@ -346,6 +346,9 @@ class PpOfficerApiController extends Controller
 
         $purchasers = $purchaserQuery->paginate(25)->withQueryString();
         $purchasers->getCollection()->transform(function ($item) {
+            if (isset($item->secure_id)) {
+                $item->secure_id = (string) $item->secure_id;
+            }
             if (isset($item->physical_possession_status)) {
                 $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
             }
@@ -963,6 +966,9 @@ class PpOfficerApiController extends Controller
         }
 
         $applications->getCollection()->transform(function ($item) {
+            if (isset($item->secure_id)) {
+                $item->secure_id = (string) $item->secure_id;
+            }
             if (isset($item->physical_possession_status)) {
                 $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
             }
@@ -1590,7 +1596,8 @@ class PpOfficerApiController extends Controller
             'pr.Unit',
             'ppa.id as application_id',
             'ppa.secure_id as application_secure_id',
-            'ppa.physical_possession_status',
+            DB::raw("COALESCE(ppa.secure_id, ppp.PrivatePurchaserId) as secure_id"),
+            DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as physical_possession_status"),
             DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ]);
 
@@ -1610,6 +1617,9 @@ class PpOfficerApiController extends Controller
 
         $purchasers = $purchaserQuery->paginate(25)->withQueryString();
         $purchasers->getCollection()->transform(function ($item) {
+            if (isset($item->secure_id)) {
+                $item->secure_id = (string) $item->secure_id;
+            }
             if (isset($item->physical_possession_status)) {
                 $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
             }
