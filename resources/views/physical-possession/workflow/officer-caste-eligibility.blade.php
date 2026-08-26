@@ -320,44 +320,37 @@
                                     <div class="text-muted fs-9">Cost: ₹ {{ number_format($p->FlatCost) }}</div>
                                 </td>
                                 <td class="text-center">
-                                    @if($p->physical_possession_status)
-                                        @php
-                                            $badgeClass = match ($p->physical_possession_status) {
-                                                'Eligible for Physical Possession' => 'bg-info bg-opacity-10 text-info border border-info border-opacity-20',
-                                                'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
-                                                'Slot Selected' => 'bg-primary text-white border border-primary',
-                                                'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
-                                                'Site Verified' => 'bg-info text-white border border-info shadow-sm',
-                                                'Verified' => 'bg-success text-white border border-success shadow-sm',
-                                                'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
-                                                default => 'bg-secondary text-white border border-secondary'
-                                            };
-                                        @endphp
-                                        <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 fs-9 font-weight-600">
-                                            {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($p->physical_possession_status) }}
-                                        </span>
-                                    @else
-                                        <span class="text-muted fs-9 italic">Not Initiated</span>
-                                    @endif
+                                    @php
+                                        $status = $p->physical_possession_status ?? 'Eligible for Physical Possession';
+                                        $badgeClass = match ($status) {
+                                            'Eligible for Physical Possession' => 'bg-info bg-opacity-10 text-info border border-info border-opacity-20',
+                                            'Visit Scheduled' => 'bg-warning bg-opacity-10 text-warning-emphasis border border-warning border-opacity-20',
+                                            'Slot Selected' => 'bg-primary text-white border border-primary',
+                                            'Physical Possession Submitted' => 'bg-primary text-white border border-primary',
+                                            'Site Verified' => 'bg-info text-white border border-info shadow-sm',
+                                            'Verified' => 'bg-success text-white border border-success shadow-sm',
+                                            'Rejected' => 'bg-danger text-white border border-danger shadow-sm',
+                                            default => 'bg-secondary text-white border border-secondary'
+                                        };
+                                    @endphp
+                                    <span class="badge {{ $badgeClass }} px-2 py-1 rounded-2 fs-9 font-weight-600">
+                                        {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($status) }}
+                                    </span>
                                 </td>
                                 <td class="text-end pe-3">
-                                     @if(!$p->application_secure_id)
-                                         <button class="btn btn-outline-secondary btn-action text-nowrap rounded" disabled>
-                                             <i class="bi bi-slash-circle me-1"></i>Not Initiated
-                                         </button>
-                                     @elseif($p->physical_possession_status === 'Eligible for Physical Possession')
-                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}?from=caste" class="btn btn-primary btn-action text-nowrap rounded shadow-sm">
+                                     @if($status === 'Eligible for Physical Possession')
+                                         <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id ?? $p->PurchaserID) }}?from=caste" class="btn btn-primary btn-action text-nowrap rounded shadow-sm">
                                              <i class="bi bi-calendar-plus me-1"></i>Schedule Visit
                                          </a>
-                                     @elseif($p->physical_possession_status === 'Visit Scheduled')
+                                     @elseif($status === 'Visit Scheduled')
                                          <a href="{{ route('pp.officer.schedule-form', $p->application_secure_id) }}?from=caste" class="btn btn-outline-secondary btn-action text-nowrap rounded">
                                              <i class="bi bi-pencil-square me-1"></i>Update
                                          </a>
-                                     @elseif($p->physical_possession_status === 'Slot Selected')
+                                     @elseif($status === 'Slot Selected')
                                          <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}?from=caste" class="btn btn-success btn-action text-nowrap rounded text-white shadow-sm">
                                              <i class="bi bi-shield-check me-1"></i>Perform Visit
                                          </a>
-                                     @elseif($p->physical_possession_status === 'Site Verified')
+                                     @elseif($status === 'Site Verified')
                                          <a href="{{ route('pp.officer.verify-form', $p->application_secure_id) }}?from=caste" class="btn btn-info btn-action text-nowrap rounded text-white shadow-sm">
                                              <i class="bi bi-file-earmark-arrow-up me-1"></i>E-Verify
                                          </a>

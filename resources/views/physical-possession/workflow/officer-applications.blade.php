@@ -1,7 +1,14 @@
 @extends('physical-possession.layouts.officer')
 
-@section('title', 'Physical Possession Applications')
-@section('page-title', 'Possession Applications')
+@php
+    $displayStatus = ($status && $status !== 'all') ? \App\Models\PhysicalPossessionApplication::getDisplayStatus($status) : 'All Applications';
+    if ($displayStatus === 'Eligible for Physical Possession') {
+        $displayStatus = 'Schedule Pending';
+    }
+@endphp
+
+@section('title', $displayStatus)
+@section('page-title', $displayStatus)
 
 @section('content')
 <div class="container-fluid py-4">
@@ -16,8 +23,8 @@
         <div class="card-body p-4">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
                 <div>
-                    <h5 class="fw-bold mb-1 text-dark">All Applications</h5>
-                    <p class="text-muted small mb-0">List of physical possession applications currently under verification or scheduled.</p>
+                    <h5 class="fw-bold mb-1 text-dark">{{ $displayStatus }}</h5>
+                    <p class="text-muted small mb-0">List of physical possession applications currently in stage: {{ $displayStatus }}.</p>
                 </div>
                 <form action="{{ route('pp.officer.possession-applications') }}" method="GET" class="d-flex gap-2 align-items-center">
                     @if(request('status'))

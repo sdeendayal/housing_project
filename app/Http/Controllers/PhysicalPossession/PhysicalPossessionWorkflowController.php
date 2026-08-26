@@ -24,7 +24,7 @@ class PhysicalPossessionWorkflowController extends Controller
         $officer = Auth::user();
         $phase = $request->input('phase');
 
-        $this->ensureDistrictApplications($officer);
+        // $this->ensureDistrictApplications($officer);
 
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')
@@ -157,7 +157,7 @@ class PhysicalPossessionWorkflowController extends Controller
      */
     public function officerScheduleForm($applicationIdOrNo)
     {
-        $application = $this->getOrCreateApplication($applicationIdOrNo);
+        $application = $this->getOrBuildApplication($applicationIdOrNo, false);
         if (!$application) {
             return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
         }
@@ -235,7 +235,7 @@ class PhysicalPossessionWorkflowController extends Controller
 
     public function officerScheduleSave(Request $request, $applicationIdOrNo)
     {
-        $application = $this->getOrCreateApplication($applicationIdOrNo);
+        $application = $this->getOrBuildApplication($applicationIdOrNo, true);
         if (!$application) {
             return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
         }
@@ -514,52 +514,119 @@ class PhysicalPossessionWorkflowController extends Controller
     {
         $officer = Auth::user();
         $phase = $request->input('phase');
-
-        $this->ensureDistrictApplications($officer);
-
-        $query = PhysicalPossessionApplication::query()
-            ->leftJoin('property_private_purchasers as ppp', 'physical_possession_applications.private_purchaser_id', '=', 'ppp.PrivatePurchaserId')
-            ->whereNotNull('physical_possession_applications.physical_possession_status')
-            ->select('physical_possession_applications.*', 'ppp.phase as purchaser_phase');
-
-        if ($officer->district_id) {
-            $query->where('physical_possession_applications.district_id', $officer->district_id);
-        } elseif ($officer->district_name) {
-            $query->where('physical_possession_applications.district_name', 'like', '%' . $officer->district_name . '%');
-        }
-
-        // Status filter
         $status = $request->input('status');
-        if ($status) {
+        $search = $request->input('search');
+
+        if (!$status || $status === 'all' || $status === 'Eligible for Physical Possession') {
+            $receiptsQuery = DB::table('cash_receipt_details')
+                ->select('asset_number')
+                ->selectRaw('SUM(total_paid_amount) as receipt_total')
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->groupBy('asset_number');
+
+            $query = DB::table('property_auction_detail as pad')
+                ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
+                ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
+                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('physical_possession_applications as ppa', function ($join) {
+                    $join->on('pad.PurchaserID', '=', 'ppa.private_purchaser_id')
+                         ->on('pad.AssetId', '=', 'ppa.asset_id');
+                })
+                ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
+                ->where('pad.IsActive', 1)
+                ->where('pad.IsDeleted', 0)
+                ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+            if ($status === 'Eligible for Physical Possession') {
+                $query->where(function ($q) {
+                    $q->whereNull('ppa.id')
+                      ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+                });
+            }
+
+            if ($officer->district_id) {
+                $query->where('ppp.DistrictId', $officer->district_id);
+            } elseif ($officer->district_name) {
+                $query->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+            }
+
+            if ($phase) {
+                $query->where('ppp.phase', $phase);
+            }
+
+            if ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('ppp.PrivatePurchaserName', 'like', "%{$search}%")
+                      ->orWhere('ppp.MobileNo', 'like', "%{$search}%")
+                      ->orWhere('ppp.PPPId', 'like', "%{$search}%")
+                      ->orWhere('ppp.ApplicationNo', 'like', "%{$search}%");
+                });
+            }
+
+            $query->select([
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+                'pad.BalanceAmount',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.PurchaserFatherName as father_name',
+                'ppp.Address as address',
+                'ppp.MobileNo as mobile',
+                DB::raw("CONCAT('PP-', YEAR(CURDATE()), '-', ppp.ApplicationNo) as application_number"),
+                'ppp.PPPId as ppp_id',
+                'ppp.DistrictId as district_id',
+                'd.DistrictName as district_name',
+                'ppp.phase as purchaser_phase',
+                'ppa.id as id',
+                DB::raw("COALESCE(ppa.secure_id, ppp.PrivatePurchaserId) as secure_id"),
+                DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as physical_possession_status"),
+                'ppa.meeting_slot as meeting_slot',
+                'ppa.visit_slot_1 as visit_slot_1',
+                'ppa.visit_slot_2 as visit_slot_2',
+                'ppa.visit_slot_3 as visit_slot_3',
+            ]);
+
+            $applications = $query->paginate(25)->withQueryString();
+        } else {
+            $query = PhysicalPossessionApplication::query()
+                ->leftJoin('property_private_purchasers as ppp', 'physical_possession_applications.private_purchaser_id', '=', 'ppp.PrivatePurchaserId')
+                ->whereNotNull('physical_possession_applications.physical_possession_status')
+                ->select('physical_possession_applications.*', 'ppp.phase as purchaser_phase');
+
+            if ($officer->district_id) {
+                $query->where('physical_possession_applications.district_id', $officer->district_id);
+            } elseif ($officer->district_name) {
+                $query->where('physical_possession_applications.district_name', 'like', '%' . $officer->district_name . '%');
+            }
+
             if ($status === 'Physical Possession Submitted') {
                 $query->whereIn('physical_possession_applications.physical_possession_status', ['Slot Selected', 'Physical Possession Submitted']);
             } else {
                 $query->where('physical_possession_applications.physical_possession_status', $status);
             }
+
+            if ($phase) {
+                $query->whereIn('physical_possession_applications.private_purchaser_id', function ($q) use ($phase) {
+                    $q->select('PrivatePurchaserId')
+                      ->from('property_private_purchasers')
+                      ->where('phase', $phase);
+                });
+            }
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('physical_possession_applications.applicant_name', 'like', "%{$search}%")
+                      ->orWhere('physical_possession_applications.mobile', 'like', "%{$search}%")
+                      ->orWhere('physical_possession_applications.application_number', 'like', "%{$search}%");
+                });
+            }
+
+            $applications = $query->orderBy('physical_possession_applications.created_at', 'desc')->paginate(25)->withQueryString();
         }
 
-        // Search filter
-        $search = $request->input('search');
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('physical_possession_applications.applicant_name', 'like', "%{$search}%")
-                  ->orWhere('physical_possession_applications.mobile', 'like', "%{$search}%")
-                  ->orWhere('physical_possession_applications.application_number', 'like', "%{$search}%");
-            });
-        }
-
-        // Phase filter
-        if ($phase) {
-            $query->whereIn('physical_possession_applications.private_purchaser_id', function ($q) use ($phase) {
-                $q->select('PrivatePurchaserId')
-                  ->from('property_private_purchasers')
-                  ->where('phase', $phase);
-            });
-        }
-
-        $applications = $query->orderBy('physical_possession_applications.created_at', 'desc')->paginate(25)->withQueryString();
-
-        return view('physical-possession.workflow.officer-applications', compact('applications', 'search', 'officer', 'phase'));
+        return view('physical-possession.workflow.officer-applications', compact('applications', 'search', 'officer', 'phase', 'status'));
     }
 
     /**
@@ -971,9 +1038,9 @@ class PhysicalPossessionWorkflowController extends Controller
     }
 
     /**
-     * Get or dynamically create a physical possession application on-the-fly.
+     * Get or build a physical possession application on-the-fly.
      */
-    private function getOrCreateApplication($idOrNo)
+    private function getOrBuildApplication($idOrNo, $persist = false)
     {
         $app = PhysicalPossessionApplication::where('id', $idOrNo)
             ->orWhere('secure_id', $idOrNo)
@@ -1021,26 +1088,46 @@ class PhysicalPossessionWorkflowController extends Controller
             return null;
         }
 
-        $user = User::where('private_purchaser_id', $p->PurchaserID)
-            ->orWhere('mobile', $p->MobileNo)
-            ->first();
+        if ($persist) {
+            $user = User::where('private_purchaser_id', $p->PurchaserID)
+                ->orWhere('mobile', $p->MobileNo)
+                ->first();
 
-        if (!$user) {
-            $user = User::create([
-                'name' => $p->PrivatePurchaserName,
-                'mobile' => $p->MobileNo,
-                'role' => 'citizen',
-                'private_purchaser_id' => $p->PurchaserID,
-            ]);
-        } else {
-            if (empty($user->private_purchaser_id)) {
-                $user->private_purchaser_id = $p->PurchaserID;
-                $user->save();
+            if (!$user) {
+                $user = User::create([
+                    'name' => $p->PrivatePurchaserName,
+                    'mobile' => $p->MobileNo,
+                    'role' => 'citizen',
+                    'private_purchaser_id' => $p->PurchaserID,
+                ]);
+            } else {
+                if (empty($user->private_purchaser_id)) {
+                    $user->private_purchaser_id = $p->PurchaserID;
+                    $user->save();
+                }
             }
+
+            return PhysicalPossessionApplication::create([
+                'user_id' => $user->id,
+                'private_purchaser_id' => $p->PurchaserID,
+                'asset_id' => $p->AssetId,
+                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                'slip_id' => 'SLIP-' . uniqid(),
+                'district_id' => $p->DistrictId,
+                'district_name' => $p->DistrictName,
+                'mobile' => $p->MobileNo,
+                'applicant_name' => $p->PrivatePurchaserName,
+                'father_name' => $p->PurchaserFatherName ?? '',
+                'address' => $p->Address ?? '',
+                'flat_cost' => $p->FlatCost,
+                'received_amount' => $p->ReceivedAmount,
+                'balance_amount' => $p->BalanceAmount,
+                'physical_possession_status' => 'Eligible for Physical Possession',
+                'status' => 'pending',
+            ]);
         }
 
-        return PhysicalPossessionApplication::create([
-            'user_id' => $user->id,
+        $application = new PhysicalPossessionApplication([
             'private_purchaser_id' => $p->PurchaserID,
             'asset_id' => $p->AssetId,
             'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
@@ -1057,6 +1144,8 @@ class PhysicalPossessionWorkflowController extends Controller
             'physical_possession_status' => 'Eligible for Physical Possession',
             'status' => 'pending',
         ]);
+        $application->secure_id = $p->PurchaserID;
+        return $application;
     }
 
     /**
