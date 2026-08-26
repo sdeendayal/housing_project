@@ -162,6 +162,11 @@ class PhysicalPossessionWorkflowController extends Controller
             return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
         }
 
+        $officer = Auth::user();
+        if (!$this->validatePossessionEligibility($application, $officer, $errorMessage)) {
+            return redirect()->route('pp.officer.eligibility-list')->with('error', $errorMessage);
+        }
+
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return redirect()->route('pp.officer.possession-applications')->with('error', 'Cannot schedule or update schedule after slot is confirmed by citizen or verified.');
         }
@@ -238,6 +243,11 @@ class PhysicalPossessionWorkflowController extends Controller
         $application = $this->getOrBuildApplication($applicationIdOrNo, true);
         if (!$application) {
             return redirect()->route('pp.officer.eligibility-list')->with('error', 'Applicant details not found.');
+        }
+
+        $officer = Auth::user();
+        if (!$this->validatePossessionEligibility($application, $officer, $errorMessage)) {
+            return redirect()->route('pp.officer.eligibility-list')->with('error', $errorMessage);
         }
 
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
@@ -1035,6 +1045,61 @@ class PhysicalPossessionWorkflowController extends Controller
             'verified_at' => $application->image_capture_datetime ? $application->image_capture_datetime->format('d M Y, h:i A') : '—',
             'site_engineer_name' => $siteEngineerName,
         ];
+    }
+
+    /**
+     * Validate officer access, MMSAY eligibility, and payment requirements.
+     */
+    private function validatePossessionEligibility($application, $officer, &$errorMessage)
+    {
+        // 1. District Check
+        if ($officer->district_id && $application->district_id !== $officer->district_id) {
+            $officerDistrict = DB::table('districts')->where('DistrictId', $officer->district_id)->value('DistrictName') ?? 'your assigned district';
+            $errorMessage = "Unauthorized Access: The applicant belongs to district '" . ($application->district_name ?? 'Unknown') . "', but you are assigned to " . $officerDistrict . " District.";
+            return false;
+        }
+
+        // Fetch Purchaser and Auction Details to verify payment and eligibility
+        $purchaserId = $application->private_purchaser_id;
+        $p = DB::table('property_private_purchasers as ppp')
+            ->join('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
+            ->where('ppp.PrivatePurchaserId', $purchaserId)
+            ->select('ppp.ApplicationNo', 'pad.AssetId', 'pad.ReceivedAmount')
+            ->first();
+
+        if (!$p) {
+            $errorMessage = "Applicant or property details not found in the system.";
+            return false;
+        }
+
+        // 2. MMSAY Eligibility Table Check
+        $isEligible = DB::table('mmsay_eligible_beneficiaries')
+            ->where('application_number', $p->ApplicationNo)
+            ->exists();
+
+        if (!$isEligible) {
+            $errorMessage = "Eligibility Check Failed: This applicant's allotment number (" . ($p->ApplicationNo ?? 'N/A') . ") is not listed in the MMSAY eligible beneficiaries registry (mmsay_eligible_beneficiaries).";
+            return false;
+        }
+
+        // 3. Total Payment Check (Initial Deposit + Installments >= 60,000)
+        $initialDeposit = (float) ($p->ReceivedAmount ?? 0);
+        $installmentPaid = 0.0;
+        if ($p->AssetId) {
+            $installmentPaid = (float) DB::table('cash_receipt_details')
+                ->where('asset_number', $p->AssetId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->sum('total_paid_amount');
+        }
+        $totalPaid = $initialDeposit + $installmentPaid;
+
+        if ($totalPaid < 60000) {
+            $errorMessage = "Payment Check Failed: The total paid amount (Initial Deposit: ₹" . number_format($initialDeposit, 2) . " + Installments: ₹" . number_format($installmentPaid, 2) . ") is ₹" . number_format($totalPaid, 2) . ", which is less than the required ₹60,000 for Physical Possession.";
+            return false;
+        }
+
+        return true;
     }
 
     /**

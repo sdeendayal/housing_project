@@ -434,9 +434,9 @@ class PpOfficerApiController extends Controller
 
         $officer = Auth::user();
 
-        // Check if officer is allowed to view (belongs to same district)
-        if ($officer->district_id && $application->district_id !== $officer->district_id) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized access to application in another district.'], 403);
+        // Check if officer is allowed to view, MMSAY eligible, and payment >= 60k
+        if (!$this->validatePossessionEligibility($application, $officer, $errorMessage)) {
+            return response()->json(['success' => false, 'message' => $errorMessage], 400);
         }
 
         // Fetch comprehensive property and allotment details
@@ -632,6 +632,11 @@ class PpOfficerApiController extends Controller
         $application = $this->getOrBuildApplication($secure_id, true);
         if (!$application) {
             return response()->json(['success' => false, 'message' => 'Application not found.'], 404);
+        }
+
+        $officer = Auth::user();
+        if (!$this->validatePossessionEligibility($application, $officer, $errorMessage)) {
+            return response()->json(['success' => false, 'message' => $errorMessage], 400);
         }
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
             return response()->json([
@@ -1058,9 +1063,8 @@ class PpOfficerApiController extends Controller
     {
         $officer = Auth::user();
 
-        // Check district authorization
-        if ($officer->district_id && $application->district_id !== $officer->district_id) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        if (!$this->validatePossessionEligibility($application, $officer, $errorMessage)) {
+            return response()->json(['success' => false, 'message' => $errorMessage], 400);
         }
 
         // Handle Reschedule Action
@@ -1631,6 +1635,61 @@ class PpOfficerApiController extends Controller
             'purchasers' => $purchasers,
             'casteCategories' => $casteCategories,
         ]);
+    }
+
+    /**
+     * Validate officer access, MMSAY eligibility, and payment requirements.
+     */
+    private function validatePossessionEligibility($application, $officer, &$errorMessage)
+    {
+        // 1. District Check
+        if ($officer->district_id && $application->district_id !== $officer->district_id) {
+            $officerDistrict = DB::table('districts')->where('DistrictId', $officer->district_id)->value('DistrictName') ?? 'your assigned district';
+            $errorMessage = "Unauthorized Access: The applicant belongs to district '" . ($application->district_name ?? 'Unknown') . "', but you are assigned to " . $officerDistrict . " District.";
+            return false;
+        }
+
+        // Fetch Purchaser and Auction Details to verify payment and eligibility
+        $purchaserId = $application->private_purchaser_id;
+        $p = DB::table('property_private_purchasers as ppp')
+            ->join('property_auction_detail as pad', 'ppp.PrivatePurchaserId', '=', 'pad.PurchaserID')
+            ->where('ppp.PrivatePurchaserId', $purchaserId)
+            ->select('ppp.ApplicationNo', 'pad.AssetId', 'pad.ReceivedAmount')
+            ->first();
+
+        if (!$p) {
+            $errorMessage = "Applicant or property details not found in the system.";
+            return false;
+        }
+
+        // 2. MMSAY Eligibility Table Check
+        $isEligible = DB::table('mmsay_eligible_beneficiaries')
+            ->where('application_number', $p->ApplicationNo)
+            ->exists();
+
+        if (!$isEligible) {
+            $errorMessage = "Eligibility Check Failed: This applicant's allotment number (" . ($p->ApplicationNo ?? 'N/A') . ") is not listed in the MMSAY eligible beneficiaries registry (mmsay_eligible_beneficiaries).";
+            return false;
+        }
+
+        // 3. Total Payment Check (Initial Deposit + Installments >= 60,000)
+        $initialDeposit = (float) ($p->ReceivedAmount ?? 0);
+        $installmentPaid = 0.0;
+        if ($p->AssetId) {
+            $installmentPaid = (float) DB::table('cash_receipt_details')
+                ->where('asset_number', $p->AssetId)
+                ->where('IsDeleted', 0)
+                ->where('IsActive', 1)
+                ->sum('total_paid_amount');
+        }
+        $totalPaid = $initialDeposit + $installmentPaid;
+
+        if ($totalPaid < 60000) {
+            $errorMessage = "Payment Check Failed: The total paid amount (Initial Deposit: ₹" . number_format($initialDeposit, 2) . " + Installments: ₹" . number_format($installmentPaid, 2) . ") is ₹" . number_format($totalPaid, 2) . ", which is less than the required ₹60,000 for Physical Possession.";
+            return false;
+        }
+
+        return true;
     }
 
     /**
