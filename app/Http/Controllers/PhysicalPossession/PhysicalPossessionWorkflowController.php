@@ -1045,6 +1045,7 @@ class PhysicalPossessionWorkflowController extends Controller
         $app = PhysicalPossessionApplication::where('id', $idOrNo)
             ->orWhere('secure_id', $idOrNo)
             ->orWhere('application_number', $idOrNo)
+            ->orWhere('private_purchaser_id', $idOrNo)
             ->first();
             
         if ($app) {
