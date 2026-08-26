@@ -128,6 +128,24 @@ class MmgayPossessionApplication extends Model
                             } else {
                                 $sub->whereRaw('0 = 1');
                             }
+                        })
+                        ->orWhere(function($sub) use ($owner) {
+                            if (!empty($owner->MobileNo)) {
+                                $sub->where('SecondPartyMobile', $owner->MobileNo)
+                                    ->whereNotNull('SecondPartyMobile')
+                                    ->where('SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('flatid')
+                                             ->orWhere('flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(\Illuminate\Support\Facades\DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'registary.flatid');
+                                             });
+                                    });
+                            } else {
+                                $sub->whereRaw('0 = 1');
+                            }
                         });
                     })
                     ->exists();
