@@ -8,7 +8,7 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-\Illuminate\Support\Facades\Schedule::command('mmgay:sync-land-registrations')->daily();
+// \Illuminate\Support\Facades\Schedule::command('mmgay:sync-land-registrations')->daily();
 \Illuminate\Support\Facades\Schedule::command('mmgay:sync-all-registries')->dailyAt('00:00');
 \Illuminate\Support\Facades\Schedule::command('app:process-due-installments')->dailyAt('00:00');
 

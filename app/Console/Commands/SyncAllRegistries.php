@@ -29,7 +29,7 @@ class SyncAllRegistries extends Command
      */
     public function handle()
     {
-        $fromDate = $this->option('from-date') ?: Carbon::now()->subDay()->format('Y-m-d');
+        $fromDate = $this->option('from-date') ?: Carbon::now()->subDays(3)->format('Y-m-d');
         $toDate = $this->option('to-date') ?: Carbon::now()->format('Y-m-d');
 
         $this->info("Starting full HFA Land Registry Sync from $fromDate to $toDate...");
@@ -125,9 +125,23 @@ class SyncAllRegistries extends Command
                     'updated_at' => now(),
                 ];
 
-                // Check if this registry token already exists
+                // Check if this registry already exists (by Token OR by RegistaryNumber + RegistaryDate OR by flatid)
                 $exists = DB::table('registary')
-                    ->where('Token', $token)
+                    ->where(function($q) use ($token, $reg, $regDate) {
+                        $q->where('Token', $token);
+                        
+                        $regNum = $reg['registryNumber'] ?? $reg['registrationNo'] ?? null;
+                        if (!empty($regNum) && !empty($regDate)) {
+                            $q->orWhere(function($sub) use ($regNum, $regDate) {
+                                $sub->where('RegistaryNumber', $regNum)
+                                    ->where('RegistaryDate', $regDate);
+                            });
+                        }
+                        
+                        if (!empty($reg['flatid'])) {
+                            $q->orWhere('flatid', $reg['flatid']);
+                        }
+                    })
                     ->first();
 
                 if (!$exists) {
