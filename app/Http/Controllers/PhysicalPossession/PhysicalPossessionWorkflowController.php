@@ -24,7 +24,7 @@ class PhysicalPossessionWorkflowController extends Controller
         $officer = Auth::user();
         $phase = $request->input('phase');
 
-        // $this->ensureDistrictApplications($officer);
+        $this->ensureDistrictApplications($officer);
 
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')
@@ -515,7 +515,7 @@ class PhysicalPossessionWorkflowController extends Controller
         $officer = Auth::user();
         $phase = $request->input('phase');
 
-        // $this->ensureDistrictApplications($officer);
+        $this->ensureDistrictApplications($officer);
 
         $query = PhysicalPossessionApplication::query()
             ->leftJoin('property_private_purchasers as ppp', 'physical_possession_applications.private_purchaser_id', '=', 'ppp.PrivatePurchaserId')
@@ -1064,6 +1064,12 @@ class PhysicalPossessionWorkflowController extends Controller
      */
     private function ensureDistrictApplications($officer)
     {
+        $cacheKey = 'ensure_possession_apps_' . ($officer->district_id ?? $officer->district_name ?? 'all');
+        if (\Illuminate\Support\Facades\Cache::has($cacheKey)) {
+            return;
+        }
+        \Illuminate\Support\Facades\Cache::put($cacheKey, true, now()->addMinutes(5));
+
         $receiptsQuery = DB::table('cash_receipt_details')
             ->select('asset_number')
             ->selectRaw('SUM(total_paid_amount) as receipt_total')
@@ -1110,7 +1116,7 @@ class PhysicalPossessionWorkflowController extends Controller
         ])
         ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
-        $missing = $query->limit(15)->get();
+        $missing = $query->get();
 
         foreach ($missing as $p) {
             $user = User::where('private_purchaser_id', $p->PurchaserID)
