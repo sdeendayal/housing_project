@@ -1726,6 +1726,8 @@ class PpOfficerApiController extends Controller
         $app = new PhysicalPossessionApplication();
         $app->private_purchaser_id = $p->PurchaserID;
         $app->asset_id = $p->AssetId;
+        $app->district_id = $p->DistrictId;
+        $app->district_name = $p->DistrictName;
         $app->mobile = $p->MobileNo;
         $app->applicant_name = $p->PrivatePurchaserName;
         $app->father_name = $p->PurchaserFatherName ?? '';
