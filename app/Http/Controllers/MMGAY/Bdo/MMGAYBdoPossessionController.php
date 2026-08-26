@@ -144,9 +144,18 @@ class MMGAYBdoPossessionController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -190,9 +199,18 @@ class MMGAYBdoPossessionController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 });
@@ -233,9 +251,18 @@ class MMGAYBdoPossessionController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 });
@@ -301,9 +328,18 @@ class MMGAYBdoPossessionController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -363,9 +399,18 @@ class MMGAYBdoPossessionController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 })
@@ -468,9 +513,18 @@ class MMGAYBdoPossessionController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -507,6 +561,10 @@ class MMGAYBdoPossessionController extends Controller
                   ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
             });
         }
+
+        $query->orderBy('d.DistrictName', 'asc')
+            ->orderBy('b.BlockName', 'asc')
+            ->orderBy('o.OwnerName', 'asc');
 
         $applications = $query->select(
             'o.OwnerId as id',
@@ -838,9 +896,18 @@ class MMGAYBdoPossessionController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -1409,7 +1476,27 @@ class MMGAYBdoPossessionController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
+                        });
+                    });
             })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
@@ -1455,7 +1542,27 @@ class MMGAYBdoPossessionController extends Controller
                 ->whereExists(function ($query) {
                     $query->select(DB::raw(1))
                         ->from('registary as r')
-                        ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                        ->where(function($q) {
+                            $q->where(function($sub) {
+                                $sub->whereColumn('r.flatid', 'o.FlatId')
+                                    ->whereNotNull('r.flatid')
+                                    ->where('r.flatid', '!=', '');
+                            })
+                            ->orWhere(function($sub) {
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
+                            });
+                        });
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -1572,8 +1679,8 @@ class MMGAYBdoPossessionController extends Controller
             'v.map_pdf',
             DB::raw("COUNT(DISTINCT o.OwnerId) as total_beneficiaries"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
-            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND EXISTS (SELECT 1 FROM registary r WHERE r.SecondPartyMobile = o.MobileNo) THEN 1 END) as approved_paid_matched"),
-            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT EXISTS (SELECT 1 FROM registary r WHERE r.SecondPartyMobile = o.MobileNo) THEN 1 END) as approved_paid_pending"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND EXISTS (SELECT 1 FROM registary r WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '') OR (r.SecondPartyMobile = o.MobileNo AND r.SecondPartyMobile IS NOT NULL AND r.SecondPartyMobile != '' AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (SELECT 1 FROM ownermaster o2 WHERE o2.FlatId = r.flatid)))) THEN 1 END) as approved_paid_matched"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT EXISTS (SELECT 1 FROM registary r WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '') OR (r.SecondPartyMobile = o.MobileNo AND r.SecondPartyMobile IS NOT NULL AND r.SecondPartyMobile != '' AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (SELECT 1 FROM ownermaster o2 WHERE o2.FlatId = r.flatid)))) THEN 1 END) as approved_paid_pending"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_unpaid"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
             DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
@@ -1628,7 +1735,27 @@ class MMGAYBdoPossessionController extends Controller
             ->whereExists(function ($query) {
                 $query->select(DB::raw(1))
                     ->from('registary as r')
-                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo');
+                    ->where(function($q) {
+                        $q->where(function($sub) {
+                            $sub->whereColumn('r.flatid', 'o.FlatId')
+                                ->whereNotNull('r.flatid')
+                                ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function($sub) {
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
+                        });
+                    });
             })
             ->select('v.VillageId as VillageId', 'v.VillageName as VillageName', 'v.map_pdf as map_pdf')
             ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
@@ -2182,7 +2309,16 @@ class MMGAYBdoPossessionController extends Controller
             'o.IsRejected',
             'o.IsAllotmentCancelled',
             DB::raw("EXISTS (
-                SELECT 1 FROM registary as r WHERE r.SecondPartyMobile = o.MobileNo
+                SELECT 1 FROM registary as r 
+                WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
+                   OR (
+                       r.SecondPartyMobile = o.MobileNo 
+                       AND r.SecondPartyMobile IS NOT NULL 
+                       AND r.SecondPartyMobile != ''
+                       AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
+                           SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
+                       ))
+                   )
             ) as registry_matched"),
             'd.DistrictName',
             'b.BlockName',

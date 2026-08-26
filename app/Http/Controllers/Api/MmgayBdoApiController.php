@@ -55,9 +55,18 @@ class MmgayBdoApiController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -101,9 +110,18 @@ class MmgayBdoApiController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 });
@@ -144,9 +162,18 @@ class MmgayBdoApiController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 });
@@ -228,9 +255,18 @@ class MmgayBdoApiController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -280,6 +316,10 @@ class MmgayBdoApiController extends Controller
                   ->orWhere('o.RegistrationNo', 'like', "%{$search}%");
             });
         }
+
+        $query->orderBy('d.DistrictName', 'asc')
+            ->orderBy('b.BlockName', 'asc')
+            ->orderBy('o.OwnerName', 'asc');
 
         $applications = $query->select(
             'o.OwnerId as id',
@@ -618,9 +658,18 @@ class MmgayBdoApiController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -1086,9 +1135,18 @@ class MmgayBdoApiController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -1394,9 +1452,18 @@ class MmgayBdoApiController extends Controller
                                 ->where('r.flatid', '!=', '');
                         })
                         ->orWhere(function($sub) {
-                            $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                ->whereNotNull('r.registrationNo')
-                                ->where('r.registrationNo', '!=', '');
+                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                ->whereNotNull('r.SecondPartyMobile')
+                                ->where('r.SecondPartyMobile', '!=', '')
+                                ->where(function($sub2) {
+                                    $sub2->whereNull('r.flatid')
+                                         ->orWhere('r.flatid', '')
+                                         ->orWhereNotExists(function($sub3) {
+                                             $sub3->select(DB::raw(1))
+                                                  ->from('ownermaster as o2')
+                                                  ->whereColumn('o2.FlatId', 'r.flatid');
+                                         });
+                                });
                         });
                     });
             })
@@ -1458,9 +1525,18 @@ class MmgayBdoApiController extends Controller
                                     ->where('r.flatid', '!=', '');
                             })
                             ->orWhere(function($sub) {
-                                $sub->whereColumn('r.registrationNo', 'o.RegistrationNo')
-                                    ->whereNotNull('r.registrationNo')
-                                    ->where('r.registrationNo', '!=', '');
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
                             });
                         });
                 })

@@ -136,8 +136,7 @@ class SyncAllRegistries extends Command
                     DB::table('registary')->insert($dbData);
                     $insertedCount++;
                 } else {
-                    DB::table('registary')->where('Token', $token)->update($dbData);
-                    $updatedCount++;
+                    $skippedCount++;
                 }
             }
 
