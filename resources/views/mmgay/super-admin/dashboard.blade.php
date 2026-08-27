@@ -1878,7 +1878,7 @@
                     ">
 
 
-                    {{-- Total Registration --}}
+                    {{-- Total Eligible --}}
 
                     <a href="{{ route('admin.registration', request()->only(['phase', 'district_id', 'block_id', 'village_id'])) }}"
                         class="
@@ -1905,7 +1905,7 @@
                                 text-slate-500
                             ">
 
-                            Total Registration
+                            Registry to be done
 
                         </p>
 
@@ -1931,7 +1931,7 @@
                                 text-slate-500
                             ">
 
-                            All Registrations
+                            Approved & Paid
 
                         </p>
 
@@ -1965,7 +1965,7 @@
                                 text-slate-500
                             ">
 
-                            Matched
+                            Registry done
 
                         </p>
 
@@ -2029,7 +2029,7 @@
                                 text-slate-500
                             ">
 
-                            Unmatched
+                            Registry yet to be done
 
                         </p>
 
@@ -2090,7 +2090,7 @@
                             text-slate-900
                         ">
 
-                        Registry Match Overview
+                        Registration Overview
 
                     </h2>
 
@@ -2102,7 +2102,7 @@
                             text-slate-500
                         ">
 
-                        Matched vs unmatched registrations
+                        Registration done vs pending
 
                     </p>
 
@@ -2195,7 +2195,7 @@
                                         text-slate-600
                                     ">
 
-                                    Matched
+                                    Done
 
                                 </span>
 
@@ -2248,7 +2248,7 @@
                                         text-slate-600
                                     ">
 
-                                    Unmatched
+                                    Pending
 
                                 </span>
 
@@ -2282,196 +2282,59 @@
              POSSESSION
         ============================================ --}}
 
+                {{-- ===========================================
+             PHYSICAL POSSESSION
+        ============================================ --}}
+
         <section class="ai-panel mb-5">
 
-            <div
-                class="
-                    flex
-                    flex-col
-                    gap-3
-                    border-b
-                    border-slate-100
-                    px-5
-                    py-4
-                    sm:flex-row
-                    sm:items-center
-                    sm:justify-between
-                ">
+            <div class="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
 
-
-                <div class="flex items-center gap-3">
-
-                    <div
-                        class="
-                            flex
-                            h-10
-                            w-10
-                            items-center
-                            justify-center
-                            rounded-xl
-                            bg-violet-50
-                            text-violet-600
-                        ">
-
-                        <span
-                            class="
-                                material-symbols-outlined
-                                text-[21px]
-                            ">
-
-                            key
-
-                        </span>
-
-                    </div>
-
-
-                    <div>
-
-                        <h2
-                            class="
-                                text-[16px]
-                                font-extrabold
-                                text-slate-900
-                            ">
-
-                            Possession
-
-                        </h2>
-
-
-                        <p
-                            class="
-                                mt-0.5
-                                text-[11px]
-                                text-slate-500
-                            ">
-
-                            Registered beneficiaries
-                            eligible for possession
-
-                        </p>
-
-                    </div>
-
+                <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
+                    <span class="material-symbols-outlined text-[21px]">
+                        key
+                    </span>
                 </div>
 
+                <div>
+                    <h2 class="text-[16px] font-extrabold text-slate-900">
+                        Possession
+                    </h2>
 
-
-                <span id="possessionLoader"
-                    class="
-                        inline-flex
-                        items-center
-                        gap-2
-                        rounded-full
-                        bg-blue-50
-                        px-3
-                        py-1.5
-                        text-[10px]
-                        font-bold
-                        text-blue-700
-                    ">
-
-                    <span
-                        class="
-                            h-3
-                            w-3
-                            animate-spin
-                            rounded-full
-                            border-2
-                            border-blue-200
-                            border-t-blue-600
-                        ">
-                    </span>
-
-                    Loading
-
-                </span>
+                    <p class="mt-0.5 text-[11px] text-slate-500">
+                        Registered beneficiaries eligible for possession
+                    </p>
+                </div>
 
             </div>
 
 
+            <div class="grid grid-cols-1 gap-4 bg-gradient-to-r from-slate-50/70 via-white to-slate-50/70 p-4 md:grid-cols-3">
 
-            <div
-                class="
-                    grid
-                    grid-cols-1
-                    gap-4
-                    bg-gradient-to-r
-                    from-slate-50/70
-                    via-white
-                    to-slate-50/70
-                    p-4
-                    md:grid-cols-3
-                ">
+                {{-- Possession to be given --}}
+                <a href="{{ route('admin.possession.list', array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['filter' => 'all'])) }}"
+                    class="master-card master-purple block min-h-[118px] p-4">
 
-
-                {{-- Eligible --}}
-
-                <a id="possessionEligibleLink" href="#"
-                    class="
-                        master-card
-                        master-purple
-                        block
-                        min-h-[108px]
-                        p-4
-                    ">
-
-                    <div
-                        class="
-                            relative
-                            z-10
-                            flex
-                            items-center
-                            justify-between
-                        ">
+                    <div class="relative z-10 flex items-center justify-between gap-3">
 
                         <div>
-
-                            <p
-                                class="
-                                    text-[10px]
-                                    font-extrabold
-                                    uppercase
-                                    text-slate-500
-                                ">
-
+                            <p class="text-[10px] font-extrabold uppercase text-slate-500">
                                 Possession to be given
-
                             </p>
 
-
-                            <h3 id="possessionEligibleCount"
-                                class="
-                                    mt-2
-                                    text-[26px]
-                                    font-black
-                                    text-violet-700
-                                ">
-
-                                —
-
+                            <h3 class="mt-2 text-[27px] font-black text-violet-700">
+                                {{ number_format($possession->TotalEligible ?? 0) }}
                             </h3>
 
+                            <p class="mt-1 text-[9px] font-semibold text-slate-500">
+                                Unique registry done beneficiaries
+                            </p>
                         </div>
 
-
-                        <div
-                            class="
-                                ai-icon
-                                bg-violet-50
-                                text-violet-600
-                            ">
-
-                            <span
-                                class="
-                                    material-symbols-outlined
-                                ">
-
+                        <div class="ai-icon bg-violet-50 text-violet-600">
+                            <span class="material-symbols-outlined">
                                 assignment_turned_in
-
                             </span>
-
                         </div>
 
                     </div>
@@ -2479,73 +2342,30 @@
                 </a>
 
 
+                {{-- Possession Given --}}
+                <a href="{{ route('admin.possession.list', array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['filter' => 'verified'])) }}"
+                    class="master-card master-green block min-h-[118px] p-4">
 
-                {{-- Given --}}
-
-                <a id="possessionGivenLink" href="#"
-                    class="
-                        master-card
-                        master-green
-                        block
-                        min-h-[108px]
-                        p-4
-                    ">
-
-                    <div
-                        class="
-                            relative
-                            z-10
-                            flex
-                            items-center
-                            justify-between
-                        ">
+                    <div class="relative z-10 flex items-center justify-between gap-3">
 
                         <div>
-
-                            <p
-                                class="
-                                    text-[10px]
-                                    font-extrabold
-                                    uppercase
-                                    text-slate-500
-                                ">
-
+                            <p class="text-[10px] font-extrabold uppercase text-slate-500">
                                 Possession Given
-
                             </p>
 
-
-                            <h3 id="possessionGivenCount"
-                                class="
-                                    mt-2
-                                    text-[26px]
-                                    font-black
-                                    text-emerald-700
-                                ">
-
-                                —
-
+                            <h3 class="mt-2 text-[27px] font-black text-emerald-700">
+                                {{ number_format($possession->Given ?? 0) }}
                             </h3>
 
+                            <p class="mt-1 text-[9px] font-semibold text-slate-500">
+                                Final verified
+                            </p>
                         </div>
 
-
-                        <div
-                            class="
-                                ai-icon
-                                bg-emerald-50
-                                text-emerald-600
-                            ">
-
-                            <span
-                                class="
-                                    material-symbols-outlined
-                                ">
-
+                        <div class="ai-icon bg-emerald-50 text-emerald-600">
+                            <span class="material-symbols-outlined">
                                 verified
-
                             </span>
-
                         </div>
 
                     </div>
@@ -2553,73 +2373,30 @@
                 </a>
 
 
+                {{-- Possession Pending --}}
+                <a href="{{ route('admin.possession.list', array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['filter' => 'schedule_pending'])) }}"
+                    class="master-card master-orange block min-h-[118px] p-4">
 
-                {{-- Pending --}}
-
-                <a id="possessionPendingLink" href="#"
-                    class="
-                        master-card
-                        master-orange
-                        block
-                        min-h-[108px]
-                        p-4
-                    ">
-
-                    <div
-                        class="
-                            relative
-                            z-10
-                            flex
-                            items-center
-                            justify-between
-                        ">
+                    <div class="relative z-10 flex items-center justify-between gap-3">
 
                         <div>
-
-                            <p
-                                class="
-                                    text-[10px]
-                                    font-extrabold
-                                    uppercase
-                                    text-slate-500
-                                ">
-
+                            <p class="text-[10px] font-extrabold uppercase text-slate-500">
                                 Possession Pending
-
                             </p>
 
-
-                            <h3 id="possessionPendingCount"
-                                class="
-                                    mt-2
-                                    text-[26px]
-                                    font-black
-                                    text-amber-700
-                                ">
-
-                                —
-
+                            <h3 class="mt-2 text-[27px] font-black text-amber-700">
+                                {{ number_format($possession->Pending ?? 0) }}
                             </h3>
 
+                            <p class="mt-1 text-[9px] font-semibold text-slate-500">
+                                Eligible minus possession given
+                            </p>
                         </div>
 
-
-                        <div
-                            class="
-                                ai-icon
-                                bg-amber-50
-                                text-amber-600
-                            ">
-
-                            <span
-                                class="
-                                    material-symbols-outlined
-                                ">
-
+                        <div class="ai-icon bg-amber-50 text-amber-600">
+                            <span class="material-symbols-outlined">
                                 hourglass_empty
-
                             </span>
-
                         </div>
 
                     </div>

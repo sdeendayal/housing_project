@@ -307,6 +307,12 @@ class PropertyManagementController extends Controller
         | The indexed generated integer column avoids VARCHAR-to-INT conversion.
         */
 
+        /*
+|--------------------------------------------------------------------------
+| EMI and possession statistics for 11,984 verified beneficiaries
+|--------------------------------------------------------------------------
+*/
+
         $verifiedAssetPaymentsQuery = DB::table(
             'mmsay_eligible_beneficiaries as meb'
         )
@@ -336,13 +342,14 @@ class PropertyManagementController extends Controller
                 'pad.AssetId'
             )
             ->selectRaw('
-                pad.PropertyAuctionId,
-                pad.AssetId,
-                (
-                    COALESCE(pad.ReceivedAmount, 0)
-                    + COALESCE(MAX(verified_cr_sum.total_receipts), 0)
-                ) AS total_received
-            ');
+        pad.PropertyAuctionId,
+        pad.AssetId,
+        pad.FlatCost,
+        (
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(MAX(verified_cr_sum.total_receipts), 0)
+        ) AS total_received
+    ');
 
         $applyLocationFilters(
             $verifiedAssetPaymentsQuery,
@@ -352,41 +359,96 @@ class PropertyManagementController extends Controller
         $verifiedAssetPaymentsQuery->groupBy(
             'pad.PropertyAuctionId',
             'pad.AssetId',
+            'pad.FlatCost',
             'pad.ReceivedAmount'
         );
 
-        $physicalPossessionStats = DB::query()
+        /*
+        |--------------------------------------------------------------------------
+        | Calculate EMI and possession counts in one query
+        |--------------------------------------------------------------------------
+        */
+
+        $verifiedPaymentStats = DB::query()
             ->fromSub(
-                $verifiedAssetPaymentsQuery,
+                clone $verifiedAssetPaymentsQuery,
                 'verified_payments'
             )
             ->selectRaw('
-                COUNT(*) AS total_candidates,
+        COUNT(*) AS total_candidates,
 
-                SUM(
-                    CASE
-                        WHEN verified_payments.total_received >= 60000
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS eligible_candidates,
+        SUM(
+            CASE
+                WHEN verified_payments.total_received
+                     >= COALESCE(verified_payments.FlatCost, 0)
+                THEN 1
+                ELSE 0
+            END
+        ) AS total_paid_properties,
 
-                SUM(
-                    CASE
-                        WHEN verified_payments.total_received < 60000
-                        THEN 1
-                        ELSE 0
-                    END
-                ) AS not_eligible_candidates
-            ')
+        SUM(
+            CASE
+                WHEN verified_payments.total_received
+                     < COALESCE(verified_payments.FlatCost, 0)
+                THEN 1
+                ELSE 0
+            END
+        ) AS pending_properties,
+
+        SUM(
+            CASE
+                WHEN verified_payments.total_received >= 60000
+                THEN 1
+                ELSE 0
+            END
+        ) AS eligible_candidates,
+
+        SUM(
+            CASE
+                WHEN verified_payments.total_received < 60000
+                THEN 1
+                ELSE 0
+            END
+        ) AS not_eligible_candidates
+    ')
             ->first();
 
+        /*
+        |--------------------------------------------------------------------------
+        | EMI Payment Status — only verified 11,984 beneficiaries
+        |--------------------------------------------------------------------------
+        */
+
+        $paymentStats = (object) [
+            'total_records' => (int) (
+                $verifiedPaymentStats->total_candidates ?? 0
+            ),
+
+            'total_paid_properties' => (int) (
+                $verifiedPaymentStats->total_paid_properties ?? 0
+            ),
+
+            'pending_properties' => (int) (
+                $verifiedPaymentStats->pending_properties ?? 0
+            ),
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | Physical possession ₹60,000 eligibility — same beneficiary base
+        |--------------------------------------------------------------------------
+        */
+
+        $totalPhysicalPossessionCandidates = (int) (
+            $verifiedPaymentStats->total_candidates ?? 0
+        );
+
         $eligiblePhysicalPossession = (int) (
-            $physicalPossessionStats->eligible_candidates ?? 0
+            $verifiedPaymentStats->eligible_candidates ?? 0
         );
 
         $notEligiblePhysicalPossession = (int) (
-            $physicalPossessionStats->not_eligible_candidates ?? 0
+            $verifiedPaymentStats->not_eligible_candidates ?? 0
         );
 
         $totalPhysicalPossessionCandidates = (int) (
@@ -407,17 +469,17 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $paymentStats = (object) [
-            'total_records' => $totalAllottedCandidates,
+        // $paymentStats = (object) [
+        //     'total_records' => $totalAllottedCandidates,
 
-            'total_paid_properties' => (int) (
-                $dashboardPaymentStats->total_paid_properties ?? 0
-            ),
+        //     'total_paid_properties' => (int) (
+        //         $dashboardPaymentStats->total_paid_properties ?? 0
+        //     ),
 
-            'pending_properties' => (int) (
-                $dashboardPaymentStats->pending_properties ?? 0
-            ),
-        ];
+        //     'pending_properties' => (int) (
+        //         $dashboardPaymentStats->pending_properties ?? 0
+        //     ),
+        // ];
 
         /*
         |--------------------------------------------------------------------------
@@ -4188,98 +4250,10 @@ class PropertyManagementController extends Controller
 
     private function fullPaidPropertiesQuery(Request $request)
     {
-        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
-
-        $paymentSummary = DB::table('property_auction_detail as pad')
-            ->where('pad.IsDeleted', 0)
-            ->where('pad.IsActive', 1)
-            ->when(
-                $request->filled('district_id'),
-                fn($query) => $query->where(
-                    'pad.DistrictId',
-                    $request->integer('district_id')
-                )
-            )
-            ->when(
-                $request->filled('city_id'),
-                fn($query) => $query->where(
-                    'pad.CityId',
-                    $request->integer('city_id')
-                )
-            )
-            ->when(
-                $request->filled('sector_id'),
-                fn($query) => $query->where(
-                    'pad.SectorId',
-                    $request->integer('sector_id')
-                )
-            )
-            ->select([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->selectRaw("{$receiptTotalSql} AS cash_received")
-            ->selectRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) AS total_paid")
-            ->whereRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) >= COALESCE(pad.FlatCost, 0)");
-
-        $query = DB::query()
-            ->fromSub($paymentSummary, 'ps')
-            ->join('property_registration as pr', function ($join) {
-                $join->on('pr.AssetId', '=', 'ps.AssetId')
-                    ->where('pr.IsDeleted', 0)
-                    ->where('pr.IsActive', 1);
-            })
-            ->leftJoin('property_private_purchasers as ppp', function ($join) {
-                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
-                    ->where('ppp.IsDeleted', 0);
-            })
-            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
-            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
-            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
-
-        $search = trim((string) $request->input('search'));
-
-        if ($search !== '') {
-            $like = '%' . addcslashes($search, '%_\\') . '%';
-
-            $query->where(function ($subQuery) use ($like) {
-                $subQuery->where('ps.AssetId', 'like', $like)
-                    ->orWhere('pr.AssetName', 'like', $like)
-                    ->orWhere('ppp.ApplicationNo', 'like', $like)
-                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
-                    ->orWhere('ppp.MobileNo', 'like', $like);
-            });
-        }
-
-        return $query
-            ->select([
-                'ps.PropertyAuctionId as property_auction_id',
-                'ps.AssetId as asset_id',
-                'ps.FlatCost as flat_cost',
-                'ps.ReceivedAmount as initial_received',
-                'ps.cash_received',
-                'ps.total_paid',
-                'pr.AssetName as asset_name',
-                'pr.AssetSize as asset_size',
-                'pr.Unit as asset_unit',
-                'ppp.ApplicationNo as application_number',
-                'ppp.PrivatePurchaserName as applicant_name',
-                'ppp.MobileNo as mobile',
-                'd.DistrictName as district_name',
-                'c.CityName as city_name',
-                's.SectorName as sector_name',
-            ])
-            ->selectRaw('GREATEST(ps.total_paid - ps.FlatCost, 0) AS excess_amount');
+        return $this->eligiblePaymentPropertiesQuery(
+            $request,
+            'full'
+        );
     }
 
     public function fullPaidProperties(Request $request)
@@ -4320,10 +4294,10 @@ class PropertyManagementController extends Controller
                 ->get()
             : collect();
 
-        $properties = $this->fullPaidPropertiesQuery($request)
-            ->orderByDesc('ps.PropertyAuctionId')
-            ->paginate(self::LIST_PAGE_SIZE)
-            ->withQueryString();
+        $properties = $this->paginatePaymentQuery(
+            $this->fullPaidPropertiesQuery($request),
+            $request
+        );
 
         return view('mmsay.fullPaidProperties', compact(
             'properties',
@@ -4418,101 +4392,10 @@ class PropertyManagementController extends Controller
 
     private function partialPaidPropertiesQuery(Request $request)
     {
-        $receiptTotalSql = $this->receiptTotalSql('pad.AssetId');
-
-        $paymentSummary = DB::table('property_auction_detail as pad')
-            ->where('pad.IsDeleted', 0)
-            ->where('pad.IsActive', 1)
-            ->when(
-                $request->filled('district_id'),
-                fn($query) => $query->where(
-                    'pad.DistrictId',
-                    $request->integer('district_id')
-                )
-            )
-            ->when(
-                $request->filled('city_id'),
-                fn($query) => $query->where(
-                    'pad.CityId',
-                    $request->integer('city_id')
-                )
-            )
-            ->when(
-                $request->filled('sector_id'),
-                fn($query) => $query->where(
-                    'pad.SectorId',
-                    $request->integer('sector_id')
-                )
-            )
-            ->select([
-                'pad.PropertyAuctionId',
-                'pad.AssetId',
-                'pad.PurchaserID',
-                'pad.DistrictId',
-                'pad.CityId',
-                'pad.SectorId',
-                'pad.FlatCost',
-                'pad.ReceivedAmount',
-            ])
-            ->selectRaw("{$receiptTotalSql} AS cash_received")
-            ->selectRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) AS total_paid")
-            ->whereRaw("(
-                COALESCE(pad.ReceivedAmount, 0) + {$receiptTotalSql}
-            ) < COALESCE(pad.FlatCost, 0)");
-
-        $query = DB::query()
-            ->fromSub($paymentSummary, 'ps')
-            ->join('property_registration as pr', function ($join) {
-                $join->on('pr.AssetId', '=', 'ps.AssetId')
-                    ->where('pr.IsDeleted', 0)
-                    ->where('pr.IsActive', 1);
-            })
-            ->leftJoin('property_private_purchasers as ppp', function ($join) {
-                $join->on('ppp.PrivatePurchaserId', '=', 'ps.PurchaserID')
-                    ->where('ppp.IsDeleted', 0);
-            })
-            ->leftJoin('districts as d', 'd.DistrictId', '=', 'ps.DistrictId')
-            ->leftJoin('cities as c', 'c.CityId', '=', 'ps.CityId')
-            ->leftJoin('sectors as s', 's.SectorId', '=', 'ps.SectorId');
-
-        $search = trim((string) $request->input('search'));
-
-        if ($search !== '') {
-            $like = '%' . addcslashes($search, '%_\\') . '%';
-
-            $query->where(function ($subQuery) use ($like) {
-                $subQuery->where('ps.AssetId', 'like', $like)
-                    ->orWhere('pr.AssetName', 'like', $like)
-                    ->orWhere('ppp.ApplicationNo', 'like', $like)
-                    ->orWhere('ppp.PrivatePurchaserName', 'like', $like)
-                    ->orWhere('ppp.MobileNo', 'like', $like);
-            });
-        }
-
-        return $query
-            ->select([
-                'ps.PropertyAuctionId as property_auction_id',
-                'ps.AssetId as asset_id',
-                'ps.FlatCost as flat_cost',
-                'ps.ReceivedAmount as initial_received',
-                'ps.cash_received',
-                'ps.total_paid',
-                'pr.AssetName as asset_name',
-                'pr.AssetSize as asset_size',
-                'pr.Unit as asset_unit',
-                'ppp.ApplicationNo as application_number',
-                'ppp.PrivatePurchaserName as applicant_name',
-                'ppp.MobileNo as mobile',
-                'd.DistrictName as district_name',
-                'c.CityName as city_name',
-                's.SectorName as sector_name',
-            ])
-            ->selectRaw('
-            GREATEST(COALESCE(ps.FlatCost, 0) - ps.total_paid, 0)
-            AS pending_amount
-        ');
+        return $this->eligiblePaymentPropertiesQuery(
+            $request,
+            'partial'
+        );
     }
 
     public function pendingProperties(Request $request)
@@ -4553,10 +4436,10 @@ class PropertyManagementController extends Controller
                 ->get()
             : collect();
 
-        $properties = $this->partialPaidPropertiesQuery($request)
-            ->orderByDesc('ps.PropertyAuctionId')
-            ->paginate(self::LIST_PAGE_SIZE)
-            ->withQueryString();
+        $properties = $this->paginatePaymentQuery(
+            $this->partialPaidPropertiesQuery($request),
+            $request
+        );
 
         return view('mmsay.pendingProperties', compact(
             'properties',
@@ -4647,6 +4530,363 @@ class PropertyManagementController extends Controller
             'hasMore',
             'nextAfterId'
         ));
+    }
+
+    /**
+     * Full/partial payment की common optimized query.
+     *
+     * @param string $paymentStatus full|partial
+     */
+    private function eligiblePaymentPropertiesQuery(
+        Request $request,
+        string $paymentStatus
+    ) {
+        if (!in_array($paymentStatus, ['full', 'partial'], true)) {
+            throw new InvalidArgumentException(
+                'Invalid payment status supplied.'
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Payment summary
+        |--------------------------------------------------------------------------
+        | Start from eligible beneficiaries so only required assets reach the
+        | cash receipt join. Receipt amount is calculated once through SUM().
+        */
+
+        $operator = $paymentStatus === 'full' ? '>=' : '<';
+
+        /*
+        |--------------------------------------------------------------------------
+        | Aggregate cash receipts only once per asset
+        |--------------------------------------------------------------------------
+        */
+
+        $eligibleAssetIds = DB::table(
+            'mmsay_eligible_beneficiaries as receipt_meb'
+        )
+            ->join('property_private_purchasers as receipt_ppp', function ($join) {
+                $join->on(
+                    'receipt_ppp.ApplicationNo',
+                    '=',
+                    'receipt_meb.application_number_int'
+                )
+                    ->where('receipt_ppp.IsDeleted', 0);
+            })
+            ->join('property_auction_detail as receipt_pad', function ($join) {
+                $join->on(
+                    'receipt_pad.PurchaserID',
+                    '=',
+                    'receipt_ppp.PrivatePurchaserId'
+                )
+                    ->on('receipt_pad.AssetId', '=', 'receipt_ppp.Flat_Id')
+                    ->where('receipt_pad.IsDeleted', 0)
+                    ->where('receipt_pad.IsActive', 1);
+            })
+            ->when(
+                $request->filled('district_id'),
+                fn($query) => $query->where(
+                    'receipt_pad.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+            ->when(
+                $request->filled('city_id'),
+                fn($query) => $query->where(
+                    'receipt_pad.CityId',
+                    $request->integer('city_id')
+                )
+            )
+            ->when(
+                $request->filled('sector_id'),
+                fn($query) => $query->where(
+                    'receipt_pad.SectorId',
+                    $request->integer('sector_id')
+                )
+            )
+            ->select('receipt_pad.AssetId')
+            ->distinct();
+
+        $receiptTotals = DB::table('cash_receipt_details as cr')
+            ->joinSub($eligibleAssetIds, 'eligible_assets', function ($join) {
+                $join->on(
+                    'eligible_assets.AssetId',
+                    '=',
+                    'cr.asset_number'
+                );
+            })
+            ->selectRaw('
+        cr.asset_number,
+        SUM(COALESCE(cr.total_paid_amount, 0)) AS cash_received
+    ')
+            ->where('cr.IsDeleted', 0)
+            ->where('cr.IsActive', 1)
+            ->groupBy('cr.asset_number');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Eligible-beneficiary payment summary
+        |--------------------------------------------------------------------------
+        */
+
+        $paymentSummary = DB::table(
+            'mmsay_eligible_beneficiaries as meb'
+        )
+            ->join(
+                'property_private_purchasers as eligible_ppp',
+                function ($join) {
+                    $join->on(
+                        'eligible_ppp.ApplicationNo',
+                        '=',
+                        'meb.application_number_int'
+                    )
+                        ->where('eligible_ppp.IsDeleted', 0);
+                }
+            )
+
+            ->join(
+                'property_auction_detail as pad',
+                function ($join) {
+                    $join->on(
+                        'pad.PurchaserID',
+                        '=',
+                        'eligible_ppp.PrivatePurchaserId'
+                    )
+                        ->on(
+                            'pad.AssetId',
+                            '=',
+                            'eligible_ppp.Flat_Id'
+                        )
+                        ->where('pad.IsDeleted', 0)
+                        ->where('pad.IsActive', 1);
+                }
+            )
+
+            ->leftJoinSub(
+                $receiptTotals,
+                'rt',
+                'rt.asset_number',
+                '=',
+                'pad.AssetId'
+            )
+
+            ->when(
+                $request->filled('district_id'),
+                fn($query) => $query->where(
+                    'pad.DistrictId',
+                    $request->integer('district_id')
+                )
+            )
+
+            ->when(
+                $request->filled('city_id'),
+                fn($query) => $query->where(
+                    'pad.CityId',
+                    $request->integer('city_id')
+                )
+            )
+
+            ->when(
+                $request->filled('sector_id'),
+                fn($query) => $query->where(
+                    'pad.SectorId',
+                    $request->integer('sector_id')
+                )
+            )
+
+            ->whereRaw("
+        (
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(rt.cash_received, 0)
+        ) {$operator} COALESCE(pad.FlatCost, 0)
+    ")
+
+            ->select([
+                'pad.PropertyAuctionId',
+                'pad.AssetId',
+                'pad.PurchaserID',
+                'pad.DistrictId',
+                'pad.CityId',
+                'pad.SectorId',
+                'pad.FlatCost',
+                'pad.ReceivedAmount',
+            ])
+
+            ->selectRaw('
+        COALESCE(rt.cash_received, 0) AS cash_received
+    ')
+
+            ->selectRaw('
+        (
+            COALESCE(pad.ReceivedAmount, 0)
+            + COALESCE(rt.cash_received, 0)
+        ) AS total_paid
+    ');
+
+        /*
+        |--------------------------------------------------------------------------
+        | Property, applicant and location details
+        |--------------------------------------------------------------------------
+        */
+
+        $query = DB::query()
+            ->fromSub($paymentSummary, 'ps')
+
+            ->join(
+                'property_registration as pr',
+                function ($join) {
+                    $join->on(
+                        'pr.AssetId',
+                        '=',
+                        'ps.AssetId'
+                    )
+                        ->where('pr.IsDeleted', 0)
+                        ->where('pr.IsActive', 1);
+                }
+            )
+
+            ->join(
+                'property_private_purchasers as ppp',
+                function ($join) {
+                    $join->on(
+                        'ppp.PrivatePurchaserId',
+                        '=',
+                        'ps.PurchaserID'
+                    )
+                        ->where('ppp.IsDeleted', 0);
+                }
+            )
+
+            ->leftJoin(
+                'districts as d',
+                'd.DistrictId',
+                '=',
+                'ps.DistrictId'
+            )
+
+            ->leftJoin(
+                'cities as c',
+                'c.CityId',
+                '=',
+                'ps.CityId'
+            )
+
+            ->leftJoin(
+                'sectors as s',
+                's.SectorId',
+                '=',
+                'ps.SectorId'
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
+        $search = trim((string) $request->input('search'));
+
+        if ($search !== '') {
+            $like = '%' . addcslashes($search, '%_\\') . '%';
+
+            $query->where(function ($subQuery) use ($like) {
+                $subQuery
+                    ->where('ps.AssetId', 'like', $like)
+                    ->orWhere('pr.AssetName', 'like', $like)
+                    ->orWhere('ppp.ApplicationNo', 'like', $like)
+                    ->orWhere(
+                        'ppp.PrivatePurchaserName',
+                        'like',
+                        $like
+                    )
+                    ->orWhere('ppp.MobileNo', 'like', $like);
+            });
+        }
+
+        $query
+            ->select([
+                'ps.PropertyAuctionId as property_auction_id',
+                'ps.AssetId as asset_id',
+                'ps.FlatCost as flat_cost',
+                'ps.ReceivedAmount as initial_received',
+                'ps.cash_received',
+                'ps.total_paid',
+
+                'pr.AssetName as asset_name',
+                'pr.AssetSize as asset_size',
+                'pr.Unit as asset_unit',
+
+                'ppp.ApplicationNo as application_number',
+                'ppp.PrivatePurchaserName as applicant_name',
+                'ppp.MobileNo as mobile',
+
+                'd.DistrictName as district_name',
+                'c.CityName as city_name',
+                's.SectorName as sector_name',
+            ]);
+
+        if ($paymentStatus === 'full') {
+            $query->selectRaw('
+            GREATEST(
+                ps.total_paid - COALESCE(ps.FlatCost, 0),
+                0
+            ) AS excess_amount
+        ');
+        } else {
+            $query->selectRaw('
+            GREATEST(
+                COALESCE(ps.FlatCost, 0) - ps.total_paid,
+                0
+            ) AS pending_amount
+        ');
+        }
+
+        return $query;
+    }
+
+    private function paginatePaymentQuery(
+        $query,
+        Request $request
+    ): \Illuminate\Pagination\LengthAwarePaginator {
+        $perPage = self::LIST_PAGE_SIZE;
+
+        $page = max(
+            \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage(),
+            1
+        );
+
+        /*
+         * COUNT(*) OVER() listing और total को एक query में देता है।
+         */
+        $rows = $query
+            ->selectRaw('COUNT(*) OVER() AS filtered_total')
+            ->orderByDesc('ps.PropertyAuctionId')
+            ->forPage($page, $perPage)
+            ->get();
+
+        $total = $rows->isNotEmpty()
+            ? (int) $rows->first()->filtered_total
+            : 0;
+
+        /*
+         * Internal total field Blade में expose नहीं करना।
+         */
+        $rows->each(function ($row) {
+            unset($row->filtered_total);
+        });
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $rows,
+            $total,
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+                'pageName' => 'page',
+            ]
+        );
     }
 
 }

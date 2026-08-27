@@ -24,48 +24,69 @@
 
     $sidebarItemClass = static function (
         bool $active,
-        string $activeClasses = 'bg-indigo-50 text-indigo-700 ring-1 ring-inset ring-indigo-100 shadow-sm',
+        string $activeClasses = 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-[0_8px_20px_rgba(79,70,229,.20)]',
     ) {
-        return $active ? $activeClasses : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900';
-    };
-
-    $sidebarIconClass = static function (bool $active, string $activeClasses = 'bg-indigo-600 text-white') {
         return $active
             ? $activeClasses
-            : 'bg-slate-100 text-slate-500 group-hover:bg-slate-200 group-hover:text-slate-700';
+            : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-[0_4px_14px_rgba(15,23,42,.05)]';
+    };
+
+    $sidebarIconClass = static function (
+        bool $active,
+        string $activeClasses = 'bg-white/15 text-white'
+    ) {
+        return $active
+            ? $activeClasses
+            : 'bg-[#eef3f8] text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600';
     };
 @endphp
-<aside class="fixed left-0 top-0 z-40 flex h-full w-[230px] flex-col border-r border-slate-200 bg-white">
+<aside
+    class="fixed left-0 top-0 z-40 flex h-full w-[230px] flex-col
+           border-r border-slate-200/80
+           bg-gradient-to-b from-[#fbfcff] via-[#f7f9fd] to-[#f3f6fb]
+           shadow-[8px_0_30px_rgba(15,23,42,0.035)]">
     <!-- Sidebar Brand -->
-    <div class="border-b border-slate-100 px-4 py-4">
+    <div class="border-b border-slate-200/70 bg-white/70 px-4 py-5 backdrop-blur-sm">
         <div class="flex items-center gap-3">
 
             <div
-                class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 to-blue-600 text-white shadow-sm">
-                <span class="material-symbols-outlined text-[22px]" style="font-variation-settings: 'FILL' 1;">
+                class="flex h-11 w-11 shrink-0 items-center justify-center
+                       rounded-[14px]
+                       bg-gradient-to-br from-blue-500 to-indigo-600
+                       text-white
+                       shadow-[0_8px_18px_rgba(79,70,229,0.22)]">
+
+                <span
+                    class="material-symbols-outlined text-[23px]"
+                    style="font-variation-settings:'FILL' 1;">
                     home_work
                 </span>
+
             </div>
 
             <div class="min-w-0">
-                <h1 class="truncate text-base font-bold leading-tight text-slate-900">
+
+                <h1 class="truncate text-[16px] font-extrabold leading-tight text-slate-900">
                     MMGAY CEO
                 </h1>
 
-                <p class="mt-0.5 truncate text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                <p
+                    class="mt-1 truncate text-[9px] font-extrabold uppercase
+                           tracking-[0.14em] text-indigo-500">
                     Management Portal
                 </p>
+
             </div>
 
         </div>
     </div>
 
     <!-- Navigation -->
-    <nav class="flex-1 overflow-y-auto px-3 py-4">
+    <nav class="ceo-sidebar-scroll flex-1 overflow-y-auto bg-transparent px-3 py-4">
 
         {{-- ================= Master ================= --}}
         <div class="mb-5">
-            <p class="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p class="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
                 Master
             </p>
 
@@ -77,22 +98,35 @@
                 @endphp
 
                 <a href="{{ route('district.dashboard') }}"
-                    class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
-                    {{ $sidebarItemClass($dashboardActive) }}">
+                    class="group flex items-center gap-3 rounded-[12px]
+                           px-3 py-2.5 text-sm
+                           transition-all duration-200
+                           {{ $dashboardActive
+                               ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-[0_8px_20px_rgba(79,70,229,.20)]'
+                               : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm'
+                           }}">
 
                     <span
-                        class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
-                        {{ $sidebarIconClass($dashboardActive) }}">
+                        class="material-symbols-outlined flex h-8 w-8 shrink-0
+                               items-center justify-center rounded-lg text-[20px]
+                               {{ $dashboardActive
+                                   ? 'bg-white/15 text-white'
+                                   : 'bg-[#eef3f8] text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+                               }}"
+                        style="font-variation-settings:'FILL' 1;">
+
                         dashboard
+
                     </span>
 
-                    <span class="flex-1 font-medium">
+                    <span class="flex-1 font-semibold">
                         Dashboard
                     </span>
 
                     @if ($dashboardActive)
-                        <span class="h-2 w-2 shrink-0 rounded-full bg-indigo-600"></span>
+                        <span class="h-2 w-2 shrink-0 rounded-full bg-white"></span>
                     @endif
+
                 </a>
 
                 {{-- Village Report --}}
@@ -154,7 +188,7 @@
 
         {{-- ================= Allotment ================= --}}
         <div class="mb-5">
-            <p class="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p class="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
                 Allotment
             </p>
 
@@ -244,7 +278,7 @@
 
         {{-- ================= Registration ================= --}}
         <div class="mb-5">
-            <p class="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p class="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
                 Registration
             </p>
 
@@ -309,15 +343,38 @@
 
         {{-- ================= Possession ================= --}}
         <div>
-            <p class="mb-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <p class="mb-2 px-3 text-[10px] font-extrabold uppercase tracking-[0.13em] text-slate-400">
                 Possession
             </p>
 
             <div class="space-y-1">
-                <div class="flex cursor-not-allowed items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-slate-400">
+                @php
+                    $possessionReportActive = request()->routeIs('district.possession.list');
+
+                    $sidebarPossessionParams = array_filter(
+                        [
+                            'filter' => request()->query('filter', 'all'),
+                            'phase' => request()->query('phase', 'all'),
+                            'village_id' => request()->query('village_id'),
+                        ],
+                        static fn($value) => $value !== null && $value !== '',
+                    );
+                @endphp
+
+                <a href="{{ route('district.possession.list', $sidebarPossessionParams) }}"
+                    class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+                    {{ $possessionReportActive
+                        ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-[0_8px_20px_rgba(124,58,237,.20)]'
+                        : 'text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-[0_4px_14px_rgba(15,23,42,.05)]'
+                    }}">
 
                     <span
-                        class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[20px] text-slate-400">
+                        class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[20px]
+                        {{ $possessionReportActive
+                            ? 'bg-white/15 text-white'
+                            : 'bg-[#eef3f8] text-slate-500 group-hover:bg-violet-50 group-hover:text-violet-600'
+                        }}"
+                        style="font-variation-settings:'FILL' 1;">
                         key
                     </span>
 
@@ -325,19 +382,22 @@
                         Possession Report
                     </span>
 
-                    <span class="rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-semibold text-purple-600">
-                        Soon
-                    </span>
-                </div>
+                    @if ($possessionReportActive)
+                        <span class="h-2 w-2 shrink-0 rounded-full bg-white"></span>
+                    @endif
+                </a>
             </div>
         </div>
 
     </nav>
 
     <!-- Footer -->
-    <div class="mt-auto border-t border-slate-200 p-3">
+    <div class="mt-auto border-t border-slate-200/80 bg-white/40 p-3 backdrop-blur-sm">
 
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+        <div
+            class="rounded-[14px] border border-slate-200
+                   bg-white/90 p-3
+                   shadow-[0_5px_18px_rgba(15,23,42,.045)]">
 
             <div class="flex items-center gap-3">
 
@@ -382,6 +442,31 @@
     </div>
 </aside>
 
+
+
+<style>
+    .ceo-sidebar-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .ceo-sidebar-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .ceo-sidebar-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .ceo-sidebar-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+    .ceo-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+</style>
 
 <!-- TOP HEADER -->
 <header

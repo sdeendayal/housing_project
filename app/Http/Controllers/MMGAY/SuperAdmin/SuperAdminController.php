@@ -362,72 +362,211 @@ class SuperAdminController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Total Registration
+        | Registration Statistics + Physical Possession Base
         |--------------------------------------------------------------------------
-        | This table total does not depend on dashboard filters.
+        |
+        | FINAL BUSINESS RULE
+        |
+        | Approved & Paid beneficiaries are the registration base.
+        |
+        | OLD registry records:
+        |   registary.flatid IS NULL
+        |   -> SecondPartyMobile = OwnerMaster.MobileNo
+        |
+        | NEW registry records:
+        |   registary.flatid available
+        |   -> registary.flatid = OwnerMaster.FlatId
+        |
+        | UNION removes duplicate OwnerIds automatically. Therefore one
+        | beneficiary matching both old and new rules is counted only once.
         |--------------------------------------------------------------------------
         */
-        $totalRegistration = Cache::remember(
-            'super_admin_dashboard_total_registration',
-            now()->addMinutes(5),
-            fn() => DB::table('registary')->count()
-        );
 
         /*
-        |--------------------------------------------------------------------------
-        | Registry Matched
-        |--------------------------------------------------------------------------
-        | Unique matched OwnerMaster mobile numbers.
-        | WHERE EXISTS prevents duplicate registry records from multiplying rows.
-        |--------------------------------------------------------------------------
-        */
-        $matchedQuery = DB::table('OwnerMaster as o')
+         * Old registry records -> Mobile match
+         */
+        $oldRegistryOwnerIds = DB::table('OwnerMaster as o')
+            ->join('registary as r', function ($join) {
+                $join->on(
+                    'r.SecondPartyMobile',
+                    '=',
+                    'o.MobileNo'
+                );
+            })
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+            ->whereNull('r.flatid')
             ->whereNotNull('o.MobileNo')
-            ->where('o.MobileNo', '<>', '')
-            ->whereExists(function ($query) {
-                $query
-                    ->selectRaw('1')
-                    ->from('registary as r')
-                    ->whereColumn(
-                        'r.SecondPartyMobile',
-                        'o.MobileNo'
-                    )
-                    ->whereNotNull('r.SecondPartyMobile')
-                    ->where('r.SecondPartyMobile', '<>', '');
-            });
+            ->where('o.MobileNo', '<>', '');
 
-        $matchedQuery =
+        $oldRegistryOwnerIds =
             $this->applyOwnerDashboardFilters(
-                $matchedQuery,
+                $oldRegistryOwnerIds,
                 $phase,
                 $districtId,
                 $blockId,
                 $villageId
             );
 
-        $matched = $matchedQuery
-            ->distinct()
-            ->count('o.MobileNo');
+        $oldRegistryOwnerIds = $oldRegistryOwnerIds
+            ->select('o.OwnerId')
+            ->distinct();
 
-        $unMatched = max(
+
+        /*
+         * New registry records -> FlatId match
+         */
+        $newRegistryOwnerIds = DB::table('OwnerMaster as o')
+            ->join('registary as r', function ($join) {
+                $join->on(
+                    'r.flatid',
+                    '=',
+                    'o.FlatId'
+                );
+            })
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+            ->whereNotNull('r.flatid')
+            ->where('r.flatid', '>', 0);
+
+        $newRegistryOwnerIds =
+            $this->applyOwnerDashboardFilters(
+                $newRegistryOwnerIds,
+                $phase,
+                $districtId,
+                $blockId,
+                $villageId
+            );
+
+        $newRegistryOwnerIds = $newRegistryOwnerIds
+            ->select('o.OwnerId')
+            ->distinct();
+
+
+        /*
+         * Combined unique Registry Done OwnerIds.
+         *
+         * UNION (not UNION ALL) is intentional.
+         */
+        $registryDoneOwnerIds = $oldRegistryOwnerIds
+            ->union($newRegistryOwnerIds);
+
+
+        /*
+         * Approved & Paid = total registration eligible.
+         * Use the already-calculated dashboard allotment statistic so another
+         * large OwnerMaster COUNT query is not required.
+         */
+        $totalRegistrationEligible =
+            (int) ($stats->ApprovedPaid ?? 0);
+
+
+        /*
+         * Unique Registration Done
+         */
+        $registrationDone = (int) DB::query()
+            ->fromSub(
+                clone $registryDoneOwnerIds,
+                'registry_done'
+            )
+            ->count();
+
+
+        /*
+         * Registration Pending
+         */
+        $registrationPending = max(
             0,
-            (int) $totalRegistration - (int) $matched
+            $totalRegistrationEligible - $registrationDone
         );
+
 
         /*
         |--------------------------------------------------------------------------
         | Registration Object
         |--------------------------------------------------------------------------
+        |
+        | Existing Blade variable names are preserved to avoid breaking other
+        | code:
+        |
+        | TotalRegistration = Approved & Paid
+        | Matched           = Registration Done
+        | UnMatched         = Registration Pending
+        |--------------------------------------------------------------------------
         */
         $registration = (object) [
             'TotalRegistration' =>
-                (int) $totalRegistration,
+                $totalRegistrationEligible,
 
             'Matched' =>
-                (int) $matched,
+                $registrationDone,
 
             'UnMatched' =>
-                (int) $unMatched,
+                $registrationPending,
+        ];
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Physical Possession
+        |--------------------------------------------------------------------------
+        |
+        | ONLY Registry Done beneficiaries can enter Physical Possession.
+        | The old physical-possession workflow remains unchanged.
+        |--------------------------------------------------------------------------
+        */
+
+        $possessionEligible = $registrationDone;
+
+
+        /*
+         * Possession Given:
+         * registry-done unique OwnerId + final verified possession status.
+         */
+        $possessionGiven = (int) DB::query()
+            ->fromSub(
+                clone $registryDoneOwnerIds,
+                'registry_done'
+            )
+            ->join(
+                'mmgay_possession_applications as pa',
+                'pa.owner_id',
+                '=',
+                'registry_done.OwnerId'
+            )
+            ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(
+                            pa.physical_possession_status,
+                            ''
+                        )
+                    )
+                ) = ?
+            ", ['verified'])
+            ->distinct()
+            ->count('registry_done.OwnerId');
+
+
+        $possession = (object) [
+            'TotalEligible' =>
+                (int) $possessionEligible,
+
+            'Given' =>
+                (int) $possessionGiven,
+
+            'Pending' =>
+                max(
+                    0,
+                    (int) $possessionEligible
+                    - (int) $possessionGiven
+                ),
         ];
 
         /*
@@ -476,6 +615,7 @@ class SuperAdminController extends Controller
             compact(
                 'summary',
                 'registration',
+                'possession',
                 'districts',
                 'blocks',
                 'villages'
@@ -501,35 +641,109 @@ class SuperAdminController extends Controller
             ? (int) $request->input('village_id')
             : null;
 
+        /*
+        |--------------------------------------------------------------------------
+        | Registry verified unique Owner IDs
+        |--------------------------------------------------------------------------
+        |
+        | OLD registry records:
+        |   registary.flatid IS NULL
+        |   -> SecondPartyMobile = OwnerMaster.MobileNo
+        |
+        | NEW registry records:
+        |   registary.flatid IS NOT NULL
+        |   -> registary.flatid = OwnerMaster.FlatId
+        |
+        | UNION is intentional (not UNION ALL), so an OwnerId matching both
+        | rules is returned only once. With the verified data this gives the
+        | unique possession eligible base (1924 before possession status split).
+        |--------------------------------------------------------------------------
+        */
+
+        $oldRegistryOwners = DB::table('registary as r_old')
+            ->join(
+                'OwnerMaster as o_old',
+                'o_old.MobileNo',
+                '=',
+                'r_old.SecondPartyMobile'
+            )
+            ->whereNull('r_old.flatid')
+            ->whereNotNull('r_old.SecondPartyMobile')
+            ->where('r_old.SecondPartyMobile', '<>', '')
+            ->select('o_old.OwnerId')
+            ->distinct();
+
+        $newRegistryOwners = DB::table('registary as r_new')
+            ->join(
+                'OwnerMaster as o_new',
+                'o_new.FlatId',
+                '=',
+                'r_new.flatid'
+            )
+            ->whereNotNull('r_new.flatid')
+            ->where('r_new.flatid', '>', 0)
+            ->select('o_new.OwnerId')
+            ->distinct();
+
+        $registryVerifiedOwners = $oldRegistryOwners
+            ->union($newRegistryOwners);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Latest possession application per owner
+        |--------------------------------------------------------------------------
+        | This prevents duplicate OwnerMaster rows when an owner has more than
+        | one possession application/history row.
+        |--------------------------------------------------------------------------
+        */
+        $latestPossessionApplication = DB::table(
+            'mmgay_possession_applications as pa_latest'
+        )
+            ->selectRaw(
+                'pa_latest.owner_id, MAX(pa_latest.id) AS latest_id'
+            )
+            ->groupBy('pa_latest.owner_id');
+
         return DB::table('OwnerMaster as o')
-            ->leftJoin(
-                'mmgay_possession_applications as pa',
-                'pa.owner_id',
+
+            ->leftJoinSub(
+                $latestPossessionApplication,
+                'pal',
+                'pal.owner_id',
                 '=',
                 'o.OwnerId'
             )
 
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.id',
+                '=',
+                'pal.latest_id'
+            )
+
             /*
             |--------------------------------------------------------------------------
-            | Existing eligibility logic
+            | Approved & Paid base
             |--------------------------------------------------------------------------
             */
             ->where('o.IsApproved', 1)
             ->where('o.IsPaid', 1)
-            ->where('o.IsAllotmentCancelled', 0)
+            ->whereRaw(
+                'COALESCE(o.IsRejected, 0) = 0'
+            )
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
 
-            ->whereNotNull('o.MobileNo')
-            ->where('o.MobileNo', '<>', '')
-
-            ->whereExists(function ($query) {
-                $query
-                    ->selectRaw('1')
-                    ->from('registary as r')
-                    ->whereColumn(
-                        'r.SecondPartyMobile',
-                        'o.MobileNo'
-                    );
-            })
+            /*
+            |--------------------------------------------------------------------------
+            | Only unique Registry Done beneficiaries can enter Possession
+            |--------------------------------------------------------------------------
+            */
+            ->whereIn(
+                'o.OwnerId',
+                $registryVerifiedOwners
+            )
 
             ->when(
                 $phase !== null,
@@ -1080,7 +1294,7 @@ class SuperAdminController extends Controller
         Request $request
     ): array {
         $cacheKey = $this->possessionCacheKey(
-            'super_admin_possession_counts_v4',
+            'super_admin_possession_counts_v5',
             $request
         );
 
@@ -3354,18 +3568,18 @@ class SuperAdminController extends Controller
             'villages' => $villages,
         ];
     }
-   
+
     public function villageWiseReport(Request $request)
     {
         return view(
             'mmgay.super-admin.village-report',
             $this->villageReportData($request, true)
         );
-    }    
+    }
     public function villageReportPrint(Request $request)
     {
         $data = $this->villageReportData($request, false);
-        
+
         $report = collect($data['report'] ?? [])
             ->filter(function ($row) {
                 return !empty($row->VillageId)
@@ -3439,7 +3653,7 @@ class SuperAdminController extends Controller
             $data
         );
     }
-    
+
     public function villageReportCsv(Request $request)
     {
         DB::disableQueryLog();
@@ -3666,7 +3880,7 @@ class SuperAdminController extends Controller
                 'X-Accel-Buffering' => 'no',
             ]
         );
-    }    
+    }
     public function villageSiteDevelopment(
         Request $request,
         int $villageId
