@@ -48,7 +48,7 @@ class PpOfficerApiController extends Controller
             ->where('IsActive', 1)
             ->groupBy('asset_number');
 
-        $tempEligibleQuery = DB::table('property_auction_detail as pad')
+        $baseEligibleQuery = DB::table('property_auction_detail as pad')
             ->join('property_private_purchasers as ppp', 'pad.PurchaserID', '=', 'ppp.PrivatePurchaserId')
             ->join('mmsay_eligible_beneficiaries as meb', 'ppp.ApplicationNo', '=', 'meb.application_number')
             ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
@@ -58,22 +58,26 @@ class PpOfficerApiController extends Controller
             })
             ->leftJoinSub($receiptsQuery, 'crd', 'pad.AssetId', '=', 'crd.asset_number')
             ->where('pad.IsActive', 1)
-            ->where('pad.IsDeleted', 0)
-            ->where(function ($q) {
-                $q->whereNull('ppa.id')
-                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
-            })
-            ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+            ->where('pad.IsDeleted', 0);
 
         if ($officer->district_id) {
-            $tempEligibleQuery->where('ppp.DistrictId', $officer->district_id);
+            $baseEligibleQuery->where('ppp.DistrictId', $officer->district_id);
         } elseif ($officer->district_name) {
-            $tempEligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
+            $baseEligibleQuery->where('d.DistrictName', 'like', '%' . $officer->district_name . '%');
         }
 
         if ($phase) {
-            $tempEligibleQuery->where('ppp.phase', $phase);
+            $baseEligibleQuery->where('ppp.phase', $phase);
         }
+
+        $baseEligibleQuery->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+        // Clone baseEligibleQuery and add status filters for schedule pending
+        $tempEligibleQuery = (clone $baseEligibleQuery)
+            ->where(function ($q) {
+                $q->whereNull('ppa.id')
+                  ->orWhere('ppa.physical_possession_status', 'Eligible for Physical Possession');
+            });
 
         $eligibleCount = $tempEligibleQuery->count();
 
@@ -86,7 +90,8 @@ class PpOfficerApiController extends Controller
             'verified' => (clone $query)->where('physical_possession_status', 'Verified')->count(),
             'rejected' => (clone $query)->where('physical_possession_status', 'Rejected')->count(),
         ];
-        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['epossession_pending'] + $stats['verified'] + $stats['rejected'];
+        // Calculate total directly from database table query
+        $stats['total'] = $baseEligibleQuery->count();
 
         // 6. Last 7 Days ka graph labels aur data taiyaar karein
         $chartLabels = [];
