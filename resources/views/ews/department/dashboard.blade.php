@@ -15,10 +15,84 @@
         body {
             font-family: 'Outfit', sans-serif;
             overflow: hidden; /* Avoid main body scrollbars completely */
+            background-color: #f1f8f4;
+        }
+        /* Custom premium scrollbar */
+        main::-webkit-scrollbar {
+            width: 5px;
+        }
+        main::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        main::-webkit-scrollbar-thumb {
+            background: #a7f3d0;
+            border-radius: 10px;
+        }
+        main::-webkit-scrollbar-thumb:hover {
+            background: #34d399;
+        }
+
+        /* Slide & Fade in animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in-up {
+            opacity: 0;
+            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .delay-1 { animation-delay: 0.05s; }
+        .delay-2 { animation-delay: 0.1s; }
+        .delay-3 { animation-delay: 0.15s; }
+        .delay-4 { animation-delay: 0.2s; }
+
+        /* Subtle fika green gradient cards */
+        .premium-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f3faf6 100%);
+            border: 1px solid #d1fae5;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .premium-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.1), 0 8px 8px -6px rgba(16, 185, 129, 0.1) !important;
+        }
+
+        /* Pulse indicator */
+        .pulse-dot {
+            position: relative;
+        }
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: inherit;
+            border-radius: inherit;
+            animation: pulse 1.6s infinite;
+            opacity: 0.6;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.6;
+            }
+            100% {
+                transform: scale(2.4);
+                opacity: 0;
+            }
         }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 h-screen flex">
+<body class="bg-[#f1f8f4] text-slate-800 h-screen flex">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
@@ -27,7 +101,7 @@
     <div class="flex-1 flex flex-col ml-[260px] h-screen overflow-hidden">
         
         <!-- Top Header / Navbar -->
-        <header class="h-14 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200 shrink-0">
+        <header class="h-14 flex justify-between items-center px-6 bg-white shadow-sm border-b border-emerald-100 shrink-0">
             <div class="flex items-center gap-3">
                 <h2 class="text-sm font-extrabold text-[#0f172a]">Department Panel</h2>
                 <div class="h-4 w-[1px] bg-slate-200"></div>
@@ -38,39 +112,39 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[9px] text-slate-400 font-semibold uppercase leading-none">EWS Administrator</p>
                 </div>
-                <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-xs">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shadow-inner">
                     EW
                 </div>
             </div>
         </header>
 
         <!-- Content Body Wrapper -->
-        <main class="p-4 flex-grow flex flex-col gap-4 overflow-y-auto">
+        <main class="px-5 py-4 flex-grow flex flex-col gap-4 overflow-y-auto">
 
             <!-- Banner Header -->
-            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#0f172a] via-[#1e293b] to-[#334155] py-2.5 px-4 border border-slate-700/10 shrink-0 shadow-sm">
+            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-[#064e3b] via-[#022c22] to-[#0f172a] py-2 px-4 border border-emerald-800/10 shrink-0 shadow-sm animate-fade-in-up">
                 <div class="relative flex items-center justify-between text-white">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-white text-lg">analytics</span>
+                    <div class="flex items-center gap-2.5">
+                        <span class="material-symbols-outlined text-white text-base">analytics</span>
                         <div>
-                            <h2 class="text-xs font-black tracking-tight leading-tight">EWS Verification Funnel & Developer Operations Console</h2>
+                            <h2 class="text-xs font-black tracking-wider leading-tight uppercase">EWS Operations Console</h2>
                             <p class="text-[8px] text-slate-350 font-semibold uppercase leading-none mt-0.5">Application flow tracking & developer management system</p>
                         </div>
                     </div>
-                    <div class="bg-white/15 rounded px-2 py-0.5 text-[9px] font-bold">
+                    <div class="bg-white/10 backdrop-blur-sm rounded border border-white/10 px-2 py-0.5 text-[8.5px] font-bold tracking-wider">
                         <span>{{ now()->format('d M Y') }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- District & Phase Filter Card -->
-            <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0">
-                <div class="flex items-center gap-4 flex-wrap">
+            <div class="bg-white rounded-xl p-2.5 border border-slate-150 flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0 animate-fade-in-up delay-1">
+                <div class="flex items-center gap-4 flex-wrap w-full md:w-auto justify-between md:justify-start">
                     <!-- District Filter -->
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-orange-600 text-sm">filter_list</span>
-                        <span class="text-[11px] font-black uppercase text-slate-750 tracking-wider">District:</span>
-                        <select id="district-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10.5px] font-extrabold text-slate-700 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[180px]">
+                        <span class="material-symbols-outlined text-emerald-600 text-sm">filter_list</span>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider">District:</span>
+                        <select id="district-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-emerald-500 transition shadow-sm cursor-pointer min-w-[160px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
@@ -82,9 +156,9 @@
 
                     <!-- Phase Filter -->
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-blue-600 text-sm">filter_alt</span>
-                        <span class="text-[11px] font-black uppercase text-slate-750 tracking-wider">Phase:</span>
-                        <select id="phase-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10.5px] font-extrabold text-slate-700 focus:outline-none focus:border-blue-500 transition shadow-sm cursor-pointer min-w-[120px]">
+                        <span class="material-symbols-outlined text-emerald-500 text-sm">filter_alt</span>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider">Phase:</span>
+                        <select id="phase-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-emerald-500 transition shadow-sm cursor-pointer min-w-[110px]">
                             <option value="">ALL PHASES</option>
                             <option value="1" {{ ($phase ?? '') == '1' ? 'selected' : '' }}>PHASE 1</option>
                             <option value="2" {{ ($phase ?? '') == '2' ? 'selected' : '' }}>PHASE 2</option>
@@ -94,43 +168,43 @@
             </div>
 
             <!-- EWS STAGE 1: APPLICATIONS & PRE-VERIFICATION REJECTIONS -->
-            <div class="space-y-2 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                    <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">Registered Applications & Eligibility Filters</h3>
+            <div class="space-y-1.5 shrink-0 animate-fade-in-up delay-2">
+                <div class="flex items-center gap-2 pb-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Stage 01 / Pre-Verification Filters</h3>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <!-- Total Registration & Survey App Verification -->
-                    <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
+                    <div class="premium-card premium-card-blue rounded-xl p-3 flex flex-col justify-between shadow-sm min-h-[105px]">
                         <div>
                             <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex justify-between items-start cursor-pointer group/header">
                                 <div>
-                                    <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover/header:text-blue-600 transition">Total Registration</span>
-                                    <h2 class="text-2xl font-black text-blue-600 font-mono mt-1 group-hover/header:text-blue-700 transition">{{ number_format($totalRegistrationCount) }}</h2>
+                                    <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover/header:text-blue-600 transition">Total Registration</span>
+                                    <h2 class="text-xl font-black text-blue-600 font-mono mt-0.5 group-hover/header:text-blue-700 transition">{{ number_format($totalRegistrationCount) }}</h2>
                                 </div>
-                                <span class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center group-hover/header:bg-blue-600 group-hover/header:text-white transition"><span class="material-symbols-outlined text-sm">groups</span></span>
+                                <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 group-hover/header:bg-blue-600 group-hover/header:text-white transition"><span class="material-symbols-outlined text-xs">groups</span></span>
                             </a>
                             
-                            <div class="space-y-1 text-xs font-bold text-slate-700 mt-2 pt-2 border-t border-slate-100">
+                            <div class="space-y-1 text-[10px] font-bold text-slate-700 mt-1.5 pt-1.5 border-t border-slate-100">
                                 <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-blue-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
-                                        <span class="text-slate-655 group-hover:text-blue-800">Verify in survey app:</span>
+                                        <span class="text-slate-500 group-hover:text-blue-800">Verified in Survey:</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span class="text-blue-700 font-extrabold font-mono">{{ number_format($registeredCount) }}</span>
-                                        <span class="text-slate-300 group-hover:text-blue-700 transition flex items-center"><span class="material-symbols-outlined text-[13px]">visibility</span></span>
+                                        <span class="text-slate-300 group-hover:text-blue-700 transition flex items-center"><span class="material-symbols-outlined text-[10px]">visibility</span></span>
                                     </div>
                                 </a>
                                 <a href="{{ route('ews.department.list', ['type' => 'not_in_survey', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-slate-655 group-hover:text-rose-800">Rejected in survey app:</span>
+                                        <span class="text-slate-500 group-hover:text-rose-800">Rejected in Survey:</span>
                                     </div>
                                     <div class="flex items-center gap-1">
                                         <span class="text-rose-700 font-extrabold font-mono">{{ number_format($notInSurveyCount) }}</span>
-                                        <span class="text-slate-300 group-hover:text-rose-700 transition flex items-center"><span class="material-symbols-outlined text-[13px]">visibility</span></span>
+                                        <span class="text-slate-300 group-hover:text-rose-700 transition flex items-center"><span class="material-symbols-outlined text-[10px]">visibility</span></span>
                                     </div>
                                 </a>
                             </div>
@@ -138,53 +212,53 @@
                     </div>
 
                     <!-- PPP Exclusion -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId, 'phase' => $phase]) }}" class="premium-card premium-card-rose rounded-xl p-3 flex flex-col justify-between shadow-sm hover:border-rose-300 min-h-[105px] group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-600 transition whitespace-nowrap">2. PPP Exclusion</span>
-                                <h2 class="text-2xl font-black text-rose-600 font-mono mt-1">{{ number_format($rejectedPppCount) }}</h2>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-600 transition">2. PPP Exclusion</span>
+                                <h2 class="text-xl font-black text-rose-600 font-mono mt-0.5">{{ number_format($rejectedPppCount) }}</h2>
                             </div>
-                            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center group-hover:bg-rose-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">cancel</span></span>
+                            <span class="w-6 h-6 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center border border-rose-100 group-hover:bg-rose-600 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">cancel</span></span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-rose-600 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
+                        <div class="flex items-center justify-between text-[9px] text-rose-600 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-1.5 mt-2">
                             <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
 
                     <!-- Property in India -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId, 'phase' => $phase]) }}" class="premium-card premium-card-rose rounded-xl p-3 flex flex-col justify-between shadow-sm hover:border-rose-300 min-h-[105px] group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">3. Property in India</span>
-                                <h2 class="text-2xl font-black text-rose-700 font-mono mt-1">{{ number_format($rejectedPropertyCount) }}</h2>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">3. Property in India</span>
+                                <h2 class="text-xl font-black text-rose-700 font-mono mt-0.5">{{ number_format($rejectedPropertyCount) }}</h2>
                             </div>
-                            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:bg-rose-700 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">domain_disabled</span></span>
+                            <span class="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center border border-rose-100 group-hover:bg-rose-750 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">domain_disabled</span></span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-rose-700 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
+                        <div class="flex items-center justify-between text-[9px] text-rose-700 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-1.5 mt-2">
                             <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
 
                     <!-- House Ownership -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId, 'phase' => $phase]) }}" class="premium-card premium-card-rose rounded-xl p-3 flex flex-col justify-between shadow-sm hover:border-rose-300 min-h-[105px] group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">4. House Ownership</span>
-                                <h2 class="text-2xl font-black text-rose-700 font-mono mt-1">{{ number_format($rejectedOwnershipCount) }}</h2>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition">4. House Ownership</span>
+                                <h2 class="text-xl font-black text-rose-700 font-mono mt-0.5">{{ number_format($rejectedOwnershipCount) }}</h2>
                             </div>
-                            <span class="w-7 h-7 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center group-hover:bg-rose-700 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">home_work</span></span>
+                            <span class="w-6 h-6 rounded-lg bg-rose-50 text-rose-700 flex items-center justify-center border border-rose-100 group-hover:bg-rose-750 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">home_work</span></span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-rose-700 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
+                        <div class="flex items-center justify-between text-[9px] text-rose-700 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-1.5 mt-2">
                             <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
                 </div>
 
                 <!-- Explanation Banner 1 -->
-                <div class="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-650 flex items-center gap-2 shrink-0">
+                <div class="bg-slate-100 border border-slate-200 rounded-lg py-1.5 px-3 text-[10px] font-bold text-slate-600 flex items-center gap-2 shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
                     <span>
                         Filtration: Verify in survey app ({{ number_format($eligibleDrawCount + $rejectedPppCount + $rejectedPropertyCount + $rejectedOwnershipCount) }}) - Rejections ({{ number_format($rejectedPppCount) }} PPP + {{ number_format($rejectedPropertyCount) }} Prop + {{ number_format($rejectedOwnershipCount) }} House) = Eligible for booking ({{ number_format($eligibleDrawCount) }})
@@ -193,123 +267,123 @@
             </div>
 
             <!-- EWS STAGE 2: VERIFICATION PROCESS, ADC STATUS & ALLOTMENT -->
-            <div class="space-y-2 shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                    <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">EWS Draw Eligibility, Physical Verification & Allotments</h3>
+            <div class="space-y-1.5 shrink-0 animate-fade-in-up delay-3">
+                <div class="flex items-center gap-2 pb-0.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                    <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Stage 02 / Verification, ADC Status & Allotments</h3>
                 </div>
 
-                <div class="grid grid-cols-4 gap-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <!-- Eligible for booking -->
-                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow-md hover:border-indigo-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId, 'phase' => $phase]) }}" class="premium-card premium-card-indigo rounded-xl p-3 flex flex-col justify-between shadow-sm hover:border-indigo-350 min-h-[125px] group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition whitespace-nowrap">5. Eligible for booking</span>
-                                <h2 class="text-2xl font-black text-indigo-700 font-mono mt-1.5">{{ number_format($eligibleDrawCount) }}</h2>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition">5. Eligible for booking</span>
+                                <h2 class="text-xl font-black text-indigo-700 font-mono mt-1">{{ number_format($eligibleDrawCount) }}</h2>
                             </div>
-                            <span class="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-650 flex items-center justify-center group-hover:bg-indigo-600 group-hover:text-white transition"><span class="material-symbols-outlined text-sm">how_to_reg</span></span>
+                            <span class="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-650 flex items-center justify-center border border-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">how_to_reg</span></span>
                         </div>
-                        <div class="flex items-center justify-between text-xs text-indigo-650 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-2">
+                        <div class="flex items-center justify-between text-[9px] text-indigo-650 font-black uppercase tracking-wider leading-none border-t border-slate-100 pt-1.5">
                             <span>View List</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
 
                     <!-- Booking amount received -->
-                    <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
+                    <div class="premium-card premium-card-emerald rounded-xl p-3 flex flex-col justify-between shadow-sm min-h-[125px]">
                         <div>
-                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">6. Booking amount received</span>
-                            <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
-                                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Received:</span>
-                                        <span class="text-emerald-700 font-extrabold font-mono text-sm">{{ number_format($bookingCount) }}</span>
+                            <span class="text-[8px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">6. Booking Amount</span>
+                            <div class="space-y-1.5 text-[10px] font-bold text-slate-700 mt-2">
+                                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-emerald-50/80 transition cursor-pointer group">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-emerald-800">Received:</span>
+                                        <span class="text-emerald-700 font-extrabold font-mono">{{ number_format($bookingCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Booking amount received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-350 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not received:</span>
-                                        <span class="text-rose-700 font-extrabold font-mono text-sm">{{ number_format($notVisitedCount) }}</span>
+                                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100/50 pt-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-rose-800">Not Received:</span>
+                                        <span class="text-rose-700 font-extrabold font-mono">{{ number_format($notVisitedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Booking amount not received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-355 group-hover:text-rose-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
                             </div>
                         </div>
-                        <div class="text-[9px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1 font-mono">
+                        <div class="text-[8px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 font-mono">
                             Sum: {{ number_format($bookingCount + $notVisitedCount) }}
                         </div>
                     </div>
 
                     <!-- ADC Verification outcomes -->
-                    <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
+                    <div class="premium-card premium-card-emerald rounded-xl p-3 flex flex-col justify-between shadow-sm min-h-[125px]">
                         <div>
-                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">7. Eligibility verified by ADC</span>
-                            <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
-                                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Eligible:</span>
-                                        <span class="text-emerald-700 font-extrabold font-mono text-sm">{{ number_format($adcPassedCount) }}</span>
+                            <span class="text-[8px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">7. ADC Verification</span>
+                            <div class="space-y-1.5 text-[10px] font-bold text-slate-700 mt-2">
+                                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-emerald-50/80 transition cursor-pointer group">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-emerald-800">Eligible:</span>
+                                        <span class="text-emerald-700 font-extrabold font-mono">{{ number_format($adcPassedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Eligible List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-350 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
-                                    <div class="flex items-center gap-2">
-                                        <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                                        <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not Eligible:</span>
-                                        <span class="text-rose-700 font-extrabold font-mono text-sm">{{ number_format($adcFailedCount) }}</span>
+                                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100/50 pt-1.5">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-rose-800">Not Eligible:</span>
+                                        <span class="text-rose-700 font-extrabold font-mono">{{ number_format($adcFailedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-rose-700 transition flex items-center p-0.5" title="View Not Eligible List"><span class="material-symbols-outlined text-sm">visibility</span></span>
+                                    <span class="text-slate-355 group-hover:text-rose-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
                             </div>
                         </div>
-                        <div class="text-[9px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1 font-mono">
+                        <div class="text-[8px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 font-mono">
                             Sum: {{ number_format($adcPassedCount + $adcFailedCount) }}
                         </div>
                     </div>
 
                     <!-- Final Draw Outcomes -->
-                    <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
+                    <div class="premium-card premium-card-amber rounded-xl p-3 flex flex-col justify-between shadow-sm min-h-[125px]">
                         <div>
-                            <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">8. Flat allocation status</span>
-                            <div class="space-y-1 text-xs font-bold text-slate-700 mt-1">
-                                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
+                            <span class="text-[8px] uppercase text-slate-400 font-extrabold tracking-wider leading-none">8. Allocation Status</span>
+                            <div class="space-y-1 text-[10px] font-bold text-slate-700 mt-1">
+                                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
-                                        <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-emerald-800">Allotted:</span>
-                                        <span class="text-emerald-700 font-extrabold font-mono text-xs">{{ number_format($allottedCount) }}</span>
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-emerald-800">Allotted:</span>
+                                        <span class="text-emerald-700 font-extrabold font-mono text-[11px]">{{ number_format($allottedCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Allotted List"><span class="material-symbols-outlined text-xs">visibility</span></span>
+                                    <span class="text-slate-350 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-amber-50/80 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-amber-50/80 transition cursor-pointer group border-t border-slate-100/50 pt-0.5">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
-                                        <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-amber-800">Waiting:</span>
-                                        <span class="text-amber-700 font-extrabold font-mono text-xs">{{ number_format($pendingCount) }}</span>
+                                        <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-amber-800">Waiting:</span>
+                                        <span class="text-amber-700 font-extrabold font-mono text-[11px]">{{ number_format($pendingCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-amber-700 transition flex items-center p-0.5" title="View Waiting List"><span class="material-symbols-outlined text-xs">visibility</span></span>
+                                    <span class="text-slate-350 group-hover:text-amber-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-slate-100 transition cursor-pointer group border-t border-slate-100/50 pt-0.5">
                                     <div class="flex items-center gap-1.5">
-                                        <span class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
-                                        <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-slate-900">Unallotted:</span>
-                                        <span class="text-slate-655 font-extrabold font-mono text-xs">{{ number_format($drawRemainingCount) }}</span>
+                                        <span class="w-2 h-2 rounded-full bg-slate-450 shrink-0"></span>
+                                        <span class="text-slate-500 group-hover:text-slate-900">Unallotted:</span>
+                                        <span class="text-slate-655 font-extrabold font-mono text-[11px]">{{ number_format($drawRemainingCount) }}</span>
                                     </div>
-                                    <span class="text-slate-400 group-hover:text-slate-700 transition flex items-center p-0.5" title="View Unallotted List"><span class="material-symbols-outlined text-xs">visibility</span></span>
+                                    <span class="text-slate-350 group-hover:text-slate-700 transition flex items-center p-0.5" title="View List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
                             </div>
                         </div>
-                        <div class="text-[9.5px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-1 mt-1">
+                        <div class="text-[8px] text-slate-400 font-extrabold uppercase text-right leading-none border-t border-slate-100 pt-0.5 font-mono">
                             Sum: {{ number_format($allottedCount + $pendingCount + $drawRemainingCount) }}
                         </div>
                     </div>
                 </div>
 
                 <!-- Explanation Banner 2 -->
-                <div class="bg-slate-100 border border-slate-200 rounded-lg p-2 text-xs font-bold text-slate-650 flex items-center gap-2 shrink-0">
+                <div class="bg-slate-100 border border-slate-200 rounded-lg py-1.5 px-3 text-[10px] font-bold text-slate-600 flex items-center gap-2 shrink-0">
                     <span class="material-symbols-outlined text-slate-400 text-sm">info</span>
                     <span>
                         Outcomes: Booking Amount Received ({{ number_format($bookingCount) }}) -> Eligible ({{ number_format($adcPassedCount) }}) [Allotted: {{ $allottedCount }} + Waiting: {{ $pendingCount }} + Unallotted: {{ $drawRemainingCount }}] & Not Eligible ({{ number_format($adcFailedCount) }})
@@ -318,70 +392,66 @@
             </div>
 
             <!-- EWS STAGE 3: DEVELOPERS MANAGEMENT & FORM SUBMISSIONS -->
-            <div class="space-y-2 shrink-0 pt-2 border-t border-slate-200">
+            <div class="space-y-1.5 shrink-0 pt-1 border-t border-slate-200 animate-fade-in-up delay-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-                        <h3 class="text-xs font-black text-slate-700 uppercase tracking-wider">EWS Developers Hub & Submissions Management</h3>
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot"></span>
+                        <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Stage 03 / Developers & Audits</h3>
                     </div>
-                    <a href="{{ route('ews.department.developers.index') }}" class="text-xs font-black text-amber-700 hover:text-amber-800 uppercase flex items-center gap-1">
+                    <a href="{{ route('ews.department.developers.index') }}" class="text-[9px] font-black text-emerald-700 hover:text-emerald-800 uppercase flex items-center gap-0.5 transition">
                         <span>Manage Developers</span>
-                        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                        <span class="material-symbols-outlined text-xs">arrow_forward</span>
                     </a>
                 </div>
 
                 <div class="grid grid-cols-3 gap-3">
                     <!-- Developer Accounts Card -->
-                    <a href="{{ route('ews.department.developers.index') }}" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-3.5 border border-slate-700 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-slate-600 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.developers.index') }}" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-xl p-3 border border-slate-700 flex flex-col justify-between min-h-[90px] shadow-sm hover:shadow-md hover:border-slate-600 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-amber-400 font-extrabold leading-none group-hover:text-amber-300 transition">Developer Accounts</span>
-                                <h2 class="text-2xl font-black text-white font-mono mt-1">{{ number_format($developerCount) }}</h2>
-                                <p class="text-xs text-slate-300 font-medium mt-0.5">Registered developer credentials</p>
+                                <span class="text-[8px] uppercase tracking-wider text-emerald-400 font-extrabold leading-none group-hover:text-emerald-300 transition">Developer Accounts</span>
+                                <h2 class="text-xl font-black text-white font-mono mt-0.5">{{ number_format($developerCount) }}</h2>
+                                <p class="text-[9px] text-slate-350 font-medium leading-tight">Registered credentials</p>
                             </div>
-                            <span class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30 group-hover:bg-amber-500 group-hover:text-slate-900 transition">
-                                <span class="material-symbols-outlined text-base">engineering</span>
+                            <span class="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30 group-hover:bg-emerald-500 group-hover:text-slate-900 transition">
+                                <span class="material-symbols-outlined text-xs">engineering</span>
                             </span>
                         </div>
-                        <div class="pt-3 border-t border-slate-700/80 flex items-center justify-between text-xs text-amber-400 font-black uppercase tracking-wider">
-                            <span>View / Add Developers</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                        <div class="pt-1.5 border-t border-slate-700/80 flex items-center justify-between text-[9px] text-emerald-400 font-black uppercase tracking-wider mt-1.5">
+                            <span>Manage Credentials</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
 
                     <!-- Developer Flat Submissions Card -->
-                    <a href="{{ route('ews.department.developer-flats.index') }}" class="bg-white rounded-xl p-3.5 border border-slate-150 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-amber-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.developer-flats.index') }}" class="premium-card rounded-xl p-3 flex flex-col justify-between min-h-[90px] shadow-sm hover:border-emerald-350 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-amber-700 transition">Builder Flat Submissions</span>
-                                <h2 class="text-2xl font-black text-amber-700 font-mono mt-1">{{ number_format($developerFlatsCount) }}</h2>
-                                <p class="text-xs text-slate-500 font-medium mt-0.5">Total builder flat form entries</p>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-emerald-700 transition">Builder Flat Submissions</span>
+                                <h2 class="text-xl font-black text-emerald-700 font-mono mt-0.5">{{ number_format($developerFlatsCount) }}</h2>
+                                <p class="text-[9px] text-slate-500 font-medium leading-tight">Builder form entries</p>
                             </div>
-                            <span class="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100 group-hover:bg-amber-600 group-hover:text-white transition">
-                                <span class="material-symbols-outlined text-base">apartment</span>
-                            </span>
+                            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">apartment</span></span>
                         </div>
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-amber-700 font-black uppercase tracking-wider">
+                        <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] text-emerald-700 font-black uppercase tracking-wider mt-1.5">
                             <span>View Submitted Forms</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
 
                     <!-- Developer Activity Logs Card -->
-                    <a href="{{ route('ews.department.developer-logs.index') }}" class="bg-white rounded-xl p-3.5 border border-slate-150 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-slate-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.developer-logs.index') }}" class="premium-card rounded-xl p-3 flex flex-col justify-between min-h-[90px] shadow-sm hover:border-emerald-350 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[10.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-slate-700 transition">Developer Activity Logs</span>
-                                <h2 class="text-2xl font-black text-slate-800 font-mono mt-1">{{ number_format($developerLogsCount) }}</h2>
-                                <p class="text-xs text-slate-500 font-medium mt-0.5">Action & audit logs</p>
+                                <span class="text-[8px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-emerald-700 transition">Developer Activity Logs</span>
+                                <h2 class="text-xl font-black text-emerald-700 font-mono mt-0.5">{{ number_format($developerLogsCount) }}</h2>
+                                <p class="text-[9px] text-slate-500 font-medium leading-tight">Action & audit logs</p>
                             </div>
-                            <span class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200 group-hover:bg-slate-800 group-hover:text-white transition">
-                                <span class="material-symbols-outlined text-base">receipt_long</span>
-                            </span>
+                            <span class="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 group-hover:bg-emerald-600 group-hover:text-white transition"><span class="material-symbols-outlined text-xs">receipt_long</span></span>
                         </div>
-                        <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-700 font-black uppercase tracking-wider">
-                            <span>View Activity Logs</span>
-                            <span class="material-symbols-outlined text-sm group-hover:translate-x-0.5 transition-transform">chevron_right</span>
+                        <div class="pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] text-emerald-700 font-black uppercase tracking-wider mt-1.5">
+                            <span>View Audit Trail</span>
+                            <span class="material-symbols-outlined text-xs group-hover:translate-x-0.5 transition-transform">chevron_right</span>
                         </div>
                     </a>
                 </div>

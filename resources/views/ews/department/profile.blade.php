@@ -26,19 +26,19 @@
         
         <!-- Header -->
         <header class="bg-white border-b border-slate-200 px-8 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
-            <div>
-                <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-                    <span class="material-symbols-outlined text-orange-600 text-2xl">manage_accounts</span>
-                    Department Admin Profile
-                </h1>
-                <p class="text-xs text-slate-500 font-semibold mt-0.5">Manage administrator credentials & profile information</p>
-            </div>
+            <h1 class="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-600 text-2xl">manage_accounts</span>
+                <div class="flex-grow">
+                    <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest leading-none">My Profile Settings</h2>
+                    <p class="text-[9px] text-slate-400 uppercase font-semibold leading-none mt-1">Manage department administrator credentials</p>
+                </div>
+            </h1>
             <div class="flex items-center gap-3">
                 <div class="text-right">
-                    <p class="text-xs font-bold text-slate-900">{{ $user->name }}</p>
-                    <p class="text-[10px] text-orange-600 font-bold uppercase tracking-wider">EWS ADMINISTRATOR</p>
+                    <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
+                    <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">EWS ADMINISTRATOR</p>
                 </div>
-                <div class="w-9 h-9 bg-orange-100 text-orange-700 font-bold rounded-lg flex items-center justify-center border border-orange-200">
+                <div class="w-9 h-9 bg-emerald-100 text-emerald-700 font-bold rounded-lg flex items-center justify-center border border-emerald-200">
                     {{ strtoupper(substr($user->name, 0, 2)) }}
                 </div>
             </div>
@@ -50,13 +50,13 @@
                 <!-- Header Banner -->
                 <div class="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-5 text-white flex items-center justify-between">
                     <div>
-                        <span class="px-2 py-0.5 bg-orange-500/20 text-orange-300 border border-orange-500/30 rounded text-[9px] font-black uppercase mb-1 inline-block">
-                            SECURE ACCESS CONTROL
+                        <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-600 border border-emerald-500/30 rounded text-[9px] font-black uppercase mb-1 inline-block">
+                            System Role: {{ str_replace('_', ' ', $user->role) }}
                         </span>
-                        <h2 class="text-sm font-black uppercase tracking-wider">Department Admin Profile Details</h2>
-                        <p class="text-[10px] text-slate-300 font-medium">Administrator Account Settings & Credentials</p>
+                        <h3 class="text-sm font-black text-white uppercase tracking-wider">{{ $user->name }}</h3>
+                        <p class="text-[10px] text-slate-400 font-bold font-mono">{{ $user->email }}</p>
                     </div>
-                    <div class="w-10 h-10 bg-orange-600 rounded-lg flex items-center justify-center text-white shadow-md">
+                    <div class="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center text-white shadow-md">
                         <span class="material-symbols-outlined text-xl">admin_panel_settings</span>
                     </div>
                 </div>
@@ -81,7 +81,7 @@
                             </label>
                             <div class="relative">
                                 <input type="text" id="name" name="name" value="{{ old('name', $user->name) }}" required
-                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-900 font-bold focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all">
+                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-900 font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all">
                                 <span class="material-symbols-outlined absolute right-3 top-2.5 text-slate-400 text-base">edit</span>
                             </div>
                         </div>
@@ -90,12 +90,12 @@
                         <div class="space-y-1.5">
                             <label for="email" class="block text-xs font-bold uppercase text-slate-600 tracking-wider flex items-center justify-between">
                                 <span>System Email Address</span>
-                                <span class="text-amber-600 font-bold text-[9px] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">lock</span> Locked</span>
+                                <span class="text-emerald-600 font-bold text-[9px] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">lock</span> Locked</span>
                             </label>
                             <div class="relative">
                                 <input type="email" id="email" value="{{ $user->email }}" readonly disabled
                                     class="w-full bg-slate-100 border border-slate-200 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-500 font-mono font-bold cursor-not-allowed select-none">
-                                <span class="material-symbols-outlined absolute right-3 top-2.5 text-amber-500 text-base">lock</span>
+                                <span class="material-symbols-outlined absolute right-3 top-2.5 text-emerald-500 text-base">lock</span>
                             </div>
                             <p class="text-[9px] text-slate-400 italic">System email address cannot be edited.</p>
                         </div>
@@ -107,7 +107,7 @@
                             </label>
                             <div class="relative">
                                 <input type="text" id="mobile" name="mobile" value="{{ old('mobile', $user->mobile) }}" placeholder="Enter 10-digit mobile number" maxlength="10"
-                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-900 font-bold focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all">
+                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg pl-3 pr-9 py-2.5 text-xs text-slate-900 font-bold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all">
                                 <span class="material-symbols-outlined absolute right-3 top-2.5 text-slate-400 text-base">edit</span>
                             </div>
                         </div>
@@ -116,7 +116,7 @@
                         <div class="space-y-1.5">
                             <label for="role" class="block text-xs font-bold uppercase text-slate-600 tracking-wider flex items-center justify-between">
                                 <span>Assigned Role & Scheme</span>
-                                <span class="text-amber-600 font-bold text-[9px] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">verified_user</span> System Role</span>
+                                <span class="text-emerald-600 font-bold text-[9px] flex items-center gap-0.5"><span class="material-symbols-outlined text-xs">verified_user</span> System Role</span>
                             </label>
                             <input type="text" id="role" value="EWS DEPARTMENT ADMINISTRATOR (EWS HOUSING)" readonly disabled
                                 class="w-full bg-slate-100 border border-slate-200 rounded-lg px-3 py-2.5 text-xs text-slate-500 font-mono font-bold cursor-not-allowed select-none">
@@ -128,7 +128,7 @@
                     <!-- Change Password Section (EDITABLE) -->
                     <div>
                         <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5 mb-4">
-                            <span class="material-symbols-outlined text-amber-500 text-base">key</span>
+                            <span class="material-symbols-outlined text-emerald-500 text-base">key</span>
                             Change Password Credentials (Optional)
                         </h3>
 
@@ -137,14 +137,14 @@
                             <div class="space-y-1.5">
                                 <label for="password" class="block text-xs font-bold uppercase text-slate-600 tracking-wider">New Password</label>
                                 <input type="password" id="password" name="password" placeholder="Leave blank to keep current password"
-                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-xs text-slate-900 font-medium focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all">
+                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-xs text-slate-900 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all">
                             </div>
 
                             <!-- Confirm Password -->
                             <div class="space-y-1.5">
                                 <label for="password_confirmation" class="block text-xs font-bold uppercase text-slate-600 tracking-wider">Confirm New Password</label>
                                 <input type="password" id="password_confirmation" name="password_confirmation" placeholder="Re-enter new password"
-                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-xs text-slate-900 font-medium focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 focus:outline-none transition-all">
+                                    class="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2.5 text-xs text-slate-900 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none transition-all">
                             </div>
                         </div>
                     </div>
@@ -154,9 +154,9 @@
                         <a href="{{ route('ews.department.dashboard') }}" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold uppercase rounded-lg text-xs transition-all">
                             Cancel
                         </a>
-                        <button type="submit" class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-wider rounded-lg text-xs shadow-md transition-all flex items-center gap-2">
+                        <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider rounded-lg text-xs shadow-md transition-all flex items-center gap-2">
                             <span class="material-symbols-outlined text-base">save</span>
-                            <span>Update Admin Profile</span>
+                            <span>Update Profile Info</span>
                         </button>
                     </div>
                 </form>

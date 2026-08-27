@@ -597,7 +597,7 @@ class EwsDepartmentController extends Controller
                 $viewUrl = route('ews.department.beneficiary.show', ['type' => $row->type, 'secure_id' => $secId]);
                 return '
                     <div class="text-right">
-                        <a href="'.$viewUrl.'" class="px-2.5 py-1.5 bg-orange-50 hover:bg-orange-500 hover:text-white text-orange-600 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm border border-orange-100">
+                        <a href="'.$viewUrl.'" class="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-600 rounded-lg text-[9px] font-black uppercase transition-all shadow-sm border border-emerald-100">
                             View Details
                         </a>
                     </div>

@@ -37,7 +37,7 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase">EWS Administrator</p>
                 </div>
-                <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
                     EW
                 </div>
             </div>
@@ -85,7 +85,7 @@
                 @endphp
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
                     <div class="flex items-center gap-3">
-                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white flex items-center justify-center font-black text-xl uppercase shadow-md shadow-orange-500/10">
+                        <div class="w-12 h-12 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-black text-xl uppercase shadow-md shadow-emerald-500/10">
                             {{ substr($beneficiary->full_name ?? 'B', 0, 1) }}
                         </div>
                         <div>
@@ -112,7 +112,7 @@
                         <!-- Flat Number Details -->
                         <div>
                             <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Flat Number / Description</span>
-                            <span class="text-orange-600 block uppercase">{{ $beneficiary->flat_no ?? 'No Flat Allotted' }}</span>
+                            <span class="text-emerald-600 block uppercase">{{ $beneficiary->flat_no ?? 'No Flat Allotted' }}</span>
                         </div>
                     @endif
 
@@ -143,14 +143,14 @@
                         <div class="space-y-4">
                             <!-- SECTION 1: Personal Details & ID -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">person</span>
                                     PPT Member Registry Details
                                 </h4>
                                 <div class="grid grid-cols-3 gap-x-4 gap-y-2.5 text-[11px] font-bold text-slate-700">
                                     <div>
                                         <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Family ID</span>
-                                        <span class="text-orange-600 block uppercase font-extrabold">{{ $beneficiary->familyID ?? 'N/A' }}</span>
+                                        <span class="text-emerald-600 block uppercase font-extrabold">{{ $beneficiary->familyID ?? 'N/A' }}</span>
                                     </div>
                                     <div>
                                         <span class="block text-[8px] font-black uppercase text-slate-400 tracking-wider">Member ID</span>
@@ -195,7 +195,7 @@
 
                             <!-- SECTION 2: Socio-Economic & Income -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">payments</span>
                                     Financial Status & Income (PPP)
                                 </h4>
@@ -240,7 +240,7 @@
                         <div class="space-y-4">
                             <!-- SECTION 3: Verification & Details -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">verified</span>
                                     PPP Verification Status
                                 </h4>
@@ -274,7 +274,7 @@
 
                             <!-- SECTION 4: Family Details -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">family_restroom</span>
                                     Parents & Spouse Information
                                 </h4>
@@ -308,7 +308,7 @@
 
                             <!-- SECTION 5: Bank & Identification Details -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">account_balance</span>
                                     Bank Details & Identification
                                 </h4>
@@ -340,7 +340,7 @@
                         <div class="space-y-4">
                             <!-- SECTION 1: Personal Details & Address -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">person</span>
                                     Personal Details & Address
                                 </h4>
@@ -378,7 +378,7 @@
 
                             <!-- SECTION 2: Socio-Economic & Income -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">payments</span>
                                     Financial Status & Income
                                 </h4>
@@ -415,7 +415,7 @@
                         <div class="space-y-4">
                             <!-- SECTION 3: Amenities & Eligibility -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">rule</span>
                                     Ownership Declarations & Exclusions
                                 </h4>
@@ -441,7 +441,7 @@
 
                             <!-- SECTION 4: Family Details -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">family_restroom</span>
                                     Parents & Spouse Information
                                 </h4>
@@ -463,7 +463,7 @@
 
                             <!-- SECTION 5: Vehicle Declarations -->
                             <div class="bg-slate-50 border border-slate-150 rounded-xl p-3.5">
-                                <h4 class="text-[10px] font-black uppercase text-orange-600 tracking-wider mb-3 flex items-center gap-1.5">
+                                <h4 class="text-[10px] font-black uppercase text-emerald-600 tracking-wider mb-3 flex items-center gap-1.5">
                                     <span class="material-symbols-outlined text-md font-bold">directions_car</span>
                                     Vehicle Declarations
                                 </h4>

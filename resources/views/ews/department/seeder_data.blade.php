@@ -46,7 +46,7 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase">EWS Administrator</p>
                 </div>
-                <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
                     EW
                 </div>
             </div>
@@ -56,13 +56,13 @@
         <main class="mt-16 p-6 flex-grow flex flex-col space-y-4 min-w-0">
 
             <!-- Banner Card -->
-            <div class="bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl p-3 text-white shadow-sm flex justify-between items-center">
+            <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl p-3 text-white shadow-sm flex justify-between items-center shadow-emerald-900/10">
                 <div class="space-y-0.5">
                     <span class="text-[7px] font-black uppercase bg-white/20 px-1.5 py-0.5 rounded tracking-widest">Excel Repository - {{ $districtId }}</span>
                     <h2 class="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
                         <i class="bi bi-file-earmark-arrow-down-fill"></i> Original EWS Database Files ({{ $districtId }})
                     </h2>
-                    <p class="text-[9px] text-orange-50/90 font-light">Download original EWS Excel files directly from the directory catalog for {{ $districtId }}.</p>
+                    <p class="text-[9px] text-emerald-50/90 font-light">Download original EWS Excel files directly from the directory catalog for {{ $districtId }}.</p>
                 </div>
             </div>
 
@@ -89,7 +89,7 @@
                             <!-- Category / Folder Source -->
                             @if(isset($file['category']))
                                 <div class="inline-flex">
-                                    <span class="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase bg-orange-50 text-orange-700 border border-orange-100 tracking-wider">
+                                    <span class="px-2 py-0.5 rounded-full text-[7.5px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-100 tracking-wider">
                                         📁 {{ $file['category'] }}
                                     </span>
                                 </div>
@@ -151,7 +151,7 @@
             <div class="flex items-start justify-between">
                 <div class="space-y-1">
                     <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
-                        <span class="material-symbols-outlined text-orange-500 text-lg font-bold">lock</span> Secure Download
+                        <span class="material-symbols-outlined text-emerald-500 text-lg font-bold">lock</span> Secure Download
                     </h3>
                     <p class="text-[8px] text-slate-400 font-extrabold uppercase tracking-wider leading-tight">सुरक्षित डाउनलोड</p>
                 </div>
@@ -169,7 +169,7 @@
                     <label class="text-[7.5px] font-black uppercase text-slate-400 tracking-wider">Set Excel Password (required):</label>
                     <div class="relative flex items-center">
                         <span class="material-symbols-outlined absolute left-3 text-slate-400 text-sm">vpn_key</span>
-                        <input type="text" id="modal-password-input" placeholder="e.g. 123456" class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-orange-500">
+                        <input type="text" id="modal-password-input" placeholder="e.g. 123456" class="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     </div>
                 </div>
             </div>

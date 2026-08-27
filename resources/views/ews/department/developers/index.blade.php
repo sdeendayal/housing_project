@@ -23,10 +23,10 @@
         table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
         .dataTables_wrapper .dataTables_length select { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 20px 4px 8px; font-size: 10px; font-weight: bold; outline: none; }
         .dataTables_wrapper .dataTables_filter input { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; font-size: 10px; font-weight: 500; outline: none; margin-left: 8px; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #d97706 !important; color: #ffffff !important; border-color: #d97706 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #059669 !important; color: #ffffff !important; border-color: #059669 !important; }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
+<body class="bg-[#f1f8f4] text-slate-800 min-h-screen flex">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
@@ -35,7 +35,7 @@
     <div class="flex-1 flex flex-col ml-[260px]">
         
         <!-- Header -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
+        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-emerald-100">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard') }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
@@ -49,7 +49,7 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase">EWS Administrator</p>
                 </div>
-                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shadow-inner">
                     EW
                 </div>
             </div>
@@ -84,15 +84,15 @@
             @endif
 
             <!-- Header Action Card -->
-            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-150 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="bg-gradient-to-br from-white to-[#f3faf6] rounded-2xl p-6 shadow-sm border border-emerald-150 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
-                        <span class="material-symbols-outlined text-amber-600 text-xl">engineering</span>
+                        <span class="material-symbols-outlined text-emerald-600 text-xl">engineering</span>
                         <span>Developer Accounts Management</span>
                     </h2>
                     <p class="text-xs text-slate-500 mt-1 font-medium">Create, update, and manage EWS developer login credentials and access.</p>
                 </div>
-                <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
+                <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">person_add</span>
                     <span>Add New Developer</span>
                 </button>
@@ -102,13 +102,13 @@
             <div class="bg-white rounded-2xl shadow-sm border border-slate-150 p-6 flex flex-col flex-grow">
                 <div class="pb-4 border-b border-slate-100 mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                     <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                        <span class="material-symbols-outlined text-amber-600 text-lg">manage_accounts</span>
+                        <span class="material-symbols-outlined text-emerald-600 text-lg">manage_accounts</span>
                         <span>All Developer Accounts</span>
                     </h3>
 
                     <!-- Export Action Buttons -->
                     <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                        <button type="button" onclick="exportData('excel')" class="px-2.5 py-1 bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                        <button type="button" onclick="exportData('excel')" class="px-2.5 py-1 bg-white hover:bg-emerald-600 hover:text-white text-emerald-705 border border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
                             <span class="material-symbols-outlined text-sm">table_view</span>
                             <span>Excel</span>
                         </button>
@@ -151,7 +151,7 @@
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-400">person_add</span>
+                    <span class="material-symbols-outlined text-emerald-400">person_add</span>
                     <h3 class="text-sm font-black uppercase tracking-wider">Add New Developer</h3>
                 </div>
                 <button type="button" onclick="closeAddModal()" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xl font-bold cursor-pointer">&times;</button>
@@ -161,22 +161,22 @@
                 @csrf
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Developer / Team Name *</label>
-                    <input type="text" name="name" required placeholder="e.g. Acme Infra Developer" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="text" name="name" required placeholder="e.g. Acme Infra Developer" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Mobile Number (Login Mobile ID) *</label>
-                    <input type="text" name="mobile" maxlength="10" required placeholder="10-digit mobile number" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:border-amber-500">
+                    <input type="text" name="mobile" maxlength="10" required placeholder="10-digit mobile number" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Email Address *</label>
-                    <input type="email" name="email" required placeholder="developer@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="email" name="email" required placeholder="developer@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned District</label>
-                    <select name="district_name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <select name="district_name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                         @foreach($districts as $dist)
                             <option value="{{ $dist->name }}">{{ strtoupper($dist->name) }}</option>
                         @endforeach
@@ -185,12 +185,12 @@
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Password *</label>
-                    <input type="password" name="password" required minlength="6" placeholder="Account Password" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="password" name="password" required minlength="6" placeholder="Account Password" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Account Status</label>
-                    <select name="Is_Active" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <select name="Is_Active" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
                     </select>
@@ -198,7 +198,7 @@
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
                     <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition cursor-pointer">Create Developer</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Create Developer</button>
                 </div>
             </form>
         </div>
@@ -209,7 +209,7 @@
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-amber-400">edit_note</span>
+                    <span class="material-symbols-outlined text-emerald-400">edit_note</span>
                     <h3 class="text-sm font-black uppercase tracking-wider">Edit Developer Account</h3>
                 </div>
                 <button type="button" onclick="closeEditModal()" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xl font-bold cursor-pointer">&times;</button>
@@ -220,22 +220,22 @@
                 @method('PUT')
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Developer / Team Name *</label>
-                    <input type="text" id="edit-name" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="text" id="edit-name" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Mobile Number (Login Mobile ID) *</label>
-                    <input type="text" id="edit-mobile" name="mobile" maxlength="10" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:border-amber-500">
+                    <input type="text" id="edit-mobile" name="mobile" maxlength="10" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold font-mono focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Email Address *</label>
-                    <input type="email" id="edit-email" name="email" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="email" id="edit-email" name="email" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned District</label>
-                    <select id="edit-district_name" name="district_name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <select id="edit-district_name" name="district_name" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                         @foreach($districts as $dist)
                             <option value="{{ $dist->name }}">{{ strtoupper($dist->name) }}</option>
                         @endforeach
@@ -244,12 +244,12 @@
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Password (Leave blank to keep current)</label>
-                    <input type="password" name="password" minlength="6" placeholder="New Password" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <input type="password" name="password" minlength="6" placeholder="New Password" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Account Status</label>
-                    <select id="edit-Is_Active" name="Is_Active" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-amber-500">
+                    <select id="edit-Is_Active" name="Is_Active" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
                     </select>
@@ -257,7 +257,7 @@
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white text-xs font-bold rounded-lg hover:bg-amber-700 transition cursor-pointer">Update Account</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Update Account</button>
                 </div>
             </form>
         </div>
@@ -276,7 +276,7 @@
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'name', name: 'name', class: 'font-bold text-slate-800 uppercase' },
-                    { data: 'mobile', name: 'mobile', class: 'font-mono font-bold text-amber-700' },
+                    { data: 'mobile', name: 'mobile', class: 'font-mono font-bold text-emerald-700' },
                     { data: 'email', name: 'email', class: 'font-mono text-slate-600' },
                     { data: 'district_name', name: 'district_name', class: 'uppercase font-bold text-slate-600' },
                     { data: 'flats_count', name: 'flats_count', class: 'font-mono font-bold text-slate-700' },

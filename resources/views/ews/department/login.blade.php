@@ -30,19 +30,19 @@
             <div class="relative z-10 flex items-center gap-3">
                 <img src="{{ asset('Haryana_emblem.png') }}" class="w-10 h-10 object-contain" alt="Haryana Govt Emblem">
                 <div>
-                    <h3 class="text-xs font-black tracking-widest uppercase text-orange-400">Department of Housing</h3>
+                    <h3 class="text-xs font-black tracking-widest uppercase text-emerald-450">Department of Housing</h3>
                     <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Government of Haryana</p>
                 </div>
             </div>
 
             <!-- Central Callout -->
             <div class="relative z-10 my-auto max-w-xl">
-                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-[10px] font-black uppercase text-orange-400 tracking-wider mb-6">
-                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase text-emerald-400 tracking-wider mb-6">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                     EWS Housing Scheme
                 </span>
                 <h1 class="text-4xl lg:text-5xl font-black text-white leading-none tracking-tight">
-                    Affordable Homes for <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-amber-300">Every Family.</span>
+                    Affordable Homes for <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">Every Family.</span>
                 </h1>
                 <p class="text-xs text-slate-400 font-semibold uppercase mt-4 leading-relaxed tracking-wide">
                     Online tracking and registry system for Economically Weaker Section (EWS) residential allocations under Haryana's state housing framework.
@@ -67,7 +67,7 @@
         <div class="w-full lg:w-[45%] flex items-center justify-center p-8 bg-[#1e293b] relative">
             
             <!-- Ambient Glow Spotlights -->
-            <div class="absolute right-10 top-10 w-72 h-72 bg-orange-600/10 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute right-10 top-10 w-72 h-72 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
             <div class="absolute left-10 bottom-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
             <!-- Form Wrapper -->
@@ -117,8 +117,8 @@
                     <div>
                         <label for="email" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Email Address / Mobile Number</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-orange-500 text-base">person</span>
-                            <input type="text" name="email" id="email" required value="{{ old('email', 'ews_department@gmail.com') }}" placeholder="Email address or 10-digit mobile" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-orange-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500 transition font-bold">
+                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-emerald-500 text-base">person</span>
+                            <input type="text" name="email" id="email" required value="{{ old('email', 'ews_department@gmail.com') }}" placeholder="Email address or 10-digit mobile" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
                         </div>
                     </div>
 
@@ -126,13 +126,13 @@
                     <div>
                         <label for="password" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Password</label>
                         <div class="relative">
-                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-orange-500 text-base">lock</span>
-                            <input type="password" name="password" id="password" required value="password123" placeholder="••••••••" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-orange-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-orange-500 transition font-bold">
+                            <span class="material-symbols-outlined absolute left-3.5 top-3 text-emerald-500 text-base">lock</span>
+                            <input type="password" name="password" id="password" required value="password123" placeholder="••••••••" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
                         </div>
                     </div>
 
                     <!-- Submit Button with Spinner -->
-                    <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white font-black uppercase py-3.5 rounded-lg text-xs tracking-widest shadow-md flex items-center justify-center gap-2 transition-all mt-6 disabled:opacity-75 disabled:cursor-not-allowed">
+                    <button type="submit" id="submitBtn" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-700 hover:to-teal-650 text-white font-black uppercase py-3.5 rounded-lg text-xs tracking-widest shadow-md flex items-center justify-center gap-2 transition-all mt-6 disabled:opacity-75 disabled:cursor-not-allowed">
                         <span id="btnIcon" class="material-symbols-outlined text-[15px] font-bold">login</span>
                         <svg id="btnSpinner" class="hidden animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -159,7 +159,7 @@
 
                 <!-- Back to Homepage -->
                 <div class="mt-8 pt-6 border-t border-slate-800/60 text-center">
-                    <a href="/" class="text-[9px] text-slate-500 hover:text-orange-400 uppercase tracking-widest font-black transition-all inline-flex items-center gap-1">
+                    <a href="/" class="text-[9px] text-slate-500 hover:text-emerald-400 uppercase tracking-widest font-black transition-all inline-flex items-center gap-1">
                         <span class="material-symbols-outlined text-sm">arrow_back</span>
                         <span>Back to Homepage</span>
                     </a>

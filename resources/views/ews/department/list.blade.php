@@ -120,7 +120,7 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase">EWS Administrator</p>
                 </div>
-                <div class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
                     EW
                 </div>
             </div>
@@ -134,7 +134,7 @@
                 <div class="pb-3.5 border-b border-slate-100 mb-4 flex justify-between items-center">
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
-                            <span class="material-symbols-outlined text-orange-600 text-lg font-bold">badge</span>
+                            <span class="material-symbols-outlined text-emerald-600 text-lg font-bold">badge</span>
                             <span id="table-title">Beneficiaries List Database</span>
                         </h3>
                         <p class="text-[9px] text-slate-400 uppercase font-semibold">Active server-side datatable listings showing registration details</p>
@@ -156,7 +156,7 @@
                             </button>
                         </div>
 
-                        <select id="district-filter" onchange="applyListFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[150px]">
+                        <select id="district-filter" onchange="applyListFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-emerald-500 transition shadow-sm cursor-pointer min-w-[150px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
@@ -240,11 +240,11 @@
             ];
 
             if (currentType === 'allotted') {
-                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
+                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-emerald-600 font-mono font-bold' });
             }
 
             if (currentType === 'pending') {
-                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-orange-600 font-mono font-bold' });
+                columnsConfig.push({ data: 'flat_no', name: 'flat_no', class: 'text-emerald-600 font-mono font-bold' });
             }
 
             if (currentType !== 'ppt_members' && currentType !== 'not_in_survey') {
@@ -311,7 +311,7 @@
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search beneficiaries...",
-                    processing: '<div class="flex items-center justify-center p-2 text-orange-600 font-bold text-[10px]"><i class="bi bi-arrow-repeat animate-spin mr-1"></i> Fetching registry...</div>'
+                    processing: '<div class="flex items-center justify-center p-2 text-emerald-600 font-bold text-[10px]"><i class="bi bi-arrow-repeat animate-spin mr-1"></i> Fetching registry...</div>'
                 },
             });
         });

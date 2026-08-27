@@ -23,10 +23,10 @@
         table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
         .dataTables_wrapper .dataTables_length select { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 4px 20px 4px 8px; font-size: 10px; font-weight: bold; outline: none; }
         .dataTables_wrapper .dataTables_filter input { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; padding: 5px 10px; font-size: 10px; font-weight: 500; outline: none; margin-left: 8px; }
-        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #d97706 !important; color: #ffffff !important; border-color: #d97706 !important; }
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #059669 !important; color: #ffffff !important; border-color: #059669 !important; }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
+<body class="bg-[#f1f8f4] text-slate-800 min-h-screen flex">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
@@ -35,7 +35,7 @@
     <div class="flex-1 flex flex-col ml-[260px]">
         
         <!-- Header -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
+        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-emerald-100">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard') }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
@@ -49,7 +49,7 @@
                     <p class="text-xs font-bold text-slate-700">{{ $user->name }}</p>
                     <p class="text-[10px] text-slate-400 font-semibold uppercase">EWS Administrator</p>
                 </div>
-                <div class="w-9 h-9 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shadow-inner">
                     EW
                 </div>
             </div>
@@ -63,7 +63,7 @@
                 <div class="pb-4 border-b border-slate-100 mb-4 flex justify-between items-center">
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
-                            <span class="material-symbols-outlined text-amber-600 text-lg">apartment</span>
+                            <span class="material-symbols-outlined text-emerald-600 text-lg">apartment</span>
                             <span>Developer Flat Form Submissions</span>
                         </h3>
                         <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Showing all flat records entered by developers across Haryana districts</p>
@@ -72,7 +72,7 @@
                     <div class="flex items-center gap-3">
                         <!-- Export Action Buttons -->
                         <div class="flex items-center gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-                            <button type="button" onclick="exportData('excel')" class="px-2.5 py-1 bg-white hover:bg-emerald-600 hover:text-white text-emerald-700 border border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
+                            <button type="button" onclick="exportData('excel')" class="px-2.5 py-1 bg-white hover:bg-emerald-600 hover:text-white text-emerald-705 border border-emerald-200 rounded-lg text-[10px] font-bold transition flex items-center gap-1 shadow-sm">
                                 <span class="material-symbols-outlined text-sm">table_view</span>
                                 <span>Excel</span>
                             </button>
@@ -86,7 +86,7 @@
                             </button>
                         </div>
 
-                        <select id="district-filter" onchange="filterFlats(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-amber-500 min-w-[170px]">
+                        <select id="district-filter" onchange="filterFlats(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-emerald-500 min-w-[170px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $dist)
                                 <option value="{{ $dist->id }}">{{ strtoupper($dist->name) }}</option>
@@ -129,7 +129,7 @@
                     icon: 'error',
                     title: 'Data Load Warning',
                     text: 'Unable to fetch flat submissions data. Please refresh or try again.',
-                    confirmButtonColor: '#d97706',
+                    confirmButtonColor: '#059669',
                     customClass: { popup: 'rounded-2xl font-sans' }
                 });
             });
@@ -152,7 +152,7 @@
                     { data: 'project_name', name: 'project_name', class: 'font-bold text-slate-800 uppercase' },
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'font-mono text-slate-600 font-bold' },
                     { data: 'floor', name: 'floor', class: 'font-bold text-slate-700' },
-                    { data: 'flat_number', name: 'flat_number', class: 'font-mono font-bold text-amber-700' },
+                    { data: 'flat_number', name: 'flat_number', class: 'font-mono font-bold text-emerald-700' },
                     { data: 'flat_code', name: 'flat_code', class: 'font-mono font-bold text-emerald-700' },
                     { data: 'created_by_info', name: 'created_by_info', orderable: false, searchable: false }
                 ],
