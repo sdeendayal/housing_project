@@ -90,7 +90,7 @@ class PpOfficerController extends Controller
             'verified' => $statsData['Verified'] ?? 0,
             'rejected' => $statsData['Rejected'] ?? 0,
         ];
-        $stats['total'] = $stats['awaiting_schedule'] + $stats['scheduled'] + $stats['submitted'] + $stats['site_verified'] + $stats['verified'] + $stats['rejected'];
+        $stats['total'] = 0; // Calculated dynamically from the database later
 
         // Aggregate last 7 days chart data in a single database query
         $sevenDaysAgo = now()->subDays(6)->startOfDay();
@@ -168,6 +168,9 @@ class PpOfficerController extends Controller
             DB::raw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) as total_paid")
         ])
         ->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
+
+        // Calculate total eligible count directly from the database table (with district/phase checks)
+        $stats['total'] = (clone $purchasersQuery)->count();
 
         $search = $request->input('search');
         if ($search) {
