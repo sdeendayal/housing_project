@@ -422,3 +422,33 @@
                     </a>
                 </div>
             </div>
+
+        </main>
+    </div>
+
+    <!-- JS Dropdown Toggle logic -->
+    <script>
+        function applyFilters() {
+            let url = new URL(window.location.href);
+            let districtId = document.getElementById('district-select').value;
+            let phase = document.getElementById('phase-select').value;
+            
+            if (districtId) {
+                url.searchParams.set('district_id', districtId);
+            } else {
+                url.searchParams.delete('district_id');
+            }
+            
+            if (phase) {
+                url.searchParams.set('phase', phase);
+            } else {
+                url.searchParams.delete('phase');
+            }
+            
+            window.location.href = url.toString();
+        }
+    </script>
+
+    @include('partials.global-toast')
+</body>
+</html>
