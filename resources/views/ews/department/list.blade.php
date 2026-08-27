@@ -108,7 +108,7 @@
         <!-- Top Header / Navbar -->
         <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
             <div class="flex items-center gap-3">
-                <a href="{{ route('ews.department.dashboard', ['district_id' => $districtId]) }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
+                <a href="{{ route('ews.department.dashboard', ['district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
                     <span class="text-xs font-bold uppercase">Back to Overview</span>
                 </a>
@@ -156,13 +156,18 @@
                             </button>
                         </div>
 
-                        <select id="district-filter" onchange="filterListByDistrict(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[150px]">
+                        <select id="district-filter" onchange="applyListFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[150px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
                                     {{ strtoupper($district->name) }}
                                 </option>
                             @endforeach
+                        </select>
+                        <select id="phase-filter" onchange="applyListFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1.5 text-[9.5px] font-extrabold text-slate-705 focus:outline-none focus:border-blue-500 transition shadow-sm cursor-pointer min-w-[100px]">
+                            <option value="">ALL PHASES</option>
+                            <option value="1" {{ ($phase ?? '') == '1' ? 'selected' : '' }}>PHASE 1</option>
+                            <option value="2" {{ ($phase ?? '') == '2' ? 'selected' : '' }}>PHASE 2</option>
                         </select>
                         <div class="bg-slate-100 text-slate-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider">
                             Type: {{ $type }}
@@ -299,6 +304,7 @@
                     data: function (d) {
                         d.type = currentType;
                         d.district_id = "{{ $districtId }}";
+                        d.phase = "{{ $phase }}";
                     }
                 },
                 columns: columnsConfig,
@@ -310,12 +316,21 @@
             });
         });
 
-        function filterListByDistrict(districtId) {
+        function applyListFilters() {
             let url = new URL(window.location.href);
+            let districtId = document.getElementById('district-filter').value;
+            let phase = document.getElementById('phase-filter').value;
+            
             if (districtId) {
                 url.searchParams.set('district_id', districtId);
             } else {
                 url.searchParams.delete('district_id');
+            }
+            
+            if (phase) {
+                url.searchParams.set('phase', phase);
+            } else {
+                url.searchParams.delete('phase');
             }
             window.location.href = url.toString();
         }
@@ -327,6 +342,7 @@
             url.searchParams.set('format', format);
             url.searchParams.set('type', currentType);
             if ("{{ $districtId }}") url.searchParams.set('district_id', "{{ $districtId }}");
+            if ("{{ $phase }}") url.searchParams.set('phase', "{{ $phase }}");
             if (search) url.searchParams.set('search', search);
 
             if (format === 'pdf') {

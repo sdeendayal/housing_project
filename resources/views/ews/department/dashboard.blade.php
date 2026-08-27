@@ -63,21 +63,33 @@
                 </div>
             </div>
 
-            <!-- District Filter Card -->
-            <div class="bg-white rounded-xl p-3 border border-slate-150 flex items-center justify-between shadow-sm shrink-0">
-                <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-orange-600 text-sm">filter_list</span>
-                    <span class="text-[11px] font-black uppercase text-slate-750 tracking-wider">Filter by District:</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <select id="district-select" onchange="filterByDistrict(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10.5px] font-extrabold text-slate-700 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[200px]">
-                        <option value="">ALL DISTRICTS</option>
-                        @foreach($districts as $district)
-                            <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
-                                {{ strtoupper($district->name) }}
-                            </option>
-                        @endforeach
-                    </select>
+            <!-- District & Phase Filter Card -->
+            <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <!-- District Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-orange-600 text-sm">filter_list</span>
+                        <span class="text-[11px] font-black uppercase text-slate-750 tracking-wider">District:</span>
+                        <select id="district-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10.5px] font-extrabold text-slate-700 focus:outline-none focus:border-orange-500 transition shadow-sm cursor-pointer min-w-[180px]">
+                            <option value="">ALL DISTRICTS</option>
+                            @foreach($districts as $district)
+                                <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
+                                    {{ strtoupper($district->name) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <!-- Phase Filter -->
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-blue-600 text-sm">filter_alt</span>
+                        <span class="text-[11px] font-black uppercase text-slate-750 tracking-wider">Phase:</span>
+                        <select id="phase-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10.5px] font-extrabold text-slate-700 focus:outline-none focus:border-blue-500 transition shadow-sm cursor-pointer min-w-[120px]">
+                            <option value="">ALL PHASES</option>
+                            <option value="1" {{ ($phase ?? '') == '1' ? 'selected' : '' }}>PHASE 1</option>
+                            <option value="2" {{ ($phase ?? '') == '2' ? 'selected' : '' }}>PHASE 2</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -92,7 +104,7 @@
                     <!-- Total Registration & Survey App Verification -->
                     <div class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm">
                         <div>
-                            <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId]) }}" class="flex justify-between items-start cursor-pointer group/header">
+                            <a href="{{ route('ews.department.list', ['type' => 'ppt_members', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex justify-between items-start cursor-pointer group/header">
                                 <div>
                                     <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover/header:text-blue-600 transition">Total Registration</span>
                                     <h2 class="text-2xl font-black text-blue-600 font-mono mt-1 group-hover/header:text-blue-700 transition">{{ number_format($totalRegistrationCount) }}</h2>
@@ -101,7 +113,7 @@
                             </a>
                             
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-2 pt-2 border-t border-slate-100">
-                                <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-blue-50/80 transition cursor-pointer group">
+                                <a href="{{ route('ews.department.list', ['type' => 'registered', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-blue-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
                                         <span class="text-slate-655 group-hover:text-blue-800">Verify in survey app:</span>
@@ -111,7 +123,7 @@
                                         <span class="text-slate-300 group-hover:text-blue-700 transition flex items-center"><span class="material-symbols-outlined text-[13px]">visibility</span></span>
                                     </div>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'not_in_survey', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group">
+                                <a href="{{ route('ews.department.list', ['type' => 'not_in_survey', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-0.5 rounded hover:bg-rose-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
                                         <span class="text-slate-655 group-hover:text-rose-800">Rejected in survey app:</span>
@@ -126,7 +138,7 @@
                     </div>
 
                     <!-- PPP Exclusion -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ppp', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-600 transition whitespace-nowrap">2. PPP Exclusion</span>
@@ -141,7 +153,7 @@
                     </a>
 
                     <!-- Property in India -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_property', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">3. Property in India</span>
@@ -156,7 +168,7 @@
                     </a>
 
                     <!-- House Ownership -->
-                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'rejected_ownership', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[98px] shadow-sm hover:shadow-md hover:border-rose-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-rose-700 transition whitespace-nowrap">4. House Ownership</span>
@@ -189,7 +201,7 @@
 
                 <div class="grid grid-cols-4 gap-3">
                     <!-- Eligible for booking -->
-                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow-md hover:border-indigo-300 transition cursor-pointer group">
+                    <a href="{{ route('ews.department.list', ['type' => 'eligible_draw', 'district_id' => $districtId, 'phase' => $phase]) }}" class="bg-white rounded-xl p-3 border border-slate-150 flex flex-col justify-between min-h-[120px] shadow-sm hover:shadow-md hover:border-indigo-300 transition cursor-pointer group">
                         <div class="flex justify-between items-start">
                             <div>
                                 <span class="text-[8.5px] uppercase tracking-wider text-slate-400 font-extrabold leading-none group-hover:text-indigo-650 transition whitespace-nowrap">5. Eligible for booking</span>
@@ -208,7 +220,7 @@
                         <div>
                             <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">6. Booking amount received</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
-                                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
+                                <a href="{{ route('ews.department.list', ['type' => 'booking', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                                         <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Received:</span>
@@ -216,7 +228,7 @@
                                     </div>
                                     <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Booking amount received List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'not_visited', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2.5 h-2.5 rounded-full bg-rose-500 shrink-0"></span>
                                         <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not received:</span>
@@ -236,7 +248,7 @@
                         <div>
                             <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">7. Eligibility verified by ADC</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1.5">
-                                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
+                                <a href="{{ route('ews.department.list', ['type' => 'adc_passed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                                         <span class="text-xs font-bold text-slate-700 group-hover:text-emerald-800">Eligible:</span>
@@ -244,7 +256,7 @@
                                     </div>
                                     <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Eligible List"><span class="material-symbols-outlined text-sm">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'adc_failed', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-rose-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-2">
                                         <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
                                         <span class="text-xs font-bold text-slate-700 group-hover:text-rose-800">Not Eligible:</span>
@@ -264,7 +276,7 @@
                         <div>
                             <span class="text-[8.5px] uppercase text-slate-400 font-extrabold tracking-wider leading-none whitespace-nowrap">8. Flat allocation status</span>
                             <div class="space-y-1 text-xs font-bold text-slate-700 mt-1">
-                                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
+                                <a href="{{ route('ews.department.list', ['type' => 'allotted', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-emerald-50/80 transition cursor-pointer group">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0"></span>
                                         <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-emerald-800">Allotted:</span>
@@ -272,7 +284,7 @@
                                     </div>
                                     <span class="text-slate-400 group-hover:text-emerald-700 transition flex items-center p-0.5" title="View Allotted List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-amber-50/80 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'pending', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-amber-50/80 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-2.5 h-2.5 rounded-full bg-amber-500 shrink-0"></span>
                                         <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-amber-800">Waiting:</span>
@@ -280,11 +292,11 @@
                                     </div>
                                     <span class="text-slate-400 group-hover:text-amber-700 transition flex items-center p-0.5" title="View Waiting List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
-                                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer group border-t border-slate-100">
+                                <a href="{{ route('ews.department.list', ['type' => 'draw_remaining', 'district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center justify-between p-1 rounded-lg hover:bg-slate-100 transition cursor-pointer group border-t border-slate-100">
                                     <div class="flex items-center gap-1.5">
                                         <span class="w-2.5 h-2.5 rounded-full bg-slate-400 shrink-0"></span>
                                         <span class="text-[11.5px] font-bold text-slate-700 group-hover:text-slate-900">Unallotted:</span>
-                                        <span class="text-slate-650 font-extrabold font-mono text-xs">{{ number_format($drawRemainingCount) }}</span>
+                                        <span class="text-slate-655 font-extrabold font-mono text-xs">{{ number_format($drawRemainingCount) }}</span>
                                     </div>
                                     <span class="text-slate-400 group-hover:text-slate-700 transition flex items-center p-0.5" title="View Unallotted List"><span class="material-symbols-outlined text-xs">visibility</span></span>
                                 </a>
@@ -380,13 +392,23 @@
 
     <!-- JS Dropdown Toggle logic -->
     <script>
-        function filterByDistrict(districtId) {
+        function applyFilters() {
             let url = new URL(window.location.href);
+            let districtId = document.getElementById('district-select').value;
+            let phase = document.getElementById('phase-select').value;
+            
             if (districtId) {
                 url.searchParams.set('district_id', districtId);
             } else {
                 url.searchParams.delete('district_id');
             }
+            
+            if (phase) {
+                url.searchParams.set('phase', phase);
+            } else {
+                url.searchParams.delete('phase');
+            }
+            
             window.location.href = url.toString();
         }
     </script>
