@@ -486,34 +486,43 @@ class PpUserController extends Controller
 
         $request->validate($rules, $messages);
 
-        if ($this->findSubmittedApplication($user)) {
-            return back()->with('error', 'You have already submitted an application.');
+        $purchaserId = $this->resolvePurchaserId($user);
+        $lock = null;
+        if ($purchaserId) {
+            $lock = \Illuminate\Support\Facades\Cache::lock('pp_submit_app_' . $purchaserId, 15);
+            if (!$lock->get()) {
+                return back()->with('error', 'Request already in progress. Please wait.');
+            }
         }
-
-        $missingDocuments = $this->missingSubmitDocuments(
-            $request,
-            $verifiedPossessionCert,
-            $verifiedAllotmentLetter
-        );
-
-        if (! empty($missingDocuments)) {
-            return back()
-                ->withInput()
-                ->with('error', 'Please complete all 5 documents before submitting: '.implode(', ', $missingDocuments).'.');
-        }
-
-        $profile = $this->getUserProfile($user);
-
-        if (empty($profile['district_id']) || $profile['district'] === '—') {
-            return back()->with('error', 'Your district details are missing. Please contact support before applying.');
-        }
-
-        $applicationNumber = $this->generateApplicationNumber();
-        $slipId = 'SLIP-'.$applicationNumber;
-
-        DB::beginTransaction();
 
         try {
+            if ($this->findSubmittedApplication($user)) {
+                return back()->with('error', 'You have already submitted an application.');
+            }
+
+            $missingDocuments = $this->missingSubmitDocuments(
+                $request,
+                $verifiedPossessionCert,
+                $verifiedAllotmentLetter
+            );
+
+            if (! empty($missingDocuments)) {
+                return back()
+                    ->withInput()
+                    ->with('error', 'Please complete all 5 documents before submitting: '.implode(', ', $missingDocuments).'.');
+            }
+
+            $profile = $this->getUserProfile($user);
+
+            if (empty($profile['district_id']) || $profile['district'] === '—') {
+                return back()->with('error', 'Your district details are missing. Please contact support before applying.');
+            }
+
+            $applicationNumber = $this->generateApplicationNumber();
+            $slipId = 'SLIP-'.$applicationNumber;
+
+            DB::beginTransaction();
+
             $assetId = $profile['asset_id'] ?? $this->assetService->resolveFromPurchaserId($profile['private_purchaser_id']);
 
             if ($draftApplication) {
@@ -607,10 +616,16 @@ class PpUserController extends Controller
                 ->with('success', 'Application submitted successfully!');
 
         } catch (\Exception $e) {
-            DB::rollBack();
+            if (\Illuminate\Support\Facades\DB::transactionLevel() > 0) {
+                \Illuminate\Support\Facades\DB::rollBack();
+            }
             report($e);
 
             return back()->with('error', 'Unable to submit application. Please try again.');
+        } finally {
+            if ($lock) {
+                $lock->release();
+            }
         }
     }
 
@@ -1392,8 +1407,26 @@ class PpUserController extends Controller
         return null;
     }
 
+    private function resolvePurchaserId(User $user): ?int
+    {
+        if ($user->private_purchaser_id) {
+            return $user->private_purchaser_id;
+        }
+
+        $purchaser = $this->findPurchaserForUserWithProperty($user);
+        return $purchaser?->PrivatePurchaserId ?? null;
+    }
+
     private function findSubmittedApplication(User $user): ?PhysicalPossessionApplication
     {
+        $purchaserId = $this->resolvePurchaserId($user);
+        if ($purchaserId) {
+            return PhysicalPossessionApplication::where('private_purchaser_id', $purchaserId)
+                ->whereNotIn('status', ['draft', 'returned'])
+                ->latest()
+                ->first();
+        }
+
         return PhysicalPossessionApplication::where('user_id', $user->id)
             ->whereNotIn('status', ['draft', 'returned'])
             ->latest()
@@ -1402,6 +1435,14 @@ class PpUserController extends Controller
 
     private function findReturnedApplication(User $user): ?PhysicalPossessionApplication
     {
+        $purchaserId = $this->resolvePurchaserId($user);
+        if ($purchaserId) {
+            return PhysicalPossessionApplication::where('private_purchaser_id', $purchaserId)
+                ->where('status', 'returned')
+                ->latest()
+                ->first();
+        }
+
         return PhysicalPossessionApplication::where('user_id', $user->id)
             ->where('status', 'returned')
             ->latest()
@@ -1446,6 +1487,14 @@ class PpUserController extends Controller
 
     private function findDraftApplication(User $user): ?PhysicalPossessionApplication
     {
+        $purchaserId = $this->resolvePurchaserId($user);
+        if ($purchaserId) {
+            return PhysicalPossessionApplication::where('private_purchaser_id', $purchaserId)
+                ->where('status', 'draft')
+                ->latest()
+                ->first();
+        }
+
         return PhysicalPossessionApplication::where('user_id', $user->id)
             ->where('status', 'draft')
             ->latest()

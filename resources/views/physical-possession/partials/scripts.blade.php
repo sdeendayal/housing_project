@@ -31,9 +31,37 @@ function ppToggleTheme() {
     document.documentElement.setAttribute('data-bs-theme', saved);
 })();
 
-document.querySelectorAll('form[data-pp-loading]').forEach(function(form) {
+// Listen to all form submissions to disable buttons and show spinner
+document.querySelectorAll('form').forEach(function(form) {
     form.addEventListener('submit', function(e) {
-        if (!e.defaultPrevented) {
+        // Prevent spinner if form validation fails (for standard HTML5 validation)
+        if (form.checkValidity && !form.checkValidity()) {
+            return;
+        }
+
+        // Find submit button(s) in this form
+        const submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"], .btn-submit');
+        submitButtons.forEach(function(button) {
+            // Avoid duplicate spinner if already loading/disabled
+            if (button.hasAttribute('disabled') || button.classList.contains('disabled')) {
+                return;
+            }
+
+            // Disable the button to prevent duplicate submits (double clicks)
+            button.setAttribute('disabled', 'true');
+            button.classList.add('disabled');
+
+            // Add spinner indicator
+            if (button.tagName.toLowerCase() === 'button') {
+                const originalHtml = button.innerHTML;
+                button.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> ' + originalHtml;
+            } else if (button.tagName.toLowerCase() === 'input') {
+                button.value = 'Please wait...';
+            }
+        });
+
+        // Also show general overlay loading if configured
+        if (form.hasAttribute('data-pp-loading') && !e.defaultPrevented) {
             document.getElementById('ppLoading')?.classList.add('show');
         }
     });

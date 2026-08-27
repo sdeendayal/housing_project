@@ -1745,42 +1745,52 @@ class PpOfficerApiController extends Controller
         }
 
         if ($persist) {
-            $user = User::where('private_purchaser_id', $p->PurchaserID)
-                ->orWhere('mobile', $p->MobileNo)
-                ->first();
+            return \Illuminate\Support\Facades\Cache::lock('pp_create_app_' . $p->PurchaserID, 15)->block(5, function () use ($p) {
+                $app = PhysicalPossessionApplication::where('private_purchaser_id', $p->PurchaserID)
+                    ->where('asset_id', $p->AssetId)
+                    ->first();
 
-            if (!$user) {
-                $user = User::create([
-                    'name' => $p->PrivatePurchaserName,
-                    'mobile' => $p->MobileNo,
-                    'role' => 'citizen',
-                    'private_purchaser_id' => $p->PurchaserID,
-                ]);
-            } else {
-                if (empty($user->private_purchaser_id)) {
-                    $user->private_purchaser_id = $p->PurchaserID;
-                    $user->save();
+                if ($app) {
+                    return $app;
                 }
-            }
 
-            return PhysicalPossessionApplication::create([
-                'user_id' => $user->id,
-                'private_purchaser_id' => $p->PurchaserID,
-                'asset_id' => $p->AssetId,
-                'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
-                'slip_id' => 'SLIP-' . uniqid(),
-                'district_id' => $p->DistrictId,
-                'district_name' => $p->DistrictName,
-                'mobile' => $p->MobileNo,
-                'applicant_name' => $p->PrivatePurchaserName,
-                'father_name' => $p->PurchaserFatherName ?? '',
-                'address' => $p->Address ?? '',
-                'flat_cost' => $p->FlatCost,
-                'received_amount' => $p->ReceivedAmount,
-                'balance_amount' => $p->BalanceAmount,
-                'physical_possession_status' => 'Eligible for Physical Possession',
-                'status' => 'pending',
-            ]);
+                $user = User::where('private_purchaser_id', $p->PurchaserID)
+                    ->orWhere('mobile', $p->MobileNo)
+                    ->first();
+
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $p->PrivatePurchaserName,
+                        'mobile' => $p->MobileNo,
+                        'role' => 'citizen',
+                        'private_purchaser_id' => $p->PurchaserID,
+                    ]);
+                } else {
+                    if (empty($user->private_purchaser_id)) {
+                        $user->private_purchaser_id = $p->PurchaserID;
+                        $user->save();
+                    }
+                }
+
+                return PhysicalPossessionApplication::create([
+                    'user_id' => $user->id,
+                    'private_purchaser_id' => $p->PurchaserID,
+                    'asset_id' => $p->AssetId,
+                    'application_number' => 'PP-' . now()->format('Y') . '-' . ($p->ApplicationNo ?? rand(1000, 9999)),
+                    'slip_id' => 'SLIP-' . uniqid(),
+                    'district_id' => $p->DistrictId,
+                    'district_name' => $p->DistrictName,
+                    'mobile' => $p->MobileNo,
+                    'applicant_name' => $p->PrivatePurchaserName,
+                    'father_name' => $p->PurchaserFatherName ?? '',
+                    'address' => $p->Address ?? '',
+                    'flat_cost' => $p->FlatCost,
+                    'received_amount' => $p->ReceivedAmount,
+                    'balance_amount' => $p->BalanceAmount,
+                    'physical_possession_status' => 'Eligible for Physical Possession',
+                    'status' => 'pending',
+                ]);
+            });
         }
 
         $app = new PhysicalPossessionApplication();

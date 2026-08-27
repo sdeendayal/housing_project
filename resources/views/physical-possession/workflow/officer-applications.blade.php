@@ -51,22 +51,22 @@
                 <table class="table table-hover align-middle mb-0 pp-applications-table">
                     <thead class="table-light text-uppercase text-muted">
                         <tr>
-                            <th class="ps-3" style="width: 60px;">S.No.</th>
-                            <th>Physical Possession Application No.</th>
+                            <th class="ps-3 text-nowrap" style="width: 50px;">S.No.</th>
+                            <th class="text-nowrap">Application No.</th>
                             <th>Applicant</th>
-                            <th>District</th>
-                            <th>Meeting Date & Slot</th>
-                            <th>Workflow Status</th>
-                            <th class="text-end pe-3">Actions</th>
+                            <th class="text-nowrap">District</th>
+                            <th class="text-nowrap">Meeting Date & Slot</th>
+                            <th class="text-nowrap">Workflow Status</th>
+                            <th class="text-end pe-3 text-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($applications as $app)
                             <tr>
-                                <td class="ps-3 fw-semibold text-muted">
+                                <td class="ps-3 fw-semibold text-muted text-nowrap">
                                     {{ ($applications->currentPage() - 1) * $applications->perPage() + $loop->iteration }}
                                 </td>
-                                <td>
+                                <td class="text-nowrap">
                                     <span class="fw-bold text-dark">{{ $app->application_number }}</span>
                                     @if(isset($app->purchaser_phase))
                                         <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-20 px-1.5 py-0.5 rounded ms-2" style="font-size: 0.6rem;">
@@ -75,13 +75,13 @@
                                     @endif
                                 </td>
                                 <td>
-                                    <div class="fw-semibold text-dark">{{ $app->applicant_name }}</div>
-                                    <small class="text-muted"><i class="bi bi-telephone me-1"></i>{{ $app->mobile }}</small>
+                                    <div class="fw-semibold text-dark" style="max-width: 140px; white-space: normal; line-height: 1.25;">{{ $app->applicant_name }}</div>
+                                    <small class="text-muted text-nowrap"><i class="bi bi-telephone me-1"></i>{{ $app->mobile }}</small>
                                 </td>
-                                <td>
+                                <td class="text-nowrap">
                                     <span class="text-slate-700">{{ $app->district_name }}</span>
                                 </td>
-                                <td>
+                                <td class="text-nowrap">
                                     @if(in_array($app->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted', 'Verified', 'Rejected']))
                                         <div class="fw-bold text-success">
                                             @if(strtotime($app->meeting_slot))
@@ -93,8 +93,8 @@
                                         </div>
                                     @elseif($app->physical_possession_status === 'Visit Scheduled')
                                         <div class="fw-semibold text-dark">
-                                            <span class="text-muted small d-block">Pending citizen choice</span>
-                                            <button type="button" class="btn btn-outline-primary btn-sm py-0.5 px-2 mt-1 rounded-pill d-inline-flex align-items-center gap-1.5 hover:-translate-y-px transition-transform cursor-pointer" 
+                                            <span class="text-muted small d-block mb-1"><i class="bi bi-hourglass-split text-warning me-1"></i>Pending Choice</span>
+                                            <button type="button" class="btn btn-outline-primary btn-sm py-0.5 px-2 rounded-pill d-inline-flex align-items-center gap-1.5 hover:-translate-y-px transition-transform cursor-pointer" 
                                                     style="font-size: 0.68rem; font-weight: 600;"
                                                     onclick="showSlotsModal('{{ $app->application_number }}', '{{ $app->visit_slot_1 ? $app->visit_slot_1->format('d M Y - h:i A') : '—' }}', '{{ $app->visit_slot_2 ? $app->visit_slot_2->format('d M Y - h:i A') : '—' }}', '{{ $app->visit_slot_3 ? $app->visit_slot_3->format('d M Y - h:i A') : '—' }}')">
                                                 <i class="bi bi-calendar3"></i> 3 Slots Offered
@@ -106,6 +106,15 @@
                                 </td>
                                 <td>
                                     @php
+                                        $displayStatus = \App\Models\PhysicalPossessionApplication::getDisplayStatus($app->physical_possession_status);
+                                        if ($displayStatus === 'Confirmation Pending From Citizen') {
+                                            $displayStatus = 'Confirm Pending';
+                                        } elseif ($displayStatus === 'Physical/Site Visit Pending') {
+                                            $displayStatus = 'Site Visit Pending';
+                                        } elseif ($displayStatus === 'Registry Documentation, Verify') {
+                                            $displayStatus = 'Registry Verify';
+                                        }
+
                                         $badgeClass = match ($app->physical_possession_status) {
                                             'Eligible for Physical Possession' => 'bg-info text-info bg-opacity-10 border border-info border-opacity-20',
                                             'Visit Scheduled' => 'bg-warning text-warning-emphasis bg-opacity-10 border border-warning border-opacity-20',
@@ -117,11 +126,11 @@
                                             default => 'bg-secondary text-white border border-secondary'
                                         };
                                     @endphp
-                                    <span class="badge {{ $badgeClass }} px-2.5 py-1.5 rounded-3 fs-8">
-                                        {{ \App\Models\PhysicalPossessionApplication::getDisplayStatus($app->physical_possession_status) }}
+                                    <span class="badge {{ $badgeClass }} px-2 py-1 rounded-3 fs-8">
+                                        {{ $displayStatus }}
                                     </span>
                                 </td>
-                                <td class="text-end pe-3">
+                                <td class="text-end pe-3 text-nowrap">
                                     @if(in_array($app->physical_possession_status, ['Slot Selected', 'Physical Possession Submitted']))
                                         <a href="{{ route('pp.officer.verify-form', $app->secure_id) }}" class="btn btn-primary btn-action text-nowrap rounded-pill shadow-sm">
                                             <i class="bi bi-shield-check me-1"></i>Perform Visit
@@ -171,24 +180,24 @@
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
     }
     .pp-applications-table th {
-        font-size: 0.72rem !important;
+        font-size: 0.68rem !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
-        letter-spacing: 0.5px !important;
-        padding: 10px 12px !important;
+        letter-spacing: 0.3px !important;
+        padding: 8px 8px !important;
         border-bottom: 2px solid #e2e8f0 !important;
     }
     .pp-applications-table td {
-        font-size: 0.78rem !important;
-        padding: 10px 12px !important;
+        font-size: 0.73rem !important;
+        padding: 8px 8px !important;
         vertical-align: middle !important;
     }
     .pp-applications-table tr:hover {
         background-color: rgba(30, 64, 175, 0.02) !important;
     }
     .btn-action {
-        font-size: 0.7rem !important;
-        padding: 5px 12px !important;
+        font-size: 0.66rem !important;
+        padding: 4px 10px !important;
         font-weight: 600 !important;
         letter-spacing: 0.2px;
         transition: all 0.2s ease;
