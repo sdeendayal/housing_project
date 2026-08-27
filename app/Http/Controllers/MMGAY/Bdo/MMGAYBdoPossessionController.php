@@ -615,63 +615,71 @@ class MMGAYBdoPossessionController extends Controller
             ->first();
 
         if (!$application) {
-            // Find or create villager user in users table
-            $user = User::where('mobile', $owner->MobileNo)
-                ->where('scheme', 'MMGAY')
-                ->first();
+            $application = \Illuminate\Support\Facades\Cache::lock('pp_create_mmgay_app_' . $owner->OwnerId, 15)->block(5, function () use ($owner) {
+                // Double check inside lock to prevent race condition duplicates
+                $app = MmgayPossessionApplication::where('owner_id', $owner->OwnerId)->first();
+                if ($app) {
+                    return $app;
+                }
 
-            if (!$user) {
-                $user = User::create([
-                    'name' => $owner->OwnerName,
-                    'mobile' => $owner->MobileNo,
-                    'role' => 'villager',
+                // Find or create villager user in users table
+                $user = User::where('mobile', $owner->MobileNo)
+                    ->where('scheme', 'MMGAY')
+                    ->first();
+
+                if (!$user) {
+                    $user = User::create([
+                        'name' => $owner->OwnerName,
+                        'mobile' => $owner->MobileNo,
+                        'role' => 'villager',
+                        'scheme' => 'MMGAY',
+                        'Is_Active' => '1',
+                        'Is_Deleted' => '0',
+                        'district_id' => $owner->DistrictId,
+                        'district_name' => $owner->DistrictName,
+                        'block_id' => $owner->BlockId,
+                        'block_name' => $owner->BlockName,
+                    ]);
+
+                    // Seed role type for this new user
+                    $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
+                    if ($villagerRole) {
+                        DB::table('role_types')->insert([
+                            'user_id' => $user->id,
+                            'role_id' => $villagerRole->id,
+                            'Is_Active' => '1',
+                            'Is_Deleted' => '0',
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
+                }
+
+                return MmgayPossessionApplication::create([
+                    'user_id' => $user->id,
+                    'owner_id' => $owner->OwnerId,
+                    'ppp_id' => $owner->PPPId ?? null,
+                    'member_id' => $owner->MemberId ?? null,
+                    'flat_id' => $owner->FlatId ?? null,
                     'scheme' => 'MMGAY',
-                    'Is_Active' => '1',
-                    'Is_Deleted' => '0',
+                    'application_number' => 'PP-MMGAY-' . now()->format('Y') . '-' . ($owner->RegistrationNo ?? rand(1000, 9999)),
+                    'secure_id' => $owner->secure_id, // Match owner's unique random 32-character secure_id
+                    'slip_id' => 'SLIP-MMGAY-' . uniqid(),
                     'district_id' => $owner->DistrictId,
                     'district_name' => $owner->DistrictName,
                     'block_id' => $owner->BlockId,
                     'block_name' => $owner->BlockName,
+                    'mobile' => $owner->MobileNo,
+                    'applicant_name' => $owner->OwnerName,
+                    'father_name' => $owner->FatherHusbandName ?? '',
+                    'address' => $owner->OwnerAddress ?? '',
+                    'flat_cost' => 0,
+                    'received_amount' => 0,
+                    'balance_amount' => 0,
+                    'physical_possession_status' => 'Eligible for Physical Possession',
+                    'status' => 'pending',
                 ]);
-
-                // Seed role type for this new user
-                $villagerRole = DB::table('roles')->where('slug', 'villager')->first();
-                if ($villagerRole) {
-                    DB::table('role_types')->insert([
-                        'user_id' => $user->id,
-                        'role_id' => $villagerRole->id,
-                        'Is_Active' => '1',
-                        'Is_Deleted' => '0',
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-                }
-            }
-
-            $application = MmgayPossessionApplication::create([
-                'user_id' => $user->id,
-                'owner_id' => $owner->OwnerId,
-                'ppp_id' => $owner->PPPId ?? null,
-                'member_id' => $owner->MemberId ?? null,
-                'flat_id' => $owner->FlatId ?? null,
-                'scheme' => 'MMGAY',
-                'application_number' => 'PP-MMGAY-' . now()->format('Y') . '-' . ($owner->RegistrationNo ?? rand(1000, 9999)),
-                'secure_id' => $owner->secure_id, // Match owner's unique random 32-character secure_id
-                'slip_id' => 'SLIP-MMGAY-' . uniqid(),
-                'district_id' => $owner->DistrictId,
-                'district_name' => $owner->DistrictName,
-                'block_id' => $owner->BlockId,
-                'block_name' => $owner->BlockName,
-                'mobile' => $owner->MobileNo,
-                'applicant_name' => $owner->OwnerName,
-                'father_name' => $owner->FatherHusbandName ?? '',
-                'address' => $owner->OwnerAddress ?? '',
-                'flat_cost' => 0,
-                'received_amount' => 0,
-                'balance_amount' => 0,
-                'physical_possession_status' => 'Eligible for Physical Possession',
-                'status' => 'pending',
-            ]);
+            });
         }
 
         if (in_array($application->physical_possession_status, ['Slot Selected', 'Verified', 'Rejected'])) {
