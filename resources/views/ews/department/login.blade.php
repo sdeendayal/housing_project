@@ -127,7 +127,7 @@
                         <label for="password" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Password</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3.5 top-3 text-emerald-500 text-base">lock</span>
-                            <input type="password" name="password" id="password" required value="password123" placeholder="••••••••" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
+                            <input type="password" name="password" id="password" required value="password" placeholder="••••••••" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
                         </div>
                     </div>
 
