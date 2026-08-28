@@ -34,12 +34,12 @@ class ApplicantReportExport implements FromQuery, WithHeadings
             ->where('SecondPartyMobile', '<>', '')
             ->distinct();
 
-        $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $query = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('v.VillageId', '=', 'o.VillageId')
                     ->on('v.DistrictId', '=', 'o.DistrictId');
             })
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
             ->leftJoinSub($registryMobileQuery, 'r', function ($join) {
                 $join->on('r.SecondPartyMobile', '=', 'o.MobileNo');
             })

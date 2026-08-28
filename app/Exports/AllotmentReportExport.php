@@ -26,27 +26,27 @@ class AllotmentReportExport implements
 
     public function query(): Builder
     {
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
             ->join(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
             ->leftJoin(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'd.DistrictId',
                 '=',
                 'o.DistrictId'
             )
             ->leftJoin(
-                'BlockMaster as b',
+                'blockmaster as b',
                 'b.BlockId',
                 '=',
                 'o.BlockId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'

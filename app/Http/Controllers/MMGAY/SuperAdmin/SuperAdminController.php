@@ -1176,7 +1176,7 @@ class SuperAdminController extends Controller
                 'o.OwnerName',
                 'o.FatherHusbandName',
                 'o.MobileNo',
-                'o.RegistrationNo',
+                'o.RegistrationNo', 
                 'o.OwnerAddress as Address',
                 'o.OwnerAddress',
                 'o.PPPId',
@@ -5194,7 +5194,7 @@ class SuperAdminController extends Controller
                     'o.VillageId'
                 )
                 ->leftJoin(
-                    'FlatMaster as f',
+                    'flatmaster as f',
                     'f.FlatId',
                     '=',
                     'o.FlatId'

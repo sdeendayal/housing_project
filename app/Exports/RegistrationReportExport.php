@@ -110,7 +110,7 @@ class RegistrationReportExport implements
         |--------------------------------------------------------------------------
         | One OwnerId per matching mobile.
         */
-        $ownerMobileSubQuery = DB::table('OwnerMaster as om')
+        $ownerMobileSubQuery = DB::table('ownermaster as om')
             ->selectRaw('om.MobileNo, MIN(om.OwnerId) AS OwnerId')
             ->whereNotNull('om.MobileNo')
             ->whereRaw("TRIM(om.MobileNo) != ''")
@@ -142,7 +142,7 @@ class RegistrationReportExport implements
                 }
             )
             ->leftJoin(
-                'OwnerMaster as o',
+                'ownermaster as o',
                 'o.OwnerId',
                 '=',
                 'matched_owner.OwnerId'

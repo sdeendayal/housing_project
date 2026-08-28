@@ -3270,6 +3270,8 @@ class DistrictCEOController extends Controller
             search: $search
         );
 
+        // IMPORTANT:
+        // Do not order by v.phase here if the base query uses DISTINCT.
         $applicants = $query
             ->orderBy('o.OwnerId')
             ->paginate($perPage)
