@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
@@ -30,6 +31,8 @@ return new class extends Migration
      */
     public function up(): void
     {
+        DB::statement('SET SESSION innodb_strict_mode=0;');
+
         foreach ($this->tables as $tableName) {
             if (Schema::hasTable($tableName)) {
                 if (!Schema::hasColumn($tableName, 'phase')) {
@@ -39,6 +42,8 @@ return new class extends Migration
                 }
             }
         }
+
+        DB::statement('SET SESSION innodb_strict_mode=1;');
     }
 
     /**
@@ -46,6 +51,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        DB::statement('SET SESSION innodb_strict_mode=0;');
+
         foreach ($this->tables as $tableName) {
             if (Schema::hasTable($tableName)) {
                 if (Schema::hasColumn($tableName, 'phase')) {
@@ -55,5 +62,7 @@ return new class extends Migration
                 }
             }
         }
+
+        DB::statement('SET SESSION innodb_strict_mode=1;');
     }
 };
