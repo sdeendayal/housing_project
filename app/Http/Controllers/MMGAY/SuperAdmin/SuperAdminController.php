@@ -120,11 +120,11 @@ class SuperAdminController extends Controller
         | Dropdown: Districts
         |--------------------------------------------------------------------------
         */
-        $districts = DB::table('DistrictMaster as d')
+        $districts = DB::table('districtmaster as d')
             ->whereExists(function ($query) use ($phase) {
                 $query
                     ->selectRaw('1')
-                    ->from('VillageMaster as v')
+                    ->from('villagemaster as v')
                     ->whereColumn(
                         'v.DistrictId',
                         'd.DistrictId'
@@ -148,12 +148,12 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         */
         $blocks = $districtId
-            ? DB::table('BlockMaster as b')
+            ? DB::table('blockmaster as b')
                 ->where('b.DistrictId', $districtId)
                 ->whereExists(function ($query) use ($phase) {
                     $query
                         ->selectRaw('1')
-                        ->from('VillageMaster as v')
+                        ->from('villagemaster as v')
                         ->whereColumn(
                             'v.BlockId',
                             'b.BlockId'
@@ -181,7 +181,7 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         */
         $villages = $blockId
-            ? DB::table('VillageMaster as v')
+            ? DB::table('villagemaster as v')
                 ->where('v.BlockId', $blockId)
                 ->where('v.plots', '>', 0)
                 ->when(
@@ -203,7 +203,7 @@ class SuperAdminController extends Controller
         | One query calculates village and district counts.
         |--------------------------------------------------------------------------
         */
-        $villageStatsQuery = DB::table('VillageMaster as v')
+        $villageStatsQuery = DB::table('villagemaster as v')
             ->where('v.plots', '>', 0);
 
         $villageStatsQuery =
@@ -242,11 +242,11 @@ class SuperAdminController extends Controller
         | WHERE EXISTS avoids creating VillageMaster join rows.
         |--------------------------------------------------------------------------
         */
-        $registeredQuery = DB::table('OwnerMaster as o')
+        $registeredQuery = DB::table('ownermaster as o')
             ->whereExists(function ($query) {
                 $query
                     ->selectRaw('1')
-                    ->from('VillageMaster as v')
+                    ->from('villagemaster as v')
                     ->whereColumn(
                         'v.VillageId',
                         'o.VillageId'
@@ -273,11 +273,11 @@ class SuperAdminController extends Controller
         | FlatMaster existence is preserved exactly like the old INNER JOIN.
         |--------------------------------------------------------------------------
         */
-        $allotmentQuery = DB::table('OwnerMaster as o')
+        $allotmentQuery = DB::table('ownermaster as o')
             ->whereExists(function ($query) {
                 $query
                     ->selectRaw('1')
-                    ->from('FlatMaster as f')
+                    ->from('flatmaster as f')
                     ->whereColumn(
                         'f.FlatId',
                         'o.FlatId'
@@ -385,7 +385,7 @@ class SuperAdminController extends Controller
         /*
          * Old registry records -> Mobile match
          */
-        $oldRegistryOwnerIds = DB::table('OwnerMaster as o')
+        $oldRegistryOwnerIds = DB::table('ownermaster as o')
             ->join('registary as r', function ($join) {
                 $join->on(
                     'r.SecondPartyMobile',
@@ -419,7 +419,7 @@ class SuperAdminController extends Controller
         /*
          * New registry records -> FlatId match
          */
-        $newRegistryOwnerIds = DB::table('OwnerMaster as o')
+        $newRegistryOwnerIds = DB::table('ownermaster as o')
             ->join('registary as r', function ($join) {
                 $join->on(
                     'r.flatid',
@@ -662,7 +662,7 @@ class SuperAdminController extends Controller
 
         $oldRegistryOwners = DB::table('registary as r_old')
             ->join(
-                'OwnerMaster as o_old',
+                'ownermaster as o_old',
                 'o_old.MobileNo',
                 '=',
                 'r_old.SecondPartyMobile'
@@ -675,7 +675,7 @@ class SuperAdminController extends Controller
 
         $newRegistryOwners = DB::table('registary as r_new')
             ->join(
-                'OwnerMaster as o_new',
+                'ownermaster as o_new',
                 'o_new.FlatId',
                 '=',
                 'r_new.flatid'
@@ -704,7 +704,7 @@ class SuperAdminController extends Controller
             )
             ->groupBy('pa_latest.owner_id');
 
-        return DB::table('OwnerMaster as o')
+        return DB::table('ownermaster as o')
 
             ->leftJoinSub(
                 $latestPossessionApplication,
@@ -862,11 +862,11 @@ class SuperAdminController extends Controller
             . ($phase ?? 'all'),
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -899,7 +899,7 @@ class SuperAdminController extends Controller
                 . ($phase ?? 'all'),
                 now()->addMinutes(30),
                 function () use ($districtId, $phase) {
-                    return DB::table('BlockMaster as b')
+                    return DB::table('blockmaster as b')
                         ->where(
                             'b.DistrictId',
                             $districtId
@@ -908,7 +908,7 @@ class SuperAdminController extends Controller
                             function ($query) use ($phase) {
                                 $query
                                     ->selectRaw('1')
-                                    ->from('VillageMaster as v')
+                                    ->from('villagemaster as v')
                                     ->whereColumn(
                                         'v.BlockId',
                                         'b.BlockId'
@@ -943,7 +943,7 @@ class SuperAdminController extends Controller
                 . ($phase ?? 'all'),
                 now()->addMinutes(30),
                 function () use ($blockId, $phase) {
-                    return DB::table('VillageMaster as v')
+                    return DB::table('villagemaster as v')
                         ->where('v.BlockId', $blockId)
                         ->where('v.plots', '>', 0)
 
@@ -1046,15 +1046,15 @@ class SuperAdminController extends Controller
         |--------------------------------------------------------------------------
         */
         if (!empty($pageOwnerIds)) {
-            $applicationRows = DB::table('OwnerMaster as o')
+            $applicationRows = DB::table('ownermaster as o')
                 ->leftJoin(
-                    'VillageMaster as v',
+                    'villagemaster as v',
                     'v.VillageId',
                     '=',
                     'o.VillageId'
                 )
                 ->leftJoin(
-                    'FlatMaster as f',
+                    'flatmaster as f',
                     'f.FlatId',
                     '=',
                     'o.FlatId'
@@ -1165,11 +1165,11 @@ class SuperAdminController extends Controller
     public function possessionView($secureId)
     {
         $application = DB::table('mmgay_possession_applications as p')
-            ->leftJoin('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->leftJoin('ownermaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('districtmaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('blockmaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
             ->where('p.secure_id', $secureId)
             ->select(
                 'p.*',
@@ -1417,14 +1417,14 @@ class SuperAdminController extends Controller
             )
 
             ->leftJoin(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
 
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -1628,14 +1628,14 @@ class SuperAdminController extends Controller
             )
 
             ->leftJoin(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
 
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -1715,11 +1715,11 @@ class SuperAdminController extends Controller
             . ($phase ?? 'all'),
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -1775,13 +1775,13 @@ class SuperAdminController extends Controller
             . ($phase ?? 'all'),
             now()->addMinutes(30),
             function () use ($districtId, $phase) {
-                return DB::table('BlockMaster as b')
+                return DB::table('blockmaster as b')
                     ->where('b.DistrictId', $districtId)
 
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.BlockId',
                                 'b.BlockId'
@@ -1838,7 +1838,7 @@ class SuperAdminController extends Controller
             . ($phase ?? 'all'),
             now()->addMinutes(30),
             function () use ($blockId, $phase) {
-                return DB::table('VillageMaster as v')
+                return DB::table('villagemaster as v')
                     ->where('v.BlockId', $blockId)
                     ->where('v.plots', '>', 0)
 
@@ -1867,7 +1867,7 @@ class SuperAdminController extends Controller
 
     public function getDistricts($phase = null)
     {
-        $villageQuery = DB::table('VillageMaster')
+        $villageQuery = DB::table('villagemaster')
             ->select('DistrictId');
 
         if ($phase == 1 || $phase == 2 || $phase == 3) {
@@ -1884,7 +1884,7 @@ class SuperAdminController extends Controller
 
         }
 
-        $districts = DB::table('DistrictMaster')
+        $districts = DB::table('districtmaster')
             ->whereIn('DistrictId', $villageQuery)
             ->orderBy('DistrictName')
             ->get([
@@ -1897,7 +1897,7 @@ class SuperAdminController extends Controller
 
     public function getBlocks($districtId, $phase = null)
     {
-        $village = DB::table('VillageMaster')
+        $village = DB::table('villagemaster')
             ->select('BlockId')
             ->where('DistrictId', $districtId);
 
@@ -1915,7 +1915,7 @@ class SuperAdminController extends Controller
             });
         }
 
-        $blocks = DB::table('BlockMaster')
+        $blocks = DB::table('blockmaster')
             ->whereIn('BlockId', $village)
             ->orderBy('BlockName')
             ->get(['BlockId', 'BlockName']);
@@ -1925,7 +1925,7 @@ class SuperAdminController extends Controller
 
     public function getVillages($blockId, $phase = null)
     {
-        $villages = DB::table('VillageMaster')
+        $villages = DB::table('villagemaster')
             ->where('BlockId', $blockId);
 
         if ($phase == 1 || $phase == 2 || $phase == 3) {
@@ -1989,7 +1989,7 @@ class SuperAdminController extends Controller
         $blockId = $request->block_id;
         $villageId = $request->village_id;
 
-        $villageQuery = DB::table('VillageMaster')
+        $villageQuery = DB::table('villagemaster')
             ->where('plots', '>', 0);
 
         if ($phase)
@@ -2006,8 +2006,8 @@ class SuperAdminController extends Controller
 
         $totalVillages = (clone $villageQuery)->count();
 
-        $registered = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+        $registered = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->where('v.plots', '>', 0);
 
         if ($phase)
@@ -2024,8 +2024,8 @@ class SuperAdminController extends Controller
 
         $registeredBeneficiaries = $registered->count();
 
-        $allotment = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+        $allotment = DB::table('ownermaster as o')
+            ->join('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
             ->where('v.plots', '>', 0);
 
         if ($phase)
@@ -2122,7 +2122,7 @@ class SuperAdminController extends Controller
                 | केवल plots > 0 वाले villages और selected phase consider होंगे।
                 |--------------------------------------------------------------------------
                 */
-                $villageRows = DB::table('VillageMaster as v')
+                $villageRows = DB::table('villagemaster as v')
                     ->where('v.plots', '>', 0)
 
                     ->when(
@@ -2199,7 +2199,7 @@ class SuperAdminController extends Controller
                 | Owner का village plots > 0 होना चाहिए
                 |--------------------------------------------------------------------------
                 */
-                $registeredRows = DB::table('OwnerMaster as o')
+                $registeredRows = DB::table('ownermaster as o')
                     ->whereIn(
                         'o.DistrictId',
                         $reportDistrictIds->all()
@@ -2208,7 +2208,7 @@ class SuperAdminController extends Controller
                     ->whereExists(function ($query) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as rv')
+                            ->from('villagemaster as rv')
                             ->whereColumn(
                                 'rv.VillageId',
                                 'o.VillageId'
@@ -2257,9 +2257,9 @@ class SuperAdminController extends Controller
                 | इसलिए dashboard के counts match रहेंगे।
                 |--------------------------------------------------------------------------
                 */
-                $allotmentRows = DB::table('OwnerMaster as o')
+                $allotmentRows = DB::table('ownermaster as o')
                     ->join(
-                        'FlatMaster as f',
+                        'flatmaster as f',
                         'f.FlatId',
                         '=',
                         'o.FlatId'
@@ -2382,7 +2382,7 @@ class SuperAdminController extends Controller
                 | केवल villages with plots वाले districts fetch होंगे।
                 |--------------------------------------------------------------------------
                 */
-                $districtRows = DB::table('DistrictMaster as d')
+                $districtRows = DB::table('districtmaster as d')
                     ->whereIn(
                         'd.DistrictId',
                         $reportDistrictIds->all()
@@ -2531,11 +2531,11 @@ class SuperAdminController extends Controller
             $districtCacheKey,
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -2774,11 +2774,11 @@ class SuperAdminController extends Controller
             $cacheKey,
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -2817,9 +2817,9 @@ class SuperAdminController extends Controller
         $districtId = $request->district_id;
 
 
-        $report = DB::table('DistrictMaster as d')
+        $report = DB::table('districtmaster as d')
 
-            ->leftJoin('VillageMaster as v', function ($join) use ($phase) {
+            ->leftJoin('villagemaster as v', function ($join) use ($phase) {
 
                 $join->on('d.DistrictId', '=', 'v.DistrictId')
                     ->where('v.plots', '>', 0);
@@ -2830,7 +2830,7 @@ class SuperAdminController extends Controller
 
             })
 
-            ->leftJoin('OwnerMaster as o', function ($join) use ($phase) {
+            ->leftJoin('ownermaster as o', function ($join) use ($phase) {
 
                 $join->on('v.VillageId', '=', 'o.VillageId');
 
@@ -2840,7 +2840,7 @@ class SuperAdminController extends Controller
 
             })
 
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
 
 
             ->select(
@@ -2944,7 +2944,7 @@ class SuperAdminController extends Controller
         ];
 
 
-        $districts = DB::table('DistrictMaster')
+        $districts = DB::table('districtmaster')
             ->orderBy('DistrictName')
             ->get([
                 'DistrictId',
@@ -3006,8 +3006,8 @@ class SuperAdminController extends Controller
         | Allotment check  : OwnerMaster.FlatId = FlatMaster.FlatId
         |--------------------------------------------------------------------------
         */
-        $beneficiarySummary = DB::table('OwnerMaster as o')
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+        $beneficiarySummary = DB::table('ownermaster as o')
+            ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
             ->when($phase !== null, function ($query) use ($phase) {
                 $query->where('o.Phase', $phase);
             })
@@ -3087,7 +3087,7 @@ class SuperAdminController extends Controller
         | Final Village Report
         |--------------------------------------------------------------------------
         */
-        return DB::table('VillageMaster as v')
+        return DB::table('villagemaster as v')
             ->leftJoinSub(
                 $beneficiarySummary,
                 'beneficiary_summary',
@@ -3184,11 +3184,11 @@ class SuperAdminController extends Controller
             $cacheKey,
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -3244,7 +3244,7 @@ class SuperAdminController extends Controller
             $cacheKey,
             now()->addMinutes(30),
             function () use ($phase, $districtId) {
-                return DB::table('VillageMaster as v')
+                return DB::table('villagemaster as v')
                     ->whereNotNull('v.plots')
                     ->where('v.plots', '>', 0)
 
@@ -3292,9 +3292,9 @@ class SuperAdminController extends Controller
 
         $villageId = $this->villageReportVillageId($request);
 
-        return DB::table('OwnerMaster as o')
+        return DB::table('ownermaster as o')
             ->join(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -3482,11 +3482,11 @@ class SuperAdminController extends Controller
             $districtCacheKey,
             now()->addMinutes(30),
             function () use ($phase) {
-                return DB::table('DistrictMaster as d')
+                return DB::table('districtmaster as d')
                     ->whereExists(function ($query) use ($phase) {
                         $query
                             ->selectRaw('1')
-                            ->from('VillageMaster as v')
+                            ->from('villagemaster as v')
                             ->whereColumn(
                                 'v.DistrictId',
                                 'd.DistrictId'
@@ -3528,7 +3528,7 @@ class SuperAdminController extends Controller
             $villageCacheKey,
             now()->addMinutes(30),
             function () use ($phase, $districtId) {
-                return DB::table('VillageMaster as v')
+                return DB::table('villagemaster as v')
                     ->whereNotNull('v.plots')
                     ->where('v.plots', '>', 0)
 
@@ -3885,7 +3885,7 @@ class SuperAdminController extends Controller
         Request $request,
         int $villageId
     ) {
-        $village = DB::table('VillageMaster as v')
+        $village = DB::table('villagemaster as v')
             ->where('v.VillageId', $villageId)
             ->select([
                 'v.VillageId',
@@ -4078,15 +4078,15 @@ class SuperAdminController extends Controller
 
     private function applicantsBaseQuery(Request $request)
     {
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
             ->join(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -4444,15 +4444,15 @@ class SuperAdminController extends Controller
         $rows = collect();
 
         if (!empty($ownerIds)) {
-            $rows = DB::table('OwnerMaster as o')
+            $rows = DB::table('ownermaster as o')
                 ->join(
-                    'VillageMaster as v',
+                    'villagemaster as v',
                     'v.VillageId',
                     '=',
                     'o.VillageId'
                 )
                 ->leftJoin(
-                    'FlatMaster as f',
+                    'flatmaster as f',
                     'f.FlatId',
                     '=',
                     'o.FlatId'
@@ -4559,7 +4559,7 @@ class SuperAdminController extends Controller
             $villageCacheKey,
             now()->addMinutes(20),
             function () use ($phase, $districtId, $blockId) {
-                return DB::table('VillageMaster as v')
+                return DB::table('villagemaster as v')
                     ->where('v.plots', '>', 0)
 
                     ->when(
@@ -4589,7 +4589,7 @@ class SuperAdminController extends Controller
                     ->whereExists(function ($query) use ($phase, $districtId, $blockId) {
                         $query
                             ->selectRaw('1')
-                            ->from('OwnerMaster as vo')
+                            ->from('ownermaster as vo')
                             ->whereColumn(
                                 'vo.VillageId',
                                 'v.VillageId'
@@ -4792,15 +4792,15 @@ class SuperAdminController extends Controller
         | केवल CSV में इस्तेमाल होने वाले columns लिए गए हैं।
         |--------------------------------------------------------------------------
         */
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
             ->join(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -4983,27 +4983,27 @@ class SuperAdminController extends Controller
     {
         DB::disableQueryLog();
 
-        $applicant = DB::table('OwnerMaster as o')
+        $applicant = DB::table('ownermaster as o')
             ->leftJoin(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'd.DistrictId',
                 '=',
                 'o.DistrictId'
             )
             ->leftJoin(
-                'BlockMaster as b',
+                'blockmaster as b',
                 'b.BlockId',
                 '=',
                 'o.BlockId'
             )
             ->leftJoin(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -5186,9 +5186,9 @@ class SuperAdminController extends Controller
         $records = collect();
 
         if (!empty($ownerIds)) {
-            $records = DB::table('OwnerMaster as o')
+            $records = DB::table('ownermaster as o')
                 ->join(
-                    'VillageMaster as v',
+                    'villagemaster as v',
                     'v.VillageId',
                     '=',
                     'o.VillageId'
@@ -5310,9 +5310,9 @@ class SuperAdminController extends Controller
         | Village को EXISTS से verify किया गया है, duplicate join नहीं होगा।
         |--------------------------------------------------------------------------
         */
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
             ->leftJoin(
-                'FlatMaster as sf',
+                'flatmaster as sf',
                 'sf.FlatId',
                 '=',
                 'o.FlatId'
@@ -5322,7 +5322,7 @@ class SuperAdminController extends Controller
             ->whereExists(function ($subQuery) {
                 $subQuery
                     ->selectRaw('1')
-                    ->from('VillageMaster as vm')
+                    ->from('villagemaster as vm')
                     ->whereColumn(
                         'vm.VillageId',
                         'o.VillageId'
@@ -5507,19 +5507,19 @@ class SuperAdminController extends Controller
 
         return $query
             ->leftJoin(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'd.DistrictId',
                 '=',
                 'o.DistrictId'
             )
             ->leftJoin(
-                'BlockMaster as b',
+                'blockmaster as b',
                 'b.BlockId',
                 '=',
                 'o.BlockId'
             )
             ->leftJoin(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
@@ -5721,27 +5721,27 @@ class SuperAdminController extends Controller
         $records = collect();
 
         if (!empty($ownerIds)) {
-            $records = DB::table('OwnerMaster as o')
+            $records = DB::table('ownermaster as o')
                 ->leftJoin(
-                    'DistrictMaster as d',
+                    'districtmaster as d',
                     'd.DistrictId',
                     '=',
                     'o.DistrictId'
                 )
                 ->leftJoin(
-                    'BlockMaster as b',
+                    'blockmaster as b',
                     'b.BlockId',
                     '=',
                     'o.BlockId'
                 )
                 ->leftJoin(
-                    'VillageMaster as v',
+                    'villagemaster as v',
                     'v.VillageId',
                     '=',
                     'o.VillageId'
                 )
                 ->leftJoin(
-                    'FlatMaster as f',
+                    'flatmaster as f',
                     'f.FlatId',
                     '=',
                     'o.FlatId'
@@ -5813,7 +5813,7 @@ class SuperAdminController extends Controller
             'allotment_report_phases_v2',
             now()->addHours(1),
             function () {
-                return DB::table('OwnerMaster')
+                return DB::table('ownermaster')
                     ->whereNotNull('Phase')
                     ->distinct()
                     ->orderBy('Phase')
@@ -5825,7 +5825,7 @@ class SuperAdminController extends Controller
             'allotment_report_districts_v2',
             now()->addHours(1),
             function () {
-                return DB::table('DistrictMaster')
+                return DB::table('districtmaster')
                     ->select([
                         'DistrictId',
                         'DistrictName',
@@ -5840,7 +5840,7 @@ class SuperAdminController extends Controller
             . ($districtId ?? 'all'),
             now()->addHours(1),
             function () use ($districtId) {
-                return DB::table('BlockMaster')
+                return DB::table('blockmaster')
                     ->when(
                         $districtId !== null,
                         fn($query) => $query->where(
@@ -5867,7 +5867,7 @@ class SuperAdminController extends Controller
             ),
             now()->addHours(1),
             function () use ($districtId, $blockId, $phase) {
-                return DB::table('VillageMaster as v')
+                return DB::table('villagemaster as v')
                     ->where('v.plots', '>', 0)
 
                     ->when(
@@ -6213,11 +6213,11 @@ class SuperAdminController extends Controller
                 'Allotment Status',
             ]);
 
-            $query = DB::table('OwnerMaster as o')
-                ->join('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-                ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-                ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-                ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            $query = DB::table('ownermaster as o')
+                ->join('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
+                ->leftJoin('districtmaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+                ->leftJoin('blockmaster as b', 'b.BlockId', '=', 'o.BlockId')
+                ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
                 ->where('v.plots', '>', 0)
                 ->whereNotNull('o.FlatId')
                 ->where('o.FlatId', '>', 0);
@@ -6387,27 +6387,27 @@ class SuperAdminController extends Controller
 
     private function getFilteredAllotmentQuery(Request $request)
     {
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
             ->join(
-                'VillageMaster as v',
+                'villagemaster as v',
                 'v.VillageId',
                 '=',
                 'o.VillageId'
             )
             ->leftJoin(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'd.DistrictId',
                 '=',
                 'o.DistrictId'
             )
             ->leftJoin(
-                'BlockMaster as b',
+                'blockmaster as b',
                 'b.BlockId',
                 '=',
                 'o.BlockId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'f.FlatId',
                 '=',
                 'o.FlatId'
@@ -6614,7 +6614,7 @@ class SuperAdminController extends Controller
             ->whereExists(function ($query) {
                 $query
                     ->selectRaw('1')
-                    ->from('OwnerMaster as o')
+                    ->from('ownermaster as o')
                     ->whereNotNull('o.MobileNo')
                     ->whereRaw("TRIM(o.MobileNo) != ''")
                     ->whereColumn(
@@ -6703,7 +6703,7 @@ class SuperAdminController extends Controller
         | Dashboard filters are applied before selecting minimum OwnerId.
         */
 
-        $ownerMobileSubQuery = DB::table('OwnerMaster as om')
+        $ownerMobileSubQuery = DB::table('ownermaster as om')
             ->selectRaw('om.MobileNo, MIN(om.OwnerId) AS OwnerId')
             ->whereNotNull('om.MobileNo')
             ->whereRaw("TRIM(om.MobileNo) != ''")
@@ -6742,7 +6742,7 @@ class SuperAdminController extends Controller
                 }
             )
             ->leftJoin(
-                'OwnerMaster as o',
+                'ownermaster as o',
                 'o.OwnerId',
                 '=',
                 'matched_owner.OwnerId'
@@ -7142,7 +7142,7 @@ class SuperAdminController extends Controller
             ) AS mobile_group_count
         ");
 
-        $ownerMobileSubQuery = DB::table('OwnerMaster as om')
+        $ownerMobileSubQuery = DB::table('ownermaster as om')
             ->selectRaw('om.MobileNo, MIN(om.OwnerId) AS OwnerId')
             ->whereNotNull('om.MobileNo')
             ->whereRaw("TRIM(om.MobileNo) != ''")
@@ -7174,7 +7174,7 @@ class SuperAdminController extends Controller
                 }
             )
             ->leftJoin(
-                'OwnerMaster as o',
+                'ownermaster as o',
                 'o.OwnerId',
                 '=',
                 'matched_owner.OwnerId'

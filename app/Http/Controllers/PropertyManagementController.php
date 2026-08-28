@@ -320,7 +320,7 @@ class PropertyManagementController extends Controller
                 $join->on(
                     'ppp.ApplicationNo',
                     '=',
-                    'meb.application_number_int'
+                    'meb.application_number'
                 )
                     ->where('ppp.IsDeleted', 0);
             })
@@ -523,7 +523,7 @@ class PropertyManagementController extends Controller
         $eligibleAllottees = (clone $verificationBaseQuery)
             ->join(
                 'mmsay_eligible_beneficiaries as meb',
-                'meb.application_number_int',
+                'meb.application_number',
                 '=',
                 'ppp.ApplicationNo'
             )
@@ -584,7 +584,7 @@ class PropertyManagementController extends Controller
             })
             ->leftJoin('mmsay_eligible_beneficiaries as meb', function ($join) {
                 $join->on(
-                    'meb.application_number_int',
+                    'meb.application_number',
                     '=',
                     'ppp.ApplicationNo'
                 );
@@ -3382,7 +3382,7 @@ class PropertyManagementController extends Controller
                 $join->on(
                     'eligible_ppp.ApplicationNo',
                     '=',
-                    'eligible_meb.application_number_int'
+                    'eligible_meb.application_number'
                 )
                     ->where('eligible_ppp.IsDeleted', 0);
             })
@@ -3413,7 +3413,7 @@ class PropertyManagementController extends Controller
                 + COALESCE(SUM(receipt.total_paid_amount), 0)
             ) AS total_received
         ")
-            ->whereNotNull('eligible_meb.application_number_int')
+            ->whereNotNull('eligible_meb.application_number')
             ->when($filters['district_id'], fn($q, $id) => $q->where('pad.DistrictId', $id))
             ->when($filters['city_id'], fn($q, $id) => $q->where('pad.CityId', $id))
             ->when($filters['sector_id'], fn($q, $id) => $q->where('pad.SectorId', $id))
@@ -3796,7 +3796,7 @@ class PropertyManagementController extends Controller
                 $join->on(
                     'ppp.ApplicationNo',
                     '=',
-                    'meb.application_number_int'
+                    'meb.application_number'
                 )
                     ->where('ppp.IsDeleted', 0);
             })
@@ -3837,7 +3837,7 @@ class PropertyManagementController extends Controller
                 '=',
                 'ppp.SectorId'
             )
-            ->whereNotNull('meb.application_number_int')
+            ->whereNotNull('meb.application_number')
 
             /*
              * Initial received already ₹60,000+ hai to receipts
@@ -4570,7 +4570,7 @@ class PropertyManagementController extends Controller
                 $join->on(
                     'receipt_ppp.ApplicationNo',
                     '=',
-                    'receipt_meb.application_number_int'
+                    'receipt_meb.application_number'
                 )
                     ->where('receipt_ppp.IsDeleted', 0);
             })
@@ -4639,7 +4639,7 @@ class PropertyManagementController extends Controller
                     $join->on(
                         'eligible_ppp.ApplicationNo',
                         '=',
-                        'meb.application_number_int'
+                        'meb.application_number'
                     )
                         ->where('eligible_ppp.IsDeleted', 0);
                 }
