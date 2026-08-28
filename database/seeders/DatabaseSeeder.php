@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CitySectorAssociationSeeder::class,
             PropertyRegistrationSeeder::class,
             PropertyPrivatePurchasersSeeder::class,
+            GhumantuPurchaserSeeder::class,
             PropertyAuctionDetailSeeder::class,
             CashReceiptDetailsSeeder::class,
             RoleSeeder::class,
