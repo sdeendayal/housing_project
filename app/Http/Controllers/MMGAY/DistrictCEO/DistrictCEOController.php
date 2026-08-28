@@ -3203,7 +3203,7 @@ class DistrictCEOController extends Controller
             END AS StatusRemark
         ")
             ->distinct()
-            ->orderBy('v.phase')
+            ->orderBy('o.Phase')
             ->orderBy('v.VillageName')
             ->orderBy('o.OwnerId')
             ->paginate($perPage)
