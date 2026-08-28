@@ -403,7 +403,7 @@
             'Mobile Number' => $application->mobile,
             'Purchaser Application No.' => $application->purchaser_application_number,
             'Physical Application No.' => $application->physical_application_number,
-            'MMSAY Application' => $application->mmsay_application_no,
+            
             'PPP ID' => $application->ppp_id,
             'Member ID' => $application->member_id,
             'Possession ID' => $application->possession_id,
