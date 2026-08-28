@@ -1,6 +1,99 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const filterForm = document.getElementById('verificationAllotteesFilterForm');
+        const district = document.getElementById('district_id');
+        const city = document.getElementById('city_id');
+        const sector = document.getElementById('sector_id');
+
+        // This file is shared by multiple pages. Only initialise this page's filter.
+        if (!filterForm || !district || !city || !sector) {
+            return;
+        }
+
+        const optionsUrl = @json(route('verification-allottees.filter-options'));
+
+        function resetSelect(select, label, disabled = true) {
+            select.innerHTML = `<option value="">${label}</option>`;
+            select.disabled = disabled;
+        }
+
+        district.addEventListener('change', async function() {
+            resetSelect(
+                city,
+                this.value ? 'Loading cities...' : 'Select district first'
+            );
+
+            resetSelect(sector, 'Select city first');
+
+            if (!this.value) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${optionsUrl}?district_id=${encodeURIComponent(this.value)}`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                resetSelect(city, 'All Cities', false);
+
+                (data.cities || []).forEach(function(item) {
+                    city.add(new Option(item.name, item.id));
+                });
+            } catch (error) {
+                resetSelect(city, 'Unable to load cities');
+            }
+        });
+
+        city.addEventListener('change', async function() {
+            resetSelect(
+                sector,
+                this.value ? 'Loading sectors...' : 'Select city first'
+            );
+
+            if (!this.value) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${optionsUrl}?city_id=${encodeURIComponent(this.value)}`, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                resetSelect(sector, 'All Sectors', false);
+
+                (data.sectors || []).forEach(function(item) {
+                    sector.add(new Option(item.name, item.id));
+                });
+            } catch (error) {
+                resetSelect(sector, 'Unable to load sectors');
+            }
+        });
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const modal = document.getElementById('drawPdfModal');
@@ -10,6 +103,10 @@
         const fileName = document.getElementById('drawPdfModalFileName');
         const download = document.getElementById('drawPdfDownload');
         const open = document.getElementById('drawPdfOpen');
+
+        if (!modal || !frame || !loading || !title || !fileName || !download || !open) {
+            return;
+        }
 
         function openViewer(button) {
             title.textContent = button.dataset.title || 'Draw Document';
@@ -46,8 +143,8 @@
             }
         });
 
-        document.getElementById('drawPdfClose').addEventListener('click', closeViewer);
-        document.getElementById('drawPdfBackdrop').addEventListener('click', closeViewer);
+        document.getElementById('drawPdfClose')?.addEventListener('click', closeViewer);
+        document.getElementById('drawPdfBackdrop')?.addEventListener('click', closeViewer);
 
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
@@ -58,9 +155,15 @@
 </script>
 <script>
     document.addEventListener('DOMContentLoaded', () => {
+        const filterForm = document.getElementById('oldRegistrationFilterForm');
         const district = document.getElementById('district_id');
         const city = document.getElementById('city_id');
         const sector = document.getElementById('sector_id');
+
+        if (!filterForm || !district || !city || !sector) {
+            return;
+        }
+
         const optionsUrl = @json(route('old-registrations.filter-options'));
 
         const resetSelect = (element, label, disabled = true) => {
@@ -73,21 +176,48 @@
             resetSelect(sector, 'Select city first');
             if (!district.value) return;
 
-            const response = await fetch(
-                `${optionsUrl}?district_id=${encodeURIComponent(district.value)}`);
-            const data = await response.json();
-            resetSelect(city, 'All Cities', false);
-            (data.cities || []).forEach(item => city.add(new Option(item.name, item.id)));
+            try {
+                const response = await fetch(
+                    `${optionsUrl}?district_id=${encodeURIComponent(district.value)}`, {}
+                        headers: {
+                            Accept: 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                resetSelect(city, 'All Cities', false);
+                (data.cities || []).forEach(item => city.add(new Option(item.name, item.id)));
+            } catch (error) {
+                console.error('Unable to load cities:', error);
+                resetSelect(city, 'Unable to load cities');
+            }
         });
 
         city.addEventListener('change', async () => {
             resetSelect(sector, city.value ? 'Loading sectors...' : 'Select city first');
             if (!city.value) return;
 
-            const response = await fetch(`${optionsUrl}?city_id=${encodeURIComponent(city.value)}`);
-            const data = await response.json();
-            resetSelect(sector, 'All Sectors', false);
-            (data.sectors || []).forEach(item => sector.add(new Option(item.name, item.id)));
+            try {
+                const response = await fetch(
+                    `${optionsUrl}?city_id=${encodeURIComponent(city.value)}`, {
+                        headers: {
+                            Accept: 'application/json'
+                        }
+                    }
+                );
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                resetSelect(sector, 'All Sectors', false);
+                (data.sectors || []).forEach(item => sector.add(new Option(item.name, item.id)));
+            } catch (error) {
+                console.error('Unable to load sectors:', error);
+                resetSelect(sector, 'Unable to load sectors');
+            }
         });
     });
 </script>
@@ -97,6 +227,10 @@
         const district = document.getElementById('district_id');
         const city = document.getElementById('city_id');
         const sector = document.getElementById('sector_id');
+
+        if (!filterForm || !district || !city || !sector) {
+            return;
+        }
 
         district.addEventListener('change', function() {
             city.value = '';
@@ -122,6 +256,10 @@
         const imageInput = document.getElementById('bannerImage');
         const previewImage = document.getElementById('previewImage');
         const placeholder = document.getElementById('previewPlaceholder');
+
+        if (!imageInput || !previewImage || !placeholder) {
+            return;
+        }
 
         imageInput.addEventListener('change', function(e) {
 
@@ -151,7 +289,7 @@
 <script>
     // Simple micro-interaction for toggle
     const toggle = document.querySelector('input[type="checkbox"]');
-    toggle.addEventListener('change', function() {
+    toggle?.addEventListener('change', function() {
         const parent = this.closest('div');
         if (this.checked) {
             console.log('Banner will be set as active immediately');

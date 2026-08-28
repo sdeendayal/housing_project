@@ -304,6 +304,32 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'propertyPdf']
     )->name('properties.pdf');
 
+    Route::get(
+        '/mmsay-department-verification-allottees/filter-options',
+        [PropertyManagementController::class, 'verificationFilterOptions']
+    )->name('verification-allottees.filter-options');
+
+    Route::get(
+        '/mmsay-department-verification-allottees/{eligibility}/csv',
+        [PropertyManagementController::class, 'verificationAllotteesCsv']
+    )
+        ->where('eligibility', 'eligible|not-eligible')
+        ->name('verification-allottees.csv');
+
+    Route::get(
+        '/mmsay-department-verification-allottees/{eligibility}/print',
+        [PropertyManagementController::class, 'verificationAllotteesPrint']
+    )
+        ->where('eligibility', 'eligible|not-eligible')
+        ->name('verification-allottees.print');
+
+    Route::get(
+        '/mmsay-department-verification-allottees/{eligibility}',
+        [PropertyManagementController::class, 'verificationAllottees']
+    )
+        ->where('eligibility', 'eligible|not-eligible')
+        ->name('verification-allottees.index');
+
     // physical-possession routes Start
 
     Route::get(
@@ -393,8 +419,8 @@ Route::middleware(['auth', 'role:department'])->group(function () {
     Route::get('/mmsay-department-draw/details/{id}', [PropertyManagementController::class, 'districtDetails']);
 
     Route::get('/mmsay-department-emi-payments', [PropertyManagementController::class, 'departmentEmiPayments'])
-        ->name('mmsay.department.emi.payments');   
-    
+        ->name('mmsay.department.emi.payments');
+
 
     Route::get(
         'mmsay-department-property-emi-calculation',

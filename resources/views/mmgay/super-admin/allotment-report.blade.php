@@ -4,6 +4,86 @@
 
 @section('content')
 
+    <style>
+        /* Allotment report visual upgrade only */
+        .allotment-filter-field { position: relative; }
+        .allotment-filter-icon {
+            position:absolute; left:9px; bottom:8px; z-index:2;
+            width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+            border-radius:9px; color:#4f46e5; background:#eef2ff;
+            border:1px solid #dbe4ff; pointer-events:none;
+        }
+        .allotment-filter-icon svg {
+            width:16px; height:16px; fill:none; stroke:currentColor;
+            stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+        }
+        .allotment-filter-field select,
+        .allotment-filter-field input { height:46px; }
+        .allotment-filter-field select { padding-left:48px !important; }
+        .allotment-filter-field:focus-within .allotment-filter-icon {
+            color:#fff; background:linear-gradient(135deg,#2563eb,#4f46e5);
+            border-color:transparent; box-shadow:0 5px 14px rgba(79,70,229,.18);
+        }
+
+        .summary-icon-card { position:relative; overflow:hidden; padding-left:66px !important; min-height:112px; }
+        .summary-card-icon {
+            position:absolute; left:16px; top:50%; transform:translateY(-50%);
+            width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+            border-radius:11px; box-shadow:0 5px 14px rgba(15,23,42,.06);
+        }
+        .summary-card-icon svg {
+            width:20px; height:20px; fill:none; stroke:currentColor;
+            stroke-width:2; stroke-linecap:round; stroke-linejoin:round;
+        }
+        .summary-total .summary-card-icon { background:#eaf2ff; color:#2563eb; }
+        .summary-paid .summary-card-icon { background:#dcfce7; color:#16a34a; }
+        .summary-unpaid .summary-card-icon { background:#fef3c7; color:#d97706; }
+        .summary-pending .summary-card-icon { background:#ede9fe; color:#6d28d9; }
+        .summary-rejected .summary-card-icon { background:#fee2e2; color:#dc2626; }
+        .summary-cancelled .summary-card-icon { background:#e2e8f0; color:#475569; }
+
+        /* No horizontal table scrolling */
+        .allotment-table-wrap { overflow-x:visible !important; width:100%; }
+        .allotment-table {
+            width:100% !important; min-width:0 !important; table-layout:fixed;
+            font-size:11px;
+        }
+        .allotment-table th {
+            padding:10px 6px !important; font-size:9px !important;
+            line-height:1.15; white-space:normal !important; overflow-wrap:anywhere;
+        }
+        .allotment-table td {
+            padding:10px 6px !important; font-size:11px !important;
+            line-height:1.25; vertical-align:middle;
+            white-space:normal !important; overflow-wrap:anywhere; word-break:break-word;
+        }
+        .allotment-table td p { font-size:11px !important; }
+        .allotment-table td p.mt-1 { font-size:9.5px !important; margin-top:3px !important; }
+        .allotment-table .allotment-status {
+            white-space:normal !important; text-align:center;
+            padding:5px 7px !important; font-size:9.5px !important; line-height:1.15;
+        }
+        .allotment-table .allotment-action { width:30px !important; height:30px !important; }
+
+        .allotment-table th:nth-child(1), .allotment-table td:nth-child(1) { width:5%; }
+        .allotment-table th:nth-child(2), .allotment-table td:nth-child(2) { width:15%; }
+        .allotment-table th:nth-child(3), .allotment-table td:nth-child(3) { width:18%; }
+        .allotment-table th:nth-child(4), .allotment-table td:nth-child(4) { width:10%; }
+        .allotment-table th:nth-child(5), .allotment-table td:nth-child(5) { width:18%; }
+        .allotment-table th:nth-child(6), .allotment-table td:nth-child(6) { width:6%; }
+        .allotment-table th:nth-child(7), .allotment-table td:nth-child(7) { width:15%; }
+        .allotment-table th:nth-child(8), .allotment-table td:nth-child(8) { width:9%; }
+        .allotment-table th:nth-child(9), .allotment-table td:nth-child(9) { width:4%; }
+
+        @media (max-width:1280px) {
+            .allotment-table td { font-size:10px !important; padding:8px 4px !important; }
+            .allotment-table th { font-size:8px !important; padding:8px 4px !important; }
+            .summary-icon-card { padding-left:56px !important; }
+            .summary-card-icon { left:12px; width:34px; height:34px; }
+        }
+    </style>
+
+
     <main class="min-h-screen bg-slate-100 p-6 pt-20 ml-[260px] w-[calc(100%-260px)] overflow-x-hidden">
 
         {{-- Page Header --}}
@@ -67,6 +147,8 @@
                         Phase
                     </label>
 
+                    <span class="allotment-filter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg></span>
+
                     <select name="phase" id="phase"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
 
@@ -87,6 +169,8 @@
                         District
                     </label>
 
+                    <span class="allotment-filter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 21h16M6 21V8l6-4 6 4v13M9 11h1M14 11h1M9 15h1M14 15h1"/></svg></span>
+
                     <select name="district_id" id="district_id"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
 
@@ -105,6 +189,8 @@
                     <label for="block_id" class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Block
                     </label>
+
+                    <span class="allotment-filter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><rect x="14" y="14" width="6" height="6"/></svg></span>
 
                     <select name="block_id" id="block_id"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
@@ -125,6 +211,8 @@
                         class="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                         Village
                     </label>
+
+                    <span class="allotment-filter-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5M5.5 9.5V21h13V9.5M9.5 21v-6h5v6"/></svg></span>
 
                     <select name="village_id" id="village_id"
                         class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100">
@@ -180,8 +268,10 @@
         <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
 
             <a href="{{ route('admin.allotment.report', request()->except(['status', 'page'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-total rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ !request('status') ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-100' : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">Total</p>
 
@@ -191,10 +281,12 @@
             </a>
 
             <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_paid'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-paid rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ request('status') === 'approved_paid'
                     ? 'border-green-500 bg-green-50 ring-2 ring-green-100'
                     : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16 9"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Approved & Paid
@@ -206,10 +298,12 @@
             </a>
 
             <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'approved_unpaid'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-unpaid rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ request('status') === 'approved_unpaid'
                     ? 'border-amber-500 bg-amber-50 ring-2 ring-amber-100'
                     : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M16 10h2v4h-2"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Approved & Unpaid
@@ -221,10 +315,12 @@
             </a>
 
             <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'pending'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-pending rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ request('status') === 'pending'
                     ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-100'
                     : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Yet to be Approved
@@ -236,10 +332,12 @@
             </a>
 
             <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'rejected'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-rejected rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ request('status') === 'rejected'
                     ? 'border-red-500 bg-red-50 ring-2 ring-red-100'
                     : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6m0-6-6 6"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Rejected
@@ -251,10 +349,12 @@
             </a>
 
             <a href="{{ route('admin.allotment.report', array_merge(request()->except('page'), ['status' => 'cancelled'])) }}"
-                class="rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
+                class="summary-icon-card summary-cancelled rounded-2xl border p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-md
                 {{ request('status') === 'cancelled'
                     ? 'border-slate-500 bg-slate-100 ring-2 ring-slate-200'
                     : 'border-slate-200 bg-white' }}">
+
+                <span class="summary-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M7.5 16.5 16.5 7.5"/></svg></span>
 
                 <p class="text-xs font-semibold uppercase text-slate-500">
                     Cancelled
@@ -294,46 +394,46 @@
 
             </div>
 
-            <div class="overflow-x-auto">
+            <div class="allotment-table-wrap">
 
-                <table class="min-w-full divide-y divide-slate-200">
+                <table class="allotment-table min-w-full divide-y divide-slate-200">
 
                     <thead class="bg-slate-50">
                         <tr>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Sr. No.
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Application
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Applicant
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Mobile
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Location
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Phase
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Plot
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Status
                             </th>
                             <th
-                                class="whitespace-nowrap px-4 py-3 text-center text-xs font-semibold uppercase text-slate-500">
+                                class="px-4 py-3 text-center text-xs font-semibold uppercase text-slate-500">
                                 Action
                             </th>
                         </tr>
@@ -363,11 +463,11 @@
 
                             <tr class="transition hover:bg-slate-50">
 
-                                <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                <td class="px-4 py-4 text-sm text-slate-600">
                                     {{ ($allotments->firstItem() ?? 1) + $loop->index }}
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-4">
+                                <td class="px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
                                         {{ $allotment->RegistrationNo ?? '-' }}
                                     </p>
@@ -376,7 +476,7 @@
                                     </p>
                                 </td>
 
-                                <td class="min-w-[220px] px-4 py-4">
+                                <td class="px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
                                         {{ $allotment->OwnerName ?? '-' }}
                                     </p>
@@ -385,11 +485,11 @@
                                     </p>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                <td class="px-4 py-4 text-sm text-slate-600">
                                     {{ $allotment->MobileNo ?? '-' }}
                                 </td>
 
-                                <td class="min-w-[220px] px-4 py-4">
+                                <td class="px-4 py-4">
                                     <p class="text-sm font-medium text-slate-700">
                                         {{ $allotment->VillageName ?? '-' }}
                                     </p>
@@ -399,11 +499,11 @@
                                     </p>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-4 text-sm text-slate-600">
+                                <td class="px-4 py-4 text-sm text-slate-600">
                                     {{ $allotment->Phase ?? '-' }}
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-4">
+                                <td class="px-4 py-4">
                                     <p class="text-sm font-semibold text-slate-800">
                                         {{ $allotment->FlatNo ?? '-' }}
                                     </p>
@@ -412,18 +512,18 @@
                                     </p>
                                 </td>
 
-                                <td class="whitespace-nowrap px-4 py-4">
+                                <td class="px-4 py-4">
                                     <span
-                                        class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
+                                        class="allotment-status inline-flex rounded-full px-3 py-1 text-xs font-semibold {{ $statusClass }}">
                                         {{ $statusText }}
                                     </span>
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-4 text-center">
+                                <td class="px-4 py-4 text-center">
 
                                     @if (!empty($allotment->secure_id))
                                         <a href="{{ route('superadmin.applicants.show', $allotment->secure_id) }}"
                                             title="View Applicant"
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg
+                                            class="allotment-action inline-flex h-9 w-9 items-center justify-center rounded-lg
                    border border-slate-300 bg-white text-slate-600 shadow-sm
                    transition hover:border-indigo-300 hover:bg-indigo-50
                    hover:text-indigo-700">
@@ -434,7 +534,7 @@
                                         </a>
                                     @else
                                         <span
-                                            class="inline-flex h-9 w-9 items-center justify-center rounded-lg
+                                            class="allotment-action inline-flex h-9 w-9 items-center justify-center rounded-lg
                    border border-slate-200 bg-slate-50 text-slate-300"
                                             title="Secure ID not available">
 

@@ -2,6 +2,104 @@
 @section('title', 'MMSAY Department Dashboard')
 @section('content')
 
+    <style>
+        @property --dashboard-orbit-angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        .dashboard-orbit-card {
+            position: relative;
+            isolation: isolate;
+        }
+
+        .dashboard-orbit-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            border-radius: inherit;
+            padding: 2px;
+            pointer-events: none;
+            opacity: 0;
+            background: conic-gradient(from var(--dashboard-orbit-angle),
+                    #7c3aed,
+                    #2563eb,
+                    #06b6d4,
+                    #10b981,
+                    #f59e0b,
+                    #f43f5e,
+                    #7c3aed);
+            -webkit-mask:
+                linear-gradient(#000 0 0) content-box,
+                linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            transition: opacity 180ms ease;
+        }
+
+        .dashboard-orbit-card:hover::before,
+        .dashboard-orbit-card:focus-visible::before {
+            opacity: 1;
+            animation: dashboard-border-orbit 1.6s linear infinite;
+        }
+
+        @keyframes dashboard-border-orbit {
+            to {
+                --dashboard-orbit-angle: 360deg;
+            }
+        }
+
+        #dashboardCardTooltip {
+            position: fixed;
+            z-index: 9999;
+            left: 0;
+            top: 0;
+            max-width: 240px;
+            transform: translate(-50%, calc(-100% - 14px)) scale(.96);
+            border: 1px solid rgba(148, 163, 184, .28);
+            border-radius: 10px;
+            padding: 7px 11px;
+            background: rgba(15, 23, 42, .94);
+            box-shadow: 0 10px 28px rgba(15, 23, 42, .22);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: .01em;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 140ms ease, transform 140ms ease, visibility 140ms ease;
+        }
+
+        #dashboardCardTooltip::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -5px;
+            width: 9px;
+            height: 9px;
+            background: rgba(15, 23, 42, .94);
+            transform: translateX(-50%) rotate(45deg);
+        }
+
+        #dashboardCardTooltip.is-visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, calc(-100% - 14px)) scale(1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .dashboard-orbit-card:hover::before,
+            .dashboard-orbit-card:focus-visible::before {
+                animation: none;
+            }
+        }
+    </style>
+
     @if (session('success'))
         <div id="successToast" class="success-toast">
             <span class="material-symbols-outlined me-2">
@@ -177,7 +275,9 @@
             </div>
 
             <!-- Bento Grid - Summary Metrics -->
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
+            <div
+                class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12
+           xl:grid-cols-[repeat(16,minmax(0,1fr))]">
 
                 {{-- Registration --}}
                 <a href="{{ route(
@@ -188,7 +288,8 @@
                         'sector_id' => $sectorId,
                     ]),
                 ) }}"
-                    class="group rounded-xl border border-indigo-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md lg:col-span-2">
+                    data-card-name="Property Registration"
+                    class="dashboard-orbit-card group rounded-xl border border-indigo-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md lg:col-span-3">
 
                     <div class="flex items-start justify-between">
                         <div
@@ -215,7 +316,8 @@
                         'sector_id' => $sectorId ?? null,
                     ]),
                 ) }}"
-                    class="group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-2">
+                    data-card-name="Plots Allotted in Year 2024"
+                    class="dashboard-orbit-card group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-3">
 
                     <div class="flex items-start justify-between">
                         <div
@@ -232,7 +334,7 @@
                     </div>
 
                     <p class="mt-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
-                        Allotted
+                        Plots allotted in Year 2024
                     </p>
 
                     <h3 class="mt-1 text-2xl font-bold leading-none text-orange-600">
@@ -240,117 +342,149 @@
                     </h3>
 
                     <p class="mt-2 text-[11px] text-slate-400">
-                        Plot / flat assigned
+                        Plot assigned
                     </p>
                 </a>
 
-                {{-- EMI --}}
-                <div
-                    class="overflow-hidden rounded-xl border border-amber-100 bg-white shadow-sm sm:col-span-2 lg:col-span-4">
+                
 
+                {{-- Physical Verification Status --}}
+                <div data-card-name="Physical Verification Status"
+                    class="dashboard-orbit-card overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm
+           sm:col-span-2 lg:col-span-4 xl:col-span-5">
+
+                    {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
                         <div class="flex items-center gap-2.5">
                             <div
-                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                class="flex h-9 w-9 shrink-0 items-center justify-center
+                       rounded-lg bg-sky-50 text-sky-600">
+
                                 <span class="material-symbols-outlined text-[20px]">
-                                    payments
+                                    fact_check
                                 </span>
                             </div>
 
                             <div>
                                 <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
-                                    EMI Payment Status
+                                    Status after verification of 15256 plots
                                 </p>
+
                                 <p class="mt-0.5 text-[10px] text-slate-400">
-                                    Property payment summary
+                                    Allottee eligibility report
                                 </p>
                             </div>
                         </div>
 
-                        <span class="rounded-full bg-amber-50 px-2 py-1 text-[9px] font-semibold text-amber-600">
-                            Payment status
+                        <span
+                            class="rounded-full bg-sky-50 px-2 py-1
+                   text-[9px] font-semibold text-sky-600">
+                            Verification status
                         </span>
                     </div>
 
+                    {{-- Status cards --}}
                     <div class="grid grid-cols-2 divide-x divide-slate-100">
 
-                        {{-- Full Payment --}}
-                        <a href="{{ url('full-paid-properties') .
-                            '?' .
-                            http_build_query(
-                                array_filter([
-                                    'district_id' => $districtId,
-                                    'city_id' => $cityId,
-                                    'sector_id' => $sectorId,
-                                ]),
-                            ) }}"
-                            class="group px-4 py-3 transition hover:bg-emerald-50/60">
+                        {{-- Eligible --}}
+                        <a href="{{ route(
+                            'verification-allottees.index',
+                            array_filter([
+                                'eligibility' => 'eligible',
+                                'district_id' => $districtId ?? null,
+                                'city_id' => $cityId ?? null,
+                                'sector_id' => $sectorId ?? null,
+                            ]),
+                        ) }}"
+                            class="group min-w-0 px-4 py-3 transition hover:bg-emerald-50/60">
+
                             <div class="flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-[17px] text-emerald-600">
-                                    task_alt
+                                <span
+                                    class="material-symbols-outlined shrink-0
+                           text-[17px] text-emerald-600">
+                                    verified_user
                                 </span>
-                                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                    Full Payment
+
+                                <p
+                                    class="truncate text-[10px] font-semibold uppercase
+                           tracking-wide text-slate-500">
+                                    Eligible Allottees
                                 </p>
                             </div>
 
                             <div class="mt-2 flex items-end justify-between gap-2">
-                                <div>
+                                <div class="min-w-0">
                                     <h3 class="text-2xl font-bold leading-none text-emerald-600">
-                                        {{ number_format($paymentStats->total_paid_properties ?? 0) }}
+                                        {{ number_format($eligibleAllottees ?? 0) }}
                                     </h3>
+
                                     <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
-                                        Payment completed
+                                        Verification eligible
                                     </p>
                                 </div>
+
                                 <span
-                                    class="material-symbols-outlined text-[17px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-500">
+                                    class="material-symbols-outlined shrink-0 text-[17px]
+                           text-slate-300 transition
+                           group-hover:translate-x-0.5
+                           group-hover:text-emerald-500">
                                     arrow_forward
                                 </span>
                             </div>
                         </a>
 
-                        {{-- Partial Payment --}}
-                        <a href="{{ url('partial-paid-properties') .
-                            '?' .
-                            http_build_query(
-                                array_filter([
-                                    'district_id' => $districtId,
-                                    'city_id' => $cityId,
-                                    'sector_id' => $sectorId,
-                                ]),
-                            ) }}"
-                            class="group px-4 py-3 transition hover:bg-amber-50/60">
+                        {{-- Not Eligible --}}
+                        <a href="{{ route(
+                            'verification-allottees.index',
+                            array_filter([
+                                'eligibility' => 'not-eligible',
+                                'district_id' => $districtId ?? null,
+                                'city_id' => $cityId ?? null,
+                                'sector_id' => $sectorId ?? null,
+                            ]),
+                        ) }}"
+                            class="group min-w-0 px-4 py-3 transition hover:bg-rose-50/60">
+
                             <div class="flex items-center gap-1.5">
-                                <span class="material-symbols-outlined text-[17px] text-amber-600">
-                                    pending_actions
+                                <span
+                                    class="material-symbols-outlined shrink-0
+                           text-[17px] text-rose-500">
+                                    person_cancel
                                 </span>
-                                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
-                                    Partial Payment
+
+                                <p
+                                    class="truncate text-[10px] font-semibold uppercase
+                           tracking-wide text-slate-500">
+                                    Not Eligible
                                 </p>
                             </div>
 
                             <div class="mt-2 flex items-end justify-between gap-2">
-                                <div>
-                                    <h3 class="text-2xl font-bold leading-none text-amber-600">
-                                        {{ number_format($paymentStats->pending_properties ?? 0) }}
+                                <div class="min-w-0">
+                                    <h3 class="text-2xl font-bold leading-none text-rose-600">
+                                        {{ number_format($notEligibleAllottees ?? 0) }}
                                     </h3>
+
                                     <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
-                                        Payment pending
+                                        Verification not eligible
                                     </p>
                                 </div>
+
                                 <span
-                                    class="material-symbols-outlined text-[17px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-amber-500">
+                                    class="material-symbols-outlined shrink-0 text-[17px]
+                           text-slate-300 transition
+                           group-hover:translate-x-0.5
+                           group-hover:text-rose-500">
                                     arrow_forward
                                 </span>
                             </div>
                         </a>
                     </div>
-                </div>
+                </div>                
 
                 {{-- Physical Possession --}}
-                <div
-                    class="overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm sm:col-span-2 lg:col-span-4">
+                <div data-card-name="Physical Possession"
+                    class="dashboard-orbit-card overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm sm:col-span-2 lg:col-span-5">
 
                     {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
@@ -620,6 +754,6 @@
                 </div>
             </section>
         </div>
-    </main>
+    </main>   
 
 @endsection

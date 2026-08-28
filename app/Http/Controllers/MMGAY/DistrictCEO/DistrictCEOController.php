@@ -110,12 +110,6 @@ class DistrictCEOController extends Controller
                 '=',
                 'f.FlatId'
             )
-            ->leftJoin(
-                'registary as r',
-                'o.MobileNo',
-                '=',
-                'r.SecondPartyMobile'
-            )
             ->where('o.DistrictId', $districtId)
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
@@ -147,6 +141,46 @@ class DistrictCEOController extends Controller
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('v.VillageId', $villageId);
             });
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Registry Verification - OLD + NEW
+        |--------------------------------------------------------------------------
+        |
+        | OLD records: registary.flatid IS NULL
+        |   -> verify by SecondPartyMobile = OwnerMaster.MobileNo
+        |
+        | NEW records: registary.flatid IS NOT NULL
+        |   -> verify by flatid = OwnerMaster.FlatId
+        |
+        | EXISTS keeps every OwnerMaster beneficiary unique even if registary
+        | contains duplicate/history rows.
+        |--------------------------------------------------------------------------
+        */
+        $registryMatchedSql = "
+            (
+                EXISTS (
+                    SELECT 1
+                    FROM registary r_old
+                    WHERE r_old.flatid IS NULL
+                      AND r_old.SecondPartyMobile IS NOT NULL
+                      AND r_old.SecondPartyMobile <> ''
+                      AND o.MobileNo IS NOT NULL
+                      AND o.MobileNo <> ''
+                      AND r_old.SecondPartyMobile = o.MobileNo
+                )
+                OR
+                EXISTS (
+                    SELECT 1
+                    FROM registary r_new
+                    WHERE r_new.flatid IS NOT NULL
+                      AND r_new.flatid > 0
+                      AND o.FlatId IS NOT NULL
+                      AND r_new.flatid = o.FlatId
+                )
+            )
+        ";
 
         /*
         |--------------------------------------------------------------------------
@@ -206,38 +240,24 @@ class DistrictCEOController extends Controller
             END) AS Cancelled,
 
             COUNT(DISTINCT CASE
-    WHEN f.FlatId IS NOT NULL
-        AND o.IsApproved = 1
-        AND o.IsPaid = 1
-        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-        AND o.MobileNo IS NOT NULL
-        AND o.MobileNo <> ''
-        AND r.SecondPartyMobile IS NOT NULL
-    THEN o.OwnerId
-END) AS RegistryMatched,
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND $registryMatchedSql
+                THEN o.OwnerId
+            END) AS RegistryMatched,
 
-COUNT(DISTINCT CASE
-    WHEN f.FlatId IS NOT NULL
-        AND o.IsApproved = 1
-        AND o.IsPaid = 1
-        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-        AND o.MobileNo IS NOT NULL
-        AND o.MobileNo <> ''
-        AND r.SecondPartyMobile IS NULL
-    THEN o.OwnerId
-END) AS RegistryUnmatchedWithMobile,
-
-COUNT(DISTINCT CASE
-    WHEN f.FlatId IS NOT NULL
-        AND o.IsApproved = 1
-        AND o.IsPaid = 1
-        AND COALESCE(o.IsAllotmentCancelled, 0) = 0
-        AND (
-            o.MobileNo IS NULL
-            OR o.MobileNo = ''
-        )
-    THEN o.OwnerId
-END) AS RegistryUnmatchedWithoutMobile,
+            COUNT(DISTINCT CASE
+                WHEN f.FlatId IS NOT NULL
+                    AND o.IsApproved = 1
+                    AND o.IsPaid = 1
+                    AND COALESCE(o.IsRejected, 0) = 0
+                    AND COALESCE(o.IsAllotmentCancelled, 0) = 0
+                    AND NOT $registryMatchedSql
+                THEN o.OwnerId
+            END) AS RegistryUnmatched,
 
             COUNT(DISTINCT CASE
                 WHEN f.FlatId IS NOT NULL
@@ -338,15 +358,13 @@ END) AS RegistryUnmatchedWithoutMobile,
         | Registration Totals
         |--------------------------------------------------------------------------
         */
-        $totalRegistryAllotted = $totalPaid;
+        $totalRegistryAllotted = (int) $villageData->sum('ApprovedPaid');
 
-        $totalRegistryMatched = (int) $villageData->sum(
-            'RegistryMatched'
-        );
+        $totalRegistryMatched = (int) $villageData->sum('RegistryMatched');
 
-        $totalRegistryUnmatched = (int) (
-            $villageData->sum('RegistryUnmatchedWithMobile') +
-            $villageData->sum('RegistryUnmatchedWithoutMobile')
+        $totalRegistryUnmatched = max(
+            0,
+            $totalRegistryAllotted - $totalRegistryMatched
         );
 
         /*
@@ -372,29 +390,70 @@ END) AS RegistryUnmatchedWithoutMobile,
         |--------------------------------------------------------------------------
         | Possession Totals
         |--------------------------------------------------------------------------
-        | Only Registry Matched beneficiaries are considered as
-        | "Possession to be given".
+        | Possession base is exactly the unique Registry Done beneficiaries.
+        | OLD = mobile match where registry flatid is NULL.
+        | NEW = flatid match where registry flatid is available.
         |--------------------------------------------------------------------------
         */
+        $latestPossessionApplication = DB::table(
+            'mmgay_possession_applications as pa_latest'
+        )
+            ->selectRaw(
+                'pa_latest.owner_id, MAX(pa_latest.id) AS latest_id'
+            )
+            ->groupBy('pa_latest.owner_id');
+
         $possessionCountQuery = DB::table('OwnerMaster as po')
             ->join('VillageMaster as pv', function ($join) {
                 $join->on('po.VillageId', '=', 'pv.VillageId')
                     ->on('po.DistrictId', '=', 'pv.DistrictId');
             })
-            ->join('FlatMaster as pf', 'po.FlatId', '=', 'pf.FlatId')
-            ->join('registary as pr', 'po.MobileNo', '=', 'pr.SecondPartyMobile')
-            ->leftJoin(
-                'mmgay_possession_applications as pa',
-                'pa.owner_id',
+            ->leftJoinSub(
+                $latestPossessionApplication,
+                'pal',
+                'pal.owner_id',
                 '=',
                 'po.OwnerId'
+            )
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.id',
+                '=',
+                'pal.latest_id'
             )
             ->where('po.DistrictId', $districtId)
             ->where('pv.DistrictId', $districtId)
             ->where('pv.plots', '>', 0)
             ->where('po.IsApproved', 1)
             ->where('po.IsPaid', 1)
-            ->where('po.IsAllotmentCancelled', 0)
+            ->whereRaw('COALESCE(po.IsRejected, 0) = 0')
+            ->whereRaw('COALESCE(po.IsAllotmentCancelled, 0) = 0')
+            ->where(function ($registryQuery) {
+                $registryQuery
+                    ->whereExists(function ($oldRegistry) {
+                        $oldRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_old')
+                            ->whereNull('r_old.flatid')
+                            ->whereNotNull('r_old.SecondPartyMobile')
+                            ->where('r_old.SecondPartyMobile', '<>', '')
+                            ->whereColumn(
+                                'r_old.SecondPartyMobile',
+                                'po.MobileNo'
+                            );
+                    })
+                    ->orWhereExists(function ($newRegistry) {
+                        $newRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_new')
+                            ->whereNotNull('r_new.flatid')
+                            ->where('r_new.flatid', '>', 0)
+                            ->whereColumn(
+                                'r_new.flatid',
+                                'po.FlatId'
+                            );
+                    });
+            })
             ->when(!$isAllPhase, function ($query) use ($phase) {
                 $query->where('po.Phase', $phase)
                     ->where('pv.phase', $phase);
@@ -406,6 +465,10 @@ END) AS RegistryUnmatchedWithoutMobile,
                 $query->where('po.VillageId', $villageId);
             });
 
+        $totalRegisteredBeneficiaries = (clone $possessionCountQuery)
+            ->distinct()
+            ->count('po.OwnerId');
+
         $totalPossessionGiven = (clone $possessionCountQuery)
             ->whereRaw(
                 "LOWER(TRIM(COALESCE(pa.physical_possession_status, ''))) = ?",
@@ -416,7 +479,7 @@ END) AS RegistryUnmatchedWithoutMobile,
 
         $totalPossessionPending = max(
             0,
-            $totalRegistryMatched - $totalPossessionGiven
+            $totalRegisteredBeneficiaries - $totalPossessionGiven
         );
 
         /*
@@ -460,7 +523,7 @@ END) AS RegistryUnmatchedWithoutMobile,
             | Possession
             |----------------------------------------------------------------------
             */
-            'totalRegisteredBeneficiaries' => $totalRegistryMatched,
+            'totalRegisteredBeneficiaries' => $totalRegisteredBeneficiaries,
             'totalPossessionGiven' => $totalPossessionGiven,
             'totalPossessionPending' => $totalPossessionPending,
 
@@ -620,11 +683,20 @@ END) AS RegistryUnmatchedWithoutMobile,
                 'f.FlatId'
             )
 
-            ->leftJoin(
-                'mmgay_possession_applications as pa',
-                'pa.owner_id',
+            ->leftJoinSub(
+                DB::table('mmgay_possession_applications as pa_latest')
+                    ->selectRaw('pa_latest.owner_id, MAX(pa_latest.id) AS latest_id')
+                    ->groupBy('pa_latest.owner_id'),
+                'pal',
+                'pal.owner_id',
                 '=',
                 'o.OwnerId'
+            )
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.id',
+                '=',
+                'pal.latest_id'
             )
 
             ->where('o.DistrictId', $districtId)
@@ -637,23 +709,40 @@ END) AS RegistryUnmatchedWithoutMobile,
             ->whereRaw(
                 'COALESCE(o.IsAllotmentCancelled, 0) = 0'
             )
-
-            ->whereNotNull('o.MobileNo')
-            ->where('o.MobileNo', '<>', '')
+            ->whereRaw(
+                'COALESCE(o.IsRejected, 0) = 0'
+            )
 
             /*
             |--------------------------------------------------------------------------
-            | Registry Matched Beneficiaries
+            | Unique Registry Done: OLD mobile + NEW FlatId
             |--------------------------------------------------------------------------
             */
-            ->whereExists(function ($query) {
-                $query
-                    ->selectRaw('1')
-                    ->from('registary as r')
-                    ->whereColumn(
-                        'r.SecondPartyMobile',
-                        'o.MobileNo'
-                    );
+            ->where(function ($registryQuery) {
+                $registryQuery
+                    ->whereExists(function ($oldRegistry) {
+                        $oldRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_old')
+                            ->whereNull('r_old.flatid')
+                            ->whereNotNull('r_old.SecondPartyMobile')
+                            ->where('r_old.SecondPartyMobile', '<>', '')
+                            ->whereColumn(
+                                'r_old.SecondPartyMobile',
+                                'o.MobileNo'
+                            );
+                    })
+                    ->orWhereExists(function ($newRegistry) {
+                        $newRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_new')
+                            ->whereNotNull('r_new.flatid')
+                            ->where('r_new.flatid', '>', 0)
+                            ->whereColumn(
+                                'r_new.flatid',
+                                'o.FlatId'
+                            );
+                    });
             })
 
             ->when(
@@ -779,18 +868,31 @@ END) AS RegistryUnmatchedWithoutMobile,
                     $registryQuery
                         ->from('registary as registry')
                         ->select('registry.RegistaryNumber')
-                        ->whereColumn(
-                            'registry.SecondPartyMobile',
-                            'o.MobileNo'
-                        )
-                        ->whereNotNull(
-                            'registry.RegistaryNumber'
-                        )
-                        ->where(
-                            'registry.RegistaryNumber',
-                            '<>',
-                            ''
-                        )
+                        ->where(function ($match) {
+                            $match
+                                ->where(function ($oldMatch) {
+                                    $oldMatch
+                                        ->whereNull('registry.flatid')
+                                        ->whereNotNull('registry.SecondPartyMobile')
+                                        ->where('registry.SecondPartyMobile', '<>', '')
+                                        ->whereColumn(
+                                            'registry.SecondPartyMobile',
+                                            'o.MobileNo'
+                                        );
+                                })
+                                ->orWhere(function ($newMatch) {
+                                    $newMatch
+                                        ->whereNotNull('registry.flatid')
+                                        ->where('registry.flatid', '>', 0)
+                                        ->whereColumn(
+                                            'registry.flatid',
+                                            'o.FlatId'
+                                        );
+                                });
+                        })
+                        ->whereNotNull('registry.RegistaryNumber')
+                        ->where('registry.RegistaryNumber', '<>', '')
+                        ->orderByDesc('registry.id')
                         ->limit(1);
                 },
                 'RegistaryNumber'
@@ -926,11 +1028,20 @@ END) AS RegistryUnmatchedWithoutMobile,
                 '=',
                 'f.FlatId'
             )
-            ->leftJoin(
-                'mmgay_possession_applications as pa',
-                'pa.owner_id',
+            ->leftJoinSub(
+                DB::table('mmgay_possession_applications as pa_latest')
+                    ->selectRaw('pa_latest.owner_id, MAX(pa_latest.id) AS latest_id')
+                    ->groupBy('pa_latest.owner_id'),
+                'pal',
+                'pal.owner_id',
                 '=',
                 'o.OwnerId'
+            )
+            ->leftJoin(
+                'mmgay_possession_applications as pa',
+                'pa.id',
+                '=',
+                'pal.latest_id'
             )
             ->where('o.DistrictId', $districtId)
             ->where('v.DistrictId', $districtId)
@@ -940,16 +1051,39 @@ END) AS RegistryUnmatchedWithoutMobile,
             ->whereRaw(
                 'COALESCE(o.IsAllotmentCancelled, 0) = 0'
             )
-            ->whereNotNull('o.MobileNo')
-            ->where('o.MobileNo', '<>', '')
-            ->whereExists(function ($subQuery) {
-                $subQuery
-                    ->selectRaw('1')
-                    ->from('registary as r')
-                    ->whereColumn(
-                        'r.SecondPartyMobile',
-                        'o.MobileNo'
-                    );
+            ->whereRaw(
+                'COALESCE(o.IsRejected, 0) = 0'
+            )
+            /*
+            |--------------------------------------------------------------------------
+            | Unique Registry Done: OLD mobile + NEW FlatId
+            |--------------------------------------------------------------------------
+            */
+            ->where(function ($registryQuery) {
+                $registryQuery
+                    ->whereExists(function ($oldRegistry) {
+                        $oldRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_old')
+                            ->whereNull('r_old.flatid')
+                            ->whereNotNull('r_old.SecondPartyMobile')
+                            ->where('r_old.SecondPartyMobile', '<>', '')
+                            ->whereColumn(
+                                'r_old.SecondPartyMobile',
+                                'o.MobileNo'
+                            );
+                    })
+                    ->orWhereExists(function ($newRegistry) {
+                        $newRegistry
+                            ->selectRaw('1')
+                            ->from('registary as r_new')
+                            ->whereNotNull('r_new.flatid')
+                            ->where('r_new.flatid', '>', 0)
+                            ->whereColumn(
+                                'r_new.flatid',
+                                'o.FlatId'
+                            );
+                    });
             })
             ->when($phase !== 'all', function ($query) use ($phase) {
                 $query
