@@ -48,6 +48,11 @@ return [
         'message' => 'You were absent for your Physical Possession visit on {#alp#}. Your slot has been reset. A new schedule will be shared soon. Please login to https://hfa.haryana.gov.in/ for updates. - HFA Haryana',
     ],
 
+    'mmsay_payment_success_sms' => [
+        'template_id' => env('MMSAY_PAYMENT_SUCCESS_SMS_TEMPLATE_ID', '1477178781048742579'),
+        'message' => 'Dear Citizen, your payment of Rs. {#num#} towards MMSAY Installment has been received successfully against Application No. {#alp#}. Receipt No: {#alp#}. - HFA Haryana',
+    ],
+
     'sms_username' => env('OTP_SMS_USERNAME', 'haryanait-sport'),
     'sms_password' => env('OTP_SMS_PASSWORD', 'sports@1234'),
     'sms_sender_id' => env('OTP_SMS_SENDER_ID', 'GOVHRY'),

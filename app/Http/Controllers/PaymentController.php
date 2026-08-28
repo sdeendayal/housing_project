@@ -428,6 +428,8 @@ class PaymentController extends Controller
                     ->where('AssetId', $assetId)
                     ->first();
 
+                $sendSms = false;
+                $receiptNo = null;
                 if ($property) {
                     $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $responseParams['merchantTxnNo']);
                     $existingReceipt = DB::table('cash_receipt_details')
@@ -456,11 +458,71 @@ class PaymentController extends Controller
 
                         // Record payment in ledger
                         \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
+
+                        $sendSms = true;
                     }
                 }
 
                 DB::commit();
                 Log::info('Payment successfully registered in database', ['txn' => $responseParams['txnID'] ?? $merchantTxnNo]);
+
+                if ($sendSms) {
+                    // Send SMS success message to citizen
+                    try {
+                        $user = User::find($userId);
+                        $purchaser = $user ? $this->findPurchaserForUser($user) : null;
+                        $mobile = null;
+                        $applicationId = '—';
+
+                        if ($purchaser) {
+                            $submittedAt = $purchaser->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
+                            $applicationNo = $purchaser->ApplicationNo;
+                            $applicationId = $applicationNo
+                                ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
+                                : ($purchaser->PPPId ?? '—');
+                            $mobile = $user->mobile ?? $purchaser->MobileNo;
+                        } elseif ($user) {
+                            $mobile = $user->mobile;
+                        }
+
+                        if (!empty($mobile)) {
+                            $smsService = app(\App\Services\LoginOtpSmsService::class);
+                            $smsConfig = config('otp-login.mmsay_payment_success_sms');
+                            if ($smsConfig) {
+                                $amount = number_format((float)$responseParams['amount'], 2, '.', '');
+                                $message = $smsConfig['message'];
+
+                                // Replace {#num#} with amount
+                                $message = str_replace('{#num#}', $amount, $message);
+
+                                // Replace first {#alp#} with Application ID
+                                $pos = strpos($message, '{#alp#}');
+                                if ($pos !== false) {
+                                    $message = substr_replace($message, $applicationId, $pos, strlen('{#alp#}'));
+                                }
+
+                                // Replace second {#alp#} with Receipt No
+                                $pos = strpos($message, '{#alp#}');
+                                if ($pos !== false) {
+                                    $message = substr_replace($message, $receiptNo, $pos, strlen('{#alp#}'));
+                                }
+
+                                $smsService->sendCustomMessage(
+                                    $mobile,
+                                    $message,
+                                    $smsConfig['template_id'],
+                                    'MMSAY Payment Success ' . $applicationId
+                                );
+                            }
+                        }
+                    } catch (\Exception $smsEx) {
+                        Log::error('Error sending payment success SMS', [
+                            'error' => $smsEx->getMessage(),
+                            'asset_id' => $assetId,
+                            'user_id' => $userId
+                        ]);
+                    }
+                }
 
             } catch (\Exception $e) {
                 DB::rollBack();
