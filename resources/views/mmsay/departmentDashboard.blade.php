@@ -289,7 +289,7 @@
                     ]),
                 ) }}"
                     data-card-name="Property Registration"
-                    class="dashboard-orbit-card group rounded-xl border border-indigo-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md lg:col-span-3">
+                    class="dashboard-orbit-card group rounded-xl border border-indigo-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
                         <div
@@ -317,7 +317,7 @@
                     ]),
                 ) }}"
                     data-card-name="Plots Allotted in Year 2024"
-                    class="dashboard-orbit-card group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-3">
+                    class="dashboard-orbit-card group rounded-xl border border-orange-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-md lg:col-span-2">
 
                     <div class="flex items-start justify-between">
                         <div
@@ -351,7 +351,7 @@
                 {{-- Physical Verification Status --}}
                 <div data-card-name="Physical Verification Status"
                     class="dashboard-orbit-card overflow-hidden rounded-xl border border-sky-100 bg-white shadow-sm
-           sm:col-span-2 lg:col-span-4 xl:col-span-5">
+           sm:col-span-2 lg:col-span-4 xl:col-span-4">
 
                     {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
@@ -480,11 +480,114 @@
                             </div>
                         </a>
                     </div>
-                </div>                
+                </div> 
+                
+                <div data-card-name="EMI Payment Status"
+                    class="dashboard-orbit-card overflow-hidden rounded-xl border border-amber-100 bg-white shadow-sm sm:col-span-2 lg:col-span-4">
+
+                    <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+                        <div class="flex items-center gap-2.5">
+                            <div
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+                                <span class="material-symbols-outlined text-[20px]">
+                                    payments
+                                </span>
+                            </div>
+
+                            <div>
+                                <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-600">
+                                    EMI Payment Status
+                                </p>
+                                <p class="mt-0.5 text-[10px] text-slate-400">
+                                    Property payment summary
+                                </p>
+                            </div>
+                        </div>
+
+                        <span class="rounded-full bg-amber-50 px-2 py-1 text-[9px] font-semibold text-amber-600">
+                            Payment status
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 divide-x divide-slate-100">
+
+                        
+                        <a href="{{ url('full-paid-properties') .
+                            '?' .
+                            http_build_query(
+                                array_filter([
+                                    'district_id' => $districtId,
+                                    'city_id' => $cityId,
+                                    'sector_id' => $sectorId,
+                                ]),
+                            ) }}"
+                            class="group px-4 py-3 transition hover:bg-emerald-50/60">
+                            <div class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[17px] text-emerald-600">
+                                    task_alt
+                                </span>
+                                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    Full Payment
+                                </p>
+                            </div>
+
+                            <div class="mt-2 flex items-end justify-between gap-2">
+                                <div>
+                                    <h3 class="text-2xl font-bold leading-none text-emerald-600">
+                                        {{ number_format($paymentStats->total_paid_properties ?? 0) }}
+                                    </h3>
+                                    <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
+                                        Payment completed
+                                    </p>
+                                </div>
+                                <span
+                                    class="material-symbols-outlined text-[17px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-emerald-500">
+                                    arrow_forward
+                                </span>
+                            </div>
+                        </a>
+
+                        
+                        <a href="{{ url('partial-paid-properties') .
+                            '?' .
+                            http_build_query(
+                                array_filter([
+                                    'district_id' => $districtId,
+                                    'city_id' => $cityId,
+                                    'sector_id' => $sectorId,
+                                ]),
+                            ) }}"
+                            class="group px-4 py-3 transition hover:bg-amber-50/60">
+                            <div class="flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[17px] text-amber-600">
+                                    pending_actions
+                                </span>
+                                <p class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    Partial Payment
+                                </p>
+                            </div>
+
+                            <div class="mt-2 flex items-end justify-between gap-2">
+                                <div>
+                                    <h3 class="text-2xl font-bold leading-none text-amber-600">
+                                        {{ number_format($paymentStats->pending_properties ?? 0) }}
+                                    </h3>
+                                    <p class="mt-1.5 text-[10px] leading-tight text-slate-400">
+                                        Payment pending
+                                    </p>
+                                </div>
+                                <span
+                                    class="material-symbols-outlined text-[17px] text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-amber-500">
+                                    arrow_forward
+                                </span>
+                            </div>
+                        </a>
+                    </div>
+                </div>
 
                 {{-- Physical Possession --}}
                 <div data-card-name="Physical Possession"
-                    class="dashboard-orbit-card overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm sm:col-span-2 lg:col-span-5">
+                    class="dashboard-orbit-card overflow-hidden rounded-xl border border-violet-100 bg-white shadow-sm sm:col-span-2 lg:col-span-4">
 
                     {{-- Header --}}
                     <div class="flex items-center justify-between border-b border-slate-100 px-4 py-3">
