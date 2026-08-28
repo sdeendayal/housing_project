@@ -2087,154 +2087,250 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 <script>
-    $(document).ready(function() {
+$(document).ready(function () {
 
-        // ============================
-        // Phase Change
-        // ============================
+    let phaseRequest = null;
+    let districtRequest = null;
+    let blockRequest = null;
 
-        $('#phase').on('change', function() {
+    function setLoading(selector, text = 'Loading...') {
+        $(selector)
+            .prop('disabled', true)
+            .html(`<option value="">${text}</option>`);
+    }
 
-            let phase = $(this).val();
+    function setReady(selector) {
+        $(selector).prop('disabled', false);
+    }
 
-            $('#district').html('<option value="">Loading...</option>');
-            $('#block').html('<option value="">All Block</option>');
-            $('#village').html('<option value="">All Village</option>');
+    // ============================
+    // PHASE → DISTRICT
+    // ============================
+    $('#phase').on('change', function () {
 
-            $.ajax({
+        const phase = $(this).val();
 
-                url: "/super-admin/get-districts/" + phase,
+        if (phaseRequest) {
+            phaseRequest.abort();
+        }
 
-                type: "GET",
+        setLoading('#district', 'Loading districts...');
+        $('#block')
+            .prop('disabled', true)
+            .html('<option value="">Select District First</option>');
 
-                success: function(response) {
+        $('#village')
+            .prop('disabled', true)
+            .html('<option value="">Select Block First</option>');
 
-                    let html = '<option value="">All District</option>';
+        phaseRequest = $.ajax({
+            url: '/super-admin/get-districts/' + encodeURIComponent(phase),
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .done(function (response) {
 
-                    $.each(response, function(i, row) {
+            let html = '<option value="">All District</option>';
 
-                        html += '<option value="' + row.DistrictId + '">' + row
-                            .DistrictName + '</option>';
-
-                    });
-
-                    $('#district').html(html);
-
-                },
-
-                error: function() {
-
-                    $('#district').html('<option value="">Unable to Load</option>');
-
-                }
-
+            $.each(response || [], function (i, row) {
+                html += `
+                    <option value="${row.DistrictId}">
+                        ${row.DistrictName}
+                    </option>
+                `;
             });
 
-        });
+            $('#district').html(html);
 
-        // ============================
-        // District Change
-        // ============================
+        })
+        .fail(function (xhr, status) {
 
-        $('#district').on('change', function() {
-
-            let districtId = $(this).val();
-            let phase = $('#phase').val();
-
-            $('#block').html('<option value="">Loading...</option>');
-            $('#village').html('<option value="">All Village</option>');
-
-            if (districtId == '') {
-
-                $('#block').html('<option value="">All Block</option>');
-                $('#village').html('<option value="">All Village</option>');
+            if (status === 'abort') {
                 return;
-
             }
 
-            $.ajax({
+            console.error(
+                'District loading failed:',
+                xhr.status,
+                xhr.responseText
+            );
 
-                url: "/super-admin/get-blocks/" + districtId + "/" + phase,
+            // Error ko "Unable to Load" mein permanently mat chhodo
+            $('#district').html(
+                '<option value="">All District</option>'
+            );
 
-                type: "GET",
-
-                success: function(response) {
-
-                    let html = '<option value="">All Block</option>';
-
-                    $.each(response, function(i, row) {
-
-                        html += '<option value="' + row.BlockId + '">' +
-                            row.BlockName +
-                            '</option>';
-
-                    });
-
-                    $('#block').html(html);
-
-                },
-
-                error: function() {
-
-                    $('#block').html('<option value="">Unable to Load</option>');
-
-                }
-
-            });
-
+        })
+        .always(function () {
+            setReady('#district');
+            $('#block').prop('disabled', false);
+            $('#village').prop('disabled', false);
         });
-
-        // ============================
-        // Block Change
-        // ============================
-
-        $('#block').on('change', function() {
-
-            let blockId = $(this).val();
-            let phase = $('#phase').val();
-
-            $('#village').html('<option value="">Loading...</option>');
-
-            if (blockId == '') {
-
-                $('#village').html('<option value="">All Village</option>');
-                return;
-
-            }
-
-            $.ajax({
-
-                url: "/super-admin/get-villages/" + blockId + "/" + phase,
-
-                type: "GET",
-
-                success: function(response) {
-
-                    let html = '<option value="">All Village</option>';
-
-                    $.each(response, function(i, row) {
-
-                        html += '<option value="' + row.VillageId + '">' +
-                            row.VillageName +
-                            '</option>';
-
-                    });
-
-                    $('#village').html(html);
-
-                },
-
-                error: function() {
-
-                    $('#village').html('<option value="">Unable to Load</option>');
-
-                }
-
-            });
-
-        });
-
     });
+
+
+    // ============================
+    // DISTRICT → BLOCK
+    // ============================
+    $('#district').on('change', function () {
+
+        const districtId = $(this).val();
+        const phase = $('#phase').val();
+
+        if (districtRequest) {
+            districtRequest.abort();
+        }
+
+        $('#village')
+            .prop('disabled', true)
+            .html('<option value="">Select Block First</option>');
+
+        if (!districtId) {
+            $('#block')
+                .prop('disabled', false)
+                .html('<option value="">All Block</option>');
+
+            $('#village')
+                .prop('disabled', false)
+                .html('<option value="">All Village</option>');
+
+            return;
+        }
+
+        setLoading('#block', 'Loading blocks...');
+
+        districtRequest = $.ajax({
+            url:
+                '/super-admin/get-blocks/' +
+                encodeURIComponent(districtId) +
+                '/' +
+                encodeURIComponent(phase || ''),
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .done(function (response) {
+
+            let html = '<option value="">All Block</option>';
+
+            $.each(response || [], function (i, row) {
+                html += `
+                    <option value="${row.BlockId}">
+                        ${row.BlockName}
+                    </option>
+                `;
+            });
+
+            $('#block').html(html);
+
+        })
+        .fail(function (xhr, status) {
+
+            if (status === 'abort') {
+                return;
+            }
+
+            console.error(
+                'Block loading failed:',
+                xhr.status,
+                xhr.responseText
+            );
+
+            $('#block').html(
+                '<option value="">All Block</option>'
+            );
+
+        })
+        .always(function () {
+            setReady('#block');
+            $('#village').prop('disabled', false);
+        });
+    });
+
+
+    // ============================
+    // BLOCK → VILLAGE
+    // ============================
+    $('#block').on('change', function () {
+
+        const blockId = $(this).val();
+        const phase = $('#phase').val();
+
+        if (blockRequest) {
+            blockRequest.abort();
+        }
+
+        if (!blockId) {
+            $('#village')
+                .prop('disabled', false)
+                .html('<option value="">All Village</option>');
+
+            return;
+        }
+
+        setLoading('#village', 'Loading villages...');
+
+        blockRequest = $.ajax({
+            url:
+                '/super-admin/get-villages/' +
+                encodeURIComponent(blockId) +
+                '/' +
+                encodeURIComponent(phase || ''),
+            type: 'GET',
+            dataType: 'json',
+            cache: false,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .done(function (response) {
+
+            let html = '<option value="">All Village</option>';
+
+            $.each(response || [], function (i, row) {
+                html += `
+                    <option value="${row.VillageId}">
+                        ${row.VillageName}
+                    </option>
+                `;
+            });
+
+            $('#village').html(html);
+
+        })
+        .fail(function (xhr, status) {
+
+            if (status === 'abort') {
+                return;
+            }
+
+            console.error(
+                'Village loading failed:',
+                xhr.status,
+                xhr.responseText
+            );
+
+            $('#village').html(
+                '<option value="">All Village</option>'
+            );
+
+        })
+        .always(function () {
+            setReady('#village');
+        });
+    });
+
+});
 </script>
 <!-- Micro-interactions Script -->
 <script>
