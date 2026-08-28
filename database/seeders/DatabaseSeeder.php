@@ -292,6 +292,6 @@ class DatabaseSeeder extends Seeder
         }
 
         // Initialize Physical Possession Applications for eligible beneficiaries
-        $this->command->call('app:initialize-possession');
+        // $this->command->call('app:initialize-possession');
     }
 }
