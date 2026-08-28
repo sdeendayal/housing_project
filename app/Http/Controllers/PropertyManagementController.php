@@ -3236,8 +3236,8 @@ class PropertyManagementController extends Controller
              * Final department verification.
              * Site Verified is intentionally not final Verified.
              */
-            WHEN {$alias}.approved_at IS NOT NULL
-                OR {$alias}.approved_by IS NOT NULL
+            WHEN {$alias}.verified_at IS NOT NULL
+                OR {$alias}.verified_by IS NOT NULL
                 OR {$physical} IN (
                     'verified',
                     'approved',
@@ -3510,9 +3510,7 @@ class PropertyManagementController extends Controller
                 'ppa.secure_id',
                 'ppa.possession_id',
                 'ppa.application_number as physical_application_number',
-                'ppa.mmsay_application_no',
                 'ppa.slip_id',
-                'ppa.registration_details',
                 'ppa.status',
                 'ppa.physical_possession_status',
                 'ppa.possession_date',
@@ -3526,8 +3524,6 @@ class PropertyManagementController extends Controller
                 'ppa.verified_by',
                 'ppa.verified_at',
                 'ppa.remarks',
-                'ppa.approved_by',
-                'ppa.approved_at',
                 'ppa.citizen_visit_date',
                 'ppa.visit_slot_1',
                 'ppa.visit_slot_2',
