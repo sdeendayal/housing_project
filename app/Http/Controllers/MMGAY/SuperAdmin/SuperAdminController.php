@@ -5194,7 +5194,7 @@ class SuperAdminController extends Controller
                     'o.VillageId'
                 )
                 ->leftJoin(
-                    'FlatMaster as f',
+                    'flatmaster as f',
                     'f.FlatId',
                     '=',
                     'o.FlatId'
