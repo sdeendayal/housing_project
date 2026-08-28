@@ -1493,14 +1493,14 @@ class PpOfficerApiController extends Controller
         $countQuery->whereRaw("COALESCE(pad.ReceivedAmount, 0) + COALESCE(crd.receipt_total, 0) >= 60000");
 
         $categoryCounts = $countQuery->selectRaw("
-            SUM(CASE WHEN (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%') THEN 1 ELSE 0 END) as count_gj,
-            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
-                          AND (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%') THEN 1 ELSE 0 END) as count_w,
-            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
-                          AND NOT (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+            SUM(CASE WHEN ppp.is_ghumantu = 1 THEN 1 ELSE 0 END) as count_gj,
+            SUM(CASE WHEN ppp.is_ghumantu = 0
+                          AND COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%' THEN 1 ELSE 0 END) as count_w,
+            SUM(CASE WHEN ppp.is_ghumantu = 0
+                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
                           AND (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_sc,
-            SUM(CASE WHEN NOT (COALESCE(meb.category, '') = 'GJ' OR COALESCE(meb.caste, '') = 'GJ' OR COALESCE(meb.caste, '') LIKE '%tapriwas%' OR COALESCE(meb.caste, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%tapriwas%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%ghumantu%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%de-notified%')
-                          AND NOT (COALESCE(meb.category, '') = 'W' OR COALESCE(meb.caste, '') = 'W' OR COALESCE(meb.caste, '') LIKE '%widow%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+            SUM(CASE WHEN ppp.is_ghumantu = 0
+                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
                           AND NOT (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_other
         ")->first();
 
@@ -1514,28 +1514,10 @@ class PpOfficerApiController extends Controller
 
         if ($selectedCategory) {
             if ($selectedCategory === 'GJ') {
-                $tempQuery->where(function($q) {
-                    $q->where('meb.category', 'GJ')
-                      ->orWhere('meb.caste', 'like', '%tapriwas%')
-                      ->orWhere('meb.caste', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%tapriwas%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%ghumantu%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%de-notified%');
-                });
+                $tempQuery->where('ppp.is_ghumantu', 1);
             } elseif ($selectedCategory === 'W') {
-                $tempQuery->where(function($q) {
-                    $q->where('meb.category', 'W')
-                      ->orWhere('meb.caste', 'like', '%widow%')
-                      ->orWhere('ppp.CasteCategoryName', 'like', '%widow%');
-                })
-                ->whereNot(function($q) {
-                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
-                });
+                $tempQuery->where('ppp.CasteCategoryName', 'like', '%widow%')
+                          ->where('ppp.is_ghumantu', 0);
             } elseif ($selectedCategory === 'SC') {
                 $tempQuery->where(function($q) {
                     $q->where('meb.category', 'SC')
@@ -1544,33 +1526,11 @@ class PpOfficerApiController extends Controller
                       ->orWhere('ppp.CasteCategoryName', 'like', '%scheduled%')
                       ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
                 })
-                ->whereNot(function($q) {
-                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
-                })
-                ->whereNot(function($q) {
-                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
-                });
+                ->where('ppp.is_ghumantu', 0)
+                ->where('ppp.CasteCategoryName', 'not like', '%widow%');
             } elseif ($selectedCategory === 'OTHER') {
-                $tempQuery->whereNot(function($q) {
-                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'GJ')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%tapriwas%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%ghumantu%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%de-notified%');
-                })
-                ->whereNot(function($q) {
-                    $q->where(DB::raw("COALESCE(meb.category, '')"), 'W')
-                      ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%widow%')
-                      ->orWhere(DB::raw("COALESCE(ppp.CasteCategoryName, '')"), 'like', '%widow%');
-                })
+                $tempQuery->where('ppp.is_ghumantu', 0)
+                ->where('ppp.CasteCategoryName', 'not like', '%widow%')
                 ->whereNot(function($q) {
                     $q->where(DB::raw("COALESCE(meb.category, '')"), 'SC')
                       ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%scheduled%')
@@ -1596,6 +1556,7 @@ class PpOfficerApiController extends Controller
             'ppp.PPPId',
             'ppp.MemberID',
             'ppp.CasteCategoryName',
+            'ppp.is_ghumantu',
             'meb.category as mmsay_category',
             'meb.caste as mmsay_caste',
             'ppp.DistrictId',

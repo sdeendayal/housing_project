@@ -268,16 +268,9 @@
                                 </td>
                                 <td class="text-center">
                                     @php
-                                        $isGhumantu = ($p->mmsay_category === 'GJ') || 
-                                                      (str_contains(strtolower($p->mmsay_caste ?? ''), 'tapriwas')) || 
-                                                      (str_contains(strtolower($p->mmsay_caste ?? ''), 'ghumantu')) || 
-                                                      (str_contains(strtolower($p->CasteCategoryName ?? ''), 'tapriwas')) || 
-                                                      (str_contains(strtolower($p->CasteCategoryName ?? ''), 'ghumantu')) || 
-                                                      (str_contains(strtolower($p->CasteCategoryName ?? ''), 'de-notified'));
+                                        $isGhumantu = ((int) ($p->is_ghumantu ?? 0) === 1);
                                                       
-                                        $isWidow = ($p->mmsay_category === 'W') || 
-                                                   (str_contains(strtolower($p->mmsay_caste ?? ''), 'widow')) || 
-                                                   (str_contains(strtolower($p->CasteCategoryName ?? ''), 'widow'));
+                                        $isWidow = str_contains(strtolower($p->CasteCategoryName ?? ''), 'widow');
                                                    
                                         $isSC = ($p->mmsay_category === 'SC') || 
                                                 (str_contains(strtolower($p->mmsay_caste ?? ''), 'scheduled')) || 
