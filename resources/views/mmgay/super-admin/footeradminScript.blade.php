@@ -2124,7 +2124,7 @@ $(document).ready(function () {
             .html('<option value="">Select Block First</option>');
 
         phaseRequest = $.ajax({
-            url: '/super-admin/get-districts/' + encodeURIComponent(phase),
+            url: '{{ url("/super-admin/get-districts") }}/' + encodeURIComponent(phase),
             type: 'GET',
             dataType: 'json',
             cache: false,
@@ -2206,7 +2206,7 @@ $(document).ready(function () {
 
         districtRequest = $.ajax({
             url:
-                '/super-admin/get-blocks/' +
+                '{{ url("/super-admin/get-blocks") }}/' +
                 encodeURIComponent(districtId) +
                 '/' +
                 encodeURIComponent(phase || ''),
@@ -2281,7 +2281,7 @@ $(document).ready(function () {
 
         blockRequest = $.ajax({
             url:
-                '/super-admin/get-villages/' +
+                '{{ url("/super-admin/get-villages") }}/' +
                 encodeURIComponent(blockId) +
                 '/' +
                 encodeURIComponent(phase || ''),
@@ -2378,7 +2378,7 @@ $(document).ready(function () {
 
             $.ajax({
 
-                url: "/district-ceo/dashboard/" + phase,
+                url: "{{ url('/district-ceo/dashboard') }}/" + phase,
 
                 type: "GET",
 
