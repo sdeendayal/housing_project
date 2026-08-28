@@ -2082,64 +2082,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
     });
-
-    error: function() {
-
-        $('#block').html('<option value="">Unable to Load</option>');
-
-    }
-
-    error: function() {
-
-        $('#village').html('<option value="">Unable to Load</option>');
-
-    }
-
-    $('#dashboardFilter').submit(function(e) {
-
-        e.preventDefault();
-
-        $('#dashboardLoader').removeClass('hidden');
-
-        $.ajax({
-
-            url: "{{ route('admin.dashboard.data') }}",
-
-            data: $(this).serialize(),
-
-            success: function(res) {
-
-                $('#totalVillages').text(res.TotalVillages);
-
-                $('#registeredBeneficiaries').text(res.RegisteredBeneficiaries);
-
-                $('#grossTotal').text(res.GrossTotal);
-
-                $('#approvedPaid').text(res.ApprovedPaid);
-
-                $('#approvedUnpaid').text(res.ApprovedUnpaid);
-
-                $('#pendingApprovalPayment').text(res.PendingApprovalPayment);
-
-                $('#rejected').text(res.Rejected);
-
-                $('#cancelled').text(res.AllotmentCancelled);
-
-                $('#dashboardLoader').addClass('hidden');
-
-            },
-
-            error: function() {
-
-                $('#dashboardLoader').addClass('hidden');
-
-                alert('Something went wrong');
-
-            }
-
-        });
-
-    });
 </script>
 
 
@@ -2155,7 +2097,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let phase = $(this).val();
 
-            $('#district').html('<option>Loading...</option>');
+            $('#district').html('<option value="">Loading...</option>');
             $('#block').html('<option value="">All Block</option>');
             $('#village').html('<option value="">All Village</option>');
 
@@ -2177,6 +2119,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     $('#district').html(html);
+
+                },
+
+                error: function() {
+
+                    $('#district').html('<option value="">Unable to Load</option>');
 
                 }
 
@@ -2224,6 +2172,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     $('#block').html(html);
 
+                },
+
+                error: function() {
+
+                    $('#block').html('<option value="">Unable to Load</option>');
+
                 }
 
             });
@@ -2267,6 +2221,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     });
 
                     $('#village').html(html);
+
+                },
+
+                error: function() {
+
+                    $('#village').html('<option value="">Unable to Load</option>');
 
                 }
 

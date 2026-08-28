@@ -141,7 +141,7 @@ $(document).ready(function () {
     $('#branch').on('change', function () {
         let branchId = $(this).val();
 
-        $('#district').html('<option>Loading...</option>');
+        $('#district').html('<option value="">Loading...</option>');
         $('#city').html('<option value="">City</option>');
         $('#sector').html('<option value="">Sector</option>');
 
@@ -160,7 +160,7 @@ $(document).ready(function () {
     $('#district').on('change', function () {
         let districtId = $(this).val();
 
-        $('#city').html('<option>Loading...</option>');
+        $('#city').html('<option value="">Loading...</option>');
         $('#sector').html('<option value="">Sector</option>');
 
         if (districtId) {
@@ -178,7 +178,7 @@ $(document).ready(function () {
     $('#city').on('change', function () {
         let cityId = $(this).val();
 
-        $('#sector').html('<option>Loading...</option>');
+        $('#sector').html('<option value="">Loading...</option>');
 
         if (cityId) {
             $.get('/get-sectors/' + cityId, function (data) {
