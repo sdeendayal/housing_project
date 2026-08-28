@@ -28,27 +28,12 @@ class PhysicalPossessionApplication extends Model
         'user_id',
         'secure_id',
         'possession_id',
-        'owner_id',
-        'scheme',
         'private_purchaser_id',
         'asset_id',
-        'property_auction_id',
-        'mmsay_application_no',
-        'ppp_id',
-        'member_id',
         'slip_id',
         'application_number',
         'district_id',
         'district_name',
-        'branch_id',
-        'city_id',
-        'city_name',
-        'sector_id',
-        'sector_name',
-        'flat_id',
-        'asset_name',
-        'asset_size',
-        'asset_unit',
         'flat_cost',
         'received_amount',
         'balance_amount',
@@ -56,17 +41,13 @@ class PhysicalPossessionApplication extends Model
         'applicant_name',
         'father_name',
         'address',
-        'registration_details',
         'status',
         'remarks',
-        'approved_by',
-        'approved_at',
         'citizen_visit_date',
         'visit_slot_1',
         'visit_slot_2',
         'visit_slot_3',
         'visit_instructions',
-        'created_by',
         'physical_possession_status',
         'possession_date',
         'meeting_slot',
@@ -83,7 +64,6 @@ class PhysicalPossessionApplication extends Model
     protected function casts(): array
     {
         return [
-            'approved_at' => 'datetime',
             'citizen_visit_date' => 'datetime',
             'visit_slot_1' => 'datetime',
             'visit_slot_2' => 'datetime',
@@ -115,11 +95,6 @@ class PhysicalPossessionApplication extends Model
     public function statusLogs(): HasMany
     {
         return $this->hasMany(ApplicationStatusLog::class, 'application_id');
-    }
-
-    public function approvedByUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'approved_by');
     }
 
     public function verifiedByUser(): BelongsTo
