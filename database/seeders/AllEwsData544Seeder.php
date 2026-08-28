@@ -15,6 +15,7 @@ class AllEwsData544Seeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '4G');
+        set_time_limit(0);
 
         $excelPath = 'C:/Users/hp/Downloads/544_data_all_columns_v1.xlsx';
         if (!file_exists($excelPath)) {

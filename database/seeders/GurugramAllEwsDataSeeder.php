@@ -17,6 +17,7 @@ class GurugramAllEwsDataSeeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '2G');
+        set_time_limit(0);
         $filePath = database_path('seeders/data/GURGAON_Completed_24-01-2026.xlsx');
 
         if (!file_exists($filePath)) {
