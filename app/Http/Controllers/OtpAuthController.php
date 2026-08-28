@@ -360,6 +360,10 @@ class OtpAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
+        if ($request->has('redirect_to')) {
+            return redirect($request->input('redirect_to'))->with('success', 'Logged out successfully.');
+        }
+
         return redirect()->route($loginRoute)->with('success', 'Logged out successfully.');
     }
 

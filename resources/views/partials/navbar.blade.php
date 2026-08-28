@@ -79,6 +79,15 @@
                 Help
             </a>
 
+            {{-- Logout --}}
+            @if(Auth::check())
+                <a href="{{ route('citizen.logout', ['redirect_to' => route('home')]) }}"
+                    class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700">
+                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                    Logout
+                </a>
+            @endif
+
         </div>
     </div>
 </nav>
