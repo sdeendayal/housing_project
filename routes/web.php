@@ -213,10 +213,10 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay/citizen/grievances/{grievance}', [GrievanceController::class, 'show'])
         ->name('citizen.grievances.show')
         ->where('grievance', '[a-f0-9]{32}');
-
-    Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
-        ->name('citizen.logout');
 });
+
+Route::get('/citizen-logout', [OtpAuthController::class, 'logout'])
+    ->name('citizen.logout');
 
 // Public payment result page (to prevent SameSite/Host session issues on redirect)
 Route::get('/mmsay/citizen/payment/result', [PaymentController::class, 'result'])

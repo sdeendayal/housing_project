@@ -356,12 +356,25 @@ class OtpAuthController extends Controller
             }
         }
 
+        $referrer = $request->headers->get('referer');
+        $redirectToHome = false;
+        if ($referrer) {
+            $parsedReferrer = parse_url($referrer, PHP_URL_PATH);
+            if (in_array(rtrim($parsedReferrer, '/'), ['', '/hfa'], true)) {
+                $redirectToHome = true;
+            }
+        }
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         if ($request->has('redirect_to')) {
             return redirect($request->input('redirect_to'))->with('success', 'Logged out successfully.');
+        }
+
+        if ($redirectToHome) {
+            return redirect()->route('home')->with('success', 'Logged out successfully.');
         }
 
         return redirect()->route($loginRoute)->with('success', 'Logged out successfully.');
