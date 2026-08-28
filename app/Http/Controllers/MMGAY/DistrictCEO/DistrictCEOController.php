@@ -21,7 +21,7 @@ class DistrictCEOController extends Controller
         | Logged-in User District
         |--------------------------------------------------------------------------
         */
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -59,7 +59,7 @@ class DistrictCEOController extends Controller
         | Phase-wise / All Phase Village Dropdown
         |--------------------------------------------------------------------------
         */
-        $villages = DB::table('VillageMaster as v')
+        $villages = DB::table('villagemaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when(!$isAllPhase, function ($query) use ($phase) {
@@ -93,19 +93,19 @@ class DistrictCEOController extends Controller
         | Main Dashboard Query
         |--------------------------------------------------------------------------
         */
-        $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $query = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
                     ->on('o.DistrictId', '=', 'v.DistrictId');
             })
             ->join(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'o.DistrictId',
                 '=',
                 'd.DistrictId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -403,8 +403,8 @@ class DistrictCEOController extends Controller
             )
             ->groupBy('pa_latest.owner_id');
 
-        $possessionCountQuery = DB::table('OwnerMaster as po')
-            ->join('VillageMaster as pv', function ($join) {
+        $possessionCountQuery = DB::table('ownermaster as po')
+            ->join('villagemaster as pv', function ($join) {
                 $join->on('po.VillageId', '=', 'pv.VillageId')
                     ->on('po.DistrictId', '=', 'pv.DistrictId');
             })
@@ -595,7 +595,7 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -630,7 +630,7 @@ class DistrictCEOController extends Controller
             ? (int) $request->village_id
             : null;
 
-        $villages = DB::table('VillageMaster as v')
+        $villages = DB::table('villagemaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when($phase !== 'all', function ($query) use ($phase) {
@@ -670,14 +670,14 @@ class DistrictCEOController extends Controller
         | dashboard's "Possession to be given" card.
         |--------------------------------------------------------------------------
         */
-        $baseQuery = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $baseQuery = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
                     ->on('o.DistrictId', '=', 'v.DistrictId');
             })
 
             ->join(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -980,7 +980,7 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -1017,13 +1017,13 @@ class DistrictCEOController extends Controller
             ? (int) $request->query('village_id')
             : null;
 
-        $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $query = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
                     ->on('o.DistrictId', '=', 'v.DistrictId');
             })
             ->join(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -1271,7 +1271,7 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -1288,7 +1288,7 @@ class DistrictCEOController extends Controller
         | Village
         |--------------------------------------------------------------------------
         */
-        $village = DB::table('VillageMaster as v')
+        $village = DB::table('villagemaster as v')
             ->where('v.VillageId', $villageId)
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
@@ -1436,7 +1436,7 @@ class DistrictCEOController extends Controller
             return redirect()->route('mmgay.login');
         }
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -1444,12 +1444,12 @@ class DistrictCEOController extends Controller
             abort(404, 'District not found.');
         }
 
-        $query = DB::table('OwnerMaster as o')
-            ->leftJoin('DistrictMaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('BlockMaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('VillageMaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('FlatMaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('SocialCategoryMaster as sc', 'o.Caste', '=', 'sc.CategoryId')
+        $query = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('socialcategorymaster as sc', 'o.Caste', '=', 'sc.CategoryId')
 
             ->select(
                 'o.OwnerId',
@@ -1553,7 +1553,7 @@ class DistrictCEOController extends Controller
             return redirect()->route('mmgay.login');
         }
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -1561,12 +1561,12 @@ class DistrictCEOController extends Controller
             abort(404, 'District not found.');
         }
 
-        $owner = DB::table('OwnerMaster as o')
-            ->leftJoin('DistrictMaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('BlockMaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('VillageMaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('FlatMaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('SocialCategoryMaster as sc', 'o.Caste', '=', 'sc.CategoryId')
+        $owner = DB::table('ownermaster as o')
+            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+            ->leftJoin('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+            ->leftJoin('socialcategorymaster as sc', 'o.Caste', '=', 'sc.CategoryId')
             ->where('o.OwnerId', $id)
             ->where('o.DistrictId', $districtId)
             ->select(
@@ -1591,7 +1591,7 @@ class DistrictCEOController extends Controller
             'grievance' => 'required'
         ]);
 
-        DB::table('OwnerMaster')
+        DB::table('ownermaster')
             ->where('OwnerId', $id)
             ->update([
                 'IsRejected' => 0, // 🔥 back to pending
@@ -1630,7 +1630,7 @@ class DistrictCEOController extends Controller
 
         }
 
-        DB::table('OwnerMaster')
+        DB::table('ownermaster')
             ->where('OwnerId', $id)
             ->update($data);
 
@@ -1641,7 +1641,7 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -1713,16 +1713,16 @@ class DistrictCEOController extends Controller
     {
         $user = auth()->user();
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
         $application = DB::table('mmgay_possession_applications as p')
 
-            ->leftJoin('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('ownermaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('districtmaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('blockmaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
 
             ->where('p.secure_id', $secure_id)
             ->where('p.district_id', $districtId)
@@ -1768,11 +1768,11 @@ class DistrictCEOController extends Controller
         $user = auth()->user();
 
         $application = DB::table('physical_possession_applications as p')
-            ->join('OwnerMaster as o', 'o.OwnerId', '=', 'p.owner_id')
-            ->leftJoin('DistrictMaster as d', 'd.DistrictId', '=', 'o.DistrictId')
-            ->leftJoin('BlockMaster as b', 'b.BlockId', '=', 'o.BlockId')
-            ->leftJoin('VillageMaster as v', 'v.VillageId', '=', 'o.VillageId')
-            ->leftJoin('FlatMaster as f', 'f.FlatId', '=', 'o.FlatId')
+            ->join('ownermaster as o', 'o.OwnerId', '=', 'p.owner_id')
+            ->leftJoin('districtmaster as d', 'd.DistrictId', '=', 'o.DistrictId')
+            ->leftJoin('blockmaster as b', 'b.BlockId', '=', 'o.BlockId')
+            ->leftJoin('villagemaster as v', 'v.VillageId', '=', 'o.VillageId')
+            ->leftJoin('flatmaster as f', 'f.FlatId', '=', 'o.FlatId')
             ->where('p.secure_id', $secureId)
             ->select(
                 'p.*',
@@ -1813,22 +1813,22 @@ class DistrictCEOController extends Controller
         int|string $phase,
         ?int $villageId = null
     ) {
-        return DB::table('OwnerMaster as o')
+        return DB::table('ownermaster as o')
             ->join(
-                'VillageMaster as v',
+                'villagemaster as v',
                 function ($join) {
                     $join->on('o.VillageId', '=', 'v.VillageId')
                         ->on('o.DistrictId', '=', 'v.DistrictId');
                 }
             )
             ->join(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'o.DistrictId',
                 '=',
                 'd.DistrictId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -1960,7 +1960,7 @@ class DistrictCEOController extends Controller
 
         abort_unless($user, 401);
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -2022,7 +2022,7 @@ class DistrictCEOController extends Controller
 
         abort_unless($user, 401);
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -2080,7 +2080,7 @@ class DistrictCEOController extends Controller
         | District
         |--------------------------------------------------------------------------
         */
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -2164,7 +2164,7 @@ class DistrictCEOController extends Controller
         | Village Dropdown
         |--------------------------------------------------------------------------
         */
-        $villages = DB::table('VillageMaster as v')
+        $villages = DB::table('villagemaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when(!$isAllPhase, function ($query) use ($phase) {
@@ -2207,9 +2207,9 @@ class DistrictCEOController extends Controller
         | Main Report Query
         |--------------------------------------------------------------------------
         */
-        $query = DB::table('OwnerMaster as o')
+        $query = DB::table('ownermaster as o')
 
-            ->join('VillageMaster as v', function ($join) {
+            ->join('villagemaster as v', function ($join) {
                 $join->on(
                     'o.VillageId',
                     '=',
@@ -2228,14 +2228,14 @@ class DistrictCEOController extends Controller
             })
 
             ->join(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'o.DistrictId',
                 '=',
                 'd.DistrictId'
             )
 
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -2649,7 +2649,7 @@ class DistrictCEOController extends Controller
         | District
         |--------------------------------------------------------------------------
         */
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -2737,7 +2737,7 @@ class DistrictCEOController extends Controller
         | Villages Dropdown
         |--------------------------------------------------------------------------
         */
-        $villages = DB::table('VillageMaster as v')
+        $villages = DB::table('villagemaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when(!$isAllPhase, function ($query) use ($phase) {
@@ -2773,20 +2773,20 @@ class DistrictCEOController extends Controller
         | Base Query — Same Logic As Dashboard
         |--------------------------------------------------------------------------
         */
-        $baseQuery = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $baseQuery = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
                     ->on('o.DistrictId', '=', 'v.DistrictId')
                     ->on('o.Phase', '=', 'v.phase');
             })
             ->join(
-                'DistrictMaster as d',
+                'districtmaster as d',
                 'o.DistrictId',
                 '=',
                 'd.DistrictId'
             )
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -3231,7 +3231,7 @@ class DistrictCEOController extends Controller
 
         abort_unless($user, 401);
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -3297,14 +3297,14 @@ class DistrictCEOController extends Controller
         ?string $caste = null,
         string $search = ''
     ) {
-        $query = DB::table('OwnerMaster as o')
-            ->join('VillageMaster as v', function ($join) {
+        $query = DB::table('ownermaster as o')
+            ->join('villagemaster as v', function ($join) {
                 $join->on('o.VillageId', '=', 'v.VillageId')
                     ->on('o.DistrictId', '=', 'v.DistrictId')
                     ->on('o.Phase', '=', 'v.phase');
             })
             ->leftJoin(
-                'FlatMaster as f',
+                'flatmaster as f',
                 'o.FlatId',
                 '=',
                 'f.FlatId'
@@ -3674,7 +3674,7 @@ class DistrictCEOController extends Controller
 
         abort_unless($user, 401);
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
@@ -3698,7 +3698,7 @@ class DistrictCEOController extends Controller
 
         abort_unless($user, 401);
 
-        $districtId = DB::table('DistrictMaster')
+        $districtId = DB::table('districtmaster')
             ->where('DistrictName', $user->district_name)
             ->value('DistrictId');
 
