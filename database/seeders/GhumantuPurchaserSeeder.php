@@ -10,7 +10,7 @@ class GhumantuPurchaserSeeder extends Seeder
     public function run(): void
     {
         ini_set('memory_limit', '512M');
-        set_time_limit(300);
+        set_time_limit(0);
 
         $csvFile = database_path('ghumantu_702_data.csv');
 
