@@ -93,29 +93,50 @@
         <main class="px-5 py-4 flex-grow flex flex-col gap-4 overflow-y-auto">
 
             <!-- Banner Header -->
-            <div class="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 via-indigo-700 to-slate-900 py-2.5 px-4 border border-blue-900/10 shrink-0 shadow-sm animate-fade-in-up">
-                <div class="relative flex items-center justify-between text-white">
-                    <div class="flex items-center gap-2.5">
-                        <span class="material-symbols-outlined text-white text-base">analytics</span>
+            <div class="relative overflow-hidden rounded-xl py-4 px-5 border border-emerald-400/30 shrink-0 shadow-[0_4px_20px_rgba(16,185,129,0.1),inset_0_0_12px_rgba(16,185,129,0.05)] animate-fade-in-up"
+                 style="background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px), linear-gradient(to right, #059669, #10b981, #0c7a60); background-size: 16px 16px, 16px 16px, 100% 100%;">
+                <!-- Glowing Backdrop Mesh Gradients -->
+                <div class="absolute -left-16 -top-16 w-36 h-36 bg-white/20 rounded-full blur-2xl pointer-events-none animate-pulse"></div>
+                <div class="absolute right-32 -bottom-16 w-32 h-32 bg-emerald-300/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="relative flex items-center justify-between text-white z-10">
+                    <div class="flex items-center gap-3.5">
+                        <!-- High-Tech Glowing Monitoring Icon -->
+                        <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/15 border border-white/20 shadow-[0_2px_8px_rgba(255,255,255,0.1)] flex-shrink-0">
+                            <span class="material-symbols-outlined text-white text-lg animate-pulse" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+                        </div>
                         <div>
-                            <h2 class="text-xs font-black tracking-wider leading-tight uppercase">EWS Operations Console</h2>
-                            <p class="text-[8px] text-slate-300 font-semibold uppercase leading-none mt-0.5">Application flow tracking & developer management system</p>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-sm font-black tracking-widest leading-none uppercase" style="text-shadow: 0 1px 8px rgba(6, 95, 70, 0.35);">
+                                    <span class="text-white font-black">EWS</span> <span class="text-white font-semibold">Operations Console</span>
+                                </h2>
+                                <!-- Live Pulsating LED Status Light -->
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                                </span>
+                            </div>
+                            <p class="text-[10px] text-emerald-50 font-bold uppercase tracking-wider leading-none mt-2" style="text-shadow: 0 1px 4px rgba(6, 95, 70, 0.2);">
+                                Application flow tracking & developer management system
+                            </p>
                         </div>
                     </div>
-                    <div class="bg-white/10 backdrop-blur-sm rounded border border-white/10 px-2 py-0.5 text-[8.5px] font-bold tracking-wider">
-                        <span>{{ now()->format('d M Y') }}</span>
+                    <!-- Premium Cyber Clock/Date Badge -->
+                    <div class="flex items-center gap-2 bg-[#044e3a]/45 backdrop-blur-md px-3 py-1.5 rounded-lg border border-emerald-400/35 text-[10px] font-black text-white tracking-widest uppercase shadow-[0_2px_8px_rgba(16,185,129,0.05)]">
+                        <span class="material-symbols-outlined text-[11px] text-emerald-300">calendar_today</span>
+                        <span class="text-white font-extrabold">{{ now()->format('d M Y') }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- District & Phase Filter Card -->
-            <div class="bg-white rounded-xl p-2.5 border border-slate-150 flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0 animate-fade-in-up delay-1">
+            <div class="bg-gradient-to-r from-slate-50 via-blue-50/15 to-slate-50 rounded-xl p-3 border border-slate-200 flex flex-wrap items-center justify-between gap-3 shadow-sm shrink-0 animate-fade-in-up delay-1">
                 <div class="flex items-center gap-4 flex-wrap w-full md:w-auto justify-between md:justify-start">
                     <!-- District Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2.5">
                         <span class="material-symbols-outlined text-blue-600 text-sm">filter_list</span>
                         <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider">District:</span>
-                        <select id="district-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-blue-500 transition shadow-sm cursor-pointer min-w-[160px]">
+                        <select id="district-select" onchange="applyFilters()" class="bg-white border border-blue-200 text-blue-900 font-extrabold text-[10px] rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm cursor-pointer min-w-[160px]">
                             <option value="">ALL DISTRICTS</option>
                             @foreach($districts as $district)
                                 <option value="{{ $district->id }}" {{ $districtId == $district->id ? 'selected' : '' }}>
@@ -126,10 +147,10 @@
                     </div>
 
                     <!-- Phase Filter -->
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2.5">
                         <span class="material-symbols-outlined text-blue-550 text-sm">filter_alt</span>
                         <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider">Phase:</span>
-                        <select id="phase-select" onchange="applyFilters()" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-2.5 py-1 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-blue-500 transition shadow-sm cursor-pointer min-w-[110px]">
+                        <select id="phase-select" onchange="applyFilters()" class="bg-white border border-blue-200 text-blue-900 font-extrabold text-[10px] rounded-lg px-3 py-1.5 focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all shadow-sm cursor-pointer min-w-[110px]">
                             <option value="">ALL PHASES</option>
                             <option value="1" {{ ($phase ?? '') == '1' ? 'selected' : '' }}>PHASE 1</option>
                             <option value="2" {{ ($phase ?? '') == '2' ? 'selected' : '' }}>PHASE 2</option>
