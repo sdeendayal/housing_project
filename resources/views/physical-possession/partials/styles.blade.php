@@ -1067,16 +1067,112 @@ body.pp-body-auth {
 }
 
 /* CM banner photo on scheme sections */
-.pp-cm-banner-photo {
-    max-width: 320px;
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    background: #fff;
-    padding: 6px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-}
-@media (min-width: 768px) {
-    .pp-cm-banner-photo { max-width: 380px; }
-}
+    .pp-cm-banner-photo {
+        max-width: 320px;
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        background: #fff;
+        padding: 6px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    }
+    @media (min-width: 768px) {
+        .pp-cm-banner-photo { max-width: 380px; }
+    }
+
+    /* Officer sidebar collapse styles */
+    .pp-sidebar {
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    .pp-main {
+        transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    #ppSidebarCollapseToggle {
+        position: absolute !important;
+        right: -12px !important;
+        top: 20px !important;
+        width: 24px !important;
+        height: 24px !important;
+        border-radius: 50% !important;
+        background: #ffffff !important;
+        border: 1.5px solid #cbd5e1 !important;
+        color: #334155 !important;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        cursor: pointer !important;
+        z-index: 1050 !important;
+        display: none;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+    }
+    #ppSidebarCollapseToggle:hover {
+        color: #1e40af !important;
+        background: #f8fafc !important;
+        border-color: #1e40af !important;
+        box-shadow: 0 4px 12px rgba(30, 64, 175, 0.25) !important;
+        transform: scale(1.08) !important;
+    }
+    #ppSidebarCollapseToggle i {
+        font-size: 0.75rem !important;
+        font-weight: bold !important;
+        display: inline-flex !important;
+        transition: transform 0.3s ease !important;
+    }
+
+    @media (min-width: 1200px) {
+        #ppSidebarCollapseToggle {
+            display: flex !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar {
+            width: 68px !important;
+        }
+        .pp-sidebar-collapsed .pp-main {
+            margin-left: 68px !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-brand-text,
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-district,
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-section,
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-link-label,
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-user-info,
+        .pp-sidebar-collapsed .pp-sidebar .pp-logout-text {
+            display: none !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-brand {
+            padding: 1rem 0.5rem !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-logo {
+            margin: 0 auto !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-nav {
+            padding: 0.5rem 0.4rem !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-link {
+            justify-content: center !important;
+            padding: 0.5rem !important;
+            gap: 0 !important;
+            font-size: 0 !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-link-icon {
+            margin: 0 auto !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-foot {
+            padding: 0.65rem 0.4rem !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-user {
+            justify-content: center !important;
+            padding: 0.35rem 0 !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-logout {
+            justify-content: center !important;
+            padding: 0.5rem !important;
+            gap: 0 !important;
+            font-size: 0 !important;
+        }
+        .pp-sidebar-collapsed .pp-sidebar .pp-sidebar-logout i {
+            margin: 0 auto !important;
+        }
+        .pp-sidebar-collapsed #ppSidebarCollapseToggle i {
+            transform: rotate(180deg) !important;
+        }
+    }
 </style>

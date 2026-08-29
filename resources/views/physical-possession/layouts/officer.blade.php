@@ -9,6 +9,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <script>
+        if (localStorage.getItem('pp-sidebar-collapsed') === 'true') {
+            document.documentElement.classList.add('pp-sidebar-collapsed');
+        }
+    </script>
     @include('physical-possession.partials.styles')
     @stack('styles')
 </head>
@@ -23,6 +28,11 @@
     <div class="pp-sidebar-overlay" id="ppSidebarOverlay" onclick="ppToggleSidebar()"></div>
 
     <nav class="pp-sidebar d-flex flex-column" id="ppSidebar">
+        <!-- Floating Collapse Toggle Button -->
+        <button id="ppSidebarCollapseToggle" type="button" class="transition-all" title="Toggle Sidebar" onclick="ppToggleCollapse()">
+            <i class="bi bi-chevron-left transition-transform duration-300"></i>
+        </button>
+
         <div class="pp-sidebar-brand">
             <button type="button" class="pp-sidebar-close d-xl-none" onclick="ppToggleSidebar()" aria-label="Close menu">
                 <i class="bi bi-x-lg"></i>
@@ -99,7 +109,7 @@
                 </div>
             </div>
             <a href="{{ route('pp.officer.logout') }}" class="pp-sidebar-logout">
-                <i class="bi bi-box-arrow-right"></i> Logout
+                <i class="bi bi-box-arrow-right"></i> <span class="pp-logout-text">Logout</span>
             </a>
         </div>
     </nav>
@@ -137,5 +147,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     @include('physical-possession.partials.scripts')
     @stack('scripts')
+    <script>
+        function ppToggleCollapse() {
+            const isCollapsed = document.documentElement.classList.toggle('pp-sidebar-collapsed');
+            localStorage.setItem('pp-sidebar-collapsed', isCollapsed ? 'true' : 'false');
+        }
+    </script>
 </body>
 </html>
