@@ -187,9 +187,8 @@
         <!-- Right Side: Visual Canvas -->
         <section class="hidden md:flex md:w-1/2 relative overflow-hidden bg-white">
             <div class="absolute inset-0 z-0">
-                <img alt="Rural Haryana House" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBfibej-rHcQ0lm0QeIHkVkL7J1ZV_FLSs4MgxkJg5J7Ssz29lgtfRR0kpKAg1HbxrWnXavXlOSuzmVNlroYiKa6n9baf5_OG74Fso1TFts2fVpAEkrn92QcAkLpcGa0IRf4Iq5_FSe0K_ndwJ7TalA40H53iO_8fPzEMs57-kzLt_8k4sNfGn_rq3uhBTwGQ0gUu7h70O_N3xFFbzE4p9xWMh5QTCbdnM4jGgINXy1mLyqGgnrkr9jYU5Y0gbjpKREvqO6-6nlkNRG" />
-                <div class="absolute inset-0 bg-[#0058bc]/20 mix-blend-multiply"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-white/90 via-white/40 to-transparent"></div>
+                <img alt="Rural Haryana House" class="w-full h-full object-cover" style="filter: blur(0.5px);" src="{{ asset('images/citizen-login/mmgay_rural_house.jpg') }}" />
+                <div class="absolute inset-0 bg-gradient-to-tr from-[#0058bc]/35 via-[#111c2d]/55 to-transparent"></div>
             </div>
             <div class="relative z-10 w-full flex flex-col items-center justify-center text-center px-10">
                 <div class="bg-white w-[110px] h-[110px] rounded-full shadow-2xl flex items-center justify-center mb-8 border-[6px] border-white/40">

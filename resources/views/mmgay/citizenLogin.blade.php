@@ -57,8 +57,8 @@
        justify-content: center;
        padding: 0.75rem 1rem;
        background:
-          linear-gradient(rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.65)),
-          url('{{ asset('images/citizen-login/gramin_bg.png') }}') center / cover no-repeat;
+          linear-gradient(135deg, rgba(30, 88, 188, 0.3) 0%, rgba(15, 23, 42, 0.55) 100%),
+          url('{{ asset('images/citizen-login/mmgay_rural_house.jpg') }}') center / cover no-repeat;
     }
     @media (min-width: 768px) {
        .cl-page {
