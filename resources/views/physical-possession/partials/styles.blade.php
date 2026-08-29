@@ -771,9 +771,9 @@ body.pp-body-auth {
     width: 100%;
     height: 110%;
     object-fit: cover;
-    object-position: 62% 38%;
+    object-position: 55% 50%;
     display: block;
-    filter: blur(1.5px);
+    filter: blur(0.3px);
     transform: scale(1.02);
 }
 

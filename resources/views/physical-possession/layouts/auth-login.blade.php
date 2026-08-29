@@ -9,7 +9,7 @@
     if ($loginType === 'dtp') {
         $bgImage = asset('images/citizen-login/dtp_bg.jpg');
     } else {
-        $bgImage = asset('images/citizen-login/mmsay_housing_bg.jpg');
+        $bgImage = asset('images/citizen-login/mmsay_30gaj_house.jpg');
     }
 @endphp
 

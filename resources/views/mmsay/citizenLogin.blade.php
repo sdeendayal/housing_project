@@ -57,13 +57,14 @@
       justify-content: center;
       padding: 0.75rem 1rem;
       background:
-         linear-gradient(135deg, rgba(30, 58, 138, 0.45) 0%, rgba(15, 23, 42, 0.65) 100%),
-         url('{{ asset('images/citizen-login/mmsay_housing_bg.jpg') }}') center / cover no-repeat;
+         linear-gradient(135deg, rgba(30, 58, 138, 0.3) 0%, rgba(15, 23, 42, 0.45) 100%),
+         url('{{ asset('images/citizen-login/mmsay_30gaj_house.jpg') }}') center / cover no-repeat;
    }
    @media (min-width: 768px) {
       .cl-page {
          justify-content: flex-start;
          padding-left: 8%;
+         background-position: 55% 50% !important;
       }
    }
    .cl-shell {
