@@ -773,7 +773,7 @@ body.pp-body-auth {
     object-fit: cover;
     object-position: 55% 50%;
     display: block;
-    filter: blur(0.3px);
+    filter: blur(0.5px);
     transform: scale(1.02);
 }
 
@@ -782,10 +782,9 @@ body.pp-body-auth {
     position: absolute;
     inset: 0;
     background: linear-gradient(
-        90deg,
-        rgba(255, 255, 255, 0.15) 0%,
-        rgba(255, 255, 255, 0.05) 42%,
-        rgba(15, 23, 42, 0.12) 100%
+        135deg,
+        rgba(30, 58, 138, 0.35) 0%,
+        rgba(15, 23, 42, 0.55) 100%
     );
     pointer-events: none;
 }
