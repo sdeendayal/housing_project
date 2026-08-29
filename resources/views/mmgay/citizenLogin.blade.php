@@ -6,56 +6,61 @@
 @section('content')
 
 <style>
-   body.page-citizen-login {
+   body.bg-bg-subtle {
       font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden !important;
    }
-   body.page-citizen-login header .max-w-7xl {
-      padding-top: 0.375rem !important;
-      padding-bottom: 0.375rem !important;
+   body.bg-bg-subtle header .max-w-7xl {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
    }
-   body.page-citizen-login header img {
-      height: 2.25rem !important;
-      width: 2.25rem !important;
+   body.bg-bg-subtle header img {
+      height: 1.75rem !important;
+      width: 1.75rem !important;
    }
-   body.page-citizen-login header h1 {
-      font-size: 0.9375rem !important;
+   body.bg-bg-subtle header h1 {
+      font-size: 0.85rem !important;
       font-weight: 600 !important;
       line-height: 1.2 !important;
    }
-   body.page-citizen-login header p {
-      font-size: 0.6875rem !important;
+   body.bg-bg-subtle header p {
+      font-size: 0.625rem !important;
    }
-   body.page-citizen-login main.flex-grow {
+   body.bg-bg-subtle main.flex-grow {
       display: flex;
       flex-direction: column;
       justify-content: center;
       padding: 0;
+      height: calc(100vh - 100px) !important;
+      overflow: hidden !important;
    }
-   body.page-citizen-login footer {
-      padding-top: 0.5rem !important;
-      padding-bottom: 0.5rem !important;
+   body.bg-bg-subtle footer {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
    }
-   body.page-citizen-login footer .flex.flex-col {
-      gap: 0.25rem !important;
+   body.bg-bg-subtle footer .flex.flex-col {
+      gap: 0.15rem !important;
    }
-   body.page-citizen-login footer p.text-base {
-      font-size: 0.75rem !important;
+   body.bg-bg-subtle footer p.text-base {
+      font-size: 0.7rem !important;
    }
-   body.page-citizen-login footer p.text-sm {
-      font-size: 0.6875rem !important;
-      margin-top: 0.125rem !important;
+   body.bg-bg-subtle footer p.text-sm {
+      font-size: 0.625rem !important;
+      margin-top: 0 !important;
    }
-   body.page-citizen-login footer .flex.justify-center.items-center.gap-6.mt-4 {
+   body.bg-bg-subtle footer .flex.justify-center.items-center.gap-6.mt-4,
+   body.bg-bg-subtle footer .flex.justify-center.items-center.gap-6 {
       display: none !important;
    }
 
     .cl-page {
        flex: 1;
        width: 100%;
+       height: 100% !important;
        display: flex;
        align-items: center;
        justify-content: center;
-       padding: 0.75rem 1rem;
+       padding: 0.5rem 1rem;
        background:
           linear-gradient(135deg, rgba(30, 88, 188, 0.3) 0%, rgba(15, 23, 42, 0.55) 100%),
           url('{{ asset('images/citizen-login/mmgay_rural_house.jpg') }}') center / cover no-repeat;

@@ -1,234 +1,476 @@
-<!DOCTYPE html>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+@extends('layouts.auth')
+@section('title', 'MMGAY BDPO Login')
+@section('content')
 
-<html class="light" lang="en">
+<style>
+   body.bg-bg-subtle {
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden !important;
+   }
+   body.bg-bg-subtle header .max-w-7xl {
+      padding-top: 0.25rem !important;
+      padding-bottom: 0.25rem !important;
+   }
+   body.bg-bg-subtle header img {
+      height: 1.75rem !important;
+      width: 1.75rem !important;
+   }
+   body.bg-bg-subtle header h1 {
+      font-size: 0.85rem !important;
+      font-weight: 600 !important;
+      line-height: 1.2 !important;
+   }
+   body.bg-bg-subtle header p {
+      font-size: 0.625rem !important;
+   }
+   body.bg-bg-subtle main.flex-grow {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 0;
+      height: calc(100vh - 100px) !important;
+      overflow: hidden !important;
+   }
+   body.bg-bg-subtle footer {
+      padding-top: 0.35rem !important;
+      padding-bottom: 0.35rem !important;
+   }
+   body.bg-bg-subtle footer .flex.flex-col {
+      gap: 0.15rem !important;
+   }
+   body.bg-bg-subtle footer p.text-base {
+      font-size: 0.7rem !important;
+   }
+   body.bg-bg-subtle footer p.text-sm {
+      font-size: 0.625rem !important;
+      margin-top: 0 !important;
+   }
+   body.bg-bg-subtle footer .flex.justify-center.items-center.gap-6.mt-4,
+   body.bg-bg-subtle footer .flex.justify-center.items-center.gap-6 {
+      display: none !important;
+   }
 
-<head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>MMGAY BDO Portal Login</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <!-- Google Fonts: Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&amp;display=swap" rel="stylesheet" />
-    <!-- Material Symbols Outlined -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "primary": "#0058bc",
-                        "on-surface": "#111c2d",
-                        "on-surface-variant": "#414755",
-                        "surface": "#f9f9ff",
-                        "outline-variant": "#c1c6d7",
-                        "surface-container-highest": "#d8e3fb"
-                    },
-                    "fontFamily": {
-                        "body-md": ["Inter"],
-                        "headline-xl": ["Inter"],
-                        "headline-lg": ["Inter"]
-                    },
-                    "fontSize": {
-                        "body-md": ["14px", {
-                            "lineHeight": "20px",
-                            "fontWeight": "400"
-                        }],
-                        "label-md": ["12px", {
-                            "lineHeight": "16px",
-                            "letterSpacing": "0.05em",
-                            "fontWeight": "600"
-                        }],
-                        "headline-xl": ["30px", {
-                            "lineHeight": "38px",
-                            "letterSpacing": "-0.02em",
-                            "fontWeight": "700"
-                        }]
-                    }
-                },
-            },
-        }
-    </script>
-    <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
+    .cl-page {
+       flex: 1;
+       width: 100%;
+       height: 100% !important;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       padding: 0.5rem 1rem;
+       background:
+          linear-gradient(135deg, rgba(30, 88, 188, 0.3) 0%, rgba(15, 23, 42, 0.55) 100%),
+          url('{{ asset('images/citizen-login/mmgay_rural_house.jpg') }}') center / cover no-repeat;
+    }
+    @media (min-width: 768px) {
+       .cl-page {
+          justify-content: flex-start;
+          padding-left: 8%;
+       }
+    }
+    .cl-shell {
+       width: 100%;
+       max-width: 22rem;
+       margin: 0 auto;
+    }
+    @media (min-width: 768px) {
+       .cl-shell {
+          margin: 0;
+       }
+    }
+   .cl-card {
+      background: #fff;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+      overflow: hidden;
+   }
+   .cl-brand {
+      display: none !important;
+   }
+   .cl-brand__icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 0.4rem;
+      background: rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+   }
+   .cl-brand__icon .material-symbols-outlined {
+      font-size: 1rem;
+   }
+   .cl-brand__title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      line-height: 1.2;
+      margin: 0;
+   }
+   .cl-brand__sub {
+      font-size: 0.6875rem;
+      opacity: 0.85;
+      margin: 0.125rem 0 0;
+   }
+   .cl-body {
+      padding: 0.65rem 0.8rem;
+   }
+   .cl-head {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin-bottom: 0.35rem;
+      padding-bottom: 0.35rem;
+      border-bottom: 1px solid #eef2f6;
+   }
+   .cl-head__icon {
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 0.4rem;
+      background: #eff6ff;
+      border: 1px solid #dbeafe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+   }
+   .cl-head__icon .material-symbols-outlined {
+      font-size: 1rem;
+      color: #0058bc;
+   }
+   .cl-head__title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0;
+      line-height: 1.2;
+   }
+   .cl-head__sub {
+      font-size: 0.65rem;
+      color: #64748b;
+      margin: 0.1rem 0 0;
+   }
+   .cl-tags {
+      display: none !important;
+   }
+   .cl-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.625rem;
+      font-weight: 500;
+      color: #475569;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 0.2rem 0.5rem;
+   }
+   .cl-tag .material-symbols-outlined {
+      font-size: 0.75rem;
+      color: #0058bc;
+   }
+   .cl-field {
+      margin-bottom: 0.45rem;
+   }
+   .cl-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #334155;
+      margin-bottom: 0.25rem;
+   }
+   .cl-label .req {
+      color: #dc2626;
+   }
+   
+   .cl-input-container {
+      display: flex;
+      align-items: center;
+      height: 2.25rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      overflow: hidden;
+      background: #f8fafc;
+      transition: border-color 0.2s, box-shadow 0.2s;
+   }
+   .cl-input-container:focus-within {
+      border-color: #0058bc;
+      box-shadow: 0 0 0 3px rgba(0, 88, 188, 0.12);
+      background: #fff;
+   }
+   .cl-input__icon {
+      width: 2.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      color: #64748b;
+      flex-shrink: 0;
+   }
+   .cl-input__field {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      padding: 0 0.625rem 0 0;
+      font-size: 0.8125rem;
+      outline: none;
+      height: 100%;
+   }
+   .cl-input__field:focus {
+      outline: none;
+      box-shadow: none;
+      background: transparent;
+   }
 
-        .captcha-box {
-            background-color: #e7eeff;
-            border: 1px solid #adc6ff;
-        }
+   .cl-captcha {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+      gap: 0.375rem;
+      align-items: center;
+   }
+   .cl-captcha__box {
+      grid-column: 1;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: 0.2rem;
+      color: #0f172a;
+   }
+   .cl-captcha__refresh {
+      grid-column: 2;
+      grid-row: 1;
+      width: 2.25rem;
+      height: 2.25rem;
+      border: 1px solid #93c5fd;
+      border-radius: 0.5rem;
+      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+   }
+   .cl-captcha__refresh:hover {
+      background: linear-gradient(135deg, #bfdbfe, #93c5fd);
+   }
+   .cl-captcha__refresh span {
+      font-size: 1rem;
+      color: #0058bc;
+   }
+   .cl-captcha__input-wrap {
+      grid-column: 1 / -1;
+      display: flex;
+      height: 2.25rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.5rem;
+      background: #f8fafc;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+   }
+   .cl-captcha__input-wrap:focus-within {
+      border-color: #0058bc;
+      box-shadow: 0 0 0 3px rgba(0, 88, 188, 0.12);
+      background: #fff;
+   }
+   .cl-captcha__input {
+      flex: 1;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      padding: 0 0.625rem;
+      font-size: 0.8125rem;
+      outline: none;
+      height: 100%;
+   }
+   .cl-captcha__input:focus {
+      outline: none;
+      box-shadow: none;
+      background: transparent;
+   }
+   .cl-btn {
+      width: 100%;
+      height: 2.15rem;
+      margin-top: 0;
+      border: none;
+      border-radius: 0.5rem;
+      background: #0058bc;
+      color: #fff;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(0, 88, 188, 0.28);
+   }
+   .cl-btn:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 88, 188, 0.35);
+   }
+</style>
 
-        .login-bg-pattern {
-            background-image: radial-gradient(circle, #0058bc10 1.5px, transparent 1.5px);
-            background-size: 32px 32px;
-        }
-
-        @media (min-height: 680px) and (min-width: 768px) {
-            body {
-                overflow: hidden;
-            }
-        }
-    </style>
-</head>
-
-<body class="bg-white font-body-md text-on-surface min-h-screen flex flex-col h-screen max-h-screen">
-
-    <main class="flex-grow flex flex-col md:flex-row overflow-hidden">
-        <!-- Left Side: Login Form -->
-        <section class="w-full md:w-1/2 flex flex-col justify-center items-center relative login-bg-pattern px-6 md:px-12 py-6 overflow-y-auto h-full">
-            <div class="absolute bottom-0 left-0 w-full opacity-10 pointer-events-none">
-                <svg viewbox="0 0 1440 320" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M0,192L48,197.3C96,203,192,213,288,197.3C384,181,480,139,576,138.7C672,139,768,181,864,197.3C960,213,1056,203,1152,186.7C1248,171,1344,149,1392,138.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="#0058bc" fill-opacity="1"></path>
-                </svg>
+<div class="cl-page">
+   <div class="cl-shell">
+      <div class="cl-card">
+         <div class="cl-brand">
+            <div class="cl-brand__icon">
+               <span class="material-symbols-outlined">apartment</span>
             </div>
-            <div class="w-full max-w-md z-10">
-                <!-- Login Card -->
-                <div class="bg-white/95 backdrop-blur-xl rounded-2xl shadow-[0_15px_45px_rgba(0,88,188,0.12)] border border-slate-100 p-6">
-                    <!-- Branding Header (Inside Card) -->
-                    <div class="flex items-center gap-3 mb-5 pb-5 border-b border-slate-100">
-                        <div class="w-[44px] h-[44px] bg-[#0070eb] rounded-xl flex items-center justify-center shadow-md shadow-blue-500/25 flex-shrink-0">
-                            <span class="material-symbols-outlined text-white text-[24px]" style="font-variation-settings: 'FILL' 1;">gavel</span>
-                        </div>
-                        <div>
-                            <h3 class="text-base font-bold text-[#111c2d]">MMGAY BDPO Login</h3>
-                            <p class="text-xs text-slate-500 font-medium">Block Development & Panchayat Officer</p>
-                        </div>
-                    </div>
+             <div>
+                <p class="cl-brand__title">Housing For All (MMGAY)</p>
+             </div>
+         </div>
 
-                    @if (session('error'))
-                        <div class="bg-red-50 text-red-600 p-3 rounded-xl mb-4 text-xs font-semibold">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-                    @if (session('success'))
-                        <div class="bg-green-50 text-green-600 p-3 rounded-xl mb-4 text-xs font-semibold">
-                            {{ session('success') }}
-                        </div>
-                    @endif
+         <div class="cl-body">
+            <div class="cl-head">
+               <div class="cl-head__icon">
+                  <span class="material-symbols-outlined">gavel</span>
+               </div>
+               <div>
+                  <p class="cl-head__title">MMGAY BDPO Login</p>
+                  <p class="cl-head__sub">Block Development & Panchayat Officer</p>
+               </div>
+            </div>
 
-                    <form method="POST" action="{{ route('mmgay.bdo.login.submit') }}" class="space-y-4">
-                        @csrf
+            <div class="cl-tags">
+               <span class="cl-tag"><span class="material-symbols-outlined">verified_user</span> Secure</span>
+               <span class="cl-tag"><span class="material-symbols-outlined">shield</span> Protected</span>
+            </div>
 
-                        {{-- Username/Email --}}
-                        <div class="space-y-1">
-                            <label class="text-[11px] font-bold text-[#414755] uppercase tracking-wider">
-                                BDPO Email Address
-                            </label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                                    mail
-                                </span>
-                                <input type="email" name="email" value="{{ old('email', 'bdpobhiwani@gmail.com') }}" placeholder="bdpobhiwani@gmail.com" class="w-full h-[40px] pl-10 pr-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('email') border-red-500 @enderror" required>
-                            </div>
-                            @error('email')
-                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Password --}}
-                        <div class="space-y-1">
-                            <label class="text-[11px] font-bold text-[#414755] uppercase tracking-wider">
-                                Password
-                            </label>
-                            <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
-                                    lock
-                                </span>
-                                <input id="password" type="password" name="password" value="123456" placeholder="••••••••" class="w-full h-[40px] pl-10 pr-10 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('password') border-red-500 @enderror" required>
-                                <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                                    <span id="eyeIcon" class="material-symbols-outlined text-[18px]">
-                                        visibility
-                                    </span>
-                                </button>
-                            </div>
-                            @error('password')
-                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Captcha --}}
-                        <div class="space-y-1">
-                            <label class="text-[11px] font-bold uppercase tracking-wider text-[#414755]">
-                                Security Verification
-                            </label>
-                            <div class="flex gap-2">
-                                <div id="captchaBox" class="flex items-center justify-center w-[90px] h-[40px] rounded-lg bg-blue-50/50 border border-blue-100 font-bold tracking-widest text-sm text-[#0058bc]">
-                                    {{ $captcha }}
-                                </div>
-                                <button type="button" id="refreshCaptcha" class="w-[40px] h-[40px] rounded-lg border border-slate-200 hover:bg-blue-50/50 hover:border-blue-200 transition-all flex items-center justify-center">
-                                    <span id="refreshIcon" class="material-symbols-outlined text-[18px] text-slate-500">
-                                        refresh
-                                    </span>
-                                </button>
-                                <input type="text" name="captcha" placeholder="Enter Captcha" class="flex-1 min-w-0 h-[40px] px-3 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-[#0058bc]/20 focus:border-[#0058bc] focus:outline-none transition-all @error('captcha') border-red-500 @enderror" required>
-                            </div>
-                            @error('captcha')
-                                <p class="text-red-500 text-xs mt-0.5">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <button type="submit" class="login-btn w-full h-[40px] bg-[#0058bc] text-white rounded-lg text-xs font-semibold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-sm shadow-blue-500/10 mt-2">
-                            Login
-                        </button>
-                    </form>
-
-                    <div class="mt-4 pt-4 border-t border-slate-100 text-center">
-                        <p class="text-[11px] text-slate-400 mb-1.5">Are you a regular officer?</p>
-                        <a href="{{ route('mmgay.login') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-[#0058bc] hover:underline">
-                            <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
-                            Go to Officer Login
-                        </a>
-                    </div>
+            @if (session('error'))
+                <div class="alert alert-danger py-2 px-3 rounded-lg text-xs font-semibold mb-3">
+                    {{ session('error') }}
                 </div>
-            </div>
-        </section>
-        <!-- Right Side: Visual Canvas -->
-        <section class="hidden md:flex md:w-1/2 relative overflow-hidden bg-white">
-            <div class="absolute inset-0 z-0">
-                <img alt="Rural Haryana House" class="w-full h-full object-cover" style="filter: blur(0.5px);" src="{{ asset('images/citizen-login/mmgay_rural_house.jpg') }}" />
-                <div class="absolute inset-0 bg-gradient-to-tr from-[#0058bc]/35 via-[#111c2d]/55 to-transparent"></div>
-            </div>
-            <div class="relative z-10 w-full flex flex-col items-center justify-center text-center px-10">
-                <div class="bg-white w-[110px] h-[110px] rounded-full shadow-2xl flex items-center justify-center mb-8 border-[6px] border-white/40">
-                    <span class="material-symbols-outlined text-[#0058bc] text-[56px]" style="font-variation-settings: 'FILL' 1;">holiday_village</span>
+            @endif
+            @if (session('success'))
+                <div class="alert alert-success py-2 px-3 rounded-lg text-xs font-semibold mb-3">
+                    {{ session('success') }}
                 </div>
-                <div class="max-w-md">
-                    <h2 class="text-[#0058bc] text-[34px] font-extrabold leading-tight mb-4">Mukhyamantri Gramin Awas Yojana</h2>
-                    <div class="h-[3px] w-20 bg-[#0058bc] mx-auto mb-6 rounded-full opacity-60"></div>
-                    <p class="text-[#0058bc] text-[20px] font-bold mb-2">हरियाणा सरकार का है सपना, सबका घर हो अपना!</p>
-                </div>
+            @endif
+
+            <form method="POST" action="{{ route('mmgay.bdo.login.submit') }}">
+               @csrf
+
+               {{-- Username/Email --}}
+               <div class="cl-field">
+                  <label class="cl-label" for="emailInput">BDPO Email Address <span class="req">*</span></label>
+                  <div class="cl-input-container">
+                     <span class="material-symbols-outlined cl-input__icon">mail</span>
+                     <input
+                        type="email"
+                        class="cl-input__field"
+                        id="emailInput"
+                        name="email"
+                        placeholder="bdpobhiwani@gmail.com"
+                        value="{{ old('email', 'bdpobhiwani@gmail.com') }}"
+                        required>
+                  </div>
+                  @error('email')
+                      <p class="text-danger text-xs mt-1">{{ $message }}</p>
+                  @enderror
+               </div>
+
+               {{-- Password --}}
+               <div class="cl-field">
+                  <label class="cl-label" for="password">Password <span class="req">*</span></label>
+                  <div class="cl-input-container">
+                     <span class="material-symbols-outlined cl-input__icon">lock</span>
+                     <input
+                        type="password"
+                        class="cl-input__field"
+                        id="password"
+                        name="password"
+                        value="123456"
+                        placeholder="••••••••"
+                        required>
+                     <button type="button" id="togglePassword" class="text-slate-400 hover:text-slate-600 mr-2 flex items-center">
+                        <span id="eyeIcon" class="material-symbols-outlined text-[18px]">visibility</span>
+                     </button>
+                  </div>
+                  @error('password')
+                      <p class="text-danger text-xs mt-1">{{ $message }}</p>
+                  @enderror
+               </div>
+
+               {{-- Captcha --}}
+               <div class="cl-field">
+                  <label class="cl-label" for="captchaInput">Security Verification <span class="req">*</span></label>
+                  <div class="cl-captcha">
+                     <div class="cl-captcha__box" id="captchaBox">{{ $captcha }}</div>
+                     <button
+                        type="button"
+                        id="refreshCaptcha"
+                        class="cl-captcha__refresh">
+                        <span class="material-symbols-outlined">refresh</span>
+                     </button>
+                     <div class="cl-captcha__input-wrap">
+                        <input
+                           type="text"
+                           class="cl-captcha__input"
+                           id="captchaInput"
+                           name="captcha"
+                           placeholder="Enter captcha"
+                           required>
+                     </div>
+                  </div>
+                  @error('captcha')
+                      <p class="text-danger text-xs mt-1">{{ $message }}</p>
+                  @enderror
+               </div>
+
+               <button type="submit" class="cl-btn" id="loginBtn">
+                  Login
+                  <span class="material-symbols-outlined">arrow_forward</span>
+               </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 text-center">
+                <p class="text-[11px] text-slate-400 mb-1">Are you a regular officer?</p>
+                <a href="{{ route('mmgay.login') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-[#0058bc] hover:underline">
+                    <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                    Go to Officer Login
+                </a>
             </div>
-        </section>
-    </main>
+         </div>
+      </div>
+   </div>
+</div>
 
-    <script>
-        const togglePassword = document.querySelector('#togglePassword');
-        const passwordInput = document.querySelector('#password');
-        const eyeIcon = document.querySelector('#eyeIcon');
+<script>
+    const togglePassword = document.querySelector('#togglePassword');
+    const passwordInput = document.querySelector('#password');
+    const eyeIcon = document.querySelector('#eyeIcon');
 
-        if (togglePassword) {
-            togglePassword.addEventListener('click', function() {
-                const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                passwordInput.setAttribute('type', type);
-                eyeIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
-            });
-        }
+    if (togglePassword) {
+        togglePassword.addEventListener('click', function() {
+            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordInput.setAttribute('type', type);
+            eyeIcon.textContent = type === 'password' ? 'visibility' : 'visibility_off';
+        });
+    }
 
-        const refreshCaptcha = document.querySelector('#refreshCaptcha');
-        const captchaBox = document.querySelector('#captchaBox');
+    const refreshCaptcha = document.querySelector('#refreshCaptcha');
+    const captchaBox = document.querySelector('#captchaBox');
 
-        if (refreshCaptcha) {
-            refreshCaptcha.addEventListener('click', function() {
-                fetch('{{ route("mmgay.bdo.refresh.captcha") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        captchaBox.textContent = data.captcha;
-                    });
-            });
-        }
-    </script>
-</body>
-
-</html>
+    if (refreshCaptcha) {
+        refreshCaptcha.addEventListener('click', function() {
+            fetch('{{ route("mmgay.bdo.refresh.captcha") }}')
+                .then(response => response.json())
+                .then(data => {
+                    captchaBox.textContent = data.captcha;
+                });
+        });
+    }
+</script>
+@endsection
