@@ -7,6 +7,12 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script>
+        // Apply sidebar collapse state immediately on load to prevent flash/flicker
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            document.documentElement.classList.add('sidebar-collapsed');
+        }
+    </script>
     @include('partials.mmsay.citizen.styles')
     @stack('styles')
 </head>
@@ -14,7 +20,7 @@
 
     @include('partials.mmsay.citizen.sidebar')
 
-    <div class="flex-1 flex flex-col md:ml-[228px] min-h-screen">
+    <div id="mainContentWrapper" class="flex-1 flex flex-col md:ml-[228px] min-h-screen">
 
         <header class="header-v2 sticky top-0 z-50">
             <div class="flex justify-between items-center px-2.5 sm:px-4 h-[46px] max-w-[1280px] mx-auto w-full">
@@ -80,6 +86,15 @@
                 if (ppNavChevron) {
                     ppNavChevron.classList.toggle('rotate-180', !isOpen);
                 }
+            });
+        }
+
+        // Sidebar collapse toggle handler
+        const sidebarCollapseToggle = document.getElementById('sidebarCollapseToggle');
+        if (sidebarCollapseToggle) {
+            sidebarCollapseToggle.addEventListener('click', () => {
+                const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+                localStorage.setItem('sidebar-collapsed', isCollapsed ? 'true' : 'false');
             });
         }
     </script>
