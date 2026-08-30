@@ -78,6 +78,20 @@
                 opacity: 0;
             }
         }
+        @keyframes cyber-pulse {
+            0%, 100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.4));
+            }
+            50% {
+                transform: scale(1.15);
+                filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 15px rgba(255, 255, 255, 0.6));
+            }
+        }
+        .animate-cyber-pulse {
+            animation: cyber-pulse 2s infinite ease-in-out;
+            display: inline-block;
+        }
     </style>
 </head>
 <body class="bg-[#f4f7f6] text-slate-800 h-screen flex">
@@ -103,7 +117,7 @@
                     <div class="flex items-center gap-3.5">
                         <!-- High-Tech Glowing Monitoring Icon -->
                         <div class="flex items-center justify-center w-10 h-10 rounded-lg bg-white/15 border border-white/20 shadow-[0_2px_8px_rgba(255,255,255,0.1)] flex-shrink-0">
-                            <span class="material-symbols-outlined text-white text-lg animate-pulse" style="font-variation-settings: 'FILL' 1;">monitoring</span>
+                            <span class="material-symbols-outlined text-white text-lg animate-cyber-pulse" style="font-variation-settings: 'FILL' 1;">monitoring</span>
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
@@ -111,9 +125,9 @@
                                     <span class="text-white font-black">EWS</span> <span class="text-white font-semibold">Operations Console</span>
                                 </h2>
                                 <!-- Live Pulsating LED Status Light -->
-                                <span class="relative flex h-2 w-2">
-                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-300 opacity-75"></span>
-                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                                <span class="relative flex h-2 w-2 shrink-0">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-300 shadow-[0_0_8px_#22d3ee]"></span>
                                 </span>
                             </div>
                             <p class="text-[10px] text-emerald-50 font-bold uppercase tracking-wider leading-none mt-2" style="text-shadow: 0 1px 4px rgba(6, 95, 70, 0.2);">
