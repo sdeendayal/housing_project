@@ -23,7 +23,7 @@ return new class extends Migration
         );
 
         $this->addIndexIfMissing(
-            'hfa.mmsay_old_registration_data',
+            'mmsay_old_registration_data',
             'idx_opt_old_reg',
             ['districtName(50)', 'btName(50)', 'wvName(50)']
         );
@@ -45,7 +45,7 @@ return new class extends Migration
         );
 
         $this->dropIndexIfExists(
-            'hfa.mmsay_old_registration_data',
+            'mmsay_old_registration_data',
             'idx_opt_old_reg'
         );
     }

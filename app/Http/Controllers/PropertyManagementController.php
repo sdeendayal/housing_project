@@ -172,7 +172,7 @@ class PropertyManagementController extends Controller
             : null;
 
         $oldRegistrationCountQuery = DB::table(
-            'hfa.mmsay_old_registration_data'
+            'mmsay_old_registration_data'
         )
             ->when(
                 $selectedDistrictName,
@@ -1063,7 +1063,7 @@ class PropertyManagementController extends Controller
     {
         $filters = $this->oldRegistrationFilters($request);
 
-        return DB::table('hfa.mmsay_old_registration_data')
+        return DB::table('mmsay_old_registration_data')
             ->select([
                 'id',
                 'application_number',
