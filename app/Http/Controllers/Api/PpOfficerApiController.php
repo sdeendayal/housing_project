@@ -352,7 +352,6 @@ class PpOfficerApiController extends Controller
                 $purchaserQuery->where('temp.physical_possession_status', $status);
             }
         }
-
         $purchasers = $purchaserQuery->paginate(25)->withQueryString();
         $purchasers->getCollection()->transform(function ($item) {
             if (isset($item->secure_id)) {
@@ -360,6 +359,25 @@ class PpOfficerApiController extends Controller
             }
             if (isset($item->physical_possession_status)) {
                 $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
+            }
+            
+            // Dynamically calculate and assign category for consistency in API response
+            $isGhumantu = ((int) ($item->is_ghumantu ?? 0) === 1);
+            $isWidow = str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
+            $isSC = ($item->mmsay_category === 'SC') || 
+                    (str_contains(strtolower($item->mmsay_caste ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($item->mmsay_caste ?? ''), 'sc')) || 
+                    (str_contains(strtolower($item->CasteCategoryName ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($item->CasteCategoryName ?? ''), 'sc'));
+
+            if ($isGhumantu) {
+                $item->mmsay_category = 'GJ';
+            } elseif ($isWidow) {
+                $item->mmsay_category = 'W';
+            } elseif ($isSC) {
+                $item->mmsay_category = 'SC';
+            } else {
+                $item->mmsay_category = 'OTHER';
             }
             return $item;
         });
@@ -1601,6 +1619,25 @@ class PpOfficerApiController extends Controller
             }
             if (isset($item->physical_possession_status)) {
                 $item->physical_possession_status = \App\Models\PhysicalPossessionApplication::getDisplayStatus($item->physical_possession_status);
+            }
+            
+            // Dynamically calculate and assign category for consistency in API response
+            $isGhumantu = ((int) ($item->is_ghumantu ?? 0) === 1);
+            $isWidow = str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
+            $isSC = ($item->mmsay_category === 'SC') || 
+                    (str_contains(strtolower($item->mmsay_caste ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($item->mmsay_caste ?? ''), 'sc')) || 
+                    (str_contains(strtolower($item->CasteCategoryName ?? ''), 'scheduled')) || 
+                    (str_contains(strtolower($item->CasteCategoryName ?? ''), 'sc'));
+
+            if ($isGhumantu) {
+                $item->mmsay_category = 'GJ';
+            } elseif ($isWidow) {
+                $item->mmsay_category = 'W';
+            } elseif ($isSC) {
+                $item->mmsay_category = 'SC';
+            } else {
+                $item->mmsay_category = 'OTHER';
             }
             return $item;
         });
