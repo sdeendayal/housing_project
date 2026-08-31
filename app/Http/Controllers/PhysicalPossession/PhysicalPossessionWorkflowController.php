@@ -1379,12 +1379,12 @@ class PhysicalPossessionWorkflowController extends Controller
         $categoryCounts = $countQuery->selectRaw("
             SUM(CASE WHEN ppp.is_ghumantu = 1 THEN 1 ELSE 0 END) as count_gj,
             SUM(CASE WHEN ppp.is_ghumantu = 0
-                          AND COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%' THEN 1 ELSE 0 END) as count_w,
+                          AND (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%' OR COALESCE(ppp.MaritalStatus, '') LIKE '%widow%') THEN 1 ELSE 0 END) as count_w,
             SUM(CASE WHEN ppp.is_ghumantu = 0
-                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%' OR COALESCE(ppp.MaritalStatus, '') LIKE '%widow%')
                           AND (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_sc,
             SUM(CASE WHEN ppp.is_ghumantu = 0
-                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%')
+                          AND NOT (COALESCE(ppp.CasteCategoryName, '') LIKE '%widow%' OR COALESCE(ppp.MaritalStatus, '') LIKE '%widow%')
                           AND NOT (COALESCE(meb.category, '') = 'SC' OR COALESCE(meb.caste, '') = 'SC' OR COALESCE(meb.caste, '') LIKE '%scheduled%' OR COALESCE(meb.caste, '') LIKE '%sc%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%scheduled%' OR COALESCE(ppp.CasteCategoryName, '') LIKE '%sc%') THEN 1 ELSE 0 END) as count_other
         ")->first();
 
@@ -1400,8 +1400,11 @@ class PhysicalPossessionWorkflowController extends Controller
             if ($selectedCategory === 'GJ') {
                 $query->where('ppp.is_ghumantu', 1);
             } elseif ($selectedCategory === 'W') {
-                $query->where('ppp.CasteCategoryName', 'like', '%widow%')
-                      ->where('ppp.is_ghumantu', 0);
+                $query->where(function($q) {
+                    $q->where('ppp.CasteCategoryName', 'like', '%widow%')
+                      ->orWhere('ppp.MaritalStatus', 'like', '%widow%');
+                })
+                ->where('ppp.is_ghumantu', 0);
             } elseif ($selectedCategory === 'SC') {
                 $query->where(function($q) {
                     $q->where('meb.category', 'SC')
@@ -1411,10 +1414,12 @@ class PhysicalPossessionWorkflowController extends Controller
                       ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
                 })
                 ->where('ppp.is_ghumantu', 0)
-                ->where('ppp.CasteCategoryName', 'not like', '%widow%');
+                ->where('ppp.CasteCategoryName', 'not like', '%widow%')
+                ->where(DB::raw("COALESCE(ppp.MaritalStatus, '')"), 'not like', '%widow%');
             } elseif ($selectedCategory === 'OTHER') {
                 $query->where('ppp.is_ghumantu', 0)
                 ->where('ppp.CasteCategoryName', 'not like', '%widow%')
+                ->where(DB::raw("COALESCE(ppp.MaritalStatus, '')"), 'not like', '%widow%')
                 ->whereNot(function($q) {
                     $q->where(DB::raw("COALESCE(meb.category, '')"), 'SC')
                       ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%scheduled%')
@@ -1507,8 +1512,11 @@ class PhysicalPossessionWorkflowController extends Controller
             if ($selectedCategory === 'GJ') {
                 $query->where('ppp.is_ghumantu', 1);
             } elseif ($selectedCategory === 'W') {
-                $query->where('ppp.CasteCategoryName', 'like', '%widow%')
-                      ->where('ppp.is_ghumantu', 0);
+                $query->where(function($q) {
+                    $q->where('ppp.CasteCategoryName', 'like', '%widow%')
+                      ->orWhere('ppp.MaritalStatus', 'like', '%widow%');
+                })
+                ->where('ppp.is_ghumantu', 0);
             } elseif ($selectedCategory === 'SC') {
                 $query->where(function($q) {
                     $q->where('meb.category', 'SC')
@@ -1518,10 +1526,12 @@ class PhysicalPossessionWorkflowController extends Controller
                       ->orWhere('ppp.CasteCategoryName', 'like', '%sc%');
                 })
                 ->where('ppp.is_ghumantu', 0)
-                ->where('ppp.CasteCategoryName', 'not like', '%widow%');
+                ->where('ppp.CasteCategoryName', 'not like', '%widow%')
+                ->where(DB::raw("COALESCE(ppp.MaritalStatus, '')"), 'not like', '%widow%');
             } elseif ($selectedCategory === 'OTHER') {
                 $query->where('ppp.is_ghumantu', 0)
                 ->where('ppp.CasteCategoryName', 'not like', '%widow%')
+                ->where(DB::raw("COALESCE(ppp.MaritalStatus, '')"), 'not like', '%widow%')
                 ->whereNot(function($q) {
                     $q->where(DB::raw("COALESCE(meb.category, '')"), 'SC')
                       ->orWhere(DB::raw("COALESCE(meb.caste, '')"), 'like', '%scheduled%')
