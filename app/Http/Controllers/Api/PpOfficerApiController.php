@@ -305,6 +305,7 @@ class PpOfficerApiController extends Controller
             'ppp.MemberID',
             'ppp.CasteCategoryName',
             'ppp.is_ghumantu',
+            'ppp.MaritalStatus',
             'meb.category as mmsay_category',
             'meb.caste as mmsay_caste',
             'ppp.DistrictId',
@@ -363,7 +364,7 @@ class PpOfficerApiController extends Controller
             
             // Dynamically calculate and assign category for consistency in API response
             $isGhumantu = ((int) ($item->is_ghumantu ?? 0) === 1);
-            $isWidow = str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
+            $isWidow = ($item->mmsay_category === 'W') || str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
             $isSC = ($item->mmsay_category === 'SC') || 
                     (str_contains(strtolower($item->mmsay_caste ?? ''), 'scheduled')) || 
                     (str_contains(strtolower($item->mmsay_caste ?? ''), 'sc')) || 
@@ -1584,6 +1585,7 @@ class PpOfficerApiController extends Controller
             'ppp.MemberID',
             'ppp.CasteCategoryName',
             'ppp.is_ghumantu',
+            'ppp.MaritalStatus',
             'meb.category as mmsay_category',
             'meb.caste as mmsay_caste',
             'ppp.DistrictId',
@@ -1623,7 +1625,7 @@ class PpOfficerApiController extends Controller
             
             // Dynamically calculate and assign category for consistency in API response
             $isGhumantu = ((int) ($item->is_ghumantu ?? 0) === 1);
-            $isWidow = str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
+            $isWidow = ($item->mmsay_category === 'W') || str_contains(strtolower($item->CasteCategoryName ?? ''), 'widow') || str_contains(strtolower($item->MaritalStatus ?? ''), 'widow');
             $isSC = ($item->mmsay_category === 'SC') || 
                     (str_contains(strtolower($item->mmsay_caste ?? ''), 'scheduled')) || 
                     (str_contains(strtolower($item->mmsay_caste ?? ''), 'sc')) || 
