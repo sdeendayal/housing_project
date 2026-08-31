@@ -1389,11 +1389,11 @@ class PhysicalPossessionWorkflowController extends Controller
         ")->first();
 
         $casteCategories = [
-            'ALL' => ($categoryCounts->count_gj ?? 0) + ($categoryCounts->count_w ?? 0) + ($categoryCounts->count_sc ?? 0) + ($categoryCounts->count_other ?? 0),
-            'GJ' => $categoryCounts->count_gj ?? 0,
-            'W' => $categoryCounts->count_w ?? 0,
-            'SC' => $categoryCounts->count_sc ?? 0,
-            'OTHER' => $categoryCounts->count_other ?? 0,
+            'ALL' => (string) (($categoryCounts->count_gj ?? 0) + ($categoryCounts->count_w ?? 0) + ($categoryCounts->count_sc ?? 0) + ($categoryCounts->count_other ?? 0)),
+            'GJ' => (string) ($categoryCounts->count_gj ?? 0),
+            'W' => (string) ($categoryCounts->count_w ?? 0),
+            'SC' => (string) ($categoryCounts->count_sc ?? 0),
+            'OTHER' => (string) ($categoryCounts->count_other ?? 0),
         ];
 
         if ($selectedCategory) {
