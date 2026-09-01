@@ -203,7 +203,7 @@
                         <span class="material-symbols-outlined text-base text-blue-600">verified</span>
                         Registry Status
                     </h4>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Tehsil Registry Verification Status</p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Registry Verification Status</p>
                 </div>
                 <span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
                     {{ number_format($counts->registry_done ?? 0) }} / {{ number_format($counts->registry_to_be_done ?? 0) }} Completed
@@ -220,20 +220,20 @@
                     <div class="min-w-0 flex-1">
                         <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry To Be Done</p>
                         <h3 class="text-base font-black text-blue-700 mt-0.5">{{ number_format($counts->registry_to_be_done ?? 0) }}</h3>
-                        <p class="text-[8.5px] text-slate-400 font-semibold mt-0.5">Approved & Paid Eligible</p>
+                        <p class="text-[8.5px] text-slate-400 font-semibold mt-0.5">Approved & Paid</p>
                     </div>
                 </a>
 
-                <!-- Registry Done -->
+                <!-- Registry Matched -->
                 <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
                    class="flex items-center p-3 bg-white border {{ $activeTab === 'registry_done' ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/30 shadow-sm' : 'border-slate-200 hover:border-emerald-300' }} rounded-xl hover:shadow-md transition">
                     <div class="w-10 h-10 rounded-xl {{ $activeTab === 'registry_done' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }} flex items-center justify-center mr-3 shrink-0">
                         <span class="material-symbols-outlined text-xl">task_alt</span>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry Done</p>
+                        <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry Matched</p>
                         <h3 class="text-base font-black text-emerald-700 mt-0.5">{{ number_format($counts->registry_done ?? 0) }}</h3>
-                        <p class="text-[8.5px] text-emerald-600 font-semibold mt-0.5">Tehsil Registry Matched</p>
+                        <p class="text-[8.5px] text-emerald-600 font-semibold mt-0.5">Registry Matched</p>
                     </div>
                 </a>
 
@@ -246,7 +246,7 @@
                     <div class="min-w-0 flex-1">
                         <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry Pending</p>
                         <h3 class="text-base font-black text-amber-700 mt-0.5">{{ number_format($counts->registry_pending ?? 0) }}</h3>
-                        <p class="text-[8.5px] text-amber-600 font-semibold mt-0.5">Awaiting Registry</p>
+                        <p class="text-[8.5px] text-amber-600 font-semibold mt-0.5">Registry Pending</p>
                     </div>
                 </a>
             </div>
