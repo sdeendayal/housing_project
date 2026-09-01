@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController;
 
 class MmgayBdoApiController extends Controller
 {
@@ -48,29 +49,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             })
             ->select('mpa.*');
 
@@ -100,29 +80,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             });
         if ($blockMasterId) {
             $totalEligibleQuery->where('o.BlockId', $blockMasterId);
@@ -152,29 +111,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             });
         if ($blockMasterId) {
             $notScheduledQuery->where('o.BlockId', $blockMasterId);
@@ -238,29 +176,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -649,29 +566,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1126,29 +1022,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1443,29 +1318,8 @@ class MmgayBdoApiController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1516,29 +1370,8 @@ class MmgayBdoApiController extends Controller
                         ->whereColumn('f.FlatId', 'o.FlatId');
                 })
                 ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function($q) {
-                            $q->where(function($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
+                    $query->select(DB::raw(1))->from('registary as r');
+                    MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -1665,29 +1498,8 @@ class MmgayBdoApiController extends Controller
                         ->whereColumn('f2.FlatId', 'o.FlatId');
                 })
                 ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function ($q) {
-                            $q->where(function ($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function ($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function ($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function ($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
+                    $query->select(DB::raw(1))->from('registary as r');
+                    MMGAYBdoPossessionController::applyRegistryMatchCondition($query);
                 })
                 ->select(
                     'o.OwnerId',

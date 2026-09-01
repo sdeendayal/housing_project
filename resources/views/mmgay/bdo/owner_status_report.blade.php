@@ -395,6 +395,8 @@
                                 <button onclick="openViewModal(this)" 
                                         data-name="{{ $owner->OwnerName }}"
                                         data-reg="{{ $owner->RegistrationNo }}"
+                                        data-reg-no="{{ $owner->RegistrationNo }}"
+                                        data-flat-id="{{ $owner->FlatId ?? '' }}"
                                         data-father="{{ $owner->FatherHusbandName ?? 'N/A' }}"
                                         data-mobile="{{ $owner->MobileNo }}"
                                         data-phase="Phase {{ $owner->Phase }}"
@@ -571,8 +573,15 @@
             regStatusBadge.className = 'text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-slate-100 text-slate-500';
 
             // 4. Hit AJAX route to get registry details
-            const mobile = button.getAttribute('data-mobile');
-            fetch('{{ url("/mmgay/bdo/owner-registry-details") }}/' + mobile)
+            const mobile = button.getAttribute('data-mobile') || '';
+            const flatId = button.getAttribute('data-flat-id') || '';
+            const regNo = button.getAttribute('data-reg-no') || '';
+
+            const qParams = new URLSearchParams();
+            if (flatId) qParams.append('flat_id', flatId);
+            if (regNo) qParams.append('reg_no', regNo);
+
+            fetch('{{ url("/mmgay/bdo/owner-registry-details") }}/' + encodeURIComponent(mobile) + '?' + qParams.toString())
                 .then(res => res.json())
                 .then(data => {
                     loader.classList.add('hidden');

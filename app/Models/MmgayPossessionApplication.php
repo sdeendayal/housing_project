@@ -111,41 +111,30 @@ class MmgayPossessionApplication extends Model
             if ($owner) {
                 return \Illuminate\Support\Facades\DB::table('registary')
                     ->where(function($q) use ($owner) {
+                        // 1. For id <= 2221: Check by Mobile Number only
                         $q->where(function($sub) use ($owner) {
-                            if (!empty($owner->FlatId)) {
-                                $sub->where('flatid', $owner->FlatId)
-                                    ->whereNotNull('flatid')
-                                    ->where('flatid', '!=', '');
-                            } else {
-                                $sub->whereRaw('0 = 1');
-                            }
+                            $sub->where('id', '<=', 2221)
+                                ->where('SecondPartyMobile', $owner->MobileNo)
+                                ->whereNotNull('SecondPartyMobile')
+                                ->where('SecondPartyMobile', '!=', '');
                         })
+                        // 2. For id > 2221: Check by FlatId or RegistrationNo only
                         ->orWhere(function($sub) use ($owner) {
-                            if (!empty($owner->RegistrationNo)) {
-                                $sub->where('registrationNo', $owner->RegistrationNo)
-                                    ->whereNotNull('registrationNo')
-                                    ->where('registrationNo', '!=', '');
-                            } else {
-                                $sub->whereRaw('0 = 1');
-                            }
-                        })
-                        ->orWhere(function($sub) use ($owner) {
-                            if (!empty($owner->MobileNo)) {
-                                $sub->where('SecondPartyMobile', $owner->MobileNo)
-                                    ->whereNotNull('SecondPartyMobile')
-                                    ->where('SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('flatid')
-                                             ->orWhere('flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(\Illuminate\Support\Facades\DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'registary.flatid');
-                                             });
-                                    });
-                            } else {
-                                $sub->whereRaw('0 = 1');
-                            }
+                            $sub->where('id', '>', 2221)
+                                ->where(function($deep) use ($owner) {
+                                    $hasCondition = false;
+                                    if (!empty($owner->FlatId)) {
+                                        $deep->orWhere('flatid', $owner->FlatId);
+                                        $hasCondition = true;
+                                    }
+                                    if (!empty($owner->RegistrationNo)) {
+                                        $deep->orWhere('registrationNo', $owner->RegistrationNo);
+                                        $hasCondition = true;
+                                    }
+                                    if (!$hasCondition) {
+                                        $deep->whereRaw('0 = 1');
+                                    }
+                                });
                         });
                     })
                     ->exists();

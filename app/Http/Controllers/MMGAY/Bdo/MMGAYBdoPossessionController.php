@@ -19,6 +19,63 @@ use Illuminate\Support\Facades\Storage;
 class MMGAYBdoPossessionController extends Controller
 {
     /**
+     * Hard-coded business check for registary matching:
+     * - id <= 2221: Match ONLY by SecondPartyMobile (MobileNo)
+     * - id > 2221: Match by flatid, registrationNo, or ownerid
+     */
+    public static function applyRegistryMatchCondition($query)
+    {
+        return $query->where(function ($q) {
+            $q->where(function ($sub) {
+                $sub->where('r.id', '<=', 2221)
+                    ->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                    ->whereNotNull('r.SecondPartyMobile')
+                    ->where('r.SecondPartyMobile', '!=', '');
+            })
+            ->orWhere(function ($sub) {
+                $sub->where('r.id', '>', 2221)
+                    ->where(function ($deep) {
+                        $deep->where(function ($d) {
+                            $d->whereColumn('r.flatid', 'o.FlatId')
+                              ->whereNotNull('r.flatid')
+                              ->where('r.flatid', '!=', '');
+                        })
+                        ->orWhere(function ($d) {
+                            $d->whereColumn('r.registrationNo', 'o.RegistrationNo')
+                              ->whereNotNull('r.registrationNo')
+                              ->where('r.registrationNo', '!=', '');
+                        });
+                    });
+            });
+        });
+    }
+
+    /**
+     * Raw SQL expression for hard-coded registry check:
+     * - id <= 2221: SecondPartyMobile = MobileNo
+     * - id > 2221: flatid and registrationNo only
+     */
+    public static function getRegistryMatchRawSql($ownerAlias = 'o', $registaryAlias = 'r')
+    {
+        return "EXISTS (
+            SELECT 1 FROM registary as {$registaryAlias} 
+            WHERE (
+                {$registaryAlias}.id <= 2221 
+                AND {$registaryAlias}.SecondPartyMobile = {$ownerAlias}.MobileNo 
+                AND {$registaryAlias}.SecondPartyMobile IS NOT NULL 
+                AND {$registaryAlias}.SecondPartyMobile != ''
+            )
+            OR (
+                {$registaryAlias}.id > 2221 
+                AND (
+                    ({$registaryAlias}.flatid = {$ownerAlias}.FlatId AND {$registaryAlias}.flatid IS NOT NULL AND {$registaryAlias}.flatid != '')
+                    OR ({$registaryAlias}.registrationNo = {$ownerAlias}.RegistrationNo AND {$registaryAlias}.registrationNo IS NOT NULL AND {$registaryAlias}.registrationNo != '')
+                )
+            )
+        )";
+    }
+
+    /**
      * Show BDO Login Form.
      */
     public function showLogin()
@@ -137,29 +194,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->select('mpa.*');
 
@@ -189,29 +225,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             });
         if ($blockMasterId) {
             $totalEligibleQuery->where('o.BlockId', $blockMasterId);
@@ -241,29 +256,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             });
         if ($blockMasterId) {
             $notScheduledQuery->where('o.BlockId', $blockMasterId);
@@ -311,29 +305,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -382,29 +355,8 @@ class MMGAYBdoPossessionController extends Controller
                         ->whereColumn('f.FlatId', 'o.FlatId');
                 })
                 ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function($q) {
-                            $q->where(function($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
+                    $query->select(DB::raw(1))->from('registary as r');
+                    self::applyRegistryMatchCondition($query);
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -496,29 +448,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -883,29 +814,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->whereIn('o.OwnerId', function ($q) {
                 $q->select(DB::raw('MIN(OwnerId)'))
@@ -1470,29 +1380,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->when($blockMasterId, function ($q) use ($blockMasterId) {
                 $q->where('o.BlockId', $blockMasterId);
@@ -1536,29 +1425,8 @@ class MMGAYBdoPossessionController extends Controller
                         ->whereColumn('f.FlatId', 'o.FlatId');
                 })
                 ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function($q) {
-                            $q->where(function($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
+                    $query->select(DB::raw(1))->from('registary as r');
+                    self::applyRegistryMatchCondition($query);
                 })
                 ->whereIn('o.OwnerId', function ($q) {
                     $q->select(DB::raw('MIN(OwnerId)'))
@@ -1675,8 +1543,8 @@ class MMGAYBdoPossessionController extends Controller
             'v.map_pdf',
             DB::raw("COUNT(DISTINCT o.OwnerId) as total_beneficiaries"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
-            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND EXISTS (SELECT 1 FROM registary r WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '') OR (r.SecondPartyMobile = o.MobileNo AND r.SecondPartyMobile IS NOT NULL AND r.SecondPartyMobile != '' AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (SELECT 1 FROM ownermaster o2 WHERE o2.FlatId = r.flatid)))) THEN 1 END) as approved_paid_matched"),
-            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT EXISTS (SELECT 1 FROM registary r WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '') OR (r.SecondPartyMobile = o.MobileNo AND r.SecondPartyMobile IS NOT NULL AND r.SecondPartyMobile != '' AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (SELECT 1 FROM ownermaster o2 WHERE o2.FlatId = r.flatid)))) THEN 1 END) as approved_paid_pending"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND " . self::getRegistryMatchRawSql('o', 'r') . " THEN 1 END) as approved_paid_matched"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT (" . self::getRegistryMatchRawSql('o', 'r') . ") THEN 1 END) as approved_paid_pending"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_unpaid"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
             DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
@@ -1729,29 +1597,8 @@ class MMGAYBdoPossessionController extends Controller
                     ->whereColumn('f.FlatId', 'o.FlatId');
             })
             ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function($q) {
-                        $q->where(function($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
+                $query->select(DB::raw(1))->from('registary as r');
+                self::applyRegistryMatchCondition($query);
             })
             ->select('v.VillageId as VillageId', 'v.VillageName as VillageName', 'v.map_pdf as map_pdf')
             ->groupBy('v.VillageId', 'v.VillageName', 'v.map_pdf')
@@ -2212,18 +2059,7 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
-        $registryConditionSql = "EXISTS (
-            SELECT 1 FROM registary as r 
-            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
-               OR (
-                   r.SecondPartyMobile = o.MobileNo 
-                   AND r.SecondPartyMobile IS NOT NULL 
-                   AND r.SecondPartyMobile != ''
-                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
-                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
-                   ))
-               )
-        )";
+        $registryConditionSql = self::getRegistryMatchRawSql('o', 'r');
 
         $counts = $countQuery->select(
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
@@ -2319,6 +2155,7 @@ class MMGAYBdoPossessionController extends Controller
 
         $owners = $listQuery->select(
             'o.OwnerId',
+            'o.FlatId',
             'o.OwnerName',
             'o.FatherHusbandName',
             'o.MobileNo',
@@ -2328,18 +2165,7 @@ class MMGAYBdoPossessionController extends Controller
             'o.IsPaid',
             'o.IsRejected',
             'o.IsAllotmentCancelled',
-            DB::raw("EXISTS (
-                SELECT 1 FROM registary as r 
-                WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
-                   OR (
-                       r.SecondPartyMobile = o.MobileNo 
-                       AND r.SecondPartyMobile IS NOT NULL 
-                       AND r.SecondPartyMobile != ''
-                       AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
-                           SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
-                       ))
-                   )
-            ) as registry_matched"),
+            DB::raw(self::getRegistryMatchRawSql('o', 'r') . " as registry_matched"),
             'd.DistrictName',
             'b.BlockName',
             'v.VillageName',
@@ -2373,14 +2199,37 @@ class MMGAYBdoPossessionController extends Controller
     }
 
     /**
-     * Get owner registry details by mobile number.
+     * Get owner registry details by mobile number / flat id / registration no.
+     * Enforces hard-coded rule:
+     * - id <= 2221: Match by SecondPartyMobile (MobileNo)
+     * - id > 2221: Match ONLY by flatid or registrationNo
      */
-    public function getOwnerRegistryDetails($mobile)
+    public function getOwnerRegistryDetails(Request $request, $mobile)
     {
         try {
-            $registry = DB::table('registary')
-                ->where('SecondPartyMobile', $mobile)
-                ->first();
+            $flatId = $request->input('flat_id');
+            $regNo = $request->input('reg_no');
+
+            $registry = null;
+
+            // 1. For records id > 2221: match ONLY by flatid and registrationNo
+            if ($flatId || $regNo) {
+                $registry = DB::table('registary')
+                    ->where('id', '>', 2221)
+                    ->where(function ($q) use ($flatId, $regNo) {
+                        if ($flatId) $q->orWhere('flatid', $flatId);
+                        if ($regNo) $q->orWhere('registrationNo', $regNo);
+                    })
+                    ->first();
+            }
+
+            // 2. For records id <= 2221: match ONLY by SecondPartyMobile
+            if (!$registry && $mobile) {
+                $registry = DB::table('registary')
+                    ->where('id', '<=', 2221)
+                    ->where('SecondPartyMobile', $mobile)
+                    ->first();
+            }
 
             if ($registry) {
                 return response()->json([
@@ -2392,7 +2241,7 @@ class MMGAYBdoPossessionController extends Controller
             return response()->json([
                 'success' => false,
                 'registry' => null,
-                'message' => 'No registry details found for this mobile number.'
+                'message' => 'No registry details found for this beneficiary.'
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -2476,18 +2325,7 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
-        $registryConditionSql = "EXISTS (
-            SELECT 1 FROM registary as r 
-            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
-               OR (
-                   r.SecondPartyMobile = o.MobileNo 
-                   AND r.SecondPartyMobile IS NOT NULL 
-                   AND r.SecondPartyMobile != ''
-                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
-                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
-                   ))
-               )
-        )";
+        $registryConditionSql = self::getRegistryMatchRawSql('o', 'r');
 
         if ($activeTab === 'approved_paid') {
             $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
@@ -2645,18 +2483,7 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
-        $registryConditionSql = "EXISTS (
-            SELECT 1 FROM registary as r 
-            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
-               OR (
-                   r.SecondPartyMobile = o.MobileNo 
-                   AND r.SecondPartyMobile IS NOT NULL 
-                   AND r.SecondPartyMobile != ''
-                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
-                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
-                   ))
-               )
-        )";
+        $registryConditionSql = self::getRegistryMatchRawSql('o', 'r');
 
         if ($activeTab === 'approved_paid') {
             $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
@@ -2721,7 +2548,7 @@ class MMGAYBdoPossessionController extends Controller
      */
     private function getEligibleCategoryBeneficiaries($blockMasterId)
     {
-        $cacheKey = 'mmgay_bdo_cat_beneficiaries_v2_' . ($blockMasterId ?: 'all');
+        $cacheKey = 'mmgay_bdo_cat_beneficiaries_v3_' . ($blockMasterId ?: 'all');
 
         return Cache::remember($cacheKey, 60, function () use ($blockMasterId) {
             return DB::table('ownermaster as o')
@@ -2751,29 +2578,8 @@ class MMGAYBdoPossessionController extends Controller
                         ->whereColumn('f2.FlatId', 'o.FlatId');
                 })
                 ->whereExists(function ($query) {
-                    $query->select(DB::raw(1))
-                        ->from('registary as r')
-                        ->where(function ($q) {
-                            $q->where(function ($sub) {
-                                $sub->whereColumn('r.flatid', 'o.FlatId')
-                                    ->whereNotNull('r.flatid')
-                                    ->where('r.flatid', '!=', '');
-                            })
-                            ->orWhere(function ($sub) {
-                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                    ->whereNotNull('r.SecondPartyMobile')
-                                    ->where('r.SecondPartyMobile', '!=', '')
-                                    ->where(function ($sub2) {
-                                        $sub2->whereNull('r.flatid')
-                                             ->orWhere('r.flatid', '')
-                                             ->orWhereNotExists(function ($sub3) {
-                                                 $sub3->select(DB::raw(1))
-                                                      ->from('ownermaster as o2')
-                                                      ->whereColumn('o2.FlatId', 'r.flatid');
-                                             });
-                                    });
-                            });
-                        });
+                    $query->select(DB::raw(1))->from('registary as r');
+                    self::applyRegistryMatchCondition($query);
                 })
                 ->select(
                     'o.OwnerId',
