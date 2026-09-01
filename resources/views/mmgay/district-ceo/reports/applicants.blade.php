@@ -344,7 +344,7 @@
 
                                 <option value="">All Categories</option>
 
-                                @foreach (['SC', 'Ghumantu', 'Widow', 'General', 'Others'] as $casteOption)
+                                @foreach (['SC', 'Ghumantu', 'Widow', 'Others'] as $casteOption)
                                     <option value="{{ $casteOption }}" @selected(($caste ?? '') === $casteOption)>
                                         {{ $casteOption }}
                                     </option>
@@ -762,7 +762,9 @@
                                     </td>
 
                                     <td class="whitespace-nowrap border-r border-slate-100 px-4 py-3 text-center">
-                                        {{ $applicant->Caste ?: 'Others' }}
+                                        {{ in_array(strtolower(trim((string) $applicant->Caste)), ['sc', 'ghumantu', 'widow'], true)
+    ? ucfirst(strtolower(trim((string) $applicant->Caste)))
+    : 'Others' }}
                                     </td>
 
                                     <td class="whitespace-nowrap border-r border-slate-100 px-4 py-3">

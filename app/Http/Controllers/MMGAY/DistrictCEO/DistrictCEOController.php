@@ -47,6 +47,39 @@ class DistrictCEOController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | Block Filter
+        |--------------------------------------------------------------------------
+        */
+        $blockId = $request->filled('block_id')
+            ? (int) $request->block_id
+            : null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phase-wise Block Dropdown
+        |--------------------------------------------------------------------------
+        | Blocks are resolved through BlockMaster and constrained by the
+        | same district/phase/village data already used by dashboard.
+        |--------------------------------------------------------------------------
+        */
+        $blocks = DB::table('VillageMaster as v')
+            ->join('BlockMaster as b', 'b.BlockId', '=', 'v.BlockId')
+            ->where('v.DistrictId', $districtId)
+            ->where('v.plots', '>', 0)
+            ->whereNotNull('v.BlockId')
+            ->when(!$isAllPhase, function ($query) use ($phase) {
+                $query->where('v.phase', $phase);
+            })
+            ->select(
+                'b.BlockId',
+                'b.BlockName'
+            )
+            ->distinct()
+            ->orderBy('b.BlockName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
         | Village Filter
         |--------------------------------------------------------------------------
         */
@@ -56,19 +89,24 @@ class DistrictCEOController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | Phase-wise / All Phase Village Dropdown
+        | Dependent Village Dropdown
+        |--------------------------------------------------------------------------
         |--------------------------------------------------------------------------
         */
-        $villages = DB::table('villagemaster as v')
+        $villages = DB::table('VillageMaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when(!$isAllPhase, function ($query) use ($phase) {
                 $query->where('v.phase', $phase);
             })
+            ->when($blockId, function ($query) use ($blockId) {
+                $query->where('v.BlockId', $blockId);
+            })
             ->select(
                 'v.VillageId',
                 'v.VillageName',
-                'v.phase'
+                'v.phase',
+                'v.BlockId'
             )
             ->orderBy('v.phase')
             ->orderBy('v.VillageName')
@@ -79,6 +117,15 @@ class DistrictCEOController extends Controller
         | Validate Selected Village
         |--------------------------------------------------------------------------
         */
+        if (
+            $blockId &&
+            !$blocks->contains(function ($block) use ($blockId) {
+                return (int) $block->BlockId === $blockId;
+            })
+        ) {
+            $blockId = null;
+        }
+
         if (
             $villageId &&
             !$villages->contains(function ($village) use ($villageId) {
@@ -138,6 +185,9 @@ class DistrictCEOController extends Controller
             | Apply Village Filter
             |--------------------------------------------------------------------------
             */
+            ->when($blockId, function ($query) use ($blockId) {
+                $query->where('v.BlockId', $blockId);
+            })
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('v.VillageId', $villageId);
             });
@@ -461,6 +511,9 @@ class DistrictCEOController extends Controller
             ->when($isAllPhase, function ($query) {
                 $query->whereColumn('po.Phase', 'pv.phase');
             })
+            ->when($blockId, function ($query) use ($blockId) {
+                $query->where('pv.BlockId', $blockId);
+            })
             ->when($villageId, function ($query) use ($villageId) {
                 $query->where('po.VillageId', $villageId);
             });
@@ -554,6 +607,7 @@ class DistrictCEOController extends Controller
                     : 'Phase ' . $phase,
 
                 'filters' => [
+                    'block_id' => $blockId,
                     'village_id' => $villageId,
                 ],
 
@@ -561,6 +615,7 @@ class DistrictCEOController extends Controller
 
                 'villageData' => $villageData,
 
+                'blocks' => $blocks,
                 'villages' => $villages,
             ]);
         }
@@ -568,6 +623,10 @@ class DistrictCEOController extends Controller
         $reportParams = [
             'phase' => $phase,
         ];
+
+        if ($blockId) {
+            $reportParams['block_id'] = $blockId;
+        }
 
         if ($villageId) {
             $reportParams['village_id'] = $villageId;
@@ -585,7 +644,9 @@ class DistrictCEOController extends Controller
                 'totals',
                 'villageData',
                 'villages',
+                'blocks',
                 'villageId',
+                'blockId',
                 'reportParams'
             )
         );
@@ -2151,7 +2212,6 @@ class DistrictCEOController extends Controller
             'SC',
             'Ghumantu',
             'Widow',
-            'General',
             'Others',
         ];
 
@@ -2283,7 +2343,10 @@ class DistrictCEOController extends Controller
             */
             ->when($caste, function ($query) use ($caste) {
                 if ($caste === 'Others') {
-                    $query->whereIn('o.Caste', ['General', 'Others']);
+                    $query->where(function ($q) {
+                        $q->whereNotIn('o.Caste', ['SC', 'Ghumantu', 'Widow'])
+                            ->orWhereNull('o.Caste');
+                    });
 
                     return;
                 }
@@ -2635,7 +2698,6 @@ class DistrictCEOController extends Controller
         );
     }
 
-
     public function applicantReport(Request $request)
     {
         $user = auth()->user();
@@ -2714,7 +2776,6 @@ class DistrictCEOController extends Controller
             'SC',
             'Ghumantu',
             'Widow',
-            'General',
             'Others',
         ];
 
@@ -2835,7 +2896,10 @@ class DistrictCEOController extends Controller
             */
             ->when($caste, function ($query) use ($caste) {
                 if ($caste === 'Others') {
-                    $query->whereIn('o.Caste', ['General', 'Others']);
+                    $query->where(function ($q) {
+                        $q->whereNotIn('o.Caste', ['SC', 'Ghumantu', 'Widow'])
+                            ->orWhereNull('o.Caste');
+                    });
 
                     return;
                 }
@@ -3099,7 +3163,12 @@ class DistrictCEOController extends Controller
                 'o.OwnerAddress',
                 'o.PPPId',
                 'o.MemberId',
-                'o.Caste',
+                DB::raw("CASE
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'sc' THEN 'SC'
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'ghumantu' THEN 'Ghumantu'
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'widow' THEN 'Widow'
+                    ELSE 'Others'
+                END AS Caste"),
                 'o.MobileNo',
                 'o.Phase',
                 'o.FlatId',
@@ -3347,7 +3416,10 @@ class DistrictCEOController extends Controller
             */
             ->when($caste, function ($query) use ($caste) {
                 if ($caste === 'Others') {
-                    $query->whereIn('o.Caste', ['General', 'Others']);
+                    $query->where(function ($q) {
+                        $q->whereNotIn('o.Caste', ['SC', 'Ghumantu', 'Widow'])
+                            ->orWhereNull('o.Caste');
+                    });
 
                     return;
                 }
@@ -3548,7 +3620,12 @@ class DistrictCEOController extends Controller
                 'o.Relation',
                 'o.FatherHusbandName',
                 'o.Gender',
-                'o.Caste',
+                DB::raw("CASE
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'sc' THEN 'SC'
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'ghumantu' THEN 'Ghumantu'
+                    WHEN TRIM(LOWER(COALESCE(o.Caste, ''))) = 'widow' THEN 'Widow'
+                    ELSE 'Others'
+                END AS Caste"),
                 'o.MobileNo',
                 'o.PPPId',
                 'o.Phase',
@@ -3682,14 +3759,112 @@ class DistrictCEOController extends Controller
 
         abort_unless($districtId, 404, 'District not found.');
 
+        $phase = (string) $request->query('phase', 'all');
+        if (!in_array($phase, ['all', '1', '2', '3'], true)) {
+            $phase = 'all';
+        }
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->query('village_id')
+            : null;
+
+        $status = trim((string) $request->query('status', 'all_applicants'));
+        $caste = trim((string) $request->query('caste', ''));
+        $search = trim((string) $request->query('search', ''));
+
+        if (
+            $caste !== '' && !in_array(
+                $caste,
+                ['SC', 'Ghumantu', 'Widow', 'General', 'Others'],
+                true
+            )
+        ) {
+            $caste = '';
+        }
+
+        $query = $this->applicantReportQuery(
+            districtId: (int) $districtId,
+            phase: $phase,
+            villageId: $villageId,
+            status: $status,
+            caste: $caste !== '' ? $caste : null,
+            search: $search
+        );
+
+        $export = new class ($query) implements
+        \Maatwebsite\Excel\Concerns\FromQuery,
+        \Maatwebsite\Excel\Concerns\WithHeadings,
+        \Maatwebsite\Excel\Concerns\WithMapping {
+            public function __construct(private $query)
+            {
+            }
+
+            public function query()
+            {
+                return $this->query
+                    ->reorder()
+                    ->orderBy('o.OwnerId');
+            }
+
+            public function headings(): array
+            {
+                return [
+                'Owner ID',
+                'Registration Number',
+                'Applicant Name',
+                'Relation',
+                'Father / Husband Name',
+                'Gender',
+                'Caste / Category',
+                'Mobile Number',
+                'PPP ID',
+                'Member ID',
+                'Phase',
+                'Village',
+                'Flat Number',
+                'Allotment Status',
+                'Applicant Status',
+                'Payment Status',
+                'Registry Status',
+                ];
+            }
+
+            public function map($row): array
+            {
+                return [
+                    $row->OwnerId,
+                    $row->RegistrationNo,
+                    $row->OwnerName,
+                    $row->Relation,
+                    $row->FatherHusbandName,
+                    $row->Gender,
+                    in_array(
+                        strtolower(trim((string) ($row->Caste ?? ''))),
+                        ['sc', 'ghumantu', 'widow'],
+                        true
+                    )
+                ? match (strtolower(trim((string) ($row->Caste ?? '')))) {
+                    'sc' => 'SC',
+                    'ghumantu' => 'Ghumantu',
+                    'widow' => 'Widow',
+                }
+                : 'Others',
+                    $row->MobileNo,
+                    $row->PPPId,
+                    $row->MemberId ?? null,
+                    $row->Phase,
+                    $row->VillageName,
+                    $row->FlatNo,
+                    $row->AllotmentStatus,
+                    $row->ApplicantStatus,
+                    $row->PaymentStatus,
+                    $row->RegistryStatus,
+                ];
+            }
+        };
+
         return Excel::download(
-            new ApplicantReportExport(
-                $districtId,
-                $request->query('status', 'all_applicants'),
-                $request->query('phase', 'all'),
-                $request->query('village_id'),
-                $request->query('search')
-            ),
+            $export,
             'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.xlsx'
         );
     }
@@ -3706,14 +3881,112 @@ class DistrictCEOController extends Controller
 
         abort_unless($districtId, 404, 'District not found.');
 
+        $phase = (string) $request->query('phase', 'all');
+        if (!in_array($phase, ['all', '1', '2', '3'], true)) {
+            $phase = 'all';
+        }
+
+        $villageId = $request->filled('village_id')
+            ? (int) $request->query('village_id')
+            : null;
+
+        $status = trim((string) $request->query('status', 'all_applicants'));
+        $caste = trim((string) $request->query('caste', ''));
+        $search = trim((string) $request->query('search', ''));
+
+        if (
+            $caste !== '' && !in_array(
+                $caste,
+                ['SC', 'Ghumantu', 'Widow', 'General', 'Others'],
+                true
+            )
+        ) {
+            $caste = '';
+        }
+
+        $query = $this->applicantReportQuery(
+            districtId: (int) $districtId,
+            phase: $phase,
+            villageId: $villageId,
+            status: $status,
+            caste: $caste !== '' ? $caste : null,
+            search: $search
+        );
+
+        $export = new class ($query) implements
+        \Maatwebsite\Excel\Concerns\FromQuery,
+        \Maatwebsite\Excel\Concerns\WithHeadings,
+        \Maatwebsite\Excel\Concerns\WithMapping {
+            public function __construct(private $query)
+            {
+            }
+
+            public function query()
+            {
+                return $this->query
+                    ->reorder()
+                    ->orderBy('o.OwnerId');
+            }
+
+            public function headings(): array
+            {
+                return [
+                'Owner ID',
+                'Registration Number',
+                'Applicant Name',
+                'Relation',
+                'Father / Husband Name',
+                'Gender',
+                'Caste / Category',
+                'Mobile Number',
+                'PPP ID',
+                'Member ID',
+                'Phase',
+                'Village',
+                'Flat Number',
+                'Allotment Status',
+                'Applicant Status',
+                'Payment Status',
+                'Registry Status',
+                ];
+            }
+
+            public function map($row): array
+            {
+                return [
+                    $row->OwnerId,
+                    $row->RegistrationNo,
+                    $row->OwnerName,
+                    $row->Relation,
+                    $row->FatherHusbandName,
+                    $row->Gender,
+                    in_array(
+                        strtolower(trim((string) ($row->Caste ?? ''))),
+                        ['sc', 'ghumantu', 'widow'],
+                        true
+                    )
+                ? match (strtolower(trim((string) ($row->Caste ?? '')))) {
+                    'sc' => 'SC',
+                    'ghumantu' => 'Ghumantu',
+                    'widow' => 'Widow',
+                }
+                : 'Others',
+                    $row->MobileNo,
+                    $row->PPPId,
+                    $row->MemberId ?? null,
+                    $row->Phase,
+                    $row->VillageName,
+                    $row->FlatNo,
+                    $row->AllotmentStatus,
+                    $row->ApplicantStatus,
+                    $row->PaymentStatus,
+                    $row->RegistryStatus,
+                ];
+            }
+        };
+
         return Excel::download(
-            new ApplicantReportExport(
-                $districtId,
-                $request->query('status', 'all_applicants'),
-                $request->query('phase', 'all'),
-                $request->query('village_id'),
-                $request->query('search')
-            ),
+            $export,
             'Applicant_Report_' . now()->format('d-m-Y_H-i-s') . '.csv',
             ExcelFormat::CSV
         );
