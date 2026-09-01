@@ -1808,19 +1808,38 @@ class MMGAYBdoPossessionController extends Controller
     {
         $bdo = Auth::user();
         $activeMenu = 'hfa_api_test';
-        return view('mmgay.bdo.hfa_test_api', compact('bdo', 'activeMenu'));
+        $yesterday = date('Y-m-d', strtotime('-1 day'));
+        $today = date('Y-m-d');
+
+        return view('mmgay.bdo.hfa_test_api', compact('bdo', 'activeMenu', 'yesterday', 'today'));
     }
 
     /**
      * Handle submission and hit HFA API from the server.
+     * Supports two separate parts:
+     * 1. 'registration_no': Single beneficiary by Registration Number
+     * 2. 'date_range': Registrations within Date Range (RegFromDate, RegToDate)
      */
     public function hfaApiTestSubmit(Request $request)
     {
-        $request->validate([
-            'registration_no' => 'required_without_all:from_date,to_date|nullable|string',
-            'from_date' => 'required_without:registration_no|required_with:to_date|nullable|date',
-            'to_date' => 'required_without:registration_no|required_with:from_date|nullable|date',
-        ]);
+        $apiMode = $request->input('api_mode', 'registration_no');
+
+        if ($apiMode === 'date_range') {
+            $request->validate([
+                'from_date' => 'required|date',
+                'to_date' => 'required|date|after_or_equal:from_date',
+            ], [
+                'from_date.required' => 'Please select a valid From Date.',
+                'to_date.required' => 'Please select a valid To Date.',
+                'to_date.after_or_equal' => 'To Date must be equal to or greater than From Date.',
+            ]);
+        } else {
+            $request->validate([
+                'registration_no' => 'required|string',
+            ], [
+                'registration_no.required' => 'Please enter a valid Registration Number (e.g. MMGAYE/GP/266709).',
+            ]);
+        }
 
         $regNo = $request->input('registration_no');
         $fromDate = $request->input('from_date');
@@ -1833,11 +1852,11 @@ class MMGAYBdoPossessionController extends Controller
         ];
 
         $queryParams = [];
-        if (!empty($regNo)) {
-            $queryParams['RegistrationNo'] = trim($regNo);
-        } else {
+        if ($apiMode === 'date_range') {
             $queryParams['RegFromDate'] = $fromDate;
             $queryParams['RegToDate'] = $toDate;
+        } else {
+            $queryParams['RegistrationNo'] = trim($regNo);
         }
 
         $startTime = microtime(true);
@@ -1860,13 +1879,18 @@ class MMGAYBdoPossessionController extends Controller
 
         $responseTime = round((microtime(true) - $startTime) * 1000, 2); // in ms
 
-        // Try to decode json for pretty printing
+        // Try to decode json for pretty printing and tabular display
         $decodedJson = null;
+        $payloadRecords = [];
         if ($responseBody) {
             $decodedJson = json_decode($responseBody, true);
+            if (isset($decodedJson['payload']) && is_array($decodedJson['payload'])) {
+                $payloadRecords = $decodedJson['payload'];
+            }
         }
 
         return redirect()->back()->withInput()->with('api_result', [
+            'api_mode' => $apiMode,
             'url' => $apiUrl . '?' . http_build_query($queryParams),
             'headers_sent' => $headers,
             'status' => $statusCode,
@@ -1875,6 +1899,8 @@ class MMGAYBdoPossessionController extends Controller
             'response_headers' => $responseHeaders,
             'raw_body' => $responseBody,
             'decoded_json' => $decodedJson,
+            'records_count' => count($payloadRecords),
+            'payload_records' => $payloadRecords,
         ]);
     }
 
