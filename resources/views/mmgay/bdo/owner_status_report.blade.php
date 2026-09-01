@@ -120,114 +120,136 @@
             </span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9 gap-2">
+        <!-- Row 1: Allotment Status (6 Cards) -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3">
             <!-- Total -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'total', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'total' ? 'border-blue-500 bg-blue-50/15 ring-1 ring-blue-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'total' ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">format_list_bulleted</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'total' ? 'border-blue-500 bg-blue-50/15 ring-2 ring-blue-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'total' ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">format_list_bulleted</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Total</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Total</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($grossTotal) }}</h3>
                 </div>
             </a>
 
             <!-- Approved + Paid -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_paid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'approved_paid' ? 'border-green-500 bg-green-50/15 ring-1 ring-green-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'approved_paid' ? 'bg-green-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">payments</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'approved_paid' ? 'border-green-500 bg-green-50/15 ring-2 ring-green-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'approved_paid' ? 'bg-green-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">payments</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Approved + Paid</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Approved + Paid</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($counts->approved_paid) }}</h3>
                 </div>
             </a>
 
             <!-- Approved + Unpaid -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'approved_unpaid', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'approved_unpaid' ? 'border-amber-500 bg-amber-50/15 ring-1 ring-amber-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'approved_unpaid' ? 'bg-amber-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">money_off</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'approved_unpaid' ? 'border-amber-500 bg-amber-50/15 ring-2 ring-amber-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'approved_unpaid' ? 'bg-amber-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">money_off</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Approved + Unpaid</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Approved + Unpaid</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($counts->approved_unpaid) }}</h3>
                 </div>
             </a>
 
             <!-- Yet to be Approved -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'yet_to_be_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'yet_to_be_done' ? 'border-indigo-500 bg-indigo-50/15 ring-1 ring-indigo-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'yet_to_be_done' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">pending</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'yet_to_be_done' ? 'border-indigo-500 bg-indigo-50/15 ring-2 ring-indigo-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'yet_to_be_done' ? 'bg-indigo-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">pending</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Yet to Approve</p>
+                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight">Yet to Approve</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($counts->yet_to_be_done) }}</h3>
                 </div>
             </a>
 
             <!-- Rejected -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'rejected', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'rejected' ? 'border-red-500 bg-red-50/15 ring-1 ring-red-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'rejected' ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">cancel</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'rejected' ? 'border-red-500 bg-red-50/15 ring-2 ring-red-500/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'rejected' ? 'bg-red-600 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">cancel</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Rejected</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Rejected</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($counts->rejected) }}</h3>
                 </div>
             </a>
 
             <!-- Cancelled -->
             <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'cancelled', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'cancelled' ? 'border-slate-800 bg-slate-100 ring-1 ring-slate-800/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'cancelled' ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">delete_forever</span>
+               class="flex items-center p-2.5 bg-white border {{ $activeTab === 'cancelled' ? 'border-slate-800 bg-slate-100 ring-2 ring-slate-800/20' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
+                <div class="w-8 h-8 rounded-lg {{ $activeTab === 'cancelled' ? 'bg-slate-800 text-white' : 'bg-slate-50 text-slate-500' }} flex items-center justify-center mr-2.5 shrink-0">
+                    <span class="material-symbols-outlined text-base">delete_forever</span>
                 </div>
                 <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-slate-400 font-black tracking-wider leading-tight truncate">Cancelled</p>
+                    <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Cancelled</p>
                     <h3 class="text-xs font-black text-slate-800 mt-0.5">{{ number_format($counts->cancelled) }}</h3>
                 </div>
             </a>
+        </div>
 
-            <!-- Registry To Be Done -->
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_to_be_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'registry_to_be_done' ? 'border-blue-600 bg-blue-50/20 ring-1 ring-blue-600/30' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'registry_to_be_done' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">assignment</span>
+        <!-- Row 2: Registry Status (3 Dedicated Spacious Cards) -->
+        <div class="mt-4 pt-3.5 border-t border-slate-100">
+            <div class="flex items-center justify-between mb-2.5">
+                <div>
+                    <h4 class="text-xs font-black uppercase text-slate-800 tracking-wider flex items-center gap-1.5">
+                        <span class="material-symbols-outlined text-base text-blue-600">verified</span>
+                        Registry Status
+                    </h4>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Tehsil Registry Verification Status</p>
                 </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-blue-600 font-black tracking-wider leading-tight truncate">Reg To Be Done</p>
-                    <h3 class="text-xs font-black text-blue-700 mt-0.5">{{ number_format($counts->registry_to_be_done ?? 0) }}</h3>
-                </div>
-            </a>
+                <span class="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wider">
+                    {{ number_format($counts->registry_done ?? 0) }} / {{ number_format($counts->registry_to_be_done ?? 0) }} Completed
+                </span>
+            </div>
 
-            <!-- Registry Done -->
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'registry_done' ? 'border-emerald-600 bg-emerald-50/20 ring-1 ring-emerald-600/30' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'registry_done' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">task_alt</span>
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-emerald-600 font-black tracking-wider leading-tight truncate">Registry Done</p>
-                    <h3 class="text-xs font-black text-emerald-700 mt-0.5">{{ number_format($counts->registry_done ?? 0) }}</h3>
-                </div>
-            </a>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <!-- Registry To Be Done -->
+                <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_to_be_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+                   class="flex items-center p-3 bg-white border {{ $activeTab === 'registry_to_be_done' ? 'border-blue-600 bg-blue-50/20 ring-2 ring-blue-600/30 shadow-sm' : 'border-slate-200 hover:border-blue-300' }} rounded-xl hover:shadow-md transition">
+                    <div class="w-10 h-10 rounded-xl {{ $activeTab === 'registry_to_be_done' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600' }} flex items-center justify-center mr-3 shrink-0">
+                        <span class="material-symbols-outlined text-xl">assignment</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry To Be Done</p>
+                        <h3 class="text-base font-black text-blue-700 mt-0.5">{{ number_format($counts->registry_to_be_done ?? 0) }}</h3>
+                        <p class="text-[8.5px] text-slate-400 font-semibold mt-0.5">Approved & Paid Eligible</p>
+                    </div>
+                </a>
 
-            <!-- Registry Pending -->
-            <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_pending', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
-               class="flex items-center p-2 bg-white border {{ $activeTab === 'registry_pending' ? 'border-amber-600 bg-amber-50/20 ring-1 ring-amber-600/30' : 'border-slate-100' }} rounded-xl hover:shadow-sm transition">
-                <div class="w-7 h-7 rounded-lg {{ $activeTab === 'registry_pending' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600' }} flex items-center justify-center mr-2 shrink-0">
-                    <span class="material-symbols-outlined text-[15px]">schedule</span>
-                </div>
-                <div class="min-w-0 flex-1">
-                    <p class="text-[8px] uppercase text-amber-600 font-black tracking-wider leading-tight truncate">Reg Pending</p>
-                    <h3 class="text-xs font-black text-amber-700 mt-0.5">{{ number_format($counts->registry_pending ?? 0) }}</h3>
-                </div>
-            </a>
+                <!-- Registry Done -->
+                <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_done', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+                   class="flex items-center p-3 bg-white border {{ $activeTab === 'registry_done' ? 'border-emerald-600 bg-emerald-50/20 ring-2 ring-emerald-600/30 shadow-sm' : 'border-slate-200 hover:border-emerald-300' }} rounded-xl hover:shadow-md transition">
+                    <div class="w-10 h-10 rounded-xl {{ $activeTab === 'registry_done' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-600' }} flex items-center justify-center mr-3 shrink-0">
+                        <span class="material-symbols-outlined text-xl">task_alt</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry Done</p>
+                        <h3 class="text-base font-black text-emerald-700 mt-0.5">{{ number_format($counts->registry_done ?? 0) }}</h3>
+                        <p class="text-[8.5px] text-emerald-600 font-semibold mt-0.5">Tehsil Registry Matched</p>
+                    </div>
+                </a>
+
+                <!-- Registry Pending -->
+                <a href="{{ route('mmgay.bdo.owner-status-report', ['status' => 'registry_pending', 'phase' => $selectedPhase, 'village_id' => $selectedVillageId, 'search' => $search]) }}" 
+                   class="flex items-center p-3 bg-white border {{ $activeTab === 'registry_pending' ? 'border-amber-600 bg-amber-50/20 ring-2 ring-amber-600/30 shadow-sm' : 'border-slate-200 hover:border-amber-300' }} rounded-xl hover:shadow-md transition">
+                    <div class="w-10 h-10 rounded-xl {{ $activeTab === 'registry_pending' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-600' }} flex items-center justify-center mr-3 shrink-0">
+                        <span class="material-symbols-outlined text-xl">schedule</span>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-[9px] uppercase text-slate-400 font-black tracking-wider leading-tight">Registry Pending</p>
+                        <h3 class="text-base font-black text-amber-700 mt-0.5">{{ number_format($counts->registry_pending ?? 0) }}</h3>
+                        <p class="text-[8.5px] text-amber-600 font-semibold mt-0.5">Awaiting Registry</p>
+                    </div>
+                </a>
+            </div>
         </div>
 
     <!-- Filters Panel -->
