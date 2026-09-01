@@ -62,7 +62,7 @@ class DistrictCEOController extends Controller
         | same district/phase/village data already used by dashboard.
         |--------------------------------------------------------------------------
         */
-        $blocks = DB::table('VillageMaster as v')
+        $blocks = DB::table('villagemaster as v')
             ->join('BlockMaster as b', 'b.BlockId', '=', 'v.BlockId')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
@@ -93,7 +93,7 @@ class DistrictCEOController extends Controller
         |--------------------------------------------------------------------------
         |--------------------------------------------------------------------------
         */
-        $villages = DB::table('VillageMaster as v')
+        $villages = DB::table('villagemaster as v')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->when(!$isAllPhase, function ($query) use ($phase) {
