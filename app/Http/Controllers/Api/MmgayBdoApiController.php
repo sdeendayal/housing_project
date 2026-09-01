@@ -9,7 +9,9 @@ use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -1628,6 +1630,94 @@ class MmgayBdoApiController extends Controller
      * - page: integer (pagination page, default: 1)
      * - per_page: integer (items per page, default: 25, max: 100)
      */
+    /**
+     * Fetch eligible physical possession beneficiaries for BDO block with high-performance caching.
+     */
+    private function getEligibleCategoryBeneficiaries($blockMasterId)
+    {
+        $cacheKey = 'mmgay_bdo_cat_beneficiaries_v2_' . ($blockMasterId ?: 'all');
+
+        return Cache::remember($cacheKey, 60, function () use ($blockMasterId) {
+            return DB::table('ownermaster as o')
+                ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
+                ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
+                ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
+                ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
+                ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->when($blockMasterId, function ($q) use ($blockMasterId) {
+                    $q->where('o.BlockId', $blockMasterId);
+                })
+                ->whereIn('o.OwnerId', function ($q) use ($blockMasterId) {
+                    $q->select(DB::raw('MIN(OwnerId)'))
+                        ->from('ownermaster')
+                        ->when($blockMasterId, function ($subQ) use ($blockMasterId) {
+                            $subQ->where('BlockId', $blockMasterId);
+                        })
+                        ->groupBy('FlatId');
+                })
+                ->whereNotNull('v.plots')
+                ->whereNotNull('v.phase')
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('flatmaster as f2')
+                        ->whereColumn('f2.FlatId', 'o.FlatId');
+                })
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('registary as r')
+                        ->where(function ($q) {
+                            $q->where(function ($sub) {
+                                $sub->whereColumn('r.flatid', 'o.FlatId')
+                                    ->whereNotNull('r.flatid')
+                                    ->where('r.flatid', '!=', '');
+                            })
+                            ->orWhere(function ($sub) {
+                                $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
+                                    ->whereNotNull('r.SecondPartyMobile')
+                                    ->where('r.SecondPartyMobile', '!=', '')
+                                    ->where(function ($sub2) {
+                                        $sub2->whereNull('r.flatid')
+                                             ->orWhere('r.flatid', '')
+                                             ->orWhereNotExists(function ($sub3) {
+                                                 $sub3->select(DB::raw(1))
+                                                      ->from('ownermaster as o2')
+                                                      ->whereColumn('o2.FlatId', 'r.flatid');
+                                             });
+                                    });
+                            });
+                        });
+                })
+                ->select(
+                    'o.OwnerId',
+                    'o.secure_id',
+                    'o.OwnerName',
+                    'o.FatherHusbandName',
+                    'o.MobileNo',
+                    'o.RegistrationNo',
+                    'o.PPPId',
+                    'o.MemberId',
+                    'o.Caste',
+                    'o.Phase',
+                    'v.VillageId',
+                    'v.VillageName',
+                    'f.FlatNo',
+                    'b.BlockName',
+                    'd.DistrictName',
+                    DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
+                    'ppa.application_number'
+                )
+                ->orderBy('v.VillageName', 'asc')
+                ->orderBy('o.OwnerName', 'asc')
+                ->get();
+        });
+    }
+
+    /**
+     * Get Category-Wise Beneficiaries for Mobile App (High-Speed Optimized)
+     * GET /api/mmgay/bdo/category-beneficiaries
+     */
     public function categoryBeneficiaries(Request $request)
     {
         $bdo = Auth::user();
@@ -1648,180 +1738,101 @@ class MmgayBdoApiController extends Controller
         $search = trim($request->input('search', ''));
         $perPage = min(max((int) $request->input('per_page', 25), 5), 100);
 
+        // Fetch from high-speed cache
+        $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
+
         // Distinct Phases
-        $phases = DB::table('ownermaster')
-            ->whereNotNull('Phase')
-            ->distinct()
-            ->orderBy('Phase', 'asc')
-            ->pluck('Phase');
+        $phases = $allRecords->pluck('Phase')->filter()->unique()->sort()->values();
 
-        // Base query with exact registry & possession eligibility logic
-        $baseQuery = DB::table('ownermaster as o')
-            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->leftJoin('flatmaster as f', 'o.FlatId', '=', 'f.FlatId')
-            ->leftJoin('blockmaster as b', 'o.BlockId', '=', 'b.BlockId')
-            ->leftJoin('districtmaster as d', 'o.DistrictId', '=', 'd.DistrictId')
-            ->leftJoin('mmgay_possession_applications as ppa', 'o.OwnerId', '=', 'ppa.owner_id')
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1)
-            ->whereIn('o.OwnerId', function ($q) {
-                $q->select(DB::raw('MIN(OwnerId)'))
-                    ->from('ownermaster')
-                    ->groupBy('FlatId');
-            })
-            ->whereNotNull('v.plots')
-            ->whereNotNull('v.phase')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('flatmaster as f2')
-                    ->whereColumn('f2.FlatId', 'o.FlatId');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function ($q) {
-                        $q->where(function ($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function ($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function ($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function ($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
-            });
-
-        if ($blockMasterId) {
-            $baseQuery->where('o.BlockId', $blockMasterId);
-        }
-
-        // Available Villages in this block
-        $villages = (clone $baseQuery)
-            ->select('v.VillageId as id', 'v.VillageName as name')
-            ->distinct()
-            ->orderBy('v.VillageName', 'asc')
-            ->get();
+        // Available Villages
+        $villages = $allRecords->map(fn($item) => [
+            'id' => $item->VillageId,
+            'name' => $item->VillageName
+        ])->unique('id')->sortBy('name')->values();
 
         // Calculate KPI category metrics for this block
-        $kpiQuery = clone $baseQuery;
+        $kpiRecords = $allRecords;
         if ($selectedPhase) {
-            $kpiQuery->where('o.Phase', $selectedPhase);
+            $kpiRecords = $kpiRecords->where('Phase', $selectedPhase);
         }
         if ($selectedVillageId) {
-            $kpiQuery->where('o.VillageId', $selectedVillageId);
+            $kpiRecords = $kpiRecords->where('VillageId', (int)$selectedVillageId);
         }
 
-        $statsRaw = (clone $kpiQuery)
-            ->select(
-                DB::raw('COUNT(DISTINCT o.OwnerId) as total_count'),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others_count")
-            )->first();
+        $totalCount = $kpiRecords->count();
+        $ghumantuCount = $kpiRecords->where('Caste', 'Ghumantu')->count();
+        $widowCount = $kpiRecords->where('Caste', 'Widow')->count();
+        $scCount = $kpiRecords->where('Caste', 'SC')->count();
+        $othersCount = $totalCount - $ghumantuCount - $widowCount - $scCount;
 
         $stats = [
-            'total' => (int) ($statsRaw->total_count ?? 0),
-            'ghumantu' => (int) ($statsRaw->ghumantu_count ?? 0),
-            'widow' => (int) ($statsRaw->widow_count ?? 0),
-            'sc' => (int) ($statsRaw->sc_count ?? 0),
-            'others' => (int) ($statsRaw->others_count ?? 0),
+            'total' => $totalCount,
+            'ghumantu' => $ghumantuCount,
+            'widow' => $widowCount,
+            'sc' => $scCount,
+            'others' => $othersCount,
         ];
 
         // Village-wise Breakdown for the block
-        $villageBreakdownQuery = clone $baseQuery;
+        $villageBreakdownQuery = $allRecords;
         if ($selectedPhase) {
-            $villageBreakdownQuery->where('o.Phase', $selectedPhase);
+            $villageBreakdownQuery = $villageBreakdownQuery->where('Phase', $selectedPhase);
         }
-        $villageBreakdown = $villageBreakdownQuery
-            ->select(
-                'v.VillageId as village_id',
-                'v.VillageName as village_name',
-                DB::raw('COUNT(DISTINCT o.OwnerId) as total'),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others")
-            )
-            ->groupBy('v.VillageId', 'v.VillageName')
-            ->orderBy('v.VillageName', 'asc')
-            ->get();
 
-        // Build list query with all active filters
-        $listQuery = clone $baseQuery;
+        $villageBreakdown = $villageBreakdownQuery->groupBy('VillageId')->map(function ($items) {
+            $first = $items->first();
+            $tot = $items->count();
+            $g = $items->where('Caste', 'Ghumantu')->count();
+            $w = $items->where('Caste', 'Widow')->count();
+            $s = $items->where('Caste', 'SC')->count();
+            $o = $tot - $g - $w - $s;
+            return [
+                'village_id' => $first->VillageId,
+                'village_name' => $first->VillageName,
+                'total' => $tot,
+                'ghumantu' => $g,
+                'widow' => $w,
+                'sc' => $s,
+                'others' => $o
+            ];
+        })->sortBy('village_name')->values();
+
+        // Filter beneficiaries
+        $filtered = $allRecords;
 
         if ($selectedPhase) {
-            $listQuery->where('o.Phase', $selectedPhase);
+            $filtered = $filtered->where('Phase', $selectedPhase);
         }
 
         if ($selectedVillageId) {
-            $listQuery->where('o.VillageId', $selectedVillageId);
+            $filtered = $filtered->where('VillageId', (int)$selectedVillageId);
         }
 
-        // Category filter
         if ($selectedCategory === 'ghumantu') {
-            $listQuery->where('o.Caste', 'Ghumantu');
+            $filtered = $filtered->where('Caste', 'Ghumantu');
         } elseif ($selectedCategory === 'widow') {
-            $listQuery->where('o.Caste', 'Widow');
+            $filtered = $filtered->where('Caste', 'Widow');
         } elseif ($selectedCategory === 'sc') {
-            $listQuery->where('o.Caste', 'SC');
+            $filtered = $filtered->where('Caste', 'SC');
         } elseif ($selectedCategory === 'others') {
-            $listQuery->where(function ($q) {
-                $q->whereNotIn('o.Caste', ['Ghumantu', 'Widow', 'SC'])
-                  ->orWhereNull('o.Caste')
-                  ->orWhere('o.Caste', '');
-            });
+            $filtered = $filtered->reject(fn($item) => in_array($item->Caste, ['Ghumantu', 'Widow', 'SC']));
         }
 
-        // Search filter
         if ($search !== '') {
-            $listQuery->where(function ($q) use ($search) {
-                $q->where('o.OwnerName', 'like', "%{$search}%")
-                  ->orWhere('o.FatherHusbandName', 'like', "%{$search}%")
-                  ->orWhere('o.MobileNo', 'like', "%{$search}%")
-                  ->orWhere('o.RegistrationNo', 'like', "%{$search}%")
-                  ->orWhere('o.PPPId', 'like', "%{$search}%")
-                  ->orWhere('f.FlatNo', 'like', "%{$search}%");
+            $searchLower = strtolower($search);
+            $filtered = $filtered->filter(function ($item) use ($searchLower) {
+                return str_contains(strtolower($item->OwnerName ?? ''), $searchLower)
+                    || str_contains(strtolower($item->FatherHusbandName ?? ''), $searchLower)
+                    || str_contains(strtolower($item->MobileNo ?? ''), $searchLower)
+                    || str_contains(strtolower($item->RegistrationNo ?? ''), $searchLower)
+                    || str_contains(strtolower($item->PPPId ?? ''), $searchLower)
+                    || str_contains(strtolower($item->FlatNo ?? ''), $searchLower);
             });
         }
 
-        $paginated = $listQuery->select(
-            'o.OwnerId as id',
-            'o.secure_id',
-            'o.OwnerName as applicant_name',
-            'o.FatherHusbandName as father_husband_name',
-            'o.MobileNo as mobile',
-            'o.RegistrationNo as registration_no',
-            'o.PPPId as ppp_id',
-            'o.MemberId as member_id',
-            'o.Caste as caste_raw',
-            'o.Phase as phase',
-            'v.VillageId as village_id',
-            'v.VillageName as village_name',
-            'f.FlatNo as flat_no',
-            'b.BlockName as block_name',
-            'd.DistrictName as district_name',
-            DB::raw("COALESCE(ppa.physical_possession_status, 'Eligible for Physical Possession') as possession_status"),
-            'ppa.application_number'
-        )
-        ->orderBy('v.VillageName', 'asc')
-        ->orderBy('o.OwnerName', 'asc')
-        ->paginate($perPage);
-
-        // Map items to include clean resolved category key and label
-        $paginated->getCollection()->transform(function ($item) {
-            $caste = $item->caste_raw ?? '';
+        // Map items to clean REST structure
+        $mappedItems = $filtered->map(function ($item) {
+            $caste = $item->Caste ?? '';
             $categoryKey = match ($caste) {
                 'Ghumantu' => 'ghumantu',
                 'Widow' => 'widow',
@@ -1835,10 +1846,40 @@ class MmgayBdoApiController extends Controller
                 default => 'Others (' . ($caste ?: 'General') . ')'
             };
 
-            $item->category_key = $categoryKey;
-            $item->category_label = $categoryLabel;
-            return $item;
+            return (object) [
+                'id' => $item->OwnerId,
+                'secure_id' => $item->secure_id,
+                'applicant_name' => $item->OwnerName,
+                'father_husband_name' => $item->FatherHusbandName,
+                'mobile' => $item->MobileNo,
+                'registration_no' => $item->RegistrationNo,
+                'ppp_id' => $item->PPPId,
+                'member_id' => $item->MemberId,
+                'caste' => $item->Caste,
+                'category_key' => $categoryKey,
+                'category_label' => $categoryLabel,
+                'phase' => $item->Phase,
+                'village_id' => $item->VillageId,
+                'village_name' => $item->VillageName,
+                'flat_no' => $item->FlatNo,
+                'block_name' => $item->BlockName,
+                'district_name' => $item->DistrictName,
+                'possession_status' => $item->possession_status,
+                'application_number' => $item->application_number,
+            ];
         });
+
+        // In-memory pagination
+        $page = max((int) $request->input('page', 1), 1);
+        $itemsForCurrentPage = $mappedItems->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginated = new LengthAwarePaginator(
+            $itemsForCurrentPage,
+            $mappedItems->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         return response()->json([
             'success' => true,
@@ -1874,7 +1915,7 @@ class MmgayBdoApiController extends Controller
     }
 
     /**
-     * Lightweight Category Beneficiaries Summary for Mobile Dashboard
+     * Unified Summary & Village-Wise API (High-Speed Optimized)
      * GET /api/mmgay/bdo/category-beneficiaries/summary
      */
     public function categoryBeneficiariesSummary(Request $request)
@@ -1893,123 +1934,69 @@ class MmgayBdoApiController extends Controller
         $selectedPhase = $request->input('phase');
         $selectedVillageId = $request->input('village_id');
 
-        // Fetch distinct phases
-        $phases = DB::table('ownermaster')
-            ->whereNotNull('Phase')
-            ->distinct()
-            ->orderBy('Phase', 'asc')
-            ->pluck('Phase');
+        $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
 
-        // Base query with exact registry & possession eligibility logic
-        $baseQuery = DB::table('ownermaster as o')
-            ->join('villagemaster as v', 'o.VillageId', '=', 'v.VillageId')
-            ->where('o.IsApproved', 1)
-            ->where('o.IsPaid', 1)
-            ->whereIn('o.OwnerId', function ($q) {
-                $q->select(DB::raw('MIN(OwnerId)'))
-                    ->from('ownermaster')
-                    ->groupBy('FlatId');
-            })
-            ->whereNotNull('v.plots')
-            ->whereNotNull('v.phase')
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('flatmaster as f2')
-                    ->whereColumn('f2.FlatId', 'o.FlatId');
-            })
-            ->whereExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('registary as r')
-                    ->where(function ($q) {
-                        $q->where(function ($sub) {
-                            $sub->whereColumn('r.flatid', 'o.FlatId')
-                                ->whereNotNull('r.flatid')
-                                ->where('r.flatid', '!=', '');
-                        })
-                        ->orWhere(function ($sub) {
-                            $sub->whereColumn('r.SecondPartyMobile', 'o.MobileNo')
-                                ->whereNotNull('r.SecondPartyMobile')
-                                ->where('r.SecondPartyMobile', '!=', '')
-                                ->where(function ($sub2) {
-                                    $sub2->whereNull('r.flatid')
-                                         ->orWhere('r.flatid', '')
-                                         ->orWhereNotExists(function ($sub3) {
-                                             $sub3->select(DB::raw(1))
-                                                  ->from('ownermaster as o2')
-                                                  ->whereColumn('o2.FlatId', 'r.flatid');
-                                         });
-                                });
-                        });
-                    });
-            });
+        $phases = $allRecords->pluck('Phase')->filter()->unique()->sort()->values();
 
-        if ($blockMasterId) {
-            $baseQuery->where('o.BlockId', $blockMasterId);
-        }
+        $availableVillages = $allRecords->map(fn($item) => [
+            'id' => $item->VillageId,
+            'name' => $item->VillageName
+        ])->unique('id')->sortBy('name')->values();
 
-        // List of all available villages in this block
-        $availableVillages = (clone $baseQuery)
-            ->select('v.VillageId as id', 'v.VillageName as name')
-            ->distinct()
-            ->orderBy('v.VillageName', 'asc')
-            ->get();
-
-        // Village-wise Breakdown for the block (optionally filtered by phase)
-        $villageBreakdownQuery = clone $baseQuery;
+        $villageBreakdownQuery = $allRecords;
         if ($selectedPhase) {
-            $villageBreakdownQuery->where('o.Phase', $selectedPhase);
+            $villageBreakdownQuery = $villageBreakdownQuery->where('Phase', $selectedPhase);
         }
 
-        $villageWise = $villageBreakdownQuery
-            ->select(
-                'v.VillageId as village_id',
-                'v.VillageName as village_name',
-                DB::raw('COUNT(DISTINCT o.OwnerId) as total'),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others")
-            )
-            ->groupBy('v.VillageId', 'v.VillageName')
-            ->orderBy('v.VillageName', 'asc')
-            ->get();
+        $villageWise = $villageBreakdownQuery->groupBy('VillageId')->map(function ($items) {
+            $first = $items->first();
+            $tot = $items->count();
+            $g = $items->where('Caste', 'Ghumantu')->count();
+            $w = $items->where('Caste', 'Widow')->count();
+            $s = $items->where('Caste', 'SC')->count();
+            $o = $tot - $g - $w - $s;
+            return [
+                'village_id' => $first->VillageId,
+                'village_name' => $first->VillageName,
+                'total' => $tot,
+                'ghumantu' => $g,
+                'widow' => $w,
+                'sc' => $s,
+                'others' => $o
+            ];
+        })->sortBy('village_name')->values();
 
-        // Selected village info (if filtered)
         $selectedVillageInfo = null;
         if ($selectedVillageId) {
             $matched = $availableVillages->firstWhere('id', (int) $selectedVillageId);
             if ($matched) {
                 $selectedVillageInfo = [
-                    'id' => $matched->id,
-                    'name' => $matched->name,
+                    'id' => $matched['id'],
+                    'name' => $matched['name'],
                 ];
             }
         }
 
-        // Calculate KPI stats (block level, or specific village if village_id is passed)
-        $kpiQuery = clone $baseQuery;
+        $kpiRecords = $allRecords;
         if ($selectedPhase) {
-            $kpiQuery->where('o.Phase', $selectedPhase);
+            $kpiRecords = $kpiRecords->where('Phase', $selectedPhase);
         }
         if ($selectedVillageId) {
-            $kpiQuery->where('o.VillageId', $selectedVillageId);
+            $kpiRecords = $kpiRecords->where('VillageId', (int)$selectedVillageId);
         }
 
-        $statsRaw = (clone $kpiQuery)
-            ->select(
-                DB::raw('COUNT(DISTINCT o.OwnerId) as total_count'),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc_count"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others_count")
-            )->first();
+        $totalCount = $kpiRecords->count();
+        $ghumantuCount = $kpiRecords->where('Caste', 'Ghumantu')->count();
+        $widowCount = $kpiRecords->where('Caste', 'Widow')->count();
+        $scCount = $kpiRecords->where('Caste', 'SC')->count();
+        $othersCount = $totalCount - $ghumantuCount - $widowCount - $scCount;
 
         $stats = [
-            'total' => (int) ($statsRaw->total_count ?? 0),
-            'ghumantu' => (int) ($statsRaw->ghumantu_count ?? 0),
-            'widow' => (int) ($statsRaw->widow_count ?? 0),
-            'sc' => (int) ($statsRaw->sc_count ?? 0),
-            'others' => (int) ($statsRaw->others_count ?? 0),
+            'total' => $totalCount,
+            'ghumantu' => $ghumantuCount,
+            'widow' => $widowCount,
+            'sc' => $scCount,
+            'others' => $othersCount,
         ];
 
         return response()->json([
@@ -2031,6 +2018,58 @@ class MmgayBdoApiController extends Controller
                 'villages_breakdown' => $villageWise,
                 'available_villages' => $availableVillages,
                 'available_phases' => $phases,
+            ]
+        ]);
+    }
+
+    /**
+     * Dedicated Village-Wise Category Breakdown API (High-Speed Optimized)
+     * GET /api/mmgay/bdo/category-beneficiaries/villages
+     */
+    public function categoryBeneficiariesVillages(Request $request)
+    {
+        $bdo = Auth::user();
+        $blockMasterId = $bdo->block_id;
+
+        $selectedPhase = $request->input('phase');
+        $search = trim($request->input('search', ''));
+
+        $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
+
+        $filtered = $allRecords;
+        if ($selectedPhase) {
+            $filtered = $filtered->where('Phase', $selectedPhase);
+        }
+
+        if ($search !== '') {
+            $searchLower = strtolower($search);
+            $filtered = $filtered->filter(fn($item) => str_contains(strtolower($item->VillageName ?? ''), $searchLower));
+        }
+
+        $villages = $filtered->groupBy('VillageId')->map(function ($items) {
+            $first = $items->first();
+            $tot = $items->count();
+            $g = $items->where('Caste', 'Ghumantu')->count();
+            $w = $items->where('Caste', 'Widow')->count();
+            $s = $items->where('Caste', 'SC')->count();
+            $o = $tot - $g - $w - $s;
+            return [
+                'village_id' => $first->VillageId,
+                'village_name' => $first->VillageName,
+                'total_beneficiaries' => $tot,
+                'ghumantu' => $g,
+                'widow' => $w,
+                'sc' => $s,
+                'others' => $o
+            ];
+        })->sortBy('village_name')->values();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Village-wise category breakdown retrieved successfully.',
+            'data' => [
+                'total_villages' => $villages->count(),
+                'villages' => $villages
             ]
         ]);
     }
