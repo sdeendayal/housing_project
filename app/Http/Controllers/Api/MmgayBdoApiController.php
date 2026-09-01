@@ -1741,8 +1741,14 @@ class MmgayBdoApiController extends Controller
         // Fetch from high-speed cache
         $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
 
-        // Distinct Phases
-        $phases = $allRecords->pluck('Phase')->filter()->unique()->sort()->values();
+        // Distinct Phases across MMGAY scheme
+        $phases = Cache::remember('mmgay_available_phases', 3600, function () {
+            return DB::table('ownermaster')
+                ->whereNotNull('Phase')
+                ->distinct()
+                ->orderBy('Phase', 'asc')
+                ->pluck('Phase');
+        });
 
         // Available Villages
         $villages = $allRecords->map(fn($item) => [
@@ -1936,7 +1942,13 @@ class MmgayBdoApiController extends Controller
 
         $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
 
-        $phases = $allRecords->pluck('Phase')->filter()->unique()->sort()->values();
+        $phases = Cache::remember('mmgay_available_phases', 3600, function () {
+            return DB::table('ownermaster')
+                ->whereNotNull('Phase')
+                ->distinct()
+                ->orderBy('Phase', 'asc')
+                ->pluck('Phase');
+        });
 
         $availableVillages = $allRecords->map(fn($item) => [
             'id' => $item->VillageId,

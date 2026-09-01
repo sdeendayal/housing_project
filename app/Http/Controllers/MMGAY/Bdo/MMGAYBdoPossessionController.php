@@ -2760,8 +2760,14 @@ class MMGAYBdoPossessionController extends Controller
         // High-speed cached collection fetch (1 single query instead of 5)
         $allRecords = $this->getEligibleCategoryBeneficiaries($blockMasterId);
 
-        // Distinct Phases
-        $phases = $allRecords->pluck('Phase')->filter()->unique()->sort()->values();
+        // Distinct Phases across MMGAY scheme
+        $phases = Cache::remember('mmgay_available_phases', 3600, function () {
+            return DB::table('ownermaster')
+                ->whereNotNull('Phase')
+                ->distinct()
+                ->orderBy('Phase', 'asc')
+                ->pluck('Phase');
+        });
 
         // Available Villages in this block
         $villages = $allRecords->map(fn($item) => (object)[
