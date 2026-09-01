@@ -2655,7 +2655,7 @@ class MMGAYBdoPossessionController extends Controller
      */
     private function getEligibleCategoryBeneficiaries($blockMasterId)
     {
-        $cacheKey = 'mmgay_bdo_cat_beneficiaries_v1_' . ($blockMasterId ?: 'all');
+        $cacheKey = 'mmgay_bdo_cat_beneficiaries_v2_' . ($blockMasterId ?: 'all');
 
         return Cache::remember($cacheKey, 60, function () use ($blockMasterId) {
             return DB::table('ownermaster as o')
