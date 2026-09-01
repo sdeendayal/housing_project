@@ -1176,7 +1176,7 @@ class SuperAdminController extends Controller
                 'o.OwnerName',
                 'o.FatherHusbandName',
                 'o.MobileNo',
-                'o.RegistrationNo', 
+                'o.RegistrationNo',
                 'o.OwnerAddress as Address',
                 'o.OwnerAddress',
                 'o.PPPId',
@@ -5534,7 +5534,13 @@ class SuperAdminController extends Controller
                 'o.PPPId',
                 'o.MemberId',
                 'o.Gender',
-                'o.Caste',
+                DB::raw("
+                    CASE
+                        WHEN LOWER(TRIM(COALESCE(o.Caste, ''))) IN ('sc', 'widow', 'ghumantu')
+                            THEN TRIM(o.Caste)
+                        ELSE 'Others'
+                    END AS Caste
+                "),
                 'o.Phase',
                 'o.FlatId',
 
@@ -5626,36 +5632,6 @@ class SuperAdminController extends Controller
             ])
         );
     }
-
-    // private function allotmentTotalCacheKey(
-    //     Request $request
-    // ): string {
-    //     return 'allotment_total_' . md5(
-    //         json_encode([
-    //             'phase' =>
-    //                 $request->query('phase'),
-
-    //             'district_id' =>
-    //                 $request->query('district_id'),
-
-    //             'block_id' =>
-    //                 $request->query('block_id'),
-
-    //             'village_id' =>
-    //                 $request->query('village_id'),
-
-    //             'search' => trim(
-    //                 (string) $request->query(
-    //                     'search',
-    //                     ''
-    //                 )
-    //             ),
-
-    //             'status' =>
-    //                 $request->query('status'),
-    //         ])
-    //     );
-    // }
 
     private function paginateAllotmentReport(
         Request $request,
@@ -6282,7 +6258,13 @@ class SuperAdminController extends Controller
                 'o.PPPId',
                 'o.MemberId',
                 'o.Gender',
-                'o.Caste',
+                DB::raw("
+                    CASE
+                        WHEN LOWER(TRIM(COALESCE(o.Caste, ''))) IN ('sc', 'widow', 'ghumantu')
+                            THEN TRIM(o.Caste)
+                        ELSE 'Others'
+                    END AS Caste
+                "),
                 'o.Phase',
                 'd.DistrictName',
                 'b.BlockName',
@@ -6314,6 +6296,17 @@ class SuperAdminController extends Controller
                         $status = 'Yet to be Approved';
                     }
 
+                    // Caste output: only SC, Widow and Ghumantu keep their category.
+                    // Every other value (General, Gen, Others, blank, etc.) is exported as Others.
+                    $rawCaste = strtoupper(trim((string) ($record->Caste ?? '')));
+
+                    $exportCaste = match ($rawCaste) {
+                        'SC' => 'SC',
+                        'WIDOW' => 'Widow',
+                        'GHUMANTU' => 'Ghumantu',
+                        default => 'Others',
+                    };
+
                     fputcsv($file, [
                         $serial,
                         $record->RegistrationNo ?? '-',
@@ -6324,7 +6317,7 @@ class SuperAdminController extends Controller
                         $record->PPPId ?? '-',
                         $record->MemberId ?? '-',
                         $record->Gender ?? '-',
-                        $record->Caste ?? '-',
+                        $exportCaste,
                         $record->DistrictName ?? '-',
                         $record->BlockName ?? '-',
                         $record->VillageName ?? '-',
