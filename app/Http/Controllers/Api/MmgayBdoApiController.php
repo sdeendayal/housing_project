@@ -1891,6 +1891,14 @@ class MmgayBdoApiController extends Controller
         $districtName = $district->DistrictName ?? '';
 
         $selectedPhase = $request->input('phase');
+        $selectedVillageId = $request->input('village_id');
+
+        // Fetch distinct phases
+        $phases = DB::table('ownermaster')
+            ->whereNotNull('Phase')
+            ->distinct()
+            ->orderBy('Phase', 'asc')
+            ->pluck('Phase');
 
         // Base query with exact registry & possession eligibility logic
         $baseQuery = DB::table('ownermaster as o')
@@ -1939,11 +1947,55 @@ class MmgayBdoApiController extends Controller
             $baseQuery->where('o.BlockId', $blockMasterId);
         }
 
+        // List of all available villages in this block
+        $availableVillages = (clone $baseQuery)
+            ->select('v.VillageId as id', 'v.VillageName as name')
+            ->distinct()
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        // Village-wise Breakdown for the block (optionally filtered by phase)
+        $villageBreakdownQuery = clone $baseQuery;
         if ($selectedPhase) {
-            $baseQuery->where('o.Phase', $selectedPhase);
+            $villageBreakdownQuery->where('o.Phase', $selectedPhase);
         }
 
-        $statsRaw = (clone $baseQuery)
+        $villageWise = $villageBreakdownQuery
+            ->select(
+                'v.VillageId as village_id',
+                'v.VillageName as village_name',
+                DB::raw('COUNT(DISTINCT o.OwnerId) as total'),
+                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu"),
+                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow"),
+                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc"),
+                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others")
+            )
+            ->groupBy('v.VillageId', 'v.VillageName')
+            ->orderBy('v.VillageName', 'asc')
+            ->get();
+
+        // Selected village info (if filtered)
+        $selectedVillageInfo = null;
+        if ($selectedVillageId) {
+            $matched = $availableVillages->firstWhere('id', (int) $selectedVillageId);
+            if ($matched) {
+                $selectedVillageInfo = [
+                    'id' => $matched->id,
+                    'name' => $matched->name,
+                ];
+            }
+        }
+
+        // Calculate KPI stats (block level, or specific village if village_id is passed)
+        $kpiQuery = clone $baseQuery;
+        if ($selectedPhase) {
+            $kpiQuery->where('o.Phase', $selectedPhase);
+        }
+        if ($selectedVillageId) {
+            $kpiQuery->where('o.VillageId', $selectedVillageId);
+        }
+
+        $statsRaw = (clone $kpiQuery)
             ->select(
                 DB::raw('COUNT(DISTINCT o.OwnerId) as total_count'),
                 DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu_count"),
@@ -1960,20 +2012,6 @@ class MmgayBdoApiController extends Controller
             'others' => (int) ($statsRaw->others_count ?? 0),
         ];
 
-        $villageBreakdown = (clone $baseQuery)
-            ->select(
-                'v.VillageId as village_id',
-                'v.VillageName as village_name',
-                DB::raw('COUNT(DISTINCT o.OwnerId) as total'),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Ghumantu' THEN o.OwnerId END) as ghumantu"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'Widow' THEN o.OwnerId END) as widow"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste = 'SC' THEN o.OwnerId END) as sc"),
-                DB::raw("COUNT(DISTINCT CASE WHEN o.Caste NOT IN ('Ghumantu', 'Widow', 'SC') OR o.Caste IS NULL OR o.Caste = '' THEN o.OwnerId END) as others")
-            )
-            ->groupBy('v.VillageId', 'v.VillageName')
-            ->orderBy('v.VillageName', 'asc')
-            ->get();
-
         return response()->json([
             'success' => true,
             'message' => 'Category summary retrieved successfully.',
@@ -1983,8 +2021,16 @@ class MmgayBdoApiController extends Controller
                     'name' => $blockName,
                     'district' => $districtName,
                 ],
+                'selected_village' => $selectedVillageInfo,
+                'active_filters' => [
+                    'phase' => $selectedPhase ? (int) $selectedPhase : null,
+                    'village_id' => $selectedVillageId ? (int) $selectedVillageId : null,
+                ],
                 'stats' => $stats,
-                'villages_breakdown' => $villageBreakdown
+                'village_wise' => $villageWise,
+                'villages_breakdown' => $villageWise,
+                'available_villages' => $availableVillages,
+                'available_phases' => $phases,
             ]
         ]);
     }
