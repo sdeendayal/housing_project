@@ -8,6 +8,7 @@
         $dashboardApplicantParams = array_filter(
             [
                 'phase' => $phase ?? 'all',
+                'block_id' => $blockId ?? null,
                 'village_id' => $villageId ?? null,
             ],
             static fn($value) => $value !== null && $value !== '',
@@ -18,6 +19,7 @@
         $possessionParams = array_filter(
             [
                 'phase' => $phase ?? 'all',
+                'block_id' => $blockId ?? null,
                 'village_id' => $villageId ?? null,
             ],
             static fn($value) => $value !== null && $value !== '',
@@ -268,11 +270,9 @@
                             class="mb-1.5 block text-[9px] font-extrabold uppercase tracking-[.08em] text-slate-600">
                             Phase
                         </label>
-
                         <span class="ceo-filter-icon">
                             <span class="material-symbols-outlined text-[16px]">filter_alt</span>
                         </span>
-
                         <select id="phase_filter" class="ceo-filter-select">
                             <option value="all" {{ $phase === 'all' ? 'selected' : '' }}>All Phases</option>
                             <option value="1" {{ (string) $phase === '1' ? 'selected' : '' }}>Phase 1</option>
@@ -281,25 +281,39 @@
                         </select>
                     </div>
 
-                    <div class="ceo-filter-wrap md:col-span-6">
+                    <div class="ceo-filter-wrap md:col-span-3">
+                        <label for="block_filter"
+                            class="mb-1.5 block text-[9px] font-extrabold uppercase tracking-[.08em] text-slate-600">
+                            Block
+                        </label>
+                        <span class="ceo-filter-icon">
+                            <span class="material-symbols-outlined text-[16px]">account_tree</span>
+                        </span>
+                        <select id="block_filter" class="ceo-filter-select">
+                            <option value="">All Blocks</option>
+                            @foreach ($blocks as $block)
+                                <option value="{{ $block->BlockId }}"
+                                    {{ (string) ($blockId ?? '') === (string) $block->BlockId ? 'selected' : '' }}>
+                                    {{ $block->BlockName }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="ceo-filter-wrap md:col-span-3">
                         <label for="village_filter"
                             class="mb-1.5 block text-[9px] font-extrabold uppercase tracking-[.08em] text-slate-600">
                             Village
                         </label>
-
                         <span class="ceo-filter-icon">
                             <span class="material-symbols-outlined text-[16px]">holiday_village</span>
                         </span>
-
                         <select id="village_filter" class="ceo-filter-select">
                             <option value="">All Villages</option>
                             @foreach ($villages as $village)
                                 <option value="{{ $village->VillageId }}"
                                     {{ (string) $villageId === (string) $village->VillageId ? 'selected' : '' }}>
                                     {{ $village->VillageName }}
-                                    @if ($phase === 'all')
-                                        (Phase {{ $village->phase }})
-                                    @endif
                                 </option>
                             @endforeach
                         </select>
@@ -1218,13 +1232,12 @@
     {{-- ================================================================ --}}
     {{-- Site Development Modal --}}
     {{-- ================================================================ --}}
-    <div id="siteDevelopmentModal"
-    class="fixed inset-0 z-[9999] hidden bg-slate-900/70 p-3 backdrop-blur-sm">
+    <div id="siteDevelopmentModal" class="fixed inset-0 z-[9999] hidden bg-slate-900/70 p-3 backdrop-blur-sm">
 
-    <div class="absolute inset-0 flex items-center justify-center">
+        <div class="absolute inset-0 flex items-center justify-center">
 
-        <div id="siteDevelopmentModalPanel"
-            class="w-[95vw] max-w-[1400px] max-h-[90vh] overflow-hidden rounded-3xl bg-slate-50 shadow-2xl">
+            <div id="siteDevelopmentModalPanel"
+                class="w-[95vw] max-w-[1400px] max-h-[90vh] overflow-hidden rounded-3xl bg-slate-50 shadow-2xl">
 
                 {{-- Header --}}
                 <div

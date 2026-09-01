@@ -188,7 +188,6 @@
     const applicantReportBaseUrl =
         @json(route('district.dashboard.applicants'));
 
-    // Site Development route requires villageId in the URL path.
     const siteDevelopmentBaseUrl =
         "{{ url('/district-ceo/dashboard/site-development') }}";
 
@@ -386,30 +385,27 @@
             // ---------------------------------------------------------
             // Each percentage is based on the currently filtered
             // total allotment, not the unfiltered dashboard total.
-            const allotmentTotal = Math.max(
-                0,
-                Number(totals.totalAllotment || 0)
-            );
+            const allotmentTotal = Number(totals.totalAllotment || 0);
 
-            const approvedPaidPercent = allotmentTotal > 0
-                ? (Number(totals.totalPaid || 0) / allotmentTotal) * 100
-                : 0;
+            const approvedPaidPercent = allotmentTotal > 0 ?
+                (Number(totals.totalPaid || 0) / allotmentTotal) * 100 :
+                0;
 
-            const approvedUnpaidPercent = allotmentTotal > 0
-                ? (Number(totals.totalApprovedUnpaid || 0) / allotmentTotal) * 100
-                : 0;
+            const approvedUnpaidPercent = allotmentTotal > 0 ?
+                (Number(totals.totalApprovedUnpaid || 0) / allotmentTotal) * 100 :
+                0;
 
-            const pendingApprovalPercent = allotmentTotal > 0
-                ? (Number(totals.totalPending || 0) / allotmentTotal) * 100
-                : 0;
+            const pendingApprovalPercent = allotmentTotal > 0 ?
+                (Number(totals.totalPending || 0) / allotmentTotal) * 100 :
+                0;
 
-            const rejectedPercent = allotmentTotal > 0
-                ? (Number(totals.totalRejected || 0) / allotmentTotal) * 100
-                : 0;
+            const rejectedPercent = allotmentTotal > 0 ?
+                (Number(totals.totalRejected || 0) / allotmentTotal) * 100 :
+                0;
 
-            const cancelledPercent = allotmentTotal > 0
-                ? (Number(totals.totalCancelled || 0) / allotmentTotal) * 100
-                : 0;
+            const cancelledPercent = allotmentTotal > 0 ?
+                (Number(totals.totalCancelled || 0) / allotmentTotal) * 100 :
+                0;
 
             // These IDs are used when the percentage <p> has its own ID.
             // The original markup has no separate percentage IDs.
@@ -438,13 +434,7 @@
             // ---------------------------------------------------------
             const registryTotal = Number(totals.totalRegistryAllotted || 0);
             const registryDone = Number(totals.totalRegistryMatched || 0);
-            const registryPending = Math.max(
-                0,
-                Number(
-                    totals.totalRegistryUnmatched ??
-                    (registryTotal - registryDone)
-                )
-            );
+            const registryPending = Number(totals.totalRegistryUnmatched || 0);
 
             const registryDonePercent = registryTotal > 0 ?
                 (registryDone / registryTotal) * 100 :
@@ -457,17 +447,6 @@
             $('#registrationAllotted').text(formatNumber(registryTotal));
             $('#registryMatched').text(formatNumber(registryDone));
             $('#registryUnmatched').text(formatNumber(registryPending));
-
-            // Registry Match Overview legend counts must also follow the
-            // currently filtered totals. These were previously left with
-            // the initial Blade values (e.g. 1,658) after AJAX filtering.
-            $('#registryDoneLegendCount').text(
-                formatNumber(registryDone)
-            );
-
-            $('#registryPendingLegendCount').text(
-                formatNumber(registryPending)
-            );
 
             // Card percentages
             $('#registryDonePercentText').text(
@@ -536,19 +515,17 @@
                 Number(totals.totalPossessionPending || 0);
 
             const possessionGivenPercent =
-                possessionTotal > 0
-                    ? (possessionGiven / possessionTotal) * 100
-                    : 0;
+                possessionTotal > 0 ?
+                (possessionGiven / possessionTotal) * 100 :
+                0;
 
             const possessionPendingPercent =
-                possessionTotal > 0
-                    ? (possessionPending / possessionTotal) * 100
-                    : 0;
+                possessionTotal > 0 ?
+                (possessionPending / possessionTotal) * 100 :
+                0;
 
             $('#possessionEligiblePercentText').text(
-                possessionTotal > 0
-                    ? '100.00% of eligible'
-                    : '0.00% of eligible'
+                '100.00% of eligible'
             );
 
             $('#possessionGivenPercentText').text(
@@ -622,9 +599,9 @@
         function updateVillageTable(rows) {
             const tbody = [];
             const baseReportUrl =
-                (typeof applicantReportBaseUrl !== 'undefined')
-                    ? applicantReportBaseUrl
-                    : '';
+                (typeof applicantReportBaseUrl !== 'undefined') ?
+                applicantReportBaseUrl :
+                '';
 
             function buildApplicantUrl(row, status) {
                 if (!baseReportUrl) {
@@ -656,35 +633,16 @@
             }
 
             function buildMapUrl(pdfFile) {
-                if (!pdfFile) {
+                if (!pdfFile || typeof villageMapPdfBaseUrl === 'undefined') {
                     return '';
                 }
 
                 const cleanFile = String(pdfFile)
-                    .trim()
-                    .replace(/\\/g, '/')
                     .replace(/^\/+/, '');
 
-                if (!cleanFile) {
-                    return '';
-                }
-
-                // Keep the same public storage directory used by the
-                // server-rendered Blade rows.
-                const base =
-                    (typeof villageMapPdfBaseUrl !== 'undefined' &&
-                        villageMapPdfBaseUrl)
-                        ? villageMapPdfBaseUrl
-                        : "{{ asset('phase1_plans_gps_map') }}";
-
-                return base.replace(/\/+$/, '') +
+                return villageMapPdfBaseUrl.replace(/\/+$/, '') +
                     '/' +
-                    cleanFile
-                        .split('/')
-                        .map(function(part) {
-                            return encodeURIComponent(part);
-                        })
-                        .join('/');
+                    cleanFile;
             }
 
             if (!rows || rows.length === 0) {
@@ -1056,9 +1014,67 @@
         | Load Dashboard
         |--------------------------------------------------------------------------
         */
+        /*
+        |--------------------------------------------------------------------------
+        | Block Dropdown
+        |--------------------------------------------------------------------------
+        | Phase -> Block -> Village dependency.
+        | Blocks and villages come from the SAME dashboard AJAX response, so
+        | no extra endpoint/request is required.
+        |--------------------------------------------------------------------------
+        */
+        function updateBlockDropdown(blocks, selectedBlock = '') {
+            const select = $('#block_filter');
+
+            if (!select.length) {
+                return;
+            }
+
+            let options = '<option value="">All Blocks</option>';
+
+            $.each(Array.isArray(blocks) ? blocks : [], function(index, block) {
+                const id =
+                    block.BlockId ??
+                    block.block_id ??
+                    block.blockId ??
+                    block.id ??
+                    '';
+
+                const name =
+                    block.BlockName ??
+                    block.block_name ??
+                    block.blockName ??
+                    block.name ??
+                    ('Block ' + id);
+
+                if (id !== '') {
+                    options += `
+                        <option value="${escapeHtml(id)}"
+                            ${String(selectedBlock ?? '') === String(id) ? 'selected' : ''}>
+                            ${escapeHtml(name)}
+                        </option>
+                    `;
+                }
+            });
+
+            select.html(options);
+        }
+
+        function updateVillageDropdownFromResponse(villages, selectedVillage = '') {
+            updateVillageDropdown(villages || [], selectedVillage);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Load Dashboard
+        |--------------------------------------------------------------------------
+        */
         function loadDashboard() {
             const phase =
                 $('#phase_filter').val() || 'all';
+
+            const blockId =
+                $('#block_filter').val() || '';
 
             const villageId =
                 $('#village_filter').val() || '';
@@ -1073,6 +1089,7 @@
                 dataType: 'json',
 
                 data: {
+                    block_id: blockId,
                     village_id: villageId
                 },
 
@@ -1102,9 +1119,16 @@
 
                     updateGrandTotals(totals);
 
-                    updateVillageDropdown(
+                    // Keep Phase -> Block -> Village dependency in sync
+                    // after every AJAX response.
+                    updateBlockDropdown(
+                        response.blocks || [],
+                        filters.block_id || blockId
+                    );
+
+                    updateVillageDropdownFromResponse(
                         response.villages || [],
-                        filters.village_id || ''
+                        filters.village_id || villageId
                     );
 
                     $('#phase_filter').val(
@@ -1222,10 +1246,6 @@
                 return response.site_development;
             }
 
-            if (response?.data && typeof response.data === 'object') {
-                return getDevelopmentRecords(response.data);
-            }
-
             return [];
         }
 
@@ -1234,63 +1254,10 @@
             const container = $('#siteDevelopmentRecords');
 
             container.empty();
-            $('#siteDevelopmentError').addClass('hidden');
-            $('#siteDevelopmentEmpty').addClass('hidden');
 
             if (!records.length) {
                 $('#siteDevelopmentEmpty').removeClass('hidden');
                 return;
-            }
-
-            function developmentStatusClass(status) {
-                const value = String(status ?? '').trim().toLowerCase();
-
-                if (value === 'completed') {
-                    return 'bg-emerald-100 text-emerald-700';
-                }
-
-                if (value === 'work in progress' || value === 'in progress') {
-                    return 'bg-amber-100 text-amber-700';
-                }
-
-                return 'bg-slate-100 text-slate-700';
-            }
-
-            function photoCard(url, label) {
-                if (!url) {
-                    return `
-                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
-                            <div class="flex h-32 items-center justify-center">
-                                <span class="material-symbols-outlined text-[42px] text-slate-300">image</span>
-                            </div>
-                            <div class="border-t border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-500">
-                                ${escapeHtml(label)}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                return `
-                    <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"
-                       class="group block overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-                        <div class="relative h-32 overflow-hidden bg-slate-100">
-                            <img src="${escapeHtml(url)}"
-                                 alt="${escapeHtml(label)}"
-                                 class="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                                 loading="lazy"
-                                 onerror="this.style.display='none'; this.nextElementSibling.classList.remove('hidden');">
-                            <div class="absolute inset-0 hidden items-center justify-center bg-slate-100">
-                                <span class="material-symbols-outlined text-[42px] text-slate-300">broken_image</span>
-                            </div>
-                            <div class="absolute right-2 top-2 rounded-lg bg-slate-900/65 px-2 py-1 text-[9px] font-bold text-white">
-                                View
-                            </div>
-                        </div>
-                        <div class="border-t border-slate-200 px-3 py-2 text-[11px] font-bold text-slate-700">
-                            ${escapeHtml(label)}
-                        </div>
-                    </a>
-                `;
             }
 
             const html = records.map(function(record, index) {
@@ -1299,81 +1266,105 @@
                     record.name ??
                     record.work_name ??
                     record.WorkName ??
+                    record.activity ??
+                    record.Activity ??
                     ('Development ' + (index + 1));
 
-                const roadStatus = record.road_status ?? record.roadStatus ?? 'Not Started';
-                const waterStatus = record.water_status ?? record.waterStatus ?? 'Not Started';
-                const electricityStatus = record.electricity_status ?? record.electricityStatus ?? 'Not Started';
-                const sewerageStatus = record.sewerage_status ?? record.sewerageStatus ?? 'Not Started';
+                const status =
+                    record.status ??
+                    record.Status ??
+                    record.work_status ??
+                    record.WorkStatus ??
+                    '';
 
-                const remarks = record.remarks ?? 'No remarks available.';
+                const description =
+                    record.description ??
+                    record.Description ??
+                    record.details ??
+                    record.Details ??
+                    '';
 
-                const statusCard = (label, status) => `
-                    <div class="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                        <div class="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">
-                            ${label}
-                        </div>
-                        <div class="mt-1">
-                            <span class="inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${developmentStatusClass(status)}">
-                                ${escapeHtml(status)}
-                            </span>
-                        </div>
-                    </div>
-                `;
+                const contractor =
+                    record.contractor ??
+                    record.Contractor ??
+                    record.agency ??
+                    record.Agency ??
+                    '';
+
+                const amount =
+                    record.amount ??
+                    record.Amount ??
+                    record.estimated_cost ??
+                    record.EstimatedCost ??
+                    '';
 
                 return `
-                    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="text-sm font-bold text-slate-800">
+                                    ${escapeHtml(title)}
+                                </h3>
 
-                        <div class="flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
-                            <div class="flex min-w-0 items-center gap-3">
-                                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-50 text-cyan-600">
-                                    <span class="material-symbols-outlined text-[20px]">construction</span>
-                                </div>
-                                <div class="min-w-0">
-                                    <h3 class="truncate text-sm font-extrabold text-slate-800">
-                                        ${escapeHtml(title)}
-                                    </h3>
-                                    <p class="mt-0.5 text-[10px] font-medium text-slate-400">
-                                        Site Development
-                                    </p>
-                                </div>
-                            </div>
-                            <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">
-                                Record ${index + 1}
-                            </span>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-2 p-4 sm:grid-cols-2 lg:grid-cols-4">
-                            ${statusCard('Roads', roadStatus)}
-                            ${statusCard('Water', waterStatus)}
-                            ${statusCard('Electricity', electricityStatus)}
-                            ${statusCard('Sewerage', sewerageStatus)}
-                        </div>
-
-                        <div class="border-t border-slate-100 px-4 pb-4">
-                            <div class="mb-2 pt-3 text-[10px] font-extrabold uppercase tracking-wide text-slate-400">
-                                Development Photos
-                            </div>
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                ${photoCard(record.road_photo_url, 'Road')}
-                                ${photoCard(record.water_photo_url, 'Water')}
-                                ${photoCard(record.electricity_photo_url, 'Electricity')}
-                                ${photoCard(record.sewerage_photo_url, 'Sewerage')}
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-100 p-4">
-                            <div class="rounded-xl bg-slate-50 p-3">
-                                <div class="text-[9px] font-extrabold uppercase tracking-wide text-slate-400">
-                                    Remarks
-                                </div>
-                                <div class="mt-1 text-xs leading-5 text-slate-700">
-                                    ${escapeHtml(remarks)}
-                                </div>
+                                ${
+                                    description
+                                        ? `
+                                            <p class="mt-1 text-xs leading-5 text-slate-500">
+                                                ${escapeHtml(description)}
+                                            </p>
+                                        `
+                                        : ''
+                                }
                             </div>
 
-                            
+                            ${
+                                status
+                                    ? `
+                                        <span class="inline-flex shrink-0 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">
+                                            ${escapeHtml(status)}
+                                        </span>
+                                    `
+                                    : ''
+                            }
                         </div>
+
+                        ${
+                            contractor || amount !== ''
+                                ? `
+                                    <div class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                                        ${
+                                            contractor
+                                                ? `
+                                                    <div class="rounded-xl bg-slate-50 p-3">
+                                                        <div class="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                                                            Agency / Contractor
+                                                        </div>
+                                                        <div class="mt-1 text-xs font-semibold text-slate-700">
+                                                            ${escapeHtml(contractor)}
+                                                        </div>
+                                                    </div>
+                                                `
+                                                : ''
+                                        }
+
+                                        ${
+                                            amount !== ''
+                                                ? `
+                                                    <div class="rounded-xl bg-slate-50 p-3">
+                                                        <div class="text-[9px] font-bold uppercase tracking-wide text-slate-400">
+                                                            Amount
+                                                        </div>
+                                                        <div class="mt-1 text-xs font-semibold text-slate-700">
+                                                            ${escapeHtml(amount)}
+                                                        </div>
+                                                    </div>
+                                                `
+                                                : ''
+                                        }
+                                    </div>
+                                `
+                                : ''
+                        }
                     </div>
                 `;
             }).join('');
@@ -1409,9 +1400,9 @@
             );
 
             $('#siteDevelopmentPhase').text(
-                phase
-                    ? 'Phase ' + phase
-                    : 'Phase'
+                phase ?
+                'Phase ' + phase :
+                'Phase'
             );
 
             $('#siteDevelopmentLoading').removeClass('hidden');
@@ -1430,73 +1421,165 @@
                 );
             }
 
-            // IMPORTANT:
-            // Laravel route is:
-            // /district-ceo/dashboard/site-development/{villageId}
-            // so villageId must be part of the path, not only a query string.
             const url =
                 siteDevelopmentBaseUrl +
-                '/' +
-                encodeURIComponent(villageId) +
-                (params.toString()
-                    ? '?' + params.toString()
-                    : '');
+                '?' +
+                params.toString();
 
             $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .done(function(response) {
-                $('#siteDevelopmentLoading').addClass('hidden');
+                    url: url,
+                    type: 'GET',
+                    dataType: 'json',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .done(function(response) {
+                    $('#siteDevelopmentLoading').addClass('hidden');
 
-                if (
-                    response &&
-                    response.success === false
-                ) {
-                    showSiteDevelopmentError(
-                        response.message ||
-                        'Unable to load site development details.'
+                    if (
+                        response &&
+                        response.success === false
+                    ) {
+                        showSiteDevelopmentError(
+                            response.message ||
+                            'Unable to load site development details.'
+                        );
+                        return;
+                    }
+
+                    renderSiteDevelopment(response);
+                })
+                .fail(function(xhr) {
+                    console.error(
+                        'Site Development AJAX Error:',
+                        xhr.status,
+                        xhr.responseText
+                    );
+
+                    $('#siteDevelopmentLoading').addClass('hidden');
+
+                    let message =
+                        'Unable to load site development details.';
+
+                    if (
+                        xhr.responseJSON &&
+                        xhr.responseJSON.message
+                    ) {
+                        message =
+                            xhr.responseJSON.message;
+                    } else if (xhr.status === 404) {
+                        message =
+                            'Site Development route not found. Please check the Laravel route.';
+                    }
+
+                    showSiteDevelopmentError(message);
+                });
+        }
+
+        // Delegated Map binding: works after AJAX table replacement.
+        $(document).on(
+            'click',
+            '.villageMapBtn',
+            function(event) {
+                event.preventDefault();
+                event.stopPropagation();
+
+                const button = $(this);
+                const modal = $('#villageMapModal');
+
+                if (!modal.length) {
+                    console.error(
+                        'Village map modal #villageMapModal not found.'
                     );
                     return;
                 }
 
-                renderSiteDevelopment(response);
-            })
-            .fail(function(xhr) {
-                console.error(
-                    'Site Development AJAX Error:',
-                    xhr.status,
-                    xhr.responseText
-                );
+                const pdfUrl = button.attr('data-pdf-url') || '';
+                const pdfName = button.attr('data-pdf-name') || 'Village Map';
+                const villageName = button.attr('data-village-name') || 'Village';
+                const phase = button.attr('data-phase') || '';
 
-                $('#siteDevelopmentLoading').addClass('hidden');
-
-                let message =
-                    'Unable to load site development details.';
-
-                if (
-                    xhr.responseJSON &&
-                    xhr.responseJSON.message
-                ) {
-                    message =
-                        xhr.responseJSON.message;
-                } else if (xhr.status === 404) {
-                    message =
-                        'Site Development route not found. Please check the Laravel route.';
+                if (!pdfUrl) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Map Not Available',
+                        text: 'Village map PDF is not available.'
+                    });
+                    return;
                 }
 
-                showSiteDevelopmentError(message);
-            });
-        }
+                $('#villageMapTitle').text(villageName);
+                $('#villageMapSubtitle').text(
+                    (phase ? 'Phase ' + phase + ' • ' : '') +
+                    pdfName
+                );
 
+                $('#downloadVillageMap').attr({
+                    href: pdfUrl,
+                    download: pdfName
+                });
 
-        // Delegated click binding is required because updateVillageTable()
-        // replaces tbody HTML after every phase/village filter.
+                $('#openVillageMap').attr(
+                    'href',
+                    pdfUrl
+                );
+
+                $('#villageMapLoader').removeClass('hidden');
+                $('#villageMapFrame').attr(
+                    'src',
+                    pdfUrl
+                );
+
+                modal.removeClass('hidden').addClass('flex');
+                $('body').addClass('overflow-hidden');
+            }
+        );
+
+        $(document).on(
+            'load',
+            '#villageMapFrame',
+            function() {
+                $('#villageMapLoader').addClass('hidden');
+            }
+        );
+
+        $(document).on(
+            'click',
+            '#closeVillageMapModal',
+            function(event) {
+                event.preventDefault();
+
+                $('#villageMapModal')
+                    .addClass('hidden')
+                    .removeClass('flex');
+
+                $('#villageMapFrame').attr('src', '');
+                $('body').removeClass('overflow-hidden');
+            }
+        );
+
+        $(document).on(
+            'click',
+            '#villageMapModal',
+            function(event) {
+                if (
+                    event.target ===
+                    document.getElementById('villageMapModal')
+                ) {
+                    $('#villageMapModal')
+                        .addClass('hidden')
+                        .removeClass('flex');
+
+                    $('#villageMapFrame').attr('src', '');
+                    $('body').removeClass('overflow-hidden');
+                }
+            }
+        );
+
+        // Delegated binding: works even after updateVillageTable()
+        // replaces the table rows through AJAX.
         $(document).on(
             'click',
             '.siteDevelopmentBtn',
@@ -1505,18 +1588,15 @@
                 event.stopPropagation();
 
                 const button = $(this);
-                const villageId = button.attr('data-village-id') || '';
-                const villageName = button.attr('data-village-name') || 'Village';
-                const phase = button.attr('data-phase') || $('#phase_filter').val() || '';
 
                 if (!openSiteDevelopmentModal()) {
                     return;
                 }
 
                 loadSiteDevelopment(
-                    villageId,
-                    villageName,
-                    phase
+                    button.attr('data-village-id'),
+                    button.attr('data-village-name'),
+                    button.attr('data-phase')
                 );
             }
         );
@@ -1557,299 +1637,6 @@
 
         /*
         |--------------------------------------------------------------------------
-        | Village Map PDF
-        |--------------------------------------------------------------------------
-        |
-        | Do NOT put the raw PDF URL directly into the iframe.
-        | Some servers send Content-Disposition: attachment, which causes
-        | the browser PDF viewer to keep showing the loader.
-        |
-        | We fetch the PDF as a Blob, create an object URL and use that
-        | object URL for both iframe preview and Download.
-        |
-        */
-        let villageMapObjectUrl = null;
-
-        function revokeVillageMapObjectUrl() {
-            if (villageMapObjectUrl) {
-                URL.revokeObjectURL(villageMapObjectUrl);
-                villageMapObjectUrl = null;
-            }
-        }
-
-        function closeVillageMapModal() {
-            $('#villageMapModal')
-                .addClass('hidden')
-                .removeClass('flex');
-
-            $('#villageMapFrame').attr('src', '');
-            $('#villageMapLoader').removeClass('hidden');
-
-            revokeVillageMapObjectUrl();
-
-            $('body').removeClass('overflow-hidden');
-        }
-
-        function showVillageMapError(message) {
-            $('#villageMapLoader').addClass('hidden');
-
-            const frame = $('#villageMapFrame');
-
-            frame.attr('src', 'about:blank');
-
-            if (window.Swal) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Map Load Failed',
-                    text: message ||
-                        'Village map PDF could not be loaded.',
-                    confirmButtonColor: '#2563eb'
-                });
-            }
-        }
-
-        function loadVillageMapPdf(pdfUrl, pdfName) {
-            $('#villageMapLoader').removeClass('hidden');
-
-            /*
-             * Use jQuery AJAX with xhrFields.responseType = blob.
-             * This works even when the PDF endpoint responds as an
-             * attachment instead of inline.
-             */
-            $.ajax({
-                url: pdfUrl,
-                method: 'GET',
-                xhrFields: {
-                    responseType: 'blob'
-                },
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/pdf,*/*'
-                }
-            })
-            .done(function(blob, textStatus, xhr) {
-                const contentType =
-                    xhr.getResponseHeader('Content-Type') || '';
-
-                /*
-                 * If the server returned HTML/JSON (404/login page) rather
-                 * than a PDF, don't put it into the PDF viewer.
-                 */
-                if (
-                    contentType &&
-                    !contentType.toLowerCase().includes('pdf') &&
-                    !String(blob.type || '').toLowerCase().includes('pdf')
-                ) {
-                    showVillageMapError(
-                        'The map URL did not return a PDF file.'
-                    );
-                    return;
-                }
-
-                revokeVillageMapObjectUrl();
-
-                villageMapObjectUrl =
-                    URL.createObjectURL(
-                        new Blob(
-                            [blob],
-                            {
-                                type: 'application/pdf'
-                            }
-                        )
-                    );
-
-                $('#downloadVillageMap').attr(
-                    'href',
-                    villageMapObjectUrl
-                );
-
-                $('#downloadVillageMap').attr(
-                    'download',
-                    pdfName || 'Village-Map.pdf'
-                );
-
-                $('#openVillageMap').attr(
-                    'href',
-                    villageMapObjectUrl
-                );
-
-                $('#villageMapFrame')
-                    .off('load.villageMap error.villageMap')
-                    .on(
-                        'load.villageMap',
-                        function() {
-                            $('#villageMapLoader')
-                                .addClass('hidden');
-                        }
-                    )
-                    .on(
-                        'error.villageMap',
-                        function() {
-                            showVillageMapError(
-                                'The PDF viewer could not display this map.'
-                            );
-                        }
-                    )
-                    .attr(
-                        'src',
-                        villageMapObjectUrl
-                    );
-
-                /*
-                 * Some Chromium PDF viewers don't reliably fire iframe
-                 * load for Blob URLs. Hide the loader after the browser
-                 * has received the Blob; the viewer itself then controls
-                 * the PDF rendering.
-                 */
-                window.setTimeout(function() {
-                    $('#villageMapLoader').addClass('hidden');
-                }, 700);
-            })
-            .fail(function(xhr) {
-                let message =
-                    'Village map PDF could not be downloaded.';
-
-                if (xhr.status === 404) {
-                    message =
-                        'Village map PDF was not found on the server.';
-                } else if (xhr.status === 401 || xhr.status === 403) {
-                    message =
-                        'You are not authorized to access this village map.';
-                }
-
-                showVillageMapError(message);
-            });
-        }
-
-        // Delegated binding: works after AJAX table replacement.
-        $(document).on(
-            'click',
-            '.villageMapBtn',
-            function(event) {
-                event.preventDefault();
-                event.stopPropagation();
-
-                const button = $(this);
-                const modal = $('#villageMapModal');
-
-                if (!modal.length) {
-                    console.error(
-                        'Village map modal #villageMapModal not found.'
-                    );
-                    return;
-                }
-
-                const pdfUrl =
-                    button.attr('data-pdf-url') || '';
-
-                const pdfName =
-                    button.attr('data-pdf-name') ||
-                    'Village-Map.pdf';
-
-                const villageName =
-                    button.attr('data-village-name') ||
-                    'Village';
-
-                const phase =
-                    button.attr('data-phase') || '';
-
-                if (!pdfUrl) {
-                    if (window.Swal) {
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Map Not Available',
-                            text:
-                                'Village map PDF is not available.'
-                        });
-                    }
-                    return;
-                }
-
-                revokeVillageMapObjectUrl();
-
-                $('#villageMapTitle').text(
-                    villageName
-                );
-
-                $('#villageMapSubtitle').text(
-                    (phase
-                        ? 'Phase ' + phase + ' • '
-                        : '') +
-                    pdfName
-                );
-
-                $('#downloadVillageMap')
-                    .attr('href', '#')
-                    .attr(
-                        'download',
-                        pdfName
-                    );
-
-                $('#openVillageMap')
-                    .attr('href', '#');
-
-                $('#villageMapFrame').attr(
-                    'src',
-                    'about:blank'
-                );
-
-                $('#villageMapLoader').removeClass(
-                    'hidden'
-                );
-
-                modal
-                    .removeClass('hidden')
-                    .addClass('flex');
-
-                $('body').addClass(
-                    'overflow-hidden'
-                );
-
-                loadVillageMapPdf(
-                    pdfUrl,
-                    pdfName
-                );
-            }
-        );
-
-        $(document).on(
-            'click',
-            '#closeVillageMapModal',
-            function(event) {
-                event.preventDefault();
-                closeVillageMapModal();
-            }
-        );
-
-        $(document).on(
-            'click',
-            '#villageMapModal',
-            function(event) {
-                if (
-                    event.target ===
-                    document.getElementById(
-                        'villageMapModal'
-                    )
-                ) {
-                    closeVillageMapModal();
-                }
-            }
-        );
-
-        $(document).on(
-            'keydown',
-            function(event) {
-                if (
-                    event.key === 'Escape' &&
-                    !$('#villageMapModal').hasClass('hidden')
-                ) {
-                    closeVillageMapModal();
-                }
-            }
-        );
-
-        /*
-        |--------------------------------------------------------------------------
         | Apply Filters
         |--------------------------------------------------------------------------
         */
@@ -1875,7 +1662,29 @@
         $('#phase_filter').on(
             'change',
             function() {
-                $('#village_filter').val('');
+                // Phase change resets both dependent filters.
+                $('#block_filter').val('');
+                $('#village_filter').html(
+                    '<option value="">All Villages</option>'
+                ).val('');
+
+                loadDashboard();
+            }
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Block Change
+        |--------------------------------------------------------------------------
+        */
+        $('#block_filter').on(
+            'change',
+            function() {
+                // Block change resets village and reloads only the relevant
+                // dashboard data/village list.
+                $('#village_filter').html(
+                    '<option value="">Loading Villages...</option>'
+                );
 
                 loadDashboard();
             }
@@ -1900,9 +1709,11 @@
         */
         $('#resetFilters').on(
             'click',
-            function() {
-                $('#phase_filter').val('all');
+            function(event) {
+                event.preventDefault();
 
+                $('#phase_filter').val('all');
+                $('#block_filter').val('');
                 $('#village_filter').val('');
 
                 loadDashboard();

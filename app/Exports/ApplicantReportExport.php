@@ -65,7 +65,16 @@ class ApplicantReportExport implements FromQuery, WithHeadings
                 'o.Relation',
                 'o.FatherHusbandName',
                 'o.Gender',
-                'o.Caste',
+                DB::raw("""
+                    CASE
+                        WHEN o.Caste IS NULL OR TRIM(o.Caste) = '' THEN 'Others'
+                        WHEN LOWER(TRIM(o.Caste)) = 'sc' THEN 'SC'
+                        WHEN LOWER(TRIM(o.Caste)) = 'ghumantu' THEN 'Ghumantu'
+                        WHEN LOWER(TRIM(o.Caste)) = 'widow' THEN 'Widow'
+                        WHEN LOWER(TRIM(o.Caste)) IN ('general', 'others') THEN 'Others'
+                        ELSE 'Others'
+                    END AS Caste
+                """),
                 'o.MobileNo',
                 'o.PPPId',
                 'o.MemberId',
