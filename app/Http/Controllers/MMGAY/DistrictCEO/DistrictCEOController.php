@@ -63,7 +63,7 @@ class DistrictCEOController extends Controller
         |--------------------------------------------------------------------------
         */
         $blocks = DB::table('villagemaster as v')
-            ->join('BlockMaster as b', 'b.BlockId', '=', 'v.BlockId')
+            ->join('blockmaster as b', 'b.BlockId', '=', 'v.BlockId')
             ->where('v.DistrictId', $districtId)
             ->where('v.plots', '>', 0)
             ->whereNotNull('v.BlockId')
