@@ -2212,12 +2212,28 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
+        $registryConditionSql = "EXISTS (
+            SELECT 1 FROM registary as r 
+            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
+               OR (
+                   r.SecondPartyMobile = o.MobileNo 
+                   AND r.SecondPartyMobile IS NOT NULL 
+                   AND r.SecondPartyMobile != ''
+                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
+                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
+                   ))
+               )
+        )";
+
         $counts = $countQuery->select(
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_paid"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as approved_unpaid"),
             DB::raw("COUNT(CASE WHEN o.IsApproved = 0 AND o.IsPaid = 0 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as yet_to_be_done"),
             DB::raw("COUNT(CASE WHEN o.IsRejected = 1 AND o.IsAllotmentCancelled = 0 THEN 1 END) as rejected"),
-            DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled")
+            DB::raw("COUNT(CASE WHEN o.IsAllotmentCancelled = 1 THEN 1 END) as cancelled"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 THEN 1 END) as registry_to_be_done"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND {$registryConditionSql} THEN 1 END) as registry_done"),
+            DB::raw("COUNT(CASE WHEN o.IsApproved = 1 AND o.IsPaid = 1 AND o.IsRejected = 0 AND o.IsAllotmentCancelled = 0 AND NOT ({$registryConditionSql}) THEN 1 END) as registry_pending")
         )->first();
 
         $grossTotal = $counts->approved_paid + $counts->approved_unpaid + $counts->yet_to_be_done + $counts->rejected + $counts->cancelled;
@@ -2291,6 +2307,14 @@ class MMGAYBdoPossessionController extends Controller
             $listQuery->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
         } elseif ($activeTab === 'cancelled') {
             $listQuery->where('o.IsAllotmentCancelled', 1);
+        } elseif ($activeTab === 'registry_to_be_done') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'registry_done') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                      ->whereRaw($registryConditionSql);
+        } elseif ($activeTab === 'registry_pending') {
+            $listQuery->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                      ->whereRaw("NOT ({$registryConditionSql})");
         }
 
         $owners = $listQuery->select(
@@ -2452,6 +2476,19 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
+        $registryConditionSql = "EXISTS (
+            SELECT 1 FROM registary as r 
+            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
+               OR (
+                   r.SecondPartyMobile = o.MobileNo 
+                   AND r.SecondPartyMobile IS NOT NULL 
+                   AND r.SecondPartyMobile != ''
+                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
+                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
+                   ))
+               )
+        )";
+
         if ($activeTab === 'approved_paid') {
             $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
         } elseif ($activeTab === 'approved_unpaid') {
@@ -2462,6 +2499,14 @@ class MMGAYBdoPossessionController extends Controller
             $query->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
         } elseif ($activeTab === 'cancelled') {
             $query->where('o.IsAllotmentCancelled', 1);
+        } elseif ($activeTab === 'registry_to_be_done') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'registry_done') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                  ->whereRaw($registryConditionSql);
+        } elseif ($activeTab === 'registry_pending') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                  ->whereRaw("NOT ({$registryConditionSql})");
         }
 
         $headers = [
@@ -2600,6 +2645,19 @@ class MMGAYBdoPossessionController extends Controller
             });
         }
 
+        $registryConditionSql = "EXISTS (
+            SELECT 1 FROM registary as r 
+            WHERE (r.flatid = o.FlatId AND r.flatid IS NOT NULL AND r.flatid != '')
+               OR (
+                   r.SecondPartyMobile = o.MobileNo 
+                   AND r.SecondPartyMobile IS NOT NULL 
+                   AND r.SecondPartyMobile != ''
+                   AND (r.flatid IS NULL OR r.flatid = '' OR NOT EXISTS (
+                       SELECT 1 FROM ownermaster as o2 WHERE o2.FlatId = r.flatid
+                   ))
+               )
+        )";
+
         if ($activeTab === 'approved_paid') {
             $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
         } elseif ($activeTab === 'approved_unpaid') {
@@ -2610,6 +2668,14 @@ class MMGAYBdoPossessionController extends Controller
             $query->where('o.IsRejected', 1)->where('o.IsAllotmentCancelled', 0);
         } elseif ($activeTab === 'cancelled') {
             $query->where('o.IsAllotmentCancelled', 1);
+        } elseif ($activeTab === 'registry_to_be_done') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0);
+        } elseif ($activeTab === 'registry_done') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                  ->whereRaw($registryConditionSql);
+        } elseif ($activeTab === 'registry_pending') {
+            $query->where('o.IsApproved', 1)->where('o.IsPaid', 1)->where('o.IsRejected', 0)->where('o.IsAllotmentCancelled', 0)
+                  ->whereRaw("NOT ({$registryConditionSql})");
         }
 
         $totalCount = $query->count();
