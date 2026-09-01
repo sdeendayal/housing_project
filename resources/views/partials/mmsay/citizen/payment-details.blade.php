@@ -128,6 +128,10 @@
             <p class="text-[9px] font-bold uppercase text-slate-500 m-0">Online Transaction Logs (Gateway Attempts)</p>
             <p class="text-[9px] text-slate-400 m-0">Track payments, status checks, and failures</p>
         </div>
+        <div class="px-2.5 py-1.5 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5 text-amber-800 text-[9px] font-medium">
+            <span class="material-symbols-outlined text-[13px] text-amber-600 shrink-0">schedule</span>
+            <span><strong>Note:</strong> Pending transactions can only be verified / refreshed <strong>24 hours</strong> after the payment attempt. (पेंडिंग पेमेंट स्टेटस 24 घंटे बाद ही Verify / Refresh किया जा सकता है।)</span>
+        </div>
         <div @class([
             'overflow-x-auto',
             'max-h-[11.25rem] overflow-y-auto' => $txScrollable,
@@ -154,6 +158,19 @@
                             'FAIL' => 'bg-red-100 text-red-700',
                             default => 'bg-amber-100 text-amber-700', // PENDING
                         };
+
+                        $txCreatedAt = $tx->created_at ? \Carbon\Carbon::parse($tx->created_at) : null;
+                        $canVerifyAt = $txCreatedAt ? $txCreatedAt->copy()->addHours(24) : null;
+                        $canVerify = $canVerifyAt ? now()->greaterThanOrEqualTo($canVerifyAt) : true;
+
+                        $remainingTimeStr = '';
+                        if (!$canVerify && $canVerifyAt) {
+                            $remTotalSeconds = max(0, (int) now()->diffInSeconds($canVerifyAt, false));
+                            $remHours = (int) floor($remTotalSeconds / 3600);
+                            $remMins = (int) floor(($remTotalSeconds % 3600) / 60);
+                            $remSecs = (int) ($remTotalSeconds % 60);
+                            $remainingTimeStr = "{$remHours}h {$remMins}min {$remSecs}sec";
+                        }
                     @endphp
                     <tr class="hover:bg-slate-50/80">
                         <td class="px-2 py-1.5 font-bold text-slate-800 break-all">{{ $tx->merchant_txn_no }}</td>
@@ -174,12 +191,29 @@
                         </td>
                         <td class="px-2 py-1.5 text-center whitespace-nowrap">
                             @if ($tx->status === 'PENDING')
-                                <a href="{{ route('citizen.payment.reconcile', $tx->id) }}"
-                                    class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-indigo-600 text-[9px] font-bold text-white no-underline hover:bg-indigo-700"
-                                    title="Verify Status with Gateway">
-                                    <span class="material-symbols-outlined text-[10px]">sync</span>
-                                    Verify
-                                </a>
+                                @if ($canVerify)
+                                    <a href="{{ route('citizen.payment.reconcile', $tx->id) }}"
+                                        class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-indigo-600 text-[9px] font-bold text-white no-underline hover:bg-indigo-700 shadow-sm transition"
+                                        title="Verify Status with Gateway">
+                                        <span class="material-symbols-outlined text-[10px]">sync</span>
+                                        Verify
+                                    </a>
+                                @else
+                                    <div class="inline-flex flex-col items-center">
+                                        <button type="button"
+                                            disabled
+                                            class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-slate-100 text-[9px] font-bold text-slate-400 border border-slate-200 cursor-not-allowed select-none opacity-80"
+                                            title="Verification available 24 hours after payment attempt (Available on {{ $canVerifyAt?->format('d M Y h:i A') }})">
+                                            <span class="material-symbols-outlined text-[10px]">lock_clock</span>
+                                            Verify
+                                        </button>
+                                        <span class="text-[8px] text-amber-600 font-semibold mt-0.5 whitespace-nowrap tx-countdown-timer"
+                                            data-target-time="{{ $canVerifyAt?->toIso8601String() }}"
+                                            title="Available at {{ $canVerifyAt?->format('d M Y h:i A') }}">
+                                            In <span class="tx-countdown-text">{{ $remainingTimeStr }}</span> (24h rule)
+                                        </span>
+                                    </div>
+                                @endif
                             @else
                                 <span class="text-slate-400 font-bold">—</span>
                             @endif
@@ -189,6 +223,34 @@
                 </tbody>
             </table>
         </div>
+        <script>
+        (function() {
+            function updateTxCountdowns() {
+                var timers = document.querySelectorAll('.tx-countdown-timer');
+                timers.forEach(function(timer) {
+                    var targetIso = timer.getAttribute('data-target-time');
+                    if (!targetIso) return;
+                    var targetTime = new Date(targetIso).getTime();
+                    var now = new Date().getTime();
+                    var diffSec = Math.max(0, Math.floor((targetTime - now) / 1000));
+                    
+                    var textSpan = timer.querySelector('.tx-countdown-text');
+                    if (diffSec <= 0) {
+                        if (textSpan) textSpan.innerText = '0h 0min 0sec';
+                        timer.innerHTML = '<span class="text-emerald-600 font-bold">Ready to verify (Refresh page)</span>';
+                    } else {
+                        var hours = Math.floor(diffSec / 3600);
+                        var minutes = Math.floor((diffSec % 3600) / 60);
+                        var seconds = diffSec % 60;
+                        if (textSpan) {
+                            textSpan.innerText = hours + 'h ' + minutes + 'min ' + seconds + 'sec';
+                        }
+                    }
+                });
+            }
+            setInterval(updateTxCountdowns, 1000);
+        })();
+        </script>
     </div>
     @endif
 @else

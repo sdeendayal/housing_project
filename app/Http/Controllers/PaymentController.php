@@ -466,6 +466,8 @@ class PaymentController extends Controller
                 DB::commit();
                 Log::info('Payment successfully registered in database', ['txn' => $responseParams['txnID'] ?? $merchantTxnNo]);
 
+                // SMS notification temporarily commented out as requested
+                /*
                 if ($sendSms) {
                     // Send SMS success message to citizen
                     try {
@@ -523,6 +525,7 @@ class PaymentController extends Controller
                         ]);
                     }
                 }
+                */
 
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -621,6 +624,24 @@ class PaymentController extends Controller
 
         if ($tx->status !== 'PENDING') {
             return redirect()->back()->with('warning', 'This transaction status is already finalized.');
+        }
+
+        // Backend Validation: Verification is only allowed after 24 hours of initiation
+        $createdAt = $tx->created_at ? Carbon::parse($tx->created_at) : null;
+        if ($createdAt) {
+            $canVerifyAt = $createdAt->copy()->addHours(24);
+            if (now()->lessThan($canVerifyAt)) {
+                $remTotalSeconds = max(0, (int) now()->diffInSeconds($canVerifyAt, false));
+                $remHours = (int) floor($remTotalSeconds / 3600);
+                $remMins = (int) floor(($remTotalSeconds % 3600) / 60);
+                $remSecs = (int) ($remTotalSeconds % 60);
+                $remTimeStr = "{$remHours}h {$remMins}min {$remSecs}sec";
+
+                return redirect()->back()->with(
+                    'warning',
+                    "पेंडिंग पेमेंट स्टेटस भुगतान प्रयास के 24 घंटे बाद ही Verify / Refresh किया जा सकता है। कृपया {$canVerifyAt->format('d M Y, h:i A')} के बाद ({$remTimeStr} शेष) पुनः प्रयास करें। (Pending payment status can only be verified after 24 hours. Available in {$remTimeStr})."
+                );
+            }
         }
 
         // Prepare request parameters for the command API
@@ -745,6 +766,8 @@ class PaymentController extends Controller
 
                         DB::commit();
 
+                        // SMS notification on verification temporarily commented out as requested
+                        /*
                         if ($sendSms) {
                             // Send SMS success message to citizen
                             try {
@@ -802,6 +825,7 @@ class PaymentController extends Controller
                                 ]);
                             }
                         }
+                        */
 
                         return redirect()->back()->with('success', 'Success! Transaction status resolved, and cash receipt has been generated.');
 
@@ -814,15 +838,15 @@ class PaymentController extends Controller
 
                 // If still pending (P0030 / Awaiting user action / REQ)
                 $createdAt = $tx->created_at ? \Carbon\Carbon::parse($tx->created_at) : null;
-                $diffInMinutes = $createdAt ? $createdAt->diffInMinutes(now()) : 9999;
+                $diffInHours = $createdAt ? $createdAt->diffInHours(now()) : 9999;
 
-                if ($diffInMinutes >= 60) {
+                if ($diffInHours >= 24) {
                     DB::table('payment_transactions')
                         ->where('id', $tx->id)
                         ->update([
                             'status' => 'FAIL',
                             'response_code' => $txnResponseCode ?: ($responseCode ?: 'INCOMPLETE'),
-                            'response_description' => $txnRespDescription ?: ($respDescription ?: 'Payment was not completed within 1 hour.'),
+                            'response_description' => $txnRespDescription ?: ($respDescription ?: 'Payment was not completed within 24 hours.'),
                             'response_payload_dump' => json_encode($data),
                             'updated_at' => now(),
                         ]);
@@ -830,7 +854,7 @@ class PaymentController extends Controller
                     return redirect()->back()->with('error', 'Payment was not completed. This transaction has been marked as failed.');
                 }
 
-                return redirect()->back()->with('warning', 'This transaction is still awaiting action from the user or bank. Please try verifying again after 1 hour of initiation.');
+                return redirect()->back()->with('warning', 'This transaction is still awaiting action from the user or bank. Please try verifying again after 24 hours of initiation.');
             }
 
             Log::error('Phicommerce status check API failed response', [

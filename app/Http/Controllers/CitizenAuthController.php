@@ -139,6 +139,10 @@ class CitizenAuthController extends Controller
             'installments' => $paymentDetails['installments'],
             'paymentReceipts' => $paymentDetails['receipts'],
             'installmentStats' => $paymentDetails['installmentStats'],
+            'onlineTransactions' => DB::table('payment_transactions')
+                ->where('user_id', $user->id)
+                ->orderByDesc('created_at')
+                ->get(),
         ]);
     }
 
