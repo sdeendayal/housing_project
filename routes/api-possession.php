@@ -37,6 +37,8 @@ Route::prefix('mmgay')->group(function () {
         Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
         Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
         Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
+        Route::get('/category-beneficiaries', [MmgayBdoApiController::class, 'categoryBeneficiaries']);
+        Route::get('/category-beneficiaries/summary', [MmgayBdoApiController::class, 'categoryBeneficiariesSummary']);
     });
 
     // Villager Authenticated APIs
@@ -73,6 +75,8 @@ Route::prefix('possession')->group(function () {
         Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
         Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
         Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
+        Route::get('/category-beneficiaries', [MmgayBdoApiController::class, 'categoryBeneficiaries']);
+        Route::get('/category-beneficiaries/summary', [MmgayBdoApiController::class, 'categoryBeneficiariesSummary']);
     });
 
     // Department officer OTP Login (public)
