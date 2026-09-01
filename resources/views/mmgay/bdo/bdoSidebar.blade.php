@@ -69,6 +69,13 @@
             <span class="font-label-md text-label-md text-xs">Villages List</span>
         </a>
 
+        <!-- Category Beneficiaries Report -->
+        <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'category_beneficiaries') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
+            href="{{ route('mmgay.bdo.category-beneficiaries') }}">
+            <span class="material-symbols-outlined text-base">diversity_3</span>
+            <span class="font-label-md text-label-md text-xs">Category Report</span>
+        </a>
+
         <!-- 8. Site Development -->
         <a class="flex items-center gap-md rounded-lg px-md py-2 transition-all duration-205 ease-in-out {{ (isset($activeMenu) && $activeMenu === 'site_development') ? 'bg-secondary-container text-on-secondary-container border-l-4 border-primary font-bold' : 'text-on-surface-variant hover:bg-surface-variant' }}"
             href="{{ route('mmgay.bdo.site-development') }}">
