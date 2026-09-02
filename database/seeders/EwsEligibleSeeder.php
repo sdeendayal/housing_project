@@ -260,6 +260,11 @@ class EwsEligibleSeeder extends Seeder
         }
 
         // Seed Rewari Data
+        $rewariBatch = [];
+        $rewariCount = 0;
+        $seenRewariAppNos = [];
+
+        // 1. Existing 2 Rewari records
         $rewariFilePath = database_path('seeders/data/1. 2 eligible Rewari ADC.xlsx');
         if (file_exists($rewariFilePath)) {
             $this->command->info("Loading Rewari Excel file from {$rewariFilePath}...");
@@ -269,9 +274,7 @@ class EwsEligibleSeeder extends Seeder
             $rewariSheet = $rewariSpreadsheet->getActiveSheet();
             $rewariRows = $rewariSheet->toArray();
             
-            $rewariBatch = [];
-            $rewariCount = 0;
-            $this->command->info("Seeding Rewari data into ews_eligible_6 table...");
+            $this->command->info("Seeding Rewari (2 eligible) data into ews_eligible_6 table...");
             
             // Loop starting from index 2 (row 3 of Excel)
             foreach (array_slice($rewariRows, 2) as $r) {
@@ -279,6 +282,10 @@ class EwsEligibleSeeder extends Seeder
                 if (empty($appNo)) {
                     continue;
                 }
+                if (isset($seenRewariAppNos[$appNo])) {
+                    continue;
+                }
+                $seenRewariAppNos[$appNo] = true;
                 
                 $rewariBatch[] = [
                     'application_number' => $appNo,
@@ -301,17 +308,78 @@ class EwsEligibleSeeder extends Seeder
                     $rewariBatch = [];
                 }
             }
-            
-            if (count($rewariBatch) > 0) {
-                DB::table('ews_eligible_6')->insert($rewariBatch);
-                $rewariCount += count($rewariBatch);
-            }
-            $this->command->info("Successfully seeded {$rewariCount} Rewari records.");
             $rewariSpreadsheet->disconnectWorksheets();
             unset($rewariSpreadsheet);
         } else {
-            $this->command->error("Rewari Excel file not found at: {$rewariFilePath}");
+            $this->command->warn("Rewari Excel file not found at: {$rewariFilePath}");
         }
+
+        // 2. Additional Rewari 224 eligible applicants
+        $rewari224FilePath = database_path('seeders/data/Rewari-224 eligible applicants (1).xlsx');
+        if (!file_exists($rewari224FilePath)) {
+            $userProfile = getenv('USERPROFILE') ?: 'C:/Users/hp';
+            $rewari224FilePath = $userProfile . '/Downloads/Rewari-224 eligible applicants (1).xlsx';
+        }
+
+        if (file_exists($rewari224FilePath)) {
+            $this->command->info("Loading Rewari 224 Excel file from {$rewari224FilePath}...");
+            $rewariReader2 = IOFactory::createReaderForFile($rewari224FilePath);
+            $rewariReader2->setReadDataOnly(true);
+            $rewariSpreadsheet2 = $rewariReader2->load($rewari224FilePath);
+            $rewariSheet2 = $rewariSpreadsheet2->getSheet(0);
+            $rewariRows2 = $rewariSheet2->toArray();
+            
+            $this->command->info("Seeding Rewari 224 eligible applicants into ews_eligible_6 table...");
+            
+            // Loop starting from index 1 (row 2 of Excel)
+            foreach (array_slice($rewariRows2, 1) as $r) {
+                $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
+                if (empty($appNo)) {
+                    continue;
+                }
+                if (isset($seenRewariAppNos[$appNo])) {
+                    continue;
+                }
+
+                $status = $r[5] !== null ? trim((string)$r[5]) : 'Eligible';
+                if (!empty($status) && (stripos($status, 'not') !== false || stripos($status, 'uneligible') !== false)) {
+                    continue;
+                }
+
+                $seenRewariAppNos[$appNo] = true;
+                
+                $rewariBatch[] = [
+                    'application_number' => $appNo,
+                    'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
+                    'aadhar_no' => null,
+                    'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
+                    'status' => 'Eligible',
+                    'priority' => null,
+                    'category' => null,
+                    'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
+                    'dist_name' => 'REWARI',
+                    'dist_id' => 19,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                
+                if (count($rewariBatch) >= $batchSize) {
+                    DB::table('ews_eligible_6')->insert($rewariBatch);
+                    $rewariCount += count($rewariBatch);
+                    $rewariBatch = [];
+                }
+            }
+            $rewariSpreadsheet2->disconnectWorksheets();
+            unset($rewariSpreadsheet2);
+        } else {
+            $this->command->warn("Rewari 224 Excel file not found at: {$rewari224FilePath}");
+        }
+
+        if (count($rewariBatch) > 0) {
+            DB::table('ews_eligible_6')->insert($rewariBatch);
+            $rewariCount += count($rewariBatch);
+        }
+        $this->command->info("Successfully seeded {$rewariCount} total Rewari records.");
 
         // Seed Rohtak Data
         $rohtakFilePath = 'E:/AAAAAAA/2. Rohtak eligible and uneligible (ADC) (Puchna Pdega).xlsx';
