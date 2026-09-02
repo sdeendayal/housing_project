@@ -314,7 +314,14 @@ class EwsEligibleSeeder extends Seeder
         }
 
         // Seed Rohtak Data
-        $rohtakFilePath = database_path('seeders/data/2. Rohtak eligible and uneligible (ADC).xlsx');
+        $rohtakFilePath = 'E:/AAAAAAA/2. Rohtak eligible and uneligible (ADC) (Puchna Pdega).xlsx';
+        if (!file_exists($rohtakFilePath)) {
+            $rohtakFilePath = database_path('seeders/data/2. Rohtak eligible and uneligible (ADC) (Puchna Pdega).xlsx');
+        }
+        if (!file_exists($rohtakFilePath)) {
+            $rohtakFilePath = database_path('seeders/data/2. Rohtak eligible and uneligible (ADC).xlsx');
+        }
+
         if (file_exists($rohtakFilePath)) {
             $this->command->info("Loading Rohtak Excel file from {$rohtakFilePath}...");
             $rohtakReader = IOFactory::createReaderForFile($rohtakFilePath);
@@ -324,52 +331,28 @@ class EwsEligibleSeeder extends Seeder
             $rohtakBatch = [];
             $rohtakCount = 0;
             $seenRohtakAppNos = [];
-            $this->command->info("Seeding Rohtak data into ews_eligible_6 table...");
+            $this->command->info("Seeding Rohtak eligible data into ews_eligible_6 table...");
             
-            // Sheet 2: BPL flats eligible (Index 1) - Process first so Eligible status takes precedence
-            $rohtakSheet2 = $rohtakSpreadsheet->getSheet(1);
-            if ($rohtakSheet2) {
-                $rows2 = $rohtakSheet2->toArray();
-                // Loop starting from index 2 (row 3 of Excel)
-                foreach (array_slice($rows2, 2) as $r) {
-                    $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
-                    if (empty($appNo)) {
-                        continue;
-                    }
-                    if (isset($seenRohtakAppNos[$appNo])) {
-                        continue;
-                    }
-                    $seenRohtakAppNos[$appNo] = true;
-                    
-                    $rohtakBatch[] = [
-                        'application_number' => $appNo,
-                        'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
-                        'aadhar_no' => null,
-                        'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
-                        'status' => $r[5] !== null ? trim((string)$r[5]) : 'Eligible',
-                        'priority' => null,
-                        'category' => null,
-                        'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
-                        'dist_name' => 'ROHTAK',
-                        'dist_id' => 20,
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ];
-                    
-                    if (count($rohtakBatch) >= $batchSize) {
-                        DB::table('ews_eligible_6')->insert($rohtakBatch);
-                        $rohtakCount += count($rohtakBatch);
-                        $rohtakBatch = [];
-                    }
+            // Only process Sheet with Eligible applicants (e.g. 'BPL flats eligible ' / Sheet index 1)
+            // Note: Sheet 'Reason not eligible' (Index 0) is excluded because ews_eligible_6 is only for eligible applicants.
+            $rohtakSheet = null;
+            foreach ($rohtakSpreadsheet->getAllSheets() as $sh) {
+                $title = strtolower(trim($sh->getTitle()));
+                if (str_contains($title, 'eligible') && !str_contains($title, 'not') && !str_contains($title, 'uneligible')) {
+                    $rohtakSheet = $sh;
+                    break;
                 }
             }
+            if (!$rohtakSheet && $rohtakSpreadsheet->getSheetCount() > 1) {
+                $rohtakSheet = $rohtakSpreadsheet->getSheet(1);
+            } elseif (!$rohtakSheet) {
+                $rohtakSheet = $rohtakSpreadsheet->getActiveSheet();
+            }
 
-            // Sheet 1: Reason not eligible (Index 0) - Process second, skipping any already seen/seeded
-            $rohtakSheet1 = $rohtakSpreadsheet->getSheet(0);
-            if ($rohtakSheet1) {
-                $rows1 = $rohtakSheet1->toArray();
+            if ($rohtakSheet) {
+                $rows = $rohtakSheet->toArray();
                 // Loop starting from index 2 (row 3 of Excel)
-                foreach (array_slice($rows1, 2) as $r) {
+                foreach (array_slice($rows, 2) as $r) {
                     $appNo = $r[1] !== null ? trim((string)$r[1]) : '';
                     if (empty($appNo)) {
                         continue;
@@ -377,6 +360,13 @@ class EwsEligibleSeeder extends Seeder
                     if (isset($seenRohtakAppNos[$appNo])) {
                         continue;
                     }
+
+                    $status = $r[5] !== null ? trim((string)$r[5]) : 'Eligible';
+                    // Strictly exclude any record marked as Not Eligible / Uneligible
+                    if (!empty($status) && (stripos($status, 'not') !== false || stripos($status, 'uneligible') !== false)) {
+                        continue;
+                    }
+
                     $seenRohtakAppNos[$appNo] = true;
                     
                     $rohtakBatch[] = [
@@ -384,7 +374,7 @@ class EwsEligibleSeeder extends Seeder
                         'full_name' => $r[2] !== null ? trim((string)$r[2]) : '',
                         'aadhar_no' => null,
                         'mobile_number' => $r[3] !== null ? trim((string)$r[3]) : '',
-                        'status' => $r[4] !== null ? trim((string)$r[4]) : 'Not Eligible',
+                        'status' => 'Eligible',
                         'priority' => null,
                         'category' => null,
                         'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
@@ -406,7 +396,7 @@ class EwsEligibleSeeder extends Seeder
                 DB::table('ews_eligible_6')->insert($rohtakBatch);
                 $rohtakCount += count($rohtakBatch);
             }
-            $this->command->info("Successfully seeded {$rohtakCount} unique Rohtak records.");
+            $this->command->info("Successfully seeded {$rohtakCount} unique eligible Rohtak records.");
             $rohtakSpreadsheet->disconnectWorksheets();
             unset($rohtakSpreadsheet);
         } else {
