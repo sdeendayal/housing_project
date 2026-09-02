@@ -14,16 +14,16 @@
         }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
+<body class="bg-[#f3f6fc] text-slate-800 h-screen flex overflow-hidden">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
-    <div class="flex-1 flex flex-col ml-[260px]">
+    <div class="flex-1 min-w-0 flex flex-col ml-[260px] h-screen overflow-hidden">
         
         <!-- Top Header / Navbar -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
+        <header class="sticky top-0 w-full z-40 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200 shrink-0">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard') }}" class="flex items-center text-slate-500 hover:text-slate-800 transition mr-2">
                     <span class="material-symbols-outlined">arrow_back</span>
@@ -44,7 +44,7 @@
         </header>
 
         <!-- Content Body Wrapper -->
-        <main class="mt-16 p-4 flex-grow flex items-center justify-center">
+        <main class="p-4 flex-grow flex items-center justify-center min-w-0 overflow-y-auto">
 
             <!-- Profile Details Card (Flexible width for EWS Data 1) -->
             <div class="w-full max-w-5xl bg-white rounded-xl border border-slate-200 shadow-lg p-5 flex flex-col my-2">

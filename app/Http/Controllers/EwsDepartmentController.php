@@ -511,7 +511,7 @@ class EwsDepartmentController extends Controller
                 );
         } elseif ($type === 'adc_passed') {
             $query = DB::table('ews_eligible_6')
-                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Eligible' as status"), 'dist_name');
+                ->select('secure_id', 'id', 'application_number', 'full_name', 'aadhar_no', 'mobile_number', DB::raw("'N/A' as flat_no"), DB::raw("'adc_passed' as type"), DB::raw("'Eligible' as status"), 'dist_name', 'dist_id');
         } elseif ($type === 'adc_failed') {
             $query = DB::table('all_ews_data_544')
                 ->where('Paid', 'Paid')
@@ -572,22 +572,114 @@ class EwsDepartmentController extends Controller
 
         $datatables = DataTables::of($query);
 
-        if ($type === 'ppt_members' || $type === 'not_in_survey') {
-            $datatables->filterColumn('application_number', function($query, $keyword) {
-                $query->where('ppt_members.familyID', 'like', "%{$keyword}%");
-            });
-            $datatables->filterColumn('full_name', function($query, $keyword) {
-                $query->where('ppt_members.fullName', 'like', "%{$keyword}%");
-            });
-            $datatables->filterColumn('aadhar_no', function($query, $keyword) {
-                $query->whereRaw('1=0');
-            });
-            $datatables->filterColumn('mobile_number', function($query, $keyword) {
-                $query->where('ppt_members.mobileNo', 'like', "%{$keyword}%");
-            });
-            $datatables->filterColumn('dist_name', function($query, $keyword) {
-                $query->where('ppt_members.district', 'like', "%{$keyword}%");
-            });
+        // Filter and Order mappings for DataTables columns
+        $datatables->filterColumn('application_number', function($q, $keyword) use ($type) {
+            if ($type === 'ppt_members') {
+                $q->where('ppt_members.familyID', 'like', "%{$keyword}%");
+            } elseif (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where(function($sub) use ($keyword) {
+                    $sub->where('all_ews_data_544.ApplicationNo', 'like', "%{$keyword}%")
+                        ->orWhere('all_ews_data_544.ApplicationNo_2', 'like', "%{$keyword}%");
+                });
+            } else {
+                $q->where('application_number', 'like', "%{$keyword}%");
+            }
+        });
+
+        $datatables->filterColumn('full_name', function($q, $keyword) use ($type) {
+            if ($type === 'ppt_members') {
+                $q->where('ppt_members.fullName', 'like', "%{$keyword}%");
+            } elseif (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where('all_ews_data_544.PrivatePurchaserName', 'like', "%{$keyword}%");
+            } else {
+                $q->where('full_name', 'like', "%{$keyword}%");
+            }
+        });
+
+        $datatables->filterColumn('dist_name', function($q, $keyword) use ($type) {
+            if ($type === 'ppt_members') {
+                $q->where('ppt_members.district', 'like', "%{$keyword}%");
+            } elseif (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where('all_ews_data_544.dist', 'like', "%{$keyword}%");
+            } else {
+                $q->where('dist_name', 'like', "%{$keyword}%");
+            }
+        });
+
+        $datatables->filterColumn('mobile_number', function($q, $keyword) use ($type) {
+            if ($type === 'ppt_members') {
+                $q->where('ppt_members.mobileNo', 'like', "%{$keyword}%");
+            } elseif (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where(function($sub) use ($keyword) {
+                    $sub->where('all_ews_data_544.MobileNo', 'like', "%{$keyword}%")
+                        ->orWhere('all_ews_data_544.MobileNo_2', 'like', "%{$keyword}%");
+                });
+            } else {
+                $q->where('mobile_number', 'like', "%{$keyword}%");
+            }
+        });
+
+        $datatables->filterColumn('aadhar_no', function($q, $keyword) use ($type) {
+            if (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where('all_ews_data_544.AadhaarNo', 'like', "%{$keyword}%");
+            } elseif (in_array($type, ['ppt_members', 'not_in_survey', 'registered'])) {
+                $q->whereRaw('1=0');
+            } else {
+                $q->where('aadhar_no', 'like', "%{$keyword}%");
+            }
+        });
+
+        $datatables->filterColumn('flat_no', function($q, $keyword) use ($type) {
+            if (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+                $q->where(function($sub) use ($keyword) {
+                    $sub->where('all_ews_data_544.Flat_PlotNo', 'like', "%{$keyword}%")
+                        ->orWhere('all_ews_data_544.Flat_plotno_2', 'like', "%{$keyword}%");
+                });
+            } elseif ($type === 'pending' || $type === 'all') {
+                $q->where('flat_no', 'like', "%{$keyword}%");
+            } else {
+                $q->whereRaw('1=0');
+            }
+        });
+
+        $datatables->filterColumn('status', function($q, $keyword) use ($type) {
+            $statusMap = [
+                'ppt_members' => 'Total registration',
+                'not_in_survey' => 'Rejected in survey app',
+                'registered' => 'Verify in survey app',
+                'allotted' => 'Allotted',
+                'pending' => 'Waiting',
+                'rejected_ppp' => 'Rejected',
+                'rejected_property' => 'Rejected',
+                'rejected_ownership' => 'Rejected',
+                'eligible_draw' => 'Eligible for booking',
+                'booking' => 'Booking Amount Received',
+                'not_visited' => 'Booking Amount Not Received',
+                'adc_passed' => 'Eligible',
+                'adc_failed' => 'Not Eligible',
+                'draw_remaining' => 'Unallotted',
+            ];
+            $currentStatus = $statusMap[$type] ?? '';
+            if ($currentStatus && stripos($currentStatus, $keyword) !== false) {
+                $q->whereRaw('1=1');
+            } elseif (in_array($type, ['registered', 'allotted', 'adc_passed', 'pending', 'all'])) {
+                $q->where('status', 'like', "%{$keyword}%");
+            } else {
+                $q->whereRaw('1=0');
+            }
+        });
+
+        // Column sorting handlers
+        if ($type === 'ppt_members') {
+            $datatables->orderColumn('application_number', 'familyID $1')
+                ->orderColumn('full_name', 'fullName $1')
+                ->orderColumn('dist_name', 'district $1')
+                ->orderColumn('mobile_number', 'mobileNo $1');
+        } elseif (in_array($type, ['booking', 'not_visited', 'adc_failed', 'draw_remaining', 'allotted'])) {
+            $datatables->orderColumn('application_number', 'COALESCE(all_ews_data_544.ApplicationNo, all_ews_data_544.ApplicationNo_2) $1')
+                ->orderColumn('full_name', 'all_ews_data_544.PrivatePurchaserName $1')
+                ->orderColumn('dist_name', 'all_ews_data_544.dist $1')
+                ->orderColumn('mobile_number', 'COALESCE(all_ews_data_544.MobileNo, all_ews_data_544.MobileNo_2) $1');
         }
 
         return $datatables

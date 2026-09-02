@@ -23,16 +23,16 @@
         }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
+<body class="bg-[#f3f6fc] text-slate-800 h-screen flex overflow-hidden">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
-    <div class="flex-1 flex flex-col ml-[260px] min-w-0">
+    <div class="flex-1 min-w-0 flex flex-col ml-[260px] h-screen overflow-hidden">
         
         <!-- Top Header / Navbar -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
+        <header class="sticky top-0 w-full z-40 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200 shrink-0">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard') }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
@@ -53,7 +53,7 @@
         </header>
 
         <!-- Content Body Wrapper -->
-        <main class="mt-16 p-6 flex-grow flex flex-col space-y-4 min-w-0">
+        <main class="p-6 flex-grow flex flex-col space-y-4 min-w-0 overflow-y-auto">
 
             <!-- Banner Card -->
             <div class="bg-gradient-to-r from-emerald-600 to-teal-500 rounded-xl p-3 text-white shadow-sm flex justify-between items-center shadow-emerald-900/10">

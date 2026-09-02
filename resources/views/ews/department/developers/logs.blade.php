@@ -26,16 +26,16 @@
         .dataTables_wrapper .dataTables_paginate .paginate_button.current { background: #059669 !important; color: #ffffff !important; border-color: #059669 !important; }
     </style>
 </head>
-<body class="bg-[#f1f8f4] text-slate-800 min-h-screen flex">
+<body class="bg-[#f1f8f4] text-slate-800 h-screen flex overflow-hidden">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
-    <div class="flex-1 flex flex-col ml-[260px]">
+    <div class="flex-1 min-w-0 flex flex-col ml-[260px] h-screen overflow-hidden">
         
         <!-- Header -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-emerald-100">
+        <header class="sticky top-0 w-full z-40 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-emerald-100 shrink-0">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard') }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
@@ -56,7 +56,7 @@
         </header>
 
         <!-- Main Content -->
-        <main class="mt-16 p-6 flex-grow flex flex-col gap-6">
+        <main class="p-6 flex-grow flex flex-col gap-6 min-w-0 overflow-y-auto">
 
             <!-- Datatable Card -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-150 p-6 flex flex-col flex-grow">

@@ -17,13 +17,32 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
-        body {
+        html, body {
             font-family: 'Outfit', sans-serif;
-            overflow-y: auto;
+            overflow-x: hidden !important;
+            max-width: 100vw;
+            background-color: #f3f6fc;
+        }
+
+        /* Custom sleek scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         /* Custom DataTables Styling overrides to match design guidelines */
         table.dataTable {
+            width: 100% !important;
             border-bottom: 1px solid #e2e8f0 !important;
             margin-top: 15px !important;
             margin-bottom: 15px !important;
@@ -97,16 +116,16 @@
         }
     </style>
 </head>
-<body class="bg-[#f3f6fc] text-slate-800 min-h-screen flex">
+<body class="bg-[#f3f6fc] text-slate-800 h-screen flex overflow-hidden">
 
     <!-- 1. Left Sidebar -->
     @include('ews.department.partials.sidebar')
 
     <!-- 2. Main Page Area -->
-    <div class="flex-1 flex flex-col ml-[260px]">
+    <div class="flex-1 min-w-0 flex flex-col ml-[260px] h-screen overflow-hidden">
         
         <!-- Top Header / Navbar -->
-        <header class="fixed top-0 right-0 w-[calc(100%-260px)] z-50 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200">
+        <header class="sticky top-0 w-full z-40 h-16 flex justify-between items-center px-6 bg-white shadow-sm border-b border-slate-200 shrink-0">
             <div class="flex items-center gap-3">
                 <a href="{{ route('ews.department.dashboard', ['district_id' => $districtId, 'phase' => $phase]) }}" class="flex items-center gap-1.5 text-slate-500 hover:text-slate-700 transition mr-2">
                     <span class="material-symbols-outlined text-md">arrow_back</span>
@@ -127,11 +146,11 @@
         </header>
 
         <!-- Content Body Wrapper -->
-        <main class="mt-16 p-4 flex-grow flex flex-col">
+        <main class="p-4 flex-grow flex flex-col min-w-0 overflow-y-auto">
 
             <!-- Datatables Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-150 p-6 flex flex-col flex-grow min-h-[500px]">
-                <div class="pb-3.5 border-b border-slate-100 mb-4 flex justify-between items-center">
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-150 p-6 flex flex-col flex-grow min-w-0">
+                <div class="pb-3.5 border-b border-slate-100 mb-4 flex flex-wrap justify-between items-center gap-3">
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-1.5">
                             <span class="material-symbols-outlined text-emerald-600 text-lg font-bold">badge</span>
@@ -176,8 +195,8 @@
                 </div>
 
                 <!-- Yajra DataTable Container -->
-                <div class="flex-grow overflow-x-auto pr-1">
-                    <table class="w-full text-left border-collapse" id="beneficiary-table">
+                <div class="flex-grow min-w-0 overflow-x-auto">
+                    <table class="w-full text-left border-collapse" id="beneficiary-table" style="width: 100%;">
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 uppercase text-[9px] font-bold border-b border-slate-100">
                                 <th style="width: 5%;">S.No.</th>
@@ -297,6 +316,7 @@
             table = $('#beneficiary-table').DataTable({
                 processing: true,
                 serverSide: true,
+                autoWidth: false,
                 pageLength: 50,
                 lengthMenu: [[10, 25, 50, 100, 250], [10, 25, 50, 100, 250]],
                 ajax: {
