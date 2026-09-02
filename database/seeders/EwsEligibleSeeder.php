@@ -472,7 +472,11 @@ class EwsEligibleSeeder extends Seeder
         }
 
         // Seed Panipat Data
-        $panipatFilePath = database_path('seeders/data/3. eligible panipat final ADC.xlsx');
+        $panipatFilePath = 'E:/AAAAAAA/3. eligible panipat final ADC.xlsx';
+        if (!file_exists($panipatFilePath)) {
+            $panipatFilePath = database_path('seeders/data/3. eligible panipat final ADC.xlsx');
+        }
+
         if (file_exists($panipatFilePath)) {
             $this->command->info("Loading Panipat Excel file from {$panipatFilePath}...");
             $panipatReader = IOFactory::createReaderForFile($panipatFilePath);
@@ -483,7 +487,8 @@ class EwsEligibleSeeder extends Seeder
             
             $panipatBatch = [];
             $panipatCount = 0;
-            $this->command->info("Seeding Panipat data into ews_eligible_6 table...");
+            $seenPanipatAppNos = [];
+            $this->command->info("Seeding Panipat eligible data into ews_eligible_6 table...");
             
             // Loop starting from index 1 (row 2 of Excel)
             foreach (array_slice($panipatRows, 1) as $r) {
@@ -491,19 +496,25 @@ class EwsEligibleSeeder extends Seeder
                 if (empty($appNo)) {
                     continue;
                 }
-                
-                $excelStatus = $r[14] !== null ? strtoupper(trim((string)$r[14])) : '';
-                $status = 'Eligible';
-                if ($excelStatus === 'NO') {
-                    $status = 'Not Eligible';
+                if (isset($seenPanipatAppNos[$appNo])) {
+                    continue;
                 }
+                
+                // Strictly seed only Eligible applicants (Eligibility col 14 == 'YES')
+                // Exclude 'NO', 'DEATH', and any uneligible records
+                $excelStatus = $r[14] !== null ? strtoupper(trim((string)$r[14])) : '';
+                if ($excelStatus !== 'YES') {
+                    continue;
+                }
+
+                $seenPanipatAppNos[$appNo] = true;
                 
                 $panipatBatch[] = [
                     'application_number' => $appNo,
                     'full_name' => $r[4] !== null ? trim((string)$r[4]) : '',
                     'aadhar_no' => null,
                     'mobile_number' => $r[6] !== null ? trim((string)$r[6]) : '',
-                    'status' => $status,
+                    'status' => 'Eligible',
                     'priority' => null,
                     'category' => null,
                     'secure_id' => md5('ews_eligible_6_' . $appNo . '_' . uniqid(rand(), true)),
@@ -524,7 +535,7 @@ class EwsEligibleSeeder extends Seeder
                 DB::table('ews_eligible_6')->insert($panipatBatch);
                 $panipatCount += count($panipatBatch);
             }
-            $this->command->info("Successfully seeded {$panipatCount} Panipat records.");
+            $this->command->info("Successfully seeded {$panipatCount} unique eligible Panipat records.");
             $panipatSpreadsheet->disconnectWorksheets();
             unset($panipatSpreadsheet);
         } else {
