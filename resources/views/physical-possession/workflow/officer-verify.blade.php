@@ -318,7 +318,7 @@
                                     <ul class="list-unstyled mb-0">
                                         <li class="mb-1.5 d-flex gap-2">
                                             <i class="bi bi-1-circle-fill text-primary"></i>
-                                            <span>Download the prefilled application PDF.</span>
+                                            <span>Download prefilled application & possession letter format.</span>
                                         </li>
                                         <li class="mb-1.5 d-flex gap-2">
                                             <i class="bi bi-2-circle-fill text-primary"></i>
@@ -400,41 +400,52 @@
 
                                 <hr class="my-3 border-slate-100">
 
-                                <!-- 1. Download Prefilled PDF -->
-                                <div class="mb-3">
-                                    <label class="form-label text-dark fw-semibold small mb-1.5">1. Download/View Physical Possession Application</label>
-                                    <div class="p-2 bg-light rounded-3 border d-flex align-items-center justify-content-between">
-                                        <div class="min-w-0">
-                                            <span class="fw-bold text-dark d-block text-truncate" style="font-size: 0.8rem;">Physical Possession Application PDF</span>
-                                            <small class="text-muted d-block text-wrap" style="font-size: 0.7rem; line-height: 1.2;">Download, get signed by citizen, and upload below</small>
+                                <!-- 1. Physical Possession Application (Signed) -->
+                                <div class="mb-3 p-3 bg-light rounded-3 border">
+                                    <div class="d-flex flex-wrap flex-sm-nowrap align-items-center justify-content-between gap-2 mb-2">
+                                        <div>
+                                            <label class="form-label text-dark fw-bold small mb-0 d-block" style="font-size: 0.82rem;">
+                                                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i>1. Upload Physical Possession Application (Signed) <span class="text-danger">*</span>
+                                            </label>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1.25;">
+                                                Physical Possession Application PDF &bull; Download, get signed by citizen, and upload below
+                                            </small>
                                         </div>
                                         <div class="d-flex gap-1.5 shrink-0">
                                             <a href="{{ route('pp.officer.download-certificate', ['application' => $application->secure_id, 'inline' => 1]) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
-                                                <i class="bi bi-eye"></i>
-                                                View
+                                                <i class="bi bi-eye"></i> View
                                             </a>
                                             <a href="{{ route('pp.officer.download-certificate', $application->secure_id) }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
-                                                <i class="bi bi-file-earmark-arrow-down"></i>
-                                                Download
+                                                <i class="bi bi-file-earmark-arrow-down"></i> Download
                                             </a>
                                         </div>
                                     </div>
+                                    <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm bg-white" style="font-size: 0.78rem;">
+                                    <div class="form-text text-muted mb-0 mt-1" style="font-size: 0.66rem;">PDF only (Max file size 500 KB)</div>
                                 </div>
 
-                                <hr class="my-3 border-slate-100">
-
-                                <!-- 2. Upload Signed PDF & Site Engineer Document -->
-                                <div class="row g-2 mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">2. Upload Physical Possession Application (Signed) <span class="text-danger">*</span></label>
-                                        <input type="file" name="possession_certificate" id="possession_certificate" required accept="application/pdf" class="form-control form-control-sm" style="font-size: 0.78rem;">
-                                        <div class="form-text text-muted" style="font-size: 0.65rem;">PDF only (Max file size 500 KB)</div>
+                                <!-- 2. Final Possession Letter -->
+                                <div class="mb-3 p-3 bg-light rounded-3 border">
+                                    <div class="d-flex flex-wrap flex-sm-nowrap align-items-center justify-content-between gap-2 mb-2">
+                                        <div>
+                                            <label class="form-label text-dark fw-bold small mb-0 d-block" style="font-size: 0.82rem;">
+                                                <i class="bi bi-file-earmark-text-fill text-primary me-1"></i>2. Upload Final Possession Letter <span class="text-danger">*</span>
+                                            </label>
+                                            <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1.25;">
+                                                Housing_For_All_Possession_Letter_Hindi_Unicode &bull; Download letter format, complete/sign, and upload below
+                                            </small>
+                                        </div>
+                                        <div class="d-flex gap-1.5 shrink-0">
+                                            <a href="{{ route('pp.officer.download-possession-letter-template', ['inline' => 1]) }}" target="_blank" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
+                                                <i class="bi bi-eye"></i> View
+                                            </a>
+                                            <a href="{{ route('pp.officer.download-possession-letter-template') }}" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1.5 py-1 px-2.5 rounded-pill fw-bold" style="font-size: 0.76rem;">
+                                                <i class="bi bi-file-earmark-arrow-down"></i> Download
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label text-dark fw-semibold small mb-1" style="min-height: 38px; display: flex; align-items: flex-end;">3. Upload Final Possession Letter <span class="text-danger">*</span></label>
-                                        <input type="file" name="site_engineer_file" id="site_engineer_file" required accept="application/pdf,image/jpeg,image/jpg,image/png" class="form-control form-control-sm" style="font-size: 0.78rem;">
-                                        <div class="form-text text-muted" style="font-size: 0.65rem;">PDF or image (Max file size 500 KB)</div>
-                                    </div>
+                                    <input type="file" name="site_engineer_file" id="site_engineer_file" required accept="application/pdf" class="form-control form-control-sm bg-white" style="font-size: 0.78rem;">
+                                    <div class="form-text text-muted mb-0 mt-1" style="font-size: 0.66rem;">PDF only (Max file size 500 KB)</div>
                                 </div>
 
                                 <hr class="my-3 border-slate-100">
@@ -1009,7 +1020,7 @@
                     const file = this.files[0];
                     const fileName = file.name.toLowerCase();
                     const isPdf = file.type === 'application/pdf' || fileName.endsWith('.pdf');
-                    const maxSize = 500 * 1024; // 500KB
+                    const maxSize = 2 * 1024 * 1024; // 2MB
 
                     if (!isPdf) {
                         Swal.fire({
@@ -1042,14 +1053,14 @@
                 if (this.files.length > 0) {
                     const file = this.files[0];
                     const fileName = file.name.toLowerCase();
-                    const isAllowed = file.type === 'application/pdf' || file.type.startsWith('image/') || fileName.endsWith('.pdf') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.png');
+                    const isAllowed = file.type === 'application/pdf' || fileName.endsWith('.pdf');
                     const maxSize = 500 * 1024; // 500KB
 
                     if (!isAllowed) {
                         Swal.fire({
                             icon: 'error',
                             title: 'Invalid File Format',
-                            text: 'Please upload only PDF or image files (JPG, JPEG, PNG) for the Final Possession Letter.',
+                            text: 'Please upload only PDF file for the Final Possession Letter.',
                             confirmButtonColor: '#3085d6'
                         });
                         this.value = ''; // clear select

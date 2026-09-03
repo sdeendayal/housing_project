@@ -782,13 +782,13 @@ class PhysicalPossessionWorkflowController extends Controller
             // Step 2 validation
             $request->validate([
                 'possession_certificate' => 'required|file|mimes:pdf|max:500',
-                'site_engineer_file' => 'required|file|mimes:pdf,jpeg,jpg,png|max:500',
+                'site_engineer_file' => 'required|file|mimes:pdf|max:500',
             ], [
                 'possession_certificate.required' => 'Physical Possession Application (Signed) is required.',
                 'possession_certificate.mimes' => 'The Physical Possession Application must be a PDF file.',
                 'possession_certificate.max' => 'The Physical Possession Application must not exceed 500 KB.',
                 'site_engineer_file.required' => 'Final Possession Letter is required.',
-                'site_engineer_file.mimes' => 'The Final Possession Letter must be a PDF or image file (JPG, JPEG, PNG).',
+                'site_engineer_file.mimes' => 'The Final Possession Letter must be a PDF file.',
                 'site_engineer_file.max' => 'The Final Possession Letter must not exceed 500 KB.',
             ]);
 
@@ -926,6 +926,29 @@ class PhysicalPossessionWorkflowController extends Controller
     }
 
     /**
+     * Download or view the blank/template Final Possession Letter (Hindi Unicode).
+     */
+    public function downloadPossessionLetterTemplate(Request $request)
+    {
+        $filePath = public_path('docs/Housing_For_All_Possession_Letter_Hindi_Unicode.pdf');
+        if (!file_exists($filePath)) {
+            $filePath = public_path('Housing_For_All_Possession_Letter_Hindi_Unicode.pdf');
+        }
+        if (!file_exists($filePath)) {
+            abort(404, 'Final Possession Letter template not found.');
+        }
+
+        if ($request->has('inline')) {
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="Housing_For_All_Possession_Letter_Hindi_Unicode.pdf"',
+            ]);
+        }
+
+        return response()->download($filePath, 'Housing_For_All_Possession_Letter_Hindi_Unicode.pdf');
+    }
+
+    /**
      * Public download of the prefilled Possession Certificate PDF (no authentication required).
      */
     public function publicDownloadCertificate(Request $request, PhysicalPossessionApplication $application)
@@ -1019,6 +1042,19 @@ class PhysicalPossessionWorkflowController extends Controller
             }
         }
 
+        // Base64 Logos for official header
+        $haryanaEmblemBase64 = null;
+        $haryanaEmblemPath = public_path('Haryana_emblem.png');
+        if (file_exists($haryanaEmblemPath)) {
+            $haryanaEmblemBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($haryanaEmblemPath));
+        }
+
+        $hsvpLogoBase64 = null;
+        $hsvpLogoPath = public_path('hsvp-logo.jpg');
+        if (file_exists($hsvpLogoPath)) {
+            $hsvpLogoBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($hsvpLogoPath));
+        }
+
         return [
             'application' => $application,
             'purchaser' => $purchaser,
@@ -1036,9 +1072,15 @@ class PhysicalPossessionWorkflowController extends Controller
             'asset_size' => $purchaser?->AssetSize ?? $application->asset_size,
             'asset_unit' => $purchaser?->AssetUnit ?? $application->asset_unit,
             'flat_cost' => $flatCost,
+            'initial_deposit' => $initialDeposit,
+            'installment_paid' => $installmentPaid,
             'total_paid' => $totalPaid,
             'pending_amount' => $pendingAmount,
+            'member_id' => $purchaser?->MemberID ?? '—',
+            'allotment_date' => $purchaser?->CreateDate ? \Carbon\Carbon::parse($purchaser->CreateDate)->format('d M Y') : '—',
             'plot_image_base64' => $plotImageBase64,
+            'haryana_emblem_base64' => $haryanaEmblemBase64,
+            'hsvp_logo_base64' => $hsvpLogoBase64,
             'latitude' => $application->latitude ?? '—',
             'longitude' => $application->longitude ?? '—',
             'remarks' => $application->remarks ?? '—',

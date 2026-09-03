@@ -103,6 +103,7 @@ Route::prefix('physical-possession')->name('pp.')->group(function () {
         Route::get('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifyForm'])->name('verify-form')->where('application', '[a-f0-9]{32}');
         Route::post('/verify/{application}', [PhysicalPossessionWorkflowController::class, 'officerVerifySave'])->name('verify-save')->where('application', '[a-f0-9]{32}');
         Route::get('/download-certificate/{application}', [PhysicalPossessionWorkflowController::class, 'officerDownloadCertificate'])->name('download-certificate')->where('application', '[a-f0-9]{32}');
+        Route::get('/download-possession-letter-template', [PhysicalPossessionWorkflowController::class, 'downloadPossessionLetterTemplate'])->name('download-possession-letter-template');
     });
 
     // DTP officer PP panel (mmgay-dtp role)
