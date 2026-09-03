@@ -473,6 +473,18 @@ Route::prefix('super-admin')
         Route::get('/registry-done/{secureId}', [SuperAdminController::class, 'registryDoneShow'])
             ->name('superadmin.registry_done.show');
 
+        Route::get('/registry-yet-done', [SuperAdminController::class, 'registryYetDone'])
+            ->name('superadmin.registry_yet_done.index');
+
+        Route::get('/registry-yet-done/options', [SuperAdminController::class, 'registryYetDoneOptions'])
+            ->name('superadmin.registry_yet_done.options');
+
+        Route::get('/registry-yet-done/print', [SuperAdminController::class, 'registryYetDonePrint'])
+            ->name('superadmin.registry_yet_done.print');
+
+        Route::get('/registry-yet-done/csv', [SuperAdminController::class, 'registryYetDoneCsv'])
+            ->name('superadmin.registry_yet_done.csv');
+
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');
     });

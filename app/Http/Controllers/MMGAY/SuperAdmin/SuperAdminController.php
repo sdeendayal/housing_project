@@ -7903,6 +7903,513 @@ class SuperAdminController extends Controller
         );
     }
 
+    public function registryYetDone(Request $request)
+    {
+        DB::disableQueryLog();
+
+        $registryYetDone = $this->registryYetDoneQuery($request)
+            ->orderBy('o.OwnerId')
+            ->paginate(25)
+            ->withQueryString();
+
+        $phases = DB::table('villagemaster')
+            ->where('plots', '>', 0)
+            ->whereNotNull('phase')
+            ->where('phase', '<>', '')
+            ->distinct()
+            ->orderBy('phase')
+            ->pluck('phase');
+
+        $districts = DB::table('districtmaster')
+            ->select([
+                'DistrictId',
+                'DistrictName',
+            ])
+            ->orderBy('DistrictName')
+            ->get();
+
+        $blocks = DB::table('blockmaster')
+            ->select([
+                'BlockId',
+                'BlockName',
+            ])
+            ->orderBy('BlockName')
+            ->get();
+
+        $villages = DB::table('villagemaster')
+            ->select([
+                'VillageId',
+                'VillageName',
+            ])
+            ->orderBy('VillageName')
+            ->get();
+
+        return view(
+            'mmgay.super-admin.registry-yet-done.index',
+            compact(
+                'registryYetDone',
+                'phases',
+                'districts',
+                'blocks',
+                'villages'
+            )
+        );
+    }
+
+    public function registryYetDoneOptions(Request $request)
+    {
+        $type = $request->get('type');
+
+        if ($type === 'districts') {
+
+            return response()->json(
+                DB::table('districtmaster')
+                    ->select(
+                        'DistrictId as id',
+                        'DistrictName as name'
+                    )
+                    ->when(
+                        $request->filled('phase'),
+                        function ($q) use ($request) {
+                            $q->whereExists(function ($sub) use ($request) {
+                                $sub->select(DB::raw(1))
+                                    ->from('ownermaster as o')
+                                    ->whereColumn(
+                                        'o.DistrictId',
+                                        'districtmaster.DistrictId'
+                                    )
+                                    ->where(
+                                        'o.Phase',
+                                        $request->phase
+                                    );
+                            });
+                        }
+                    )
+                    ->orderBy('DistrictName')
+                    ->get()
+            );
+        }
+
+
+        if ($type === 'blocks') {
+
+            return response()->json(
+                DB::table('blockmaster')
+                    ->select(
+                        'BlockId as id',
+                        'BlockName as name'
+                    )
+                    ->when(
+                        $request->filled('district_id'),
+                        function ($q) use ($request) {
+                            $q->whereExists(function ($sub) use ($request) {
+
+                                $sub->select(DB::raw(1))
+                                    ->from('ownermaster as o')
+                                    ->whereColumn(
+                                        'o.BlockId',
+                                        'blockmaster.BlockId'
+                                    )
+                                    ->where(
+                                        'o.DistrictId',
+                                        $request->district_id
+                                    );
+
+                                if ($request->filled('phase')) {
+                                    $sub->where(
+                                        'o.Phase',
+                                        $request->phase
+                                    );
+                                }
+                            });
+                        }
+                    )
+                    ->orderBy('BlockName')
+                    ->get()
+            );
+        }
+
+
+        if ($type === 'villages') {
+
+            return response()->json(
+                DB::table('villagemaster')
+                    ->select(
+                        'VillageId as id',
+                        'VillageName as name'
+                    )
+                    ->where('plots', '>', 0)
+                    ->when(
+                        $request->filled('phase'),
+                        fn($q) => $q->where(
+                            'Phase',
+                            $request->phase
+                        )
+                    )
+                    ->when(
+                        $request->filled('district_id'),
+                        fn($q) => $q->where(
+                            'DistrictId',
+                            $request->district_id
+                        )
+                    )
+                    ->when(
+                        $request->filled('block_id'),
+                        fn($q) => $q->where(
+                            'BlockId',
+                            $request->block_id
+                        )
+                    )
+                    ->orderBy('VillageName')
+                    ->get()
+            );
+        }
+
+
+        return response()->json([]);
+    }
+
+    public function registryYetDonePrint(Request $request)
+    {
+        DB::disableQueryLog();
+
+        $registryYetDone = $this->registryYetDoneQuery($request)
+            ->orderBy('o.OwnerId')
+            ->get();
+
+        return view(
+            'mmgay.super-admin.registry-yet-done.print',
+            compact('registryYetDone')
+        );
+    }
+
+    public function registryYetDoneCsv(Request $request)
+    {
+        DB::disableQueryLog();
+
+        $filename = 'Registry_Yet_To_Be_Done_' .
+            now()->format('d-m-Y_H-i-s') .
+            '.csv';
+
+        return response()->streamDownload(
+            function () use ($request) {
+
+                $handle = fopen('php://output', 'w');
+
+                /*
+                |--------------------------------------------------------------------------
+                | UTF-8 BOM
+                |--------------------------------------------------------------------------
+                */
+                fwrite(
+                    $handle,
+                    "\xEF\xBB\xBF"
+                );
+
+                /*
+                |--------------------------------------------------------------------------
+                | Header
+                |--------------------------------------------------------------------------
+                */
+                fputcsv($handle, [
+                    'Sr. No.',
+                    'Application No.',
+                    'Owner ID',
+                    'Applicant Name',
+                    'Father / Husband',
+                    'Mobile',
+                    'Village',
+                    'Block',
+                    'District',
+                    'Phase',
+                    'Flat No.',
+                    'Flat ID',
+                    'Status',
+                ]);
+
+                $srNo = 0;
+
+                $query = $this->registryYetDoneQuery($request)
+                    ->orderBy('o.OwnerId');
+
+                /*
+                |--------------------------------------------------------------------------
+                | Chunk
+                |--------------------------------------------------------------------------
+                */
+
+                $query->chunkById(
+                    1000,
+                    function ($rows) use ($handle, &$srNo) {
+
+                        foreach ($rows as $row) {
+
+                            $srNo++;
+
+                            fputcsv($handle, [
+                                $srNo,
+                                $row->RegistrationNo,
+                                $row->OwnerId,
+                                $row->OwnerName,
+                                $row->FatherHusbandName,
+                                $row->MobileNo,
+                                $row->VillageName,
+                                $row->BlockName,
+                                $row->DistrictName,
+                                $row->Phase,
+                                $row->FlatNo,
+                                $row->FlatId,
+                                'Registry Pending',
+                            ]);
+                        }
+
+                    },
+                    'o.OwnerId',
+                    'OwnerId'
+                );
+
+                fclose($handle);
+            },
+            $filename,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
+    private function registryYetDoneQuery(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Registry matched Owner IDs
+        |--------------------------------------------------------------------------
+        | OLD Registry:
+        |   flatid IS NULL
+        |   SecondPartyMobile = Owner.MobileNo
+        |
+        | NEW Registry:
+        |   flatid > 0
+        |   flatid = Owner.FlatId
+        |--------------------------------------------------------------------------
+        */
+
+        $oldRegistryOwners = DB::table('registary as r')
+            ->join('ownermaster as o', function ($join) {
+                $join->on(
+                    'r.SecondPartyMobile',
+                    '=',
+                    'o.MobileNo'
+                );
+            })
+            ->whereNull('r.flatid')
+            ->whereNotNull('r.SecondPartyMobile')
+            ->where('r.SecondPartyMobile', '<>', '')
+            ->select('o.OwnerId');
+
+        $newRegistryOwners = DB::table('registary as r')
+            ->join('ownermaster as o', function ($join) {
+                $join->on(
+                    'r.flatid',
+                    '=',
+                    'o.FlatId'
+                );
+            })
+            ->whereNotNull('r.flatid')
+            ->where('r.flatid', '>', 0)
+            ->select('o.OwnerId');
+
+        $registryMatchedOwners = $oldRegistryOwners
+            ->union($newRegistryOwners);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Main Yet-To-Be-Done Query
+        |--------------------------------------------------------------------------
+        */
+
+        $query = DB::table('ownermaster as o')
+
+            ->leftJoin(
+                'villagemaster as v',
+                'v.VillageId',
+                '=',
+                'o.VillageId'
+            )
+
+            ->leftJoin(
+                'districtmaster as d',
+                'd.DistrictId',
+                '=',
+                'o.DistrictId'
+            )
+
+            ->leftJoin(
+                'blockmaster as b',
+                'b.BlockId',
+                '=',
+                'o.BlockId'
+            )
+
+            ->leftJoin(
+                'flatmaster as f',
+                'f.FlatId',
+                '=',
+                'o.FlatId'
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Exclude Registry Done
+            |--------------------------------------------------------------------------
+            */
+            ->leftJoinSub(
+                $registryMatchedOwners,
+                'ro',
+                function ($join) {
+                    $join->on(
+                        'ro.OwnerId',
+                        '=',
+                        'o.OwnerId'
+                    );
+                }
+            )
+
+            ->whereNull('ro.OwnerId')
+
+            /*
+            |--------------------------------------------------------------------------
+            | Eligible Applicants
+            |--------------------------------------------------------------------------
+            */
+            ->where('o.IsApproved', 1)
+            ->where('o.IsPaid', 1)
+            ->whereRaw(
+                'COALESCE(o.IsRejected, 0) = 0'
+            )
+            ->whereRaw(
+                'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Select
+            |--------------------------------------------------------------------------
+            */
+            ->select([
+                'o.OwnerId',
+                'o.OwnerName',
+                'o.FatherHusbandName',
+                'o.MobileNo',
+                'o.RegistrationNo',
+
+                'o.FlatId',
+                'f.FlatNo',
+
+                'o.Phase',
+
+                'o.VillageId',
+                'v.VillageName',
+
+                'o.BlockId',
+                'b.BlockName',
+
+                'o.DistrictId',
+                'd.DistrictName',
+            ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Filters
+        |--------------------------------------------------------------------------
+        */
+
+        $query->when(
+            $request->filled('phase'),
+            function ($q) use ($request) {
+                $q->where(
+                    'o.Phase',
+                    $request->phase
+                );
+            }
+        );
+
+        $query->when(
+            $request->filled('district_id'),
+            function ($q) use ($request) {
+                $q->where(
+                    'o.DistrictId',
+                    $request->district_id
+                );
+            }
+        );
+
+        $query->when(
+            $request->filled('block_id'),
+            function ($q) use ($request) {
+                $q->where(
+                    'o.BlockId',
+                    $request->block_id
+                );
+            }
+        );
+
+        $query->when(
+            $request->filled('village_id'),
+            function ($q) use ($request) {
+                $q->where(
+                    'o.VillageId',
+                    $request->village_id
+                );
+            }
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Search
+        |--------------------------------------------------------------------------
+        */
+
+        $query->when(
+            $request->filled('search'),
+            function ($q) use ($request) {
+
+                $search = trim($request->search);
+
+                $q->where(function ($searchQuery) use ($search) {
+
+                    $searchQuery
+                        ->where('o.OwnerName', 'LIKE', "%{$search}%")
+                        ->orWhere(
+                            'o.FatherHusbandName',
+                            'LIKE',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.MobileNo',
+                            'LIKE',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.RegistrationNo',
+                            'LIKE',
+                            "%{$search}%"
+                        )
+                        ->orWhere(
+                            'o.OwnerId',
+                            'LIKE',
+                            "%{$search}%"
+                        );
+                });
+            }
+        );
+
+        return $query;
+    }
+
 
 
 }

@@ -2005,7 +2005,7 @@
 
                     {{-- Unmatched --}}
 
-                    <a href="#"
+                    <a href="{{ route('superadmin.registry_yet_done.index') }}"
                         class="
                             master-card
                             block
