@@ -67,7 +67,7 @@
         </a>
 
         {{-- 6. Possession Application Request Form --}}
-        <a class="nav-v2 {{ $activeNav === 'possession-certificate' ? 'active' : '' }}" href="{{ route('citizen.possession-certificate') }}">
+        <a class="nav-v2 d-none hidden {{ $activeNav === 'possession-certificate' ? 'active' : '' }}" style="display: none !important;" href="{{ route('citizen.possession-certificate') }}">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'possession-certificate') style="font-variation-settings:'FILL' 1" @endif>description</span></span>
             <span class="nav-text">Possession Application Request Form</span>
         </a>
