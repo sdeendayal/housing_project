@@ -459,6 +459,20 @@ Route::prefix('super-admin')
             ]
         )->name('admin.possession.filters.villages');
 
+        // Registry Routes Start
+    
+        Route::get('/registry-done', [SuperAdminController::class, 'registryDone'])
+            ->name('superadmin.registry_done.index');
+
+        Route::get('/registry-done/options', [SuperAdminController::class, 'registryDoneOptions'])
+            ->name('superadmin.registry_done.options');
+
+        Route::get('/registry-done/{secureId}/print', [SuperAdminController::class, 'registryDonePrint'])
+            ->name('superadmin.registry_done.print');
+
+        Route::get('/registry-done/{secureId}', [SuperAdminController::class, 'registryDoneShow'])
+            ->name('superadmin.registry_done.show');
+
         Route::post('/logout', [MMGAYAuthController::class, 'logout'])
             ->name('admin.logout');
     });

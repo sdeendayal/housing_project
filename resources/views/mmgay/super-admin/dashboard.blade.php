@@ -126,8 +126,8 @@
 
 
         /* ============================
-                           MASTER CARD
-                        ============================ */
+                               MASTER CARD
+                            ============================ */
 
         .master-card {
             position: relative;
@@ -231,8 +231,8 @@
 
 
         /* ============================
-                           ICON
-                        ============================ */
+                               ICON
+                            ============================ */
 
         .ai-icon {
             display: flex;
@@ -250,8 +250,8 @@
 
 
         /* ============================
-                           STATUS CARD
-                        ============================ */
+                               STATUS CARD
+                            ============================ */
 
         .status-card {
             min-height: 102px;
@@ -304,8 +304,8 @@
 
 
         /* ============================
-                           DONUT
-                        ============================ */
+                               DONUT
+                            ============================ */
 
         .registry-donut {
             width: 138px;
@@ -358,8 +358,8 @@
         }
 
         /* =================================
-           FILTER DROPDOWN - SAME THEME
-        ================================= */
+               FILTER DROPDOWN - SAME THEME
+            ================================= */
 
         .filter-field {
             position: relative;
@@ -484,8 +484,8 @@
 
 
         /* =================================
-           APPLY BUTTON
-        ================================= */
+               APPLY BUTTON
+            ================================= */
 
         .ai-apply {
             width: 100%;
@@ -531,9 +531,9 @@
         }
 
         /* ============================================================
-               REFERENCE IMAGE ICON FIX
-               Visual-only change: routes, filters, values and JS untouched
-            ============================================================ */
+                   REFERENCE IMAGE ICON FIX
+                   Visual-only change: routes, filters, values and JS untouched
+                ============================================================ */
 
         /* Existing master / possession icon boxes */
         .ai-icon {
@@ -737,12 +737,12 @@
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                             <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                    M3 4h18
-                                                    M6 8h12
-                                                    l-4.5 5v5
-                                                    l-3 2v-7
-                                                    L6 8z
-                                                " />
+                                                        M3 4h18
+                                                        M6 8h12
+                                                        l-4.5 5v5
+                                                        l-3 2v-7
+                                                        L6 8z
+                                                    " />
 
                         </svg>
 
@@ -804,10 +804,10 @@
                     <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                         <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                M4 4v6h6
-                                                M20 20v-6h-6
-                                                M5.6 18.4A8 8 0 0018.4 5.6
-                                            " />
+                                                    M4 4v6h6
+                                                    M20 20v-6h-6
+                                                    M5.6 18.4A8 8 0 0018.4 5.6
+                                                " />
 
                     </svg>
 
@@ -1020,13 +1020,13 @@
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                             <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                    M3 21h18
-                                                    M5 21V7l7-4 7 4v14
-                                                    M9 9h.01
-                                                    M15 9h.01
-                                                    M9 13h.01
-                                                    M15 13h.01
-                                                " />
+                                                        M3 21h18
+                                                        M5 21V7l7-4 7 4v14
+                                                        M9 9h.01
+                                                        M15 9h.01
+                                                        M9 13h.01
+                                                        M15 13h.01
+                                                    " />
 
                         </svg>
 
@@ -1117,10 +1117,10 @@
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                             <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                    M3 10l9-7 9 7
-                                                    M5 10v10h14V10
-                                                    M9 20v-6h6v6
-                                                " />
+                                                        M3 10l9-7 9 7
+                                                        M5 10v10h14V10
+                                                        M9 20v-6h6v6
+                                                    " />
 
                         </svg>
 
@@ -1211,11 +1211,11 @@
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                             <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                    M17 20h5v-2a4 4 0 00-4-4h-1
-                                                    M9 20H4v-2a4 4 0 014-4h1
-                                                    m4-4a4 4 0 10-8 0
-                                                    4 4 0 008 0z
-                                                " />
+                                                        M17 20h5v-2a4 4 0 00-4-4h-1
+                                                        M9 20H4v-2a4 4 0 014-4h1
+                                                        m4-4a4 4 0 10-8 0
+                                                        4 4 0 008 0z
+                                                    " />
 
                         </svg>
 
@@ -1306,10 +1306,10 @@
                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 
                             <path stroke-linecap="round" stroke-linejoin="round" d="
-                                                    M8 17v-5h8v5
-                                                    M3 10l9-7 9 7
-                                                    M5 10v10h14V10
-                                                " />
+                                                        M8 17v-5h8v5
+                                                        M3 10l9-7 9 7
+                                                        M5 10v10h14V10
+                                                    " />
 
                         </svg>
 
@@ -1941,15 +1941,15 @@
 
                     {{-- Matched --}}
 
-                    <a href="#"
+                    <a href="{{ route('superadmin.registry_done.index') }}"
                         class="
-                            master-card
-                            master-green
-                            block
-                            min-h-[130px]
-                            p-4
-                        
-                            registration-icon-card">
+        master-card
+        master-green
+        block
+        min-h-[130px]
+        p-4
+        registration-icon-card">
+
                         <span class="card-ref-icon card-ref-green" aria-hidden="true">
                             <svg viewBox="0 0 24 24">
                                 <circle cx="12" cy="12" r="8" />
@@ -1959,37 +1959,35 @@
 
                         <p
                             class="
-                                text-[10px]
-                                font-extrabold
-                                uppercase
-                                text-slate-500
-                            ">
+            text-[10px]
+            font-extrabold
+            uppercase
+            text-slate-500
+        ">
 
                             Registry done
 
                         </p>
 
-
                         <h3
                             class="
-                                mt-2
-                                text-[25px]
-                                font-black
-                                text-slate-900
-                            ">
+            mt-2
+            text-[25px]
+            font-black
+            text-slate-900
+        ">
 
                             {{ number_format($registration->Matched) }}
 
                         </h3>
 
-
                         <p
                             class="
-                                mt-2
-                                text-[10px]
-                                font-extrabold
-                                text-emerald-600
-                            ">
+            mt-2
+            text-[10px]
+            font-extrabold
+            text-emerald-600
+        ">
 
                             {{ number_format($matchedPct, 2) }}%
                             of total
@@ -2282,7 +2280,7 @@
              POSSESSION
         ============================================ --}}
 
-                {{-- ===========================================
+        {{-- ===========================================
              PHYSICAL POSSESSION
         ============================================ --}}
 
@@ -2309,7 +2307,8 @@
             </div>
 
 
-            <div class="grid grid-cols-1 gap-4 bg-gradient-to-r from-slate-50/70 via-white to-slate-50/70 p-4 md:grid-cols-3">
+            <div
+                class="grid grid-cols-1 gap-4 bg-gradient-to-r from-slate-50/70 via-white to-slate-50/70 p-4 md:grid-cols-3">
 
                 {{-- Possession to be given --}}
                 <a href="{{ route('admin.possession.list', array_merge(request()->only(['phase', 'district_id', 'block_id', 'village_id']), ['filter' => 'all'])) }}"
