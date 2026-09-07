@@ -483,6 +483,21 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'partialPaidPropertiesPrint']
     )->name('partial-paid-properties.print');
 
+    Route::get(
+        'physical-verification-report',
+        [PropertyManagementController::class, 'physicalVerificationReport']
+    )->name('physical-verification.report');
+
+    Route::get(
+        'physical-verification-report/print',
+        [PropertyManagementController::class, 'physicalVerificationReportPrint']
+    )->name('physical-verification.report.print');
+
+    Route::get(
+        'physical-verification-report/csv',
+        [PropertyManagementController::class, 'physicalVerificationReportCsv']
+    )->name('physical-verification.report.csv');
+
     // Optional backward compatibility for the old URL.
     Route::redirect('pending-properties', 'partial-paid-properties');
 

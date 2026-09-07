@@ -4885,4 +4885,530 @@ class PropertyManagementController extends Controller
         );
     }
 
+    public function physicalVerificationReport(Request $request)
+    {
+
+        $query = DB::table('hfa_new.property_private_purchasers as ppp')
+            ->join('hfa_new.cities as c', function ($join) {
+                $join->on('c.CityId', '=', 'ppp.CityId')
+                    ->where('c.Is_Deleted', 0);
+            })
+            ->where('ppp.IsDeleted', 0)
+            ->where('ppp.phase', '1')
+            ->whereRaw("LOWER(TRIM(ppp.property_type)) = 'plot'");
+
+        // Phase
+        if ($request->filled('phase')) {
+            $query->where('ppp.phase', $request->phase);
+        }
+
+        // District
+        if ($request->filled('district_id')) {
+            $query->where('c.DistrictId', $request->district_id);
+        }
+
+        // Town / ULB
+        if ($request->filled('city_id')) {
+            $query->where('ppp.CityId', $request->city_id);
+        }
+
+        $rows = $query
+            ->select(
+                'ppp.PrivatePurchaserId',
+                'ppp.is_ghumantu',
+                'ppp.MaritalStatus',
+                'ppp.CasteCategoryName',
+                'c.CityName',
+                'c.DistrictId'
+            )
+            ->distinct()
+            ->get();
+
+        $classified = $rows->map(function ($row) {
+
+            if ((int) $row->is_ghumantu === 1) {
+                $row->report_category = 'ghumantu';
+            } elseif (
+                strtolower(trim($row->MaritalStatus ?? '')) === 'widow'
+            ) {
+                $row->report_category = 'widow';
+            } elseif (
+                in_array(
+                    strtolower(trim($row->CasteCategoryName ?? '')),
+                    ['sc', 'deprived scheduled castes']
+                )
+            ) {
+                $row->report_category = 'scheduled_caste';
+            } else {
+                $row->report_category = 'others';
+            }
+
+            return $row;
+        });
+
+        $report = $classified
+            ->groupBy('CityName')
+            ->map(function ($items, $town) {
+
+                return (object) [
+                    'town_ulb' => $town,
+
+                    'ghumantu_jati' => $items
+                        ->where('report_category', 'ghumantu')
+                        ->count(),
+
+                    'widows' => $items
+                        ->where('report_category', 'widow')
+                        ->count(),
+
+                    'scheduled_caste' => $items
+                        ->where('report_category', 'scheduled_caste')
+                        ->count(),
+
+                    'others' => $items
+                        ->where('report_category', 'others')
+                        ->count(),
+
+                    'total' => $items->count(),
+                ];
+            });
+
+        $serial = [
+            'CHARKHI DADRI MC' => 1,
+            'FATEHABAD MC' => 2,
+            'GOHANA MC' => 3,
+            'JHAJJAR MC' => 4,
+            'JULANA MC' => 5,
+            'KALKA MC' => 6,
+            'KARNAL MC' => 7,
+            'MAHENDRAGARH MC' => 8,
+            'PALWAL MC' => 9,
+            'REWARI MC' => 10,
+            'ROHTAK MC' => 11,
+            'SAFIDON MC' => 12,
+            'SIRSA MC' => 13,
+            'YAMUNANAGAR MC' => 14,
+        ];
+
+        $report = $report
+            ->sortBy(fn($row) => $serial[$row->town_ulb] ?? 999)
+            ->values();
+
+        $grandTotal = (object) [
+            'ghumantu_jati' => $report->sum('ghumantu_jati'),
+            'widows' => $report->sum('widows'),
+            'scheduled_caste' => $report->sum('scheduled_caste'),
+            'others' => $report->sum('others'),
+            'total' => $report->sum('total'),
+        ];
+
+        $phases = DB::table('hfa_new.property_private_purchasers')
+            ->where('IsDeleted', 0)
+            ->select('phase')
+            ->distinct()
+            ->orderBy('phase')
+            ->pluck('phase');
+
+        $districts = DB::table('hfa_new.districts')
+            ->where('Is_Deleted', 0)
+            ->orderBy('DistrictName')
+            ->get();
+
+        $cities = DB::table('hfa_new.cities')
+            ->where('Is_Deleted', 0)
+            ->orderBy('CityName')
+            ->get();
+
+        return view(
+            'mmsay.physical_verification_report',
+            compact(
+                'report',
+                'grandTotal',
+                'phases',
+                'districts',
+                'cities'
+            )
+        );
+    }
+
+    private function getPhysicalVerificationReportData(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Base Query
+        |--------------------------------------------------------------------------
+        */
+
+        $query = DB::table(
+            'hfa_new.property_private_purchasers as ppp'
+        )
+            ->join(
+                'hfa_new.cities as c',
+                function ($join) {
+                    $join->on(
+                        'c.CityId',
+                        '=',
+                        'ppp.CityId'
+                    )
+                        ->where(
+                            'c.Is_Deleted',
+                            0
+                        );
+                }
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Required Conditions
+            |--------------------------------------------------------------------------
+            */
+
+            ->where(
+                'ppp.IsDeleted',
+                0
+            )
+
+            ->where(
+                'ppp.phase',
+                '1'
+            )
+
+            ->whereRaw(
+                "LOWER(TRIM(ppp.property_type)) = 'plot'"
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phase Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('phase')) {
+
+            $query->where(
+                'ppp.phase',
+                $request->phase
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | District Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('district_id')) {
+
+            $query->where(
+                'c.DistrictId',
+                $request->district_id
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Town / ULB Filter
+        |--------------------------------------------------------------------------
+        */
+
+        if ($request->filled('city_id')) {
+
+            $query->where(
+                'ppp.CityId',
+                $request->city_id
+            );
+
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Classified Data
+        |--------------------------------------------------------------------------
+        |
+        | Priority:
+        |
+        | 1. Ghumantu
+        | 2. Widow
+        | 3. Scheduled Caste
+        | 4. Others
+        |
+        */
+
+        $classifiedData = $query
+            ->select(
+                'ppp.PrivatePurchaserId',
+                'c.CityName as town_ulb'
+            )
+            ->selectRaw("
+            CASE
+
+                WHEN ppp.is_ghumantu = 1
+                    THEN 'ghumantu'
+
+                WHEN LOWER(
+                    TRIM(
+                        COALESCE(
+                            ppp.MaritalStatus,
+                            ''
+                        )
+                    )
+                ) = 'widow'
+                    THEN 'widow'
+
+                WHEN LOWER(
+                    TRIM(
+                        COALESCE(
+                            ppp.CasteCategoryName,
+                            ''
+                        )
+                    )
+                ) IN (
+                    'sc',
+                    'scheduled caste',
+                    'deprived scheduled castes'
+                )
+                    THEN 'scheduled_caste'
+
+                ELSE 'others'
+
+            END AS report_category
+        ")
+            ->distinct();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Town-wise Report
+        |--------------------------------------------------------------------------
+        */
+
+        $report = DB::query()
+            ->fromSub(
+                $classifiedData,
+                'classified_data'
+            )
+            ->select(
+                'town_ulb'
+            )
+            ->selectRaw("
+            SUM(
+                report_category = 'ghumantu'
+            ) AS ghumantu_jati
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'widow'
+            ) AS widows
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'scheduled_caste'
+            ) AS scheduled_caste
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'others'
+            ) AS others
+        ")
+            ->selectRaw("
+            COUNT(*) AS total
+        ")
+            ->groupBy(
+                'town_ulb'
+            )
+            ->orderBy(
+                'town_ulb'
+            )
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Grand Total
+        |--------------------------------------------------------------------------
+        */
+
+        $grandTotal = DB::query()
+            ->fromSub(
+                $classifiedData,
+                'classified_data'
+            )
+            ->selectRaw("
+            SUM(
+                report_category = 'ghumantu'
+            ) AS ghumantu_jati
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'widow'
+            ) AS widows
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'scheduled_caste'
+            ) AS scheduled_caste
+        ")
+            ->selectRaw("
+            SUM(
+                report_category = 'others'
+            ) AS others
+        ")
+            ->selectRaw("
+            COUNT(*) AS total
+        ")
+            ->first();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Return
+        |--------------------------------------------------------------------------
+        */
+
+        return [
+            'report' => $report,
+            'grandTotal' => $grandTotal,
+        ];
+    }
+
+
+    /**
+     * =========================================================================
+     * Physical Verification Print
+     * =========================================================================
+     */
+    public function physicalVerificationReportPrint(Request $request)
+    {
+        /*
+        |--------------------------------------------------------------------------
+        | Get Same Filtered Report Data
+        |--------------------------------------------------------------------------
+        */
+
+        $data = $this->getPhysicalVerificationReportData(
+            $request
+        );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Print View
+        |--------------------------------------------------------------------------
+        */
+
+        return view(
+            'mmsay.physical_verification_report_print',
+            $data
+        );
+    }
+
+    /**
+     * =========================================================================
+     * Physical Verification CSV
+     * =========================================================================
+     */
+    public function physicalVerificationReportCsv(Request $request)
+    {
+        $data = $this->getPhysicalVerificationReportData(
+            $request
+        );
+
+        $report = $data['report'];
+
+        $grandTotal = $data['grandTotal'];
+
+        $filename = 'physical_verification_report_' .
+            now()->format('Y_m_d_H_i_s') .
+            '.csv';
+
+
+        return response()->streamDownload(
+            function () use ($report, $grandTotal) {
+
+                $handle = fopen(
+                    'php://output',
+                    'w'
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | CSV Header
+                |--------------------------------------------------------------------------
+                */
+
+                fputcsv(
+                    $handle,
+                    [
+                        'S. No.',
+                        'Town/ULB',
+                        'Ghumantu Jati',
+                        'Widows',
+                        'Scheduled Caste',
+                        'Others',
+                        'Total plots allotted',
+                    ]
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Report Rows
+                |--------------------------------------------------------------------------
+                */
+
+                foreach ($report as $index => $row) {
+
+                    fputcsv(
+                        $handle,
+                        [
+                            $index + 1,
+                            $row->town_ulb,
+                            $row->ghumantu_jati,
+                            $row->widows,
+                            $row->scheduled_caste,
+                            $row->others,
+                            $row->total,
+                        ]
+                    );
+
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Grand Total
+                |--------------------------------------------------------------------------
+                */
+
+                fputcsv(
+                    $handle,
+                    [
+                        '',
+                        'GRAND TOTAL',
+                        $grandTotal->ghumantu_jati,
+                        $grandTotal->widows,
+                        $grandTotal->scheduled_caste,
+                        $grandTotal->others,
+                        $grandTotal->total,
+                    ]
+                );
+
+
+                fclose($handle);
+
+            },
+            $filename,
+            [
+                'Content-Type' => 'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
 }

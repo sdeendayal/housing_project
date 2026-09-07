@@ -2,6 +2,126 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{{-- =========================================================
+     DISTRICT → TOWN / ULB DEPENDENCY
+========================================================= --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const districtSelect = document.getElementById('district_id');
+        const citySelect = document.getElementById('city_id');
+
+        if (!districtSelect || !citySelect) {
+            return;
+        }
+
+
+        /*
+         * Store all original city options.
+         * This prevents losing options when district changes.
+         */
+        const allCities = Array.from(citySelect.options)
+            .filter(option => option.value !== '')
+            .map(option => ({
+                value: option.value,
+                text: option.text.trim(),
+                district: option.dataset.district || ''
+            }));
+
+
+        /*
+         * City which came from URL/query string.
+         * Example:
+         * ?district_id=294&city_id=3264
+         */
+        const selectedCityId = @json(request('city_id', ''));
+
+
+        function loadCities(resetCity = false) {
+
+            const districtId = districtSelect.value;
+
+            // Clear existing cities
+            citySelect.innerHTML = '';
+
+
+            // Default option
+            const defaultOption = document.createElement('option');
+
+            defaultOption.value = '';
+            defaultOption.textContent = 'All Towns / ULBs';
+
+            citySelect.appendChild(defaultOption);
+
+
+            /*
+             * Add cities according to selected district
+             */
+            allCities.forEach(city => {
+
+                // No district selected = show all cities
+                // District selected = show matching cities only
+                if (
+                    districtId === '' ||
+                    city.district === districtId
+                ) {
+
+                    const option = document.createElement('option');
+
+                    option.value = city.value;
+                    option.textContent = city.text;
+                    option.dataset.district = city.district;
+
+
+                    /*
+                     * Preserve selected city after page reload
+                     */
+                    if (
+                        !resetCity &&
+                        selectedCityId &&
+                        selectedCityId.toString() === city.value.toString()
+                    ) {
+                        option.selected = true;
+                    }
+
+
+                    citySelect.appendChild(option);
+
+                }
+
+            });
+
+        }
+
+
+        /*
+         * Initial page load
+         *
+         * If district is already selected from GET,
+         * only its cities will be displayed.
+         */
+        loadCities(false);
+
+
+        /*
+         * When district changes:
+         *
+         * District = Rewari
+         *       ↓
+         * Town = only Rewari cities
+         *
+         * District = Rohtak
+         *       ↓
+         * Town = only Rohtak cities
+         */
+        districtSelect.addEventListener('change', function() {
+
+            loadCities(true);
+
+        });
+
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const filterForm = document.getElementById('verificationAllotteesFilterForm');
@@ -172,13 +292,13 @@
         };
 
         district.addEventListener('change', async () => {
-            resetSelect(city, district.value ? 'Loading cities...' : 'Select district first');
-            resetSelect(sector, 'Select city first');
-            if (!district.value) return;
+                resetSelect(city, district.value ? 'Loading cities...' : 'Select district first');
+                resetSelect(sector, 'Select city first');
+                if (!district.value) return;
 
-            try {
-                const response = await fetch(
-                    `${optionsUrl}?district_id=${encodeURIComponent(district.value)}`, {}
+                try {
+                    const response = await fetch(
+                        `${optionsUrl}?district_id=${encodeURIComponent(district.value)}`, {}
                         headers: {
                             Accept: 'application/json'
                         }
@@ -196,29 +316,29 @@
             }
         });
 
-        city.addEventListener('change', async () => {
-            resetSelect(sector, city.value ? 'Loading sectors...' : 'Select city first');
-            if (!city.value) return;
+    city.addEventListener('change', async () => {
+        resetSelect(sector, city.value ? 'Loading sectors...' : 'Select city first');
+        if (!city.value) return;
 
-            try {
-                const response = await fetch(
-                    `${optionsUrl}?city_id=${encodeURIComponent(city.value)}`, {
-                        headers: {
-                            Accept: 'application/json'
-                        }
+        try {
+            const response = await fetch(
+                `${optionsUrl}?city_id=${encodeURIComponent(city.value)}`, {
+                    headers: {
+                        Accept: 'application/json'
                     }
-                );
+                }
+            );
 
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-                const data = await response.json();
-                resetSelect(sector, 'All Sectors', false);
-                (data.sectors || []).forEach(item => sector.add(new Option(item.name, item.id)));
-            } catch (error) {
-                console.error('Unable to load sectors:', error);
-                resetSelect(sector, 'Unable to load sectors');
-            }
-        });
+            const data = await response.json();
+            resetSelect(sector, 'All Sectors', false);
+            (data.sectors || []).forEach(item => sector.add(new Option(item.name, item.id)));
+        } catch (error) {
+            console.error('Unable to load sectors:', error);
+            resetSelect(sector, 'Unable to load sectors');
+        }
+    });
     });
 </script>
 <script>
