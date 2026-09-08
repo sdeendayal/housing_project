@@ -4887,152 +4887,81 @@ class PropertyManagementController extends Controller
 
     public function physicalVerificationReport(Request $request)
     {
+        $data = $this->getPhysicalVerificationReportData($request);
 
-        $query = DB::table('hfa_new.property_private_purchasers as ppp')
-            ->join('hfa_new.cities as c', function ($join) {
-                $join->on('c.CityId', '=', 'ppp.CityId')
-                    ->where('c.Is_Deleted', 0);
-            })
-            ->where('ppp.IsDeleted', 0)
-            ->where('ppp.phase', '1')
-            ->whereRaw("LOWER(TRIM(ppp.property_type)) = 'plot'");
+        /*
+        |--------------------------------------------------------------------------
+        | Phase List
+        |--------------------------------------------------------------------------
+        */
 
-        // Phase
-        if ($request->filled('phase')) {
-            $query->where('ppp.phase', $request->phase);
-        }
-
-        // District
-        if ($request->filled('district_id')) {
-            $query->where('c.DistrictId', $request->district_id);
-        }
-
-        // Town / ULB
-        if ($request->filled('city_id')) {
-            $query->where('ppp.CityId', $request->city_id);
-        }
-
-        $rows = $query
-            ->select(
-                'ppp.PrivatePurchaserId',
-                'ppp.is_ghumantu',
-                'ppp.MaritalStatus',
-                'ppp.CasteCategoryName',
-                'c.CityName',
-                'c.DistrictId'
-            )
-            ->distinct()
-            ->get();
-
-        $classified = $rows->map(function ($row) {
-
-            if ((int) $row->is_ghumantu === 1) {
-                $row->report_category = 'ghumantu';
-            } elseif (
-                strtolower(trim($row->MaritalStatus ?? '')) === 'widow'
-            ) {
-                $row->report_category = 'widow';
-            } elseif (
-                in_array(
-                    strtolower(trim($row->CasteCategoryName ?? '')),
-                    ['sc', 'deprived scheduled castes']
-                )
-            ) {
-                $row->report_category = 'scheduled_caste';
-            } else {
-                $row->report_category = 'others';
-            }
-
-            return $row;
-        });
-
-        $report = $classified
-            ->groupBy('CityName')
-            ->map(function ($items, $town) {
-
-                return (object) [
-                    'town_ulb' => $town,
-
-                    'ghumantu_jati' => $items
-                        ->where('report_category', 'ghumantu')
-                        ->count(),
-
-                    'widows' => $items
-                        ->where('report_category', 'widow')
-                        ->count(),
-
-                    'scheduled_caste' => $items
-                        ->where('report_category', 'scheduled_caste')
-                        ->count(),
-
-                    'others' => $items
-                        ->where('report_category', 'others')
-                        ->count(),
-
-                    'total' => $items->count(),
-                ];
-            });
-
-        $serial = [
-            'CHARKHI DADRI MC' => 1,
-            'FATEHABAD MC' => 2,
-            'GOHANA MC' => 3,
-            'JHAJJAR MC' => 4,
-            'JULANA MC' => 5,
-            'KALKA MC' => 6,
-            'KARNAL MC' => 7,
-            'MAHENDRAGARH MC' => 8,
-            'PALWAL MC' => 9,
-            'REWARI MC' => 10,
-            'ROHTAK MC' => 11,
-            'SAFIDON MC' => 12,
-            'SIRSA MC' => 13,
-            'YAMUNANAGAR MC' => 14,
-        ];
-
-        $report = $report
-            ->sortBy(fn($row) => $serial[$row->town_ulb] ?? 999)
-            ->values();
-
-        $grandTotal = (object) [
-            'ghumantu_jati' => $report->sum('ghumantu_jati'),
-            'widows' => $report->sum('widows'),
-            'scheduled_caste' => $report->sum('scheduled_caste'),
-            'others' => $report->sum('others'),
-            'total' => $report->sum('total'),
-        ];
-
-        $phases = DB::table('hfa_new.property_private_purchasers')
+        $phases = DB::table(
+            'hfa_new.property_private_purchasers'
+        )
             ->where('IsDeleted', 0)
+            ->whereNotNull('phase')
+            ->where('phase', '!=', '')
             ->select('phase')
             ->distinct()
             ->orderBy('phase')
             ->pluck('phase');
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | District List
+        |--------------------------------------------------------------------------
+        |
+        | cities table mein DistrictName nahi hai.
+        | Isliye yahan DistrictId use kiya ja raha hai.
+        |
+        */
+
         $districts = DB::table('hfa_new.districts')
+            ->select('DistrictId', 'DistrictName')
             ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
             ->orderBy('DistrictName')
             ->get();
 
-        $cities = DB::table('hfa_new.cities')
+
+        /*
+        |--------------------------------------------------------------------------
+        | City List
+        |--------------------------------------------------------------------------
+        */
+
+        $cities = DB::table(
+            'hfa_new.cities'
+        )
             ->where('Is_Deleted', 0)
+            ->whereNotNull('DistrictId')
+            ->select(
+                'CityId',
+                'CityName',
+                'DistrictId'
+            )
             ->orderBy('CityName')
             ->get();
 
+
         return view(
             'mmsay.physical_verification_report',
-            compact(
-                'report',
-                'grandTotal',
-                'phases',
-                'districts',
-                'cities'
+            array_merge(
+                $data,
+                compact(
+                    'phases',
+                    'districts',
+                    'cities'
+                )
             )
         );
     }
 
-    private function getPhysicalVerificationReportData(Request $request)
-    {
+    private function getPhysicalVerificationReportData(
+        Request $request
+    ) {
+
         /*
         |--------------------------------------------------------------------------
         | Base Query
@@ -5045,6 +4974,7 @@ class PropertyManagementController extends Controller
             ->join(
                 'hfa_new.cities as c',
                 function ($join) {
+
                     $join->on(
                         'c.CityId',
                         '=',
@@ -5056,23 +4986,14 @@ class PropertyManagementController extends Controller
                         );
                 }
             )
-
-            /*
-            |--------------------------------------------------------------------------
-            | Required Conditions
-            |--------------------------------------------------------------------------
-            */
-
             ->where(
                 'ppp.IsDeleted',
                 0
             )
-
             ->where(
                 'ppp.phase',
                 '1'
             )
-
             ->whereRaw(
                 "LOWER(TRIM(ppp.property_type)) = 'plot'"
             );
@@ -5090,7 +5011,6 @@ class PropertyManagementController extends Controller
                 'ppp.phase',
                 $request->phase
             );
-
         }
 
 
@@ -5106,13 +5026,12 @@ class PropertyManagementController extends Controller
                 'c.DistrictId',
                 $request->district_id
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Town / ULB Filter
+        | City Filter
         |--------------------------------------------------------------------------
         */
 
@@ -5122,13 +5041,12 @@ class PropertyManagementController extends Controller
                 'ppp.CityId',
                 $request->city_id
             );
-
         }
 
 
         /*
         |--------------------------------------------------------------------------
-        | Classified Data
+        | Classification
         |--------------------------------------------------------------------------
         |
         | Priority:
@@ -5143,12 +5061,14 @@ class PropertyManagementController extends Controller
         $classifiedData = $query
             ->select(
                 'ppp.PrivatePurchaserId',
+                'ppp.CityId',
+                'c.DistrictId',
                 'c.CityName as town_ulb'
             )
             ->selectRaw("
             CASE
 
-                WHEN ppp.is_ghumantu = 1
+                WHEN COALESCE(ppp.is_ghumantu, 0) = 1
                     THEN 'ghumantu'
 
                 WHEN LOWER(
@@ -5194,7 +5114,9 @@ class PropertyManagementController extends Controller
                 'classified_data'
             )
             ->select(
-                'town_ulb'
+                'town_ulb',
+                'CityId',
+                'DistrictId'
             )
             ->selectRaw("
             SUM(
@@ -5216,11 +5138,13 @@ class PropertyManagementController extends Controller
                 report_category = 'others'
             ) AS others
         ")
-            ->selectRaw("
-            COUNT(*) AS total
-        ")
+            ->selectRaw(
+                'COUNT(*) AS total'
+            )
             ->groupBy(
-                'town_ulb'
+                'town_ulb',
+                'CityId',
+                'DistrictId'
             )
             ->orderBy(
                 'town_ulb'
@@ -5259,17 +5183,11 @@ class PropertyManagementController extends Controller
                 report_category = 'others'
             ) AS others
         ")
-            ->selectRaw("
-            COUNT(*) AS total
-        ")
+            ->selectRaw(
+                'COUNT(*) AS total'
+            )
             ->first();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Return
-        |--------------------------------------------------------------------------
-        */
 
         return [
             'report' => $report,
@@ -5277,30 +5195,14 @@ class PropertyManagementController extends Controller
         ];
     }
 
+    public function physicalVerificationReportPrint(
+        Request $request
+    ) {
 
-    /**
-     * =========================================================================
-     * Physical Verification Print
-     * =========================================================================
-     */
-    public function physicalVerificationReportPrint(Request $request)
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Get Same Filtered Report Data
-        |--------------------------------------------------------------------------
-        */
-
-        $data = $this->getPhysicalVerificationReportData(
-            $request
-        );
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Print View
-        |--------------------------------------------------------------------------
-        */
+        $data =
+            $this->getPhysicalVerificationReportData(
+                $request
+            );
 
         return view(
             'mmsay.physical_verification_report_print',
@@ -5308,40 +5210,52 @@ class PropertyManagementController extends Controller
         );
     }
 
-    /**
-     * =========================================================================
-     * Physical Verification CSV
-     * =========================================================================
-     */
-    public function physicalVerificationReportCsv(Request $request)
-    {
-        $data = $this->getPhysicalVerificationReportData(
-            $request
-        );
+    public function physicalVerificationReportCsv(
+        Request $request
+    ) {
 
-        $report = $data['report'];
+        $data =
+            $this->getPhysicalVerificationReportData(
+                $request
+            );
 
-        $grandTotal = $data['grandTotal'];
+        $report =
+            $data['report'];
 
-        $filename = 'physical_verification_report_' .
+        $grandTotal =
+            $data['grandTotal'];
+
+
+        $filename =
+            'physical_verification_report_' .
             now()->format('Y_m_d_H_i_s') .
             '.csv';
 
 
         return response()->streamDownload(
+
             function () use ($report, $grandTotal) {
 
-                $handle = fopen(
-                    'php://output',
-                    'w'
-                );
+                $handle =
+                    fopen(
+                        'php://output',
+                        'w'
+                    );
 
 
                 /*
                 |--------------------------------------------------------------------------
-                | CSV Header
+                | UTF-8 BOM
                 |--------------------------------------------------------------------------
                 */
+
+                fprintf(
+                    $handle,
+                    chr(0xEF) .
+                    chr(0xBB) .
+                    chr(0xBF)
+                );
+
 
                 fputcsv(
                     $handle,
@@ -5352,18 +5266,14 @@ class PropertyManagementController extends Controller
                         'Widows',
                         'Scheduled Caste',
                         'Others',
-                        'Total plots allotted',
+                        'Total Plots Allotted',
                     ]
                 );
 
 
-                /*
-                |--------------------------------------------------------------------------
-                | Report Rows
-                |--------------------------------------------------------------------------
-                */
-
-                foreach ($report as $index => $row) {
+                foreach (
+                    $report as $index => $row
+                ) {
 
                     fputcsv(
                         $handle,
@@ -5377,15 +5287,8 @@ class PropertyManagementController extends Controller
                             $row->total,
                         ]
                     );
-
                 }
 
-
-                /*
-                |--------------------------------------------------------------------------
-                | Grand Total
-                |--------------------------------------------------------------------------
-                */
 
                 fputcsv(
                     $handle,
@@ -5402,11 +5305,625 @@ class PropertyManagementController extends Controller
 
 
                 fclose($handle);
-
             },
+
             $filename,
+
             [
-                'Content-Type' => 'text/csv; charset=UTF-8',
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
+    private function getPhysicalVerificationBeneficiaryData(
+        Request $request,
+        bool $paginate = false
+    ) {
+        $category = $request->get('category');
+
+        /*
+        |--------------------------------------------------------------------------
+        | AUCTION TOTALS
+        |--------------------------------------------------------------------------
+        */
+        $auction = DB::table('hfa_new.property_auction_detail')
+            ->select('AssetId')
+            ->selectRaw('MAX(FlatCost) AS FlatCost')
+            ->selectRaw('SUM(COALESCE(ReceivedAmount, 0)) AS AuctionReceived')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('AssetId');
+
+        /*
+        |--------------------------------------------------------------------------
+        | CASH RECEIPT TOTALS
+        |--------------------------------------------------------------------------
+        */
+        $receipts = DB::table('hfa_new.cash_receipt_details')
+            ->select('asset_number')
+            ->selectRaw('SUM(COALESCE(total_paid_amount, 0)) AS ReceiptAmount')
+            ->where('IsDeleted', 0)
+            ->where('IsActive', 1)
+            ->groupBy('asset_number');
+
+        /*
+        |--------------------------------------------------------------------------
+        | MAIN BENEFICIARY QUERY
+        |--------------------------------------------------------------------------
+        */
+        $query = DB::table('hfa_new.property_private_purchasers as ppp')
+
+            // CITY
+            ->leftJoin('hfa_new.cities as c', function ($join) {
+                $join->on('c.CityId', '=', 'ppp.CityId')
+                    ->where('c.Is_Deleted', 0);
+            })
+
+            // DISTRICT
+            // DistrictId is taken from PPP itself.
+            ->leftJoin('hfa_new.districts as d', function ($join) {
+                $join->on('d.DistrictId', '=', 'ppp.DistrictId')
+                    ->where('d.Is_Deleted', 0)
+                    ->where('d.Is_Active', 1);
+            })
+
+            // SECTOR
+            ->leftJoin('hfa_new.sectors as s', function ($join) {
+                $join->on('s.SectorId', '=', 'ppp.SectorId')
+                    ->where('s.Is_Deleted', 0)
+                    ->where('s.Is_Active', 1);
+            })
+
+            // ASSET / PROPERTY
+            ->leftJoin('hfa_new.property_registration as pr', function ($join) {
+                $join->on('pr.AssetId', '=', 'ppp.Flat_Id')
+                    ->where('pr.IsDeleted', 0)
+                    ->where('pr.IsActive', 1);
+            })
+
+            // AUCTION
+            ->leftJoinSub($auction, 'auction', function ($join) {
+                $join->on('auction.AssetId', '=', 'ppp.Flat_Id');
+            })
+
+            // CASH RECEIPTS
+            ->leftJoinSub($receipts, 'receipts', function ($join) {
+                $join->on('receipts.asset_number', '=', 'ppp.Flat_Id');
+            })
+
+            ->where('ppp.IsDeleted', 0)
+            ->where('ppp.phase', '1')
+            ->whereRaw(
+                "LOWER(TRIM(COALESCE(ppp.property_type, ''))) = 'plot'"
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTERS
+        |--------------------------------------------------------------------------
+        */
+        if ($request->filled('phase')) {
+            $query->where('ppp.phase', $request->phase);
+        }
+
+        if ($request->filled('district_id')) {
+            $query->where('ppp.DistrictId', $request->district_id);
+        }
+
+        if ($request->filled('city_id')) {
+            $query->where('ppp.CityId', $request->city_id);
+        }
+
+        if ($request->filled('sector_id')) {
+            $query->where('ppp.SectorId', $request->sector_id);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | CATEGORY FILTER
+        |--------------------------------------------------------------------------
+        */
+        switch ($category) {
+
+            case 'ghumantu':
+
+                $query->whereRaw(
+                    'COALESCE(ppp.is_ghumantu, 0) = 1'
+                );
+
+                break;
+
+            case 'widow':
+
+                $query
+                    ->whereRaw(
+                        'COALESCE(ppp.is_ghumantu, 0) != 1'
+                    )
+                    ->whereRaw(
+                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) = 'widow'"
+                    );
+
+                break;
+
+            case 'scheduled_caste':
+
+                $query
+                    ->whereRaw(
+                        'COALESCE(ppp.is_ghumantu, 0) != 1'
+                    )
+                    ->whereRaw(
+                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) != 'widow'"
+                    )
+                    ->whereRaw("
+                        LOWER(TRIM(COALESCE(ppp.CasteCategoryName, '')))
+                        IN (
+                            'sc',
+                            'scheduled caste',
+                            'deprived scheduled castes'
+                        )
+                    ");
+
+                break;
+
+            case 'others':
+
+                $query
+                    ->whereRaw(
+                        'COALESCE(ppp.is_ghumantu, 0) != 1'
+                    )
+                    ->whereRaw(
+                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) != 'widow'"
+                    )
+                    ->whereRaw("
+                        LOWER(TRIM(COALESCE(ppp.CasteCategoryName, '')))
+                        NOT IN (
+                            'sc',
+                            'scheduled caste',
+                            'deprived scheduled castes'
+                        )
+                    ");
+
+                break;
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | DETAIL DATA
+        |--------------------------------------------------------------------------
+        */
+        $query->select([
+            'ppp.PrivatePurchaserId',
+            'ppp.PrivatePurchaserName',
+            'ppp.PurchaserFatherName',
+            'ppp.ApplicationNo',
+
+            // CASTE
+            DB::raw("
+                COALESCE(
+                    NULLIF(TRIM(ppp.CasteCategoryName), ''),
+                    '-'
+                ) AS CasteCategoryName
+            "),
+
+            'ppp.MobileNo',
+            'ppp.Address',
+            'ppp.Flat_Id',
+
+            // ASSET
+            DB::raw("
+                COALESCE(
+                    NULLIF(TRIM(pr.AssetName), ''),
+                    CONCAT('Asset ', ppp.Flat_Id)
+                ) AS AssetName
+            "),
+
+            // LOCATION
+            DB::raw("
+                COALESCE(
+                    NULLIF(TRIM(d.DistrictName), ''),
+                    '-'
+                ) AS DistrictName
+            "),
+
+            DB::raw("
+                COALESCE(
+                    NULLIF(TRIM(c.CityName), ''),
+                    '-'
+                ) AS CityName
+            "),
+
+            DB::raw("
+                COALESCE(
+                    NULLIF(TRIM(s.SectorName), ''),
+                    '-'
+                ) AS SectorName
+            "),
+
+            // PAYMENT
+            DB::raw("
+                COALESCE(auction.FlatCost, 0) AS FlatCost
+            "),
+
+            DB::raw("
+                COALESCE(auction.AuctionReceived, 0) AS AuctionReceived
+            "),
+
+            DB::raw("
+                COALESCE(receipts.ReceiptAmount, 0) AS ReceiptAmount
+            "),
+
+            DB::raw("
+                COALESCE(auction.AuctionReceived, 0)
+                +
+                COALESCE(receipts.ReceiptAmount, 0)
+                AS TotalPaid
+            "),
+        ])
+            ->distinct()
+            ->orderBy('ppp.PrivatePurchaserName');
+
+        /*
+        |--------------------------------------------------------------------------
+        | DETAILS PAGE
+        |--------------------------------------------------------------------------
+        */
+        if ($paginate === true) {
+            return $query
+                ->paginate(50)
+                ->withQueryString();
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | PRINT / CSV
+        |--------------------------------------------------------------------------
+        */
+        return $query->get();
+    }
+
+    public function physicalVerificationReportDetails(
+        Request $request
+    ) {
+
+        /*
+        |--------------------------------------------------------------------------
+        | IMPORTANT
+        |--------------------------------------------------------------------------
+        */
+
+        $category =
+            $request->get('category');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Beneficiaries
+        |--------------------------------------------------------------------------
+        */
+
+        $beneficiaries =
+            $this->getPhysicalVerificationBeneficiaryData(
+                $request,
+                true
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Phases
+        |--------------------------------------------------------------------------
+        */
+
+        $phases = DB::table(
+            'hfa_new.property_private_purchasers'
+        )
+            ->where(
+                'IsDeleted',
+                0
+            )
+            ->whereNotNull(
+                'phase'
+            )
+            ->where(
+                'phase',
+                '!=',
+                ''
+            )
+            ->select(
+                'phase'
+            )
+            ->distinct()
+            ->orderBy(
+                'phase'
+            )
+            ->pluck(
+                'phase'
+            );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Districts
+        |--------------------------------------------------------------------------
+        |
+        | DistrictName cities table mein nahi hai.
+        | Isliye safe version mein DistrictId.
+        |
+        */
+
+        $districts = DB::table('hfa_new.districts')
+            ->select('DistrictId', 'DistrictName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Cities
+        |--------------------------------------------------------------------------
+        */
+
+        $cities = DB::table(
+            'hfa_new.cities'
+        )
+            ->where(
+                'Is_Deleted',
+                0
+            )
+            ->whereNotNull(
+                'DistrictId'
+            )
+            ->select(
+                'CityId',
+                'CityName',
+                'DistrictId'
+            )
+            ->orderBy(
+                'CityName'
+            )
+            ->get();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Sector
+        |--------------------------------------------------------------------------
+        */
+
+        $sectors = DB::table('hfa_new.sectors')
+            ->select('SectorId', 'SectorName')
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('SectorName')
+            ->get();
+
+
+        return view(
+            'mmsay.physical_verification_report_details',
+            compact(
+                'beneficiaries',
+                'category',
+                'phases',
+                'districts',
+                'cities',
+                'sectors'
+            )
+        );
+    }
+
+    public function physicalVerificationReportDetailsPrint(
+        Request $request
+    ) {
+
+        $category =
+            $request->get('category');
+
+
+        $beneficiaries =
+            $this->getPhysicalVerificationBeneficiaryData(
+                $request
+            );
+
+
+        return view(
+            'mmsay.physical_verification_report_details_print',
+            compact(
+                'beneficiaries',
+                'category'
+            )
+        );
+    }
+
+    public function physicalVerificationReportDetailsCsv(
+        Request $request
+    ) {
+
+        $beneficiaries =
+            $this->getPhysicalVerificationBeneficiaryData(
+                $request
+            );
+
+
+        $filename =
+            'physical_verification_beneficiaries_' .
+            now()->format('Y_m_d_H_i_s') .
+            '.csv';
+
+
+        return response()->streamDownload(
+
+            function () use ($beneficiaries) {
+
+                $handle =
+                    fopen(
+                        'php://output',
+                        'w'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | UTF-8 BOM for Excel
+                |--------------------------------------------------------------------------
+                */
+
+                fprintf(
+                    $handle,
+                    chr(0xEF) .
+                    chr(0xBB) .
+                    chr(0xBF)
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Header
+                |--------------------------------------------------------------------------
+                */
+
+                fputcsv(
+                    $handle,
+                    [
+                        'S. No.',
+                        'Name',
+                        'Father Name',
+                        'Registration Number',
+                        'Caste',
+                        'Mobile Number',
+                        'Address',
+                        'Asset Name',
+                        'District',
+                        'City / ULB',
+                        'Sector',
+                        'Flat Cost',
+                        'Auction Received',
+                        'Receipt Amount',
+                        'Total Paid',
+                    ]
+                );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Records
+                |--------------------------------------------------------------------------
+                */
+
+                foreach (
+                    $beneficiaries as $index => $row
+                ) {
+
+                    fputcsv(
+                        $handle,
+                        [
+                            $index + 1,
+
+                            $row->PrivatePurchaserName ?? '-',
+
+                            $row->PurchaserFatherName ?? '-',
+
+                            $row->ApplicationNo ?? '-',
+
+                            // CASTE
+                            $row->CasteCategoryName ?? '-',
+
+                            $row->MobileNo ?? '-',
+
+                            $row->Address ?? '-',
+
+                            // ASSET NAME
+                            $row->AssetName ?? '-',
+
+                            // DISTRICT
+                            $row->DistrictName ?? '-',
+
+                            // CITY / ULB
+                            $row->CityName ?? '-',
+
+                            // SECTOR
+                            $row->SectorName ?? '-',
+
+                            // PAYMENT
+                            $row->FlatCost ?? 0,
+
+                            $row->AuctionReceived ?? 0,
+
+                            $row->ReceiptAmount ?? 0,
+
+                            $row->TotalPaid ?? 0,
+                        ]
+                    );
+                }
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | Total Row
+                |--------------------------------------------------------------------------
+                */
+
+                $totalFlatCost =
+                    $beneficiaries->sum(
+                        'FlatCost'
+                    );
+
+                $totalAuction =
+                    $beneficiaries->sum(
+                        'AuctionReceived'
+                    );
+
+                $totalReceipt =
+                    $beneficiaries->sum(
+                        'ReceiptAmount'
+                    );
+
+                $totalPaid =
+                    $beneficiaries->sum(
+                        'TotalPaid'
+                    );
+
+
+                /*
+                |--------------------------------------------------------------------------
+                | TOTAL
+                |--------------------------------------------------------------------------
+                */
+
+                fputcsv(
+                    $handle,
+                    [
+                        '',
+                        'TOTAL',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        '',
+                        $totalFlatCost,
+                        $totalAuction,
+                        $totalReceipt,
+                        $totalPaid,
+                    ]
+                );
+
+
+                fclose(
+                    $handle
+                );
+            },
+
+            $filename,
+
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
             ]
         );
     }

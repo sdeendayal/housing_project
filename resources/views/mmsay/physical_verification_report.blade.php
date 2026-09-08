@@ -531,42 +531,74 @@
 
 
                                 {{-- GHUMANTU --}}
-                                <td
-                                    class="px-4 py-3 text-center text-sm
-                                       tabular-nums text-slate-700">
-
-                                    {{ number_format($row->ghumantu_jati) }}
-
+                                <td class="px-4 py-3 text-center text-sm">
+                                    @if ($row->ghumantu_jati > 0)
+                                        <a href="{{ route('physical-verification.report.details', [
+                                            'phase' => request('phase', '1'),
+                                            'district_id' => request('district_id'),
+                                            'city_id' => $row->CityId,
+                                            'category' => 'ghumantu',
+                                        ]) }}"
+                                            class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                            {{ number_format($row->ghumantu_jati) }}
+                                        </a>
+                                    @else
+                                        0
+                                    @endif
                                 </td>
 
 
                                 {{-- WIDOWS --}}
-                                <td
-                                    class="px-4 py-3 text-center text-sm
-                                       tabular-nums text-slate-700">
-
-                                    {{ number_format($row->widows) }}
-
+                                <td class="px-4 py-3 text-center text-sm">
+                                    @if ($row->widows > 0)
+                                        <a href="{{ route('physical-verification.report.details', [
+                                            'phase' => request('phase', '1'),
+                                            'district_id' => request('district_id'),
+                                            'city_id' => $row->CityId,
+                                            'category' => 'widow',
+                                        ]) }}"
+                                            class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                            {{ number_format($row->widows) }}
+                                        </a>
+                                    @else
+                                        0
+                                    @endif
                                 </td>
 
 
                                 {{-- SC --}}
-                                <td
-                                    class="px-4 py-3 text-center text-sm
-                                       tabular-nums text-slate-700">
-
-                                    {{ number_format($row->scheduled_caste) }}
-
+                                <td class="px-4 py-3 text-center text-sm">
+                                    @if ($row->scheduled_caste > 0)
+                                        <a href="{{ route('physical-verification.report.details', [
+                                            'phase' => request('phase', '1'),
+                                            'district_id' => request('district_id'),
+                                            'city_id' => $row->CityId,
+                                            'category' => 'scheduled_caste',
+                                        ]) }}"
+                                            class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                            {{ number_format($row->scheduled_caste) }}
+                                        </a>
+                                    @else
+                                        0
+                                    @endif
                                 </td>
 
 
                                 {{-- OTHERS --}}
-                                <td
-                                    class="px-4 py-3 text-center text-sm
-                                       tabular-nums text-slate-700">
-
-                                    {{ number_format($row->others) }}
-
+                                <td class="px-4 py-3 text-center text-sm">
+                                    @if ($row->others > 0)
+                                        <a href="{{ route('physical-verification.report.details', [
+                                            'phase' => request('phase', '1'),
+                                            'district_id' => request('district_id'),
+                                            'city_id' => $row->CityId,
+                                            'category' => 'others',
+                                        ]) }}"
+                                            class="font-semibold text-indigo-600 hover:text-indigo-800 hover:underline">
+                                            {{ number_format($row->others) }}
+                                        </a>
+                                    @else
+                                        0
+                                    @endif
                                 </td>
 
 

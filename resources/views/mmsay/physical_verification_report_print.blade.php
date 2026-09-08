@@ -10,7 +10,6 @@
     </title>
 
     <style>
-
         @page {
             size: A4 landscape;
             margin: 12mm;
@@ -104,7 +103,6 @@
             }
 
         }
-
     </style>
 
 </head>
@@ -112,9 +110,7 @@
 
 <body>
 
-    <button
-        class="print-button"
-        onclick="window.print()">
+    <button class="print-button" onclick="window.print()">
 
         Print
 
@@ -222,7 +218,6 @@
         <tbody>
 
             @forelse($report as $index => $row)
-
                 <tr>
 
                     <td>
@@ -266,7 +261,6 @@
                     </td>
 
                 </tr>
-
             @endforelse
 
 
@@ -306,7 +300,7 @@
 
 
     <script>
-        window.onload = function () {
+        window.onload = function() {
             window.print();
         };
     </script>
