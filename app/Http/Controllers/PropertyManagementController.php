@@ -262,7 +262,7 @@ class PropertyManagementController extends Controller
             'pad.AssetId',
             'pad.FlatCost',
             'pad.ReceivedAmount'
-Reply to I The first one is the one that was used in The I just think it's a very significant thing. I have a... I have a... I Still need I I think It picked up my head. I was like, ah.do with that.
+        );
 
         /*
         |--------------------------------------------------------------------------
@@ -5959,7 +5959,7 @@ Reply to I The first one is the one that was used in The I just think it's a ver
             'property_private_purchasers as ppp'
         )
             ->join(
-                'cities as c',
+                'hfa_new.cities as c',
                 function ($join) {
                     $join->on(
                         'c.CityId',
