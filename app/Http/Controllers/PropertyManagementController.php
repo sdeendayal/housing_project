@@ -4896,7 +4896,7 @@ class PropertyManagementController extends Controller
         */
 
         $phases = DB::table(
-            'hfa_new.property_private_purchasers'
+            'property_private_purchasers'
         )
             ->where('IsDeleted', 0)
             ->whereNotNull('phase')
@@ -4917,7 +4917,7 @@ class PropertyManagementController extends Controller
         |
         */
 
-        $districts = DB::table('hfa_new.districts')
+        $districts = DB::table('districts')
             ->select('DistrictId', 'DistrictName')
             ->where('Is_Deleted', 0)
             ->where('Is_Active', 1)
@@ -4932,7 +4932,7 @@ class PropertyManagementController extends Controller
         */
 
         $cities = DB::table(
-            'hfa_new.cities'
+            'cities'
         )
             ->where('Is_Deleted', 0)
             ->whereNotNull('DistrictId')
@@ -4969,10 +4969,10 @@ class PropertyManagementController extends Controller
         */
 
         $query = DB::table(
-            'hfa_new.property_private_purchasers as ppp'
+            'property_private_purchasers as ppp'
         )
             ->join(
-                'hfa_new.cities as c',
+                'cities as c',
                 function ($join) {
 
                     $join->on(
@@ -5327,7 +5327,7 @@ class PropertyManagementController extends Controller
         | AUCTION TOTALS
         |--------------------------------------------------------------------------
         */
-        $auction = DB::table('hfa_new.property_auction_detail')
+        $auction = DB::table('property_auction_detail')
             ->select('AssetId')
             ->selectRaw('MAX(FlatCost) AS FlatCost')
             ->selectRaw('SUM(COALESCE(ReceivedAmount, 0)) AS AuctionReceived')
@@ -5340,7 +5340,7 @@ class PropertyManagementController extends Controller
         | CASH RECEIPT TOTALS
         |--------------------------------------------------------------------------
         */
-        $receipts = DB::table('hfa_new.cash_receipt_details')
+        $receipts = DB::table('cash_receipt_details')
             ->select('asset_number')
             ->selectRaw('SUM(COALESCE(total_paid_amount, 0)) AS ReceiptAmount')
             ->where('IsDeleted', 0)
@@ -5352,31 +5352,31 @@ class PropertyManagementController extends Controller
         | MAIN BENEFICIARY QUERY
         |--------------------------------------------------------------------------
         */
-        $query = DB::table('hfa_new.property_private_purchasers as ppp')
+        $query = DB::table('property_private_purchasers as ppp')
 
             // CITY
-            ->leftJoin('hfa_new.cities as c', function ($join) {
+            ->leftJoin('cities as c', function ($join) {
                 $join->on('c.CityId', '=', 'ppp.CityId')
                     ->where('c.Is_Deleted', 0);
             })
 
             // DISTRICT
             // DistrictId is taken from PPP itself.
-            ->leftJoin('hfa_new.districts as d', function ($join) {
+            ->leftJoin('districts as d', function ($join) {
                 $join->on('d.DistrictId', '=', 'ppp.DistrictId')
                     ->where('d.Is_Deleted', 0)
                     ->where('d.Is_Active', 1);
             })
 
             // SECTOR
-            ->leftJoin('hfa_new.sectors as s', function ($join) {
+            ->leftJoin('sectors as s', function ($join) {
                 $join->on('s.SectorId', '=', 'ppp.SectorId')
                     ->where('s.Is_Deleted', 0)
                     ->where('s.Is_Active', 1);
             })
 
             // ASSET / PROPERTY
-            ->leftJoin('hfa_new.property_registration as pr', function ($join) {
+            ->leftJoin('property_registration as pr', function ($join) {
                 $join->on('pr.AssetId', '=', 'ppp.Flat_Id')
                     ->where('pr.IsDeleted', 0)
                     ->where('pr.IsActive', 1);
@@ -5616,7 +5616,7 @@ class PropertyManagementController extends Controller
         */
 
         $phases = DB::table(
-            'hfa_new.property_private_purchasers'
+            'property_private_purchasers'
         )
             ->where(
                 'IsDeleted',
@@ -5652,7 +5652,7 @@ class PropertyManagementController extends Controller
         |
         */
 
-        $districts = DB::table('hfa_new.districts')
+        $districts = DB::table('districts')
             ->select('DistrictId', 'DistrictName')
             ->where('Is_Deleted', 0)
             ->where('Is_Active', 1)
@@ -5667,7 +5667,7 @@ class PropertyManagementController extends Controller
         */
 
         $cities = DB::table(
-            'hfa_new.cities'
+            'cities'
         )
             ->where(
                 'Is_Deleted',
@@ -5693,7 +5693,7 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $sectors = DB::table('hfa_new.sectors')
+        $sectors = DB::table('sectors')
             ->select('SectorId', 'SectorName')
             ->where('Is_Deleted', 0)
             ->where('Is_Active', 1)
@@ -5943,7 +5943,7 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
         $eligibleApplications = DB::table(
-            'hfa_new.mmsay_eligible_beneficiaries'
+            'mmsay_eligible_beneficiaries'
         )
             ->select('application_number')
             ->whereNotNull('application_number')
@@ -5956,10 +5956,10 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
         $query = DB::table(
-            'hfa_new.property_private_purchasers as ppp'
+            'property_private_purchasers as ppp'
         )
             ->join(
-                'hfa_new.cities as c',
+                'cities as c',
                 function ($join) {
                     $join->on(
                         'c.CityId',
@@ -6224,7 +6224,7 @@ class PropertyManagementController extends Controller
         |--------------------------------------------------------------------------
         */
         $phases = DB::table(
-            'hfa_new.property_private_purchasers'
+            'property_private_purchasers'
         )
             ->where('IsDeleted', 0)
             ->whereNotNull('phase')
@@ -6235,7 +6235,7 @@ class PropertyManagementController extends Controller
             ->pluck('phase');
 
         $districts = DB::table(
-            'hfa_new.districts'
+            'districts'
         )
             ->select(
                 'DistrictId',
@@ -6253,7 +6253,7 @@ class PropertyManagementController extends Controller
         |----------------------------------------------------------------------
         */
         $cities = DB::table(
-            'hfa_new.cities'
+            'cities'
         )
             ->select(
                 'CityId',
