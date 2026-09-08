@@ -513,6 +513,30 @@ Route::middleware(['auth', 'role:department'])->group(function () {
         [PropertyManagementController::class, 'physicalVerificationReportDetailsCsv']
     )->name('physical-verification.report.details.csv');
 
+    Route::get(
+        'physical-verification-eligible-caste-wise',
+        [
+            PropertyManagementController::class,
+            'physicalVerificationEligibleCasteWiseReport'
+        ]
+    )->name('physical-verification.eligible-caste-wise');
+
+    Route::get(
+        'physical-verification-eligible-caste-wise/print',
+        [
+            PropertyManagementController::class,
+            'physicalVerificationEligibleCasteWiseReportPrint'
+        ]
+    )->name('physical-verification.eligible-caste-wise.print');
+
+    Route::get(
+        'physical-verification-eligible-caste-wise/csv',
+        [
+            PropertyManagementController::class,
+            'physicalVerificationEligibleCasteWiseReportCsv'
+        ]
+    )->name('physical-verification.eligible-caste-wise.csv');
+
     // Optional backward compatibility for the old URL.
     Route::redirect('pending-properties', 'partial-paid-properties');
 

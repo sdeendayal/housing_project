@@ -5928,4 +5928,527 @@ class PropertyManagementController extends Controller
         );
     }
 
+    private function physicalVerificationEligibleCasteWiseQuery(Request $request)
+    {
+        $phase = $request->input('phase', '1');
+        $districtId = $request->integer('district_id') ?: null;
+        $cityId = $request->integer('city_id') ?: null;
+
+        /*
+        |--------------------------------------------------------------------------
+        | Eligible applications - DISTINCT
+        |--------------------------------------------------------------------------
+        | MEB mein same application multiple times ho sakti hai.
+        | Isliye pehle distinct application_number nikal rahe hain.
+        |--------------------------------------------------------------------------
+        */
+        $eligibleApplications = DB::table(
+            'hfa_new.mmsay_eligible_beneficiaries'
+        )
+            ->select('application_number')
+            ->whereNotNull('application_number')
+            ->where('application_number', '!=', '')
+            ->distinct();
+
+        /*
+        |--------------------------------------------------------------------------
+        | Base PPP Query
+        |--------------------------------------------------------------------------
+        */
+        $query = DB::table(
+            'hfa_new.property_private_purchasers as ppp'
+        )
+            ->join(
+                'hfa_new.cities as c',
+                function ($join) {
+                    $join->on(
+                        'c.CityId',
+                        '=',
+                        'ppp.CityId'
+                    )
+                        ->where('c.Is_Deleted', 0)
+                        ->where('c.Is_Active', 1);
+                }
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | ONE JOIN instead of 5 correlated EXISTS
+            |--------------------------------------------------------------------------
+            */
+            ->leftJoinSub(
+                $eligibleApplications,
+                'meb',
+                function ($join) {
+                    $join->on(
+                        'meb.application_number',
+                        '=',
+                        'ppp.ApplicationNo'
+                    );
+                }
+            )
+
+            /*
+            |--------------------------------------------------------------------------
+            | Base filters
+            |--------------------------------------------------------------------------
+            */
+            ->where('ppp.IsDeleted', 0)
+            ->where('ppp.phase', $phase ?: '1')
+
+            /*
+            |--------------------------------------------------------------------------
+            | Plot only
+            |--------------------------------------------------------------------------
+            */
+            ->whereRaw(
+                "LOWER(TRIM(COALESCE(ppp.property_type, ''))) = 'plot'"
+            );
+
+        /*
+        |--------------------------------------------------------------------------
+        | District Filter
+        |--------------------------------------------------------------------------
+        */
+        if ($districtId) {
+            $query->where(
+                'ppp.DistrictId',
+                $districtId
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | City / Town Filter
+        |--------------------------------------------------------------------------
+        */
+        if ($cityId) {
+            $query->where(
+                'ppp.CityId',
+                $cityId
+            );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | Category-wise counts
+        |--------------------------------------------------------------------------
+        |
+        | Priority:
+        | Ghumantu
+        |     ↓
+        | Widow
+        |     ↓
+        | SC
+        |     ↓
+        | Others
+        |
+        | Only eligible beneficiaries are counted in these columns.
+        |--------------------------------------------------------------------------
+        */
+
+        $query->select(
+            'c.CityId',
+            'c.CityName'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Plots Allotted
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(DISTINCT ppp.PrivatePurchaserId)
+        AS plots_allotted
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ghumantu Eligible
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(
+            DISTINCT CASE
+                WHEN COALESCE(ppp.is_ghumantu, 0) = 1
+                AND meb.application_number IS NOT NULL
+                THEN ppp.PrivatePurchaserId
+            END
+        ) AS ghumantu
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Widow Eligible
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(
+            DISTINCT CASE
+                WHEN COALESCE(ppp.is_ghumantu, 0) != 1
+                AND LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
+                    )
+                ) = 'widow'
+                AND meb.application_number IS NOT NULL
+                THEN ppp.PrivatePurchaserId
+            END
+        ) AS widow
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | SC Eligible
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(
+            DISTINCT CASE
+                WHEN COALESCE(ppp.is_ghumantu, 0) != 1
+
+                AND LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
+                    )
+                ) != 'widow'
+
+                AND LOWER(
+                    TRIM(
+                        COALESCE(ppp.CasteCategoryName, '')
+                    )
+                ) IN (
+                    'sc',
+                    'scheduled caste',
+                    'deprived scheduled castes'
+                )
+
+                AND meb.application_number IS NOT NULL
+
+                THEN ppp.PrivatePurchaserId
+            END
+        ) AS scheduled_caste
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Others Eligible
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(
+            DISTINCT CASE
+                WHEN COALESCE(ppp.is_ghumantu, 0) != 1
+
+                AND LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
+                    )
+                ) != 'widow'
+
+                AND LOWER(
+                    TRIM(
+                        COALESCE(ppp.CasteCategoryName, '')
+                    )
+                ) NOT IN (
+                    'sc',
+                    'scheduled caste',
+                    'deprived scheduled castes'
+                )
+
+                AND meb.application_number IS NOT NULL
+
+                THEN ppp.PrivatePurchaserId
+            END
+        ) AS others
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total Eligible
+        |--------------------------------------------------------------------------
+        */
+        $query->selectRaw("
+        COUNT(
+            DISTINCT CASE
+                WHEN meb.application_number IS NOT NULL
+                THEN ppp.PrivatePurchaserId
+            END
+        ) AS eligible_total
+    ");
+
+        /*
+        |--------------------------------------------------------------------------
+        | GROUP BY
+        |--------------------------------------------------------------------------
+        */
+        return $query
+            ->groupBy(
+                'c.CityId',
+                'c.CityName'
+            )
+            ->orderBy(
+                'c.CityName'
+            );
+    }
+
+    public function physicalVerificationEligibleCasteWiseReport(
+        Request $request
+    ) {
+        /*
+        |--------------------------------------------------------------------------
+        | SUMMARY ROWS
+        |--------------------------------------------------------------------------
+        */
+        $rows = $this
+            ->physicalVerificationEligibleCasteWiseQuery($request)
+            ->get()
+            ->map(function ($row) {
+                $row->plots_allotted = (int) $row->plots_allotted;
+                $row->ghumantu = (int) $row->ghumantu;
+                $row->widow = (int) $row->widow;
+                $row->scheduled_caste = (int) $row->scheduled_caste;
+                $row->others = (int) $row->others;
+                $row->eligible_total = (int) $row->eligible_total;
+
+                $row->not_eligible =
+                    $row->plots_allotted -
+                    $row->eligible_total;
+
+                return $row;
+            });
+
+        /*
+        |--------------------------------------------------------------------------
+        | FILTER DATA
+        |--------------------------------------------------------------------------
+        */
+        $phases = DB::table(
+            'hfa_new.property_private_purchasers'
+        )
+            ->where('IsDeleted', 0)
+            ->whereNotNull('phase')
+            ->where('phase', '!=', '')
+            ->select('phase')
+            ->distinct()
+            ->orderBy('phase')
+            ->pluck('phase');
+
+        $districts = DB::table(
+            'hfa_new.districts'
+        )
+            ->select(
+                'DistrictId',
+                'DistrictName'
+            )
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('DistrictName')
+            ->get();
+
+        /*
+        |----------------------------------------------------------------------
+        | All cities are sent to Blade because city dropdown is client-side
+        | dependent on district.
+        |----------------------------------------------------------------------
+        */
+        $cities = DB::table(
+            'hfa_new.cities'
+        )
+            ->select(
+                'CityId',
+                'CityName',
+                'DistrictId'
+            )
+            ->where('Is_Deleted', 0)
+            ->where('Is_Active', 1)
+            ->orderBy('CityName')
+            ->get();
+
+        /*
+        |--------------------------------------------------------------------------
+        | GRAND TOTALS
+        |--------------------------------------------------------------------------
+        */
+        $grandTotalPlots =
+            (int) $rows->sum('plots_allotted');
+
+        $grandGhumantu =
+            (int) $rows->sum('ghumantu');
+
+        $grandWidow =
+            (int) $rows->sum('widow');
+
+        $grandScheduledCaste =
+            (int) $rows->sum('scheduled_caste');
+
+        $grandOthers =
+            (int) $rows->sum('others');
+
+        $grandEligible =
+            (int) $rows->sum('eligible_total');
+
+        $grandNotEligible =
+            (int) $rows->sum('not_eligible');
+
+
+        return view(
+            'mmsay.physical_verification_eligible_caste_wise_report',
+            compact(
+                'rows',
+                'phases',
+                'districts',
+                'cities',
+                'grandTotalPlots',
+                'grandGhumantu',
+                'grandWidow',
+                'grandScheduledCaste',
+                'grandOthers',
+                'grandEligible',
+                'grandNotEligible'
+            )
+        );
+    }
+
+    public function physicalVerificationEligibleCasteWiseReportCsv(
+        Request $request
+    ) {
+        $rows = $this
+            ->physicalVerificationEligibleCasteWiseQuery($request)
+            ->get()
+            ->map(function ($row) {
+                $row->not_eligible =
+                    (int) $row->plots_allotted -
+                    (int) $row->eligible_total;
+
+                return $row;
+            });
+
+        $filename =
+            'physical_verification_caste_wise_' .
+            now()->format('Y_m_d_H_i_s') .
+            '.csv';
+
+        return response()->streamDownload(
+            function () use ($rows) {
+
+                $handle = fopen(
+                    'php://output',
+                    'w'
+                );
+
+                fwrite(
+                    $handle,
+                    "\xEF\xBB\xBF"
+                );
+
+                fputcsv(
+                    $handle,
+                    [
+                        'Sr. No.',
+                        'Towns',
+                        'Plots allotted Year 2024',
+                        'Ghumantu',
+                        'Widow',
+                        'SC',
+                        'Others',
+                        'Total Eligible',
+                        'Not Eligible',
+                    ]
+                );
+
+                foreach ($rows as $index => $row) {
+
+                    fputcsv(
+                        $handle,
+                        [
+                            $index + 1,
+                            $row->CityName ?? '-',
+                            $row->plots_allotted ?? 0,
+                            $row->ghumantu ?? 0,
+                            $row->widow ?? 0,
+                            $row->scheduled_caste ?? 0,
+                            $row->others ?? 0,
+                            $row->eligible_total ?? 0,
+                            $row->not_eligible ?? 0,
+                        ]
+                    );
+                }
+
+                fputcsv(
+                    $handle,
+                    [
+                        '',
+                        'TOTAL',
+                        $rows->sum('plots_allotted'),
+                        $rows->sum('ghumantu'),
+                        $rows->sum('widow'),
+                        $rows->sum('scheduled_caste'),
+                        $rows->sum('others'),
+                        $rows->sum('eligible_total'),
+                        $rows->sum('not_eligible'),
+                    ]
+                );
+
+                fclose($handle);
+            },
+            $filename,
+            [
+                'Content-Type' =>
+                    'text/csv; charset=UTF-8',
+            ]
+        );
+    }
+
+    public function physicalVerificationEligibleCasteWiseReportPrint(
+        Request $request
+    ) {
+        $rows = $this
+            ->physicalVerificationEligibleCasteWiseQuery($request)
+            ->get()
+            ->map(function ($row) {
+                $row->not_eligible =
+                    (int) $row->plots_allotted -
+                    (int) $row->eligible_total;
+
+                return $row;
+            });
+
+        $grandTotalPlots =
+            (int) $rows->sum('plots_allotted');
+
+        $grandGhumantu =
+            (int) $rows->sum('ghumantu');
+
+        $grandWidow =
+            (int) $rows->sum('widow');
+
+        $grandScheduledCaste =
+            (int) $rows->sum('scheduled_caste');
+
+        $grandOthers =
+            (int) $rows->sum('others');
+
+        $grandEligible =
+            (int) $rows->sum('eligible_total');
+
+        $grandNotEligible =
+            (int) $rows->sum('not_eligible');
+
+        return view(
+            'mmsay.physical_verification_eligible_caste_wise_report_print',
+            compact(
+                'rows',
+                'grandTotalPlots',
+                'grandGhumantu',
+                'grandWidow',
+                'grandScheduledCaste',
+                'grandOthers',
+                'grandEligible',
+                'grandNotEligible'
+            )
+        );
+    }
+
+
 }
