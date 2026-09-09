@@ -5959,7 +5959,7 @@ class PropertyManagementController extends Controller
             'property_private_purchasers as ppp'
         )
             ->join(
-                'hfa_new.cities as c',
+                'cities as c',
                 function ($join) {
                     $join->on(
                         'c.CityId',
