@@ -134,7 +134,7 @@
     }
 
     #departmentSidebar {
-        width: 18rem;
+        width: 20rem;
         max-width: calc(100vw - 3rem);
         transform: translateX(-100%);
         transition: transform 260ms cubic-bezier(.4, 0, .2, 1);
@@ -200,7 +200,7 @@
         <div
             class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-200">
 
-            <img src="/Haryana_emblem.png" alt="Haryana State Emblem"
+            <img src="{{ asset('images/Haryana_emblem.png') }}" alt="Haryana State Emblem"
                 class="h-7 w-7 object-contain brightness-0 invert" />
 
         </div>
@@ -265,6 +265,65 @@
             @endif
 
         </a>
+
+        <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
+
+            Reports
+
+        </p>
+
+        <a href="{{ route('physical-verification.report') }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
+
+        {{ $menuClass('physical-verification-report*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
+
+            {{ $iconClass('physical-verification-report*') }}">
+
+                fact_check
+
+            </span>
+
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+
+                15256 Plots - Physical Verification Report
+
+            </span>
+
+            @if ($isActive('physical-verification-report*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+
+        </a>
+        <a href="{{ route('physical-verification.eligible-caste-wise') }}"
+            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5
+           text-[12px] font-medium transition-all duration-200
+           {{ $menuClass('physical-verification.eligible-caste-wise*') }}">
+
+            <span
+                class="material-symbols-outlined flex h-8 w-8 shrink-0
+               items-center justify-center rounded-lg text-[18px] transition
+               {{ $iconClass('physical-verification.eligible-caste-wise*') }}">
+
+                fact_check
+
+            </span>
+
+            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
+
+                11984 Plots - No. of Eligible allottees caste wise report
+
+            </span>
+
+            @if ($isActive('physical-verification.eligible-caste-wise*'))
+                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
+            @endif
+
+        </a>
+
+
 
         <p class="mb-2 mt-5 px-3 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">
 
@@ -378,57 +437,6 @@
             </span>
 
             @if (request()->is('mmsay-department-property-registration*') && $propertyView === 'allotted')
-                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
-            @endif
-
-        </a>
-
-        <a href="{{ route('physical-verification.report') }}"
-            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5 text-[12px] font-medium transition-all duration-200
-
-        {{ $menuClass('physical-verification-report*') }}">
-
-            <span
-                class="material-symbols-outlined flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[18px] transition
-
-            {{ $iconClass('physical-verification-report*') }}">
-
-                fact_check
-
-            </span>
-
-            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
-
-                Category-wise plots allotted
-
-            </span>
-
-            @if ($isActive('physical-verification-report*'))
-                <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
-            @endif
-
-        </a>
-        <a href="{{ route('physical-verification.eligible-caste-wise') }}"
-            class="group mb-1 flex items-center gap-2 rounded-xl border px-2.5 py-2.5
-           text-[12px] font-medium transition-all duration-200
-           {{ $menuClass('physical-verification.eligible-caste-wise*') }}">
-
-            <span
-                class="material-symbols-outlined flex h-8 w-8 shrink-0
-               items-center justify-center rounded-lg text-[18px] transition
-               {{ $iconClass('physical-verification.eligible-caste-wise*') }}">
-
-                fact_check
-
-            </span>
-
-            <span class="min-w-0 flex-1 whitespace-normal leading-tight">
-
-                Eligible Allottees - Caste Wise
-
-            </span>
-
-            @if ($isActive('physical-verification.eligible-caste-wise*'))
                 <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-600"></span>
             @endif
 
