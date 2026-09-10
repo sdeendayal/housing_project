@@ -1089,17 +1089,17 @@ class PropertyManagementController extends Controller
             ->when(
                 $filters['district_name'],
                 fn($query, $name) =>
-                $query->where('districtName', $name)
+                    $query->where('districtName', $name)
             )
             ->when(
                 $filters['city_name'],
                 fn($query, $name) =>
-                $query->where('btName', $name)
+                    $query->where('btName', $name)
             )
             ->when(
                 $filters['sector_name'],
                 fn($query, $name) =>
-                $query->where('wvName', $name)
+                    $query->where('wvName', $name)
             )
             ->when($filters['search'] !== '', function ($query) use ($filters) {
                 $search = $filters['search'];
@@ -1387,17 +1387,17 @@ class PropertyManagementController extends Controller
             ->when(
                 $districtId,
                 fn($query) =>
-                $query->where('pr.DistrictId', $districtId)
+                    $query->where('pr.DistrictId', $districtId)
             )
             ->when(
                 $cityId,
                 fn($query) =>
-                $query->where('pr.CityId', $cityId)
+                    $query->where('pr.CityId', $cityId)
             )
             ->when(
                 $sectorId,
                 fn($query) =>
-                $query->where('pr.SectorId', $sectorId)
+                    $query->where('pr.SectorId', $sectorId)
             )
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($query) use ($search) {
@@ -2139,26 +2139,26 @@ class PropertyManagementController extends Controller
                     ->when(
                         $districtId,
                         fn($query) =>
-                        $query->where(
-                            'pr.DistrictId',
-                            $districtId
-                        )
+                            $query->where(
+                                'pr.DistrictId',
+                                $districtId
+                            )
                     )
                     ->when(
                         $cityId,
                         fn($query) =>
-                        $query->where(
-                            'pr.CityId',
-                            $cityId
-                        )
+                            $query->where(
+                                'pr.CityId',
+                                $cityId
+                            )
                     )
                     ->when(
                         $sectorId,
                         fn($query) =>
-                        $query->where(
-                            'pr.SectorId',
-                            $sectorId
-                        )
+                            $query->where(
+                                'pr.SectorId',
+                                $sectorId
+                            )
                     )
                     ->when(
                         $search !== '',
@@ -2348,17 +2348,17 @@ class PropertyManagementController extends Controller
             ->when(
                 $filters['district_id'] ?? null,
                 fn($query, $value) =>
-                $query->where('pr.DistrictId', $value)
+                    $query->where('pr.DistrictId', $value)
             )
             ->when(
                 $filters['city_id'] ?? null,
                 fn($query, $value) =>
-                $query->where('pr.CityId', $value)
+                    $query->where('pr.CityId', $value)
             )
             ->when(
                 $filters['sector_id'] ?? null,
                 fn($query, $value) =>
-                $query->where('pr.SectorId', $value)
+                    $query->where('pr.SectorId', $value)
             )
             ->when(
                 trim($filters['search'] ?? '') !== '',
@@ -5426,64 +5426,206 @@ class PropertyManagementController extends Controller
         */
         switch ($category) {
 
+            /*
+            |--------------------------------------------------------------------------
+            | GHUMANTU - ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
             case 'ghumantu':
 
-                $query->whereRaw(
-                    'COALESCE(ppp.is_ghumantu, 0) = 1'
-                );
+                $query
+                    ->whereRaw("
+                COALESCE(ppp.is_ghumantu, 0) = 1
+            ")
+                    ->whereExists(function ($sub) {
+
+                        $sub->select(DB::raw(1))
+                            ->from('mmsay_eligible_beneficiaries as meb')
+                            ->whereRaw("
+                        TRIM(meb.application_number)
+                        =
+                        TRIM(ppp.ApplicationNo)
+                    ");
+
+                    });
 
                 break;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | WIDOW - ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
             case 'widow':
 
                 $query
-                    ->whereRaw(
-                        'COALESCE(ppp.is_ghumantu, 0) != 1'
+                    ->whereRaw("
+                COALESCE(ppp.is_ghumantu, 0) != 1
+            ")
+                    ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
                     )
-                    ->whereRaw(
-                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) = 'widow'"
-                    );
+                ) = 'widow'
+            ")
+                    ->whereExists(function ($sub) {
+
+                        $sub->select(DB::raw(1))
+                            ->from('mmsay_eligible_beneficiaries as meb')
+                            ->whereRaw("
+                        TRIM(meb.application_number)
+                        =
+                        TRIM(ppp.ApplicationNo)
+                    ");
+
+                    });
 
                 break;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | SC - ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
             case 'scheduled_caste':
 
                 $query
-                    ->whereRaw(
-                        'COALESCE(ppp.is_ghumantu, 0) != 1'
-                    )
-                    ->whereRaw(
-                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) != 'widow'"
-                    )
                     ->whereRaw("
-                        LOWER(TRIM(COALESCE(ppp.CasteCategoryName, '')))
-                        IN (
-                            'sc',
-                            'scheduled caste',
-                            'deprived scheduled castes'
-                        )
+                COALESCE(ppp.is_ghumantu, 0) != 1
+            ")
+                    ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
+                    )
+                ) != 'widow'
+            ")
+                    ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(ppp.CasteCategoryName, '')
+                    )
+                ) IN (
+                    'sc',
+                    'scheduled caste',
+                    'deprived scheduled castes'
+                )
+            ")
+                    ->whereExists(function ($sub) {
+
+                        $sub->select(DB::raw(1))
+                            ->from('mmsay_eligible_beneficiaries as meb')
+                            ->whereRaw("
+                        TRIM(meb.application_number)
+                        =
+                        TRIM(ppp.ApplicationNo)
                     ");
+
+                    });
 
                 break;
 
+
+            /*
+            |--------------------------------------------------------------------------
+            | OTHERS - ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
             case 'others':
 
                 $query
-                    ->whereRaw(
-                        'COALESCE(ppp.is_ghumantu, 0) != 1'
-                    )
-                    ->whereRaw(
-                        "LOWER(TRIM(COALESCE(ppp.MaritalStatus, ''))) != 'widow'"
-                    )
                     ->whereRaw("
-                        LOWER(TRIM(COALESCE(ppp.CasteCategoryName, '')))
-                        NOT IN (
-                            'sc',
-                            'scheduled caste',
-                            'deprived scheduled castes'
-                        )
+                COALESCE(ppp.is_ghumantu, 0) != 1
+            ")
+                    ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(ppp.MaritalStatus, '')
+                    )
+                ) != 'widow'
+            ")
+                    ->whereRaw("
+                LOWER(
+                    TRIM(
+                        COALESCE(ppp.CasteCategoryName, '')
+                    )
+                ) NOT IN (
+                    'sc',
+                    'scheduled caste',
+                    'deprived scheduled castes'
+                )
+            ")
+                    ->whereExists(function ($sub) {
+
+                        $sub->select(DB::raw(1))
+                            ->from('mmsay_eligible_beneficiaries as meb')
+                            ->whereRaw("
+                        TRIM(meb.application_number)
+                        =
+                        TRIM(ppp.ApplicationNo)
                     ");
 
+                    });
+
+                break;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | TOTAL ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
+            case 'eligible':
+
+                $query->whereExists(function ($sub) {
+
+                    $sub->select(DB::raw(1))
+                        ->from('mmsay_eligible_beneficiaries as meb')
+                        ->whereRaw("
+                    TRIM(meb.application_number)
+                    =
+                    TRIM(ppp.ApplicationNo)
+                ");
+
+                });
+
+                break;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | NOT ELIGIBLE
+            |--------------------------------------------------------------------------
+            */
+            case 'not_eligible':
+
+                $query->whereNotExists(function ($sub) {
+
+                    $sub->select(DB::raw(1))
+                        ->from('mmsay_eligible_beneficiaries as meb')
+                        ->whereRaw("
+                    TRIM(meb.application_number)
+                    =
+                    TRIM(ppp.ApplicationNo)
+                ");
+
+                });
+
+                break;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | ALL
+            |--------------------------------------------------------------------------
+            */
+            case 'all':
+            default:
+
+                // All allotted records
                 break;
         }
 
@@ -6049,7 +6191,8 @@ class PropertyManagementController extends Controller
 
         $query->select(
             'c.CityId',
-            'c.CityName'
+            'c.CityName',
+            'c.DistrictId'
         );
 
         /*
@@ -6185,7 +6328,8 @@ class PropertyManagementController extends Controller
         return $query
             ->groupBy(
                 'c.CityId',
-                'c.CityName'
+                'c.CityName',
+                'c.DistrictId'
             )
             ->orderBy(
                 'c.CityName'
