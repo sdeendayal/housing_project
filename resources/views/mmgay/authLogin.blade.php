@@ -419,7 +419,7 @@
                                     EWS
                                 </p>
                                 <div class="space-y-1.5">
-                                    @foreach ([['ews/citizen/login', 'person', 'Citizen Login'], ['ews/developer/login', 'developer_mode', 'Developer Login'], ['ews/department/login', 'apartment', 'Department Login']] as [$portalUrl, $portalIcon, $portalLabel])
+                                    @foreach ([['ews/citizen/login', 'person', 'Citizen Login'], ['ews/developer/login', 'developer_mode', 'STP Login'], ['ews/department/login', 'apartment', 'Department Login']] as [$portalUrl, $portalIcon, $portalLabel])
                                         <a href="{{ url($portalUrl) }}"
                                             class="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white/90 p-2 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-sm">
                                             <span

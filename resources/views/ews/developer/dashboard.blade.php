@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer - Registry Dashboard</title>
+    <title>EWS STP - Registry Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -132,7 +132,7 @@
             </div>
             <div>
                 <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
+                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">STP Hub</p>
             </div>
         </div>
 
@@ -168,7 +168,7 @@
                 <div class="space-y-1">
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-journal-text text-slate-400"></i>
-                        <span>Developer Logs</span>
+                        <span>STP Logs</span>
                     </a>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                         @elseif($currentView === 'my_flats')
                             My Registered Flats Inventory
                         @else
-                            Developer Command Dashboard
+                            STP Command Dashboard
                         @endif
                     </h2>
                     <p class="text-[8px] text-slate-455 font-mono uppercase">EWS Builder Housing Administration</p>

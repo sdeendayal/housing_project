@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer - Register Flat</title>
+    <title>EWS STP - Register Flat</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -87,7 +87,7 @@
             </div>
             <div>
                 <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
+                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">STP Hub</p>
             </div>
         </div>
 
@@ -115,7 +115,7 @@
                 <div class="space-y-1">
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-journal-text text-slate-400"></i>
-                        <span>Developer Logs</span>
+                        <span>STP Logs</span>
                     </a>
                 </div>
             </div>
@@ -375,7 +375,7 @@
                     <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-3">
                         <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
                             <i class="bi bi-info-circle text-sky-500"></i>
-                            Developer Guidelines
+                            STP Guidelines
                         </h4>
                         <ul class="space-y-2.5 text-xs text-slate-600 font-medium">
                             <li class="flex gap-2">

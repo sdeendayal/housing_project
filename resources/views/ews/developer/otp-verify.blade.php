@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer Portal - OTP Verification</title>
+    <title>EWS STP Portal - OTP Verification</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -50,7 +50,7 @@
                     <i class="bi bi-shield-fill-check text-violet-400 text-sm"></i>
                 </div>
                 <div>
-                    <h4 class="text-xs font-black tracking-wider text-violet-400 uppercase">EWS Dev Hub</h4>
+                    <h4 class="text-xs font-black tracking-wider text-violet-400 uppercase">EWS STP Hub</h4>
                     <div class="text-[8px] text-slate-400 tracking-widest font-extrabold uppercase font-mono">AUTH CONSOLE</div>
                 </div>
             </div>
@@ -84,7 +84,7 @@
                     <div class="w-7 h-7 rounded bg-violet-50 border border-violet-100 flex items-center justify-center">
                         <i class="bi bi-shield-fill-check text-violet-650 text-xs"></i>
                     </div>
-                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS DEV MFA</span>
+                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS STP MFA</span>
                 </div>
                 <span class="text-[8px] text-violet-600 bg-violet-50 px-2 py-0.5 rounded border border-violet-100 font-bold font-mono">VERIFY</span>
             </div>

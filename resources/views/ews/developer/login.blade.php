@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer Portal - Secure Access</title>
+    <title>EWS STP Portal - Secure Access</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -50,7 +50,7 @@
                     <i class="bi bi-terminal-fill text-sky-455 text-sm"></i>
                 </div>
                 <div>
-                    <h4 class="text-xs font-black tracking-wider text-sky-400 uppercase">EWS Dev Hub</h4>
+                    <h4 class="text-xs font-black tracking-wider text-sky-400 uppercase">EWS STP Hub</h4>
                     <div class="text-[8px] text-slate-405 tracking-widest font-extrabold uppercase font-mono">SECURED CONSOLE</div>
                 </div>
             </div>
@@ -75,7 +75,7 @@
             </div>
         </div>
 
-        <!-- Right Side: Developer Login Form (7/12 width) -->
+        <!-- Right Side: STP Login Form (7/12 width) -->
         <div class="w-full md:w-7/12 h-full flex flex-col justify-between p-6 sm:p-8 bg-white relative overflow-y-auto custom-scroll">
             
             <!-- Mobile Header logo -->
@@ -84,9 +84,9 @@
                     <div class="w-7 h-7 rounded bg-indigo-50 border border-indigo-100 flex items-center justify-center">
                         <i class="bi bi-terminal-fill text-indigo-600 text-xs"></i>
                     </div>
-                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS DEV AUTH</span>
+                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS STP AUTH</span>
                 </div>
-                <span class="text-[8px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 font-bold font-mono">DEV GATEWAY</span>
+                <span class="text-[8px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 font-bold font-mono">STP GATEWAY</span>
             </div>
 
             <!-- Spacer -->
@@ -95,8 +95,8 @@
             <!-- Developer Form Container (Centered & Clean) -->
             <div class="w-full max-w-sm mx-auto space-y-4 my-auto">
                 <div class="text-center md:text-left space-y-1">
-                    <h3 class="text-base font-black tracking-tight text-slate-800 uppercase">Developer Authorization</h3>
-                    <p class="text-slate-400 text-[10px] font-light">Verify system keys to access developer sandbox dashboard.</p>
+                    <h3 class="text-base font-black tracking-tight text-slate-800 uppercase">STP Authorization</h3>
+                    <p class="text-slate-400 text-[10px] font-light">Verify system keys to access STP portal dashboard.</p>
                 </div>
 
                 @if(session('error'))
@@ -118,7 +118,7 @@
 
                     <!-- Mobile Number -->
                     <div class="space-y-1.5">
-                        <label for="mobile" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Registered Dev Mobile</label>
+                        <label for="mobile" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Registered STP Mobile</label>
                         <div class="flex rounded-lg overflow-hidden border border-slate-250 bg-slate-50 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-all">
                             <span class="flex items-center justify-center px-3 text-slate-400 border-r border-slate-200 text-[11px] font-mono bg-slate-100">+91</span>
                             <input type="text" id="mobile" name="mobile" maxlength="10" placeholder="9999999999" value="{{ old('mobile', '9999999999') }}"

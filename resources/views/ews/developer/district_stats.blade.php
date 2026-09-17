@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer - District Wise Summary</title>
+    <title>EWS STP - District Wise Summary</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -33,7 +33,7 @@
             </div>
             <div>
                 <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
+                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">STP Hub</p>
             </div>
         </div>
 
@@ -62,7 +62,7 @@
                     </a>
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-activity text-slate-400"></i>
-                        <span>Developer logs</span>
+                        <span>STP logs</span>
                     </a>
                 </div>
             </div>

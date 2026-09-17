@@ -90,7 +90,7 @@
                         <span class="material-symbols-outlined text-emerald-600 text-xl">engineering</span>
                         <span>Developer Accounts Management</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-1 font-medium">Create, update, and manage EWS developer login credentials and access.</p>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Create, update, and manage EWS STP login credentials and access.</p>
                 </div>
                 <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">person_add</span>
