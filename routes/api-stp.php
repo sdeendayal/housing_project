@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Stp\StpAuthApiController;
+use App\Http\Controllers\Api\Stp\StpApiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -30,4 +31,13 @@ Route::post('/login', [StpAuthApiController::class, 'login'])->middleware('throt
 Route::middleware(['auth:sanctum', 'role:ews_developer,ews_stp,stp'])->group(function () {
     Route::get('/profile', [StpAuthApiController::class, 'profile']);
     Route::post('/logout', [StpAuthApiController::class, 'logout']);
+
+    // STP Zone & Assigned Districts
+    Route::get('/districts', [StpApiController::class, 'getZoneDistricts']);
+    Route::get('/zone-districts', [StpApiController::class, 'getZoneDistricts']);
+
+    // Master Dropdown Data (Towns, Projects, Blocks)
+    Route::get('/towns', [StpApiController::class, 'getTowns']);
+    Route::get('/projects', [StpApiController::class, 'getProjects']);
+    Route::get('/blocks', [StpApiController::class, 'getBlocks']);
 });
