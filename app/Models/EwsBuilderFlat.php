@@ -10,8 +10,12 @@ class EwsBuilderFlat extends Model
     protected $table = 'ews_builder_flats';
 
     protected $fillable = [
+        'zone_id',
+        'zone_name',
         'district_id',
+        'dist_id',
         'district_name',
+        'dist_name',
         'town_name',
         'town_id',
         'project_name',
@@ -37,6 +41,11 @@ class EwsBuilderFlat extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function zone(): BelongsTo
+    {
+        return $this->belongsTo(EwsStpDistrict::class, 'zone_id');
     }
 
     public function district(): BelongsTo

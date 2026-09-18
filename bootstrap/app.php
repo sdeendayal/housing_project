@@ -16,6 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api-possession.php'));
+            Route::middleware('api')
+                ->prefix('api/stp')
+                ->group(base_path('routes/api-stp.php'));
 
             Route::middleware('web')
                 ->group(base_path('routes/mmgayAuth.php'));

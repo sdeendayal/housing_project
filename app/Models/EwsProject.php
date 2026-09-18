@@ -11,13 +11,23 @@ class EwsProject extends Model
     protected $table = 'ews_projects';
 
     protected $fillable = [
+        'zone_id',
+        'zone_name',
         'district_id',
+        'district_name',
+        'town_id',
+        'town_name',
         'name',
     ];
 
     public function district(): BelongsTo
     {
         return $this->belongsTo(EwsDistrict::class, 'district_id');
+    }
+
+    public function town(): BelongsTo
+    {
+        return $this->belongsTo(EwsTown::class, 'town_id');
     }
 
     public function blocks(): HasMany

@@ -230,7 +230,7 @@
             <button type="button" onclick="toggleDevelopersSubmenu()" class="w-full flex items-center justify-between rounded-xl px-4 py-2.5 transition-all text-left font-bold {{ $isDevActive ? 'bg-white/40 text-slate-900 border border-white/20 font-black' : 'hover:bg-white/40 hover:text-slate-955 text-slate-600 border border-transparent' }}">
                 <div class="flex items-center gap-3">
                     <span class="material-symbols-outlined text-[18px] {{ $isDevActive ? 'text-indigo-600 font-bold' : 'text-slate-500' }}">engineering</span>
-                    <span class="sidebar-text">Developers Hub</span>
+                    <span class="sidebar-text">STP Hub</span>
                 </div>
                 <span id="dev-submenu-arrow" class="material-symbols-outlined text-sm text-slate-400">{{ $isDevActive ? 'keyboard_arrow_down' : 'keyboard_arrow_right' }}</span>
             </button>
@@ -241,7 +241,7 @@
                 <a href="{{ route('ews.department.developers.index') }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-white/40 hover:text-slate-955 transition-all text-left {{ request()->routeIs('ews.department.developers.*') ? 'bg-white/50 text-indigo-700 font-extrabold shadow-sm border border-white/30' : '' }}">
                     <div class="flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm {{ request()->routeIs('ews.department.developers.*') ? 'text-indigo-600 font-bold' : 'text-slate-455' }}">manage_accounts</span>
-                        <span class="sidebar-text">Developer Accounts</span>
+                        <span class="sidebar-text">STP Accounts (Master)</span>
                     </div>
                     @if(isset($developerCount))
                         <span class="text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shadow-sm shadow-indigo-600/10 sidebar-badge">{{ $developerCount }}</span>

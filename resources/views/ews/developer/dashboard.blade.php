@@ -149,7 +149,7 @@
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" id="nav-district-flats"
                         class="flex items-center gap-2.5 px-3 py-2 rounded-lg {{ $currentView === 'district' ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
                         <i class="bi bi-building text-sky-400"></i>
-                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
+                        <span>{{ $displayZoneName ?? (!empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' Zone') : 'Zone') }} Flats</span>
                     </a>
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'my_flats']) }}" id="nav-my-flats"
                         class="flex items-center gap-2.5 px-3 py-2 rounded-lg {{ $currentView === 'my_flats' ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
@@ -198,7 +198,7 @@
                 <div>
                     <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">
                         @if($currentView === 'district')
-                            {{ $user->district_name ?? 'District' }} District Master Registry
+                            {{ !empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' Zone') : 'Zone' }} Master Registry
                         @elseif($currentView === 'my_flats')
                             My Registered Flats Inventory
                         @else
@@ -214,13 +214,13 @@
                 <div class="text-right">
                     <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
-                        @if(!empty($user->district_name))
-                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                        @if(!empty($displayZoneName))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
                         @endif
                         <i class="bi bi-person-circle text-sky-600"></i>
                     </div>
                     <div class="text-[8.5px] text-slate-500 font-mono">
-                        District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
+                        Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
                     </div>
                 </div>
                 <a href="{{ route('ews.developer.logout') }}" class="md:hidden px-3 py-1.5 bg-red-50 text-red-650 rounded-lg text-[9px] font-black uppercase border border-red-100">
@@ -241,7 +241,7 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
                         <div>
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-md text-[9px] font-black uppercase mb-2">
-                                <i class="bi bi-geo-alt-fill"></i> ASSIGNED DISTRICT: {{ strtoupper($user->district_name ?? 'ALL') }}
+                                <i class="bi bi-geo-alt-fill"></i> ASSIGNED ZONE: {{ $displayZoneName ?? (!empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' ZONE') : 'ALL ZONES') }}
                             </span>
                             <h2 class="text-lg font-black tracking-tight text-white">Welcome, {{ $user->name }}</h2>
                             <p class="text-xs text-slate-300 mt-0.5">EWS Builder Flats Registry Console & Inventory Management Panel</p>
@@ -257,12 +257,12 @@
 
                 <!-- Telemetry Stats Grid -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Stat 1: Total District Flats -->
+                    <!-- Stat 1: Total District/Zone Flats -->
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" class="bg-white border border-sky-200/80 hover:border-sky-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-sky-600">District Master</span>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-sky-600">Total Zone Flats</span>
                             <h4 class="text-xl font-black text-sky-600 font-mono mt-0.5">{{ $stats['total_flats'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Total {{ $user->district_name ?? '' }} Flats</span>
+                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Total {{ $displayZoneName ?? 'Zone' }} Flats</span>
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-building text-lg"></i>
@@ -281,12 +281,12 @@
                         </div>
                     </a>
 
-                    <!-- Stat 3: Active Projects -->
+                    <!-- Stat 3: Active Projects in Zone -->
                     <a href="javascript:void(0)" onclick="openProjectsModal(event)" class="bg-white border border-indigo-200/80 hover:border-indigo-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-indigo-600">District Projects</span>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-indigo-600">Zone Projects</span>
                             <h4 class="text-xl font-black text-indigo-600 font-mono mt-0.5">{{ $stats['total_projects'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Active Projects</span>
+                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Active Projects in Zone</span>
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-diagram-3-fill text-lg"></i>
@@ -298,7 +298,7 @@
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-wider text-violet-600">Coverage Towns</span>
                             <h4 class="text-xl font-black text-violet-600 font-mono mt-0.5">{{ $stats['total_towns'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Mapped Towns</span>
+                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Mapped Towns in Zone</span>
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-pin-map-fill text-lg"></i>
@@ -306,13 +306,13 @@
                     </a>
                 </div>
 
-                <!-- District Project Breakdown Cards Grid -->
+                <!-- Zone Project Breakdown Cards Grid -->
                 <div id="project-breakdown-section" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-150 pb-3">
                         <div class="flex items-center gap-2">
                             <i class="bi bi-buildings-fill text-sky-500 text-base"></i>
                             <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">
-                                {{ $user->district_name ?? 'District' }} EWS Projects Breakdown
+                                {{ $displayZoneName ?? 'Zone' }} EWS Projects Breakdown
                             </h3>
                         </div>
                         <span class="text-[9px] font-mono font-bold text-slate-400 uppercase">
@@ -339,23 +339,23 @@
                         </div>
                     @else
                         <div class="text-center py-6 text-slate-400 text-xs italic">
-                            No EWS builder projects registered yet in {{ $user->district_name ?? 'District' }}.
+                            No EWS builder projects registered yet in {{ $displayZoneName ?? 'this zone' }}.
                         </div>
                     @endif
                 </div>
             @elseif($currentView === 'district')
-                <!-- DISTRICT FLATS VIEW -->
+                <!-- ZONE FLATS VIEW -->
                 <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
                     <div>
                         <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-building"></i> DISTRICT SCOPED MATRIX
+                            <i class="bi bi-building"></i> ZONE SCOPED MATRIX
                         </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">{{ $user->district_name ?? 'District' }} Master EWS Flats</h2>
-                        <p class="text-[9px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $user->district_name }} District Authority</p>
+                        <h2 class="text-base font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Master EWS Flats</h2>
+                        <p class="text-[9px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $displayZoneName ?? 'Zone' }} Authority</p>
                     </div>
                     <div class="text-right">
                         <span class="text-3xl font-black font-mono">{{ $stats['total_flats'] }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-sky-200">District Total</span>
+                        <span class="block text-[8px] uppercase tracking-widest text-sky-200">Zone Total</span>
                     </div>
                 </div>
             @elseif($currentView === 'my_flats')
@@ -382,9 +382,9 @@
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                             <i class="bi bi-file-earmark-text text-sky-500 text-sm"></i>
                             EWS Builder Flats Table
-                            @if(!empty($user->district_name))
+                            @if(!empty($displayZoneName))
                                 <span class="px-2 py-0.5 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[9px] font-black uppercase">
-                                    <i class="bi bi-geo-alt-fill me-0.5"></i> {{ strtoupper($user->district_name) }}
+                                    <i class="bi bi-geo-alt-fill me-0.5"></i> {{ $displayZoneName }}
                                 </span>
                             @endif
                         </h3>
@@ -395,7 +395,7 @@
                         <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-[10px] font-bold">
                             <button type="button" id="btn-scope-all" onclick="setOwnershipFilter('all')"
                                 class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'text-slate-600 font-bold' : 'bg-white text-sky-700 shadow-sm font-black' }}">
-                                <i class="bi bi-building me-1"></i> All {{ $user->district_name ?? 'District' }} Records
+                                <i class="bi bi-building me-1"></i> All {{ $displayZoneName ?? 'Zone' }} Records
                             </button>
                             <button type="button" id="btn-scope-my" onclick="setOwnershipFilter('my_flats')"
                                 class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'bg-white text-emerald-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">

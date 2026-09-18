@@ -14,6 +14,7 @@ class EwsTown extends Model
     protected $fillable = [
         'district_id',
         'name',
+        'type',
     ];
 
     public function district()

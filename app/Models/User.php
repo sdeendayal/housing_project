@@ -24,6 +24,8 @@ class User extends Authenticatable
         'Is_Deleted',
         'district_id',
         'district_name',
+        'zone_id',
+        'zone_name',
         'block_id',
         'block_name',
         'secure_id',
@@ -84,7 +86,7 @@ class User extends Authenticatable
             'admin', 'director', 'departmental' => route('mmsay.dashboard'),
             'ews_department' => route('ews.department.dashboard'),
             'ews_user' => route('ews.dashboard'),
-            'ews_developer' => route('ews.developer.dashboard'),
+            'ews_developer', 'ews_stp', 'stp' => route('ews.developer.dashboard'),
             'mmgay-dtp' => route('pp.dtp.dashboard'),
             default => route('home'),
         };

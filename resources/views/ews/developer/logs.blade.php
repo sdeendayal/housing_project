@@ -44,7 +44,7 @@
                 <div class="space-y-1">
                     <a href="{{ route('ews.developer.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-building text-sky-400"></i>
-                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
+                        <span>{{ $displayZoneName ?? 'Zone' }} Flats</span>
                     </a>
                     <a href="{{ route('ews.developer.dashboard', ['ownership_scope' => 'my_flats']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-person-check-fill text-emerald-400"></i>
@@ -97,11 +97,11 @@
                 <div class="text-right">
                     <div class="text-[10px] text-slate-650 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
-                        @if(!empty($user->district_name))
-                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                        @if(!empty($displayZoneName))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
                         @endif
                     </div>
-                    <div class="text-[8.5px] text-slate-500 font-mono">District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
+                    <div class="text-[8.5px] text-slate-500 font-mono">Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
                 </div>
             </div>
         </header>

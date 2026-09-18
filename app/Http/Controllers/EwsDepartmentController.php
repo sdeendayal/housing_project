@@ -867,13 +867,19 @@ class EwsDepartmentController extends Controller
         return redirect()->route('ews.department.login')->with('success', 'Logged out successfully.');
     }
 
-    // ─── EWS DEVELOPER MANAGEMENT METHODS ────────────────────────────
+    // ─── EWS STP MANAGEMENT METHODS ────────────────────────────
 
     public function developersIndex(Request $request)
     {
         $user = Auth::user();
-        $districts = DB::table('ews_districts')->orderBy('name')->get();
-        $developerCount = User::where('role', 'ews_developer')->count();
+        $districts = DB::table('ews_stp_districts')->where('is_active', 1)->orderBy('name')->get();
+        if ($districts->isEmpty()) {
+            $districts = DB::table('ews_districts')
+                ->whereIn(DB::raw('UPPER(name)'), ['FARIDABAD', 'GURUGRAM', 'HISAR', 'PANIPAT', 'ROHTAK'])
+                ->orderBy('name')
+                ->get();
+        }
+        $developerCount = User::whereIn('role', ['ews_stp', 'ews_developer'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
 
@@ -884,7 +890,7 @@ class EwsDepartmentController extends Controller
 
     public function getDevelopersData(Request $request)
     {
-        $query = User::where('role', 'ews_developer')->orderBy('id', 'desc');
+        $query = User::whereIn('role', ['ews_stp', 'ews_developer'])->orderBy('id', 'desc');
 
         return DataTables::of($query)
             ->addIndexColumn()
@@ -933,75 +939,113 @@ class EwsDepartmentController extends Controller
 
     public function storeDeveloper(Request $request)
     {
+        $allowedZones = DB::table('ews_stp_districts')->where('is_active', 1)->pluck('name')->map(fn($n) => strtoupper(trim(str_ireplace(' ZONE', '', $n))))->toArray();
+        if (empty($allowedZones)) {
+            $allowedZones = ['FARIDABAD', 'GURUGRAM', 'HISAR', 'PANCHKULA', 'ROHTAK'];
+        }
+
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'mobile' => 'required|string|digits:10|unique:users,mobile',
-            'district_name' => 'nullable|string|max:255',
+            'district_name' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($allowedZones) {
+                    $cleaned = strtoupper(trim(str_ireplace(' ZONE', '', $value)));
+                    if (!in_array($cleaned, $allowedZones, true)) {
+                        $fail('The assigned zone must be one of the designated STP zones: ' . implode(', ', $allowedZones) . '.');
+                    }
+                },
+            ],
             'password' => 'required|string|min:6',
         ]);
 
-        $devRole = Role::where('slug', 'ews_developer')->first();
-        if (!$devRole) {
-            $devRole = Role::create([
-                'name' => 'EWS Developer',
-                'slug' => 'ews_developer',
+        $rawDistrict = trim($request->district_name);
+        $cleanZone = strtoupper(trim(str_ireplace(' ZONE', '', $rawDistrict)));
+        $isActive = (string)$request->input('Is_Active', '1') === '1';
+
+        $stpZone = DB::table('ews_stp_districts')->where(DB::raw('UPPER(name)'), $cleanZone)->first();
+        $zoneId = $stpZone->id ?? null;
+        $zoneName = $cleanZone . ' ZONE';
+
+        // Validation Rule: Only 1 active STP can exist per zone!
+        if ($isActive) {
+            $existingActive = User::whereIn('role', ['ews_stp', 'ews_developer'])
+                ->where('Is_Active', '1')
+                ->where(function($q) use ($zoneId, $cleanZone) {
+                    if ($zoneId) {
+                        $q->where('zone_id', $zoneId)
+                          ->orWhere('zone_name', 'like', "%{$cleanZone}%")
+                          ->orWhere(DB::raw('UPPER(TRIM(REPLACE(district_name, " ZONE", "")))'), $cleanZone);
+                    } else {
+                        $q->where(DB::raw('UPPER(TRIM(REPLACE(district_name, " ZONE", "")))'), $cleanZone);
+                    }
+                })
+                ->first();
+
+            if ($existingActive) {
+                return redirect()->back()->withInput()->with('error', "Zone '{$cleanZone} ZONE' me pehle se ek Active STP ({$existingActive->name} - Mobile: {$existingActive->mobile}) maujood hai! Naya STP active karne se pehle puraane account ko Deactivate karna hoga.");
+            }
+        }
+
+        $stpRole = Role::where('slug', 'ews_stp')->first();
+        if (!$stpRole) {
+            $stpRole = Role::create([
+                'name' => 'EWS Senior Town Planner (STP)',
+                'slug' => 'ews_stp',
                 'dashboard_route' => 'ews.developer.dashboard',
-                'Is_Active' => '1',
-                'Is_Deleted' => '0',
+                'is_active' => true,
             ]);
         }
 
-        $secureId = md5(uniqid("dev_" . microtime() . rand(), true));
-
-        $districtId = null;
-        $districtName = $request->district_name ?? 'SONIPAT';
-        if (!empty($districtName)) {
-            $dist = DB::table('ews_districts')->where('name', strtoupper(trim($districtName)))->orWhere('id', $districtName)->first();
-            if ($dist) {
-                $districtId = $dist->id;
-                $districtName = $dist->name;
-            }
-        }
+        $secureId = md5(uniqid("stp_" . microtime() . rand(), true));
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'mobile' => $request->mobile,
             'password' => Hash::make($request->password),
-            'role' => 'ews_developer',
+            'role' => 'ews_stp',
             'scheme' => 'EWS',
             'Is_Active' => $request->input('Is_Active', '1'),
             'Is_Deleted' => '0',
-            'district_id' => $districtId,
-            'district_name' => $districtName,
+            'district_id' => null,
+            'district_name' => $zoneName,
+            'zone_id' => $zoneId,
+            'zone_name' => $zoneName,
             'secure_id' => $secureId,
         ]);
 
         RoleType::create([
             'user_id' => $user->id,
-            'role_id' => $devRole->id,
+            'role_id' => $stpRole->id,
             'Is_Active' => '1',
             'Is_Deleted' => '0',
         ]);
 
-        // Log Developer Creation Activity
+        // Log STP Creation Activity
         EwsDeveloperLog::create([
             'user_id' => Auth::id(),
-            'action' => 'DEVELOPER_CREATED',
-            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') created Developer Account '{$user->name}' (Mobile: {$user->mobile}, District: {$user->district_name}) with status " . ($user->Is_Active == '1' ? 'ACTIVE' : 'INACTIVE'),
+            'action' => 'STP_CREATED',
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') created Senior Town Planner (STP) Account '{$user->name}' (Mobile: {$user->mobile}, Zone: {$user->zone_name}) with status " . ($user->Is_Active == '1' ? 'ACTIVE' : 'INACTIVE'),
             'ip_address' => $request->ip(),
         ]);
 
-        return redirect()->back()->with('success', 'Developer account created successfully!');
+        return redirect()->route('ews.department.developers.index')->with('success', "Senior Town Planner (STP) account for {$user->zone_name} created successfully.");
     }
 
-    public function updateDeveloper(Request $request, $secureId)
+    public function updateDeveloper(Request $request, $id)
     {
-        $user = User::where('role', 'ews_developer')
-            ->where(function($q) use ($secureId) {
-                $q->where('secure_id', $secureId);
-                $decoded = EwsHelper::decodeSecureId($secureId);
+        $allowedZones = DB::table('ews_stp_districts')->where('is_active', 1)->pluck('name')->map(fn($n) => strtoupper(trim(str_ireplace(' ZONE', '', $n))))->toArray();
+        if (empty($allowedZones)) {
+            $allowedZones = ['FARIDABAD', 'GURUGRAM', 'HISAR', 'PANCHKULA', 'ROHTAK'];
+        }
+
+        $user = User::whereIn('role', ['ews_stp', 'ews_developer'])
+            ->where(function ($q) use ($id) {
+                $q->where('secure_id', $id);
+                $decoded = EwsHelper::decodeSecureId($id);
                 if ($decoded) {
                     $q->orWhere('id', $decoded);
                 }
@@ -1014,25 +1058,55 @@ class EwsDepartmentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$user->id,
             'mobile' => 'required|string|digits:10|unique:users,mobile,'.$user->id,
-            'district_name' => 'nullable|string|max:255',
+            'district_name' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($allowedZones) {
+                    $cleaned = strtoupper(trim(str_ireplace(' ZONE', '', $value)));
+                    if (!in_array($cleaned, $allowedZones, true)) {
+                        $fail('The assigned zone must be one of the designated STP zones: ' . implode(', ', $allowedZones) . '.');
+                    }
+                },
+            ],
             'password' => 'nullable|string|min:6',
         ]);
+
+        $rawDistrict = trim($request->district_name);
+        $cleanZone = strtoupper(trim(str_ireplace(' ZONE', '', $rawDistrict)));
+        $isActive = (string)$request->input('Is_Active', '1') === '1';
+
+        $stpZone = DB::table('ews_stp_districts')->where(DB::raw('UPPER(name)'), $cleanZone)->first();
+        $zoneId = $stpZone->id ?? null;
+        $zoneName = $cleanZone . ' ZONE';
+
+        // Validation Rule: Only 1 active STP can exist per zone!
+        if ($isActive) {
+            $existingActive = User::whereIn('role', ['ews_stp', 'ews_developer'])
+                ->where('Is_Active', '1')
+                ->where('id', '!=', $user->id)
+                ->where(function($q) use ($zoneId, $cleanZone) {
+                    if ($zoneId) {
+                        $q->where('zone_id', $zoneId)
+                          ->orWhere('zone_name', 'like', "%{$cleanZone}%")
+                          ->orWhere(DB::raw('UPPER(TRIM(REPLACE(district_name, " ZONE", "")))'), $cleanZone);
+                    } else {
+                        $q->where(DB::raw('UPPER(TRIM(REPLACE(district_name, " ZONE", "")))'), $cleanZone);
+                    }
+                })
+                ->first();
+
+            if ($existingActive) {
+                return redirect()->back()->withInput()->with('error', "Zone '{$cleanZone} ZONE' me pehle se ek Active STP ({$existingActive->name} - Mobile: {$existingActive->mobile}) maujood hai! Is account ko active karne ke liye pehle us active account ko Deactivate karna hoga.");
+            }
+        }
 
         $user->name = $request->name;
         $user->email = $request->email;
         $user->mobile = $request->mobile;
-
-        $reqDist = $request->district_name ?? $user->district_name;
-        if (!empty($reqDist)) {
-            $dist = DB::table('ews_districts')->where('name', strtoupper(trim($reqDist)))->orWhere('id', $reqDist)->first();
-            if ($dist) {
-                $user->district_id = $dist->id;
-                $user->district_name = $dist->name;
-            } else {
-                $user->district_name = $reqDist;
-            }
-        }
-
+        $user->zone_id = $zoneId;
+        $user->zone_name = $zoneName;
+        $user->district_name = $zoneName;
+        $user->district_id = null;
         $user->Is_Active = $request->input('Is_Active', '1');
 
         if ($request->filled('password')) {
@@ -1041,15 +1115,24 @@ class EwsDepartmentController extends Controller
 
         $user->save();
 
+        // Ensure role mapping exists
+        $stpRole = Role::where('slug', 'ews_stp')->first();
+        if ($stpRole) {
+            RoleType::updateOrCreate(
+                ['user_id' => $user->id],
+                ['role_id' => $stpRole->id, 'Is_Active' => '1', 'Is_Deleted' => '0']
+            );
+        }
+
         // Log Update / Status Change Activity
-        $actionName = 'DEVELOPER_UPDATED';
+        $actionName = 'STP_UPDATED';
         $statusNote = '';
         if ($oldActive !== $user->Is_Active) {
             if ($user->Is_Active == '1') {
-                $actionName = 'DEVELOPER_ACTIVATED';
+                $actionName = 'STP_ACTIVATED';
                 $statusNote = " (Status changed from INACTIVE to ACTIVE)";
             } else {
-                $actionName = 'DEVELOPER_DEACTIVATED';
+                $actionName = 'STP_DEACTIVATED';
                 $statusNote = " (Status changed from ACTIVE to INACTIVE)";
             }
         }
@@ -1057,16 +1140,16 @@ class EwsDepartmentController extends Controller
         EwsDeveloperLog::create([
             'user_id' => Auth::id(),
             'action' => $actionName,
-            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') updated Developer Account '{$user->name}' (Mobile: {$user->mobile}, District: {$user->district_name})" . $statusNote,
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') updated STP Account '{$user->name}' (Mobile: {$user->mobile}, District: {$user->district_name})" . $statusNote,
             'ip_address' => $request->ip(),
         ]);
 
-        return redirect()->back()->with('success', 'Developer account updated successfully!');
+        return redirect()->back()->with('success', 'STP account updated successfully!');
     }
 
     public function destroyDeveloper($secureId)
     {
-        $user = User::where('role', 'ews_developer')
+        $user = User::whereIn('role', ['ews_stp', 'ews_developer'])
             ->where(function($q) use ($secureId) {
                 $q->where('secure_id', $secureId);
                 $decoded = EwsHelper::decodeSecureId($secureId);
@@ -1074,8 +1157,9 @@ class EwsDepartmentController extends Controller
                     $q->orWhere('id', $decoded);
                 }
             })->firstOrFail();
-        $devName = $user->name;
-        $devMobile = $user->mobile;
+        $stpName = $user->name;
+        $stpMobile = $user->mobile;
+        $dist = $user->district_name;
 
         RoleType::where('user_id', $user->id)->delete();
         $user->delete();
@@ -1083,24 +1167,40 @@ class EwsDepartmentController extends Controller
         // Log Delete Activity
         EwsDeveloperLog::create([
             'user_id' => Auth::id(),
-            'action' => 'DEVELOPER_DELETED',
-            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') deleted Developer Account '{$devName}' (Mobile: {$devMobile})",
+            'action' => 'STP_DELETED',
+            'details' => "Department Admin ('".(Auth::user()->name ?? 'Admin')."') deleted STP Account '{$stpName}' (Mobile: {$stpMobile}, District: {$dist})",
             'ip_address' => request()->ip(),
         ]);
 
-        return redirect()->back()->with('success', 'Developer account deleted successfully!');
+        return redirect()->back()->with('success', 'STP account deleted successfully!');
     }
 
     public function developerFlatsIndex(Request $request)
     {
         $user = Auth::user();
-        $districts = DB::table('ews_districts')->orderBy('name')->get();
-        $developerCount = User::where('role', 'ews_developer')->count();
+        
+        // Designated 5 Haryana TCP Zones
+        $stpZones = DB::table('ews_stp_districts')
+            ->where('is_active', 1)
+            ->orderBy('name')
+            ->get();
+
+        if ($stpZones->isEmpty()) {
+            $stpZones = collect([
+                (object)['id' => 1, 'name' => 'FARIDABAD', 'code' => 'FBD'],
+                (object)['id' => 2, 'name' => 'GURUGRAM', 'code' => 'GGN'],
+                (object)['id' => 3, 'name' => 'HISAR', 'code' => 'HSR'],
+                (object)['id' => 4, 'name' => 'PANIPAT', 'code' => 'PNP'],
+                (object)['id' => 5, 'name' => 'ROHTAK', 'code' => 'ROH'],
+            ]);
+        }
+
+        $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
 
         return view('ews.department.developers.flats', compact(
-            'user', 'districts', 'developerCount', 'developerFlatsCount', 'developerLogsCount'
+            'user', 'stpZones', 'developerCount', 'developerFlatsCount', 'developerLogsCount'
         ));
     }
 
@@ -1108,22 +1208,72 @@ class EwsDepartmentController extends Controller
     {
         $query = DB::table('ews_builder_flats as f')
             ->leftJoin('users as u', 'f.created_by', '=', 'u.id')
-            ->select('f.*', 'u.name as developer_name', 'u.mobile as developer_mobile')
+            ->select('f.*', 'u.name as developer_name', 'u.mobile as developer_mobile', 'u.district_name as creator_zone')
             ->orderBy('f.id', 'desc');
 
-        if ($request->filled('district_id')) {
+        if ($request->filled('zone')) {
+            $zone = strtoupper(trim(str_replace(' ZONE', '', $request->zone)));
+
+            // Standard Haryana TCP Zone to District clusters
+            $zoneDistricts = [
+                'FARIDABAD' => ['FARIDABAD', 'PALWAL', 'NUH'],
+                'GURUGRAM' => ['GURUGRAM', 'REWARI', 'MAHENDERGARH', 'NARNAUL'],
+                'HISAR' => ['HISAR', 'BHIWANI', 'CHARKHI-DADRI', 'CHARKHI DADRI', 'FATEHABAD', 'JIND', 'SIRSA', 'HANSI'],
+                'PANIPAT' => ['PANIPAT', 'KARNAL', 'KURUKSHETRA', 'KAITHAL', 'AMBALA', 'YAMUNANAGAR', 'PANCHKULA'],
+                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT'],
+            ];
+
+            $cluster = $zoneDistricts[$zone] ?? [$zone];
+
+            $query->where(function ($q) use ($zone, $cluster) {
+                $q->whereIn(DB::raw('UPPER(f.district_name)'), $cluster)
+                  ->orWhere(DB::raw('UPPER(f.district_name)'), 'like', "%{$zone}%")
+                  ->orWhere(DB::raw('UPPER(u.district_name)'), 'like', "%{$zone}%");
+            });
+        } elseif ($request->filled('district_id')) {
             $query->where('f.district_id', $request->district_id);
         }
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('zone_display', function ($row) {
+                $dist = strtoupper($row->district_name ?? '');
+                $zoneMap = [
+                    'FARIDABAD' => 'FARIDABAD ZONE',
+                    'PALWAL' => 'FARIDABAD ZONE',
+                    'NUH' => 'FARIDABAD ZONE',
+                    'GURUGRAM' => 'GURUGRAM ZONE',
+                    'REWARI' => 'GURUGRAM ZONE',
+                    'MAHENDERGARH' => 'GURUGRAM ZONE',
+                    'HISAR' => 'HISAR ZONE',
+                    'BHIWANI' => 'HISAR ZONE',
+                    'CHARKHI-DADRI' => 'HISAR ZONE',
+                    'CHARKHI DADRI' => 'HISAR ZONE',
+                    'FATEHABAD' => 'HISAR ZONE',
+                    'JIND' => 'HISAR ZONE',
+                    'SIRSA' => 'HISAR ZONE',
+                    'HANSI' => 'HISAR ZONE',
+                    'PANIPAT' => 'PANIPAT ZONE',
+                    'KARNAL' => 'PANIPAT ZONE',
+                    'KURUKSHETRA' => 'PANIPAT ZONE',
+                    'KAITHAL' => 'PANIPAT ZONE',
+                    'AMBALA' => 'PANIPAT ZONE',
+                    'YAMUNANAGAR' => 'PANIPAT ZONE',
+                    'PANCHKULA' => 'PANIPAT ZONE',
+                    'ROHTAK' => 'ROHTAK ZONE',
+                    'JHAJJAR' => 'ROHTAK ZONE',
+                    'SONIPAT' => 'ROHTAK ZONE',
+                ];
+                $zoneName = $zoneMap[$dist] ?? ($dist ? $dist.' ZONE' : 'N/A');
+                return '<span class="font-bold text-emerald-800 uppercase tracking-wide">'.$zoneName.'</span><br><span class="text-[9px] font-semibold text-slate-400">Dist: '.$dist.'</span>';
+            })
             ->addColumn('created_by_info', function ($row) {
                 if ($row->developer_name) {
                     return '<span class="font-bold text-slate-800 uppercase">'.$row->developer_name.'</span><br><span class="font-mono text-[9px] text-slate-400">'.$row->developer_mobile.'</span>';
                 }
                 return '<span class="text-slate-400 font-mono text-[10px]">System Seeded</span>';
             })
-            ->rawColumns(['created_by_info'])
+            ->rawColumns(['zone_display', 'created_by_info'])
             ->make(true);
     }
 
@@ -1375,7 +1525,7 @@ class EwsDepartmentController extends Controller
         $search = $request->input('search');
         $format = strtolower($request->input('format', 'csv'));
 
-        $query = User::where('role', 'ews_developer')
+        $query = User::whereIn('role', ['ews_stp', 'ews_developer'])
             ->orderBy('id', 'desc');
 
         if ($search) {
@@ -1387,11 +1537,11 @@ class EwsDepartmentController extends Controller
             });
         }
 
-        $headers = ['S.No.', 'Developer Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions'];
-        $filename = "ews_developers_" . date('Y-m-d_H-i') . ".csv";
+        $headers = ['S.No.', 'STP Officer / Name', 'Mobile ID', 'Email Address', 'District', 'Flat Submissions'];
+        $filename = "ews_stp_accounts_" . date('Y-m-d_H-i') . ".csv";
 
         if ($format === 'pdf') {
-            return $this->streamPrintPdfResponse("EWS DEVELOPER ACCOUNTS REPORT", $headers, $query);
+            return $this->streamPrintPdfResponse("EWS STP ACCOUNTS REPORT", $headers, $query);
         }
 
         $responseHeaders = [
@@ -1428,6 +1578,7 @@ class EwsDepartmentController extends Controller
 
     public function exportDeveloperFlats(Request $request)
     {
+        $zone = $request->input('zone');
         $districtId = $request->input('district_id');
         $search = $request->input('search');
         $format = strtolower($request->input('format', 'csv'));
@@ -1435,7 +1586,21 @@ class EwsDepartmentController extends Controller
         $query = EwsBuilderFlat::with(['creator', 'district'])
             ->orderBy('id', 'desc');
 
-        if ($districtId) {
+        if ($zone) {
+            $cleanZone = strtoupper(trim(str_replace(' ZONE', '', $zone)));
+            $zoneDistricts = [
+                'FARIDABAD' => ['FARIDABAD', 'PALWAL', 'NUH'],
+                'GURUGRAM' => ['GURUGRAM', 'REWARI', 'MAHENDERGARH', 'NARNAUL'],
+                'HISAR' => ['HISAR', 'BHIWANI', 'CHARKHI-DADRI', 'CHARKHI DADRI', 'FATEHABAD', 'JIND', 'SIRSA', 'HANSI'],
+                'PANIPAT' => ['PANIPAT', 'KARNAL', 'KURUKSHETRA', 'KAITHAL', 'AMBALA', 'YAMUNANAGAR', 'PANCHKULA'],
+                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT'],
+            ];
+            $cluster = $zoneDistricts[$cleanZone] ?? [$cleanZone];
+            $query->where(function($q) use ($cleanZone, $cluster) {
+                $q->whereIn(DB::raw('UPPER(district_name)'), $cluster)
+                  ->orWhere(DB::raw('UPPER(district_name)'), 'like', "%{$cleanZone}%");
+            });
+        } elseif ($districtId) {
             $query->where('district_id', $districtId);
         }
 
@@ -1448,7 +1613,7 @@ class EwsDepartmentController extends Controller
             });
         }
 
-        $headers = ['S.No.', 'District', 'Town Name', 'Project Name', 'Block / Tower', 'Floor', 'Flat Number', 'Submitted By Developer'];
+        $headers = ['S.No.', 'Zone / District', 'Town Name', 'Project Name', 'Block / Tower', 'Floor', 'Flat Number', 'Submitted By (STP)'];
         $filename = "ews_builder_flats_" . date('Y-m-d_H-i') . ".csv";
 
         if ($format === 'pdf') {

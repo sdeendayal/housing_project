@@ -97,7 +97,7 @@
                 <div class="space-y-1">
                     <a href="{{ route('ews.developer.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-building text-sky-400"></i>
-                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
+                        <span>{{ $displayZoneName ?? 'Zone' }} Flats</span>
                     </a>
                     <a href="{{ route('ews.developer.dashboard', ['ownership_scope' => 'my_flats']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-person-check-fill text-emerald-400"></i>
@@ -147,11 +147,11 @@
             <div class="text-right">
                 <div class="text-[10px] text-slate-650 font-bold flex items-center gap-1 justify-end">
                     <span>{{ $user->name }}</span>
-                    @if(!empty($user->district_name))
-                        <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                    @if(!empty($displayZoneName))
+                        <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
                     @endif
                 </div>
-                <div class="text-[8.5px] text-slate-500 font-mono">District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
+                <div class="text-[8.5px] text-slate-500 font-mono">Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
             </div>
         </header>
 
@@ -187,50 +187,80 @@
                     <form method="POST" action="{{ route('ews.developer.flats.store') }}" class="p-6 space-y-4" id="devCreateForm">
                         @csrf
 
-                        <!-- Session Alert Notifications -->
+                        <!-- Row 1: Zone (Locked) & District (Filtered by Zone) -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- District -->
+                            <!-- Assigned Zone (Frozen/Locked) -->
+                            @php
+                                $displayZoneName = $zone ? $zone->name : ($user->zone_name ?? ($user->district_name ?? ''));
+                                $displayZoneName = strtoupper(trim(str_replace(' ZONE', '', $displayZoneName))) . ' ZONE';
+                                $selectedZoneId = $zone->id ?? ($user->zone_id ?? '');
+                            @endphp
                             <div class="space-y-1">
-                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Select District <span class="text-red-500">*</span></label>
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">
+                                        Assigned Zone <span class="text-red-500">*</span>
+                                    </label>
+                                    <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                                        <span class="material-symbols-outlined text-[11px]">lock</span> Locked
+                                    </span>
+                                </div>
+                                <input type="hidden" name="zone_id" id="zone_id" value="{{ $selectedZoneId }}">
+                                <input type="hidden" name="zone_name" id="zone_name" value="{{ $displayZoneName }}">
+                                <div class="relative">
+                                    <input type="text" readonly disabled
+                                        value="{{ $displayZoneName }}"
+                                        class="w-full bg-slate-100 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-700 font-extrabold cursor-not-allowed uppercase shadow-inner" />
+                                    <span class="absolute right-3 top-2 text-slate-400">
+                                        <span class="material-symbols-outlined text-base">lock</span>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Select District (Only districts of this zone) -->
+                            <div class="space-y-1">
+                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 1</span>
+                                    <span>Select District</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <select id="district_id" name="district_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     @if(count($districts) > 1)
-                                        <option value="" disabled {{ old('district_id') ? '' : 'selected' }}>Choose a district...</option>
+                                        <option value="" disabled {{ old('district_id', $selectedDistrictId ?? '') ? '' : 'selected' }}>Choose a district in {{ $displayZoneName }}...</option>
                                     @endif
                                     @foreach($districts as $district)
-                                        <option value="{{ $district->id }}" {{ (count($districts) === 1 || old('district_id') == $district->id) ? 'selected' : '' }}>
+                                        <option value="{{ $district->id }}" {{ (old('district_id', $selectedDistrictId ?? '') == $district->id) ? 'selected' : '' }}>
                                             {{ strtoupper($district->name) }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
+                        </div>
 
+                        <!-- Row 2: Town & Project -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Town -->
                             <div class="space-y-1">
-                                <label for="town_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Town <span class="text-red-500">*</span></label>
+                                <label for="town_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 2</span>
+                                    <span>Name of Town</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <select id="town_id" name="town_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled selected>Choose a town...</option>
                                     @foreach($towns as $town)
                                         <option value="{{ $town->id }}" {{ old('town_id') == $town->id ? 'selected' : '' }}>
-                                            {{ strtoupper($town->name) }}
+                                            {{ strtoupper($town->name) }}{{ !empty($town->type) ? ' (' . strtoupper($town->type) . ')' : '' }}
                                         </option>
                                     @endforeach
-                                    <option value="new">+ Add New Town</option>
                                 </select>
-                                
-                                <!-- New Town Input -->
-                                <div id="new_town_container" class="hidden mt-2">
-                                    <input type="text" id="new_town_name" name="new_town_name" placeholder="Enter new town name (e.g. Kundli)"
-                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
-                                </div>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Project Selection -->
                             <div class="space-y-1">
-                                <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Name of Project <span class="text-red-500">*</span></label>
+                                <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 3</span>
+                                    <span>Name of Project</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <select id="project_id" name="project_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled selected>Choose a project...</option>
@@ -239,14 +269,28 @@
                                 
                                 <!-- New Project Input -->
                                 <div id="new_project_container" class="hidden mt-2">
-                                    <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
-                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
+                                            class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                        <button type="button" id="btn_save_project_ajax" onclick="saveNewProjectAjax()"
+                                            class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0">
+                                            <i class="bi bi-plus-circle-fill"></i>
+                                            <span>Save Project</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Project' to instantly save into ews_projects, or auto-saves on form submit.</p>
                                 </div>
                             </div>
+                        </div>
 
+                        <!-- Row 3: Block Selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Block / Tower No. Selection -->
                             <div class="space-y-1">
-                                <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Block / Tower No. <span class="text-red-500">*</span></label>
+                                <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 4</span>
+                                    <span>Block / Tower No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <select id="block_id" name="block_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled selected>Choose a block/tower...</option>
@@ -255,8 +299,16 @@
                                 
                                 <!-- New Block Input -->
                                 <div id="new_block_container" class="hidden mt-2">
-                                    <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
-                                        class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
+                                            class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                        <button type="button" id="btn_save_block_ajax" onclick="saveNewBlockAjax()"
+                                            class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0">
+                                            <i class="bi bi-plus-circle-fill"></i>
+                                            <span>Save Block</span>
+                                        </button>
+                                    </div>
+                                    <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Block' to instantly save into ews_blocks, or auto-saves on form submit.</p>
                                 </div>
                             </div>
                         </div>
@@ -267,7 +319,10 @@
                         <div id="single-fields-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Floor Details -->
                             <div class="space-y-1">
-                                <label for="floor_number_single" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Floor (Number) <span class="text-red-500">*</span></label>
+                                <label for="floor_number_single" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 5</span>
+                                    <span>Floor (Number)</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <select id="floor_number_single" name="floor_number" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
                                     <option value="0" selected>Ground Floor (0)</option>
@@ -279,7 +334,10 @@
 
                             <!-- Flat Number -->
                             <div class="space-y-1">
-                                <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">Flat Number <span class="text-red-500">*</span></label>
+                                <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 5</span>
+                                    <span>Flat Number</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <input type="text" id="flat_number" name="flat_number" placeholder="e.g. B-101" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
                             </div>
@@ -561,10 +619,7 @@
 
         // AJAX and Dynamic Fields Logic for Towns, Projects, and Blocks
         const districtSelect = document.getElementById('district_id');
-        
         const townSelect = document.getElementById('town_id');
-        const newTownContainer = document.getElementById('new_town_container');
-        const newTownInput = document.getElementById('new_town_name');
 
         const projectSelect = document.getElementById('project_id');
         const newProjectContainer = document.getElementById('new_project_container');
@@ -576,15 +631,15 @@
 
         $(document).ready(function() {
             // Initialize Select2 search elements
-            $('#district_id').select2();
+            if ($('#district_id').is('select')) {
+                $('#district_id').select2();
+                $('#district_id').on('select2:select select2:unselect', function() {
+                    districtSelect.dispatchEvent(new Event('change'));
+                });
+            }
             $('#town_id').select2();
             $('#project_id').select2();
             $('#block_id').select2();
-
-            // Sync Select2 select/clear triggers with our vanilla events
-            $('#district_id').on('select2:select select2:unselect', function() {
-                districtSelect.dispatchEvent(new Event('change'));
-            });
             $('#town_id').on('select2:select select2:unselect', function() {
                 townSelect.dispatchEvent(new Event('change'));
             });
@@ -632,8 +687,7 @@
 
         function fetchTowns(districtId, selectedTownId = null) {
             if (!districtId) {
-                townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
-                $(townSelect).trigger('change.select2');
+                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
                 return;
             }
             
@@ -646,11 +700,11 @@
                     townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
                     data.forEach(t => {
                         const isSel = selectedTownId && selectedTownId == t.id ? 'selected' : '';
-                        townSelect.innerHTML += `<option value="${t.id}" ${isSel}>${t.name.toUpperCase()}</option>`;
+                        const typeBadge = t.type ? ` (${t.type.toUpperCase()})` : '';
+                        townSelect.innerHTML += `<option value="${t.id}" ${isSel}>${t.name.toUpperCase()}${typeBadge}</option>`;
                     });
-                    townSelect.innerHTML += '<option value="new">+ Add New Town</option>';
                     
-                    $(townSelect).trigger('change.select2');
+                    updateSelectLock(townSelect, true);
                     
                     if (selectedTownId) {
                         $(townSelect).val(selectedTownId).trigger('change.select2');
@@ -661,15 +715,62 @@
                 })
                 .catch(err => {
                     console.error('Error fetching towns:', err);
-                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
+                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
                     $(townSelect).trigger('change.select2');
                 });
         }
 
-        function fetchProjects(districtId, selectedProjectId = null) {
-            if (!districtId) {
-                projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
-                $(projectSelect).trigger('change.select2');
+        function updateSelectLock(selectEl, enabled, placeholderText = null) {
+            if (!selectEl) return;
+            const $el = $(selectEl);
+            if (enabled) {
+                $el.prop('disabled', false);
+                selectEl.disabled = false;
+                selectEl.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+            } else {
+                $el.prop('disabled', true);
+                selectEl.disabled = true;
+                selectEl.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                if (placeholderText) {
+                    selectEl.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
+                }
+            }
+            $el.trigger('change.select2');
+        }
+
+        function setFlatInputsLock(locked) {
+            const singleFloor = document.getElementById('floor_number_single');
+            const flatNum = document.getElementById('flat_number');
+            const bulkFloor = document.getElementById('floor_number_bulk');
+            const flatType = document.getElementById('flat_number_type');
+            const fromFlat = document.getElementById('from_flat');
+            const toFlat = document.getElementById('to_flat');
+            const customFlats = document.getElementById('custom_flat_numbers');
+            const submitBtn = document.querySelector('button[type="submit"]');
+
+            const inputs = [singleFloor, flatNum, bulkFloor, flatType, fromFlat, toFlat, customFlats];
+            inputs.forEach(el => {
+                if (!el) return;
+                el.disabled = locked;
+                if (locked) {
+                    el.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                } else {
+                    el.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                }
+            });
+
+            if (submitBtn) {
+                if (locked) {
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                } else {
+                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function fetchProjects(districtId, townId, selectedProjectId = null) {
+            if (!districtId || !townId) {
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
                 clearBlocks();
                 return;
             }
@@ -677,7 +778,7 @@
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
             $(projectSelect).trigger('change.select2');
             
-            fetch(`/ews/developer/projects?district_id=${districtId}`)
+            fetch(`/ews/developer/projects?district_id=${districtId}&town_id=${townId}`)
                 .then(res => res.json())
                 .then(data => {
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
@@ -687,7 +788,7 @@
                     });
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
-                    $(projectSelect).trigger('change.select2');
+                    updateSelectLock(projectSelect, true);
                     
                     if (selectedProjectId) {
                         $(projectSelect).val(selectedProjectId).trigger('change.select2');
@@ -701,6 +802,128 @@
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
                     $(projectSelect).trigger('change.select2');
                 });
+        }
+
+        function saveNewProjectAjax() {
+            const districtId = districtSelect ? districtSelect.value : '';
+            const townId = townSelect ? townSelect.value : '';
+            const projInput = document.getElementById('new_project_name');
+            const projName = projInput ? projInput.value.trim() : '';
+            const saveBtn = document.getElementById('btn_save_project_ajax');
+
+            if (!districtId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'District Required',
+                    text: 'Please select a district first before creating a project.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!townId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Town Required',
+                    text: 'Please select a town first before creating a project.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!projName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Project Name Required',
+                    text: 'Please enter the new project name.',
+                    confirmButtonColor: '#0284c7'
+                });
+                if (projInput) projInput.focus();
+                return;
+            }
+
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
+            }
+
+            fetch('{{ route("ews.developer.projects.store-ajax") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    district_id: districtId,
+                    town_id: townId,
+                    project_name: projName
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
+                }
+
+                if (data.success && data.project) {
+                    let opt = Array.from(projectSelect.options).find(o => o.value == data.project.id);
+                    if (!opt) {
+                        const newOption = document.createElement('option');
+                        newOption.value = data.project.id;
+                        newOption.textContent = data.project.name.toUpperCase();
+                        
+                        const addNewOpt = Array.from(projectSelect.options).find(o => o.value === 'new');
+                        if (addNewOpt) {
+                            projectSelect.insertBefore(newOption, addNewOpt);
+                        } else {
+                            projectSelect.appendChild(newOption);
+                        }
+                    }
+
+                    projectSelect.value = data.project.id;
+                    $(projectSelect).val(data.project.id).trigger('change.select2');
+                    
+                    newProjectContainer.classList.add('hidden');
+                    newProjectInput.required = false;
+                    newProjectInput.value = '';
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || `Project '${data.project.name}' saved successfully!`
+                    });
+
+                    handleProjectChange();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Could not save project.',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'An error occurred while saving the project.',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
         }
 
         function fetchBlocks(projectId, selectedBlockId = null) {
@@ -724,7 +947,7 @@
                     });
                     blockSelect.innerHTML += '<option value="new">+ Add New Block/Tower</option>';
                     
-                    $(blockSelect).trigger('change.select2');
+                    updateSelectLock(blockSelect, true);
                     
                     if (selectedBlockId) {
                         $(blockSelect).val(selectedBlockId).trigger('change.select2');
@@ -740,21 +963,134 @@
                 });
         }
 
+        function saveNewBlockAjax() {
+            const projectId = projectSelect ? projectSelect.value : '';
+            const blockInput = document.getElementById('new_block_name');
+            const blockName = blockInput ? blockInput.value.trim() : '';
+            const saveBtn = document.getElementById('btn_save_block_ajax');
+
+            if (!projectId || projectId === 'new') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Project Required',
+                    text: 'Please select a valid Project first before creating a Block/Tower.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!blockName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Block/Tower Name Required',
+                    text: 'Please enter the block/tower name or number.',
+                    confirmButtonColor: '#0284c7'
+                });
+                if (blockInput) blockInput.focus();
+                return;
+            }
+
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
+            }
+
+            fetch('{{ route("ews.developer.blocks.store-ajax") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    project_id: projectId,
+                    block_name: blockName
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
+                }
+
+                if (data.success && data.block) {
+                    let opt = Array.from(blockSelect.options).find(o => o.value == data.block.id);
+                    if (!opt) {
+                        const newOption = document.createElement('option');
+                        newOption.value = data.block.id;
+                        newOption.textContent = data.block.name.toUpperCase();
+                        
+                        const addNewOpt = Array.from(blockSelect.options).find(o => o.value === 'new');
+                        if (addNewOpt) {
+                            blockSelect.insertBefore(newOption, addNewOpt);
+                        } else {
+                            blockSelect.appendChild(newOption);
+                        }
+                    }
+
+                    blockSelect.value = data.block.id;
+                    $(blockSelect).val(data.block.id).trigger('change.select2');
+                    
+                    newBlockContainer.classList.add('hidden');
+                    newBlockInput.required = false;
+                    newBlockInput.value = '';
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || `Block '${data.block.name}' saved successfully!`
+                    });
+
+                    handleBlockChange();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Could not save block.',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'An error occurred while saving the block.',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
+        }
+
         function clearBlocks() {
-            blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
+            updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
             $(blockSelect).val('').trigger('change.select2');
             handleBlockChange();
         }
 
         function handleTownChange() {
             const val = townSelect.value;
-            if (val === 'new') {
-                newTownContainer.classList.remove('hidden');
-                newTownInput.required = true;
+
+            // Step 3 (Project) is unlocked ONLY if Town has a valid selection
+            if (val && val !== '') {
+                const distId = districtSelect ? districtSelect.value : '';
+                updateSelectLock(projectSelect, true);
+                fetchProjects(distId, val);
             } else {
-                newTownContainer.classList.add('hidden');
-                newTownInput.required = false;
-                newTownInput.value = '';
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                clearBlocks();
+                setFlatInputsLock(true);
             }
         }
 
@@ -764,6 +1100,8 @@
                 newProjectContainer.classList.remove('hidden');
                 newProjectInput.required = true;
                 
+                // Allow adding new block
+                updateSelectLock(blockSelect, true);
                 $(blockSelect).val('new').trigger('change.select2');
                 blockSelect.dispatchEvent(new Event('change'));
             } else {
@@ -771,10 +1109,13 @@
                 newProjectInput.required = false;
                 newProjectInput.value = '';
                 
-                if (val) {
+                // Step 4 (Block) is unlocked ONLY if Project has a valid selection
+                if (val && val !== '') {
+                    updateSelectLock(blockSelect, true);
                     fetchBlocks(val);
                 } else {
                     clearBlocks();
+                    setFlatInputsLock(true);
                 }
             }
         }
@@ -784,17 +1125,36 @@
             if (val === 'new') {
                 newBlockContainer.classList.remove('hidden');
                 newBlockInput.required = true;
+                setFlatInputsLock(false);
             } else {
                 newBlockContainer.classList.add('hidden');
                 newBlockInput.required = false;
                 newBlockInput.value = '';
+                
+                // Step 5 (Floor & Flat) is unlocked ONLY if Block has a valid selection
+                if (val && val !== '') {
+                    setFlatInputsLock(false);
+                } else {
+                    setFlatInputsLock(true);
+                }
             }
         }
 
-        districtSelect.addEventListener('change', function() {
-            fetchTowns(this.value);
-            fetchProjects(this.value);
-        });
+        if (districtSelect && districtSelect.tagName === 'SELECT') {
+            districtSelect.addEventListener('change', function() {
+                const distId = this.value;
+                if (distId) {
+                    updateSelectLock(townSelect, true, "Choose a town...");
+                    fetchTowns(distId);
+                } else {
+                    updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
+                }
+                // When district changes, reset downstream Project, Block, and Flat fields
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                clearBlocks();
+                setFlatInputsLock(true);
+            });
+        }
 
         townSelect.addEventListener('change', handleTownChange);
         projectSelect.addEventListener('change', handleProjectChange);
@@ -804,13 +1164,88 @@
             this.value = this.value.replace(/[^0-9,\s]/g, '');
         });
 
-        // Initial trigger on load
-        if (districtSelect.value) {
-            fetchTowns(districtSelect.value);
-            fetchProjects(districtSelect.value);
+        // Initial setup on page load - Lock in strict sequential order
+        if (districtSelect && districtSelect.value) {
+            updateSelectLock(townSelect, true);
+            fetchTowns(districtSelect.value, '{{ old("town_id") }}');
+            
+            @if(old('town_id'))
+                updateSelectLock(projectSelect, true);
+                fetchProjects(districtSelect.value, '{{ old("town_id") }}', '{{ old("project_id") }}');
+            @else
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+            @endif
+
+            @if(old('project_id'))
+                updateSelectLock(blockSelect, true);
+                fetchBlocks('{{ old("project_id") }}', '{{ old("block_id") }}');
+            @else
+                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
+            @endif
+
+            @if(old('block_id'))
+                setFlatInputsLock(false);
+            @else
+                setFlatInputsLock(true);
+            @endif
+        } else {
+            updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
+            updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+            updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
+            setFlatInputsLock(true);
         }
 
+        // Strict Sequential Validation on Form Submission
         document.getElementById('devCreateForm').addEventListener('submit', function (e) {
+            const distVal = districtSelect ? districtSelect.value : '';
+            const townVal = townSelect ? townSelect.value : '';
+            const projVal = projectSelect ? projectSelect.value : '';
+            const blkVal = blockSelect ? blockSelect.value : '';
+
+            if (!distVal) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Step 1 Incomplete',
+                    text: 'Please select a District first.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!townVal) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Step 2 Incomplete',
+                    text: 'Please select a Town from the list.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!projVal || (projVal === 'new' && !document.getElementById('new_project_name').value.trim())) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Step 3 Incomplete',
+                    text: 'Please select or enter the Name of Project.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!blkVal || (blkVal === 'new' && !document.getElementById('new_block_name').value.trim())) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Step 4 Incomplete',
+                    text: 'Please select or enter the Block / Tower Number.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
             const btn = this.querySelector('button[type="submit"]');
             if (btn) {
                 btn.disabled = true;

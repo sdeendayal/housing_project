@@ -121,10 +121,13 @@ Route::middleware('')->group(function () {
         ->defaults('context', 'ews_developer')
         ->middleware('throttle:5,1')
         ->name('ews.developer.login.resend-otp');
+
+    // STP Login URL alias
+    Route::get('/ews/stp/login', fn() => redirect()->route('ews.developer.login'))->name('ews.stp.login');
 });
 
-// EWS Developer Protected Routes
-Route::middleware(['auth', 'role:ews_developer'])->group(function () {
+// EWS Developer / STP Protected Routes
+Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function () {
     Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
         ->name('ews.developer.dashboard');
     Route::get('/ews/developer/flats/data', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getFlatsData'])
@@ -155,6 +158,12 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.blocks');
     Route::get('/ews/developer/towns', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getTowns'])
         ->name('ews.developer.towns');
+    Route::post('/ews/developer/towns/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeTownAjax'])
+        ->name('ews.developer.towns.store-ajax');
+    Route::post('/ews/developer/projects/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeProjectAjax'])
+        ->name('ews.developer.projects.store-ajax');
+    Route::post('/ews/developer/blocks/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeBlockAjax'])
+        ->name('ews.developer.blocks.store-ajax');
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });

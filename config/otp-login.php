@@ -105,9 +105,9 @@ return [
             'verify_view' => 'ews.developer.otp-verify',
             'login_route' => 'ews.developer.login',
             'verify_page_route' => 'ews.developer.login.verify-page',
-            'not_registered_message' => 'Mobile number is not registered as an EWS developer account.',
+            'not_registered_message' => 'Mobile number is not registered as an EWS STP account.',
             'scheme' => 'EWS',
-            'log_label' => 'EWS Developer',
+            'log_label' => 'EWS STP',
         ],
     ],
 ];

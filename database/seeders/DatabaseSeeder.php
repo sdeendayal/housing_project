@@ -45,6 +45,8 @@ class DatabaseSeeder extends Seeder
             MmgayBdoSeeder::class,
             EwsDepartmentSeeder::class,
             EwsMasterDistSeeder::class,
+            // EwsTownSeeder::class,
+            EwsFlatAbbreviationsSeeder::class,
             PptSonipatSeeder::class,
             PptFaridabadSeeder::class,
             PptGurugramSeeder::class,

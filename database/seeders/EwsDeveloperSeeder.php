@@ -28,18 +28,20 @@ class EwsDeveloperSeeder extends Seeder
             $dev->delete();
         }
 
-        // Create developer user with mobile 9999999999 assigned to Sonipat district
+        // Create STP user with mobile 9999999999 assigned to Rohtak Zone
         $user = User::create([
-            'name' => 'Developer Login',
-            'email' => 'ews_developer@gmail.com',
+            'name' => 'STP Rohtak Zone',
+            'email' => 'ews_stp@gmail.com',
             'mobile' => '9999999999',
             'password' => Hash::make('password'),
-            'role' => 'ews_developer',
+            'role' => 'ews_stp',
             'scheme' => 'EWS',
             'Is_Active' => '1',
             'Is_Deleted' => '0',
-            'district_id' => 22,
-            'district_name' => 'SONIPAT',
+            'district_id' => null,
+            'district_name' => 'ROHTAK ZONE',
+            'zone_id' => 5,
+            'zone_name' => 'ROHTAK ZONE',
         ]);
 
         RoleType::create([
