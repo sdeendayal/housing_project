@@ -294,7 +294,8 @@ class EwsStpPossessionWebController extends Controller
                 $q->where('application_number', 'LIKE', "%{$search}%")
                   ->orWhere('full_name', 'LIKE', "%{$search}%")
                   ->orWhere('flat_no', 'LIKE', "%{$search}%")
-                  ->orWhere('mobile_number', 'LIKE', "%{$search}%");
+                  ->orWhere('mobile_number', 'LIKE', "%{$search}%")
+                  ->orWhere('secure_id', 'LIKE', "%{$search}%");
             });
         }
 
@@ -332,7 +333,8 @@ class EwsStpPossessionWebController extends Controller
             })
             ->addColumn('action', function ($row) {
                 $isGiven = (int)($row->is_possession_given ?? 0);
-                $pageUrl = url("/ews/developer/possession/{$row->id}");
+                $identifier = $row->secure_id;
+                $pageUrl = url("/ews/developer/possession/{$identifier}");
                 if ($isGiven) {
                     $btn = '<a href="' . $pageUrl . '" title="View Possession Details" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition-all shadow-xs inline-flex items-center gap-1 whitespace-nowrap"><i class="bi bi-eye text-[10px]"></i> View</a>';
                 } else {
@@ -347,18 +349,18 @@ class EwsStpPossessionWebController extends Controller
     /**
      * Show Dedicated Beneficiary Possession Handover Page
      */
-    public function show($id)
+    public function show($secure_id)
     {
         $user = Auth::user();
         $zoneData = $this->resolveStpZone($user);
 
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
+            ->where('secure_id', $secure_id)
             ->first();
 
         if (!$beneficiary) {
             return redirect()->route('ews.developer.possession.index')
-                ->with('error', 'Beneficiary record not found.');
+                ->with('error', 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.');
         }
 
         // Project Info
@@ -412,16 +414,16 @@ class EwsStpPossessionWebController extends Controller
     /**
      * Get Single Beneficiary Possession Details & Audit Trail (AJAX)
      */
-    public function getBeneficiaryDetails(Request $request, $id): JsonResponse
+    public function getBeneficiaryDetails(Request $request, $secure_id): JsonResponse
     {
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
+            ->where('secure_id', $secure_id)
             ->first();
 
         if (!$beneficiary) {
             return response()->json([
                 'success' => false,
-                'message' => 'Beneficiary record not found.',
+                'message' => 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.',
             ], 404);
         }
 
@@ -441,6 +443,7 @@ class EwsStpPossessionWebController extends Controller
             'success' => true,
             'beneficiary' => [
                 'id' => $beneficiary->id,
+                'secure_id' => $beneficiary->secure_id ?? null,
                 'application_number' => $beneficiary->application_number,
                 'full_name' => $beneficiary->full_name,
                 'mobile_number' => $beneficiary->mobile_number,
@@ -482,16 +485,16 @@ class EwsStpPossessionWebController extends Controller
     /**
      * Submit Physical Possession Form via Web UI
      */
-    public function submitPossession(Request $request, $id): JsonResponse
+    public function submitPossession(Request $request, $secure_id): JsonResponse
     {
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
+            ->where('secure_id', $secure_id)
             ->first();
 
         if (!$beneficiary) {
             return response()->json([
                 'success' => false,
-                'message' => 'Beneficiary record not found.',
+                'message' => 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.',
             ], 404);
         }
 
@@ -595,6 +598,7 @@ class EwsStpPossessionWebController extends Controller
                 $oldStatus = $possession->exists ? $possession->possession_status : ($beneficiary->possession_status ?? 'PENDING');
 
                 $possession->beneficiary_id = $beneficiary->id;
+                $possession->beneficiary_secure_id = $beneficiary->secure_id ?? null;
                 $possession->application_number = $beneficiary->application_number;
                 $possession->citizen_name = $beneficiary->full_name;
                 $possession->citizen_mobile = $beneficiary->mobile_number;

@@ -14,6 +14,7 @@ class EwsBeneficiaryPossession extends Model
 
     protected $fillable = [
         'beneficiary_id',
+        'beneficiary_secure_id',
         'application_number',
         'citizen_name',
         'citizen_mobile',
@@ -49,7 +50,8 @@ class EwsBeneficiaryPossession extends Model
     public function getPossessionLetterUrlAttribute()
     {
         if ($this->possession_letter_path) {
-            return '/storage/' . ltrim($this->possession_letter_path, '/');
+            $path = 'storage/' . ltrim($this->possession_letter_path, '/');
+            return request()->hasHeader('host') ? url($path) : ('/' . $path);
         }
         return null;
     }
@@ -57,7 +59,8 @@ class EwsBeneficiaryPossession extends Model
     public function getBeneficiaryFlatPhotoUrlAttribute()
     {
         if ($this->beneficiary_flat_photo_path) {
-            return '/storage/' . ltrim($this->beneficiary_flat_photo_path, '/');
+            $path = 'storage/' . ltrim($this->beneficiary_flat_photo_path, '/');
+            return request()->hasHeader('host') ? url($path) : ('/' . $path);
         }
         return null;
     }

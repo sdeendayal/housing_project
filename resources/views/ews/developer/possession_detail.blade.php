@@ -154,7 +154,13 @@
                                 </div>
                                 <h3 class="text-xs font-black uppercase text-slate-800 tracking-wide">Beneficiary Profile</h3>
                             </div>
-                            <span class="text-[10px] font-mono font-bold text-slate-500">ID: {{ $beneficiary->id }}</span>
+                            <div class="flex items-center gap-1 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-slate-700 shadow-2xs" title="Unique Secure ID: {{ $beneficiary->secure_id }}">
+                                <i class="bi bi-shield-lock-fill text-sky-600 text-[10px]"></i>
+                                <span>{{ substr($beneficiary->secure_id, 0, 8) . '...' . substr($beneficiary->secure_id, -6) }}</span>
+                                <button type="button" onclick="navigator.clipboard.writeText('{{ $beneficiary->secure_id }}'); Swal.fire({toast:true, position:'top-end', icon:'success', title:'Secure ID Copied!', showConfirmButton:false, timer:1500});" class="text-slate-400 hover:text-sky-600 ml-0.5" title="Copy Full 32-digit Secure ID">
+                                    <i class="bi bi-copy text-[9.5px]"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-xs">
@@ -827,7 +833,7 @@
             submitBtn.prop('disabled', true).html('<i class="bi bi-arrow-repeat animate-spin"></i> Saving Possession...');
 
             $.ajax({
-                url: `/ews/developer/possession/submit/{{ $beneficiary->id }}`,
+                url: `/ews/developer/possession/submit/{{ $beneficiary->secure_id }}`,
                 type: 'POST',
                 data: formData,
                 processData: false,

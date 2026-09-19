@@ -46,10 +46,13 @@ Route::middleware(['auth:sanctum', 'role:ews_developer,ews_stp,stp'])->group(fun
 
     // Allotted Beneficiaries (Card 8 Source)
     Route::get('/beneficiaries', [StpApiController::class, 'getBeneficiaries']);
-    Route::get('/beneficiaries/{id}', [StpApiController::class, 'getBeneficiaryDetails']);
+    Route::get('/beneficiaries/{secure_id}', [StpApiController::class, 'getBeneficiaryDetails'])
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
     Route::get('/projects/{id}/beneficiaries', [StpApiController::class, 'getBeneficiaries']);
 
     // Physical Possession Flow APIs (Given / Pending, 500KB PDF, Flat Photo, Lat/Long, Transaction & Audit)
-    Route::post('/beneficiaries/{id}/possession', [StpApiController::class, 'submitPossession']);
-    Route::get('/beneficiaries/{id}/possession', [StpApiController::class, 'getPossessionDetails']);
+    Route::post('/beneficiaries/{secure_id}/possession', [StpApiController::class, 'submitPossession'])
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+    Route::get('/beneficiaries/{secure_id}/possession', [StpApiController::class, 'getPossessionDetails'])
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
 });

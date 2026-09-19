@@ -77,6 +77,8 @@ class EwsAllottedSeeder extends Seeder
                     $rowInsert[$dbCol] = $row->Flat_PlotNo ?? $row->Flat_plotno_2 ?? null;
                 } elseif ($dbCol === 'dist_name') {
                     $rowInsert[$dbCol] = $row->dist ?? null;
+                } elseif ($dbCol === 'secure_id') {
+                    $rowInsert[$dbCol] = \Illuminate\Support\Str::random(32);
                 } else {
                     // Match case-insensitively
                     $lowerCol = strtolower($dbCol);

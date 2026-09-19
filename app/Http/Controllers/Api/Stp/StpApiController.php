@@ -407,7 +407,8 @@ class StpApiController extends Controller
                 $q->where('application_number', 'LIKE', "%{$search}%")
                   ->orWhere('full_name', 'LIKE', "%{$search}%")
                   ->orWhere('flat_no', 'LIKE', "%{$search}%")
-                  ->orWhere('mobile_number', 'LIKE', "%{$search}%");
+                  ->orWhere('mobile_number', 'LIKE', "%{$search}%")
+                  ->orWhere('secure_id', 'LIKE', "%{$search}%");
             });
         }
 
@@ -441,12 +442,27 @@ class StpApiController extends Controller
             // Parse flat number segments
             // Example formats: SNP-PIPD-4F-405, SNP-IRWO-2F-BO-207, SNP-PDPL-GF-05
             $flatParts = explode('-', $item->flat_no ?? '');
+            $floor = $flatParts[2] ?? null;
+            if (count($flatParts) >= 6) {
+                $block = $flatParts[3] . ($flatParts[4] !== '' ? '-' . $flatParts[4] : '');
+                $unit = $flatParts[5];
+            } elseif (count($flatParts) == 5) {
+                $block = $flatParts[3];
+                $unit = $flatParts[4];
+            } elseif (count($flatParts) == 4) {
+                $block = null;
+                $unit = $flatParts[3];
+            } else {
+                $block = null;
+                $unit = null;
+            }
+
             $breakdown = [
                 'town_code' => $flatParts[0] ?? null,
                 'project_abbr' => $flatParts[1] ?? null,
-                'floor' => $flatParts[2] ?? null,
-                'block' => count($flatParts) >= 5 ? $flatParts[3] : null,
-                'flat_unit' => count($flatParts) >= 5 ? ($flatParts[4] ?? null) : ($flatParts[3] ?? null),
+                'floor' => $floor,
+                'block' => $block,
+                'flat_unit' => $unit,
             ];
 
             return [
@@ -485,18 +501,16 @@ class StpApiController extends Controller
      * Get Single Beneficiary Details
      * GET /api/stp/beneficiaries/{id}
      */
-    public function getBeneficiaryDetails(Request $request, $id): JsonResponse
+    public function getBeneficiaryDetails(Request $request, $secureId): JsonResponse
     {
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->orWhere('application_number', $id)
+            ->where('secure_id', $secureId)
             ->first();
 
         if (!$beneficiary) {
             return response()->json([
                 'success' => false,
-                'message' => 'Beneficiary record not found.',
+                'message' => 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.',
             ], 404);
         }
 
@@ -506,6 +520,28 @@ class StpApiController extends Controller
         if ($projectAbbr) {
             $project = EwsProject::where('project_abbr', $projectAbbr)->first();
         }
+        $floor = $flatParts[2] ?? null;
+        if (count($flatParts) >= 6) {
+            $block = $flatParts[3] . ($flatParts[4] !== '' ? '-' . $flatParts[4] : '');
+            $unit = $flatParts[5];
+        } elseif (count($flatParts) == 5) {
+            $block = $flatParts[3];
+            $unit = $flatParts[4];
+        } elseif (count($flatParts) == 4) {
+            $block = null;
+            $unit = $flatParts[3];
+        } else {
+            $block = null;
+            $unit = null;
+        }
+
+        $flatBreakdown = [
+            'town_code' => $flatParts[0] ?? null,
+            'project_abbr' => $projectAbbr,
+            'floor' => $floor,
+            'block' => $block,
+            'flat_unit' => $unit,
+        ];
 
         // Fetch current possession details if available
         $possession = EwsBeneficiaryPossession::where('beneficiary_id', $beneficiary->id)->first();
@@ -528,13 +564,7 @@ class StpApiController extends Controller
                 'district' => $beneficiary->dist_name,
                 'dist_id' => $beneficiary->dist_id,
                 'flat_number' => $beneficiary->flat_no,
-                'flat_breakdown' => [
-                    'town_code' => $flatParts[0] ?? null,
-                    'project_abbr' => $projectAbbr,
-                    'floor' => $flatParts[2] ?? null,
-                    'block' => count($flatParts) >= 5 ? $flatParts[3] : null,
-                    'flat_unit' => count($flatParts) >= 5 ? ($flatParts[4] ?? null) : ($flatParts[3] ?? null),
-                ],
+                'flat_breakdown' => $flatBreakdown,
                 'project_name' => $project ? $project->name : null,
                 'status' => 'ALLOTTED',
                 'is_possession_given' => (int)($beneficiary->is_possession_given ?? 0),
@@ -574,18 +604,16 @@ class StpApiController extends Controller
      * Submit Physical Possession Form for Beneficiary
      * POST /api/stp/beneficiaries/{id}/possession
      */
-    public function submitPossession(Request $request, $id): JsonResponse
+    public function submitPossession(Request $request, $secureId): JsonResponse
     {
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->orWhere('application_number', $id)
+            ->where('secure_id', $secureId)
             ->first();
 
         if (!$beneficiary) {
             return response()->json([
                 'success' => false,
-                'message' => 'Beneficiary record not found.',
+                'message' => 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.',
             ], 404);
         }
 
@@ -600,23 +628,31 @@ class StpApiController extends Controller
             ], 422);
         }
 
+        $existingPossession = EwsBeneficiaryPossession::where('beneficiary_id', $beneficiary->id)->first();
+
         // Build validation rules
         $rules = [
             'possession_status' => 'required|in:GIVEN,PENDING',
         ];
 
         if ($rawStatus === 'GIVEN') {
-            // As required: only PDF <= 500 KB, photo with beneficiary, lat, long
-            $rules['possession_letter'] = 'required|file|mimes:pdf|max:500';
-            $rules['beneficiary_flat_photo'] = 'required|image|mimes:jpeg,jpg,png|max:2048';
+            // As required: only PDF <= 500 KB, photo with beneficiary <= 500 KB, lat, long
+            $rules['possession_letter'] = ($existingPossession && $existingPossession->possession_letter_path)
+                ? 'nullable|file|mimes:pdf|max:500'
+                : 'required|file|mimes:pdf|max:500';
+
+            $rules['beneficiary_flat_photo'] = ($existingPossession && $existingPossession->beneficiary_flat_photo_path)
+                ? 'nullable|image|mimes:jpeg,jpg,png|max:500'
+                : 'required|image|mimes:jpeg,jpg,png|max:500';
+
             $rules['latitude'] = 'required|numeric|between:-90,90';
             $rules['longitude'] = 'required|numeric|between:-180,180';
-            $rules['remarks'] = 'nullable|string|max:1000';
+            $rules['remarks'] = 'nullable|string|max:5000';
         } else {
             // For PENDING: pending reason / remarks is required
-            $rules['remarks'] = 'required|string|max:1000';
+            $rules['remarks'] = 'required|string|max:5000';
             $rules['possession_letter'] = 'nullable|file|mimes:pdf|max:500';
-            $rules['beneficiary_flat_photo'] = 'nullable|image|mimes:jpeg,jpg,png|max:2048';
+            $rules['beneficiary_flat_photo'] = 'nullable|image|mimes:jpeg,jpg,png|max:500';
             $rules['latitude'] = 'nullable|numeric|between:-90,90';
             $rules['longitude'] = 'nullable|numeric|between:-180,180';
         }
@@ -627,10 +663,11 @@ class StpApiController extends Controller
             'possession_letter.max' => 'The possession letter PDF file size must not exceed 500 KB.',
             'beneficiary_flat_photo.required' => 'Photo of beneficiary with flat is required when possession is given.',
             'beneficiary_flat_photo.image' => 'The flat photo must be an image file (jpeg, jpg, png).',
-            'beneficiary_flat_photo.max' => 'The flat photo file size must not exceed 2 MB.',
+            'beneficiary_flat_photo.max' => 'The flat photo file size must not exceed 500 KB.',
             'latitude.required' => 'Device GPS latitude coordinate is required.',
             'longitude.required' => 'Device GPS longitude coordinate is required.',
             'remarks.required' => 'Please provide the pending reason / remarks.',
+            'remarks.max' => 'Remarks cannot exceed 1000 words (5000 characters).',
         ];
 
         $validator = Validator::make($request->all(), $rules, $messages);
@@ -690,6 +727,7 @@ class StpApiController extends Controller
                 $oldStatus = $possession->exists ? $possession->possession_status : ($beneficiary->possession_status ?? 'PENDING');
 
                 $possession->beneficiary_id = $beneficiary->id;
+                $possession->beneficiary_secure_id = $beneficiary->secure_id ?? null;
                 $possession->application_number = $beneficiary->application_number;
                 $possession->citizen_name = $beneficiary->full_name;
                 $possession->citizen_mobile = $beneficiary->mobile_number;
@@ -815,18 +853,16 @@ class StpApiController extends Controller
      * Get Possession Record & Audit History for a Beneficiary
      * GET /api/stp/beneficiaries/{id}/possession
      */
-    public function getPossessionDetails(Request $request, $id): JsonResponse
+    public function getPossessionDetails(Request $request, $secureId): JsonResponse
     {
         $beneficiary = DB::table('ews_allotted_8')
-            ->where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->orWhere('application_number', $id)
+            ->where('secure_id', $secureId)
             ->first();
 
         if (!$beneficiary) {
             return response()->json([
                 'success' => false,
-                'message' => 'Beneficiary record not found.',
+                'message' => 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.',
             ], 404);
         }
 
@@ -838,6 +874,7 @@ class StpApiController extends Controller
         return response()->json([
             'success' => true,
             'beneficiary_id' => $beneficiary->id,
+            'secure_id' => $beneficiary->secure_id ?? null,
             'application_number' => $beneficiary->application_number,
             'flat_no' => $beneficiary->flat_no,
             'is_possession_given' => (int)($beneficiary->is_possession_given ?? 0),

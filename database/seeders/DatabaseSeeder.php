@@ -93,6 +93,7 @@ class DatabaseSeeder extends Seeder
             EwsBookingsSeeder::class,
             EwsEligibleSeeder::class,
             EwsAllottedSeeder::class,
+            EwsAllottedSecureIdSeeder::class,
             EwsWaitingListSeeder::class,
             EwsDeveloperSeeder::class,
             MmsayOldRegistrationDataSeeder::class,
