@@ -147,7 +147,6 @@
                 <div>
                     <h2 class="text-sm font-black tracking-wide text-slate-800 uppercase flex items-center gap-2">
                         Physical Possession Module
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">Card 8 (4,211 Flats)</span>
                     </h2>
                     <p class="text-[10px] text-slate-500 font-medium">Verify handover, upload signed possession letters & photos, and track GPS location.</p>
                 </div>
