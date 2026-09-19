@@ -391,13 +391,40 @@ class StpApiController extends Controller
         // Filter by possession status (GIVEN / PENDING)
         $possessionFilter = $request->query('possession_status');
         if ($possessionFilter) {
-            $query->where('possession_status', strtoupper(trim($possessionFilter)));
+            $status = strtoupper(trim($possessionFilter));
+            if ($status === 'GIVEN') {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 1)
+                      ->orWhere('possession_status', 'GIVEN');
+                });
+            } elseif ($status === 'PENDING') {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 0)
+                      ->orWhereNull('is_possession_given');
+                })->where(function ($q) {
+                    $q->where('possession_status', '!=', 'GIVEN')
+                      ->orWhereNull('possession_status');
+                });
+            }
         }
 
         // Filter by is_possession_given (1 / 0)
         $isPossessionGivenFilter = $request->query('is_possession_given');
         if ($isPossessionGivenFilter !== null && $isPossessionGivenFilter !== '') {
-            $query->where('is_possession_given', (int)$isPossessionGivenFilter);
+            if ((int)$isPossessionGivenFilter === 1) {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 1)
+                      ->orWhere('possession_status', 'GIVEN');
+                });
+            } else {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 0)
+                      ->orWhereNull('is_possession_given');
+                })->where(function ($q) {
+                    $q->where('possession_status', '!=', 'GIVEN')
+                      ->orWhereNull('possession_status');
+                });
+            }
         }
 
         // Search query (application number, name, flat number, mobile)
@@ -477,11 +504,31 @@ class StpApiController extends Controller
                 'flat_breakdown' => $breakdown,
                 'status' => 'ALLOTTED',
                 'is_possession_given' => (int)($item->is_possession_given ?? 0),
-                'possession_status' => $item->possession_status ?? 'PENDING',
+                'possession_status' => !empty($item->possession_status)
+                    ? $item->possession_status
+                    : ((int)($item->is_possession_given ?? 0) === 1 ? 'GIVEN' : 'PENDING'),
                 'property_type' => $item->property_type ?? 'EWS Flat',
                 'phase' => $item->phase ?? null,
             ];
         });
+
+        // Compute project overall possession stats
+        $baseProjectQuery = DB::table('ews_allotted_8')
+            ->where('flat_no', 'LIKE', "%-{$projectAbbr}-%");
+        if ($block) {
+            $baseProjectQuery->where('flat_no', 'LIKE', "%-{$block}-%");
+        }
+        $projectTotalAllotted = (clone $baseProjectQuery)->count();
+        $projectPossessionGiven = (clone $baseProjectQuery)->where(function ($q) {
+            $q->where('is_possession_given', 1)->orWhere('possession_status', 'GIVEN');
+        })->count();
+        $projectPossessionPending = max(0, $projectTotalAllotted - $projectPossessionGiven);
+
+        $stats = [
+            'total_allotted' => $projectTotalAllotted,
+            'possession_given' => $projectPossessionGiven,
+            'possession_pending' => $projectPossessionPending,
+        ];
 
         return response()->json([
             'success' => true,
@@ -491,8 +538,11 @@ class StpApiController extends Controller
                 'project_abbr' => $projectAbbr,
                 'district_name' => $project->district_name,
             ],
+            'stats' => $stats,
+            'total_allotted' => $projectTotalAllotted,
+            'possession_given' => $projectPossessionGiven,
+            'possession_pending' => $projectPossessionPending,
             'pagination' => $pagination,
-            'total_allotted' => $totalCount,
             'beneficiaries' => $formatted,
         ]);
     }
@@ -568,7 +618,9 @@ class StpApiController extends Controller
                 'project_name' => $project ? $project->name : null,
                 'status' => 'ALLOTTED',
                 'is_possession_given' => (int)($beneficiary->is_possession_given ?? 0),
-                'possession_status' => $beneficiary->possession_status ?? 'PENDING',
+                'possession_status' => !empty($beneficiary->possession_status)
+                    ? $beneficiary->possession_status
+                    : ((int)($beneficiary->is_possession_given ?? 0) === 1 ? 'GIVEN' : 'PENDING'),
                 'possession_record' => $possession ? [
                     'id' => $possession->id,
                     'possession_status' => $possession->possession_status,
@@ -900,7 +952,9 @@ class StpApiController extends Controller
             'application_number' => $beneficiary->application_number,
             'flat_no' => $beneficiary->flat_no,
             'is_possession_given' => (int)($beneficiary->is_possession_given ?? 0),
-            'possession_status' => $beneficiary->possession_status ?? 'PENDING',
+            'possession_status' => !empty($beneficiary->possession_status)
+                ? $beneficiary->possession_status
+                : ((int)($beneficiary->is_possession_given ?? 0) === 1 ? 'GIVEN' : 'PENDING'),
             'possession' => $possession ? [
                 'id' => $possession->id,
                 'possession_status' => $possession->possession_status,
