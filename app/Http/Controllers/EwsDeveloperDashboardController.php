@@ -1098,15 +1098,15 @@ class EwsDeveloperDashboardController extends Controller
     public function getProjects(Request $request)
     {
         $districtId = $request->query('district_id');
-        $townId = $request->query('town_id');
         if (!$districtId) {
             return response()->json([]);
         }
-        $query = EwsProject::where('district_id', $districtId);
-        if ($townId) {
-            $query->where('town_id', $townId);
-        }
-        $projects = $query->orderBy('name', 'asc')->get(['id', 'name']);
+
+        // Return all projects for the selected district (district-wise project master)
+        $projects = EwsProject::where('district_id', $districtId)
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name']);
+
         return response()->json($projects);
     }
 

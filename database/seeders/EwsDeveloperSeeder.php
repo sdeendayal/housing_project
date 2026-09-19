@@ -28,6 +28,9 @@ class EwsDeveloperSeeder extends Seeder
             $dev->delete();
         }
 
+        $rohtakZone = DB::table('ews_stp_districts')->whereRaw('UPPER(name) LIKE ?', ['%ROHTAK%'])->first();
+        $zoneId = $rohtakZone ? $rohtakZone->id : 5;
+
         // Create STP user with mobile 9999999999 assigned to Rohtak Zone
         $user = User::create([
             'name' => 'STP Rohtak Zone',
@@ -40,7 +43,7 @@ class EwsDeveloperSeeder extends Seeder
             'Is_Deleted' => '0',
             'district_id' => null,
             'district_name' => 'ROHTAK ZONE',
-            'zone_id' => 5,
+            'zone_id' => $zoneId,
             'zone_name' => 'ROHTAK ZONE',
         ]);
 

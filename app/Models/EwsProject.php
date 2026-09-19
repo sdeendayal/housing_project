@@ -18,6 +18,7 @@ class EwsProject extends Model
         'town_id',
         'town_name',
         'name',
+        'project_abbr',
     ];
 
     public function district(): BelongsTo

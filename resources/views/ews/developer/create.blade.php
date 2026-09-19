@@ -720,21 +720,49 @@
                 });
         }
 
-        function updateSelectLock(selectEl, enabled, placeholderText = null) {
+        function updateSelectLock(selectEl, enabled, placeholderText = null, clearOptions = true) {
             if (!selectEl) return;
             const $el = $(selectEl);
+            const $s2 = $el.next('.select2-container');
+
             if (enabled) {
                 $el.prop('disabled', false);
                 selectEl.disabled = false;
                 selectEl.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                if ($s2.length) {
+                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none');
+                    $s2.find('.select2-selection').removeClass('bg-slate-100 cursor-not-allowed opacity-60');
+                }
+                if (placeholderText && selectEl.options && selectEl.options.length > 0) {
+                    selectEl.options[0].textContent = placeholderText;
+                }
             } else {
                 $el.prop('disabled', true);
                 selectEl.disabled = true;
                 selectEl.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
+                if ($s2.length) {
+                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none');
+                    $s2.find('.select2-selection').addClass('bg-slate-100 cursor-not-allowed opacity-60');
+                }
                 if (placeholderText) {
-                    selectEl.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
+                    if (clearOptions) {
+                        selectEl.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
+                    } else if (selectEl.options && selectEl.options.length > 0) {
+                        selectEl.options[0].textContent = placeholderText;
+                    }
                 }
             }
+
+            // Immediately update Select2 visible text to remove or show lock icon
+            const select2Container = document.getElementById(`select2-${selectEl.id}-container`);
+            if (select2Container) {
+                const currentText = selectEl.value && selectEl.selectedIndex >= 0 
+                    ? selectEl.options[selectEl.selectedIndex].textContent 
+                    : (placeholderText || (selectEl.options.length > 0 ? selectEl.options[0].textContent : ''));
+                select2Container.textContent = currentText;
+                select2Container.title = currentText;
+            }
+
             $el.trigger('change.select2');
         }
 
@@ -768,9 +796,9 @@
             }
         }
 
-        function fetchProjects(districtId, townId, selectedProjectId = null) {
-            if (!districtId || !townId) {
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+        function fetchProjects(districtId, selectedProjectId = null) {
+            if (!districtId) {
+                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
                 clearBlocks();
                 return;
             }
@@ -778,23 +806,30 @@
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
             $(projectSelect).trigger('change.select2');
             
-            fetch(`/ews/developer/projects?district_id=${districtId}&town_id=${townId}`)
+            fetch(`/ews/developer/projects?district_id=${districtId}`)
                 .then(res => res.json())
                 .then(data => {
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
                     data.forEach(proj => {
                         const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
-                        projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}</option>`;
+                        const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
+                        projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
                     });
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
-                    updateSelectLock(projectSelect, true);
-                    
-                    if (selectedProjectId) {
-                        $(projectSelect).val(selectedProjectId).trigger('change.select2');
-                        projectSelect.dispatchEvent(new Event('change'));
+                    // As requested: Step 3 (Project) remains locked until Step 2 (Town) is selected
+                    const isTownSelected = townSelect && townSelect.value && townSelect.value !== '';
+                    if (isTownSelected) {
+                        updateSelectLock(projectSelect, true, "Choose a project...", false);
+                        if (selectedProjectId) {
+                            $(projectSelect).val(selectedProjectId).trigger('change.select2');
+                            projectSelect.dispatchEvent(new Event('change'));
+                        } else {
+                            handleProjectChange();
+                        }
                     } else {
-                        handleProjectChange();
+                        // Keep values loaded, but lock the select until town is selected
+                        updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
                     }
                 })
                 .catch(err => {
@@ -816,16 +851,6 @@
                     icon: 'warning',
                     title: 'District Required',
                     text: 'Please select a district first before creating a project.',
-                    confirmButtonColor: '#0284c7'
-                });
-                return;
-            }
-
-            if (!townId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Town Required',
-                    text: 'Please select a town first before creating a project.',
                     confirmButtonColor: '#0284c7'
                 });
                 return;
@@ -1080,15 +1105,18 @@
         }
 
         function handleTownChange() {
-            const val = townSelect.value;
+            const townVal = townSelect ? townSelect.value : '';
 
-            // Step 3 (Project) is unlocked ONLY if Town has a valid selection
-            if (val && val !== '') {
+            // Step 3 (Project) unlocks ONLY when Town (Step 2) is selected
+            if (townVal && townVal !== '') {
                 const distId = districtSelect ? districtSelect.value : '';
-                updateSelectLock(projectSelect, true);
-                fetchProjects(distId, val);
+                updateSelectLock(projectSelect, true, "Choose a project...", false);
+                if (!projectSelect.options || projectSelect.options.length <= 2) {
+                    fetchProjects(distId, projectSelect.value);
+                }
             } else {
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                // Town is not selected -> Keep Step 3 locked (values remain preserved)
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
                 clearBlocks();
                 setFlatInputsLock(true);
             }
@@ -1101,7 +1129,7 @@
                 newProjectInput.required = true;
                 
                 // Allow adding new block
-                updateSelectLock(blockSelect, true);
+                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
                 $(blockSelect).val('new').trigger('change.select2');
                 blockSelect.dispatchEvent(new Event('change'));
             } else {
@@ -1111,7 +1139,7 @@
                 
                 // Step 4 (Block) is unlocked ONLY if Project has a valid selection
                 if (val && val !== '') {
-                    updateSelectLock(blockSelect, true);
+                    updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
                     fetchBlocks(val);
                 } else {
                     clearBlocks();
@@ -1144,13 +1172,16 @@
             districtSelect.addEventListener('change', function() {
                 const distId = this.value;
                 if (distId) {
-                    updateSelectLock(townSelect, true, "Choose a town...");
+                    updateSelectLock(townSelect, true, "Choose a town...", true);
                     fetchTowns(distId);
+
+                    // Pre-load projects for the district, but lock Step 3 until Step 2 is selected
+                    updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                    fetchProjects(distId);
                 } else {
-                    updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
+                    updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
+                    updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
                 }
-                // When district changes, reset downstream Project, Block, and Flat fields
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
                 clearBlocks();
                 setFlatInputsLock(true);
             });
@@ -1164,23 +1195,25 @@
             this.value = this.value.replace(/[^0-9,\s]/g, '');
         });
 
-        // Initial setup on page load - Lock in strict sequential order
+        // Initial setup on page load - District-wise Project Master
         if (districtSelect && districtSelect.value) {
             updateSelectLock(townSelect, true);
             fetchTowns(districtSelect.value, '{{ old("town_id") }}');
             
+            // Pre-load projects for the district in background
+            fetchProjects(districtSelect.value, '{{ old("project_id") }}');
+
             @if(old('town_id'))
-                updateSelectLock(projectSelect, true);
-                fetchProjects(districtSelect.value, '{{ old("town_id") }}', '{{ old("project_id") }}');
+                updateSelectLock(projectSelect, true, "Choose a project...", false);
             @else
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
             @endif
 
             @if(old('project_id'))
                 updateSelectLock(blockSelect, true);
                 fetchBlocks('{{ old("project_id") }}', '{{ old("block_id") }}');
             @else
-                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
+                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
             @endif
 
             @if(old('block_id'))
@@ -1189,9 +1222,9 @@
                 setFlatInputsLock(true);
             @endif
         } else {
-            updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
-            updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
-            updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
+            updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
+            updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
+            updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
             setFlatInputsLock(true);
         }
 

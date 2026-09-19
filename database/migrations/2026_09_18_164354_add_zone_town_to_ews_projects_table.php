@@ -27,6 +27,9 @@ return new class extends Migration
             if (!Schema::hasColumn('ews_projects', 'town_name')) {
                 $table->string('town_name')->nullable()->after('town_id');
             }
+            if (!Schema::hasColumn('ews_projects', 'project_abbr')) {
+                $table->string('project_abbr', 50)->nullable()->after('name')->index();
+            }
         });
     }
 

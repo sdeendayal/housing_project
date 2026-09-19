@@ -32,12 +32,24 @@ Route::middleware(['auth:sanctum', 'role:ews_developer,ews_stp,stp'])->group(fun
     Route::get('/profile', [StpAuthApiController::class, 'profile']);
     Route::post('/logout', [StpAuthApiController::class, 'logout']);
 
-    // STP Zone & Assigned Districts
+    // STP Zones & Districts Hierarchy
+    Route::get('/zones', [StpApiController::class, 'getZones']);
     Route::get('/districts', [StpApiController::class, 'getZoneDistricts']);
     Route::get('/zone-districts', [StpApiController::class, 'getZoneDistricts']);
 
     // Master Dropdown Data (Towns, Projects, Blocks)
     Route::get('/towns', [StpApiController::class, 'getTowns']);
     Route::get('/projects', [StpApiController::class, 'getProjects']);
+    Route::post('/projects', [StpApiController::class, 'storeProject']);
     Route::get('/blocks', [StpApiController::class, 'getBlocks']);
+    Route::post('/blocks', [StpApiController::class, 'storeBlock']);
+
+    // Allotted Beneficiaries (Card 8 Source)
+    Route::get('/beneficiaries', [StpApiController::class, 'getBeneficiaries']);
+    Route::get('/beneficiaries/{id}', [StpApiController::class, 'getBeneficiaryDetails']);
+    Route::get('/projects/{id}/beneficiaries', [StpApiController::class, 'getBeneficiaries']);
+
+    // Physical Possession Flow APIs (Given / Pending, 500KB PDF, Flat Photo, Lat/Long, Transaction & Audit)
+    Route::post('/beneficiaries/{id}/possession', [StpApiController::class, 'submitPossession']);
+    Route::get('/beneficiaries/{id}/possession', [StpApiController::class, 'getPossessionDetails']);
 });
