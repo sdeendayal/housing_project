@@ -260,11 +260,29 @@
                 <!-- Secondary Sub-filter bar -->
                 <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 text-xs">
                     <div class="flex items-center gap-2">
-                        <span class="text-[10px] font-bold uppercase text-slate-400">Filter By Status:</span>
-                        <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5" role="group">
-                            <button type="button" onclick="filterByStatus('')" class="status-btn px-3 py-1 text-xs font-bold rounded-md bg-white text-slate-800 shadow-sm transition-all" data-status="">All (<span id="count-all">{{ $stats['total_allotted'] }}</span>)</button>
-                            <button type="button" onclick="filterByStatus('PENDING')" class="status-btn px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-md transition-all" data-status="PENDING">Pending (<span id="count-pending">{{ $stats['possession_pending'] }}</span>)</button>
-                            <button type="button" onclick="filterByStatus('GIVEN')" class="status-btn px-3 py-1 text-xs font-medium text-slate-600 hover:text-slate-900 rounded-md transition-all" data-status="GIVEN">Given (<span id="count-given">{{ $stats['possession_given'] }}</span>)</button>
+                        <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider">Filter By Status:</span>
+                        <div class="inline-flex rounded-xl border border-slate-200 bg-slate-100 p-1 shadow-inner gap-1" role="group">
+                            <button type="button" onclick="filterByStatus('')" 
+                                class="status-btn px-3.5 py-1.5 text-xs rounded-lg transition-all duration-150 flex items-center gap-1.5 bg-sky-600 text-white shadow-md font-black scale-[1.02] ring-2 ring-sky-300" 
+                                data-status="">
+                                <i class="bi bi-grid-fill text-[11px]"></i>
+                                <span>All</span>
+                                <span id="count-all" class="count-badge px-1.5 py-0.2 rounded-full text-[10.5px] font-mono font-bold bg-white/25 text-white transition-all">{{ $stats['total_allotted'] }}</span>
+                            </button>
+                            <button type="button" onclick="filterByStatus('PENDING')" 
+                                class="status-btn px-3.5 py-1.5 text-xs rounded-lg transition-all duration-150 flex items-center gap-1.5 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 font-bold" 
+                                data-status="PENDING">
+                                <i class="bi bi-hourglass-split text-[11px] text-amber-500"></i>
+                                <span>Pending</span>
+                                <span id="count-pending" class="count-badge px-1.5 py-0.2 rounded-full text-[10.5px] font-mono font-bold bg-slate-200 text-slate-700 transition-all">{{ $stats['possession_pending'] }}</span>
+                            </button>
+                            <button type="button" onclick="filterByStatus('GIVEN')" 
+                                class="status-btn px-3.5 py-1.5 text-xs rounded-lg transition-all duration-150 flex items-center gap-1.5 text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 font-bold" 
+                                data-status="GIVEN">
+                                <i class="bi bi-check-circle-fill text-[11px] text-emerald-500"></i>
+                                <span>Given</span>
+                                <span id="count-given" class="count-badge px-1.5 py-0.2 rounded-full text-[10.5px] font-mono font-bold bg-slate-200 text-slate-700 transition-all">{{ $stats['possession_given'] }}</span>
+                            </button>
                         </div>
                     </div>
 
@@ -784,10 +802,43 @@
         function filterByStatus(status) {
             currentStatusFilter = status;
             $('.status-btn').each(function() {
-                if ($(this).data('status') === status) {
-                    $(this).addClass('bg-white text-slate-800 shadow-sm').removeClass('text-slate-600');
+                const btnStatus = String($(this).data('status'));
+                const isActive = (btnStatus === String(status));
+                const badge = $(this).find('.count-badge');
+                const icon = $(this).find('i');
+
+                // Clear all active/inactive classes
+                $(this).removeClass(
+                    'bg-sky-600 bg-amber-500 bg-emerald-600 text-white shadow-md ring-2 ring-sky-300 ring-amber-300 ring-emerald-300 font-black scale-[1.02] ' +
+                    'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 font-bold'
+                );
+                badge.removeClass('bg-white/25 text-white bg-slate-200 text-slate-700');
+                icon.removeClass('text-white text-sky-500 text-amber-500 text-emerald-500');
+
+                if (isActive) {
+                    if (btnStatus === '') {
+                        $(this).addClass('bg-sky-600 text-white shadow-md ring-2 ring-sky-300 font-black scale-[1.02]');
+                        badge.addClass('bg-white/25 text-white');
+                        icon.addClass('text-white');
+                    } else if (btnStatus === 'PENDING') {
+                        $(this).addClass('bg-amber-500 text-white shadow-md ring-2 ring-amber-300 font-black scale-[1.02]');
+                        badge.addClass('bg-white/25 text-white');
+                        icon.addClass('text-white');
+                    } else if (btnStatus === 'GIVEN') {
+                        $(this).addClass('bg-emerald-600 text-white shadow-md ring-2 ring-emerald-300 font-black scale-[1.02]');
+                        badge.addClass('bg-white/25 text-white');
+                        icon.addClass('text-white');
+                    }
                 } else {
-                    $(this).removeClass('bg-white text-slate-800 shadow-sm').addClass('text-slate-600');
+                    $(this).addClass('text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 font-bold');
+                    badge.addClass('bg-slate-200 text-slate-700');
+                    if (btnStatus === '') {
+                        icon.addClass('text-sky-500');
+                    } else if (btnStatus === 'PENDING') {
+                        icon.addClass('text-amber-500');
+                    } else if (btnStatus === 'GIVEN') {
+                        icon.addClass('text-emerald-500');
+                    }
                 }
             });
             reloadDataTable();
