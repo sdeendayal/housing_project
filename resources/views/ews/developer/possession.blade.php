@@ -806,7 +806,7 @@
             });
 
             $.ajax({
-                url: `/ews/developer/possession/beneficiary/${beneficiaryId}`,
+                url: "{{ url('ews/developer/possession/beneficiary') }}/${beneficiaryId}",
                 type: 'GET',
                 success: function(response) {
                     Swal.close();
@@ -861,6 +861,11 @@
                     }
 
                     $('#possessionModal').removeClass('hidden');
+
+                    // Auto-detect live GPS coordinates if not already set
+                    if (!$('#input-latitude').val() || !$('#input-longitude').val()) {
+                        detectLocation();
+                    }
                 },
                 error: function(err) {
                     Swal.fire('Error', 'Failed to fetch beneficiary details.', 'error');
@@ -961,7 +966,7 @@
             btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat animate-spin"></i> Saving...');
 
             $.ajax({
-                url: `/ews/developer/possession/submit/${beneficiaryId}`,
+                url: "{{ url('ews/developer/possession/submit') }}/${beneficiaryId}",
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -1010,7 +1015,7 @@
             });
 
             $.ajax({
-                url: `/ews/developer/possession/beneficiary/${beneficiaryId}`,
+                url: "{{ url('ews/developer/possession/beneficiary') }}/${beneficiaryId}",
                 type: 'GET',
                 success: function(res) {
                     Swal.close();

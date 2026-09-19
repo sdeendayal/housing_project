@@ -833,7 +833,7 @@
             submitBtn.prop('disabled', true).html('<i class="bi bi-arrow-repeat animate-spin"></i> Saving Possession...');
 
             $.ajax({
-                url: `/ews/developer/possession/submit/{{ $beneficiary->secure_id }}`,
+                url: "{{ route('ews.developer.possession.submit', $beneficiary->secure_id) }}",
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -872,6 +872,13 @@
                     Swal.fire('Submission Failed', errMsg, 'error');
                 }
             });
+        });
+
+        // Auto-detect live GPS location on page load if coordinates are not already set
+        $(document).ready(function() {
+            if (!$('#latitude').val() || !$('#longitude').val()) {
+                detectLocation();
+            }
         });
     </script>
 </body>
