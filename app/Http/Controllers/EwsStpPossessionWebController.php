@@ -575,13 +575,22 @@ class EwsStpPossessionWebController extends Controller
             $photoPath = $photoFile->storeAs('ews_possession/' . $beneficiary->id, $photoFileName, 'public');
         }
 
-        // Resolve Project Name from Flat No Abbreviation
+        // Resolve Project & Administrative Hierarchy from Flat No Abbreviation
         $flatParts = explode('-', $beneficiary->flat_no ?? '');
         $projectAbbr = $flatParts[1] ?? null;
-        $projectName = null;
+        $project = null;
         if ($projectAbbr) {
-            $projectName = DB::table('ews_projects')->where('project_abbr', $projectAbbr)->value('name');
+            $project = DB::table('ews_projects')->where('project_abbr', $projectAbbr)->first();
         }
+
+        $projectId = $project ? $project->id : null;
+        $projectName = $project ? $project->name : null;
+        $distId = $beneficiary->dist_id ?: ($project ? $project->district_id : null);
+        $districtName = $beneficiary->dist_name ?: ($project ? $project->district_name : null);
+        $townId = $project ? $project->town_id : null;
+        $townName = $project ? $project->town_name : null;
+        $zoneId = $project ? $project->zone_id : ($zoneData['zone_id'] ?? null);
+        $zoneName = $project ? $project->zone_name : ($zoneData['zone_name'] ?? null);
 
         try {
             $possession = DB::transaction(function () use (
@@ -592,7 +601,14 @@ class EwsStpPossessionWebController extends Controller
                 $letterPath,
                 $letterOriginalName,
                 $photoPath,
-                $projectName
+                $distId,
+                $districtName,
+                $projectId,
+                $projectName,
+                $townId,
+                $townName,
+                $zoneId,
+                $zoneName
             ) {
                 $possession = EwsBeneficiaryPossession::firstOrNew(['beneficiary_id' => $beneficiary->id]);
                 $oldStatus = $possession->exists ? $possession->possession_status : ($beneficiary->possession_status ?? 'PENDING');
@@ -603,7 +619,13 @@ class EwsStpPossessionWebController extends Controller
                 $possession->citizen_name = $beneficiary->full_name;
                 $possession->citizen_mobile = $beneficiary->mobile_number;
                 $possession->flat_no = $beneficiary->flat_no;
-                $possession->district_name = $beneficiary->dist_name;
+                $possession->zone_id = $zoneId;
+                $possession->zone_name = $zoneName;
+                $possession->dist_id = $distId;
+                $possession->district_name = $districtName;
+                $possession->town_id = $townId;
+                $possession->town_name = $townName;
+                $possession->project_id = $projectId;
                 $possession->project_name = $projectName;
                 $possession->stp_user_id = $user->id;
                 $possession->possession_status = $rawStatus;
