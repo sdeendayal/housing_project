@@ -49,7 +49,7 @@ class EwsBeneficiaryPossession extends Model
     public function getPossessionLetterUrlAttribute()
     {
         if ($this->possession_letter_path) {
-            return Storage::disk('public')->url($this->possession_letter_path);
+            return '/storage/' . ltrim($this->possession_letter_path, '/');
         }
         return null;
     }
@@ -57,7 +57,7 @@ class EwsBeneficiaryPossession extends Model
     public function getBeneficiaryFlatPhotoUrlAttribute()
     {
         if ($this->beneficiary_flat_photo_path) {
-            return Storage::disk('public')->url($this->beneficiary_flat_photo_path);
+            return '/storage/' . ltrim($this->beneficiary_flat_photo_path, '/');
         }
         return null;
     }

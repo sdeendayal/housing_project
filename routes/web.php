@@ -164,6 +164,26 @@ Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function ()
         ->name('ews.developer.projects.store-ajax');
     Route::post('/ews/developer/blocks/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeBlockAjax'])
         ->name('ews.developer.blocks.store-ajax');
+
+    // STP Physical Possession Web Module
+    Route::get('/ews/developer/possession', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'index'])
+        ->name('ews.developer.possession.index');
+    Route::get('/ews/developer/possession/district-projects', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getDistrictProjects'])
+        ->name('ews.developer.possession.district-projects');
+    Route::get('/ews/developer/possession/project-stats', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getProjectStats'])
+        ->name('ews.developer.possession.project-stats');
+    Route::get('/ews/developer/possession/beneficiaries-data', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiariesData'])
+        ->name('ews.developer.possession.beneficiaries-data');
+    Route::get('/ews/developer/possession/beneficiary/{id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiaryDetails'])
+        ->name('ews.developer.possession.beneficiary-details');
+    Route::post('/ews/developer/possession/submit/{id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'submitPossession'])
+        ->name('ews.developer.possession.submit');
+    Route::get('/ews/developer/possession/logs', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'auditLogs'])
+        ->name('ews.developer.possession.logs');
+    Route::get('/ews/developer/possession/{id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'show'])
+        ->name('ews.developer.possession.show')
+        ->where('id', '[0-9]+');
+
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });

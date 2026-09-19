@@ -160,12 +160,20 @@
                         <i class="bi bi-plus-circle text-slate-400"></i>
                         <span>Register Flat</span>
                     </a>
+                    <a href="{{ route('ews.developer.possession.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-bold transition-all">
+                        <i class="bi bi-key-fill text-amber-400"></i>
+                        <span>Physical Possession</span>
+                    </a>
                 </div>
             </div>
 
             <div>
                 <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Activity</span>
                 <div class="space-y-1">
+                    <a href="{{ route('ews.developer.possession.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
+                        <i class="bi bi-clock-history text-indigo-400"></i>
+                        <span>Possession Audit Logs</span>
+                    </a>
                     <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
                         <i class="bi bi-journal-text text-slate-400"></i>
                         <span>STP Logs</span>
