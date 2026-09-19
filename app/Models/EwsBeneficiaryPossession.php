@@ -56,8 +56,7 @@ class EwsBeneficiaryPossession extends Model
     public function getPossessionLetterUrlAttribute()
     {
         if ($this->possession_letter_path) {
-            $path = 'storage/' . ltrim($this->possession_letter_path, '/');
-            return request()->hasHeader('host') ? url($path) : ('/' . $path);
+            return asset('storage/' . ltrim($this->possession_letter_path, '/'));
         }
         return null;
     }
@@ -65,8 +64,7 @@ class EwsBeneficiaryPossession extends Model
     public function getBeneficiaryFlatPhotoUrlAttribute()
     {
         if ($this->beneficiary_flat_photo_path) {
-            $path = 'storage/' . ltrim($this->beneficiary_flat_photo_path, '/');
-            return request()->hasHeader('host') ? url($path) : ('/' . $path);
+            return asset('storage/' . ltrim($this->beneficiary_flat_photo_path, '/'));
         }
         return null;
     }

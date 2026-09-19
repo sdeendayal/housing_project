@@ -382,7 +382,7 @@
                                         </div>
                                     </div>
                                     @if($possession && $possession->possession_letter_path)
-                                        <a href="/storage/{{ ltrim($possession->possession_letter_path, '/') }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all whitespace-nowrap">
+                                        <a href="{{ $possession->possession_letter_url ?: asset('storage/' . ltrim($possession->possession_letter_path, '/')) }}" target="_blank" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all whitespace-nowrap">
                                             <i class="bi bi-eye"></i> View PDF
                                         </a>
                                     @else
@@ -399,8 +399,8 @@
                                         </span>
                                         <div class="h-44 rounded-lg border border-slate-200 bg-slate-900/5 overflow-hidden relative flex items-center justify-center">
                                             @if($possession && $possession->beneficiary_flat_photo_path)
-                                                <img src="/storage/{{ ltrim($possession->beneficiary_flat_photo_path, '/') }}" alt="Flat Photo" class="w-full h-full object-cover" />
-                                                <a href="/storage/{{ ltrim($possession->beneficiary_flat_photo_path, '/') }}" target="_blank" class="absolute inset-0 bg-slate-900/40 hover:bg-slate-900/60 flex items-center justify-center text-white text-xs font-bold opacity-0 hover:opacity-100 transition-opacity gap-1.5">
+                                                <img src="{{ $possession->beneficiary_flat_photo_url ?: asset('storage/' . ltrim($possession->beneficiary_flat_photo_path, '/')) }}" alt="Flat Photo" class="w-full h-full object-cover" />
+                                                <a href="{{ $possession->beneficiary_flat_photo_url ?: asset('storage/' . ltrim($possession->beneficiary_flat_photo_path, '/')) }}" target="_blank" class="absolute inset-0 bg-slate-900/40 hover:bg-slate-900/60 flex items-center justify-center text-white text-xs font-bold opacity-0 hover:opacity-100 transition-opacity gap-1.5">
                                                     <i class="bi bi-zoom-in text-sm"></i> View Full Photo
                                                 </a>
                                             @else
