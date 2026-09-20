@@ -385,7 +385,23 @@ class StpApiController extends Controller
         // Filter by block if requested
         $block = $request->query('block') ?: $request->query('block_name');
         if ($block) {
-            $query->where('flat_no', 'LIKE', "%-{$block}-%");
+            $filterBlock = trim($block);
+            $projectHasThisBlock = DB::table('ews_flat_abbreviations')
+                ->where('project_abbr', $projectAbbr)
+                ->where(function($q) use ($filterBlock) {
+                    $q->where('block_tower', $filterBlock)
+                      ->orWhere('block_abbr', $filterBlock);
+                })
+                ->exists();
+
+            if ($projectHasThisBlock) {
+                $query->where(function($q) use ($filterBlock) {
+                    $q->where('flat_no', 'LIKE', "%-{$filterBlock}-%")
+                      ->orWhereRaw('1 = 1');
+                });
+            } else {
+                $query->where('flat_no', 'LIKE', "%-{$filterBlock}-%");
+            }
         }
 
         // Filter by possession status (GIVEN / PENDING)
@@ -462,8 +478,14 @@ class StpApiController extends Controller
             ];
         }
 
+        // Preload default project block if flat_no doesn't have an embedded block
+        $defaultProjectBlock = DB::table('ews_flat_abbreviations')
+            ->where('project_abbr', $projectAbbr)
+            ->whereNotNull('block_tower')
+            ->value('block_tower');
+
         // Format items matching mobile app list requirement
-        $formatted = collect($beneficiaries)->map(function ($item, $index) use ($pagination) {
+        $formatted = collect($beneficiaries)->map(function ($item, $index) use ($pagination, $defaultProjectBlock) {
             $sNo = (($pagination['current_page'] - 1) * $pagination['per_page']) + ($index + 1);
             
             // Parse flat number segments
@@ -477,7 +499,7 @@ class StpApiController extends Controller
                 $block = $flatParts[3];
                 $unit = $flatParts[4];
             } elseif (count($flatParts) == 4) {
-                $block = null;
+                $block = $defaultProjectBlock ?? null;
                 $unit = $flatParts[3];
             } else {
                 $block = null;
@@ -578,7 +600,10 @@ class StpApiController extends Controller
             $block = $flatParts[3];
             $unit = $flatParts[4];
         } elseif (count($flatParts) == 4) {
-            $block = null;
+            $block = DB::table('ews_flat_abbreviations')
+                ->where('project_abbr', $projectAbbr)
+                ->whereNotNull('block_tower')
+                ->value('block_tower') ?? null;
             $unit = $flatParts[3];
         } else {
             $block = null;

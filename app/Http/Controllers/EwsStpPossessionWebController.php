@@ -272,8 +272,29 @@ class EwsStpPossessionWebController extends Controller
 
         // Filter by block
         if ($request->filled('block')) {
-            $query->where('flat_no', 'LIKE', "%-" . trim($request->block) . "-%");
+            $filterBlock = trim($request->block);
+            $projectsWithThisBlock = DB::table('ews_flat_abbreviations')
+                ->where('block_tower', $filterBlock)
+                ->orWhere('block_abbr', $filterBlock)
+                ->pluck('project_abbr')
+                ->unique()
+                ->toArray();
+
+            $query->where(function ($q) use ($filterBlock, $projectsWithThisBlock) {
+                $q->where('flat_no', 'LIKE', "%-{$filterBlock}-%");
+                foreach ($projectsWithThisBlock as $pAbbr) {
+                    $q->orWhere('flat_no', 'LIKE', "%-{$pAbbr}-%");
+                }
+            });
         }
+
+        // Preload default blocks from abbreviations for projects with 4-part flat numbers (e.g. ARPL, PIPD, PDPL)
+        $projectDefaultBlocks = DB::table('ews_flat_abbreviations')
+            ->whereNotNull('block_tower')
+            ->select('project_abbr', 'block_tower')
+            ->distinct()
+            ->pluck('block_tower', 'project_abbr')
+            ->toArray();
 
         // Filter by possession status
         if ($request->filled('possession_status')) {
@@ -301,8 +322,9 @@ class EwsStpPossessionWebController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('flat_breakdown', function ($row) {
+            ->addColumn('flat_breakdown', function ($row) use ($projectDefaultBlocks) {
                 $parts = explode('-', $row->flat_no ?? '');
+                $projAbbr = $parts[1] ?? '';
                 $floor = $parts[2] ?? '-';
                 if (count($parts) >= 6) {
                     $block = $parts[3] . ($parts[4] !== '' ? '-' . $parts[4] : '');
@@ -311,7 +333,7 @@ class EwsStpPossessionWebController extends Controller
                     $block = $parts[3];
                     $unit = $parts[4];
                 } elseif (count($parts) == 4) {
-                    $block = '-';
+                    $block = $projectDefaultBlocks[$projAbbr] ?? '-';
                     $unit = $parts[3];
                 } else {
                     $block = '-';
@@ -380,7 +402,10 @@ class EwsStpPossessionWebController extends Controller
             $block = $flatParts[3];
             $unit = $flatParts[4];
         } elseif (count($flatParts) == 4) {
-            $block = '-';
+            $block = DB::table('ews_flat_abbreviations')
+                ->where('project_abbr', $projectAbbr)
+                ->whereNotNull('block_tower')
+                ->value('block_tower') ?? '-';
             $unit = $flatParts[3];
         } else {
             $block = '-';
