@@ -151,18 +151,48 @@ class EwsDistrictProjectsSeeder extends Seeder
 
                 // Seed Blocks for this project
                 foreach ($projData['blocks'] as $blockName) {
+                    $cleanBlockName = trim($blockName);
                     EwsBlock::updateOrCreate(
                         [
                             'project_id' => $project->id,
-                            'name' => trim($blockName),
+                            'name' => $cleanBlockName,
                         ],
                         [
-                            'project_id' => $project->id,
-                            'name' => trim($blockName),
+                            'zone_id'       => $zoneId,
+                            'zone_name'     => $zoneName,
+                            'district_id'   => $district->id,
+                            'district_name' => $district->name,
+                            'town_id'       => $townId,
+                            'town_name'     => $townName,
+                            'project_id'    => $project->id,
+                            'project_name'  => $cleanProjectName,
+                            'name'          => $cleanBlockName,
                         ]
                     );
                     $totalBlocks++;
                 }
+            }
+        }
+
+        // Global sync for any blocks with missing hierarchy
+        $remainingBlocks = EwsBlock::whereNull('district_id')
+            ->orWhereNull('zone_id')
+            ->orWhereNull('town_id')
+            ->orWhereNull('project_name')
+            ->get();
+
+        foreach ($remainingBlocks as $b) {
+            $proj = EwsProject::find($b->project_id);
+            if ($proj) {
+                $b->update([
+                    'zone_id'       => $b->zone_id ?? $proj->zone_id,
+                    'zone_name'     => $b->zone_name ?? $proj->zone_name,
+                    'district_id'   => $b->district_id ?? $proj->district_id,
+                    'district_name' => $b->district_name ?? $proj->district_name,
+                    'town_id'       => $b->town_id ?? $proj->town_id,
+                    'town_name'     => $b->town_name ?? $proj->town_name,
+                    'project_name'  => $b->project_name ?? $proj->name,
+                ]);
             }
         }
 
