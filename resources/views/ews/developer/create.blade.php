@@ -268,9 +268,18 @@
                                     <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 3</span>
                                     <span>Name of Project</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
-                                <select id="project_id" name="project_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    <option value="" disabled selected>Choose a project...</option>
+                                <select id="project_id" name="project_id" required {{ old('town_id') ? '' : 'disabled' }}
+                                    class="w-full {{ old('town_id') ? 'bg-slate-50' : 'bg-slate-100 cursor-not-allowed opacity-60' }} border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled {{ old('project_id') ? '' : 'selected' }}>
+                                        {{ old('town_id') ? 'Choose a project...' : '🔒 Step 2: Select Town First...' }}
+                                    </option>
+                                    @if(isset($projects))
+                                        @foreach($projects as $proj)
+                                            <option value="{{ $proj->id }}" {{ old('project_id') == $proj->id ? 'selected' : '' }}>
+                                                {{ strtoupper($proj->name) }}{{ !empty($proj->project_abbr) ? ' [' . $proj->project_abbr . ']' : '' }}
+                                            </option>
+                                        @endforeach
+                                    @endif
                                     <option value="new">+ Add New Project</option>
                                 </select>
                                 
@@ -285,6 +294,12 @@
                                             <span>Save Project</span>
                                         </button>
                                     </div>
+                                    <div id="project_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
+                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <span id="project_similarity_msg"></span>
+                                        </div>
+                                    </div>
                                     <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Project' to instantly save into ews_projects, or auto-saves on form submit.</p>
                                 </div>
                             </div>
@@ -298,9 +313,11 @@
                                     <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 4</span>
                                     <span>Block / Tower No.</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
-                                <select id="block_id" name="block_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    <option value="" disabled selected>Choose a block/tower...</option>
+                                <select id="block_id" name="block_id" required {{ old('project_id') ? '' : 'disabled' }}
+                                    class="w-full {{ old('project_id') ? 'bg-slate-50' : 'bg-slate-100 cursor-not-allowed opacity-60' }} border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled {{ old('block_id') ? '' : 'selected' }}>
+                                        {{ old('project_id') ? 'Choose a block/tower...' : '🔒 Step 3: Select Project First...' }}
+                                    </option>
                                     <option value="new">+ Add New Block/Tower</option>
                                 </select>
                                 
@@ -314,6 +331,12 @@
                                             <i class="bi bi-plus-circle-fill"></i>
                                             <span>Save Block</span>
                                         </button>
+                                    </div>
+                                    <div id="block_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
+                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <span id="block_similarity_msg"></span>
+                                        </div>
                                     </div>
                                     <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Block' to instantly save into ews_blocks, or auto-saves on form submit.</p>
                                 </div>
@@ -521,6 +544,12 @@
                     </label>
                     <input type="text" id="modal_new_town_name" placeholder="Enter town name (e.g. Kharkhoda, Samalkha)"
                         class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 focus:bg-white rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none transition-all">
+                    <div id="modal_town_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2 shadow-xs transition-all mt-1">
+                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <span id="modal_town_similarity_msg"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Town Type (Municipality) Selection -->
@@ -718,21 +747,23 @@
             // Initialize Select2 search elements
             if ($('#district_id').is('select')) {
                 $('#district_id').select2();
-                $('#district_id').on('select2:select select2:unselect', function() {
-                    districtSelect.dispatchEvent(new Event('change'));
-                });
             }
             $('#town_id').select2();
             $('#project_id').select2();
             $('#block_id').select2();
-            $('#town_id').on('select2:select select2:unselect change', function() {
-                townSelect.dispatchEvent(new Event('change'));
+
+            // Direct non-recursive change listeners
+            $(document).on('change', '#district_id', function() {
+                if (typeof handleDistrictChange === 'function') handleDistrictChange();
             });
-            $('#project_id').on('select2:select select2:unselect change', function() {
-                projectSelect.dispatchEvent(new Event('change'));
+            $(document).on('change', '#town_id', function() {
+                handleTownChange();
             });
-            $('#block_id').on('select2:select select2:unselect change', function() {
-                blockSelect.dispatchEvent(new Event('change'));
+            $(document).on('change', '#project_id', function() {
+                handleProjectChange();
+            });
+            $(document).on('change', '#block_id', function() {
+                handleBlockChange();
             });
 
             // SweetAlert2 Toast Notifications for session messages
@@ -768,7 +799,47 @@
             @endif
             // Initialize form mode
             switchMode('single', true);
+
+            // Set sequential lock states: Step 3 (Project) unlocks ONLY after Step 2 (Town) is selected
+            initSequentialLockState();
         });
+
+        function initSequentialLockState() {
+            const hasDist = districtSelect && districtSelect.value && districtSelect.value !== '';
+            const hasTown = townSelect && townSelect.value && townSelect.value !== '' && townSelect.value !== 'new';
+            const hasProj = projectSelect && projectSelect.value && projectSelect.value !== '' && projectSelect.value !== 'new';
+            const hasBlock = blockSelect && blockSelect.value && blockSelect.value !== '' && blockSelect.value !== 'new';
+
+            // Step 2: Town Lock State
+            if (hasDist) {
+                updateSelectLock(townSelect, true, "Choose a town...", false);
+            } else {
+                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", false);
+            }
+
+            // Step 3: Project Lock State - strictly locked unless Town is selected!
+            if (hasDist && hasTown) {
+                updateSelectLock(projectSelect, true, "Choose a project...", false);
+            } else {
+                const placeholder = !hasDist ? "🔒 Step 1: Select District First..." : "🔒 Step 2: Select Town First...";
+                updateSelectLock(projectSelect, false, placeholder, false);
+            }
+
+            // Step 4: Block Lock State - locked unless Project is selected
+            if (hasDist && hasTown && hasProj) {
+                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
+            } else {
+                const placeholder = !hasDist ? "🔒 Step 1: Select District First..." : (!hasTown ? "🔒 Step 2: Select Town First..." : "🔒 Step 3: Select Project First...");
+                updateSelectLock(blockSelect, false, placeholder, false);
+            }
+
+            // Step 5: Floor & Flat Lock State - locked unless Block is selected
+            if (hasDist && hasTown && hasProj && hasBlock) {
+                setFlatInputsLock(false);
+            } else {
+                setFlatInputsLock(true);
+            }
+        }
 
         function fetchTowns(districtId, selectedTownId = null) {
             if (!districtId) {
@@ -806,50 +877,45 @@
                 });
         }
 
-        function updateSelectLock(selectEl, enabled, placeholderText = null, clearOptions = true) {
+        function updateSelectLock(selectEl, enabled, placeholderText = null) {
             if (!selectEl) return;
             const $el = $(selectEl);
-            const $s2 = $el.next('.select2-container');
+            const s2Data = $el.data('select2');
+            const $s2 = (s2Data && s2Data.$container && s2Data.$container.length) ? s2Data.$container : $el.next('.select2-container');
+
+            $el.prop('disabled', !enabled);
+            selectEl.disabled = !enabled;
 
             if (enabled) {
-                $el.prop('disabled', false);
-                selectEl.disabled = false;
                 selectEl.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                if ($s2.length) {
-                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none');
+                if ($s2 && $s2.length) {
+                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
                     $s2.find('.select2-selection').removeClass('bg-slate-100 cursor-not-allowed opacity-60');
+                    $s2.find('.select2-selection').attr('tabindex', '0').attr('aria-disabled', 'false');
                 }
                 if (placeholderText && selectEl.options && selectEl.options.length > 0) {
                     selectEl.options[0].textContent = placeholderText;
                 }
             } else {
-                $el.prop('disabled', true);
-                selectEl.disabled = true;
                 selectEl.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                if ($s2.length) {
-                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none');
+                if ($s2 && $s2.length) {
+                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
                     $s2.find('.select2-selection').addClass('bg-slate-100 cursor-not-allowed opacity-60');
+                    $s2.find('.select2-selection').attr('tabindex', '-1').attr('aria-disabled', 'true');
                 }
-                if (placeholderText) {
-                    if (clearOptions) {
-                        selectEl.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
-                    } else if (selectEl.options && selectEl.options.length > 0) {
-                        selectEl.options[0].textContent = placeholderText;
-                    }
+                if (placeholderText && selectEl.options && selectEl.options.length > 0) {
+                    selectEl.options[0].textContent = placeholderText;
                 }
             }
 
-            // Immediately update Select2 visible text to remove or show lock icon
-            const select2Container = document.getElementById(`select2-${selectEl.id}-container`);
-            if (select2Container) {
-                const currentText = selectEl.value && selectEl.selectedIndex >= 0 
-                    ? selectEl.options[selectEl.selectedIndex].textContent 
-                    : (placeholderText || (selectEl.options.length > 0 ? selectEl.options[0].textContent : ''));
-                select2Container.textContent = currentText;
-                select2Container.title = currentText;
+            // Update Select2 visible text ONLY if disabled or empty
+            if (!enabled || !selectEl.value) {
+                const select2Container = document.getElementById(`select2-${selectEl.id}-container`);
+                if (select2Container && placeholderText) {
+                    select2Container.textContent = placeholderText;
+                    select2Container.title = placeholderText;
+                }
             }
-
-            $el.trigger('change.select2');
         }
 
         function setFlatInputsLock(locked) {
@@ -884,45 +950,176 @@
 
         function fetchProjects(districtId, selectedProjectId = null) {
             if (!districtId) {
-                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
+                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...");
                 clearBlocks();
                 return;
             }
             
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
-            $(projectSelect).trigger('change.select2');
+            $(projectSelect).val('').trigger('change.select2');
             
             fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}`)
                 .then(res => res.json())
                 .then(data => {
-                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
-                    data.forEach(proj => {
-                        const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
-                        const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
-                        projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
-                    });
+                    const hasTown = townSelect && townSelect.value && townSelect.value !== '' && townSelect.value !== 'new';
+                    const placeholder = hasTown ? "Choose a project..." : "🔒 Step 2: Select Town First...";
+
+                    projectSelect.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
+                    if (Array.isArray(data)) {
+                        data.forEach(proj => {
+                            const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
+                            const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
+                            projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
+                        });
+                    }
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
-                    // As requested: Step 3 (Project) remains locked until Step 2 (Town) is selected
-                    const isTownSelected = townSelect && townSelect.value && townSelect.value !== '';
-                    if (isTownSelected) {
-                        updateSelectLock(projectSelect, true, "Choose a project...", false);
-                        if (selectedProjectId) {
-                            $(projectSelect).val(selectedProjectId).trigger('change.select2');
-                            projectSelect.dispatchEvent(new Event('change'));
-                        } else {
-                            handleProjectChange();
-                        }
+                    if (hasTown) {
+                        updateSelectLock(projectSelect, true, "Choose a project...");
                     } else {
-                        // Keep values loaded, but lock the select until town is selected
-                        updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                        updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                    }
+                    
+                    if (selectedProjectId) {
+                        $(projectSelect).val(selectedProjectId).trigger('change');
+                    } else {
+                        $(projectSelect).val('').trigger('change.select2');
+                        handleProjectChange();
                     }
                 })
                 .catch(err => {
                     console.error('Error fetching projects:', err);
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
-                    $(projectSelect).trigger('change.select2');
+                    $(projectSelect).val('').trigger('change.select2');
                 });
+        }
+
+        function fetchBlocks(projectId, selectedBlockId = null) {
+            if (!projectId || projectId === 'new') {
+                return;
+            }
+            
+            blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
+            $(blockSelect).val('').trigger('change.select2');
+            
+            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}`)
+                .then(res => res.json())
+                .then(data => {
+                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
+                    if (Array.isArray(data)) {
+                        data.forEach(blk => {
+                            const isSel = selectedBlockId && selectedBlockId == blk.id ? 'selected' : '';
+                            blockSelect.innerHTML += `<option value="${blk.id}" ${isSel}>${blk.name.toUpperCase()}</option>`;
+                        });
+                    }
+                    blockSelect.innerHTML += '<option value="new">+ Add New Block/Tower</option>';
+                    
+                    updateSelectLock(blockSelect, true, "Choose a block/tower...");
+                    
+                    if (selectedBlockId) {
+                        $(blockSelect).val(selectedBlockId).trigger('change');
+                    } else {
+                        $(blockSelect).val('').trigger('change.select2');
+                        handleBlockChange();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching blocks:', err);
+                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
+                    updateSelectLock(blockSelect, true, "Choose a block/tower...");
+                    $(blockSelect).val('').trigger('change.select2');
+                });
+        }
+
+        // Client-Side Fuzzy & Duplicate Similarity Detection Engine
+        function normalizeStr(str) {
+            if (!str) return '';
+            let s = str.toLowerCase().trim();
+            s = s.replace(/\s*\([^)]*\)/g, '');
+            return s.replace(/[^a-z0-9]/g, '');
+        }
+
+        function collapseRepeats(str) {
+            if (!str) return '';
+            return str.replace(/(.)\1+/g, '$1');
+        }
+
+        function levenshteinDistance(s1, s2) {
+            const m = s1.length, n = s2.length;
+            const d = [];
+            for (let i = 0; i <= m; i++) d[i] = [i];
+            for (let j = 0; j <= n; j++) d[0][j] = j;
+            for (let j = 1; j <= n; j++) {
+                for (let i = 1; i <= m; i++) {
+                    if (s1[i - 1] === s2[j - 1]) {
+                        d[i][j] = d[i - 1][j - 1];
+                    } else {
+                        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1);
+                    }
+                }
+            }
+            return d[m][n];
+        }
+
+        function calculateSimilarityScore(s1, s2) {
+            const lev = levenshteinDistance(s1, s2);
+            const maxLen = Math.max(s1.length, s2.length);
+            if (maxLen === 0) return 100;
+            return ((maxLen - lev) / maxLen) * 100;
+        }
+
+        function findDuplicateOrSimilar(input, optionsList, threshold = 85.0) {
+            const cleanInput = (input || '').trim();
+            if (!cleanInput) return null;
+
+            const normInput = normalizeStr(cleanInput);
+            if (!normInput) return null;
+
+            const collapsedInput = collapseRepeats(normInput);
+
+            for (let i = 0; i < optionsList.length; i++) {
+                let opt = optionsList[i];
+                let rawText = typeof opt === 'string' ? opt : (opt.text || opt.name || '');
+                let cleanOpt = rawText.trim();
+                if (!cleanOpt || cleanOpt.startsWith('+ Add') || cleanOpt.startsWith('Choose') || cleanOpt.startsWith('🔒') || cleanOpt.startsWith('Loading')) {
+                    continue;
+                }
+
+                // 1. Exact case-insensitive match
+                if (cleanInput.toLowerCase() === cleanOpt.toLowerCase()) {
+                    return { match: true, existing: cleanOpt, reason: 'Exact match' };
+                }
+
+                const normOpt = normalizeStr(cleanOpt);
+                if (!normOpt) continue;
+
+                // 2. Canonical match (without spaces, hyphens, punctuation)
+                if (normInput === normOpt) {
+                    return { match: true, existing: cleanOpt, reason: 'Identical (ignoring spaces & punctuation)' };
+                }
+
+                // 3. Repeated character match (e.g. behaat vs behat, aanandkamboj vs anand kamboj)
+                const collapsedOpt = collapseRepeats(normOpt);
+                if (collapsedInput === collapsedOpt) {
+                    return { match: true, existing: cleanOpt, reason: 'Duplicate with repeated characters' };
+                }
+
+                // 4. Levenshtein / Edit distance
+                const lev = levenshteinDistance(normInput, normOpt);
+                const score = calculateSimilarityScore(normInput, normOpt);
+                const minLen = Math.min(normInput.length, normOpt.length);
+
+                if (minLen >= 3 && lev === 1 && score >= 80.0) {
+                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
+                }
+                if (minLen >= 8 && lev <= 2 && score >= 85.0) {
+                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
+                }
+                if (score >= threshold && minLen >= 4) {
+                    return { match: true, existing: cleanOpt, reason: Math.round(score) + '% similar name' };
+                }
+            }
+            return null;
         }
 
         let previousTownValue = '';
@@ -961,9 +1158,11 @@
             const townInput = document.getElementById('modal_new_town_name');
             const typeSelect = document.getElementById('modal_new_town_type');
             const customTypeInput = document.getElementById('modal_custom_town_type');
+            const alertBox = document.getElementById('modal_town_similarity_alert');
             if (townInput) townInput.value = '';
             if (typeSelect) typeSelect.value = '';
             if (customTypeInput) customTypeInput.value = '';
+            if (alertBox) alertBox.classList.add('hidden');
             toggleCustomTownTypeModal('');
 
             const modal = document.getElementById('modal_add_town');
@@ -1044,6 +1243,20 @@
                 return;
             }
 
+            // Client-side Duplicate & Similarity Check
+            const townOptions = Array.from(townSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(townName, townOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Town '<strong>${townName}</strong>' already exists or is too similar to existing town '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (townInput) townInput.focus();
+                return;
+            }
+
             if (townType === 'other') {
                 const customTypeInput = document.getElementById('modal_custom_town_type');
                 townType = customTypeInput ? customTypeInput.value.trim() : '';
@@ -1087,11 +1300,21 @@
                     town_type: townType
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Town',
+                        text: data.message || 'Could not save town.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.town) {
@@ -1146,13 +1369,6 @@
                     });
 
                     handleTownChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save town.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1187,12 +1403,36 @@
                 return;
             }
 
+            if (!townId || townId === 'new') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Town Required',
+                    text: 'Please select Step 2: Name of Town first before creating a project.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
             if (!projName) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Project Name Required',
                     text: 'Please enter the new project name.',
                     confirmButtonColor: '#0284c7'
+                });
+                if (projInput) projInput.focus();
+                return;
+            }
+
+            // Client-side Duplicate & Similarity Check
+            const projOptions = Array.from(projectSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(projName, projOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Project '<strong>${projName}</strong>' already exists or is too similar to existing project '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
                 });
                 if (projInput) projInput.focus();
                 return;
@@ -1216,11 +1456,21 @@
                     project_name: projName
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Project',
+                        text: data.message || 'Could not save project.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.project) {
@@ -1244,6 +1494,8 @@
                     newProjectContainer.classList.add('hidden');
                     newProjectInput.required = false;
                     newProjectInput.value = '';
+                    const alertBox = document.getElementById('project_similarity_alert');
+                    if (alertBox) alertBox.classList.add('hidden');
 
                     const Toast = Swal.mixin({
                         toast: true,
@@ -1258,13 +1510,6 @@
                     });
 
                     handleProjectChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save project.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1346,6 +1591,20 @@
                 return;
             }
 
+            // Client-side Duplicate & Similarity Check
+            const blockOptions = Array.from(blockSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(blockName, blockOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Block/Tower '<strong>${blockName}</strong>' already exists or is too similar to existing '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}) under this project.<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (blockInput) blockInput.focus();
+                return;
+            }
+
             if (saveBtn) {
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
@@ -1363,11 +1622,21 @@
                     block_name: blockName
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Block',
+                        text: data.message || 'Could not save block/tower.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.block) {
@@ -1391,6 +1660,8 @@
                     newBlockContainer.classList.add('hidden');
                     newBlockInput.required = false;
                     newBlockInput.value = '';
+                    const alertBox = document.getElementById('block_similarity_alert');
+                    if (alertBox) alertBox.classList.add('hidden');
 
                     const Toast = Swal.mixin({
                         toast: true,
@@ -1401,17 +1672,10 @@
                     });
                     Toast.fire({
                         icon: 'success',
-                        title: data.message || `Block '${data.block.name}' saved successfully!`
+                        title: data.message || `Block/Tower '${data.block.name}' saved successfully!`
                     });
 
                     handleBlockChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save block.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1430,6 +1694,7 @@
         }
 
         function clearBlocks() {
+            blockSelect.innerHTML = '<option value="" disabled selected>🔒 Step 3: Select Project First...</option><option value="new">+ Add New Block/Tower</option>';
             updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
             $(blockSelect).val('').trigger('change.select2');
             handleBlockChange();
@@ -1437,22 +1702,30 @@
 
         function handleTownChange() {
             const townVal = townSelect ? townSelect.value : '';
+            const distId = districtSelect ? districtSelect.value : '';
 
             if (townVal === 'new') {
                 openAddTownModal();
                 return;
             }
 
-            // Step 3 (Project) unlocks ONLY when Town (Step 2) is selected
             if (townVal && townVal !== '') {
                 previousTownValue = townVal;
-                const distId = districtSelect ? districtSelect.value : '';
-                updateSelectLock(projectSelect, true, "Choose a project...", false);
-                fetchProjects(distId, projectSelect.value);
+                // UNLOCK Step 3 (Project) ONLY after Step 2 (Town) is selected!
+                updateSelectLock(projectSelect, true, "Choose a project...");
+                
+                // If project options are not loaded yet, fetch them for this district
+                if (!projectSelect.options || projectSelect.options.length <= 2) {
+                    fetchProjects(distId);
+                }
             } else {
                 previousTownValue = '';
-                // Town is not selected -> Keep Step 3 locked (values remain preserved)
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                // LOCK Step 3 (Project) if Town is unselected / empty
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                $(projectSelect).val('').trigger('change.select2');
+                newProjectContainer.classList.add('hidden');
+                newProjectInput.required = false;
+                newProjectInput.value = '';
                 clearBlocks();
                 setFlatInputsLock(true);
             }
@@ -1465,9 +1738,8 @@
                 newProjectInput.required = true;
                 
                 // Allow adding new block
-                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
-                $(blockSelect).val('new').trigger('change.select2');
-                blockSelect.dispatchEvent(new Event('change'));
+                updateSelectLock(blockSelect, true, "Choose a block/tower...");
+                $(blockSelect).val('new').trigger('change');
             } else {
                 newProjectContainer.classList.add('hidden');
                 newProjectInput.required = false;
@@ -1475,7 +1747,7 @@
                 
                 // Step 4 (Block) is unlocked ONLY if Project has a valid selection
                 if (val && val !== '') {
-                    updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
+                    updateSelectLock(blockSelect, true, "Choose a block/tower...");
                     fetchBlocks(val);
                 } else {
                     clearBlocks();
@@ -1490,6 +1762,7 @@
                 newBlockContainer.classList.remove('hidden');
                 newBlockInput.required = true;
                 setFlatInputsLock(false);
+                setTimeout(() => { if (newBlockInput) newBlockInput.focus(); }, 50);
             } else {
                 newBlockContainer.classList.add('hidden');
                 newBlockInput.required = false;
@@ -1504,28 +1777,74 @@
             }
         }
 
-        if (districtSelect && districtSelect.tagName === 'SELECT') {
-            districtSelect.addEventListener('change', function() {
-                const distId = this.value;
-                if (distId) {
-                    updateSelectLock(townSelect, true, "Choose a town...", true);
-                    fetchTowns(distId);
+        function handleDistrictChange() {
+            if (!districtSelect) return;
+            const distId = districtSelect.value;
+            if (distId) {
+                updateSelectLock(townSelect, true, "Choose a town...");
+                fetchTowns(distId);
 
-                    // Pre-load projects for the district, but lock Step 3 until Step 2 is selected
-                    updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
-                    fetchProjects(distId);
-                } else {
-                    updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
-                    updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
+                // Re-lock Step 3 (Project) because Town is reset for the new District!
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                $(projectSelect).val('').trigger('change.select2');
+                fetchProjects(distId);
+            } else {
+                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
+                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...");
+                $(projectSelect).val('').trigger('change.select2');
+            }
+            clearBlocks();
+            setFlatInputsLock(true);
+        }
+
+        // Live Input Similarity Checkers
+        const townModalInput = document.getElementById('modal_new_town_name');
+        if (townModalInput) {
+            townModalInput.addEventListener('input', function() {
+                const alertBox = document.getElementById('modal_town_similarity_alert');
+                const alertMsg = document.getElementById('modal_town_similarity_msg');
+                const townOptions = Array.from(townSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, townOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar town '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
                 }
-                clearBlocks();
-                setFlatInputsLock(true);
             });
         }
 
-        townSelect.addEventListener('change', handleTownChange);
-        projectSelect.addEventListener('change', handleProjectChange);
-        blockSelect.addEventListener('change', handleBlockChange);
+        const projInputEl = document.getElementById('new_project_name');
+        if (projInputEl) {
+            projInputEl.addEventListener('input', function() {
+                const alertBox = document.getElementById('project_similarity_alert');
+                const alertMsg = document.getElementById('project_similarity_msg');
+                const projOptions = Array.from(projectSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, projOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar project '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
+                }
+            });
+        }
+
+        const blockInputEl = document.getElementById('new_block_name');
+        if (blockInputEl) {
+            blockInputEl.addEventListener('input', function() {
+                const alertBox = document.getElementById('block_similarity_alert');
+                const alertMsg = document.getElementById('block_similarity_msg');
+                const blockOptions = Array.from(blockSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, blockOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Block/Tower '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
+                }
+            });
+        }
 
         document.getElementById('custom_flat_numbers').addEventListener('input', function() {
             this.value = this.value.replace(/[^0-9,\s]/g, '');

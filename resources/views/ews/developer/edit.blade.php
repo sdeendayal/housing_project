@@ -282,6 +282,12 @@
                                             <span>Save Project</span>
                                         </button>
                                     </div>
+                                    <div id="project_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
+                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <span id="project_similarity_msg"></span>
+                                        </div>
+                                    </div>
                                     <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Project' to instantly save into ews_projects, or auto-saves on form submit.</p>
                                 </div>
                             </div>
@@ -316,6 +322,12 @@
                                             <i class="bi bi-plus-circle-fill"></i>
                                             <span>Save Block</span>
                                         </button>
+                                    </div>
+                                    <div id="block_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
+                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                                        <div>
+                                            <span id="block_similarity_msg"></span>
+                                        </div>
                                     </div>
                                     <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Block' to instantly save into ews_blocks, or auto-saves on form submit.</p>
                                 </div>
@@ -464,6 +476,12 @@
                     </label>
                     <input type="text" id="modal_new_town_name" placeholder="Enter town name (e.g. Kharkhoda, Samalkha)"
                         class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 focus:bg-white rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none transition-all">
+                    <div id="modal_town_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2 shadow-xs transition-all mt-1">
+                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                        <div>
+                            <span id="modal_town_similarity_msg"></span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Town Type (Municipality) Selection -->
@@ -595,8 +613,9 @@
                 selectEl.disabled = false;
                 selectEl.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
                 if ($s2.length) {
-                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none');
+                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
                     $s2.find('.select2-selection').removeClass('bg-slate-100 cursor-not-allowed opacity-60');
+                    $s2.find('.select2-selection').attr('tabindex', '0').attr('aria-disabled', 'false');
                 }
                 if (placeholderText && selectEl.options && selectEl.options.length > 0) {
                     selectEl.options[0].textContent = placeholderText;
@@ -606,8 +625,9 @@
                 selectEl.disabled = true;
                 selectEl.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
                 if ($s2.length) {
-                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none');
+                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
                     $s2.find('.select2-selection').addClass('bg-slate-100 cursor-not-allowed opacity-60');
+                    $s2.find('.select2-selection').attr('tabindex', '-1').attr('aria-disabled', 'true');
                 }
                 if (placeholderText) {
                     if (clearOptions) {
@@ -618,12 +638,12 @@
                 }
             }
 
-            // Immediately update Select2 visible text to remove or show lock icon
+            // Immediately update Select2 visible text
             const select2Container = document.getElementById(`select2-${selectEl.id}-container`);
-            if (select2Container) {
+            if (select2Container && placeholderText) {
                 const currentText = selectEl.value && selectEl.selectedIndex >= 0 
                     ? selectEl.options[selectEl.selectedIndex].textContent 
-                    : (placeholderText || (selectEl.options.length > 0 ? selectEl.options[0].textContent : ''));
+                    : placeholderText;
                 select2Container.textContent = currentText;
                 select2Container.title = currentText;
             }
@@ -664,12 +684,7 @@
 
             if (!hasDist) {
                 updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
-                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
-                setFlatInputsLock(true);
-            } else if (!hasTown) {
-                updateSelectLock(townSelect, true);
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
                 updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
                 setFlatInputsLock(true);
             } else if (!hasProj) {
@@ -680,7 +695,7 @@
             } else if (!hasBlock) {
                 updateSelectLock(townSelect, true);
                 updateSelectLock(projectSelect, true);
-                updateSelectLock(blockSelect, true);
+                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
                 setFlatInputsLock(true);
             } else {
                 updateSelectLock(townSelect, true);
@@ -755,24 +770,113 @@
                     });
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
-                    const isTownSelected = townSelect && townSelect.value && townSelect.value !== '';
-                    if (isTownSelected) {
-                        updateSelectLock(projectSelect, true, "Choose a project...", false);
-                        if (selectedProjectId) {
-                            $(projectSelect).val(selectedProjectId).trigger('change.select2');
-                            projectSelect.dispatchEvent(new Event('change'));
-                        } else {
-                            handleProjectChange();
-                        }
+                    updateSelectLock(projectSelect, true, "Choose a project...", false);
+                    $(projectSelect).select2();
+
+                    if (selectedProjectId) {
+                        $(projectSelect).val(selectedProjectId).trigger('change.select2');
+                        projectSelect.dispatchEvent(new Event('change'));
                     } else {
-                        updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                        handleProjectChange();
                     }
                 })
                 .catch(err => {
                     console.error('Error fetching projects:', err);
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
-                    $(projectSelect).trigger('change.select2');
+                    $(projectSelect).select2();
+                    updateSelectLock(projectSelect, true, "Choose a project...", false);
                 });
+        }
+
+        // Client-Side Fuzzy & Duplicate Similarity Detection Engine
+        function normalizeStr(str) {
+            if (!str) return '';
+            let s = str.toLowerCase().trim();
+            s = s.replace(/\s*\([^)]*\)/g, '');
+            return s.replace(/[^a-z0-9]/g, '');
+        }
+
+        function collapseRepeats(str) {
+            if (!str) return '';
+            return str.replace(/(.)\1+/g, '$1');
+        }
+
+        function levenshteinDistance(s1, s2) {
+            const m = s1.length, n = s2.length;
+            const d = [];
+            for (let i = 0; i <= m; i++) d[i] = [i];
+            for (let j = 0; j <= n; j++) d[0][j] = j;
+            for (let j = 1; j <= n; j++) {
+                for (let i = 1; i <= m; i++) {
+                    if (s1[i - 1] === s2[j - 1]) {
+                        d[i][j] = d[i - 1][j - 1];
+                    } else {
+                        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1);
+                    }
+                }
+            }
+            return d[m][n];
+        }
+
+        function calculateSimilarityScore(s1, s2) {
+            const lev = levenshteinDistance(s1, s2);
+            const maxLen = Math.max(s1.length, s2.length);
+            if (maxLen === 0) return 100;
+            return ((maxLen - lev) / maxLen) * 100;
+        }
+
+        function findDuplicateOrSimilar(input, optionsList, threshold = 85.0) {
+            const cleanInput = (input || '').trim();
+            if (!cleanInput) return null;
+
+            const normInput = normalizeStr(cleanInput);
+            if (!normInput) return null;
+
+            const collapsedInput = collapseRepeats(normInput);
+
+            for (let i = 0; i < optionsList.length; i++) {
+                let opt = optionsList[i];
+                let rawText = typeof opt === 'string' ? opt : (opt.text || opt.name || '');
+                let cleanOpt = rawText.trim();
+                if (!cleanOpt || cleanOpt.startsWith('+ Add') || cleanOpt.startsWith('Choose') || cleanOpt.startsWith('🔒') || cleanOpt.startsWith('Loading')) {
+                    continue;
+                }
+
+                // 1. Exact case-insensitive match
+                if (cleanInput.toLowerCase() === cleanOpt.toLowerCase()) {
+                    return { match: true, existing: cleanOpt, reason: 'Exact match' };
+                }
+
+                const normOpt = normalizeStr(cleanOpt);
+                if (!normOpt) continue;
+
+                // 2. Canonical match (without spaces, hyphens, punctuation)
+                if (normInput === normOpt) {
+                    return { match: true, existing: cleanOpt, reason: 'Identical (ignoring spaces & punctuation)' };
+                }
+
+                // 3. Repeated character match (e.g. behaat vs behat, aanandkamboj vs anand kamboj)
+                const collapsedOpt = collapseRepeats(normOpt);
+                if (collapsedInput === collapsedOpt) {
+                    return { match: true, existing: cleanOpt, reason: 'Duplicate with repeated characters' };
+                }
+
+                // 4. Levenshtein / Edit distance
+                const lev = levenshteinDistance(normInput, normOpt);
+                const score = calculateSimilarityScore(normInput, normOpt);
+                const minLen = Math.min(normInput.length, normOpt.length);
+
+                if (minLen >= 3 && lev === 1 && score >= 80.0) {
+                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
+                }
+                if (minLen >= 8 && lev <= 2 && score >= 85.0) {
+                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
+                }
+                if (score >= threshold && minLen >= 4) {
+                    return { match: true, existing: cleanOpt, reason: Math.round(score) + '% similar name' };
+                }
+            }
+            return null;
         }
 
         let previousTownValue = '{{ old("town_id", $flat->town_id) }}';
@@ -894,6 +998,20 @@
                 return;
             }
 
+            // Client-side Duplicate & Similarity Check
+            const townOptions = Array.from(townSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(townName, townOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Town '<strong>${townName}</strong>' already exists or is too similar to existing town '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (townInput) townInput.focus();
+                return;
+            }
+
             if (townType === 'other') {
                 const customTypeInput = document.getElementById('modal_custom_town_type');
                 townType = customTypeInput ? customTypeInput.value.trim() : '';
@@ -937,11 +1055,21 @@
                     town_type: townType
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Town',
+                        text: data.message || 'Could not save town.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.town) {
@@ -996,13 +1124,6 @@
                     });
 
                     handleTownChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save town.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1048,6 +1169,20 @@
                 return;
             }
 
+            // Client-side Duplicate & Similarity Check
+            const projOptions = Array.from(projectSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(projName, projOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Project '<strong>${projName}</strong>' already exists or is too similar to existing project '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (projInput) projInput.focus();
+                return;
+            }
+
             if (saveBtn) {
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
@@ -1066,11 +1201,21 @@
                     project_name: projName
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Project',
+                        text: data.message || 'Could not save project.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.project) {
@@ -1094,6 +1239,8 @@
                     newProjectContainer.classList.add('hidden');
                     newProjectInput.required = false;
                     newProjectInput.value = '';
+                    const alertBox = document.getElementById('project_similarity_alert');
+                    if (alertBox) alertBox.classList.add('hidden');
 
                     const Toast = Swal.mixin({
                         toast: true,
@@ -1108,13 +1255,6 @@
                     });
 
                     handleProjectChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save project.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1196,6 +1336,20 @@
                 return;
             }
 
+            // Client-side Duplicate & Similarity Check
+            const blockOptions = Array.from(blockSelect.options).map(o => o.text);
+            const dupCheck = findDuplicateOrSimilar(blockName, blockOptions);
+            if (dupCheck) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Already Exists / Similar Name Found',
+                    html: `Block/Tower '<strong>${blockName}</strong>' already exists or is too similar to existing '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}) under this project.<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
+                    confirmButtonColor: '#f59e0b'
+                });
+                if (blockInput) blockInput.focus();
+                return;
+            }
+
             if (saveBtn) {
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
@@ -1213,11 +1367,21 @@
                     block_name: blockName
                 })
             })
-            .then(res => res.json())
-            .then(data => {
+            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+            .then(({ ok, data }) => {
                 if (saveBtn) {
                     saveBtn.disabled = false;
                     saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
+                }
+
+                if (!ok || !data.success) {
+                    Swal.fire({
+                        icon: data.duplicate ? 'warning' : 'error',
+                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Block',
+                        text: data.message || 'Could not save block/tower.',
+                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
+                    });
+                    return;
                 }
 
                 if (data.success && data.block) {
@@ -1241,6 +1405,8 @@
                     newBlockContainer.classList.add('hidden');
                     newBlockInput.required = false;
                     newBlockInput.value = '';
+                    const alertBox = document.getElementById('block_similarity_alert');
+                    if (alertBox) alertBox.classList.add('hidden');
 
                     const Toast = Swal.mixin({
                         toast: true,
@@ -1251,17 +1417,10 @@
                     });
                     Toast.fire({
                         icon: 'success',
-                        title: data.message || `Block '${data.block.name}' saved successfully!`
+                        title: data.message || `Block/Tower '${data.block.name}' saved successfully!`
                     });
 
                     handleBlockChange();
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: data.message || 'Could not save block.',
-                        confirmButtonColor: '#ef4444'
-                    });
                 }
             })
             .catch(err => {
@@ -1370,6 +1529,55 @@
         townSelect.addEventListener('change', handleTownChange);
         projectSelect.addEventListener('change', handleProjectChange);
         blockSelect.addEventListener('change', handleBlockChange);
+
+        // Live Input Similarity Checkers
+        const townModalInput = document.getElementById('modal_new_town_name');
+        if (townModalInput) {
+            townModalInput.addEventListener('input', function() {
+                const alertBox = document.getElementById('modal_town_similarity_alert');
+                const alertMsg = document.getElementById('modal_town_similarity_msg');
+                const townOptions = Array.from(townSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, townOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar town '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
+                }
+            });
+        }
+
+        const projInputEl = document.getElementById('new_project_name');
+        if (projInputEl) {
+            projInputEl.addEventListener('input', function() {
+                const alertBox = document.getElementById('project_similarity_alert');
+                const alertMsg = document.getElementById('project_similarity_msg');
+                const projOptions = Array.from(projectSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, projOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar project '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
+                }
+            });
+        }
+
+        const blockInputEl = document.getElementById('new_block_name');
+        if (blockInputEl) {
+            blockInputEl.addEventListener('input', function() {
+                const alertBox = document.getElementById('block_similarity_alert');
+                const alertMsg = document.getElementById('block_similarity_msg');
+                const blockOptions = Array.from(blockSelect.options).map(o => o.text);
+                const dup = findDuplicateOrSimilar(this.value, blockOptions);
+                if (dup && alertBox && alertMsg) {
+                    alertMsg.innerHTML = `<strong>Attention:</strong> Block/Tower '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
+                    alertBox.classList.remove('hidden');
+                } else if (alertBox) {
+                    alertBox.classList.add('hidden');
+                }
+            });
+        }
 
         document.getElementById('devEditForm').addEventListener('submit', function (e) {
             // Strict Sequential Validation on Form Submission

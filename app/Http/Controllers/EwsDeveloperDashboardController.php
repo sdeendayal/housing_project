@@ -272,8 +272,10 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $towns = collect();
+        $projects = collect();
         if ($selectedDistrictId) {
             $towns = EwsTown::where('district_id', $selectedDistrictId)->orderBy('name', 'asc')->get();
+            $projects = EwsProject::where('district_id', $selectedDistrictId)->orderBy('name', 'asc')->get();
         }
         $townTypes = EwsTown::whereNotNull('type')->where('type', '!=', '')->distinct()->pluck('type')->sort()->values();
         if ($townTypes->isEmpty()) {
@@ -281,7 +283,7 @@ class EwsDeveloperDashboardController extends Controller
         }
         $displayZoneName = $this->resolveDisplayZoneName($user);
 
-        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
+        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'projects', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
     }
 
     public function store(Request $request)
@@ -325,30 +327,19 @@ class EwsDeveloperDashboardController extends Controller
             $cleanTownName = trim($request->new_town_name);
             $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
 
-            $town = EwsTown::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower($cleanTownName)])
-                ->first();
-            if (!$town) {
-                $town = EwsTown::create([
-                    'district_id' => $district->id,
-                    'zone_id'     => $zoneId,
-                    'zone_name'   => $zoneName,
-                    'name'        => $cleanTownName,
-                    'type'        => !empty($townType) ? $townType : null,
-                ]);
-            } else {
-                $updateData = [];
-                if (!empty($townType) && empty($town->type)) {
-                    $updateData['type'] = $townType;
-                }
-                if (!empty($zoneId) && empty($town->zone_id)) {
-                    $updateData['zone_id'] = $zoneId;
-                    $updateData['zone_name'] = $zoneName;
-                }
-                if (!empty($updateData)) {
-                    $town->update($updateData);
-                }
+            $existingTowns = EwsTown::where('district_id', $district->id)->get();
+            $similarTown = EwsHelper::findSimilarName($cleanTownName, $existingTowns);
+            if ($similarTown) {
+                return back()->withInput()->with('error', "Validation Error: Town '{$cleanTownName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one.");
             }
+
+            $town = EwsTown::create([
+                'district_id' => $district->id,
+                'zone_id'     => $zoneId,
+                'zone_name'   => $zoneName,
+                'name'        => $cleanTownName,
+                'type'        => !empty($townType) ? $townType : null,
+            ]);
         } else {
             $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
             if (!$town) {
@@ -363,12 +354,11 @@ class EwsDeveloperDashboardController extends Controller
 
         // Resolve Project ID and Name
         if ($request->project_id === 'new') {
-            $projectExists = EwsProject::where('district_id', $district->id)
-                ->where('town_id', $townId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_project_name))])
-                ->exists();
-            if ($projectExists) {
-                return back()->withInput()->with('error', "Validation Error: A project named '{$request->new_project_name}' already exists in this town. Please select it from the list instead of adding it as a new project.");
+            $cleanProjName = trim($request->new_project_name);
+            $existingProjects = EwsProject::where('district_id', $district->id)->get();
+            $similarProject = EwsHelper::findSimilarName($cleanProjName, $existingProjects);
+            if ($similarProject) {
+                return back()->withInput()->with('error', "Validation Error: Project '{$cleanProjName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the list instead of adding it as a new project.");
             }
 
             $project = EwsProject::create([
@@ -378,7 +368,7 @@ class EwsDeveloperDashboardController extends Controller
                 'district_name' => $district->name,
                 'town_id' => $townId,
                 'town_name' => $townName,
-                'name' => trim($request->new_project_name),
+                'name' => $cleanProjName,
             ]);
             $projectId = $project->id;
             $projectName = $project->name;
@@ -399,16 +389,16 @@ class EwsDeveloperDashboardController extends Controller
 
         // Resolve Block ID and Name
         if ($request->block_id === 'new') {
-            $blockExists = EwsBlock::where('project_id', $projectId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_block_name))])
-                ->exists();
-            if ($blockExists) {
-                return back()->withInput()->with('error', "Validation Error: A block/tower named '{$request->new_block_name}' already exists under the selected project. Please select it from the list.");
+            $cleanBlockName = trim($request->new_block_name);
+            $existingBlocks = EwsBlock::where('project_id', $projectId)->get();
+            $similarBlock = EwsHelper::findSimilarName($cleanBlockName, $existingBlocks);
+            if ($similarBlock) {
+                return back()->withInput()->with('error', "Validation Error: Block/Tower '{$cleanBlockName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under the selected project. Please select it from the list.");
             }
 
-            $block = EwsBlock::firstOrCreate([
+            $block = EwsBlock::create([
                 'project_id' => $projectId,
-                'name' => trim($request->new_block_name),
+                'name' => $cleanBlockName,
             ]);
             $blockId = $block->id;
             $blockName = $block->name;
@@ -811,30 +801,19 @@ class EwsDeveloperDashboardController extends Controller
             $cleanTownName = trim($request->new_town_name);
             $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
 
-            $town = EwsTown::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower($cleanTownName)])
-                ->first();
-            if (!$town) {
-                $town = EwsTown::create([
-                    'district_id' => $district->id,
-                    'zone_id'     => $zoneId,
-                    'zone_name'   => $zoneName,
-                    'name'        => $cleanTownName,
-                    'type'        => !empty($townType) ? $townType : null,
-                ]);
-            } else {
-                $updateData = [];
-                if (!empty($townType) && empty($town->type)) {
-                    $updateData['type'] = $townType;
-                }
-                if (!empty($zoneId) && empty($town->zone_id)) {
-                    $updateData['zone_id'] = $zoneId;
-                    $updateData['zone_name'] = $zoneName;
-                }
-                if (!empty($updateData)) {
-                    $town->update($updateData);
-                }
+            $existingTowns = EwsTown::where('district_id', $district->id)->get();
+            $similarTown = EwsHelper::findSimilarName($cleanTownName, $existingTowns);
+            if ($similarTown) {
+                return back()->withInput()->with('error', "Validation Error: Town '{$cleanTownName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one.");
             }
+
+            $town = EwsTown::create([
+                'district_id' => $district->id,
+                'zone_id'     => $zoneId,
+                'zone_name'   => $zoneName,
+                'name'        => $cleanTownName,
+                'type'        => !empty($townType) ? $townType : null,
+            ]);
         } else {
             $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
             if (!$town) {
@@ -849,12 +828,11 @@ class EwsDeveloperDashboardController extends Controller
 
         // Resolve Project ID and Name
         if ($request->project_id === 'new') {
-            $projectExists = EwsProject::where('district_id', $district->id)
-                ->where('town_id', $townId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_project_name))])
-                ->exists();
-            if ($projectExists) {
-                return back()->withInput()->with('error', "Validation Error: A project named '{$request->new_project_name}' already exists in this town. Please select it from the list instead of adding it as a new project.");
+            $cleanProjName = trim($request->new_project_name);
+            $existingProjects = EwsProject::where('district_id', $district->id)->get();
+            $similarProject = EwsHelper::findSimilarName($cleanProjName, $existingProjects);
+            if ($similarProject) {
+                return back()->withInput()->with('error', "Validation Error: Project '{$cleanProjName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the list instead of adding it as a new project.");
             }
 
             $project = EwsProject::create([
@@ -864,7 +842,7 @@ class EwsDeveloperDashboardController extends Controller
                 'district_name' => $district->name,
                 'town_id' => $townId,
                 'town_name' => $townName,
-                'name' => trim($request->new_project_name),
+                'name' => $cleanProjName,
             ]);
             $projectId = $project->id;
             $projectName = $project->name;
@@ -885,16 +863,16 @@ class EwsDeveloperDashboardController extends Controller
 
         // Resolve Block ID and Name
         if ($request->block_id === 'new') {
-            $blockExists = EwsBlock::where('project_id', $projectId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_block_name))])
-                ->exists();
-            if ($blockExists) {
-                return back()->withInput()->with('error', "Validation Error: A block/tower named '{$request->new_block_name}' already exists under the selected project. Please select it from the list.");
+            $cleanBlockName = trim($request->new_block_name);
+            $existingBlocks = EwsBlock::where('project_id', $projectId)->get();
+            $similarBlock = EwsHelper::findSimilarName($cleanBlockName, $existingBlocks);
+            if ($similarBlock) {
+                return back()->withInput()->with('error', "Validation Error: Block/Tower '{$cleanBlockName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under the selected project. Please select it from the list.");
             }
 
-            $block = EwsBlock::firstOrCreate([
+            $block = EwsBlock::create([
                 'project_id' => $projectId,
-                'name' => trim($request->new_block_name),
+                'name' => $cleanBlockName,
             ]);
             $blockId = $block->id;
             $blockName = $block->name;
@@ -1243,33 +1221,16 @@ class EwsDeveloperDashboardController extends Controller
         $zoneId = $zone ? $zone->id : ($district->zone_id ?? null);
         $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : null;
 
-        $exists = EwsTown::where('district_id', $districtId)
-            ->whereRaw('LOWER(name) = ?', [strtolower($cleanName)])
-            ->first();
+        $existingTowns = EwsTown::where('district_id', $districtId)->get();
+        $similarTown = EwsHelper::findSimilarName($cleanName, $existingTowns);
 
-        if ($exists) {
-            $updateData = [];
-            if (!empty($cleanType) && empty($exists->type)) {
-                $updateData['type'] = $cleanType;
-            }
-            if (!empty($zoneId) && empty($exists->zone_id)) {
-                $updateData['zone_id'] = $zoneId;
-                $updateData['zone_name'] = $zoneName;
-            }
-            if (!empty($updateData)) {
-                $exists->update($updateData);
-            }
+        if ($similarTown) {
             return response()->json([
-                'success' => true,
-                'message' => "Town '{$exists->name}' already exists.",
-                'town' => [
-                    'id' => $exists->id,
-                    'name' => $exists->name,
-                    'type' => $exists->type,
-                    'zone_id' => $exists->zone_id,
-                    'zone_name' => $exists->zone_name,
-                ]
-            ]);
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarTown['existing'],
+                'message' => "Town '{$cleanName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one."
+            ], 422);
         }
 
         $town = EwsTown::create([
@@ -1324,22 +1285,22 @@ class EwsDeveloperDashboardController extends Controller
         $zoneId = $zone ? $zone->id : ($district->zone_id ?? $user->zone_id);
         $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : (!empty($user->zone_name) ? strtoupper($user->zone_name) : null);
 
-        $existsQuery = EwsProject::where('district_id', $districtId)
-            ->whereRaw('LOWER(name) = ?', [strtolower($cleanName)]);
+        $projectQuery = EwsProject::where('district_id', $districtId);
         if ($townId) {
-            $existsQuery->where('town_id', $townId);
+            $projectQuery->where(function($q) use ($townId) {
+                $q->where('town_id', $townId)->orWhereNull('town_id');
+            });
         }
-        $exists = $existsQuery->first();
+        $existingProjects = $projectQuery->get();
+        $similarProject = EwsHelper::findSimilarName($cleanName, $existingProjects);
 
-        if ($exists) {
+        if ($similarProject) {
             return response()->json([
-                'success' => true,
-                'message' => "Project '{$exists->name}' already exists.",
-                'project' => [
-                    'id' => $exists->id,
-                    'name' => $exists->name,
-                ]
-            ]);
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarProject['existing'],
+                'message' => "Project '{$cleanName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the dropdown."
+            ], 422);
         }
 
         $project = EwsProject::create([
@@ -1377,19 +1338,16 @@ class EwsDeveloperDashboardController extends Controller
         $projectId = (int)$request->project_id;
         $cleanName = trim($request->block_name);
 
-        $exists = EwsBlock::where('project_id', $projectId)
-            ->whereRaw('LOWER(name) = ?', [strtolower($cleanName)])
-            ->first();
+        $existingBlocks = EwsBlock::where('project_id', $projectId)->get();
+        $similarBlock = EwsHelper::findSimilarName($cleanName, $existingBlocks);
 
-        if ($exists) {
+        if ($similarBlock) {
             return response()->json([
-                'success' => true,
-                'message' => "Block/Tower '{$exists->name}' already exists.",
-                'block' => [
-                    'id' => $exists->id,
-                    'name' => $exists->name,
-                ]
-            ]);
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarBlock['existing'],
+                'message' => "Block/Tower '{$cleanName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under this project. Please select it from the dropdown."
+            ], 422);
         }
 
         $block = EwsBlock::create([
