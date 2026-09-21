@@ -167,7 +167,7 @@ class EwsDepartmentController extends Controller
 
         $totalCount = $allottedCount + $pendingCount;
 
-        $developerCount = User::where('role', 'ews_developer')->count();
+        $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer', 'ews_dtp', 'dtp'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
         $notInSurveyCount = DB::table('all_ews_data_1')
@@ -310,7 +310,7 @@ class EwsDepartmentController extends Controller
 
         $totalCount = $allottedCount + $pendingCount;
 
-        $developerCount = User::where('role', 'ews_developer')->count();
+        $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer', 'ews_dtp', 'dtp'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
         $notInSurveyCount = DB::table('all_ews_data_1')
@@ -875,7 +875,7 @@ class EwsDepartmentController extends Controller
         $districts = DB::table('ews_stp_districts')->where('is_active', 1)->orderBy('name')->get();
         if ($districts->isEmpty()) {
             $districts = DB::table('ews_districts')
-                ->whereIn(DB::raw('UPPER(name)'), ['FARIDABAD', 'GURUGRAM', 'HISAR', 'PANIPAT', 'ROHTAK'])
+                ->whereIn(DB::raw('UPPER(name)'), ['FARIDABAD', 'GURUGRAM', 'HISAR', 'PANCHKULA', 'ROHTAK'])
                 ->orderBy('name')
                 ->get();
         }
@@ -1187,11 +1187,11 @@ class EwsDepartmentController extends Controller
 
         if ($stpZones->isEmpty()) {
             $stpZones = collect([
-                (object)['id' => 1, 'name' => 'FARIDABAD', 'code' => 'FBD'],
-                (object)['id' => 2, 'name' => 'GURUGRAM', 'code' => 'GGN'],
-                (object)['id' => 3, 'name' => 'HISAR', 'code' => 'HSR'],
-                (object)['id' => 4, 'name' => 'PANIPAT', 'code' => 'PNP'],
-                (object)['id' => 5, 'name' => 'ROHTAK', 'code' => 'ROH'],
+                (object)['id' => 1, 'name' => 'ROHTAK', 'code' => 'ROH'],
+                (object)['id' => 2, 'name' => 'FARIDABAD', 'code' => 'FBD'],
+                (object)['id' => 3, 'name' => 'PANCHKULA', 'code' => 'PKL'],
+                (object)['id' => 4, 'name' => 'GURUGRAM', 'code' => 'GGN'],
+                (object)['id' => 5, 'name' => 'HISAR', 'code' => 'HSR'],
             ]);
         }
 
@@ -1219,8 +1219,8 @@ class EwsDepartmentController extends Controller
                 'FARIDABAD' => ['FARIDABAD', 'PALWAL', 'NUH'],
                 'GURUGRAM' => ['GURUGRAM', 'REWARI', 'MAHENDERGARH', 'NARNAUL'],
                 'HISAR' => ['HISAR', 'BHIWANI', 'CHARKHI-DADRI', 'CHARKHI DADRI', 'FATEHABAD', 'JIND', 'SIRSA', 'HANSI'],
-                'PANIPAT' => ['PANIPAT', 'KARNAL', 'KURUKSHETRA', 'KAITHAL', 'AMBALA', 'YAMUNANAGAR', 'PANCHKULA'],
-                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT'],
+                'PANCHKULA' => ['PANCHKULA', 'AMBALA', 'YAMUNANAGAR', 'KARNAL', 'KURUKSHETRA', 'KAITHAL'],
+                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT', 'PANIPAT'],
             ];
 
             $cluster = $zoneDistricts[$zone] ?? [$zone];
@@ -1253,16 +1253,16 @@ class EwsDepartmentController extends Controller
                     'JIND' => 'HISAR ZONE',
                     'SIRSA' => 'HISAR ZONE',
                     'HANSI' => 'HISAR ZONE',
-                    'PANIPAT' => 'PANIPAT ZONE',
-                    'KARNAL' => 'PANIPAT ZONE',
-                    'KURUKSHETRA' => 'PANIPAT ZONE',
-                    'KAITHAL' => 'PANIPAT ZONE',
-                    'AMBALA' => 'PANIPAT ZONE',
-                    'YAMUNANAGAR' => 'PANIPAT ZONE',
-                    'PANCHKULA' => 'PANIPAT ZONE',
+                    'PANCHKULA' => 'PANCHKULA ZONE',
+                    'AMBALA' => 'PANCHKULA ZONE',
+                    'YAMUNANAGAR' => 'PANCHKULA ZONE',
+                    'KARNAL' => 'PANCHKULA ZONE',
+                    'KURUKSHETRA' => 'PANCHKULA ZONE',
+                    'KAITHAL' => 'PANCHKULA ZONE',
                     'ROHTAK' => 'ROHTAK ZONE',
                     'JHAJJAR' => 'ROHTAK ZONE',
                     'SONIPAT' => 'ROHTAK ZONE',
+                    'PANIPAT' => 'ROHTAK ZONE',
                 ];
                 $zoneName = $zoneMap[$dist] ?? ($dist ? $dist.' ZONE' : 'N/A');
                 return '<span class="font-bold text-emerald-800 uppercase tracking-wide">'.$zoneName.'</span><br><span class="text-[9px] font-semibold text-slate-400">Dist: '.$dist.'</span>';
@@ -1281,7 +1281,7 @@ class EwsDepartmentController extends Controller
     {
         $user = Auth::user();
         $districts = DB::table('ews_districts')->orderBy('name')->get();
-        $developerCount = User::where('role', 'ews_developer')->count();
+        $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer', 'ews_dtp', 'dtp'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
 
@@ -1592,8 +1592,8 @@ class EwsDepartmentController extends Controller
                 'FARIDABAD' => ['FARIDABAD', 'PALWAL', 'NUH'],
                 'GURUGRAM' => ['GURUGRAM', 'REWARI', 'MAHENDERGARH', 'NARNAUL'],
                 'HISAR' => ['HISAR', 'BHIWANI', 'CHARKHI-DADRI', 'CHARKHI DADRI', 'FATEHABAD', 'JIND', 'SIRSA', 'HANSI'],
-                'PANIPAT' => ['PANIPAT', 'KARNAL', 'KURUKSHETRA', 'KAITHAL', 'AMBALA', 'YAMUNANAGAR', 'PANCHKULA'],
-                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT'],
+                'PANCHKULA' => ['PANCHKULA', 'AMBALA', 'YAMUNANAGAR', 'KARNAL', 'KURUKSHETRA', 'KAITHAL'],
+                'ROHTAK' => ['ROHTAK', 'JHAJJAR', 'SONIPAT', 'PANIPAT'],
             ];
             $cluster = $zoneDistricts[$cleanZone] ?? [$cleanZone];
             $query->where(function($q) use ($cleanZone, $cluster) {
@@ -1999,7 +1999,7 @@ class EwsDepartmentController extends Controller
             ->when($districtId, fn($q) => $q->where('dist_id', $districtId))
             ->count();
         
-        $developerCount = User::where('role', 'ews_developer')->count();
+        $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer', 'ews_dtp', 'dtp'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
         

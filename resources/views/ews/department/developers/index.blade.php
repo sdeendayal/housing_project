@@ -389,7 +389,7 @@
         function confirmDelete(secureId) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: 'Do you really want to delete this developer account?',
+                text: 'Do you really want to delete this DTP account?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Developer Activity Logs | EWS Department</title>
+    <title>DTP Activity Logs | EWS Department</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts & Material Icons -->
@@ -42,7 +42,7 @@
                     <span class="text-xs font-bold uppercase">Dashboard</span>
                 </a>
                 <div class="h-5 w-[1px] bg-slate-200"></div>
-                <span class="text-xs text-slate-500 font-medium">EWS Developer Activity & System Audit Logs</span>
+                <span class="text-xs text-slate-500 font-medium">EWS DTP Activity & System Audit Logs</span>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -64,9 +64,9 @@
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                             <span class="material-symbols-outlined text-emerald-600 text-lg">receipt_long</span>
-                            <span>Developer Activity Audit Logs</span>
+                            <span>DTP Activity Audit Logs</span>
                         </h3>
-                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Real-time log of form creations, updates, deletions, and logins by developer accounts</p>
+                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Real-time log of form creations, updates, deletions, and logins by DTP accounts</p>
                     </div>
 
                     <!-- Export Action Buttons -->
@@ -91,7 +91,7 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 uppercase text-[9px] font-bold border-b border-slate-100">
                                 <th style="width: 5%;">S.No.</th>
-                                <th>Developer Name & Mobile</th>
+                                <th>DTP Officer Name & Mobile</th>
                                 <th>Action Performed</th>
                                 <th>Action Details</th>
                                 <th>IP Address</th>

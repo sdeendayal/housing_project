@@ -783,7 +783,7 @@
                                 <a href="{{ url('ews/developer/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
                                             class="material-symbols-outlined">developer_mode</span></span>
-                                    <span class="portal-link-copy"><span class="portal-link-name">STP
+                                    <span class="portal-link-copy"><span class="portal-link-name">DTP
                                             Login</span><span class="portal-link-scheme">EWS Portal</span></span>
                                     <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
                                 </a>

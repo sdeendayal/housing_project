@@ -18,11 +18,11 @@ class EwsStpDistrict extends Model
      * The 5 allowed STP district names in uppercase.
      */
     public const ALLOWED_DISTRICTS = [
+        'ROHTAK',
         'FARIDABAD',
+        'PANCHKULA',
         'GURUGRAM',
         'HISAR',
-        'PANIPAT',
-        'ROHTAK',
     ];
 
     /**

@@ -29,6 +29,11 @@ class EwsZoneDistrictMappingSeeder extends Seeder
             'HISAR' => 'HSR',
         ];
 
+        // Clean up any extra entries not in the 5 official TCP Zones
+        DB::table('ews_stp_districts')
+            ->whereNotIn('name', array_keys($zones))
+            ->delete();
+
         $zoneModelMap = [];
         foreach ($zones as $zoneName => $code) {
             $zone = EwsStpDistrict::updateOrCreate(
