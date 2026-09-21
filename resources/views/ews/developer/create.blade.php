@@ -694,7 +694,7 @@
             townSelect.innerHTML = '<option value="" disabled selected>Loading towns...</option>';
             $(townSelect).trigger('change.select2');
             
-            fetch(`/ews/developer/towns?district_id=${districtId}`)
+            fetch(`{{ route('ews.developer.towns') }}?district_id=${districtId}`)
                 .then(res => res.json())
                 .then(data => {
                     townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
@@ -806,7 +806,7 @@
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
             $(projectSelect).trigger('change.select2');
             
-            fetch(`/ews/developer/projects?district_id=${districtId}`)
+            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}`)
                 .then(res => res.json())
                 .then(data => {
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
@@ -962,7 +962,7 @@
             blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
             $(blockSelect).trigger('change.select2');
             
-            fetch(`/ews/developer/blocks?project_id=${projectId}`)
+            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}`)
                 .then(res => res.json())
                 .then(data => {
                     blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
