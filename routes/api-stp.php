@@ -44,7 +44,11 @@ Route::middleware(['auth:sanctum', 'role:ews_developer,ews_stp,stp'])->group(fun
     Route::get('/blocks', [StpApiController::class, 'getBlocks']);
     Route::post('/blocks', [StpApiController::class, 'storeBlock']);
 
-    // Allotted Beneficiaries (Card 8 Source)
+    // Possession KPI Stats (Zone, District, or Project scoped)
+    Route::get('/stats', [StpApiController::class, 'getPossessionStats']);
+    Route::get('/possession-stats', [StpApiController::class, 'getPossessionStats']);
+
+    // Allotted Beneficiaries (Zone, District, or Project scoped)
     Route::get('/beneficiaries', [StpApiController::class, 'getBeneficiaries']);
     Route::get('/beneficiaries/{secure_id}', [StpApiController::class, 'getBeneficiaryDetails'])
         ->where('secure_id', '[a-zA-Z0-9]{32}');

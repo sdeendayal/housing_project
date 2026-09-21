@@ -395,67 +395,164 @@ class StpApiController extends Controller
     }
 
     /**
-     * Get Allotted Beneficiaries for a Project (Card 8 Source)
-     * GET /api/stp/beneficiaries?project_id=X
-     * or GET /api/stp/projects/{id}/beneficiaries
+     * Helper to collect project abbreviations based on zone, district, or project filters
+     */
+    private function getFilterProjectAbbrs($zoneDistricts, $districtId = null, $projectId = null): array
+    {
+        if (!empty($projectId)) {
+            $project = EwsProject::find($projectId);
+            if (!$project) return [];
+            $abbr = $project->project_abbr ?: DB::table('ews_flat_abbreviations')->where('project_name', $project->name)->value('project_abbr');
+            return $abbr ? [$abbr] : [];
+        }
+
+        if (!empty($districtId)) {
+            $projects = EwsProject::where('district_id', $districtId)->get();
+        } else {
+            $districtIds = collect($zoneDistricts)->pluck('id')->filter()->toArray();
+            if (empty($districtIds)) {
+                $projects = EwsProject::all();
+            } else {
+                $projects = EwsProject::whereIn('district_id', $districtIds)->get();
+            }
+        }
+
+        $abbrs = [];
+        foreach ($projects as $p) {
+            $abbr = $p->project_abbr ?: DB::table('ews_flat_abbreviations')->where('project_name', $p->name)->value('project_abbr');
+            if ($abbr) {
+                $abbrs[] = $abbr;
+            }
+        }
+        return array_values(array_unique($abbrs));
+    }
+
+    /**
+     * Get Possession KPI Stats (Zone, District, or Project scoped)
+     * GET /api/stp/possession-stats?district_id=X&project_id=Y
+     * GET /api/stp/stats
+     */
+    public function getPossessionStats(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $zoneData = $this->resolveStpZone($user);
+        $districtId = $request->query('district_id');
+        $projectId = $request->query('project_id');
+
+        $abbrs = $this->getFilterProjectAbbrs($zoneData['districts'], $districtId, $projectId);
+
+        $stats = [
+            'total_allotted' => 0,
+            'possession_given' => 0,
+            'possession_pending' => 0,
+        ];
+
+        if (!empty($abbrs)) {
+            $baseQuery = DB::table('ews_allotted_8')->where(function ($q) use ($abbrs) {
+                foreach ($abbrs as $a) {
+                    $q->orWhere('flat_no', 'LIKE', "%-{$a}-%");
+                }
+            });
+
+            $stats['total_allotted'] = (clone $baseQuery)->count();
+            $stats['possession_given'] = (clone $baseQuery)->where(function ($q) {
+                $q->where('is_possession_given', 1)->orWhere('possession_status', 'GIVEN');
+            })->count();
+            $stats['possession_pending'] = max(0, $stats['total_allotted'] - $stats['possession_given']);
+        }
+
+        // Scope description
+        $scopeName = "All " . $zoneData['zone_name'] . " Projects";
+        $projectAbbr = null;
+        if (!empty($projectId)) {
+            $p = EwsProject::find($projectId);
+            if ($p) {
+                $projectAbbr = $abbrs[0] ?? null;
+                $scopeName = $p->name . ($projectAbbr ? " [{$projectAbbr}]" : '');
+            }
+        } elseif (!empty($districtId)) {
+            $d = DB::table('ews_districts')->find($districtId);
+            if ($d) {
+                $scopeName = "All Projects in " . strtoupper($d->name);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'zone_id' => $zoneData['zone_id'],
+            'zone_name' => $zoneData['zone_name'],
+            'district_id' => $districtId ? (int)$districtId : null,
+            'project_id' => $projectId ? (int)$projectId : null,
+            'project_abbr' => $projectAbbr,
+            'scope_name' => $scopeName,
+            'total_allotted' => $stats['total_allotted'],
+            'possession_given' => $stats['possession_given'],
+            'possession_pending' => $stats['possession_pending'],
+            'stats' => $stats,
+        ]);
+    }
+
+    /**
+     * Get Allotted Beneficiaries (Zone, District, or Project scoped)
+     * GET /api/stp/beneficiaries?district_id=X&project_id=Y&block=Z
+     * GET /api/stp/projects/{id}/beneficiaries
      */
     public function getBeneficiaries(Request $request, $projectId = null): JsonResponse
     {
+        $user = $request->user();
+        $zoneData = $this->resolveStpZone($user);
+        $districtId = $request->query('district_id');
         $projectId = $projectId ?: $request->query('project_id');
 
-        if (!$projectId) {
+        $abbrs = $this->getFilterProjectAbbrs($zoneData['districts'], $districtId, $projectId);
+
+        if (empty($abbrs)) {
             return response()->json([
-                'success' => false,
-                'message' => 'project_id parameter is required.',
-            ], 422);
+                'success' => true,
+                'scope_name' => 'No Projects Found',
+                'stats' => [
+                    'total_allotted' => 0,
+                    'possession_given' => 0,
+                    'possession_pending' => 0,
+                ],
+                'total_allotted' => 0,
+                'possession_given' => 0,
+                'possession_pending' => 0,
+                'pagination' => [
+                    'total' => 0,
+                    'per_page' => 20,
+                    'current_page' => 1,
+                    'last_page' => 1,
+                ],
+                'beneficiaries' => [],
+            ]);
         }
 
-        $project = EwsProject::find($projectId);
-        if (!$project) {
-            return response()->json([
-                'success' => false,
-                'message' => "Project with ID {$projectId} not found.",
-            ], 404);
-        }
-
-        $projectAbbr = $project->project_abbr;
-        if (!$projectAbbr) {
-            $projectAbbr = DB::table('ews_flat_abbreviations')
-                ->where('project_name', $project->name)
-                ->value('project_abbr');
-        }
-
-        if (!$projectAbbr) {
-            return response()->json([
-                'success' => false,
-                'message' => "No abbreviation mapping found for project '{$project->name}'.",
-            ], 404);
-        }
-
-        // Query ews_allotted_8 (Source table for Card 8 4,211 allotted beneficiaries)
+        // Query ews_allotted_8
         $query = DB::table('ews_allotted_8')
-            ->where('flat_no', 'LIKE', "%-{$projectAbbr}-%");
+            ->where(function ($q) use ($abbrs) {
+                foreach ($abbrs as $a) {
+                    $q->orWhere('flat_no', 'LIKE', "%-{$a}-%");
+                }
+            });
 
         // Filter by block if requested
         $block = $request->query('block') ?: $request->query('block_name');
         if ($block) {
             $filterBlock = trim($block);
-            $projectHasThisBlock = DB::table('ews_flat_abbreviations')
-                ->where('project_abbr', $projectAbbr)
-                ->where(function($q) use ($filterBlock) {
-                    $q->where('block_tower', $filterBlock)
-                      ->orWhere('block_abbr', $filterBlock);
-                })
-                ->exists();
+            $projectsWithThisBlock = DB::table('ews_flat_abbreviations')
+                ->where('block_tower', $filterBlock)
+                ->orWhere('block_abbr', $filterBlock)
+                ->pluck('project_abbr')
+                ->unique()
+                ->toArray();
 
-            if ($projectHasThisBlock) {
-                $query->where(function($q) use ($filterBlock) {
-                    $q->where('flat_no', 'LIKE', "%-{$filterBlock}-%")
-                      ->orWhereRaw('1 = 1');
-                });
-            } else {
-                $query->where('flat_no', 'LIKE', "%-{$filterBlock}-%");
-            }
+            $query->where(function ($q) use ($filterBlock, $projectsWithThisBlock) {
+                $q->where('flat_no', 'LIKE', "%-{$filterBlock}-%");
+                foreach ($projectsWithThisBlock as $pAbbr) {
+                    $q->orWhere('flat_no', 'LIKE', "%-{$pAbbr}-%");
+                }
+            });
         }
 
         // Filter by possession status (GIVEN / PENDING)
@@ -497,7 +594,7 @@ class StpApiController extends Controller
             }
         }
 
-        // Search query (application number, name, flat number, mobile)
+        // Search query (application number, name, flat number, mobile, secure_id)
         $search = trim($request->query('search', ''));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -509,7 +606,31 @@ class StpApiController extends Controller
             });
         }
 
-        $perPage = $request->query('per_page', 50);
+        // Compute overall possession stats for the active scope (Zone, District, or Project)
+        $baseScopeQuery = DB::table('ews_allotted_8')
+            ->where(function ($q) use ($abbrs) {
+                foreach ($abbrs as $a) {
+                    $q->orWhere('flat_no', 'LIKE', "%-{$a}-%");
+                }
+            });
+        if ($block) {
+            $filterBlock = trim($block);
+            $baseScopeQuery->where('flat_no', 'LIKE', "%-{$filterBlock}-%");
+        }
+
+        $totalAllotted = (clone $baseScopeQuery)->count();
+        $possessionGiven = (clone $baseScopeQuery)->where(function ($q) {
+            $q->where('is_possession_given', 1)->orWhere('possession_status', 'GIVEN');
+        })->count();
+        $possessionPending = max(0, $totalAllotted - $possessionGiven);
+
+        $stats = [
+            'total_allotted' => $totalAllotted,
+            'possession_given' => $possessionGiven,
+            'possession_pending' => $possessionPending,
+        ];
+
+        $perPage = $request->query('per_page', 20);
         $totalCount = (clone $query)->count();
 
         if (strtolower((string)$perPage) === 'all') {
@@ -532,19 +653,20 @@ class StpApiController extends Controller
             ];
         }
 
-        // Preload default project block if flat_no doesn't have an embedded block
-        $defaultProjectBlock = DB::table('ews_flat_abbreviations')
-            ->where('project_abbr', $projectAbbr)
+        // Preload default blocks
+        $projectDefaultBlocks = DB::table('ews_flat_abbreviations')
             ->whereNotNull('block_tower')
-            ->value('block_tower');
+            ->select('project_abbr', 'block_tower')
+            ->distinct()
+            ->pluck('block_tower', 'project_abbr')
+            ->toArray();
 
         // Format items matching mobile app list requirement
-        $formatted = collect($beneficiaries)->map(function ($item, $index) use ($pagination, $defaultProjectBlock) {
+        $formatted = collect($beneficiaries)->map(function ($item, $index) use ($pagination, $projectDefaultBlocks) {
             $sNo = (($pagination['current_page'] - 1) * $pagination['per_page']) + ($index + 1);
             
-            // Parse flat number segments
-            // Example formats: SNP-PIPD-4F-405, SNP-IRWO-2F-BO-207, SNP-PDPL-GF-05
             $flatParts = explode('-', $item->flat_no ?? '');
+            $projAbbr = $flatParts[1] ?? '';
             $floor = $flatParts[2] ?? null;
             if (count($flatParts) >= 6) {
                 $block = $flatParts[3] . ($flatParts[4] !== '' ? '-' . $flatParts[4] : '');
@@ -553,7 +675,7 @@ class StpApiController extends Controller
                 $block = $flatParts[3];
                 $unit = $flatParts[4];
             } elseif (count($flatParts) == 4) {
-                $block = $defaultProjectBlock ?? null;
+                $block = $projectDefaultBlocks[$projAbbr] ?? null;
                 $unit = $flatParts[3];
             } else {
                 $block = null;
@@ -562,7 +684,7 @@ class StpApiController extends Controller
 
             $breakdown = [
                 'town_code' => $flatParts[0] ?? null,
-                'project_abbr' => $flatParts[1] ?? null,
+                'project_abbr' => $projAbbr,
                 'floor' => $floor,
                 'block' => $block,
                 'flat_unit' => $unit,
@@ -574,6 +696,7 @@ class StpApiController extends Controller
                 'secure_id' => $item->secure_id ?? null,
                 'application_number' => $item->application_number,
                 'full_name' => $item->full_name,
+                'father_husband_name' => $item->father_husband_name ?? null,
                 'district' => $item->dist_name,
                 'mobile_number' => $item->mobile_number,
                 'flat_number' => $item->flat_no,
@@ -588,36 +711,35 @@ class StpApiController extends Controller
             ];
         });
 
-        // Compute project overall possession stats
-        $baseProjectQuery = DB::table('ews_allotted_8')
-            ->where('flat_no', 'LIKE', "%-{$projectAbbr}-%");
-        if ($block) {
-            $baseProjectQuery->where('flat_no', 'LIKE', "%-{$block}-%");
+        // Determine scope display name
+        $scopeName = "All " . $zoneData['zone_name'] . " Projects";
+        $projectData = null;
+        if (!empty($projectId)) {
+            $p = EwsProject::find($projectId);
+            if ($p) {
+                $projectData = [
+                    'id' => $p->id,
+                    'name' => $p->name,
+                    'project_abbr' => $abbrs[0] ?? null,
+                    'district_name' => $p->district_name,
+                ];
+                $scopeName = $p->name . (($abbrs[0] ?? null) ? " [{$abbrs[0]}]" : '');
+            }
+        } elseif (!empty($districtId)) {
+            $d = DB::table('ews_districts')->find($districtId);
+            if ($d) {
+                $scopeName = "All Projects in " . strtoupper($d->name);
+            }
         }
-        $projectTotalAllotted = (clone $baseProjectQuery)->count();
-        $projectPossessionGiven = (clone $baseProjectQuery)->where(function ($q) {
-            $q->where('is_possession_given', 1)->orWhere('possession_status', 'GIVEN');
-        })->count();
-        $projectPossessionPending = max(0, $projectTotalAllotted - $projectPossessionGiven);
-
-        $stats = [
-            'total_allotted' => $projectTotalAllotted,
-            'possession_given' => $projectPossessionGiven,
-            'possession_pending' => $projectPossessionPending,
-        ];
 
         return response()->json([
             'success' => true,
-            'project' => [
-                'id' => $project->id,
-                'name' => $project->name,
-                'project_abbr' => $projectAbbr,
-                'district_name' => $project->district_name,
-            ],
+            'scope_name' => $scopeName,
+            'project' => $projectData,
             'stats' => $stats,
-            'total_allotted' => $projectTotalAllotted,
-            'possession_given' => $projectPossessionGiven,
-            'possession_pending' => $projectPossessionPending,
+            'total_allotted' => $totalAllotted,
+            'possession_given' => $possessionGiven,
+            'possession_pending' => $possessionPending,
             'pagination' => $pagination,
             'beneficiaries' => $formatted,
         ]);
