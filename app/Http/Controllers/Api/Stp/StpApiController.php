@@ -142,22 +142,41 @@ class StpApiController extends Controller
     public function getProjects(Request $request): JsonResponse
     {
         $districtId = $request->query('district_id');
+        $townId = $request->query('town_id');
+        $zoneId = $request->query('zone_id');
 
-        if (!$districtId) {
+        if (!$districtId && !$townId && !$zoneId) {
             return response()->json([
                 'success' => false,
-                'message' => 'district_id parameter is required.',
+                'message' => 'district_id or town_id parameter is required.',
             ], 422);
         }
 
-        // District-wise Project Master: Always returns all projects registered for this district
-        $projects = EwsProject::where('district_id', $districtId)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'district_id', 'town_id', 'town_name', 'name', 'project_abbr']);
+        $query = EwsProject::query();
+
+        if ($zoneId) {
+            $query->where('zone_id', $zoneId);
+        }
+
+        if ($districtId) {
+            $query->where('district_id', $districtId);
+        }
+
+        if ($townId) {
+            $query->where(function ($q) use ($townId) {
+                $q->where('town_id', $townId)
+                  ->orWhereNull('town_id');
+            });
+        }
+
+        $projects = $query->orderBy('name', 'asc')
+            ->get(['id', 'district_id', 'zone_id', 'town_id', 'town_name', 'name', 'project_abbr']);
 
         return response()->json([
             'success' => true,
-            'district_id' => (int)$districtId,
+            'district_id' => $districtId ? (int)$districtId : null,
+            'town_id' => $townId ? (int)$townId : null,
+            'zone_id' => $zoneId ? (int)$zoneId : null,
             'total_projects' => $projects->count(),
             'projects' => $projects,
         ]);
@@ -170,21 +189,47 @@ class StpApiController extends Controller
     public function getBlocks(Request $request): JsonResponse
     {
         $projectId = $request->query('project_id');
+        $townId = $request->query('town_id');
+        $districtId = $request->query('district_id');
+        $zoneId = $request->query('zone_id');
 
-        if (!$projectId) {
+        if (!$projectId && !$townId && !$districtId && !$zoneId) {
             return response()->json([
                 'success' => false,
-                'message' => 'project_id parameter is required.',
+                'message' => 'project_id, town_id, or district_id parameter is required.',
             ], 422);
         }
 
-        $blocks = EwsBlock::where('project_id', $projectId)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'project_id', 'name']);
+        $query = EwsBlock::query();
+
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
+        if ($townId) {
+            $query->where(function ($q) use ($townId) {
+                $q->where('town_id', $townId)->orWhereNull('town_id');
+            });
+        }
+        if ($districtId) {
+            $query->where(function ($q) use ($districtId) {
+                $q->where('district_id', $districtId)->orWhereNull('district_id');
+            });
+        }
+        if ($zoneId) {
+            $query->where(function ($q) use ($zoneId) {
+                $q->where('zone_id', $zoneId)->orWhereNull('zone_id');
+            });
+        }
+
+        $blocks = $query->orderBy('name', 'asc')
+            ->get(['id', 'project_id', 'project_name', 'town_id', 'district_id', 'zone_id', 'name']);
 
         return response()->json([
             'success' => true,
-            'project_id' => (int)$projectId,
+            'project_id' => $projectId ? (int)$projectId : null,
+            'town_id' => $townId ? (int)$townId : null,
+            'district_id' => $districtId ? (int)$districtId : null,
+            'zone_id' => $zoneId ? (int)$zoneId : null,
             'total_blocks' => $blocks->count(),
             'blocks' => $blocks,
         ]);
@@ -275,9 +320,18 @@ class StpApiController extends Controller
             ]);
         }
 
+        $project = EwsProject::find($projectId);
+
         $block = EwsBlock::create([
-            'project_id' => $projectId,
-            'name' => $cleanName,
+            'zone_id'       => $project->zone_id ?? null,
+            'zone_name'     => $project->zone_name ?? null,
+            'district_id'   => $project->district_id ?? null,
+            'district_name' => $project->district_name ?? null,
+            'town_id'       => $project->town_id ?? null,
+            'town_name'     => $project->town_name ?? null,
+            'project_id'    => $projectId,
+            'project_name'  => $project->name ?? null,
+            'name'          => $cleanName,
         ]);
 
         return response()->json([

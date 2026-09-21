@@ -749,9 +749,15 @@
                 });
         }
 
-        function fetchProjects(districtId, selectedProjectId = null) {
+        function fetchProjects(districtId, townId = null, selectedProjectId = null) {
             if (!districtId) {
                 updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
+                clearBlocks();
+                return;
+            }
+
+            if (!townId || townId === 'new') {
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
                 clearBlocks();
                 return;
             }
@@ -759,15 +765,20 @@
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
             $(projectSelect).trigger('change.select2');
             
-            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}`)
+            const zoneInput = document.getElementById('zone_id');
+            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
+
+            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}&town_id=${townId}${zoneParam}`)
                 .then(res => res.json())
                 .then(data => {
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
-                    data.forEach(proj => {
-                        const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
-                        const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
-                        projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
-                    });
+                    if (Array.isArray(data) && data.length > 0) {
+                        data.forEach(proj => {
+                            const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
+                            const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
+                            projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
+                        });
+                    }
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
                     updateSelectLock(projectSelect, true, "Choose a project...", false);
@@ -1283,7 +1294,14 @@
             blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
             $(blockSelect).trigger('change.select2');
             
-            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}`)
+            const distId = districtSelect ? districtSelect.value : '';
+            const townId = townSelect ? townSelect.value : '';
+            const zoneInput = document.getElementById('zone_id');
+            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
+            const distParam = distId ? `&district_id=${distId}` : '';
+            const townParam = townId && townId !== 'new' ? `&town_id=${townId}` : '';
+
+            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}${townParam}${distParam}${zoneParam}`)
                 .then(res => res.json())
                 .then(data => {
                     blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
@@ -1355,6 +1373,11 @@
                 saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
             }
 
+            const distId = districtSelect ? districtSelect.value : '';
+            const townId = townSelect ? townSelect.value : '';
+            const zoneInput = document.getElementById('zone_id');
+            const zoneId = zoneInput ? zoneInput.value : '';
+
             fetch('{{ route("ews.developer.blocks.store-ajax") }}', {
                 method: 'POST',
                 headers: {
@@ -1364,6 +1387,9 @@
                 },
                 body: JSON.stringify({
                     project_id: projectId,
+                    town_id: townId,
+                    district_id: distId,
+                    zone_id: zoneId,
                     block_name: blockName
                 })
             })
@@ -1458,11 +1484,11 @@
                 previousTownValue = townVal;
                 const distId = districtSelect ? districtSelect.value : '';
                 updateSelectLock(projectSelect, true, "Choose a project...", false);
-                fetchProjects(distId, projectSelect.value);
+                fetchProjects(distId, townVal, projectSelect.value);
             } else {
                 previousTownValue = '';
                 // Town is not selected -> Keep Step 3 locked (values remain preserved)
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
                 clearBlocks();
                 setFlatInputsLock(true);
             }
@@ -1516,8 +1542,7 @@
             if (distId) {
                 updateSelectLock(townSelect, true, "Choose a town...", true);
                 fetchTowns(distId);
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
-                fetchProjects(distId);
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
             } else {
                 updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
                 updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);

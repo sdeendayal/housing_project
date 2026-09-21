@@ -224,11 +224,9 @@
                                 </label>
                                 <select id="district_id" name="district_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    @if(count($districts) > 1)
-                                        <option value="" disabled {{ old('district_id', $selectedDistrictId ?? '') ? '' : 'selected' }}>Choose a district in {{ $displayZoneName }}...</option>
-                                    @endif
+                                    <option value="" disabled {{ old('district_id') ? '' : 'selected' }}>Choose a district in {{ $displayZoneName }}...</option>
                                     @foreach($districts as $district)
-                                        <option value="{{ $district->id }}" {{ (old('district_id', $selectedDistrictId ?? '') == $district->id) ? 'selected' : '' }}>
+                                        <option value="{{ $district->id }}" {{ (old('district_id') == $district->id) ? 'selected' : '' }}>
                                             {{ strtoupper($district->name) }}
                                         </option>
                                     @endforeach
@@ -948,9 +946,17 @@
             }
         }
 
-        function fetchProjects(districtId, selectedProjectId = null) {
+        function fetchProjects(districtId, townId = null, selectedProjectId = null) {
             if (!districtId) {
                 updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...");
+                clearBlocks();
+                return;
+            }
+
+            if (!townId || townId === 'new') {
+                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                projectSelect.innerHTML = '<option value="" disabled selected>🔒 Step 2: Select Town First...</option>';
+                $(projectSelect).val('').trigger('change.select2');
                 clearBlocks();
                 return;
             }
@@ -958,14 +964,14 @@
             projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
             $(projectSelect).val('').trigger('change.select2');
             
-            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}`)
+            const zoneInput = document.getElementById('zone_id');
+            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
+
+            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}&town_id=${townId}${zoneParam}`)
                 .then(res => res.json())
                 .then(data => {
-                    const hasTown = townSelect && townSelect.value && townSelect.value !== '' && townSelect.value !== 'new';
-                    const placeholder = hasTown ? "Choose a project..." : "🔒 Step 2: Select Town First...";
-
-                    projectSelect.innerHTML = `<option value="" disabled selected>${placeholder}</option>`;
-                    if (Array.isArray(data)) {
+                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
+                    if (Array.isArray(data) && data.length > 0) {
                         data.forEach(proj => {
                             const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
                             const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
@@ -974,11 +980,7 @@
                     }
                     projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
                     
-                    if (hasTown) {
-                        updateSelectLock(projectSelect, true, "Choose a project...");
-                    } else {
-                        updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
-                    }
+                    updateSelectLock(projectSelect, true, "Choose a project...");
                     
                     if (selectedProjectId) {
                         $(projectSelect).val(selectedProjectId).trigger('change');
@@ -990,46 +992,11 @@
                 .catch(err => {
                     console.error('Error fetching projects:', err);
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
+                    updateSelectLock(projectSelect, true, "Choose a project...");
                     $(projectSelect).val('').trigger('change.select2');
                 });
         }
 
-        function fetchBlocks(projectId, selectedBlockId = null) {
-            if (!projectId || projectId === 'new') {
-                return;
-            }
-            
-            blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
-            $(blockSelect).val('').trigger('change.select2');
-            
-            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}`)
-                .then(res => res.json())
-                .then(data => {
-                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
-                    if (Array.isArray(data)) {
-                        data.forEach(blk => {
-                            const isSel = selectedBlockId && selectedBlockId == blk.id ? 'selected' : '';
-                            blockSelect.innerHTML += `<option value="${blk.id}" ${isSel}>${blk.name.toUpperCase()}</option>`;
-                        });
-                    }
-                    blockSelect.innerHTML += '<option value="new">+ Add New Block/Tower</option>';
-                    
-                    updateSelectLock(blockSelect, true, "Choose a block/tower...");
-                    
-                    if (selectedBlockId) {
-                        $(blockSelect).val(selectedBlockId).trigger('change');
-                    } else {
-                        $(blockSelect).val('').trigger('change.select2');
-                        handleBlockChange();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching blocks:', err);
-                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
-                    updateSelectLock(blockSelect, true, "Choose a block/tower...");
-                    $(blockSelect).val('').trigger('change.select2');
-                });
-        }
 
         // Client-Side Fuzzy & Duplicate Similarity Detection Engine
         function normalizeStr(str) {
@@ -1538,7 +1505,14 @@
             blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
             $(blockSelect).trigger('change.select2');
             
-            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}`)
+            const distId = districtSelect ? districtSelect.value : '';
+            const townId = townSelect ? townSelect.value : '';
+            const zoneInput = document.getElementById('zone_id');
+            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
+            const distParam = distId ? `&district_id=${distId}` : '';
+            const townParam = townId && townId !== 'new' ? `&town_id=${townId}` : '';
+
+            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}${townParam}${distParam}${zoneParam}`)
                 .then(res => res.json())
                 .then(data => {
                     blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
@@ -1610,6 +1584,11 @@
                 saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
             }
 
+            const distId = districtSelect ? districtSelect.value : '';
+            const townId = townSelect ? townSelect.value : '';
+            const zoneInput = document.getElementById('zone_id');
+            const zoneId = zoneInput ? zoneInput.value : '';
+
             fetch('{{ route("ews.developer.blocks.store-ajax") }}', {
                 method: 'POST',
                 headers: {
@@ -1619,6 +1598,9 @@
                 },
                 body: JSON.stringify({
                     project_id: projectId,
+                    town_id: townId,
+                    district_id: distId,
+                    zone_id: zoneId,
                     block_name: blockName
                 })
             })
@@ -1711,17 +1693,14 @@
 
             if (townVal && townVal !== '') {
                 previousTownValue = townVal;
-                // UNLOCK Step 3 (Project) ONLY after Step 2 (Town) is selected!
+                // UNLOCK Step 3 (Project) and fetch projects matching District + Town + Zone
                 updateSelectLock(projectSelect, true, "Choose a project...");
-                
-                // If project options are not loaded yet, fetch them for this district
-                if (!projectSelect.options || projectSelect.options.length <= 2) {
-                    fetchProjects(distId);
-                }
+                fetchProjects(distId, townVal, projectSelect.value);
             } else {
                 previousTownValue = '';
                 // LOCK Step 3 (Project) if Town is unselected / empty
                 updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                projectSelect.innerHTML = '<option value="" disabled selected>🔒 Step 2: Select Town First...</option>';
                 $(projectSelect).val('').trigger('change.select2');
                 newProjectContainer.classList.add('hidden');
                 newProjectInput.required = false;
@@ -1786,11 +1765,12 @@
 
                 // Re-lock Step 3 (Project) because Town is reset for the new District!
                 updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...");
+                projectSelect.innerHTML = '<option value="" disabled selected>🔒 Step 2: Select Town First...</option>';
                 $(projectSelect).val('').trigger('change.select2');
-                fetchProjects(distId);
             } else {
                 updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...");
                 updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...");
+                projectSelect.innerHTML = '<option value="" disabled selected>🔒 Step 1: Select District First...</option>';
                 $(projectSelect).val('').trigger('change.select2');
             }
             clearBlocks();
@@ -1850,18 +1830,17 @@
             this.value = this.value.replace(/[^0-9,\s]/g, '');
         });
 
-        // Initial setup on page load - District-wise Project Master
+        // Initial setup on page load - Hierarchical Project Master (Zone + District + Town)
         if (districtSelect && districtSelect.value) {
             updateSelectLock(townSelect, true);
             fetchTowns(districtSelect.value, '{{ old("town_id") }}');
             
-            // Pre-load projects for the district in background
-            fetchProjects(districtSelect.value, '{{ old("project_id") }}');
-
             @if(old('town_id'))
                 updateSelectLock(projectSelect, true, "Choose a project...", false);
+                fetchProjects(districtSelect.value, '{{ old("town_id") }}', '{{ old("project_id") }}');
             @else
                 updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
+                projectSelect.innerHTML = '<option value="" disabled selected>🔒 Step 2: Select Town First...</option>';
             @endif
 
             @if(old('project_id'))
