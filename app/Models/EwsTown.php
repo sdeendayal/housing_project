@@ -13,9 +13,16 @@ class EwsTown extends Model
 
     protected $fillable = [
         'district_id',
+        'zone_id',
+        'zone_name',
         'name',
         'type',
     ];
+
+    public function zone()
+    {
+        return $this->belongsTo(EwsStpDistrict::class, 'zone_id');
+    }
 
     public function district()
     {

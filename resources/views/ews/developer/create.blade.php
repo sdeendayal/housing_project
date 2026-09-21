@@ -240,10 +240,16 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Town -->
                             <div class="space-y-1">
-                                <label for="town_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 2</span>
-                                    <span>Name of Town</span> <span class="text-red-500 ms-0.5">*</span>
-                                </label>
+                                <div class="flex items-center justify-between">
+                                    <label for="town_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 2</span>
+                                        <span>Name of Town</span> <span class="text-red-500 ms-0.5">*</span>
+                                    </label>
+                                    <button type="button" onclick="openAddTownModal()" class="inline-flex items-center gap-1 text-[9.5px] font-bold text-sky-600 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 hover:border-sky-300 px-2 py-0.5 rounded shadow-2xs transition-all cursor-pointer">
+                                        <i class="bi bi-plus-circle-fill text-[10px]"></i>
+                                        <span>Add Town</span>
+                                    </button>
+                                </div>
                                 <select id="town_id" name="town_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled selected>Choose a town...</option>
@@ -252,6 +258,7 @@
                                             {{ strtoupper($town->name) }}{{ !empty($town->type) ? ' (' . strtoupper($town->type) . ')' : '' }}
                                         </option>
                                     @endforeach
+                                    <option value="new">+ Add New Town</option>
                                 </select>
                             </div>
 
@@ -484,6 +491,86 @@
         </div>
     </div>
 
+    <!-- Modal: Add New Town Popup -->
+    <div id="modal_add_town" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300" onclick="if(event.target === this) closeAddTownModal()">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal_add_town_content">
+            <!-- Modal Header -->
+            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-sky-50 via-white to-slate-50">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shadow-xs shrink-0">
+                        <i class="bi bi-geo-alt-fill text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Add New Town</h3>
+                        <p class="text-[10px] text-slate-500 font-medium" id="modal_town_context_info">
+                            District: <span class="font-bold text-slate-700" id="modal_town_dist_name">-</span> &bull; Zone: <span class="font-bold text-sky-700" id="modal_town_zone_name">-</span>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeAddTownModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all cursor-pointer">
+                    <i class="bi bi-x-lg text-xs"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-5 space-y-3.5">
+                <!-- Town Name Input -->
+                <div class="space-y-1">
+                    <label for="modal_new_town_name" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                        Town Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="modal_new_town_name" placeholder="Enter town name (e.g. Kharkhoda, Samalkha)"
+                        class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 focus:bg-white rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none transition-all">
+                </div>
+
+                <!-- Town Type (Municipality) Selection -->
+                <div class="space-y-1">
+                    <label for="modal_new_town_type" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                        Town Type (Municipality) <span class="text-red-500">*</span>
+                    </label>
+                    <select id="modal_new_town_type" onchange="toggleCustomTownTypeModal(this.value)"
+                        class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 focus:bg-white rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none transition-all cursor-pointer">
+                        <option value="" disabled selected>Select Municipality Type *</option>
+                        @if(isset($townTypes))
+                            @foreach($townTypes as $tType)
+                                <option value="{{ $tType }}">{{ $tType }}</option>
+                            @endforeach
+                        @endif
+                        <option value="other">+ Add New Type / Other</option>
+                    </select>
+                </div>
+
+                <!-- Custom Municipality Type (if 'other') -->
+                <div id="modal_custom_town_type_container" class="hidden space-y-1 bg-sky-50/60 p-2.5 rounded-lg border border-sky-200">
+                    <label for="modal_custom_town_type" class="block text-[9px] font-black uppercase text-sky-800 tracking-wider">
+                        Specify Municipality Type <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="modal_custom_town_type" placeholder="e.g. Nagar Panchayat / Special Area"
+                        class="w-full bg-white border border-sky-400 focus:border-sky-600 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:outline-none">
+                </div>
+
+                <!-- Auto Zone & District Notice -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5">
+                    <i class="bi bi-info-circle-fill text-sky-600 text-sm mt-0.5 shrink-0"></i>
+                    <div class="text-[10px] text-slate-600 leading-relaxed">
+                        This town will be linked to <strong class="text-slate-800 font-bold" id="modal_notice_dist">-</strong> and assigned to <strong class="text-sky-700 font-bold" id="modal_notice_zone">-</strong> in the master database.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeAddTownModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" id="modal_btn_save_town" onclick="saveNewTownAjax()" class="px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase rounded-lg text-[10px] tracking-wider shadow-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                    <i class="bi bi-plus-circle-fill text-xs"></i>
+                    <span>Save Town</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         function switchMode(mode, isInitial = false) {
             const bulkModeInput = document.getElementById('bulk_mode');
@@ -524,8 +611,7 @@
 
                     // Clear shared select2/text inputs
                     $('#town_id').val('').trigger('change.select2');
-                    document.getElementById('new_town_name').value = '';
-                    document.getElementById('new_town_container').classList.add('hidden');
+                    if (document.getElementById('modal_new_town_name')) document.getElementById('modal_new_town_name').value = '';
 
                     $('#project_id').val('').trigger('change.select2');
                     document.getElementById('new_project_name').value = '';
@@ -566,8 +652,7 @@
 
                     // Clear shared select2/text inputs
                     $('#town_id').val('').trigger('change.select2');
-                    document.getElementById('new_town_name').value = '';
-                    document.getElementById('new_town_container').classList.add('hidden');
+                    if (document.getElementById('modal_new_town_name')) document.getElementById('modal_new_town_name').value = '';
 
                     $('#project_id').val('').trigger('change.select2');
                     document.getElementById('new_project_name').value = '';
@@ -640,13 +725,13 @@
             $('#town_id').select2();
             $('#project_id').select2();
             $('#block_id').select2();
-            $('#town_id').on('select2:select select2:unselect', function() {
+            $('#town_id').on('select2:select select2:unselect change', function() {
                 townSelect.dispatchEvent(new Event('change'));
             });
-            $('#project_id').on('select2:select select2:unselect', function() {
+            $('#project_id').on('select2:select select2:unselect change', function() {
                 projectSelect.dispatchEvent(new Event('change'));
             });
-            $('#block_id').on('select2:select select2:unselect', function() {
+            $('#block_id').on('select2:select select2:unselect change', function() {
                 blockSelect.dispatchEvent(new Event('change'));
             });
 
@@ -703,6 +788,7 @@
                         const typeBadge = t.type ? ` (${t.type.toUpperCase()})` : '';
                         townSelect.innerHTML += `<option value="${t.id}" ${isSel}>${t.name.toUpperCase()}${typeBadge}</option>`;
                     });
+                    townSelect.innerHTML += '<option value="new">+ Add New Town</option>';
                     
                     updateSelectLock(townSelect, true);
                     
@@ -715,7 +801,7 @@
                 })
                 .catch(err => {
                     console.error('Error fetching towns:', err);
-                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
+                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
                     $(townSelect).trigger('change.select2');
                 });
         }
@@ -837,6 +923,251 @@
                     projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
                     $(projectSelect).trigger('change.select2');
                 });
+        }
+
+        let previousTownValue = '';
+
+        function openAddTownModal() {
+            const distId = districtSelect ? districtSelect.value : '';
+            const distText = districtSelect && districtSelect.selectedIndex >= 0 && districtSelect.options[districtSelect.selectedIndex] ? 
+                districtSelect.options[districtSelect.selectedIndex].text.trim() : '';
+            const zoneName = (document.getElementById('zone_name') ? document.getElementById('zone_name').value : '') || 'Zone';
+
+            if (!distId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'District Required',
+                    text: 'Please select a District first before adding a Town.',
+                    confirmButtonColor: '#0284c7'
+                });
+                if (townSelect && townSelect.value === 'new') {
+                    townSelect.value = previousTownValue || '';
+                    $(townSelect).val(previousTownValue || '').trigger('change.select2');
+                }
+                return;
+            }
+
+            // Populate context labels
+            const distSpan = document.getElementById('modal_town_dist_name');
+            const zoneSpan = document.getElementById('modal_town_zone_name');
+            const noticeDist = document.getElementById('modal_notice_dist');
+            const noticeZone = document.getElementById('modal_notice_zone');
+            if (distSpan) distSpan.textContent = distText;
+            if (zoneSpan) zoneSpan.textContent = zoneName;
+            if (noticeDist) noticeDist.textContent = distText;
+            if (noticeZone) noticeZone.textContent = zoneName;
+
+            // Reset inputs
+            const townInput = document.getElementById('modal_new_town_name');
+            const typeSelect = document.getElementById('modal_new_town_type');
+            const customTypeInput = document.getElementById('modal_custom_town_type');
+            if (townInput) townInput.value = '';
+            if (typeSelect) typeSelect.value = '';
+            if (customTypeInput) customTypeInput.value = '';
+            toggleCustomTownTypeModal('');
+
+            const modal = document.getElementById('modal_add_town');
+            const content = document.getElementById('modal_add_town_content');
+            if (modal && content) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                setTimeout(() => {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                    if (townInput) townInput.focus();
+                }, 20);
+            }
+        }
+
+        function closeAddTownModal() {
+            const modal = document.getElementById('modal_add_town');
+            const content = document.getElementById('modal_add_town_content');
+            if (modal && content) {
+                content.classList.remove('scale-100', 'opacity-100');
+                content.classList.add('scale-95', 'opacity-0');
+                setTimeout(() => {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }, 200);
+            }
+
+            // If townSelect is on 'new', reset to previous value
+            if (townSelect && townSelect.value === 'new') {
+                townSelect.value = previousTownValue || '';
+                $(townSelect).val(previousTownValue || '').trigger('change.select2');
+            }
+        }
+
+        function toggleCustomTownTypeModal(val) {
+            const customContainer = document.getElementById('modal_custom_town_type_container');
+            const customInput = document.getElementById('modal_custom_town_type');
+            if (val === 'other') {
+                if (customContainer) customContainer.classList.remove('hidden');
+                if (customInput) {
+                    customInput.required = true;
+                    customInput.focus();
+                }
+            } else {
+                if (customContainer) customContainer.classList.add('hidden');
+                if (customInput) {
+                    customInput.required = false;
+                    customInput.value = '';
+                }
+            }
+        }
+
+        function saveNewTownAjax() {
+            const districtId = districtSelect ? districtSelect.value : '';
+            const townInput = document.getElementById('modal_new_town_name');
+            const townName = townInput ? townInput.value.trim() : '';
+            const townTypeSelect = document.getElementById('modal_new_town_type');
+            let townType = townTypeSelect ? townTypeSelect.value : '';
+
+            if (!districtId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'District Required',
+                    text: 'Please select a district first before creating a town.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            if (!townName) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Town Name Required',
+                    text: 'Please enter the new town name.',
+                    confirmButtonColor: '#0284c7'
+                });
+                if (townInput) townInput.focus();
+                return;
+            }
+
+            if (townType === 'other') {
+                const customTypeInput = document.getElementById('modal_custom_town_type');
+                townType = customTypeInput ? customTypeInput.value.trim() : '';
+                if (!townType) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Type Required',
+                        text: 'Please enter the custom municipality type.',
+                        confirmButtonColor: '#0284c7'
+                    });
+                    if (customTypeInput) customTypeInput.focus();
+                    return;
+                }
+            } else if (!townType) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Type Required',
+                    text: 'Please select a Municipality / Town Type.',
+                    confirmButtonColor: '#0284c7'
+                });
+                if (townTypeSelect) townTypeSelect.focus();
+                return;
+            }
+
+            const saveBtn = document.getElementById('modal_btn_save_town');
+            if (saveBtn) {
+                saveBtn.disabled = true;
+                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> <span>Saving...</span>';
+            }
+
+            fetch('{{ route("ews.developer.towns.store-ajax") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    district_id: districtId,
+                    town_name: townName,
+                    town_type: townType
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
+                }
+
+                if (data.success && data.town) {
+                    let opt = Array.from(townSelect.options).find(o => o.value == data.town.id);
+                    const typeBadge = data.town.type ? ` (${data.town.type.toUpperCase()})` : '';
+                    if (!opt) {
+                        const newOption = document.createElement('option');
+                        newOption.value = data.town.id;
+                        newOption.textContent = `${data.town.name.toUpperCase()}${typeBadge}`;
+                        
+                        const addNewOpt = Array.from(townSelect.options).find(o => o.value === 'new');
+                        if (addNewOpt) {
+                            townSelect.insertBefore(newOption, addNewOpt);
+                        } else {
+                            townSelect.appendChild(newOption);
+                        }
+                    }
+
+                    // Add new type to modal type dropdown if it was custom
+                    if (data.town.type && townTypeSelect) {
+                        const existsType = Array.from(townTypeSelect.options).some(o => o.value.toLowerCase() === data.town.type.toLowerCase());
+                        if (!existsType) {
+                            const newTypeOpt = document.createElement('option');
+                            newTypeOpt.value = data.town.type;
+                            newTypeOpt.textContent = data.town.type;
+                            const otherOpt = Array.from(townTypeSelect.options).find(o => o.value === 'other');
+                            if (otherOpt) {
+                                townTypeSelect.insertBefore(newTypeOpt, otherOpt);
+                            } else {
+                                townTypeSelect.appendChild(newTypeOpt);
+                            }
+                        }
+                    }
+
+                    previousTownValue = data.town.id;
+                    townSelect.value = data.town.id;
+                    $(townSelect).val(data.town.id).trigger('change');
+                    townSelect.dispatchEvent(new Event('change'));
+                    
+                    closeAddTownModal();
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: data.message || `Town '${data.town.name}' saved successfully!`
+                    });
+
+                    handleTownChange();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Could not save town.',
+                        confirmButtonColor: '#ef4444'
+                    });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Server Error',
+                    text: 'An error occurred while saving the town.',
+                    confirmButtonColor: '#ef4444'
+                });
+            });
         }
 
         function saveNewProjectAjax() {
@@ -1107,14 +1438,19 @@
         function handleTownChange() {
             const townVal = townSelect ? townSelect.value : '';
 
+            if (townVal === 'new') {
+                openAddTownModal();
+                return;
+            }
+
             // Step 3 (Project) unlocks ONLY when Town (Step 2) is selected
             if (townVal && townVal !== '') {
+                previousTownValue = townVal;
                 const distId = districtSelect ? districtSelect.value : '';
                 updateSelectLock(projectSelect, true, "Choose a project...", false);
-                if (!projectSelect.options || projectSelect.options.length <= 2) {
-                    fetchProjects(distId, projectSelect.value);
-                }
+                fetchProjects(distId, projectSelect.value);
             } else {
+                previousTownValue = '';
                 // Town is not selected -> Keep Step 3 locked (values remain preserved)
                 updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", false);
                 clearBlocks();
@@ -1246,12 +1582,12 @@
                 return;
             }
 
-            if (!townVal) {
+            if (!townVal || townVal === 'new') {
                 e.preventDefault();
                 Swal.fire({
                     icon: 'warning',
                     title: 'Step 2 Incomplete',
-                    text: 'Please select a Town from the list.',
+                    text: 'Please select or add a Town from the list.',
                     confirmButtonColor: '#0284c7'
                 });
                 return;

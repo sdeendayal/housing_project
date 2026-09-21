@@ -154,6 +154,42 @@ class EwsTownSeeder extends Seeder
             ],
         ];
 
+        $zoneMapping = [
+            // Rohtak Zone
+            'SONIPAT' => 'ROHTAK',
+            'ROHTAK' => 'ROHTAK',
+            'PANIPAT' => 'ROHTAK',
+            'JHAJJAR' => 'ROHTAK',
+
+            // Faridabad Zone
+            'FARIDABAD' => 'FARIDABAD',
+            'NUH' => 'FARIDABAD',
+            'MEWAT' => 'FARIDABAD',
+            'PALWAL' => 'FARIDABAD',
+
+            // Panchkula Zone
+            'AMBALA' => 'PANCHKULA',
+            'YAMUNANAGAR' => 'PANCHKULA',
+            'PANCHKULA' => 'PANCHKULA',
+            'KAITHAL' => 'PANCHKULA',
+            'KARNAL' => 'PANCHKULA',
+            'KURUKSHETRA' => 'PANCHKULA',
+
+            // Gurugram Zone
+            'GURUGRAM' => 'GURUGRAM',
+            'REWARI' => 'GURUGRAM',
+            'MAHENDRAGARH' => 'GURUGRAM',
+
+            // Hisar Zone
+            'HISAR' => 'HISAR',
+            'SIRSA' => 'HISAR',
+            'JIND' => 'HISAR',
+            'FATEHABAD' => 'HISAR',
+            'BHIWANI' => 'HISAR',
+            'CHARKHI-DADRI' => 'HISAR',
+            'CHARKHI DADRI' => 'HISAR',
+        ];
+
         $seededCount = 0;
         foreach ($municipalities as $districtKey => $townsList) {
             $district = DB::table('ews_districts')
@@ -167,6 +203,24 @@ class EwsTownSeeder extends Seeder
                 continue;
             }
 
+            // Resolve Zone from ews_stp_districts
+            $zone = null;
+            if (!empty($district->zone_id)) {
+                $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+            }
+            if (!$zone) {
+                $mappedZoneName = $zoneMapping[$districtKey] ?? null;
+                if ($mappedZoneName) {
+                    $zone = DB::table('ews_stp_districts')->where('name', $mappedZoneName)->first();
+                    if ($zone && empty($district->zone_id)) {
+                        DB::table('ews_districts')->where('id', $district->id)->update(['zone_id' => $zone->id]);
+                    }
+                }
+            }
+
+            $zoneId = $zone ? $zone->id : null;
+            $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : null;
+
             foreach ($townsList as $town) {
                 EwsTown::updateOrCreate(
                     [
@@ -175,6 +229,8 @@ class EwsTownSeeder extends Seeder
                     ],
                     [
                         'district_id' => $district->id,
+                        'zone_id'     => $zoneId,
+                        'zone_name'   => $zoneName,
                         'name'        => $town['name'],
                         'type'        => $town['type'],
                     ]
@@ -183,6 +239,32 @@ class EwsTownSeeder extends Seeder
             }
         }
 
-        $this->command->info("EwsTownSeeder completed: {$seededCount} municipalities successfully seeded across 23 districts.");
+        // Backfill any existing towns in ews_towns (e.g. manually added ones) missing zone_id
+        $unlinkedTowns = EwsTown::whereNull('zone_id')->get();
+        foreach ($unlinkedTowns as $unlinkedTown) {
+            $dist = DB::table('ews_districts')->where('id', $unlinkedTown->district_id)->first();
+            if ($dist) {
+                $z = null;
+                if (!empty($dist->zone_id)) {
+                    $z = DB::table('ews_stp_districts')->where('id', $dist->zone_id)->first();
+                }
+                if (!$z && !empty($dist->name)) {
+                    $normDist = strtoupper(trim(str_replace('-', ' ', $dist->name)));
+                    $mappedZ = $zoneMapping[$normDist] ?? ($zoneMapping[str_replace(' ', '-', $normDist)] ?? null);
+                    if ($mappedZ) {
+                        $z = DB::table('ews_stp_districts')->where('name', $mappedZ)->first();
+                    }
+                }
+                if ($z) {
+                    $zName = str_contains(strtoupper($z->name), 'ZONE') ? strtoupper($z->name) : strtoupper($z->name) . ' ZONE';
+                    $unlinkedTown->update([
+                        'zone_id'   => $z->id,
+                        'zone_name' => $zName,
+                    ]);
+                }
+            }
+        }
+
+        $this->command->info("EwsTownSeeder completed: {$seededCount} municipalities successfully seeded across 23 districts with zone_id and zone_name.");
     }
 }

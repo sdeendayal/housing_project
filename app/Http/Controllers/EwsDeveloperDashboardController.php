@@ -275,9 +275,13 @@ class EwsDeveloperDashboardController extends Controller
         if ($selectedDistrictId) {
             $towns = EwsTown::where('district_id', $selectedDistrictId)->orderBy('name', 'asc')->get();
         }
+        $townTypes = EwsTown::whereNotNull('type')->where('type', '!=', '')->distinct()->pluck('type')->sort()->values();
+        if ($townTypes->isEmpty()) {
+            $townTypes = collect(['Municipal Corporation', 'Municipal Council', 'Municipal Committee']);
+        }
         $displayZoneName = $this->resolveDisplayZoneName($user);
 
-        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'selectedDistrictId', 'displayZoneName'));
+        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
     }
 
     public function store(Request $request)
@@ -290,7 +294,10 @@ class EwsDeveloperDashboardController extends Controller
         // Validate basic parameters
         $request->validate([
             'district_id' => 'required|exists:ews_districts,id',
-            'town_id' => 'required|exists:ews_towns,id',
+            'town_id' => 'required',
+            'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
+            'new_town_type' => 'required_if:town_id,new|nullable|string|max:255',
+            'custom_town_type' => 'required_if:new_town_type,other|nullable|string|max:255',
             'project_id' => 'required',
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
             'block_id' => 'required',
@@ -314,12 +321,42 @@ class EwsDeveloperDashboardController extends Controller
         $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : (!empty($user->zone_name) ? strtoupper($user->zone_name) : ($district ? strtoupper($district->name) . ' ZONE' : 'ZONE'));
 
         // Resolve Town ID and Name from master ews_towns table
-        $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
-        if (!$town) {
-            $town = EwsTown::find($request->town_id);
-        }
-        if (!$town) {
-            return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+        if ($request->town_id === 'new') {
+            $cleanTownName = trim($request->new_town_name);
+            $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
+
+            $town = EwsTown::where('district_id', $district->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($cleanTownName)])
+                ->first();
+            if (!$town) {
+                $town = EwsTown::create([
+                    'district_id' => $district->id,
+                    'zone_id'     => $zoneId,
+                    'zone_name'   => $zoneName,
+                    'name'        => $cleanTownName,
+                    'type'        => !empty($townType) ? $townType : null,
+                ]);
+            } else {
+                $updateData = [];
+                if (!empty($townType) && empty($town->type)) {
+                    $updateData['type'] = $townType;
+                }
+                if (!empty($zoneId) && empty($town->zone_id)) {
+                    $updateData['zone_id'] = $zoneId;
+                    $updateData['zone_name'] = $zoneName;
+                }
+                if (!empty($updateData)) {
+                    $town->update($updateData);
+                }
+            }
+        } else {
+            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
+            if (!$town) {
+                $town = EwsTown::find($request->town_id);
+            }
+            if (!$town) {
+                return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+            }
         }
         $townId = $town->id;
         $townName = $town->name;
@@ -689,9 +726,13 @@ class EwsDeveloperDashboardController extends Controller
             $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
         }
 
+        $townTypes = EwsTown::whereNotNull('type')->where('type', '!=', '')->distinct()->pluck('type')->sort()->values();
+        if ($townTypes->isEmpty()) {
+            $townTypes = collect(['Municipal Corporation', 'Municipal Council', 'Municipal Committee']);
+        }
         $displayZoneName = $this->resolveDisplayZoneName($user);
 
-        return view('ews.developer.edit', compact('user', 'flat', 'zone', 'districts', 'secureId', 'towns', 'projects', 'blocks', 'displayZoneName'));
+        return view('ews.developer.edit', compact('user', 'flat', 'zone', 'districts', 'secureId', 'towns', 'townTypes', 'projects', 'blocks', 'displayZoneName'));
     }
 
     public function update(Request $request, $secureId)
@@ -720,7 +761,10 @@ class EwsDeveloperDashboardController extends Controller
 
         $request->validate([
             'district_id' => 'required|exists:ews_districts,id',
-            'town_id' => 'required|exists:ews_towns,id',
+            'town_id' => 'required',
+            'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
+            'new_town_type' => 'required_if:town_id,new|nullable|string|max:255',
+            'custom_town_type' => 'required_if:new_town_type,other|nullable|string|max:255',
             'project_id' => 'required',
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
             'block_id' => 'required',
@@ -763,12 +807,42 @@ class EwsDeveloperDashboardController extends Controller
         $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : ($flat->zone_name ?? (!empty($user->zone_name) ? strtoupper($user->zone_name) : ($district ? strtoupper($district->name) . ' ZONE' : 'ZONE')));
 
         // Resolve Town ID and Name from master ews_towns table
-        $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
-        if (!$town) {
-            $town = EwsTown::find($request->town_id);
-        }
-        if (!$town) {
-            return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+        if ($request->town_id === 'new') {
+            $cleanTownName = trim($request->new_town_name);
+            $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
+
+            $town = EwsTown::where('district_id', $district->id)
+                ->whereRaw('LOWER(name) = ?', [strtolower($cleanTownName)])
+                ->first();
+            if (!$town) {
+                $town = EwsTown::create([
+                    'district_id' => $district->id,
+                    'zone_id'     => $zoneId,
+                    'zone_name'   => $zoneName,
+                    'name'        => $cleanTownName,
+                    'type'        => !empty($townType) ? $townType : null,
+                ]);
+            } else {
+                $updateData = [];
+                if (!empty($townType) && empty($town->type)) {
+                    $updateData['type'] = $townType;
+                }
+                if (!empty($zoneId) && empty($town->zone_id)) {
+                    $updateData['zone_id'] = $zoneId;
+                    $updateData['zone_name'] = $zoneName;
+                }
+                if (!empty($updateData)) {
+                    $town->update($updateData);
+                }
+            }
+        } else {
+            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
+            if (!$town) {
+                $town = EwsTown::find($request->town_id);
+            }
+            if (!$town) {
+                return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+            }
         }
         $townId = $town->id;
         $townName = $town->name;
@@ -1150,29 +1224,60 @@ class EwsDeveloperDashboardController extends Controller
         $request->validate([
             'district_id' => 'required|exists:ews_districts,id',
             'town_name' => 'required|string|max:255',
+            'town_type' => 'required|string|max:255',
         ]);
 
         $districtId = (int)$request->district_id;
         $cleanName = trim($request->town_name);
+        $cleanType = trim($request->town_type);
+
+        // Resolve Zone for this district
+        $district = DB::table('ews_districts')->where('id', $districtId)->first();
+        $zone = null;
+        if ($district && !empty($district->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && $user && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? null);
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : null;
 
         $exists = EwsTown::where('district_id', $districtId)
             ->whereRaw('LOWER(name) = ?', [strtolower($cleanName)])
             ->first();
 
         if ($exists) {
+            $updateData = [];
+            if (!empty($cleanType) && empty($exists->type)) {
+                $updateData['type'] = $cleanType;
+            }
+            if (!empty($zoneId) && empty($exists->zone_id)) {
+                $updateData['zone_id'] = $zoneId;
+                $updateData['zone_name'] = $zoneName;
+            }
+            if (!empty($updateData)) {
+                $exists->update($updateData);
+            }
             return response()->json([
                 'success' => true,
                 'message' => "Town '{$exists->name}' already exists.",
                 'town' => [
                     'id' => $exists->id,
                     'name' => $exists->name,
+                    'type' => $exists->type,
+                    'zone_id' => $exists->zone_id,
+                    'zone_name' => $exists->zone_name,
                 ]
             ]);
         }
 
         $town = EwsTown::create([
             'district_id' => $districtId,
-            'name' => $cleanName,
+            'zone_id'     => $zoneId,
+            'zone_name'   => $zoneName,
+            'name'        => $cleanName,
+            'type'        => $cleanType,
         ]);
 
         return response()->json([
@@ -1181,6 +1286,9 @@ class EwsDeveloperDashboardController extends Controller
             'town' => [
                 'id' => $town->id,
                 'name' => $town->name,
+                'type' => $town->type,
+                'zone_id' => $town->zone_id,
+                'zone_name' => $town->zone_name,
             ]
         ]);
     }
