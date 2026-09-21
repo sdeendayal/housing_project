@@ -103,7 +103,7 @@
                         <i class="bi bi-person-check-fill text-emerald-400"></i>
                         <span>Flats Added By Me</span>
                     </a>
-                    <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
+                    <a href="#" class="d-none hidden flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold transition-all shadow-sm" style="display: none !important;">
                         <i class="bi bi-plus-circle-fill text-sky-400"></i>
                         <span>Register Flat</span>
                     </a>

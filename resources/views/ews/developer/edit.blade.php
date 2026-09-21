@@ -103,7 +103,7 @@
                         <i class="bi bi-person-check-fill text-emerald-400"></i>
                         <span>Flats Added By Me</span>
                     </a>
-                    <a href="{{ route('ews.developer.flats.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
+                    <a href="{{ route('ews.developer.flats.create') }}" class="d-none hidden flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all" style="display: none !important;">
                         <i class="bi bi-plus-circle text-slate-400"></i>
                         <span>Register Flat</span>
                     </a>
