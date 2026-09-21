@@ -141,7 +141,7 @@ class StpApiController extends Controller
      */
     public function getProjects(Request $request): JsonResponse
     {
-        $districtId = $request->query('district_id');
+        $districtId = $request->query('district_id') ?: $request->query('dist_id');
         $townId = $request->query('town_id');
         $zoneId = $request->query('zone_id');
 
@@ -190,7 +190,7 @@ class StpApiController extends Controller
     {
         $projectId = $request->query('project_id');
         $townId = $request->query('town_id');
-        $districtId = $request->query('district_id');
+        $districtId = $request->query('district_id') ?: $request->query('dist_id');
         $zoneId = $request->query('zone_id');
 
         if (!$projectId && !$townId && !$districtId && !$zoneId) {
@@ -436,7 +436,7 @@ class StpApiController extends Controller
     {
         $user = $request->user();
         $zoneData = $this->resolveStpZone($user);
-        $districtId = $request->query('district_id');
+        $districtId = $request->query('district_id') ?: $request->query('dist_id');
         $projectId = $request->query('project_id');
 
         $abbrs = $this->getFilterProjectAbbrs($zoneData['districts'], $districtId, $projectId);
@@ -501,7 +501,7 @@ class StpApiController extends Controller
     {
         $user = $request->user();
         $zoneData = $this->resolveStpZone($user);
-        $districtId = $request->query('district_id');
+        $districtId = $request->query('district_id') ?: $request->query('dist_id');
         $projectId = $projectId ?: $request->query('project_id');
 
         $abbrs = $this->getFilterProjectAbbrs($zoneData['districts'], $districtId, $projectId);
