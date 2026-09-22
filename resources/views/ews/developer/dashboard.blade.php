@@ -420,11 +420,8 @@
             <!-- Body -->
             <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
                 @forelse($projectsList as $index => $proj)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
                         <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($proj->name) }}</span>
-                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded text-[9px] font-mono font-bold uppercase">
-                            {{ DB::table('ews_builder_flats')->where('project_id', $proj->id)->count() }} Flats
-                        </span>
                     </div>
                 @empty
                     <div class="text-center py-6 text-slate-400 text-xs font-medium">No projects registered in {{ $user->district_name }}.</div>
@@ -455,11 +452,8 @@
             <!-- Body -->
             <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
                 @forelse($townsList as $index => $town)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
                         <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($town->name) }}</span>
-                        <span class="px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-150 rounded text-[9px] font-mono font-bold uppercase">
-                            {{ DB::table('ews_builder_flats')->where('town_id', $town->id)->count() }} Flats
-                        </span>
                     </div>
                 @empty
                     <div class="text-center py-6 text-slate-400 text-xs font-medium">No towns mapped in {{ $user->district_name }}.</div>
