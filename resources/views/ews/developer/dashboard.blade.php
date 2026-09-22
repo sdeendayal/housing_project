@@ -378,6 +378,70 @@
                     </div>
                 </div>
 
+                <!-- Cascading Filter Console (Zone -> District -> Town -> Project) -->
+                <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                        <!-- Step 1: District Filter (Filtered by Zone) -->
+                        <div class="lg:col-span-3 space-y-1">
+                            <label for="filter-district" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                <span class="flex items-center gap-1">
+                                    <span class="px-1 py-0.2 rounded text-[8px] bg-sky-100 text-sky-800 font-black">1</span>
+                                    <span>Select District</span>
+                                </span>
+                                <span class="text-[8px] text-slate-400 font-mono font-bold">{{ count($districts ?? []) }} In Zone</span>
+                            </label>
+                            <div class="relative">
+                                <select id="filter-district" onchange="onDistrictFilterChange()"
+                                    class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs">
+                                    <option value="">All {{ $displayZoneName ?? 'Zone' }} Districts</option>
+                                    @foreach($districts ?? [] as $d)
+                                        <option value="{{ $d->id }}">{{ strtoupper($d->name) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Town Filter (Cascading) -->
+                        <div id="filter-town-box" class="lg:col-span-3 space-y-1">
+                            <label for="filter-town" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded text-[8px] bg-violet-100 text-violet-800 font-black">2</span>
+                                <span>Name of Town</span>
+                            </label>
+                            <select id="filter-town" onchange="onTownFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none shadow-2xs">
+                                <option value="">All Towns</option>
+                                @foreach($townsList ?? [] as $t)
+                                    <option value="{{ $t->id }}">{{ strtoupper($t->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Step 3: Project Filter (Cascading) -->
+                        <div id="filter-project-box" class="lg:col-span-4 space-y-1">
+                            <label for="filter-project" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded text-[8px] bg-indigo-100 text-indigo-800 font-black">3</span>
+                                <span>Name of Project</span>
+                            </label>
+                            <select id="filter-project" onchange="onProjectFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none shadow-2xs">
+                                <option value="">All Projects</option>
+                                @foreach($projectsList ?? [] as $p)
+                                    <option value="{{ $p->id }}">{{ strtoupper($p->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Reset Filter Button -->
+                        <div class="lg:col-span-2 flex items-center">
+                            <button type="button" onclick="resetAllFilters()"
+                                class="w-full px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5">
+                                <i class="bi bi-arrow-counterclockwise text-xs"></i>
+                                <span>Reset Filters</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Table Content (Yajra Server-side) -->
                 <div class="p-5">
                     <table class="w-full text-left border-collapse" id="flats-table">
@@ -527,6 +591,9 @@
 
         function triggerExport(type) {
             const scope = $('#filter-ownership').val();
+            const districtId = $('#filter-district').val();
+            const townId = $('#filter-town').val();
+            const projectId = $('#filter-project').val();
             const searchVal = table ? table.search() : '';
             let baseUrl = '';
             if (type === 'csv') baseUrl = "{{ route('ews.developer.flats.export.csv') }}";
@@ -535,9 +602,78 @@
 
             const url = new URL(baseUrl, window.location.origin);
             if (scope) url.searchParams.append('ownership_scope', scope);
+            if (districtId) url.searchParams.append('district_id', districtId);
+            if (townId) url.searchParams.append('town_id', townId);
+            if (projectId) url.searchParams.append('project_id', projectId);
             if (searchVal) url.searchParams.append('search', searchVal);
 
             window.location.href = url.toString();
+        }
+
+        function onDistrictFilterChange() {
+            const districtId = $('#filter-district').val();
+
+            // Fetch towns for selected district
+            let townUrl = "{{ route('ews.developer.towns') }}";
+            if (districtId) townUrl += "?district_id=" + districtId;
+
+            $.getJSON(townUrl, function(data) {
+                let options = '<option value="">All Towns</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-town').html(options);
+            });
+
+            // Fetch projects for selected district
+            let projUrl = "{{ route('ews.developer.projects') }}";
+            if (districtId) projUrl += "?district_id=" + districtId;
+
+            $.getJSON(projUrl, function(data) {
+                let options = '<option value="">All Projects</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-project').html(options);
+            });
+
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function onTownFilterChange() {
+            const districtId = $('#filter-district').val();
+            const townId = $('#filter-town').val();
+
+            let projUrl = "{{ route('ews.developer.projects') }}";
+            let params = [];
+            if (districtId) params.push("district_id=" + districtId);
+            if (townId) params.push("town_id=" + townId);
+            if (params.length) projUrl += "?" + params.join("&");
+
+            $.getJSON(projUrl, function(data) {
+                let options = '<option value="">All Projects</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-project').html(options);
+            });
+
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function onProjectFilterChange() {
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function resetAllFilters() {
+            $('#filter-district').val('');
+            onDistrictFilterChange();
         }
 
         function setOwnershipFilter(scope) {
@@ -561,6 +697,8 @@
                 $('#th-col-7').text('Unique Flat Code');
                 $('#th-col-8').text('Ownership');
 
+                $('#filter-town-box, #filter-project-box').show();
+
                 // Sidebar Menu Active Toggle
                 $('#nav-my-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
                 $('#nav-district-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
@@ -576,6 +714,9 @@
                 $('#th-col-6').text('Flat No.');
                 $('#th-col-7').text('Mobile No.');
                 $('#th-col-8').text('Possession Status');
+
+                // For allotted pool, town & project are consolidated, district filter operates directly
+                $('#filter-town-box, #filter-project-box').hide();
 
                 // Sidebar Menu Active Toggle
                 $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
@@ -593,12 +734,14 @@
                 $('#th-col-7').text('Unique Flat Code');
                 $('#th-col-8').text('Ownership');
 
+                $('#filter-town-box, #filter-project-box').show();
+
                 // Sidebar Menu Active Toggle
                 $('#nav-district-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
                 $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
             }
             if (table) {
-                table.ajax.reload();
+                table.draw();
             }
         }
 
@@ -652,6 +795,7 @@
                 $('#th-col-6').text('Flat No.');
                 $('#th-col-7').text('Mobile No.');
                 $('#th-col-8').text('Possession Status');
+                $('#filter-town-box, #filter-project-box').hide();
             }
 
             table = $('#flats-table').DataTable({
@@ -663,6 +807,9 @@
                     url: "{{ route('ews.developer.flats.data') }}",
                     data: function (d) {
                         d.ownership_scope = $('#filter-ownership').val();
+                        d.district_id = $('#filter-district').val();
+                        d.town_id = $('#filter-town').val();
+                        d.project_id = $('#filter-project').val();
                     }
                 },
                 columns: [
@@ -685,28 +832,6 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [] // Disable default ordering, sorting resolved server-side
-            });
-
-            // Redraw on district filter change
-            $('#filter-district').on('change', function() {
-                table.draw();
-            });
-
-            // Handle Export Clicks dynamically incorporating active filters
-            $('#export-csv').on('click', function(e) {
-                e.preventDefault();
-                let search = $('#flats-table_filter input').val() || '';
-                let districtId = $('#filter-district').val() || '';
-                let url = "{{ route('ews.developer.flats.export.csv') }}?search=" + encodeURIComponent(search) + "&district_id=" + districtId;
-                window.location.href = url;
-            });
-
-            $('#export-pdf').on('click', function(e) {
-                e.preventDefault();
-                let search = $('#flats-table_filter input').val() || '';
-                let districtId = $('#filter-district').val() || '';
-                let url = "{{ route('ews.developer.flats.export.pdf') }}?search=" + encodeURIComponent(search) + "&district_id=" + districtId;
-                window.location.href = url;
             });
         });
     </script>

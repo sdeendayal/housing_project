@@ -113,7 +113,11 @@ class EwsDeveloperDashboardController extends Controller
             ? EwsTown::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
             : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get() : EwsTown::orderBy('name')->get());
 
-        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'projectsList', 'townsList', 'displayZoneName'));
+        $districts = !empty($zoneDistrictIds) 
+            ? DB::table('ews_districts')->whereIn('id', $zoneDistrictIds)->orderBy('name')->get()
+            : DB::table('ews_districts')->orderBy('name')->get();
+
+        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'displayZoneName'));
     }
 
     /**
@@ -146,9 +150,22 @@ class EwsDeveloperDashboardController extends Controller
                         $q->orWhere('district_id', $user->district_id);
                     }
                 });
-            } elseif ($request->filled('district_id')) {
-                $query->where('district_id', $request->district_id);
             }
+        }
+
+        // 2. Specific District Filter
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        }
+
+        // 3. Specific Town Filter
+        if ($request->filled('town_id')) {
+            $query->where('town_id', $request->town_id);
+        }
+
+        // 4. Specific Project Filter
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
         }
 
         // Search Filter (Standard string parameter or Yajra request array)
@@ -186,12 +203,16 @@ class EwsDeveloperDashboardController extends Controller
         // Check if viewing Zone Allotted Flats (from 4,211 master pool)
         if ($request->input('ownership_scope') === 'allotted') {
             $query = DB::table('ews_allotted_8');
-            if (!empty($user->zone_id)) {
-                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
-                $query->whereIn('dist_id', $zoneDistrictIds);
-            } elseif ($user && !empty($user->district_name)) {
-                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
-                $query->where('dist_name', 'like', "%{$userDist}%");
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
             }
 
             // Search filter
@@ -1129,12 +1150,16 @@ class EwsDeveloperDashboardController extends Controller
 
         if ($request->input('ownership_scope') === 'allotted') {
             $query = DB::table('ews_allotted_8');
-            if (!empty($user->zone_id)) {
-                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
-                $query->whereIn('dist_id', $zoneDistrictIds);
-            } elseif ($user && !empty($user->district_name)) {
-                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
-                $query->where('dist_name', 'like', "%{$userDist}%");
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
             }
             if ($request->filled('search')) {
                 $s = $request->search;
@@ -1234,12 +1259,16 @@ class EwsDeveloperDashboardController extends Controller
 
         if ($request->input('ownership_scope') === 'allotted') {
             $query = DB::table('ews_allotted_8');
-            if (!empty($user->zone_id)) {
-                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
-                $query->whereIn('dist_id', $zoneDistrictIds);
-            } elseif ($user && !empty($user->district_name)) {
-                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
-                $query->where('dist_name', 'like', "%{$userDist}%");
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
             }
             if ($request->filled('search')) {
                 $s = $request->search;
