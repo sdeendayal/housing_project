@@ -169,28 +169,30 @@
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-5 custom-scroll">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scroll">
             
             @if($currentView === 'dashboard')
                 <!-- DASHBOARD VIEW: OVERVIEW TELEMETRY & PROJECT BREAKDOWN -->
                 
-                <!-- Welcome Banner -->
-                <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-indigo-950 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
-                    <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-indigo-500/10 to-transparent pointer-events-none"></div>
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                        <div>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-md text-[9px] font-black uppercase mb-2">
-                                <i class="bi bi-geo-alt-fill"></i> ASSIGNED ZONE: {{ $displayZoneName ?? (!empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' ZONE') : 'ALL ZONES') }}
+                <!-- Sleek Compact Welcome Header -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-xl px-4 py-2.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 relative overflow-hidden">
+                    <div class="flex items-center gap-3 relative z-10">
+                        <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+                            <i class="bi bi-speedometer2 text-sm"></i>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                            <h2 class="text-xs font-black tracking-tight text-white uppercase">Welcome, {{ $user->name }}</h2>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded text-[8.5px] font-black uppercase">
+                                <i class="bi bi-geo-alt-fill text-[8px]"></i> {{ $displayZoneName ?? 'ZONE' }}
                             </span>
-                            <h2 class="text-lg font-black tracking-tight text-white">Welcome, {{ $user->name }}</h2>
-                            <p class="text-xs text-slate-300 mt-0.5">EWS Builder Flats Registry Console & Inventory Management Panel</p>
+                            <span class="text-[9px] text-slate-400 font-mono hidden md:inline">| EWS Registry Console</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <a href="{{ route('ews.developer.flats.create') }}" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-all">
-                                <i class="bi bi-plus-lg"></i>
-                                <span>Register New Flat</span>
-                            </a>
-                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 relative z-10">
+                        <a href="{{ route('ews.developer.flats.create') }}" class="px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 transition-all">
+                            <i class="bi bi-plus-lg text-[10px]"></i>
+                            <span>Register New Flat</span>
+                        </a>
                     </div>
                 </div>
 
@@ -259,48 +261,63 @@
 
 
             @elseif($currentView === 'allotted')
-                <!-- ZONE ALLOTTED FLATS VIEW -->
-                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
-                    <div>
-                        <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-houses-fill"></i> STATE ALLOTMENT POOL
-                        </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool</h2>
-                        <p class="text-[9px] text-amber-100 font-mono">Viewing {{ number_format($stats['total_allotted']) }} state-allotted EWS flats in {{ $displayZoneName ?? 'Zone' }} (out of {{ number_format($stats['state_allotted_total'] ?? 4211) }} state total)</p>
+                <!-- Compact Zone Allotted Header -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-houses-fill text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Pool</span>
+                            </div>
+                            <p class="text-[8.5px] text-amber-100 font-mono">{{ number_format($stats['total_allotted']) }} flats in {{ $displayZoneName ?? 'Zone' }} (out of {{ number_format($stats['state_allotted_total'] ?? 4211) }} state total)</p>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-3xl font-black font-mono">{{ number_format($stats['total_allotted']) }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-amber-200">Zone Allotted</span>
+                        <span class="text-base font-black font-mono leading-none">{{ number_format($stats['total_allotted']) }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-amber-200">Allotted</span>
                     </div>
                 </div>
             @elseif($currentView === 'district')
-                <!-- ZONE FLATS VIEW -->
-                <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
-                    <div>
-                        <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-building"></i> ZONE SCOPED MATRIX
-                        </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Master EWS Flats</h2>
-                        <p class="text-[9px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $displayZoneName ?? 'Zone' }} Authority</p>
+                <!-- Compact Zone Master Header -->
+                <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-building text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Master EWS Flats</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Master</span>
+                            </div>
+                            <p class="text-[8.5px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $displayZoneName ?? 'Zone' }} Authority</p>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-3xl font-black font-mono">{{ $stats['total_flats'] }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-sky-200">Zone Total</span>
+                        <span class="text-base font-black font-mono leading-none">{{ $stats['total_flats'] }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-sky-200">Zone Total</span>
                     </div>
                 </div>
             @elseif($currentView === 'my_flats')
-                <!-- MY FLATS INVENTORY VIEW -->
-                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
-                    <div>
-                        <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-person-check-fill"></i> PERSONAL INVENTORY
-                        </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">Flats Registered By My Account</h2>
-                        <p class="text-[9px] text-emerald-100 font-mono">Viewing flats created directly by your developer account (ID: #{{ $user->id }})</p>
+                <!-- Compact Personal Inventory Header -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-person-check-fill text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">Flats Registered By My Account</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">My Entries</span>
+                            </div>
+                            <p class="text-[8.5px] text-emerald-100 font-mono">Viewing flats created directly by your developer account (ID: #{{ $user->id }})</p>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-3xl font-black font-mono">{{ $stats['my_flats'] }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-emerald-200">My Entries</span>
+                        <span class="text-base font-black font-mono leading-none">{{ $stats['my_flats'] }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-emerald-200">My Total</span>
                     </div>
                 </div>
             @endif
@@ -448,14 +465,14 @@
                         <thead>
                             <tr class="bg-slate-55/30 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
                                 <th style="width: 5%;">S.No.</th>
-                                <th id="th-col-1">District Name</th>
+                                <th id="th-col-1">{{ $currentView === 'allotted' ? 'District' : 'District Name' }}</th>
                                 <th id="th-col-2">Town Name</th>
                                 <th id="th-col-3">Project Name</th>
                                 <th id="th-col-4">Block / Tower No.</th>
-                                <th id="th-col-5">Floor Details</th>
+                                <th id="th-col-5">{{ $currentView === 'allotted' ? 'Allottee Name' : 'Floor Details' }}</th>
                                 <th id="th-col-6">Flat No.</th>
-                                <th id="th-col-7">Unique Flat Code</th>
-                                <th id="th-col-8">Ownership</th>
+                                <th id="th-col-7">{{ $currentView === 'allotted' ? 'Mobile No.' : 'Unique Flat Code' }}</th>
+                                <th id="th-col-8">{{ $currentView === 'allotted' ? 'Possession Status' : 'Ownership' }}</th>
                                 <th style="text-align: right; width: 14%;">Actions</th>
                             </tr>
                         </thead>
@@ -682,6 +699,10 @@
                 $('#btn-scope-my').addClass('bg-white text-emerald-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
                 $('#table-heading-title').html('<i class="bi bi-person-check-fill text-emerald-500 text-sm"></i> Flats Offered By Me');
 
+                if (table) {
+                    table.columns([2, 3, 4]).visible(true);
+                }
+
                 $('#th-col-1').text('District Name');
                 $('#th-col-2').text('Town Name');
                 $('#th-col-3').text('Project Name');
@@ -700,10 +721,11 @@
                 $('#btn-scope-allotted').addClass('bg-white text-amber-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
                 $('#table-heading-title').html('<i class="bi bi-houses-fill text-amber-500 text-sm"></i> {{ $displayZoneName ?? "Zone" }} Allotted Flats Pool (From 4,211 State Allotments)');
 
+                if (table) {
+                    table.columns([2, 3, 4]).visible(false);
+                }
+
                 $('#th-col-1').text('District');
-                $('#th-col-2').text('Category');
-                $('#th-col-3').text('Project / Flat');
-                $('#th-col-4').text('Application No.');
                 $('#th-col-5').text('Allottee Name');
                 $('#th-col-6').text('Flat No.');
                 $('#th-col-7').text('Mobile No.');
@@ -718,6 +740,10 @@
             } else {
                 $('#btn-scope-all').addClass('bg-white text-sky-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
                 $('#table-heading-title').html('<i class="bi bi-file-earmark-text text-sky-500 text-sm"></i> All {{ $displayZoneName ?? "Zone" }} Offered Builder Flats');
+
+                if (table) {
+                    table.columns([2, 3, 4]).visible(true);
+                }
 
                 $('#th-col-1').text('District Name');
                 $('#th-col-2').text('Town Name');
@@ -782,9 +808,6 @@
             const initScope = $('#filter-ownership').val();
             if (initScope === 'allotted') {
                 $('#th-col-1').text('District');
-                $('#th-col-2').text('Category');
-                $('#th-col-3').text('Project / Flat');
-                $('#th-col-4').text('Application No.');
                 $('#th-col-5').text('Allottee Name');
                 $('#th-col-6').text('Flat No.');
                 $('#th-col-7').text('Mobile No.');
@@ -808,11 +831,11 @@
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900' },
-                    { data: 'town_name', name: 'town_name' },
-                    { data: 'project_name', name: 'project_name', class: 'text-slate-500' },
-                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold' },
-                    { data: 'floor', name: 'floor' },
+                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase' },
+                    { data: 'town_name', name: 'town_name', visible: initScope !== 'allotted' },
+                    { data: 'project_name', name: 'project_name', class: 'text-slate-500', visible: initScope !== 'allotted' },
+                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold', visible: initScope !== 'allotted' },
+                    { data: 'floor', name: 'floor', class: 'font-bold text-slate-800' },
                     { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono' },
                     { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono' },
                     { data: 'added_by', name: 'added_by', orderable: false, searchable: false },
