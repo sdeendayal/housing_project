@@ -188,8 +188,7 @@
                                 </option>
 
                                 @foreach ($districts as $district)
-                                    <option value="{{ $district->DistrictId }}"
-                                        @selected(request('district_id') == $district->DistrictId)>
+                                    <option value="{{ $district->DistrictId }}" @selected(request('district_id') == $district->DistrictId)>
 
                                         {{ $district->DistrictName }}
 
@@ -298,8 +297,7 @@
                                 </option>
 
                                 @foreach ($sectors as $sector)
-                                    <option value="{{ $sector->SectorId }}"
-                                        @selected(request('sector_id') == $sector->SectorId)>
+                                    <option value="{{ $sector->SectorId }}" @selected(request('sector_id') == $sector->SectorId)>
 
                                         {{ $sector->SectorName }}
 
@@ -374,44 +372,142 @@
                             px-6 py-5 sm:flex-row sm:items-center
                             sm:justify-between">
 
-                    <div>
+                    @php
+                        /*
+    |--------------------------------------------------------------------------
+    | CATEGORY LABEL
+    |--------------------------------------------------------------------------
+    */
 
-                        <div class="flex items-center gap-3">
+                        $categoryLabels = [
+                            'all' => 'All Allottees',
+                            'ghumantu' => 'Eligible - Ghumantu Jati',
+                            'widow' => 'Eligible - Widow',
+                            'scheduled_caste' => 'Eligible - Scheduled Caste',
+                            'others' => 'Eligible - Others',
+                            'eligible' => 'Total Eligible Allottees',
+                            'not_eligible' => 'Not Eligible Allottees',
+                        ];
 
-                            <div
-                                class="flex h-10 w-10 items-center
-                                        justify-center rounded-xl
-                                        bg-indigo-50 text-indigo-600">
+                        $currentCategory = $categoryLabels[$category ?? 'all'] ?? 'All Allottees';
 
-                                <span class="material-symbols-outlined text-[21px]">
-                                    fact_check
-                                </span>
+                        /*
+    |--------------------------------------------------------------------------
+    | SELECTED FILTER NAMES
+    |--------------------------------------------------------------------------
+    */
 
-                            </div>
+                        $selectedPhase = request('phase');
+
+                        $selectedDistrict = $districts->firstWhere('DistrictId', request('district_id'));
+
+                        $selectedCity = $cities->firstWhere('CityId', request('city_id'));
+
+                        $selectedSector = $sectors->firstWhere('SectorId', request('sector_id'));
+                    @endphp
 
 
-                            <div>
+                    <div class="flex items-center gap-3">
 
-                                <h2 class="text-lg font-bold text-slate-800">
+                        {{-- ICON --}}
+                        <div
+                            class="flex h-10 w-10 shrink-0 items-center
+               justify-center rounded-xl
+               bg-indigo-50 text-indigo-600">
 
-                                    Beneficiary Details
+                            <span class="material-symbols-outlined text-[21px]">
+                                fact_check
+                            </span>
 
-                                </h2>
+                        </div>
 
-                                <p class="mt-0.5 text-sm text-slate-500">
 
-                                    @php
-                                        $categoryLabels = [
-                                            'ghumantu' => 'Ghumantu Jati',
-                                            'widow' => 'Widows',
-                                            'scheduled_caste' => 'Scheduled Caste',
-                                            'others' => 'Others',
-                                        ];
-                                    @endphp
+                        {{-- TITLE --}}
+                        <div class="min-w-0">
 
-                                    {{ $categoryLabels[$category] ?? 'All Categories' }}
+                            <h2 class="text-lg font-bold text-slate-800">
+                                Physical Verification Details
+                            </h2>
 
-                                </p>
+
+                            {{-- CATEGORY --}}
+                            <p class="mt-0.5 text-sm font-semibold text-indigo-600">
+                                {{ $currentCategory }}
+                            </p>
+
+
+                            {{-- FILTER SUMMARY --}}
+                            <div class="mt-2 flex flex-wrap items-center gap-2">
+
+                                {{-- PHASE --}}
+                                @if ($selectedPhase)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-lg
+                           bg-slate-100 px-2.5 py-1
+                           text-[11px] font-medium text-slate-600">
+                                        <span class="material-symbols-outlined text-[14px]">
+                                            layers
+                                        </span>
+
+                                        Phase {{ $selectedPhase }}
+                                    </span>
+                                @endif
+
+
+                                {{-- DISTRICT --}}
+                                @if ($selectedDistrict)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-lg
+                           bg-slate-100 px-2.5 py-1
+                           text-[11px] font-medium text-slate-600">
+                                        <span class="material-symbols-outlined text-[14px]">
+                                            location_on
+                                        </span>
+
+                                        {{ $selectedDistrict->DistrictName }}
+                                    </span>
+                                @endif
+
+
+                                {{-- CITY / TOWN --}}
+                                @if ($selectedCity)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-lg
+                           bg-indigo-50 px-2.5 py-1
+                           text-[11px] font-semibold text-indigo-700">
+                                        <span class="material-symbols-outlined text-[14px]">
+                                            location_city
+                                        </span>
+
+                                        {{ $selectedCity->CityName }}
+                                    </span>
+                                @endif
+
+
+                                {{-- SECTOR --}}
+                                @if ($selectedSector)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-lg
+                           bg-slate-100 px-2.5 py-1
+                           text-[11px] font-medium text-slate-600">
+                                        <span class="material-symbols-outlined text-[14px]">
+                                            apartment
+                                        </span>
+
+                                        {{ $selectedSector->SectorName }}
+                                    </span>
+                                @endif
+
+
+                                {{-- NO LOCATION FILTER --}}
+                                @if (!$selectedDistrict && !$selectedCity && !$selectedSector)
+                                    <span
+                                        class="inline-flex items-center gap-1 rounded-lg
+                           bg-slate-100 px-2.5 py-1
+                           text-[11px] font-medium text-slate-500">
+                                        All Locations
+                                    </span>
+                                @endif
 
                             </div>
 
@@ -421,14 +517,23 @@
 
 
                     {{-- TOTAL --}}
+                    @php
+                        $totalLabel = match ($category ?? 'all') {
+                            'ghumantu' => 'Eligible Ghumantu',
+                            'widow' => 'Eligible Widow',
+                            'scheduled_caste' => 'Eligible SC',
+                            'others' => 'Eligible Others',
+                            'eligible' => 'Total Eligible',
+                            'not_eligible' => 'Not Eligible',
+                            default => 'Total Allottees',
+                        };
+                    @endphp
+
                     <div class="rounded-xl bg-slate-50 px-5 py-3 text-right">
 
-                        <p
-                            class="text-xs font-medium uppercase
-                                  tracking-wide text-slate-500">
-
-                            Total Beneficiaries
-
+                        <p class="text-xs font-medium uppercase
+               tracking-wide text-slate-500">
+                            {{ $totalLabel }}
                         </p>
 
                         <p class="mt-0.5 text-2xl font-bold text-slate-800">
@@ -436,7 +541,7 @@
                             {{ number_format(
                                 $beneficiaries instanceof \Illuminate\Pagination\LengthAwarePaginator
                                     ? $beneficiaries->total()
-                                    : $beneficiaries->count()
+                                    : $beneficiaries->count(),
                             ) }}
 
                         </p>
@@ -456,55 +561,68 @@
                         <thead>
                             <tr class="bg-slate-50">
 
-                                <th class="w-[3%] border-b border-r border-slate-200 px-2 py-3 text-center text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[3%] border-b border-r border-slate-200 px-2 py-3 text-center text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     S.No
                                 </th>
 
-                                <th class="w-[9%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[9%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Name
                                 </th>
 
-                                <th class="w-[9%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[9%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Father Name
                                 </th>
 
-                                <th class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Registration No.
                                 </th>
 
-                                <th class="w-[7%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[7%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Caste
                                 </th>
 
-                                <th class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Mobile
                                 </th>
 
-                                <th class="w-[12%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[12%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Address
                                 </th>
 
-                                <th class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Asset Name
                                 </th>
 
-                                <th class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[8%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     District
                                 </th>
 
-                                <th class="w-[7%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[7%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     City / ULB
                                 </th>
 
-                                <th class="w-[6%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[6%] border-b border-r border-slate-200 px-2 py-3 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Sector
                                 </th>
 
-                                <th class="w-[6%] border-b border-r border-slate-200 px-2 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[6%] border-b border-r border-slate-200 px-2 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Flat Cost
                                 </th>
 
-                                <th class="w-[9%] border-b border-slate-200 px-2 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-600">
+                                <th
+                                    class="w-[9%] border-b border-slate-200 px-2 py-3 text-right text-[10px] font-bold uppercase tracking-wide text-slate-600">
                                     Total Paid
                                 </th>
 
@@ -514,16 +632,16 @@
                         <tbody>
 
                             @forelse ($beneficiaries as $index => $beneficiary)
-
                                 <tr class="border-b border-slate-100 bg-white transition hover:bg-indigo-50/40">
 
                                     <td class="border-r border-slate-100 px-2 py-2 text-center text-[10px] text-slate-600">
                                         {{ $beneficiaries instanceof \Illuminate\Pagination\LengthAwarePaginator
-    ? (int) $beneficiaries->firstItem() + $loop->index
-    : $loop->iteration }}
+                                            ? (int) $beneficiaries->firstItem() + $loop->index
+                                            : $loop->iteration }}
                                     </td>
 
-                                    <td class="border-r border-slate-100 px-2 py-2 text-[10px] font-semibold text-slate-800">
+                                    <td
+                                        class="border-r border-slate-100 px-2 py-2 text-[10px] font-semibold text-slate-800">
                                         <div class="break-words">
                                             {{ $beneficiary->PrivatePurchaserName ?? '-' }}
                                         </div>
@@ -585,11 +703,13 @@
                                         </div>
                                     </td>
 
-                                    <td class="border-r border-slate-100 px-2 py-2 text-right text-[10px] font-semibold tabular-nums text-slate-800 whitespace-nowrap">
+                                    <td
+                                        class="border-r border-slate-100 px-2 py-2 text-right text-[10px] font-semibold tabular-nums text-slate-800 whitespace-nowrap">
                                         ₹{{ number_format((float) ($beneficiary->FlatCost ?? 0), 2) }}
                                     </td>
 
-                                    <td class="px-2 py-2 text-right text-[10px] font-bold tabular-nums text-emerald-600 whitespace-nowrap">
+                                    <td
+                                        class="px-2 py-2 text-right text-[10px] font-bold tabular-nums text-emerald-600 whitespace-nowrap">
                                         ₹{{ number_format((float) ($beneficiary->TotalPaid ?? 0), 2) }}
                                     </td>
 
@@ -618,7 +738,6 @@
 
                                     </td>
                                 </tr>
-
                             @endforelse
 
                         </tbody>
@@ -636,7 +755,8 @@
         ========================================================== --}}
         @if ($beneficiaries instanceof \Illuminate\Pagination\LengthAwarePaginator)
 
-            <div class="flex flex-col gap-3 border-t border-slate-200
+            <div
+                class="flex flex-col gap-3 border-t border-slate-200
                         bg-white px-5 py-4 sm:flex-row sm:items-center
                         sm:justify-between">
 
@@ -661,7 +781,8 @@
                     <div class="flex items-center gap-1.5">
 
                         @if ($beneficiaries->onFirstPage())
-                            <span class="inline-flex h-10 items-center gap-1
+                            <span
+                                class="inline-flex h-10 items-center gap-1
                                          rounded-xl border border-slate-200
                                          bg-slate-50 px-3 text-sm font-medium
                                          text-slate-300">
@@ -672,7 +793,7 @@
                             </span>
                         @else
                             <a href="{{ $beneficiaries->previousPageUrl() }}"
-                               class="inline-flex h-10 items-center gap-1
+                                class="inline-flex h-10 items-center gap-1
                                       rounded-xl border border-slate-200
                                       bg-white px-3 text-sm font-medium
                                       text-slate-600 transition hover:bg-slate-50">
@@ -700,9 +821,9 @@
                         @endphp
 
                         @for ($page = $startPage; $page <= $endPage; $page++)
-
                             @if ($page == $currentPage)
-                                <span class="inline-flex h-10 min-w-10
+                                <span
+                                    class="inline-flex h-10 min-w-10
                                              items-center justify-center
                                              rounded-xl bg-indigo-600 px-3
                                              text-sm font-semibold text-white shadow-sm">
@@ -710,7 +831,7 @@
                                 </span>
                             @else
                                 <a href="{{ $beneficiaries->url($page) }}"
-                                   class="inline-flex h-10 min-w-10
+                                    class="inline-flex h-10 min-w-10
                                           items-center justify-center
                                           rounded-xl border border-slate-200
                                           bg-white px-3 text-sm font-medium
@@ -718,12 +839,11 @@
                                     {{ $page }}
                                 </a>
                             @endif
-
                         @endfor
 
                         @if ($beneficiaries->hasMorePages())
                             <a href="{{ $beneficiaries->nextPageUrl() }}"
-                               class="inline-flex h-10 items-center gap-1
+                                class="inline-flex h-10 items-center gap-1
                                       rounded-xl border border-slate-200
                                       bg-white px-3 text-sm font-medium
                                       text-slate-600 transition hover:bg-slate-50">
@@ -733,7 +853,8 @@
                                 </span>
                             </a>
                         @else
-                            <span class="inline-flex h-10 items-center gap-1
+                            <span
+                                class="inline-flex h-10 items-center gap-1
                                          rounded-xl border border-slate-200
                                          bg-slate-50 px-3 text-sm font-medium
                                          text-slate-300">
