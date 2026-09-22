@@ -80,17 +80,19 @@ class EwsDeveloperDashboardController extends Controller
         // My Flats Query
         $myFlatsQuery = EwsBuilderFlat::where('created_by', $user->id);
 
-        // Project Breakdown in District
-        $projectBreakdown = (clone $districtFlatsQuery)
-            ->select('town_name', 'project_name', DB::raw('count(*) as total_flats'), DB::raw('count(distinct block_tower_number) as towers_count'))
-            ->groupBy('town_name', 'project_name')
-            ->orderBy('total_flats', 'desc')
-            ->get();
-
-        // Recent Activity Logs
-        $recentLogs = EwsDeveloperLog::where('user_id', $user->id)->latest()->take(5)->get();
+        // Zone Allotted Flats from ews_allotted_8 (out of 4,211 master pool)
+        $zoneAllottedQuery = DB::table('ews_allotted_8');
+        if (!empty($zoneDistrictIds)) {
+            $zoneAllottedQuery->whereIn('dist_id', $zoneDistrictIds);
+        } elseif ($userDist) {
+            $zoneAllottedQuery->where('dist_name', 'like', "%{$userDist}%");
+        }
+        $zoneAllottedCount = (clone $zoneAllottedQuery)->count();
+        $stateAllottedTotal = DB::table('ews_allotted_8')->count();
 
         $stats = [
+            'total_allotted' => $zoneAllottedCount,
+            'state_allotted_total' => $stateAllottedTotal,
             'total_flats' => (clone $districtFlatsQuery)->count(),
             'my_flats' => (clone $myFlatsQuery)->count(),
             'total_projects' => !empty($zoneDistrictIds) 
@@ -111,7 +113,7 @@ class EwsDeveloperDashboardController extends Controller
             ? EwsTown::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
             : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get() : EwsTown::orderBy('name')->get());
 
-        return view('ews.developer.dashboard', compact('user', 'stats', 'projectBreakdown', 'recentLogs', 'currentView', 'projectsList', 'townsList', 'displayZoneName'));
+        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'projectsList', 'townsList', 'displayZoneName'));
     }
 
     /**
@@ -179,6 +181,59 @@ class EwsDeveloperDashboardController extends Controller
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        // Check if viewing Zone Allotted Flats (from 4,211 master pool)
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if (!empty($user->zone_id)) {
+                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                $query->whereIn('dist_id', $zoneDistrictIds);
+            } elseif ($user && !empty($user->district_name)) {
+                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                $query->where('dist_name', 'like', "%{$userDist}%");
+            }
+
+            // Search filter
+            $searchValue = '';
+            if ($request->has('search')) {
+                $searchParam = $request->search;
+                $searchValue = is_array($searchParam) ? ($searchParam['value'] ?? '') : $searchParam;
+            }
+            if (!empty($searchValue)) {
+                $query->where(function ($q) use ($searchValue) {
+                    $q->where('application_number', 'like', "%{$searchValue}%")
+                      ->orWhere('full_name', 'like', "%{$searchValue}%")
+                      ->orWhere('mobile_number', 'like', "%{$searchValue}%")
+                      ->orWhere('flat_no', 'like', "%{$searchValue}%")
+                      ->orWhere('dist_name', 'like', "%{$searchValue}%");
+                });
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('district_name', fn($r) => '<span class="font-bold text-slate-900 uppercase">' . $r->dist_name . '</span>')
+                ->addColumn('town_name', fn($r) => '<span class="text-slate-400 font-mono text-[10px]">Zone Allotted</span>')
+                ->addColumn('project_name', function($r) {
+                    $parts = explode('-', $r->flat_no);
+                    return count($parts) > 1 ? '<span class="text-slate-700 font-bold">' . $parts[1] . '</span>' : '<span class="text-slate-600 font-bold">EWS Flat</span>';
+                })
+                ->addColumn('block_tower_number', fn($r) => '<span class="text-indigo-600 font-mono font-bold">App #' . $r->application_number . '</span>')
+                ->addColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . $r->full_name . '</span>')
+                ->addColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono">' . $r->flat_no . '</span>')
+                ->addColumn('flat_code', fn($r) => '<span class="text-emerald-700 font-bold font-mono">' . ($r->mobile_number ? substr($r->mobile_number, 0, 2) . '******' . substr($r->mobile_number, -2) : 'N/A') . '</span>')
+                ->addColumn('added_by', function($r) {
+                    $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given');
+                    $status = $isGiven ? 'Possession Given' : ($r->possession_status ?: 'Allotted');
+                    $color = $isGiven ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                    return '<span class="px-2 py-0.5 ' . $color . ' border rounded text-[9px] font-black uppercase inline-flex items-center gap-1"><i class="bi bi-houses"></i> ' . $status . '</span>';
+                })
+                ->addColumn('actions', function($r) {
+                    $url = route('ews.developer.possession.index');
+                    return '<div class="inline-flex justify-end w-full"><a href="' . $url . '" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-1 border border-amber-200 shadow-sm"><i class="bi bi-key-fill"></i> Possession</a></div>';
+                })
+                ->rawColumns(['district_name', 'town_name', 'project_name', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'added_by', 'actions'])
+                ->make(true);
         }
 
         $query = $this->getFilteredQuery($request);
@@ -1072,6 +1127,57 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if (!empty($user->zone_id)) {
+                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                $query->whereIn('dist_id', $zoneDistrictIds);
+            } elseif ($user && !empty($user->district_name)) {
+                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                $query->where('dist_name', 'like', "%{$userDist}%");
+            }
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function($q) use ($s) {
+                    $q->where('application_number', 'like', "%{$s}%")
+                      ->orWhere('full_name', 'like', "%{$s}%")
+                      ->orWhere('mobile_number', 'like', "%{$s}%")
+                      ->orWhere('flat_no', 'like', "%{$s}%")
+                      ->orWhere('dist_name', 'like', "%{$s}%");
+                });
+            }
+            $allotted = $query->orderBy('id', 'asc')->get();
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="ews_allotted_flats_' . date('Ymd_His') . '.csv"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            $callback = function () use ($allotted) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['S.No.', 'District Name', 'Application Number', 'Allottee Name', 'Mobile Number', 'Flat No.', 'Possession Status']);
+
+                foreach ($allotted as $index => $row) {
+                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given');
+                    fputcsv($file, [
+                        $index + 1,
+                        $row->dist_name,
+                        $row->application_number,
+                        $row->full_name,
+                        $row->mobile_number,
+                        $row->flat_no,
+                        $isGiven ? 'Possession Given' : ($row->possession_status ?: 'Allotted'),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+        }
+
         // Respect search and custom district filters
         $flats = $this->getFilteredQuery($request)->get();
 
@@ -1124,6 +1230,56 @@ class EwsDeveloperDashboardController extends Controller
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if (!empty($user->zone_id)) {
+                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                $query->whereIn('dist_id', $zoneDistrictIds);
+            } elseif ($user && !empty($user->district_name)) {
+                $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                $query->where('dist_name', 'like', "%{$userDist}%");
+            }
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function($q) use ($s) {
+                    $q->where('application_number', 'like', "%{$s}%")
+                      ->orWhere('full_name', 'like', "%{$s}%")
+                      ->orWhere('mobile_number', 'like', "%{$s}%")
+                      ->orWhere('flat_no', 'like', "%{$s}%")
+                      ->orWhere('dist_name', 'like', "%{$s}%");
+                });
+            }
+            $allotted = $query->orderBy('id', 'asc')->get();
+
+            $headers = [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="ews_allotted_flats_' . date('Ymd_His') . '.xls"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            $callback = function () use ($allotted) {
+                $file = fopen('php://output', 'w');
+                fputs($file, "S.No.\tDistrict Name\tApplication Number\tAllottee Name\tMobile Number\tFlat No.\tPossession Status\n");
+
+                foreach ($allotted as $index => $row) {
+                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given');
+                    fputs($file, ($index + 1) . "\t" .
+                        $row->dist_name . "\t" .
+                        $row->application_number . "\t" .
+                        $row->full_name . "\t" .
+                        $row->mobile_number . "\t" .
+                        $row->flat_no . "\t" .
+                        ($isGiven ? 'Possession Given' : ($row->possession_status ?: 'Allotted')) . "\n"
+                    );
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
         }
 
         $flats = $this->getFilteredQuery($request)->get();
