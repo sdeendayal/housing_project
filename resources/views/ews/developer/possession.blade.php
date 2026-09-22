@@ -67,74 +67,7 @@
 </head>
 <body class="h-full flex overflow-hidden">
 
-    <!-- LEFT SIDEBAR -->
-    <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 select-none z-20">
-        <!-- Brand Header -->
-        <div class="h-16 flex items-center gap-3 px-5 border-b border-slate-800 bg-slate-950/80">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
-                <i class="bi bi-key-fill text-white text-sm"></i>
-            </div>
-            <div>
-                <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-400 font-mono tracking-widest uppercase">Physical Possession</p>
-            </div>
-        </div>
-
-        <!-- Menu Navigation -->
-        <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto custom-scroll">
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Possession Management</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.possession.index') }}" 
-                        class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-sky-600 text-white font-bold shadow-md shadow-sky-600/20 text-xs transition-all">
-                        <i class="bi bi-key text-white text-base"></i>
-                        <span>Physical Possession</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard') }}" 
-                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-speedometer2 text-slate-400"></i>
-                        <span>STP Dashboard</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" 
-                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-building text-slate-400"></i>
-                        <span>{{ $displayZoneName }} Flats</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Tracking</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.possession.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-clock-history text-slate-400"></i>
-                        <span>Possession Audit Logs</span>
-                    </a>
-                    <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-journal-text text-slate-400"></i>
-                        <span>General STP Logs</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- User Info & Logout -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950 flex flex-col gap-2 shrink-0">
-            <div class="flex items-center gap-2 px-1">
-                <div class="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs text-sky-400 font-bold">
-                    <i class="bi bi-person"></i>
-                </div>
-                <div class="truncate">
-                    <div class="text-[11px] font-bold text-white truncate">{{ $user->name }}</div>
-                    <div class="text-[9px] text-slate-400 font-mono">{{ $displayZoneName }}</div>
-                </div>
-            </div>
-            <a href="{{ route('ews.developer.logout') }}" class="w-full py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 border border-red-500/20">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Logout Session</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.developer.partials.sidebar')
 
     <!-- RIGHT MAIN WORKSPACE -->
     <div class="flex-1 flex flex-col overflow-hidden h-full">

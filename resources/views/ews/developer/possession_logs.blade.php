@@ -22,57 +22,7 @@
 </head>
 <body class="h-full flex overflow-hidden bg-[#f4f7fa]">
 
-    <!-- SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 shrink-0 h-full shadow-xl z-20">
-        <!-- Brand logo -->
-        <div class="h-16 px-6 border-b border-slate-800 flex items-center gap-2.5 shrink-0 bg-slate-950">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-sky-600 flex items-center justify-center shadow-md">
-                <i class="bi bi-clock-history text-white text-sm"></i>
-            </div>
-            <div>
-                <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Audit Logs</p>
-            </div>
-        </div>
-
-        <!-- Menu Navigation -->
-        <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto custom-scroll">
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Possession Management</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.possession.index') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-key text-emerald-400"></i>
-                        <span>Physical Possession</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-speedometer2 text-slate-400"></i>
-                        <span>STP Dashboard</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit Console</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.possession.logs') }}" class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-sky-600 text-white font-bold text-xs shadow-md shadow-sky-600/20 transition-all">
-                        <i class="bi bi-clock-history text-white"></i>
-                        <span>Possession Audit Logs</span>
-                    </a>
-                    <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-journal-text text-slate-400"></i>
-                        <span>STP General Logs</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="p-4 border-t border-slate-800 bg-slate-950 flex flex-col gap-2 shrink-0">
-            <a href="{{ route('ews.developer.logout') }}" class="w-full py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-[10px] font-bold uppercase transition-all flex items-center justify-center gap-1.5 border border-red-500/20">
-                <i class="bi bi-box-arrow-right"></i>
-                <span>Logout Session</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.developer.partials.sidebar')
 
     <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col overflow-hidden h-full">
