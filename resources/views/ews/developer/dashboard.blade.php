@@ -197,7 +197,7 @@
                 </div>
 
                 <!-- Telemetry Stats Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3.5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
                     <!-- Stat 1: Zone Allotted Flats from 4,211 State Pool -->
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'allotted']) }}" class="bg-white border border-amber-200/80 hover:border-amber-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
@@ -231,30 +231,6 @@
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-person-check-fill text-lg"></i>
-                        </div>
-                    </a>
-
-                    <!-- Stat 4: Active Projects in Zone -->
-                    <a href="javascript:void(0)" onclick="openProjectsModal(event)" class="bg-white border border-indigo-200/80 hover:border-indigo-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-indigo-600">Zone Projects</span>
-                            <h4 class="text-xl font-black text-indigo-600 font-mono mt-0.5">{{ $stats['total_projects'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Active Projects In Zone</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-diagram-3-fill text-lg"></i>
-                        </div>
-                    </a>
-
-                    <!-- Stat 5: Coverage Towns -->
-                    <a href="javascript:void(0)" onclick="openTownsModal(event)" class="bg-white border border-violet-200/80 hover:border-violet-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-violet-600">Coverage Towns</span>
-                            <h4 class="text-xl font-black text-violet-600 font-mono mt-0.5">{{ $stats['total_towns'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Mapped Towns In Zone</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-pin-map-fill text-lg"></i>
                         </div>
                     </a>
                 </div>
