@@ -5737,7 +5737,7 @@ class SuperAdminController extends Controller
                     'o.PPPId',
                     'o.Phase',
                     'o.FlatId',
-
+                    'o.Caste',
                     'o.IsApproved',
                     'o.IsRejected',
                     'o.IsPaid',
