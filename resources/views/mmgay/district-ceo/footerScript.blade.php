@@ -1423,8 +1423,11 @@
 
             const url =
                 siteDevelopmentBaseUrl +
-                '?' +
-                params.toString();
+                '/' +
+                encodeURIComponent(villageId) +
+                (params.toString() ?
+                    '?' + params.toString() :
+                    '');
 
             $.ajax({
                     url: url,
@@ -1537,13 +1540,11 @@
             }
         );
 
-        $(document).on(
-            'load',
-            '#villageMapFrame',
-            function() {
+        $('#villageMapFrame')
+            .off('load.villageMap')
+            .on('load.villageMap', function() {
                 $('#villageMapLoader').addClass('hidden');
-            }
-        );
+            });
 
         $(document).on(
             'click',
