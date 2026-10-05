@@ -414,6 +414,10 @@
                             </th>
                             <th
                                 class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
+                                Caste
+                            </th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold uppercase text-slate-500">
                                 Mobile
                             </th>
                             <th
@@ -483,6 +487,15 @@
                                     <p class="mt-1 text-xs text-slate-500">
                                         {{ $allotment->FatherHusbandName ?? '-' }}
                                     </p>
+                                </td>
+                                <td class="p-3">
+                                    @if (!empty($allotment->Caste))
+                                        <span class="caste-pill">
+                                            {{ $allotment->Caste }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400">-</span>
+                                    @endif
                                 </td>
 
                                 <td class="px-4 py-4 text-sm text-slate-600">

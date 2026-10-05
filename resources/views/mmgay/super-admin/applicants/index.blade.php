@@ -6,13 +6,13 @@
 
     <style>
         /* =========================================================
-           APPLICANTS PAGE - VISUAL ONLY
-           No route / query / filter / pagination logic changed
-        ========================================================= */
+               APPLICANTS PAGE - VISUAL ONLY
+               No route / query / filter / pagination logic changed
+            ========================================================= */
 
         .applicants-page {
             background:
-                radial-gradient(circle at 75% 0%, rgba(79,70,229,.055), transparent 24%),
+                radial-gradient(circle at 75% 0%, rgba(79, 70, 229, .055), transparent 24%),
                 #f6f8fc !important;
         }
 
@@ -20,14 +20,14 @@
         .app-table-card {
             border: 1px solid #e2e8f0 !important;
             border-radius: 18px !important;
-            background: rgba(255,255,255,.98) !important;
+            background: rgba(255, 255, 255, .98) !important;
             box-shadow:
-                0 10px 30px rgba(15,23,42,.055),
-                0 1px 2px rgba(15,23,42,.03) !important;
+                0 10px 30px rgba(15, 23, 42, .055),
+                0 1px 2px rgba(15, 23, 42, .03) !important;
         }
 
         .app-filter-head {
-            background: linear-gradient(180deg,#ffffff 0%,#fbfdff 100%) !important;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%) !important;
         }
 
         .filter-with-icon {
@@ -45,7 +45,7 @@
             align-items: center;
             justify-content: center;
             border-radius: 9px;
-            background: linear-gradient(135deg,#eff6ff,#eef2ff);
+            background: linear-gradient(135deg, #eff6ff, #eef2ff);
             color: #4f46e5;
             border: 1px solid #e0e7ff;
             pointer-events: none;
@@ -83,13 +83,13 @@
         .filter-with-icon:focus-within .filter-left-icon {
             color: #fff;
             border-color: transparent;
-            background: linear-gradient(135deg,#2563eb,#4f46e5);
-            box-shadow: 0 5px 12px rgba(79,70,229,.18);
+            background: linear-gradient(135deg, #2563eb, #4f46e5);
+            box-shadow: 0 5px 12px rgba(79, 70, 229, .18);
         }
 
         .filter-with-icon select:focus {
             border-color: #6366f1 !important;
-            box-shadow: 0 0 0 3px rgba(99,102,241,.10) !important;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, .10) !important;
         }
 
         /* Table fits in one screen - horizontal scroll removed */
@@ -145,16 +145,55 @@
         }
 
         /* Column widths tuned to 10-column layout */
-        .app-table th:nth-child(1), .app-table td:nth-child(1) { width: 4%; }
-        .app-table th:nth-child(2), .app-table td:nth-child(2) { width: 13%; }
-        .app-table th:nth-child(3), .app-table td:nth-child(3) { width: 17%; }
-        .app-table th:nth-child(4), .app-table td:nth-child(4) { width: 13%; }
-        .app-table th:nth-child(5), .app-table td:nth-child(5) { width: 10%; }
-        .app-table th:nth-child(6), .app-table td:nth-child(6) { width: 11%; }
-        .app-table th:nth-child(7), .app-table td:nth-child(7) { width: 7%; }
-        .app-table th:nth-child(8), .app-table td:nth-child(8) { width: 8%; }
-        .app-table th:nth-child(9), .app-table td:nth-child(9) { width: 12%; }
-        .app-table th:nth-child(10), .app-table td:nth-child(10) { width: 5%; }
+        .app-table th:nth-child(1),
+        .app-table td:nth-child(1) {
+            width: 4%;
+        }
+
+        .app-table th:nth-child(2),
+        .app-table td:nth-child(2) {
+            width: 13%;
+        }
+
+        .app-table th:nth-child(3),
+        .app-table td:nth-child(3) {
+            width: 17%;
+        }
+
+        .app-table th:nth-child(4),
+        .app-table td:nth-child(4) {
+            width: 13%;
+        }
+
+        .app-table th:nth-child(5),
+        .app-table td:nth-child(5) {
+            width: 10%;
+        }
+
+        .app-table th:nth-child(6),
+        .app-table td:nth-child(6) {
+            width: 11%;
+        }
+
+        .app-table th:nth-child(7),
+        .app-table td:nth-child(7) {
+            width: 7%;
+        }
+
+        .app-table th:nth-child(8),
+        .app-table td:nth-child(8) {
+            width: 8%;
+        }
+
+        .app-table th:nth-child(9),
+        .app-table td:nth-child(9) {
+            width: 12%;
+        }
+
+        .app-table th:nth-child(10),
+        .app-table td:nth-child(10) {
+            width: 5%;
+        }
 
         @media (max-width: 1280px) {
             .app-table {
@@ -171,6 +210,122 @@
                 padding: 9px 5px !important;
             }
         }
+        .app-table-wrap {
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-table {
+    width: 100% !important;
+    min-width: 1450px !important;
+    table-layout: auto !important;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 12px !important;
+}
+
+.app-table th {
+    padding: 13px 12px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+    font-weight: 700 !important;
+    letter-spacing: .025em;
+    white-space: nowrap !important;
+    vertical-align: middle;
+}
+
+.app-table td {
+    padding: 13px 12px !important;
+    font-size: 12px !important;
+    line-height: 1.35 !important;
+    vertical-align: middle;
+    white-space: nowrap !important;
+}
+
+.app-table tbody tr {
+    transition: background-color .15s ease;
+}
+
+.app-table tbody tr:hover {
+    background: #f8fafc !important;
+}
+
+/* Applicant column */
+.app-table td:nth-child(3) {
+    min-width: 220px;
+}
+
+/* Caste */
+.app-table td:nth-child(4) {
+    min-width: 110px;
+}
+
+/* Father/Husband */
+.app-table td:nth-child(5) {
+    min-width: 170px;
+}
+
+/* Village */
+.app-table td:nth-child(7) {
+    min-width: 140px;
+}
+
+/* Status */
+.app-table td:nth-child(10) {
+    min-width: 155px;
+    white-space: nowrap !important;
+}
+
+/* Action */
+.app-table td:nth-child(11) {
+    min-width: 70px;
+}
+
+/* Status pill should never break */
+.app-table .status-pill {
+    white-space: nowrap !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 125px;
+    padding: 6px 10px !important;
+    line-height: 1.2 !important;
+    font-size: 11px !important;
+}
+
+/* Caste pill */
+.app-table .caste-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 75px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Mobile/tablet */
+@media (max-width: 1280px) {
+    .app-table {
+        min-width: 1350px !important;
+    }
+
+    .app-table th {
+        font-size: 9px !important;
+        padding: 11px 9px !important;
+    }
+
+    .app-table td {
+        font-size: 11px !important;
+        padding: 11px 9px !important;
+    }
+}
     </style>
 
 
@@ -240,24 +395,26 @@
 
                         <div class="filter-with-icon">
                             <span class="filter-left-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 6h16M7 12h10M10 18h4" />
+                                </svg>
                             </span>
                             <select id="phase" name="phase"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="">All Phases</option>
+                                <option value="">All Phases</option>
 
-                            <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>
-                                Phase 1
-                            </option>
+                                <option value="1" {{ request('phase') == '1' ? 'selected' : '' }}>
+                                    Phase 1
+                                </option>
 
-                            <option value="2" {{ request('phase') == '2' ? 'selected' : '' }}>
-                                Phase 2
-                            </option>
+                                <option value="2" {{ request('phase') == '2' ? 'selected' : '' }}>
+                                    Phase 2
+                                </option>
 
-                            <option value="3" {{ request('phase') == '3' ? 'selected' : '' }}>
-                                Phase 3
-                            </option>
-                        </select>
+                                <option value="3" {{ request('phase') == '3' ? 'selected' : '' }}>
+                                    Phase 3
+                                </option>
+                            </select>
                         </div>
                     </div>
 
@@ -269,19 +426,23 @@
 
                         <div class="filter-with-icon">
                             <span class="filter-left-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M3 10.5 12 4l9 6.5"/><path d="M5.5 9.5V21h13V9.5"/><path d="M9.5 21v-6h5v6"/></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M3 10.5 12 4l9 6.5" />
+                                    <path d="M5.5 9.5V21h13V9.5" />
+                                    <path d="M9.5 21v-6h5v6" />
+                                </svg>
                             </span>
                             <select id="village_id" name="village_id"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="">All Villages</option>
+                                <option value="">All Villages</option>
 
-                            @foreach ($villages as $village)
-                                <option value="{{ $village->VillageId }}"
-                                    {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
-                                    {{ $village->VillageName }}
-                                </option>
-                            @endforeach
-                        </select>
+                                @foreach ($villages as $village)
+                                    <option value="{{ $village->VillageId }}"
+                                        {{ request('village_id') == $village->VillageId ? 'selected' : '' }}>
+                                        {{ $village->VillageName }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
@@ -293,33 +454,39 @@
 
                         <div class="filter-with-icon">
                             <span class="filter-left-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M4 5h16"/><path d="M7 10h10"/><path d="M10 15h4"/><path d="M12 19h.01"/></svg>
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M4 5h16" />
+                                    <path d="M7 10h10" />
+                                    <path d="M10 15h4" />
+                                    <path d="M12 19h.01" />
+                                </svg>
                             </span>
                             <select id="status" name="status"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100">
-                            <option value="">All Statuses</option>
+                                <option value="">All Statuses</option>
 
-                            <option value="approved_paid" {{ request('status') === 'approved_paid' ? 'selected' : '' }}>
-                                Approved & Paid
-                            </option>
+                                <option value="approved_paid"
+                                    {{ request('status') === 'approved_paid' ? 'selected' : '' }}>
+                                    Approved & Paid
+                                </option>
 
-                            <option value="approved_unpaid"
-                                {{ request('status') === 'approved_unpaid' ? 'selected' : '' }}>
-                                Approved & Unpaid
-                            </option>
+                                <option value="approved_unpaid"
+                                    {{ request('status') === 'approved_unpaid' ? 'selected' : '' }}>
+                                    Approved & Unpaid
+                                </option>
 
-                            <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>
-                                Yet to be Approved
-                            </option>
+                                <option value="pending" {{ request('status') === 'pending' ? 'selected' : '' }}>
+                                    Yet to be Approved
+                                </option>
 
-                            <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>
-                                Rejected
-                            </option>
+                                <option value="rejected" {{ request('status') === 'rejected' ? 'selected' : '' }}>
+                                    Rejected
+                                </option>
 
-                            <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>
-                                Cancelled
-                            </option>
-                        </select>
+                                <option value="cancelled" {{ request('status') === 'cancelled' ? 'selected' : '' }}>
+                                    Cancelled
+                                </option>
+                            </select>
                         </div>
                     </div>
 
@@ -481,6 +648,9 @@
                             <th class="p-3 text-left">
                                 Applicant
                             </th>
+                            <th class="p-3 text-left">
+                                Caste
+                            </th>
 
                             <th class="p-3 text-left">
                                 Father / Husband
@@ -565,6 +735,15 @@
 
                                     </div>
 
+                                </td>
+                                <td class="p-3">
+                                    @if (!empty($applicant->Caste))
+                                        <span class="caste-pill">
+                                            {{ $applicant->Caste }}
+                                        </span>
+                                    @else
+                                        <span class="text-slate-400">-</span>
+                                    @endif
                                 </td>
 
                                 <td class="p-3 text-slate-600">
