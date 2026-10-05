@@ -76,7 +76,8 @@
             </div>
         </div>
 
-        <div>
+        <!-- Audit & Activity (Hidden for now) -->
+        <div class="d-none hidden" style="display: none;">
             <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Activity</span>
             <div class="space-y-1">
                 <!-- 6. Possession Audit Logs -->

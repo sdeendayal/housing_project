@@ -110,10 +110,10 @@
         <!-- Form Workspace -->
         <div class="flex-1 overflow-y-auto p-6">
             
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full max-w-5xl mx-auto">
+            <div class="w-full max-w-4xl mx-auto">
                 
-                <!-- Left Column: Edit Form Card (lg:col-span-7) -->
-                <div class="lg:col-span-7 bg-white border border-slate-200 rounded-xl shadow-sm dev-shadow overflow-hidden">
+                <!-- Edit Form Card -->
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm dev-shadow overflow-hidden">
                     <div class="px-6 py-4 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
                         <div>
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
@@ -342,55 +342,6 @@
                             </button>
                         </div>
                     </form>
-                </div>
-
-                <!-- Right Column: Guidelines & Sandbox Parameters (lg:col-span-5) -->
-                <div class="lg:col-span-5 space-y-4">
-                    
-                    <!-- Sandbox Info Card -->
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-3">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                            <i class="bi bi-info-circle text-sky-500"></i>
-                            Editing Guidelines
-                        </h4>
-                        <ul class="space-y-2.5 text-xs text-slate-600 font-medium">
-                            <li class="flex gap-2">
-                                <i class="bi bi-check-circle-fill text-sky-500 text-sm shrink-0"></i>
-                                <span><strong>Audit Trail Tracking:</strong> Updates generate an <code>UPDATED</code> log entry with the old details and new details stored.</span>
-                            </li>
-                            <li class="flex gap-2">
-                                <i class="bi bi-check-circle-fill text-sky-500 text-sm shrink-0"></i>
-                                <span><strong>Floor Designation:</strong> Indicar floor description i.e. Ground floor, First floor, and so on.</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <!-- Sandbox Database Status -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm text-slate-350 space-y-3 font-mono text-[10px]">
-                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-200 border-b border-slate-800 pb-2 flex items-center gap-2">
-                            <i class="bi bi-hdd-network text-sky-400"></i>
-                            Node Telemetry
-                        </h4>
-                        <div class="space-y-2">
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">DB CONFLICT STATUS:</span>
-                                <span class="text-emerald-400 font-bold">BYPASS (LOCAL)</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">PPP FAMILY LOCK:</span>
-                                <span class="text-emerald-400 font-bold">DISABLED</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-505 font-bold">RECORD STATE:</span>
-                                <span class="text-sky-400 font-bold font-mono">ID: #{{ $flat->id }}</span>
-                            </div>
-                            <div class="flex justify-between">
-                                <span class="text-slate-500">LATENCY TIME:</span>
-                                <span class="text-slate-200">1.4ms</span>
-                            </div>
-                        </div>
-                    </div>
-
                 </div>
 
             </div>
