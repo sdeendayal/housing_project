@@ -932,6 +932,41 @@ class MmgayBdoApiController extends Controller
     }
 
     /**
+     * Download or view MMGAY Final Possession Letter Template PDF.
+     */
+    public function downloadLetterTemplate(Request $request)
+    {
+        $filePath = public_path('docs/MMGAY-letter.pdf');
+        if (!file_exists($filePath)) {
+            $filePath = public_path('MMGAY-letter.pdf');
+        }
+        if (!file_exists($filePath)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'MMGAY Possession Letter template not found.'
+            ], 404);
+        }
+
+        // If client accepts JSON and explicitly requested JSON info
+        if ($request->query('format') === 'json') {
+            return response()->json([
+                'success' => true,
+                'file_url' => asset(file_exists(public_path('docs/MMGAY-letter.pdf')) ? 'docs/MMGAY-letter.pdf' : 'MMGAY-letter.pdf'),
+                'file_name' => 'MMGAY-letter.pdf'
+            ]);
+        }
+
+        if ($request->has('inline') || $request->query('inline')) {
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="MMGAY-letter.pdf"',
+            ]);
+        }
+
+        return response()->download($filePath, 'MMGAY-letter.pdf');
+    }
+
+    /**
      * AJAX slot capacity check.
      */
     public function getSlotCapacityCheck(Request $request)

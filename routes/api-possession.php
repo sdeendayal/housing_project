@@ -34,6 +34,7 @@ Route::prefix('mmgay')->group(function () {
         Route::get('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifyForm']);
         Route::post('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifySave']);
         Route::get('/download-certificate/{secure_id}', [MmgayBdoApiController::class, 'downloadCertificate']);
+        Route::get('/download-letter', [MmgayBdoApiController::class, 'downloadLetterTemplate']);
         Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
         Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
         Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
@@ -72,6 +73,7 @@ Route::prefix('possession')->group(function () {
         Route::get('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifyForm']);
         Route::post('/verify/{secure_id}', [MmgayBdoApiController::class, 'verifySave']);
         Route::get('/download-certificate/{secure_id}', [MmgayBdoApiController::class, 'downloadCertificate']);
+        Route::get('/download-letter', [MmgayBdoApiController::class, 'downloadLetterTemplate']);
         Route::get('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentGet']);
         Route::post('/site-development', [MmgayBdoApiController::class, 'siteDevelopmentSave']);
         Route::get('/phase-report', [MmgayBdoApiController::class, 'phaseReport']);
