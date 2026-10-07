@@ -240,6 +240,7 @@ Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->na
     Route::get('/verify/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'verifyForm'])->name('verify-form');
     Route::post('/verify/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'verifySave'])->name('verify-save');
     Route::get('/download-certificate/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadCertificate'])->name('download-certificate');
+    Route::get('/download-letter', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadLetterTemplate'])->name('download-letter');
     Route::get('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentForm'])->name('site-development');
     Route::post('/site-development', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'siteDevelopmentSave'])->name('site-development.save');
     Route::get('/owner-status-report', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'ownerStatusReport'])->name('owner-status-report');
@@ -260,6 +261,7 @@ Route::middleware(['auth', 'mmgay', 'role:villager'])->prefix('mmgav/villager')-
     Route::post('/submit-possession', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'submitPossession'])->name('submit.post');
     Route::get('/download-slip', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadSlip'])->name('download-slip');
     Route::get('/download-certificate/{secure_id}', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadCertificate'])->name('download-certificate');
+    Route::get('/download-letter', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'downloadLetterTemplate'])->name('download-letter');
 });
 
 Route::prefix('super-admin')

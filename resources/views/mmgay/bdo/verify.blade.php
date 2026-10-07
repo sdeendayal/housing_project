@@ -288,6 +288,17 @@
                             </div>
                         </div>
 
+                        <!-- Final Possession Letter Preview & Download -->
+                        <div class="bg-white p-3 rounded-lg border border-slate-150 shadow-sm space-y-1.5">
+                            <span class="text-xs font-bold text-slate-700 font-extrabold block">Final Possession Letter Preview & Print</span>
+                            <p class="text-[10px] text-slate-400 leading-normal">
+                                Click the button below to view and download the MMGAY Final Possession Letter. BDPO must print this document, sign it, and upload the signed copy.
+                            </p>
+                            <a href="{{ route('mmgay.bdo.download-letter') }}?inline=1" target="_blank" class="inline-flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3.5 py-1.5 rounded-lg font-bold transition shadow-sm font-bold">
+                                <span class="material-symbols-outlined text-sm">picture_as_pdf</span> Download & View MMGAY Letter PDF
+                            </a>
+                        </div>
+
                         <!-- Upload 2: Final Possession Letter -->
                         <div class="space-y-2">
                             <div>

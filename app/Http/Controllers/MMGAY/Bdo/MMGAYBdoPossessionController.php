@@ -1116,6 +1116,29 @@ class MMGAYBdoPossessionController extends Controller
     }
 
     /**
+     * Download or view the blank/template Final MMGAY Possession Letter PDF.
+     */
+    public function downloadLetterTemplate(Request $request)
+    {
+        $filePath = public_path('docs/MMGAY-letter.pdf');
+        if (!file_exists($filePath)) {
+            $filePath = public_path('MMGAY-letter.pdf');
+        }
+        if (!file_exists($filePath)) {
+            abort(404, 'MMGAY Possession Letter template not found.');
+        }
+
+        if ($request->has('inline') || $request->query('inline')) {
+            return response()->file($filePath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="MMGAY-letter.pdf"',
+            ]);
+        }
+
+        return response()->download($filePath, 'MMGAY-letter.pdf');
+    }
+
+    /**
      * Download Prefilled BDO/Citizen Possession Report PDF.
      */
     public function downloadCertificate(Request $request, $secureId)
