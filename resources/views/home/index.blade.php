@@ -449,7 +449,7 @@
                                         code
                                     </span>
 
-                                    Developer Login
+                                    DTP Login
                                 </a>
 
                                 <a href="{{ route('ews.department.login') }}"

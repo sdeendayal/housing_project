@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Developer Flat Form Submissions | EWS Department</title>
+    <title>STP Flat Submissions | EWS Department</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts & Material Icons -->
@@ -42,7 +42,7 @@
                     <span class="text-xs font-bold uppercase">Dashboard</span>
                 </a>
                 <div class="h-5 w-[1px] bg-slate-200"></div>
-                <span class="text-xs text-slate-500 font-medium">EWS Developer Form Submissions & Builder Flats Registry</span>
+                <span class="text-xs text-slate-500 font-medium">Senior Town Planner (STP) Zone Flats Registry</span>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -64,9 +64,9 @@
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                             <span class="material-symbols-outlined text-emerald-600 text-lg">apartment</span>
-                            <span>Developer Flat Form Submissions</span>
+                            <span>STP Flat Form Submissions</span>
                         </h3>
-                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Showing all flat records entered by developers across Haryana districts</p>
+                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Showing all flat records entered by Senior Town Planners across Haryana Zones</p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -86,10 +86,10 @@
                             </button>
                         </div>
 
-                        <select id="district-filter" onchange="filterFlats(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-emerald-500 min-w-[170px]">
-                            <option value="">ALL DISTRICTS</option>
-                            @foreach($districts as $dist)
-                                <option value="{{ $dist->id }}">{{ strtoupper($dist->name) }}</option>
+                        <select id="zone-filter" onchange="filterFlats(this.value)" class="bg-[#f8fafc] border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-extrabold text-slate-700 focus:outline-none focus:border-emerald-500 min-w-[170px]">
+                            <option value="">ALL ZONES</option>
+                            @foreach($stpZones as $zone)
+                                <option value="{{ $zone->name }}">{{ strtoupper($zone->name) }} ZONE</option>
                             @endforeach
                         </select>
                     </div>
@@ -100,14 +100,14 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 uppercase text-[9px] font-bold border-b border-slate-100">
                                 <th style="width: 5%;">S.No.</th>
-                                <th>District</th>
+                                <th>Assigned Zone</th>
                                 <th>Town Name</th>
                                 <th>Project Name</th>
                                 <th>Block / Tower</th>
                                 <th>Floor</th>
                                 <th>Flat Number</th>
                                 <th>Unique Flat Code</th>
-                                <th>Submitted By Developer</th>
+                                <th>Submitted By (STP)</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs">
@@ -142,12 +142,12 @@
                 ajax: {
                     url: "{{ route('ews.department.developer-flats.data') }}",
                     data: function(d) {
-                        d.district_id = $('#district-filter').val();
+                        d.zone = $('#zone-filter').val();
                     }
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'district_name', name: 'district_name', class: 'uppercase font-bold text-slate-600' },
+                    { data: 'zone_display', name: 'zone_display' },
                     { data: 'town_name', name: 'town_name', class: 'uppercase font-semibold text-slate-700' },
                     { data: 'project_name', name: 'project_name', class: 'font-bold text-slate-800 uppercase' },
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'font-mono text-slate-600 font-bold' },
@@ -163,17 +163,17 @@
             });
         });
 
-        function filterFlats(districtId) {
+        function filterFlats(zone) {
             flatsTable.ajax.reload();
         }
 
         function exportData(format) {
             let search = flatsTable ? flatsTable.search() : '';
-            let districtId = $('#district-filter').val();
+            let zone = $('#zone-filter').val();
             let url = new URL("{{ route('ews.department.export.developer-flats') }}");
             
             url.searchParams.set('format', format);
-            if (districtId) url.searchParams.set('district_id', districtId);
+            if (zone) url.searchParams.set('zone', zone);
             if (search) url.searchParams.set('search', search);
 
             if (format === 'pdf') {

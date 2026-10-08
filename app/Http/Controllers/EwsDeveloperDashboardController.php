@@ -16,18 +16,58 @@ use App\Helpers\EwsHelper;
 
 class EwsDeveloperDashboardController extends Controller
 {
+    private function resolveDisplayZoneName($user)
+    {
+        $zone = null;
+        if (!empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_name)) {
+            $cleanZone = strtoupper(trim(str_ireplace(' ZONE', '', $user->zone_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZone)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanName = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanName)->first();
+            if (!$zone) {
+                $dist = DB::table('ews_districts')->where('name', $cleanName)->first();
+                if ($dist && $dist->zone_id) {
+                    $zone = DB::table('ews_stp_districts')->where('id', $dist->zone_id)->first();
+                }
+            }
+        }
+        if ($zone) {
+            return str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE';
+        }
+        return !empty($user->zone_name) ? strtoupper($user->zone_name) : (!empty($user->district_name) ? strtoupper($user->district_name) : 'ZONE');
+    }
+
     public function index(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403, 'Unauthorized access to Developer dashboard.');
+        }
+
+        $displayZoneName = $this->resolveDisplayZoneName($user);
+
+        $zoneDistrictIds = [];
+        if (!empty($user->zone_id)) {
+            $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
         }
 
         $userDist = !empty($user->district_name) ? strtoupper(trim($user->district_name)) : null;
 
-        // District Flats Query
+        // Zone / District Flats Query
         $districtFlatsQuery = EwsBuilderFlat::query();
-        if ($userDist) {
+        if (!empty($user->zone_id)) {
+            $districtFlatsQuery->where(function ($q) use ($user, $zoneDistrictIds) {
+                $q->where('zone_id', $user->zone_id);
+                if (!empty($zoneDistrictIds)) {
+                    $q->orWhereIn('district_id', $zoneDistrictIds);
+                }
+            });
+        } elseif ($userDist) {
             $districtFlatsQuery->where(function ($q) use ($user, $userDist) {
                 $q->where('district_name', $userDist)
                   ->orWhere('district_name', $user->district_name);
@@ -40,38 +80,44 @@ class EwsDeveloperDashboardController extends Controller
         // My Flats Query
         $myFlatsQuery = EwsBuilderFlat::where('created_by', $user->id);
 
-        // Project Breakdown in District
-        $projectBreakdown = (clone $districtFlatsQuery)
-            ->select('town_name', 'project_name', DB::raw('count(*) as total_flats'), DB::raw('count(distinct block_tower_number) as towers_count'))
-            ->groupBy('town_name', 'project_name')
-            ->orderBy('total_flats', 'desc')
-            ->get();
-
-        // Recent Activity Logs
-        $recentLogs = EwsDeveloperLog::where('user_id', $user->id)->latest()->take(5)->get();
+        // Zone Allotted Flats from ews_allotted_8 (out of 4,211 master pool)
+        $zoneAllottedQuery = DB::table('ews_allotted_8');
+        if (!empty($zoneDistrictIds)) {
+            $zoneAllottedQuery->whereIn('dist_id', $zoneDistrictIds);
+        } elseif ($userDist) {
+            $zoneAllottedQuery->where('dist_name', 'like', "%{$userDist}%");
+        }
+        $zoneAllottedCount = (clone $zoneAllottedQuery)->count();
+        $stateAllottedTotal = DB::table('ews_allotted_8')->count();
 
         $stats = [
+            'total_allotted' => $zoneAllottedCount,
+            'state_allotted_total' => $stateAllottedTotal,
             'total_flats' => (clone $districtFlatsQuery)->count(),
             'my_flats' => (clone $myFlatsQuery)->count(),
-            'total_projects' => !empty($user->district_id) 
-                ? EwsProject::where('district_id', $user->district_id)->count()
-                : EwsProject::count(),
-            'total_towns' => !empty($user->district_id) 
-                ? EwsTown::where('district_id', $user->district_id)->count()
-                : EwsTown::count(),
+            'total_projects' => !empty($zoneDistrictIds) 
+                ? EwsProject::whereIn('district_id', $zoneDistrictIds)->count()
+                : (!empty($user->district_id) ? EwsProject::where('district_id', $user->district_id)->count() : EwsProject::count()),
+            'total_towns' => !empty($zoneDistrictIds) 
+                ? EwsTown::whereIn('district_id', $zoneDistrictIds)->count()
+                : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->count() : EwsTown::count()),
             'total_logs' => EwsDeveloperLog::where('user_id', $user->id)->count(),
         ];
 
         $currentView = $request->query('view', 'dashboard');
 
-        $projectsList = !empty($user->district_id) 
-            ? EwsProject::where('district_id', $user->district_id)->orderBy('name')->get()
-            : EwsProject::orderBy('name')->get();
-        $townsList = !empty($user->district_id) 
-            ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get()
-            : EwsTown::orderBy('name')->get();
+        $projectsList = !empty($zoneDistrictIds) 
+            ? EwsProject::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
+            : (!empty($user->district_id) ? EwsProject::where('district_id', $user->district_id)->orderBy('name')->get() : EwsProject::orderBy('name')->get());
+        $townsList = !empty($zoneDistrictIds) 
+            ? EwsTown::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
+            : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get() : EwsTown::orderBy('name')->get());
 
-        return view('ews.developer.dashboard', compact('user', 'stats', 'projectBreakdown', 'recentLogs', 'currentView', 'projectsList', 'townsList'));
+        $districts = !empty($zoneDistrictIds) 
+            ? DB::table('ews_districts')->whereIn('id', $zoneDistrictIds)->orderBy('name')->get()
+            : DB::table('ews_districts')->orderBy('name')->get();
+
+        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'displayZoneName'));
     }
 
     /**
@@ -82,12 +128,20 @@ class EwsDeveloperDashboardController extends Controller
         $query = EwsBuilderFlat::query();
         $user = Auth::user();
 
-        // 1. Ownership Scope Filter (My Flats vs All District Flats)
+        // 1. Ownership Scope Filter (My Flats vs All Zone Flats)
         if ($request->input('ownership_scope') === 'my_flats' || $request->input('my_flats') == '1') {
             $query->where('created_by', $user->id);
         } else {
-            // Lock flats data strictly to developer's assigned district
-            if ($user && !empty($user->district_name)) {
+            // Lock flats data strictly to developer's assigned zone
+            if (!empty($user->zone_id)) {
+                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                $query->where(function ($q) use ($user, $zoneDistrictIds) {
+                    $q->where('zone_id', $user->zone_id);
+                    if (!empty($zoneDistrictIds)) {
+                        $q->orWhereIn('district_id', $zoneDistrictIds);
+                    }
+                });
+            } elseif ($user && !empty($user->district_name)) {
                 $userDist = strtoupper(trim($user->district_name));
                 $query->where(function ($q) use ($user, $userDist) {
                     $q->where('district_name', $userDist)
@@ -96,9 +150,22 @@ class EwsDeveloperDashboardController extends Controller
                         $q->orWhere('district_id', $user->district_id);
                     }
                 });
-            } elseif ($request->filled('district_id')) {
-                $query->where('district_id', $request->district_id);
             }
+        }
+
+        // 2. Specific District Filter
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        }
+
+        // 3. Specific Town Filter
+        if ($request->filled('town_id')) {
+            $query->where('town_id', $request->town_id);
+        }
+
+        // 4. Specific Project Filter
+        if ($request->filled('project_id')) {
+            $query->where('project_id', $request->project_id);
         }
 
         // Search Filter (Standard string parameter or Yajra request array)
@@ -129,8 +196,65 @@ class EwsDeveloperDashboardController extends Controller
     public function getFlatsData(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        // Check if viewing Zone Allotted Flats (from 4,211 master pool)
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
+            }
+
+            // Search filter
+            $searchValue = '';
+            if ($request->has('search')) {
+                $searchParam = $request->search;
+                $searchValue = is_array($searchParam) ? ($searchParam['value'] ?? '') : $searchParam;
+            }
+            if (!empty($searchValue)) {
+                $query->where(function ($q) use ($searchValue) {
+                    $q->where('application_number', 'like', "%{$searchValue}%")
+                      ->orWhere('full_name', 'like', "%{$searchValue}%")
+                      ->orWhere('mobile_number', 'like', "%{$searchValue}%")
+                      ->orWhere('flat_no', 'like', "%{$searchValue}%")
+                      ->orWhere('dist_name', 'like', "%{$searchValue}%");
+                });
+            }
+
+            return DataTables::of($query)
+                ->addIndexColumn()
+                ->addColumn('district_name', fn($r) => '<span class="font-bold text-slate-900 uppercase">' . $r->dist_name . '</span>')
+                ->addColumn('town_name', fn($r) => '<span class="text-slate-400 font-mono text-[10px]">Zone Allotted</span>')
+                ->addColumn('project_name', function($r) {
+                    $parts = explode('-', $r->flat_no);
+                    return count($parts) > 1 ? '<span class="text-slate-700 font-bold">' . $parts[1] . '</span>' : '<span class="text-slate-600 font-bold">EWS Flat</span>';
+                })
+                ->addColumn('block_tower_number', fn($r) => '<span class="text-indigo-600 font-mono font-bold">App #' . $r->application_number . '</span>')
+                ->addColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . $r->full_name . '</span>')
+                ->addColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono">' . $r->flat_no . '</span>')
+                ->addColumn('flat_code', fn($r) => '<span class="text-emerald-700 font-bold font-mono">' . ($r->mobile_number ? substr($r->mobile_number, 0, 2) . '******' . substr($r->mobile_number, -2) : 'N/A') . '</span>')
+                ->addColumn('added_by', function($r) {
+                    $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given');
+                    $status = $isGiven ? 'Possession Given' : ($r->possession_status ?: 'Allotted');
+                    $color = $isGiven ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
+                    return '<span class="px-2 py-0.5 ' . $color . ' border rounded text-[9px] font-black uppercase inline-flex items-center gap-1"><i class="bi bi-houses"></i> ' . $status . '</span>';
+                })
+                ->addColumn('actions', function($r) {
+                    $url = route('ews.developer.possession.index');
+                    return '<div class="inline-flex justify-end w-full"><a href="' . $url . '" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-1 border border-amber-200 shadow-sm"><i class="bi bi-key-fill"></i> Possession</a></div>';
+                })
+                ->rawColumns(['district_name', 'town_name', 'project_name', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'added_by', 'actions'])
+                ->make(true);
         }
 
         $query = $this->getFilteredQuery($request);
@@ -176,37 +300,57 @@ class EwsDeveloperDashboardController extends Controller
     public function create()
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
-        // District wise locking: If developer is assigned a district, pre-select and restrict ONLY to their district!
-        if (!empty($user->district_name)) {
-            $userDist = strtoupper(trim($user->district_name));
+        // 1. Resolve Zone directly from ews_stp_districts master table
+        $zone = null;
+        if (!empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->zone_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanName)->first();
+            if (!$zone) {
+                $dist = DB::table('ews_districts')->where('name', $cleanName)->first();
+                if ($dist && $dist->zone_id) {
+                    $zone = DB::table('ews_stp_districts')->where('id', $dist->zone_id)->first();
+                }
+            }
+        }
+
+        // 2. Fetch ONLY districts that belong to this STP's Zone!
+        if ($zone) {
             $districts = DB::table('ews_districts')
-                ->where('name', $userDist)
-                ->orWhere('id', $user->district_id)
+                ->where('zone_id', $zone->id)
                 ->orderBy('name', 'asc')
                 ->get();
-            if ($districts->isEmpty()) {
-                $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
-            }
         } else {
             $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
         }
 
+        // Do not auto-preselect district; user must select everything manually while zone remains frozen
+        $selectedDistrictId = null;
         $towns = collect();
-        if ($districts->count() === 1) {
-            $towns = EwsTown::where('district_id', $districts->first()->id)->orderBy('name', 'asc')->get();
+        $projects = collect();
+        $townTypes = EwsTown::whereNotNull('type')->where('type', '!=', '')->distinct()->pluck('type')->sort()->values();
+        if ($townTypes->isEmpty()) {
+            $townTypes = collect(['Municipal Corporation', 'Municipal Council', 'Municipal Committee']);
         }
+        $displayZoneName = $this->resolveDisplayZoneName($user);
 
-        return view('ews.developer.create', compact('user', 'districts', 'towns'));
+        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'projects', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
     }
 
     public function store(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
@@ -215,6 +359,8 @@ class EwsDeveloperDashboardController extends Controller
             'district_id' => 'required|exists:ews_districts,id',
             'town_id' => 'required',
             'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
+            'new_town_type' => 'required_if:town_id,new|nullable|string|max:255',
+            'custom_town_type' => 'required_if:new_town_type,other|nullable|string|max:255',
             'project_id' => 'required',
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
             'block_id' => 'required',
@@ -222,76 +368,152 @@ class EwsDeveloperDashboardController extends Controller
         ]);
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
-        if (!empty($user->district_name)) {
-            $userDist = strtoupper(trim($user->district_name));
-            $selectedDist = strtoupper(trim($district->name));
-            if ($userDist !== $selectedDist && $user->district_id != $district->id) {
-                return back()->withInput()->with('error', "Unauthorized: You can only register flats for {$user->district_name}.");
-            }
+        if (!$district) {
+            return back()->withInput()->with('error', "Invalid district selected.");
         }
 
-        // Resolve Town ID and Name
+        // Resolve Zone
+        $zone = null;
+        if ($district->zone_id) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? $user->zone_id);
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : (!empty($user->zone_name) ? strtoupper($user->zone_name) : ($district ? strtoupper($district->name) . ' ZONE' : 'ZONE'));
+
+        // Resolve Town ID and Name from master ews_towns table
         if ($request->town_id === 'new') {
-            $townExists = EwsTown::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_town_name))])
-                ->exists();
-            if ($townExists) {
-                return back()->withInput()->with('error', "Validation Error: A town named '{$request->new_town_name}' already exists in this district. Please select it from the list.");
+            $cleanTownName = trim($request->new_town_name);
+            $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
+
+            $existingTowns = EwsTown::where('district_id', $district->id)->get();
+            $similarTown = EwsHelper::findSimilarName($cleanTownName, $existingTowns);
+            if ($similarTown) {
+                return back()->withInput()->with('error', "Validation Error: Town '{$cleanTownName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one.");
             }
 
-            $town = EwsTown::firstOrCreate([
+            $town = EwsTown::create([
                 'district_id' => $district->id,
-                'name' => trim($request->new_town_name),
+                'zone_id'     => $zoneId,
+                'zone_name'   => $zoneName,
+                'name'        => $cleanTownName,
+                'type'        => !empty($townType) ? $townType : null,
             ]);
-            $townId = $town->id;
-            $townName = $town->name;
         } else {
-            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->firstOrFail();
-            $townId = $town->id;
-            $townName = $town->name;
+            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
+            if (!$town) {
+                $town = EwsTown::find($request->town_id);
+            }
+            if (!$town) {
+                return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+            }
         }
+        $townId = $town->id;
+        $townName = $town->name;
 
         // Resolve Project ID and Name
         if ($request->project_id === 'new') {
-            $projectExists = EwsProject::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_project_name))])
-                ->exists();
-            if ($projectExists) {
-                return back()->withInput()->with('error', "Validation Error: A project named '{$request->new_project_name}' already exists in this district. Please select it from the list instead of adding it as a new project.");
+            $cleanProjName = trim($request->new_project_name);
+            $projectQuery = EwsProject::where('district_id', $district->id);
+            if ($zoneId) {
+                $projectQuery->where('zone_id', $zoneId);
+            }
+            if ($townId) {
+                $projectQuery->where(function($q) use ($townId) {
+                    $q->where('town_id', $townId)->orWhereNull('town_id');
+                });
+            }
+            $existingProjects = $projectQuery->get();
+            $similarProject = EwsHelper::findSimilarName($cleanProjName, $existingProjects);
+            if ($similarProject) {
+                return back()->withInput()->with('error', "Validation Error: Project '{$cleanProjName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the list instead of adding it as a new project.");
             }
 
-            $project = EwsProject::firstOrCreate([
+            $project = EwsProject::create([
+                'zone_id' => $zoneId,
+                'zone_name' => $zoneName,
                 'district_id' => $district->id,
-                'name' => trim($request->new_project_name),
+                'district_name' => $district->name,
+                'town_id' => $townId,
+                'town_name' => $townName,
+                'name' => $cleanProjName,
             ]);
             $projectId = $project->id;
             $projectName = $project->name;
         } else {
             $project = EwsProject::where('district_id', $district->id)->where('id', $request->project_id)->firstOrFail();
+            if (empty($project->town_id) && $townId) {
+                $project->update([
+                    'zone_id' => $project->zone_id ?? $zoneId,
+                    'zone_name' => $project->zone_name ?? $zoneName,
+                    'district_name' => $project->district_name ?? $district->name,
+                    'town_id' => $townId,
+                    'town_name' => $townName,
+                ]);
+            }
             $projectId = $project->id;
             $projectName = $project->name;
         }
 
         // Resolve Block ID and Name
         if ($request->block_id === 'new') {
-            $blockExists = EwsBlock::where('project_id', $projectId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_block_name))])
-                ->exists();
-            if ($blockExists) {
-                return back()->withInput()->with('error', "Validation Error: A block/tower named '{$request->new_block_name}' already exists under the selected project. Please select it from the list.");
+            $cleanBlockName = trim($request->new_block_name);
+            $existingBlocks = EwsBlock::where('project_id', $projectId)
+                ->where(function($q) use ($townId) {
+                    $q->where('town_id', $townId)->orWhereNull('town_id');
+                })->get();
+            $similarBlock = EwsHelper::findSimilarName($cleanBlockName, $existingBlocks);
+            if ($similarBlock) {
+                return back()->withInput()->with('error', "Validation Error: Block/Tower '{$cleanBlockName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under the selected project. Please select it from the list.");
             }
 
-            $block = EwsBlock::firstOrCreate([
-                'project_id' => $projectId,
-                'name' => trim($request->new_block_name),
+            $block = EwsBlock::create([
+                'zone_id'       => $zoneId,
+                'zone_name'     => $zoneName,
+                'district_id'   => $district->id,
+                'district_name' => $district->name,
+                'town_id'       => $townId,
+                'town_name'     => $townName,
+                'project_id'    => $projectId,
+                'project_name'  => $projectName,
+                'name'          => $cleanBlockName,
             ]);
             $blockId = $block->id;
             $blockName = $block->name;
         } else {
             $block = EwsBlock::where('project_id', $projectId)->where('id', $request->block_id)->firstOrFail();
+            if ((empty($block->town_id) && $townId) || empty($block->zone_id)) {
+                $block->update([
+                    'zone_id'       => $block->zone_id ?? $zoneId,
+                    'zone_name'     => $block->zone_name ?? $zoneName,
+                    'district_id'   => $block->district_id ?? $district->id,
+                    'district_name' => $block->district_name ?? $district->name,
+                    'town_id'       => $block->town_id ?? $townId,
+                    'town_name'     => $block->town_name ?? $townName,
+                    'project_name'  => $block->project_name ?? $projectName,
+                ]);
+            }
             $blockId = $block->id;
             $blockName = $block->name;
         }
+
+        // Resolve Zone directly from ews_stp_districts master table
+        $zone = null;
+        if (!empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && $district) {
+            $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $district->name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($user->zone_id ?? null);
+        $zoneName = $zone ? $zone->name . ' ZONE' : ($user->zone_name ?? ($district ? $district->name . ' ZONE' : 'N/A'));
 
         // Bulk Mode Generation
         if ($request->input('bulk_mode') == '1') {
@@ -321,30 +543,17 @@ class EwsDeveloperDashboardController extends Controller
             }
 
             $floorNum = (int)$request->floor_number;
-            
-            $flatNumbers = [];
-            if ($request->flat_number_type === 'custom') {
-                $raw = $request->custom_flat_numbers;
-                $parts = explode(',', $raw);
-                foreach ($parts as $part) {
-                    $num = trim($part);
-                    if ($num !== '') {
-                        $flatNumbers[] = $num;
-                    }
-                }
+            if ($request->flat_number_type === 'range') {
+                $flatNumbers = range((int)$request->from_flat, (int)$request->to_flat);
             } else {
-                $fromFlat = (int)$request->from_flat;
-                $toFlat = (int)$request->to_flat;
-                for ($i = $fromFlat; $i <= $toFlat; $i++) {
-                    $flatNumbers[] = $i;
-                }
+                $flatNumbers = array_filter(array_map('trim', explode(',', $request->custom_flat_numbers)));
             }
 
             if (empty($flatNumbers)) {
-                return back()->withInput()->with('error', "Invalid flats configuration. Please provide a valid flat range or custom list.");
+                return back()->withInput()->with('error', "Validation Error: No valid flat numbers provided.");
             }
 
-            // Query existing flats for duplicate check in bulk
+            // Existing Flats in Project and Block to prevent duplicates
             $existingFlats = EwsBuilderFlat::where('district_id', $district->id)
                 ->where('town_name', $townName)
                 ->where('project_name', $projectName)
@@ -388,8 +597,12 @@ class EwsDeveloperDashboardController extends Controller
                     }
 
                     $flatData = [
+                        'zone_id' => $zoneId,
+                        'zone_name' => $zoneName,
                         'district_id' => $district->id,
+                        'dist_id' => $district->id,
                         'district_name' => $district->name,
+                        'dist_name' => $district->name,
                         'town_name' => $townName,
                         'town_id' => $townId,
                         'project_name' => $projectName,
@@ -462,8 +675,12 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $flat = EwsBuilderFlat::create([
+            'zone_id' => $zoneId,
+            'zone_name' => $zoneName,
             'district_id' => $district->id,
+            'dist_id' => $district->id,
             'district_name' => $district->name,
+            'dist_name' => $district->name,
             'town_name' => $townName,
             'town_id' => $townId,
             'project_name' => $projectName,
@@ -497,7 +714,7 @@ class EwsDeveloperDashboardController extends Controller
     public function edit($secureId)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
@@ -530,11 +747,34 @@ class EwsDeveloperDashboardController extends Controller
         $towns = EwsTown::where('district_id', $flat->district_id)
             ->orderBy('name', 'asc')
             ->get();
+        if (!$flat->town_id && !empty($flat->town_name)) {
+            $matchingTown = $towns->first(function($t) use ($flat) {
+                return strcasecmp(trim($t->name), trim($flat->town_name)) === 0;
+            });
+            if ($matchingTown) {
+                $flat->town_id = $matchingTown->id;
+            }
+        }
 
-        // Fetch projects for the flat's district
-        $projects = EwsProject::where('district_id', $flat->district_id)
-            ->orderBy('name', 'asc')
-            ->get();
+        // Fetch projects for the flat's district and town
+        $projectsQuery = EwsProject::where('district_id', $flat->district_id);
+        if ($flat->town_id) {
+            $projectsQuery->where(function ($q) use ($flat) {
+                $q->where('town_id', $flat->town_id);
+                if ($flat->project_id) {
+                    $q->orWhere('id', $flat->project_id);
+                }
+            });
+        }
+        $projects = $projectsQuery->orderBy('name', 'asc')->get();
+        if (!$flat->project_id && !empty($flat->project_name)) {
+            $matchingProj = $projects->first(function($p) use ($flat) {
+                return strcasecmp(trim($p->name), trim($flat->project_name)) === 0;
+            });
+            if ($matchingProj) {
+                $flat->project_id = $matchingProj->id;
+            }
+        }
 
         // Fetch blocks for the flat's project
         $blocks = collect();
@@ -542,22 +782,57 @@ class EwsDeveloperDashboardController extends Controller
             $blocks = EwsBlock::where('project_id', $flat->project_id)
                 ->orderBy('name', 'asc')
                 ->get();
+            if (!$flat->block_id && !empty($flat->block_tower_number)) {
+                $matchingBlock = $blocks->first(function($b) use ($flat) {
+                    return strcasecmp(trim($b->name), trim($flat->block_tower_number)) === 0;
+                });
+                if ($matchingBlock) {
+                    $flat->block_id = $matchingBlock->id;
+                }
+            }
         }
 
-        return view('ews.developer.edit', compact('user', 'flat', 'districts', 'secureId', 'towns', 'projects', 'blocks'));
+        $zone = null;
+        if (!empty($flat->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $flat->zone_id)->first();
+        } elseif (!empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && $flat->district_name) {
+            $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $flat->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
+        }
+
+        $townTypes = EwsTown::whereNotNull('type')->where('type', '!=', '')->distinct()->pluck('type')->sort()->values();
+        if ($townTypes->isEmpty()) {
+            $townTypes = collect(['Municipal Corporation', 'Municipal Council', 'Municipal Committee']);
+        }
+        $displayZoneName = $this->resolveDisplayZoneName($user);
+
+        return view('ews.developer.edit', compact('user', 'flat', 'zone', 'districts', 'secureId', 'towns', 'townTypes', 'projects', 'blocks', 'displayZoneName'));
     }
 
     public function update(Request $request, $secureId)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
 
-        // District-wise update check
-        if (!empty($user->district_name)) {
+        // Zone-wise update authorization check
+        if (!empty($user->zone_id)) {
+            $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+            $allowed = ($flat->zone_id == $user->zone_id) || in_array($flat->district_id, $zoneDistrictIds) || ($flat->created_by == $user->id);
+            if (!$allowed) {
+                abort(403, 'Unauthorized action for this zone.');
+            }
+        } elseif (!empty($user->district_name)) {
             $userDist = strtoupper(trim($user->district_name));
             $flatDist = strtoupper(trim($flat->district_name));
             if ($userDist !== $flatDist && $user->district_id != $flat->district_id && $flat->created_by != $user->id) {
@@ -569,6 +844,8 @@ class EwsDeveloperDashboardController extends Controller
             'district_id' => 'required|exists:ews_districts,id',
             'town_id' => 'required',
             'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
+            'new_town_type' => 'required_if:town_id,new|nullable|string|max:255',
+            'custom_town_type' => 'required_if:new_town_type,other|nullable|string|max:255',
             'project_id' => 'required',
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
             'block_id' => 'required',
@@ -579,7 +856,11 @@ class EwsDeveloperDashboardController extends Controller
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
 
-        if (!empty($user->district_name)) {
+        if (!empty($user->zone_id)) {
+            if ($district->zone_id != $user->zone_id) {
+                return back()->withInput()->with('error', "Unauthorized: You can only update flats for districts within your assigned zone.");
+            }
+        } elseif (!empty($user->district_name)) {
             $userDist = strtoupper(trim($user->district_name));
             $selectedDist = strtoupper(trim($district->name));
             if ($userDist !== $selectedDist && $user->district_id != $district->id) {
@@ -587,60 +868,102 @@ class EwsDeveloperDashboardController extends Controller
             }
         }
 
-        // Resolve Town ID and Name
+        // Resolve Zone directly from ews_stp_districts master table
+        $zone = null;
+        if (!empty($district->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && $district) {
+            $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $district->name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? ($user->zone_id ?? $flat->zone_id));
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : ($flat->zone_name ?? (!empty($user->zone_name) ? strtoupper($user->zone_name) : ($district ? strtoupper($district->name) . ' ZONE' : 'ZONE')));
+
+        // Resolve Town ID and Name from master ews_towns table
         if ($request->town_id === 'new') {
-            $townExists = EwsTown::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_town_name))])
-                ->exists();
-            if ($townExists) {
-                return back()->withInput()->with('error', "Validation Error: A town named '{$request->new_town_name}' already exists in this district. Please select it from the list.");
+            $cleanTownName = trim($request->new_town_name);
+            $townType = $request->new_town_type === 'other' ? trim($request->custom_town_type ?? '') : trim($request->new_town_type ?? '');
+
+            $existingTowns = EwsTown::where('district_id', $district->id)->get();
+            $similarTown = EwsHelper::findSimilarName($cleanTownName, $existingTowns);
+            if ($similarTown) {
+                return back()->withInput()->with('error', "Validation Error: Town '{$cleanTownName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one.");
             }
 
-            $town = EwsTown::firstOrCreate([
+            $town = EwsTown::create([
                 'district_id' => $district->id,
-                'name' => trim($request->new_town_name),
+                'zone_id'     => $zoneId,
+                'zone_name'   => $zoneName,
+                'name'        => $cleanTownName,
+                'type'        => !empty($townType) ? $townType : null,
             ]);
-            $townId = $town->id;
-            $townName = $town->name;
         } else {
-            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->firstOrFail();
-            $townId = $town->id;
-            $townName = $town->name;
+            $town = EwsTown::where('district_id', $district->id)->where('id', $request->town_id)->first();
+            if (!$town) {
+                $town = EwsTown::find($request->town_id);
+            }
+            if (!$town) {
+                return back()->withInput()->with('error', "Validation Error: The selected town is not registered under {$district->name}.");
+            }
         }
+        $townId = $town->id;
+        $townName = $town->name;
 
         // Resolve Project ID and Name
         if ($request->project_id === 'new') {
-            $projectExists = EwsProject::where('district_id', $district->id)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_project_name))])
-                ->exists();
-            if ($projectExists) {
-                return back()->withInput()->with('error', "Validation Error: A project named '{$request->new_project_name}' already exists in this district. Please select it from the list instead of adding it as a new project.");
+            $cleanProjName = trim($request->new_project_name);
+            $existingProjects = EwsProject::where('district_id', $district->id)->get();
+            $similarProject = EwsHelper::findSimilarName($cleanProjName, $existingProjects);
+            if ($similarProject) {
+                return back()->withInput()->with('error', "Validation Error: Project '{$cleanProjName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the list instead of adding it as a new project.");
             }
 
-            $project = EwsProject::firstOrCreate([
+            $project = EwsProject::create([
+                'zone_id' => $zoneId,
+                'zone_name' => $zoneName,
                 'district_id' => $district->id,
-                'name' => trim($request->new_project_name),
+                'district_name' => $district->name,
+                'town_id' => $townId,
+                'town_name' => $townName,
+                'name' => $cleanProjName,
             ]);
             $projectId = $project->id;
             $projectName = $project->name;
         } else {
             $project = EwsProject::where('district_id', $district->id)->where('id', $request->project_id)->firstOrFail();
+            if (empty($project->town_id) && $townId) {
+                $project->update([
+                    'zone_id' => $project->zone_id ?? $zoneId,
+                    'zone_name' => $project->zone_name ?? $zoneName,
+                    'district_name' => $project->district_name ?? $district->name,
+                    'town_id' => $townId,
+                    'town_name' => $townName,
+                ]);
+            }
             $projectId = $project->id;
             $projectName = $project->name;
         }
 
         // Resolve Block ID and Name
         if ($request->block_id === 'new') {
-            $blockExists = EwsBlock::where('project_id', $projectId)
-                ->whereRaw('LOWER(name) = ?', [strtolower(trim($request->new_block_name))])
-                ->exists();
-            if ($blockExists) {
-                return back()->withInput()->with('error', "Validation Error: A block/tower named '{$request->new_block_name}' already exists under the selected project. Please select it from the list.");
+            $cleanBlockName = trim($request->new_block_name);
+            $existingBlocks = EwsBlock::where('project_id', $projectId)->get();
+            $similarBlock = EwsHelper::findSimilarName($cleanBlockName, $existingBlocks);
+            if ($similarBlock) {
+                return back()->withInput()->with('error', "Validation Error: Block/Tower '{$cleanBlockName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under the selected project. Please select it from the list.");
             }
 
-            $block = EwsBlock::firstOrCreate([
+            $block = EwsBlock::create([
                 'project_id' => $projectId,
-                'name' => trim($request->new_block_name),
+                'name' => $cleanBlockName,
             ]);
             $blockId = $block->id;
             $blockName = $block->name;
@@ -677,7 +1000,25 @@ class EwsDeveloperDashboardController extends Controller
             return back()->withInput()->with('error', "Validation Error: Another EWS Flat with the same details ('{$request->flat_number}', Floor '{$floorLabel}', Block '{$blockName}') is already registered.");
         }
 
+        // Resolve Zone directly from ews_stp_districts master table
+        $zone = null;
+        if (!empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && $district) {
+            $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $district->name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($flat->zone_id ?? null);
+        $zoneName = $zone ? $zone->name . ' ZONE' : ($flat->zone_name ?? ($district ? $district->name . ' ZONE' : 'N/A'));
+
         $validatedData = [
+            'zone_id' => $zoneId,
+            'zone_name' => $zoneName,
             'district_id' => $district->id,
             'district_name' => $district->name,
             'town_name' => $townName,
@@ -698,16 +1039,52 @@ class EwsDeveloperDashboardController extends Controller
         ];
 
         $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
+        if (!empty($district->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_name)) {
+            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->zone_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
+        }
+        if (!$zone && !empty($user->district_name)) {
+            $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
+            $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
+        }
+        $zoneId = $zone->id ?? ($user->zone_id ?? null);
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : (!empty($user->zone_name) ? strtoupper($user->zone_name) : null);
 
-        $flat->update($validatedData);
+        $flat->district_id = $district->id;
+        $flat->dist_id = $district->id;
+        $flat->district_name = $district->name;
+        $flat->dist_name = $district->name;
+        $flat->zone_id = $zoneId;
+        $flat->zone_name = $zoneName;
+        $flat->town_id = $townId;
+        $flat->town_name = $townName;
+        $flat->project_id = $projectId;
+        $flat->project_name = $projectName;
+        $flat->block_id = $blockId;
+        $flat->block_tower_number = $blockName;
+        $flat->floor = $floorLabel;
+        $flat->flat_number = $request->flat_number;
+        $flat->flat_code = EwsHelper::generateFlatCode(
+            $townName,
+            $user->name,
+            $floorLabel,
+            $blockName,
+            $request->flat_number
+        );
 
-        $newDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
+        $flat->save();
 
-        // Create log entry
+        // Update activity log
         EwsDeveloperLog::create([
             'user_id' => $user->id,
             'action' => 'UPDATED',
-            'details' => "Updated EWS Flat ID #{$flat->id} from [{$oldDetails}] to [{$newDetails}]",
+            'details' => "Updated EWS Flat [Flat: {$flat->flat_number}, Tower: {$flat->block_tower_number}] under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})",
             'ip_address' => $request->ip(),
         ]);
 
@@ -717,11 +1094,21 @@ class EwsDeveloperDashboardController extends Controller
     public function destroy(Request $request, $secureId)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
+
+        // Zone-wise delete authorization check
+        if (!empty($user->zone_id)) {
+            $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+            $allowed = ($flat->zone_id == $user->zone_id) || in_array($flat->district_id, $zoneDistrictIds) || ($flat->created_by == $user->id);
+            if (!$allowed) {
+                abort(403, 'Unauthorized action for this zone.');
+            }
+        }
+
         $oldDetails = "Flat: {$flat->flat_number}, Floor: {$flat->floor}, Tower: {$flat->block_tower_number} under Project '{$flat->project_name}' in {$flat->town_name} ({$flat->district_name})";
 
         $flat->delete();
@@ -740,23 +1127,80 @@ class EwsDeveloperDashboardController extends Controller
     public function logs()
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
+
+        $displayZoneName = $this->resolveDisplayZoneName($user);
 
         // Fetch logs with pagination
         $logs = EwsDeveloperLog::with('developer')
             ->orderBy('id', 'desc')
             ->paginate(50);
 
-        return view('ews.developer.logs', compact('user', 'logs'));
+        return view('ews.developer.logs', compact('user', 'logs', 'displayZoneName'));
     }
 
     public function exportCsv(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
+            }
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function($q) use ($s) {
+                    $q->where('application_number', 'like', "%{$s}%")
+                      ->orWhere('full_name', 'like', "%{$s}%")
+                      ->orWhere('mobile_number', 'like', "%{$s}%")
+                      ->orWhere('flat_no', 'like', "%{$s}%")
+                      ->orWhere('dist_name', 'like', "%{$s}%");
+                });
+            }
+            $allotted = $query->orderBy('id', 'asc')->get();
+
+            $headers = [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="ews_allotted_flats_' . date('Ymd_His') . '.csv"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            $callback = function () use ($allotted) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, ['S.No.', 'District Name', 'Application Number', 'Allottee Name', 'Mobile Number', 'Flat No.', 'Possession Status']);
+
+                foreach ($allotted as $index => $row) {
+                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given');
+                    fputcsv($file, [
+                        $index + 1,
+                        $row->dist_name,
+                        $row->application_number,
+                        $row->full_name,
+                        $row->mobile_number,
+                        $row->flat_no,
+                        $isGiven ? 'Possession Given' : ($row->possession_status ?: 'Allotted'),
+                    ]);
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
         }
 
         // Respect search and custom district filters
@@ -795,7 +1239,7 @@ class EwsDeveloperDashboardController extends Controller
     public function exportPdf(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
         }
 
@@ -809,8 +1253,62 @@ class EwsDeveloperDashboardController extends Controller
     public function exportExcel(Request $request)
     {
         $user = Auth::user();
-        if (!$user || $user->role !== 'ews_developer') {
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        if ($request->input('ownership_scope') === 'allotted') {
+            $query = DB::table('ews_allotted_8');
+            if ($request->filled('district_id')) {
+                $query->where('dist_id', $request->district_id);
+            } else {
+                if (!empty($user->zone_id)) {
+                    $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                    $query->whereIn('dist_id', $zoneDistrictIds);
+                } elseif ($user && !empty($user->district_name)) {
+                    $userDist = strtoupper(trim(str_ireplace(' ZONE', '', $user->district_name)));
+                    $query->where('dist_name', 'like', "%{$userDist}%");
+                }
+            }
+            if ($request->filled('search')) {
+                $s = $request->search;
+                $query->where(function($q) use ($s) {
+                    $q->where('application_number', 'like', "%{$s}%")
+                      ->orWhere('full_name', 'like', "%{$s}%")
+                      ->orWhere('mobile_number', 'like', "%{$s}%")
+                      ->orWhere('flat_no', 'like', "%{$s}%")
+                      ->orWhere('dist_name', 'like', "%{$s}%");
+                });
+            }
+            $allotted = $query->orderBy('id', 'asc')->get();
+
+            $headers = [
+                'Content-Type' => 'application/vnd.ms-excel',
+                'Content-Disposition' => 'attachment; filename="ews_allotted_flats_' . date('Ymd_His') . '.xls"',
+                'Pragma' => 'no-cache',
+                'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                'Expires' => '0',
+            ];
+
+            $callback = function () use ($allotted) {
+                $file = fopen('php://output', 'w');
+                fputs($file, "S.No.\tDistrict Name\tApplication Number\tAllottee Name\tMobile Number\tFlat No.\tPossession Status\n");
+
+                foreach ($allotted as $index => $row) {
+                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given');
+                    fputs($file, ($index + 1) . "\t" .
+                        $row->dist_name . "\t" .
+                        $row->application_number . "\t" .
+                        $row->full_name . "\t" .
+                        $row->mobile_number . "\t" .
+                        $row->flat_no . "\t" .
+                        ($isGiven ? 'Possession Given' : ($row->possession_status ?: 'Allotted')) . "\n"
+                    );
+                }
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
         }
 
         $flats = $this->getFilteredQuery($request)->get();
@@ -852,24 +1350,77 @@ class EwsDeveloperDashboardController extends Controller
     public function getProjects(Request $request)
     {
         $districtId = $request->query('district_id');
-        if (!$districtId) {
+        $townId = $request->query('town_id');
+        $zoneId = $request->query('zone_id');
+
+        if (!$districtId && !$townId && !$zoneId) {
             return response()->json([]);
         }
-        $projects = EwsProject::where('district_id', $districtId)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'name']);
+
+        $query = EwsProject::query();
+
+        if ($zoneId) {
+            $query->where('zone_id', $zoneId);
+        }
+
+        if ($districtId) {
+            $query->where('district_id', $districtId);
+        }
+
+        if ($townId) {
+            $query->where(function ($q) use ($townId) {
+                $q->where('town_id', $townId)
+                  ->orWhereNull('town_id');
+            });
+        }
+
+        $projects = $query->orderBy('name', 'asc')
+            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id']);
+
         return response()->json($projects);
     }
 
     public function getBlocks(Request $request)
     {
         $projectId = $request->query('project_id');
-        if (!$projectId) {
+        $townId = $request->query('town_id');
+        $districtId = $request->query('district_id');
+        $zoneId = $request->query('zone_id');
+
+        if (!$projectId && !$townId && !$districtId && !$zoneId) {
             return response()->json([]);
         }
-        $blocks = EwsBlock::where('project_id', $projectId)
-            ->orderBy('name', 'asc')
-            ->get(['id', 'name']);
+
+        $query = EwsBlock::query();
+
+        if ($projectId) {
+            $query->where('project_id', $projectId);
+        }
+
+        if ($townId) {
+            $query->where(function ($q) use ($townId) {
+                $q->where('town_id', $townId)
+                  ->orWhereNull('town_id');
+            });
+        }
+
+        if ($districtId) {
+            $query->where(function ($q) use ($districtId) {
+                $q->where('district_id', $districtId)
+                  ->orWhereNull('district_id');
+            });
+        }
+
+        if ($zoneId) {
+            $query->where(function ($q) use ($zoneId) {
+                $q->where('zone_id', $zoneId)
+                  ->orWhereNull('zone_id');
+            });
+        }
+
+        $blocks = $query->orderBy('name', 'asc')
+            ->get(['id', 'name', 'project_id', 'project_name', 'town_id', 'town_name', 'district_id', 'zone_id']);
+
         return response()->json($blocks);
     }
 
@@ -877,11 +1428,223 @@ class EwsDeveloperDashboardController extends Controller
     {
         $districtId = $request->query('district_id');
         if (!$districtId) {
+            $user = Auth::user();
+            if ($user && !empty($user->zone_id)) {
+                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
+                $towns = EwsTown::whereIn('district_id', $zoneDistrictIds)->orderBy('name', 'asc')->get(['id', 'name', 'type']);
+                return response()->json($towns);
+            }
             return response()->json([]);
         }
         $towns = EwsTown::where('district_id', $districtId)
             ->orderBy('name', 'asc')
-            ->get(['id', 'name']);
+            ->get(['id', 'name', 'type']);
         return response()->json($towns);
+    }
+
+    public function storeTownAjax(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        $request->validate([
+            'district_id' => 'required|exists:ews_districts,id',
+            'town_name' => 'required|string|max:255',
+            'town_type' => 'required|string|max:255',
+        ]);
+
+        $districtId = (int)$request->district_id;
+        $cleanName = trim($request->town_name);
+        $cleanType = trim($request->town_type);
+
+        // Resolve Zone for this district
+        $district = DB::table('ews_districts')->where('id', $districtId)->first();
+        $zone = null;
+        if ($district && !empty($district->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && $user && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? null);
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : null;
+
+        $existingTowns = EwsTown::where('district_id', $districtId)->get();
+        $similarTown = EwsHelper::findSimilarName($cleanName, $existingTowns);
+
+        if ($similarTown) {
+            return response()->json([
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarTown['existing'],
+                'message' => "Town '{$cleanName}' already exists or is too similar to existing town '{$similarTown['existing']}' ({$similarTown['reason']}). Please select it from the list instead of adding a new one."
+            ], 422);
+        }
+
+        $town = EwsTown::create([
+            'district_id' => $districtId,
+            'zone_id'     => $zoneId,
+            'zone_name'   => $zoneName,
+            'name'        => $cleanName,
+            'type'        => $cleanType,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Town '{$cleanName}' added successfully to database.",
+            'town' => [
+                'id' => $town->id,
+                'name' => $town->name,
+                'type' => $town->type,
+                'zone_id' => $town->zone_id,
+                'zone_name' => $town->zone_name,
+            ]
+        ]);
+    }
+
+    public function storeProjectAjax(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        $request->validate([
+            'district_id' => 'required|exists:ews_districts,id',
+            'town_id' => 'nullable|exists:ews_towns,id',
+            'project_name' => 'required|string|max:255',
+        ]);
+
+        $districtId = (int)$request->district_id;
+        $townId = $request->filled('town_id') ? (int)$request->town_id : null;
+        $cleanName = trim($request->project_name);
+
+        $district = DB::table('ews_districts')->where('id', $districtId)->first();
+        $town = $townId ? EwsTown::find($townId) : null;
+
+        // Resolve Zone
+        $zone = null;
+        if ($district && $district->zone_id) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
+        }
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? $user->zone_id);
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : (!empty($user->zone_name) ? strtoupper($user->zone_name) : null);
+
+        $projectQuery = EwsProject::where('district_id', $districtId);
+        if ($zoneId) {
+            $projectQuery->where('zone_id', $zoneId);
+        }
+        if ($townId) {
+            $projectQuery->where(function($q) use ($townId) {
+                $q->where('town_id', $townId)->orWhereNull('town_id');
+            });
+        }
+        $existingProjects = $projectQuery->get();
+        $similarProject = EwsHelper::findSimilarName($cleanName, $existingProjects);
+
+        if ($similarProject) {
+            return response()->json([
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarProject['existing'],
+                'message' => "Project '{$cleanName}' already exists or is too similar to existing project '{$similarProject['existing']}' ({$similarProject['reason']}). Please select it from the dropdown."
+            ], 422);
+        }
+
+        $project = EwsProject::create([
+            'zone_id' => $zoneId,
+            'zone_name' => $zoneName,
+            'district_id' => $districtId,
+            'district_name' => $district ? $district->name : null,
+            'town_id' => $townId,
+            'town_name' => $town ? $town->name : null,
+            'name' => $cleanName,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Project '{$cleanName}' added successfully to database.",
+            'project' => [
+                'id' => $project->id,
+                'name' => $project->name,
+            ]
+        ]);
+    }
+
+    public function storeBlockAjax(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        $request->validate([
+            'project_id' => 'required|exists:ews_projects,id',
+            'block_name' => 'required|string|max:255',
+            'town_id'    => 'nullable|exists:ews_towns,id',
+            'district_id'=> 'nullable|exists:ews_districts,id',
+            'zone_id'    => 'nullable',
+        ]);
+
+        $projectId = (int)$request->project_id;
+        $cleanName = trim($request->block_name);
+
+        $project = EwsProject::find($projectId);
+        $districtId = $request->filled('district_id') ? (int)$request->district_id : ($project->district_id ?? null);
+        $townId = $request->filled('town_id') ? (int)$request->town_id : ($project->town_id ?? null);
+        $zoneId = $request->filled('zone_id') ? (int)$request->zone_id : ($project->zone_id ?? $user->zone_id);
+
+        $district = $districtId ? DB::table('ews_districts')->where('id', $districtId)->first() : null;
+        $town = $townId ? EwsTown::find($townId) : null;
+        $zone = $zoneId ? DB::table('ews_stp_districts')->where('id', $zoneId)->first() : null;
+
+        $zoneName = $zone ? (str_contains(strtoupper($zone->name), 'ZONE') ? strtoupper($zone->name) : strtoupper($zone->name) . ' ZONE') : ($project->zone_name ?? null);
+        $districtName = $district ? $district->name : ($project->district_name ?? null);
+        $townName = $town ? $town->name : ($project->town_name ?? null);
+        $projectName = $project ? $project->name : null;
+
+        $existingBlocksQuery = EwsBlock::where('project_id', $projectId);
+        if ($townId) {
+            $existingBlocksQuery->where(function($q) use ($townId) {
+                $q->where('town_id', $townId)->orWhereNull('town_id');
+            });
+        }
+        $existingBlocks = $existingBlocksQuery->get();
+        $similarBlock = EwsHelper::findSimilarName($cleanName, $existingBlocks);
+
+        if ($similarBlock) {
+            return response()->json([
+                'success' => false,
+                'duplicate' => true,
+                'existing_name' => $similarBlock['existing'],
+                'message' => "Block/Tower '{$cleanName}' already exists or is too similar to existing '{$similarBlock['existing']}' ({$similarBlock['reason']}) under this project. Please select it from the dropdown."
+            ], 422);
+        }
+
+        $block = EwsBlock::create([
+            'zone_id'       => $zoneId,
+            'zone_name'     => $zoneName,
+            'district_id'   => $districtId,
+            'district_name' => $districtName,
+            'town_id'       => $townId,
+            'town_name'     => $townName,
+            'project_id'    => $projectId,
+            'project_name'  => $projectName,
+            'name'          => $cleanName,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Block/Tower '{$cleanName}' added successfully to database.",
+            'block' => [
+                'id' => $block->id,
+                'name' => $block->name,
+            ]
+        ]);
     }
 }

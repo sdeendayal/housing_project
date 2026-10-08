@@ -23,7 +23,7 @@ class RoleMiddleware
                 'citizen' => route('citizen.login'),
                 'villager' => route('mmgav.villager.login'),
                 'ews_user' => route('ews.citizen.login'),
-                'ews_developer' => route('ews.developer.login'),
+                'ews_developer', 'ews_stp', 'stp' => route('ews.developer.login'),
                 'ews_department' => route('ews.department.login'),
                 default => route('pp.department.login'),
             };
@@ -50,6 +50,11 @@ class RoleMiddleware
                     $authorized = true;
                     break;
                 }
+            } elseif (in_array($role, ['ews_developer', 'ews_stp', 'stp'], true)) {
+                if (in_array($userRole, ['ews_developer', 'ews_stp', 'stp'], true)) {
+                    $authorized = true;
+                    break;
+                }
             } else {
                 if ($userRole === $role) {
                     $authorized = true;
@@ -68,7 +73,7 @@ class RoleMiddleware
                 'citizen' => route('citizen.login'),
                 'villager' => route('mmgav.villager.login'),
                 'ews_user' => route('ews.citizen.login'),
-                'ews_developer' => route('ews.developer.login'),
+                'ews_developer', 'ews_stp', 'stp' => route('ews.developer.login'),
                 'ews_department' => route('ews.department.login'),
                 default => route('pp.department.login'),
             };

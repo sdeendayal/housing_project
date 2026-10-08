@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer - Registry Dashboard</title>
+    <title>EWS STP - Registry Dashboard</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -123,68 +123,7 @@
 </head>
 <body class="h-full flex overflow-hidden bg-[#f4f7fa]">
 
-    <!-- DEEP NAVY / SLATE SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 shrink-0 h-full shadow-xl z-20">
-        <!-- Brand logo -->
-        <div class="h-16 px-6 border-b border-slate-800 flex items-center gap-2.5 shrink-0 bg-slate-950">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-                <i class="bi bi-shield-fill-check text-white text-sm"></i>
-            </div>
-            <div>
-                <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
-            </div>
-        </div>
-
-        <!-- Menu Navigation -->
-        <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto custom-scroll">
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Navigation Console</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.dashboard') }}" id="nav-dashboard"
-                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg {{ $currentView === 'dashboard' ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                        <i class="bi bi-speedometer2 text-sky-400"></i>
-                        <span>Dashboard</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" id="nav-district-flats"
-                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg {{ $currentView === 'district' ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                        <i class="bi bi-building text-sky-400"></i>
-                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard', ['view' => 'my_flats']) }}" id="nav-my-flats"
-                        class="flex items-center gap-2.5 px-3 py-2 rounded-lg {{ $currentView === 'my_flats' ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                        <i class="bi bi-person-check-fill text-emerald-400"></i>
-                        <span>Flats Added By Me</span>
-                    </a>
-                    <a href="{{ route('ews.developer.flats.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-plus-circle text-slate-400"></i>
-                        <span>Register Flat</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Activity</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.logs') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-journal-text text-slate-400"></i>
-                        <span>Developer Logs</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Session Details -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950 flex flex-col gap-2 shrink-0">
-            <div class="flex items-center justify-between text-[9px] text-slate-500 font-mono">
-                <span>VERSION: 2.4-stable</span>
-            </div>
-            <a href="{{ route('ews.developer.logout') }}" class="w-full py-1.5 bg-red-500/20 hover:bg-red-600 text-red-300 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1 border border-red-500/30">
-                <i class="bi bi-power"></i>
-                <span>Logout Session</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.developer.partials.sidebar')
 
     <!-- RIGHT CONTAINER WORKSPACE -->
     <div class="flex-1 flex flex-col overflow-hidden h-full">
@@ -198,11 +137,11 @@
                 <div>
                     <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">
                         @if($currentView === 'district')
-                            {{ $user->district_name ?? 'District' }} District Master Registry
+                            {{ !empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' Zone') : 'Zone' }} Master Registry
                         @elseif($currentView === 'my_flats')
                             My Registered Flats Inventory
                         @else
-                            Developer Command Dashboard
+                            STP Command Dashboard
                         @endif
                     </h2>
                     <p class="text-[8px] text-slate-455 font-mono uppercase">EWS Builder Housing Administration</p>
@@ -214,13 +153,13 @@
                 <div class="text-right">
                     <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
-                        @if(!empty($user->district_name))
-                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                        @if(!empty($displayZoneName))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
                         @endif
                         <i class="bi bi-person-circle text-sky-600"></i>
                     </div>
                     <div class="text-[8.5px] text-slate-500 font-mono">
-                        District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
+                        Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
                     </div>
                 </div>
                 <a href="{{ route('ews.developer.logout') }}" class="md:hidden px-3 py-1.5 bg-red-50 text-red-650 rounded-lg text-[9px] font-black uppercase border border-red-100">
@@ -230,161 +169,151 @@
         </header>
 
         <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 space-y-5 custom-scroll">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scroll">
             
             @if($currentView === 'dashboard')
                 <!-- DASHBOARD VIEW: OVERVIEW TELEMETRY & PROJECT BREAKDOWN -->
                 
-                <!-- Welcome Banner -->
-                <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-indigo-950 rounded-xl p-6 text-white shadow-md relative overflow-hidden">
-                    <div class="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-l from-indigo-500/10 to-transparent pointer-events-none"></div>
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
-                        <div>
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded-md text-[9px] font-black uppercase mb-2">
-                                <i class="bi bi-geo-alt-fill"></i> ASSIGNED DISTRICT: {{ strtoupper($user->district_name ?? 'ALL') }}
+                <!-- Sleek Compact Welcome Header -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-xl px-4 py-2.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 relative overflow-hidden">
+                    <div class="flex items-center gap-3 relative z-10">
+                        <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
+                            <i class="bi bi-speedometer2 text-sm"></i>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
+                            <h2 class="text-xs font-black tracking-tight text-white uppercase">Welcome, {{ $user->name }}</h2>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded text-[8.5px] font-black uppercase">
+                                <i class="bi bi-geo-alt-fill text-[8px]"></i> {{ $displayZoneName ?? 'ZONE' }}
                             </span>
-                            <h2 class="text-lg font-black tracking-tight text-white">Welcome, {{ $user->name }}</h2>
-                            <p class="text-xs text-slate-300 mt-0.5">EWS Builder Flats Registry Console & Inventory Management Panel</p>
+                            <span class="text-[9px] text-slate-400 font-mono hidden md:inline">| EWS Registry Console</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <a href="{{ route('ews.developer.flats.create') }}" class="px-4 py-2 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5 transition-all">
-                                <i class="bi bi-plus-lg"></i>
-                                <span>Register New Flat</span>
-                            </a>
-                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 relative z-10">
+                        <a href="{{ route('ews.developer.flats.create') }}" class="px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 transition-all">
+                            <i class="bi bi-plus-lg text-[10px]"></i>
+                            <span>Register New Flat</span>
+                        </a>
                     </div>
                 </div>
 
                 <!-- Telemetry Stats Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <!-- Stat 1: Total District Flats -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+                    <!-- Stat 1: Zone Allotted Flats from 4,211 State Pool -->
+                    <a href="{{ route('ews.developer.dashboard', ['view' => 'allotted']) }}" class="bg-white border border-amber-200/80 hover:border-amber-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
+                        <div>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-amber-600">Total Allotted Flats</span>
+                            <h4 class="text-xl font-black text-amber-600 font-mono mt-0.5">{{ number_format($stats['total_allotted']) }}</h4>
+                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">From 4,211 State Pool</span>
+                        </div>
+                        <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 group-hover:scale-110 transition-all">
+                            <i class="bi bi-houses-fill text-lg"></i>
+                        </div>
+                    </a>
+
+                    <!-- Stat 2: Total Zone Offered Flats -->
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" class="bg-white border border-sky-200/80 hover:border-sky-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-sky-600">District Master</span>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-sky-600">All {{ strtoupper(trim(str_ireplace('ZONE', '', $displayZoneName ?? 'ROHTAK'))) }} Offered Flats</span>
                             <h4 class="text-xl font-black text-sky-600 font-mono mt-0.5">{{ $stats['total_flats'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Total {{ $user->district_name ?? '' }} Flats</span>
+                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Total Offered In Zone</span>
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-building text-lg"></i>
                         </div>
                     </a>
 
-                    <!-- Stat 2: Flats Added By Me -->
+                    <!-- Stat 3: Offered By Me -->
                     <a href="{{ route('ews.developer.dashboard', ['view' => 'my_flats']) }}" class="bg-white border border-emerald-200/80 hover:border-emerald-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
                         <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-emerald-600">Personal Entries</span>
+                            <span class="block text-[9px] font-black uppercase tracking-wider text-emerald-600">Offered By Me</span>
                             <h4 class="text-xl font-black text-emerald-600 font-mono mt-0.5">{{ $stats['my_flats'] }}</h4>
-                            <span class="block text-[8px] text-emerald-500 font-mono uppercase mt-1">My Created Flats</span>
+                            <span class="block text-[8px] text-emerald-500 font-mono uppercase mt-1">Flats Offered By Me</span>
                         </div>
                         <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-all">
                             <i class="bi bi-person-check-fill text-lg"></i>
                         </div>
                     </a>
-
-                    <!-- Stat 3: Active Projects -->
-                    <a href="javascript:void(0)" onclick="openProjectsModal(event)" class="bg-white border border-indigo-200/80 hover:border-indigo-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-indigo-600">District Projects</span>
-                            <h4 class="text-xl font-black text-indigo-600 font-mono mt-0.5">{{ $stats['total_projects'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Active Projects</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-diagram-3-fill text-lg"></i>
-                        </div>
-                    </a>
-
-                    <!-- Stat 4: Coverage Towns -->
-                    <a href="javascript:void(0)" onclick="openTownsModal(event)" class="bg-white border border-violet-200/80 hover:border-violet-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-violet-600">Coverage Towns</span>
-                            <h4 class="text-xl font-black text-violet-600 font-mono mt-0.5">{{ $stats['total_towns'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Mapped Towns</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center border border-violet-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-pin-map-fill text-lg"></i>
-                        </div>
-                    </a>
                 </div>
 
-                <!-- District Project Breakdown Cards Grid -->
-                <div id="project-breakdown-section" class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm dev-shadow space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-150 pb-3">
-                        <div class="flex items-center gap-2">
-                            <i class="bi bi-buildings-fill text-sky-500 text-base"></i>
-                            <h3 class="text-xs font-black uppercase text-slate-800 tracking-wider">
-                                {{ $user->district_name ?? 'District' }} EWS Projects Breakdown
-                            </h3>
-                        </div>
-                        <span class="text-[9px] font-mono font-bold text-slate-400 uppercase">
-                            {{ count($projectBreakdown) }} Active Project Lines
-                        </span>
-                    </div>
 
-                    @if(count($projectBreakdown) > 0)
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            @foreach($projectBreakdown as $project)
-                                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-[9px] font-black uppercase text-slate-400 tracking-wider">{{ $project->town_name }}</div>
-                                        <div class="text-xs font-bold text-slate-900 mt-0.5">{{ $project->project_name }}</div>
-                                        <div class="text-[8px] text-slate-500 font-mono mt-1">Towers: {{ $project->towers_count }} Blocks</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="px-2.5 py-1 bg-sky-100 text-sky-800 font-black font-mono rounded-md text-xs">
-                                            {{ $project->total_flats }} Flats
-                                        </span>
-                                    </div>
-                                </div>
-                            @endforeach
+            @elseif($currentView === 'allotted')
+                <!-- Compact Zone Allotted Header -->
+                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-houses-fill text-xs"></i>
                         </div>
-                    @else
-                        <div class="text-center py-6 text-slate-400 text-xs italic">
-                            No EWS builder projects registered yet in {{ $user->district_name ?? 'District' }}.
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Pool</span>
+                            </div>
+                            <p class="text-[8.5px] text-amber-100 font-mono">{{ number_format($stats['total_allotted']) }} flats in {{ $displayZoneName ?? 'Zone' }} (out of {{ number_format($stats['state_allotted_total'] ?? 4211) }} state total)</p>
                         </div>
-                    @endif
-                </div>
-            @elseif($currentView === 'district')
-                <!-- DISTRICT FLATS VIEW -->
-                <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
-                    <div>
-                        <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-building"></i> DISTRICT SCOPED MATRIX
-                        </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">{{ $user->district_name ?? 'District' }} Master EWS Flats</h2>
-                        <p class="text-[9px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $user->district_name }} District Authority</p>
                     </div>
                     <div class="text-right">
-                        <span class="text-3xl font-black font-mono">{{ $stats['total_flats'] }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-sky-200">District Total</span>
+                        <span class="text-base font-black font-mono leading-none">{{ number_format($stats['total_allotted']) }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-amber-200">Allotted</span>
+                    </div>
+                </div>
+            @elseif($currentView === 'district')
+                <!-- Compact Zone Master Header -->
+                <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-building text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Master EWS Flats</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Master</span>
+                            </div>
+                            <p class="text-[8.5px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $displayZoneName ?? 'Zone' }} Authority</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-base font-black font-mono leading-none">{{ $stats['total_flats'] }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-sky-200">Zone Total</span>
                     </div>
                 </div>
             @elseif($currentView === 'my_flats')
-                <!-- MY FLATS INVENTORY VIEW -->
-                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl p-5 text-white shadow-sm flex items-center justify-between">
-                    <div>
-                        <span class="inline-block px-2 py-0.5 bg-white/20 text-white rounded text-[9px] font-black uppercase mb-1">
-                            <i class="bi bi-person-check-fill"></i> PERSONAL INVENTORY
-                        </span>
-                        <h2 class="text-base font-black uppercase tracking-wider">Flats Registered By My Account</h2>
-                        <p class="text-[9px] text-emerald-100 font-mono">Viewing flats created directly by your developer account (ID: #{{ $user->id }})</p>
+                <!-- Compact Personal Inventory Header -->
+                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
+                            <i class="bi bi-person-check-fill text-xs"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xs font-black uppercase tracking-wider">Flats Registered By My Account</h2>
+                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">My Entries</span>
+                            </div>
+                            <p class="text-[8.5px] text-emerald-100 font-mono">Viewing flats created directly by your developer account (ID: #{{ $user->id }})</p>
+                        </div>
                     </div>
                     <div class="text-right">
-                        <span class="text-3xl font-black font-mono">{{ $stats['my_flats'] }}</span>
-                        <span class="block text-[8px] uppercase tracking-widest text-emerald-200">My Entries</span>
+                        <span class="text-base font-black font-mono leading-none">{{ $stats['my_flats'] }}</span>
+                        <span class="block text-[7px] uppercase tracking-widest text-emerald-200">My Total</span>
                     </div>
                 </div>
             @endif
 
             <!-- REGISTRY DATABASE TABLE SECTION -->
-            <section class="bg-white border border-slate-200/80 rounded-xl shadow-sm dev-shadow overflow-hidden">
+            <section id="table-section" class="bg-white border border-slate-200/80 rounded-xl shadow-sm dev-shadow overflow-hidden">
                 <div class="px-5 py-4 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
                     <div>
-                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                        <h3 id="table-heading-title" class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
                             <i class="bi bi-file-earmark-text text-sky-500 text-sm"></i>
-                            EWS Builder Flats Table
-                            @if(!empty($user->district_name))
+                            @if($currentView === 'allotted')
+                                {{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool (From 4,211 State Allotments)
+                            @elseif($currentView === 'my_flats')
+                                Flats Offered By Me
+                            @else
+                                All {{ $displayZoneName ?? 'Zone' }} Offered Builder Flats
+                            @endif
+                            @if(!empty($displayZoneName))
                                 <span class="px-2 py-0.5 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[9px] font-black uppercase">
-                                    <i class="bi bi-geo-alt-fill me-0.5"></i> {{ strtoupper($user->district_name) }}
+                                    <i class="bi bi-geo-alt-fill me-0.5"></i> {{ $displayZoneName }}
                                 </span>
                             @endif
                         </h3>
@@ -394,16 +323,20 @@
                         <!-- Ownership Scope Filter Tabs -->
                         <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-[10px] font-bold">
                             <button type="button" id="btn-scope-all" onclick="setOwnershipFilter('all')"
-                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'text-slate-600 font-bold' : 'bg-white text-sky-700 shadow-sm font-black' }}">
-                                <i class="bi bi-building me-1"></i> All {{ $user->district_name ?? 'District' }} Records
+                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ in_array($currentView, ['my_flats', 'allotted']) ? 'text-slate-600 font-bold' : 'bg-white text-sky-700 shadow-sm font-black' }}">
+                                <i class="bi bi-building me-1"></i> All {{ trim(str_ireplace('ZONE', '', $displayZoneName ?? 'Rohtak')) }} Offered ({{ $stats['total_flats'] }})
                             </button>
                             <button type="button" id="btn-scope-my" onclick="setOwnershipFilter('my_flats')"
                                 class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'bg-white text-emerald-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">
-                                <i class="bi bi-person-check-fill me-1"></i> Added By Me Only
+                                <i class="bi bi-person-check-fill me-1"></i> Offered By Me ({{ $stats['my_flats'] }})
+                            </button>
+                            <button type="button" id="btn-scope-allotted" onclick="setOwnershipFilter('allotted')"
+                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'allotted' ? 'bg-white text-amber-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">
+                                <i class="bi bi-houses-fill me-1"></i> Zone Allotted ({{ number_format($stats['total_allotted']) }})
                             </button>
                         </div>
 
-                        <input type="hidden" id="filter-ownership" value="{{ $currentView === 'my_flats' ? 'my_flats' : 'all' }}">
+                        <input type="hidden" id="filter-ownership" value="{{ $currentView === 'allotted' ? 'allotted' : ($currentView === 'my_flats' ? 'my_flats' : 'all') }}">
 
                         <div class="w-px h-5 bg-slate-200 mx-1"></div>
 
@@ -438,21 +371,85 @@
                     </div>
                 </div>
 
+                <!-- Cascading Filter Console (Zone -> District -> Town -> Project) -->
+                <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+                        <!-- Step 1: District Filter (Filtered by Zone) -->
+                        <div class="lg:col-span-3 space-y-1">
+                            <label for="filter-district" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                <span class="flex items-center gap-1">
+                                    <span class="px-1 py-0.2 rounded text-[8px] bg-sky-100 text-sky-800 font-black">1</span>
+                                    <span>Select District</span>
+                                </span>
+                                <span class="text-[8px] text-slate-400 font-mono font-bold">{{ count($districts ?? []) }} In Zone</span>
+                            </label>
+                            <div class="relative">
+                                <select id="filter-district" onchange="onDistrictFilterChange()"
+                                    class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs">
+                                    <option value="">All {{ $displayZoneName ?? 'Zone' }} Districts</option>
+                                    @foreach($districts ?? [] as $d)
+                                        <option value="{{ $d->id }}">{{ strtoupper($d->name) }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Town Filter (Cascading) -->
+                        <div id="filter-town-box" class="lg:col-span-3 space-y-1">
+                            <label for="filter-town" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded text-[8px] bg-violet-100 text-violet-800 font-black">2</span>
+                                <span>Name of Town</span>
+                            </label>
+                            <select id="filter-town" onchange="onTownFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none shadow-2xs">
+                                <option value="">All Towns</option>
+                                @foreach($townsList ?? [] as $t)
+                                    <option value="{{ $t->id }}">{{ strtoupper($t->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Step 3: Project Filter (Cascading) -->
+                        <div id="filter-project-box" class="lg:col-span-4 space-y-1">
+                            <label for="filter-project" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded text-[8px] bg-indigo-100 text-indigo-800 font-black">3</span>
+                                <span>Name of Project</span>
+                            </label>
+                            <select id="filter-project" onchange="onProjectFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none shadow-2xs">
+                                <option value="">All Projects</option>
+                                @foreach($projectsList ?? [] as $p)
+                                    <option value="{{ $p->id }}">{{ strtoupper($p->name) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Reset Filter Button -->
+                        <div class="lg:col-span-2 flex items-center">
+                            <button type="button" onclick="resetAllFilters()"
+                                class="w-full px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5">
+                                <i class="bi bi-arrow-counterclockwise text-xs"></i>
+                                <span>Reset Filters</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Table Content (Yajra Server-side) -->
                 <div class="p-5">
                     <table class="w-full text-left border-collapse" id="flats-table">
                         <thead>
                             <tr class="bg-slate-55/30 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
                                 <th style="width: 5%;">S.No.</th>
-                                <th>District Name</th>
-                                <th>Town Name</th>
-                                <th>Project Name</th>
-                                <th>Block / Tower No.</th>
-                                <th>Floor Details</th>
-                                <th>Flat No.</th>
-                                <th>Unique Flat Code</th>
-                                <th>Ownership</th>
-                                <th style="text-align: right; width: 15%;">Actions</th>
+                                <th id="th-col-1">{{ $currentView === 'allotted' ? 'District' : 'District Name' }}</th>
+                                <th id="th-col-2">Town Name</th>
+                                <th id="th-col-3">Project Name</th>
+                                <th id="th-col-4">Block / Tower No.</th>
+                                <th id="th-col-5">{{ $currentView === 'allotted' ? 'Allottee Name' : 'Floor Details' }}</th>
+                                <th id="th-col-6">Flat No.</th>
+                                <th id="th-col-7">{{ $currentView === 'allotted' ? 'Mobile No.' : 'Unique Flat Code' }}</th>
+                                <th id="th-col-8">{{ $currentView === 'allotted' ? 'Possession Status' : 'Ownership' }}</th>
+                                <th style="text-align: right; width: 14%;">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="text-[11px] font-medium text-slate-655">
@@ -481,11 +478,8 @@
             <!-- Body -->
             <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
                 @forelse($projectsList as $index => $proj)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
                         <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($proj->name) }}</span>
-                        <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-150 rounded text-[9px] font-mono font-bold uppercase">
-                            {{ DB::table('ews_builder_flats')->where('project_id', $proj->id)->count() }} Flats
-                        </span>
                     </div>
                 @empty
                     <div class="text-center py-6 text-slate-400 text-xs font-medium">No projects registered in {{ $user->district_name }}.</div>
@@ -516,11 +510,8 @@
             <!-- Body -->
             <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
                 @forelse($townsList as $index => $town)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center justify-between hover:bg-slate-100/70 transition-all">
+                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
                         <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($town->name) }}</span>
-                        <span class="px-2 py-0.5 bg-violet-50 text-violet-700 border border-violet-150 rounded text-[9px] font-mono font-bold uppercase">
-                            {{ DB::table('ews_builder_flats')->where('town_id', $town->id)->count() }} Flats
-                        </span>
                     </div>
                 @empty
                     <div class="text-center py-6 text-slate-400 text-xs font-medium">No towns mapped in {{ $user->district_name }}.</div>
@@ -587,6 +578,9 @@
 
         function triggerExport(type) {
             const scope = $('#filter-ownership').val();
+            const districtId = $('#filter-district').val();
+            const townId = $('#filter-town').val();
+            const projectId = $('#filter-project').val();
             const searchVal = table ? table.search() : '';
             let baseUrl = '';
             if (type === 'csv') baseUrl = "{{ route('ews.developer.flats.export.csv') }}";
@@ -595,30 +589,155 @@
 
             const url = new URL(baseUrl, window.location.origin);
             if (scope) url.searchParams.append('ownership_scope', scope);
+            if (districtId) url.searchParams.append('district_id', districtId);
+            if (townId) url.searchParams.append('town_id', townId);
+            if (projectId) url.searchParams.append('project_id', projectId);
             if (searchVal) url.searchParams.append('search', searchVal);
 
             window.location.href = url.toString();
         }
 
+        function onDistrictFilterChange() {
+            const districtId = $('#filter-district').val();
+
+            // Fetch towns for selected district
+            let townUrl = "{{ route('ews.developer.towns') }}";
+            if (districtId) townUrl += "?district_id=" + districtId;
+
+            $.getJSON(townUrl, function(data) {
+                let options = '<option value="">All Towns</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-town').html(options);
+            });
+
+            // Fetch projects for selected district
+            let projUrl = "{{ route('ews.developer.projects') }}";
+            if (districtId) projUrl += "?district_id=" + districtId;
+
+            $.getJSON(projUrl, function(data) {
+                let options = '<option value="">All Projects</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-project').html(options);
+            });
+
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function onTownFilterChange() {
+            const districtId = $('#filter-district').val();
+            const townId = $('#filter-town').val();
+
+            let projUrl = "{{ route('ews.developer.projects') }}";
+            let params = [];
+            if (districtId) params.push("district_id=" + districtId);
+            if (townId) params.push("town_id=" + townId);
+            if (params.length) projUrl += "?" + params.join("&");
+
+            $.getJSON(projUrl, function(data) {
+                let options = '<option value="">All Projects</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-project').html(options);
+            });
+
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function onProjectFilterChange() {
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function resetAllFilters() {
+            $('#filter-district').val('');
+            onDistrictFilterChange();
+        }
+
         function setOwnershipFilter(scope) {
             $('#filter-ownership').val(scope);
+
+            // Reset button active styling
+            $('#btn-scope-all').removeClass('bg-white text-sky-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
+            $('#btn-scope-my').removeClass('bg-white text-emerald-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
+            $('#btn-scope-allotted').removeClass('bg-white text-amber-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
+
             if (scope === 'my_flats') {
                 $('#btn-scope-my').addClass('bg-white text-emerald-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
-                $('#btn-scope-all').removeClass('bg-white text-sky-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
-                
+                $('#table-heading-title').html('<i class="bi bi-person-check-fill text-emerald-500 text-sm"></i> Flats Offered By Me');
+
+                if (table) {
+                    table.columns([2, 3, 4]).visible(true);
+                }
+
+                $('#th-col-1').text('District Name');
+                $('#th-col-2').text('Town Name');
+                $('#th-col-3').text('Project Name');
+                $('#th-col-4').text('Block / Tower No.');
+                $('#th-col-5').text('Floor Details');
+                $('#th-col-6').text('Flat No.');
+                $('#th-col-7').text('Unique Flat Code');
+                $('#th-col-8').text('Ownership');
+
+                $('#filter-town-box, #filter-project-box').show();
+
                 // Sidebar Menu Active Toggle
                 $('#nav-my-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
                 $('#nav-district-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
+            } else if (scope === 'allotted') {
+                $('#btn-scope-allotted').addClass('bg-white text-amber-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
+                $('#table-heading-title').html('<i class="bi bi-houses-fill text-amber-500 text-sm"></i> {{ $displayZoneName ?? "Zone" }} Allotted Flats Pool (From 4,211 State Allotments)');
+
+                if (table) {
+                    table.columns([2, 3, 4]).visible(false);
+                }
+
+                $('#th-col-1').text('District');
+                $('#th-col-5').text('Allottee Name');
+                $('#th-col-6').text('Flat No.');
+                $('#th-col-7').text('Mobile No.');
+                $('#th-col-8').text('Possession Status');
+
+                // For allotted pool, town & project are consolidated, district filter operates directly
+                $('#filter-town-box, #filter-project-box').hide();
+
+                // Sidebar Menu Active Toggle
+                $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
+                $('#nav-district-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
             } else {
                 $('#btn-scope-all').addClass('bg-white text-sky-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
-                $('#btn-scope-my').removeClass('bg-white text-emerald-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
+                $('#table-heading-title').html('<i class="bi bi-file-earmark-text text-sky-500 text-sm"></i> All {{ $displayZoneName ?? "Zone" }} Offered Builder Flats');
+
+                if (table) {
+                    table.columns([2, 3, 4]).visible(true);
+                }
+
+                $('#th-col-1').text('District Name');
+                $('#th-col-2').text('Town Name');
+                $('#th-col-3').text('Project Name');
+                $('#th-col-4').text('Block / Tower No.');
+                $('#th-col-5').text('Floor Details');
+                $('#th-col-6').text('Flat No.');
+                $('#th-col-7').text('Unique Flat Code');
+                $('#th-col-8').text('Ownership');
+
+                $('#filter-town-box, #filter-project-box').show();
 
                 // Sidebar Menu Active Toggle
                 $('#nav-district-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
                 $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
             }
             if (table) {
-                table.ajax.reload();
+                table.draw();
             }
         }
 
@@ -661,6 +780,17 @@
 
         // Initialize Yajra Server-side DataTables
         $(document).ready(function() {
+            // Apply initial column labels if starting on allotted view
+            const initScope = $('#filter-ownership').val();
+            if (initScope === 'allotted') {
+                $('#th-col-1').text('District');
+                $('#th-col-5').text('Allottee Name');
+                $('#th-col-6').text('Flat No.');
+                $('#th-col-7').text('Mobile No.');
+                $('#th-col-8').text('Possession Status');
+                $('#filter-town-box, #filter-project-box').hide();
+            }
+
             table = $('#flats-table').DataTable({
                 processing: true,
                 serverSide: true,
@@ -670,15 +800,18 @@
                     url: "{{ route('ews.developer.flats.data') }}",
                     data: function (d) {
                         d.ownership_scope = $('#filter-ownership').val();
+                        d.district_id = $('#filter-district').val();
+                        d.town_id = $('#filter-town').val();
+                        d.project_id = $('#filter-project').val();
                     }
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900' },
-                    { data: 'town_name', name: 'town_name' },
-                    { data: 'project_name', name: 'project_name', class: 'text-slate-500' },
-                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold' },
-                    { data: 'floor', name: 'floor' },
+                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase' },
+                    { data: 'town_name', name: 'town_name', visible: initScope !== 'allotted' },
+                    { data: 'project_name', name: 'project_name', class: 'text-slate-500', visible: initScope !== 'allotted' },
+                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold', visible: initScope !== 'allotted' },
+                    { data: 'floor', name: 'floor', class: 'font-bold text-slate-800' },
                     { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono' },
                     { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono' },
                     { data: 'added_by', name: 'added_by', orderable: false, searchable: false },
@@ -692,28 +825,6 @@
                 pageLength: 10,
                 lengthMenu: [10, 25, 50, 100],
                 order: [] // Disable default ordering, sorting resolved server-side
-            });
-
-            // Redraw on district filter change
-            $('#filter-district').on('change', function() {
-                table.draw();
-            });
-
-            // Handle Export Clicks dynamically incorporating active filters
-            $('#export-csv').on('click', function(e) {
-                e.preventDefault();
-                let search = $('#flats-table_filter input').val() || '';
-                let districtId = $('#filter-district').val() || '';
-                let url = "{{ route('ews.developer.flats.export.csv') }}?search=" + encodeURIComponent(search) + "&district_id=" + districtId;
-                window.location.href = url;
-            });
-
-            $('#export-pdf').on('click', function(e) {
-                e.preventDefault();
-                let search = $('#flats-table_filter input').val() || '';
-                let districtId = $('#filter-district').val() || '';
-                let url = "{{ route('ews.developer.flats.export.pdf') }}?search=" + encodeURIComponent(search) + "&district_id=" + districtId;
-                window.location.href = url;
             });
         });
     </script>

@@ -10,7 +10,14 @@ class EwsBlock extends Model
     protected $table = 'ews_blocks';
 
     protected $fillable = [
+        'zone_id',
+        'zone_name',
+        'district_id',
+        'district_name',
+        'town_id',
+        'town_name',
         'project_id',
+        'project_name',
         'name',
     ];
 

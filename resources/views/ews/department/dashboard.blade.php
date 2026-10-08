@@ -131,7 +131,7 @@
                                 </span>
                             </div>
                             <p class="text-[10px] text-emerald-50 font-bold uppercase tracking-wider leading-none mt-2" style="text-shadow: 0 1px 4px rgba(6, 95, 70, 0.2);">
-                                Application flow tracking & developer management system
+                                Application flow tracking & DTP management system
                             </p>
                         </div>
                     </div>
@@ -388,25 +388,25 @@
                 </div>
             </div>
 
-            <!-- EWS STAGE 3: DEVELOPERS MANAGEMENT & FORM SUBMISSIONS -->
+            <!-- EWS STAGE 3: DTP MANAGEMENT & FORM SUBMISSIONS -->
             <div class="space-y-1.5 shrink-0 pt-1.5 border-t border-slate-200 animate-fade-in-up delay-4">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500 pulse-dot"></span>
-                        <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Stage 03 / Developers & Audits</h3>
+                        <h3 class="text-[9px] font-black text-slate-500 uppercase tracking-widest leading-none">Stage 03 / DTP & Audits</h3>
                     </div>
                     <a href="{{ route('ews.department.developers.index') }}" class="text-[9px] font-black text-blue-600 hover:text-blue-700 uppercase flex items-center gap-0.5 transition leading-none">
-                        <span>Manage Developers</span>
+                        <span>Manage DTP</span>
                         <span class="material-symbols-outlined text-xs">arrow_forward</span>
                     </a>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <!-- Developer Accounts Card -->
+                    <!-- DTP Accounts Card -->
                     <a href="{{ route('ews.department.developers.index') }}" class="bg-gradient-to-br from-[#f8fafc] to-[#f1f5f9] text-slate-800 rounded-xl p-3 flex flex-col justify-between min-h-[90px] shadow-sm border border-slate-200 hover:-translate-y-0.5 transition-all duration-300 group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-slate-500 font-extrabold leading-none">Developer Accounts</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-slate-500 font-extrabold leading-none">DTP Accounts</span>
                                 <h2 class="text-xl font-black text-slate-800 font-mono mt-0.5">{{ number_format($developerCount) }}</h2>
                                 <p class="text-[9px] text-slate-550 font-medium leading-tight">Registered credentials</p>
                             </div>
@@ -438,11 +438,11 @@
                         </div>
                     </a>
 
-                    <!-- Developer Activity Logs Card -->
+                    <!-- DTP Activity Logs Card -->
                     <a href="{{ route('ews.department.developer-logs.index') }}" class="bg-gradient-to-br from-[#f0f9ff] to-[#e0f2fe] text-slate-800 rounded-xl p-3 flex flex-col justify-between min-h-[90px] shadow-sm border border-[#bae6fd] hover:-translate-y-0.5 transition-all duration-300 group">
                         <div class="flex justify-between items-start">
                             <div>
-                                <span class="text-[8.5px] uppercase tracking-wider text-[#075985] font-extrabold leading-none">Developer Activity Logs</span>
+                                <span class="text-[8.5px] uppercase tracking-wider text-[#075985] font-extrabold leading-none">DTP Activity Logs</span>
                                 <h2 class="text-xl font-black text-[#075985] font-mono mt-0.5">{{ number_format($developerLogsCount) }}</h2>
                                 <p class="text-[9px] text-slate-600 font-medium leading-tight">Action & audit logs</p>
                             </div>

@@ -121,10 +121,13 @@ Route::middleware('')->group(function () {
         ->defaults('context', 'ews_developer')
         ->middleware('throttle:5,1')
         ->name('ews.developer.login.resend-otp');
+
+    // STP Login URL alias
+    Route::get('/ews/stp/login', fn() => redirect()->route('ews.developer.login'))->name('ews.stp.login');
 });
 
-// EWS Developer Protected Routes
-Route::middleware(['auth', 'role:ews_developer'])->group(function () {
+// EWS Developer / STP Protected Routes
+Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function () {
     Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
         ->name('ews.developer.dashboard');
     Route::get('/ews/developer/flats/data', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getFlatsData'])
@@ -155,6 +158,34 @@ Route::middleware(['auth', 'role:ews_developer'])->group(function () {
         ->name('ews.developer.blocks');
     Route::get('/ews/developer/towns', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getTowns'])
         ->name('ews.developer.towns');
+    Route::post('/ews/developer/towns/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeTownAjax'])
+        ->name('ews.developer.towns.store-ajax');
+    Route::post('/ews/developer/projects/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeProjectAjax'])
+        ->name('ews.developer.projects.store-ajax');
+    Route::post('/ews/developer/blocks/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeBlockAjax'])
+        ->name('ews.developer.blocks.store-ajax');
+
+    // STP Physical Possession Web Module
+    Route::get('/ews/developer/possession', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'index'])
+        ->name('ews.developer.possession.index');
+    Route::get('/ews/developer/possession/district-projects', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getDistrictProjects'])
+        ->name('ews.developer.possession.district-projects');
+    Route::get('/ews/developer/possession/project-stats', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getProjectStats'])
+        ->name('ews.developer.possession.project-stats');
+    Route::get('/ews/developer/possession/beneficiaries-data', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiariesData'])
+        ->name('ews.developer.possession.beneficiaries-data');
+    Route::get('/ews/developer/possession/beneficiary/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiaryDetails'])
+        ->name('ews.developer.possession.beneficiary-details')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+    Route::post('/ews/developer/possession/submit/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'submitPossession'])
+        ->name('ews.developer.possession.submit')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+    Route::get('/ews/developer/possession/logs', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'auditLogs'])
+        ->name('ews.developer.possession.logs');
+    Route::get('/ews/developer/possession/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'show'])
+        ->name('ews.developer.possession.show')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+
     Route::get('/ews/developer/logout', [OtpAuthController::class, 'logout'])
         ->name('ews.developer.logout');
 });

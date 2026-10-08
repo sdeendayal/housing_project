@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Developer - Activity Logs</title>
+    <title>EWS STP - Activity Logs</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -24,58 +24,7 @@
 </head>
 <body class="h-full flex overflow-hidden bg-[#f4f7fa]">
 
-    <!-- DEEP NAVY / SLATE SIDEBAR -->
-    <aside class="hidden md:flex flex-col w-64 bg-slate-900 text-slate-355 shrink-0 h-full shadow-xl z-20">
-        <!-- Brand logo -->
-        <div class="h-16 px-6 border-b border-slate-800 flex items-center gap-2.5 shrink-0 bg-slate-950">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-400 to-indigo-655 flex items-center justify-center shadow-md">
-                <i class="bi bi-shield-fill-check text-white text-sm"></i>
-            </div>
-            <div>
-                <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-                <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
-            </div>
-        </div>
-
-        <!-- Menu Navigation -->
-        <div class="flex-1 px-4 py-6 space-y-6 overflow-y-auto">
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Registry Matrix</span>
-                <div class="space-y-1">
-                    <a href="{{ route('ews.developer.dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-building text-sky-400"></i>
-                        <span>{{ !empty($user->district_name) ? strtoupper($user->district_name) : 'My District' }} Flats</span>
-                    </a>
-                    <a href="{{ route('ews.developer.dashboard', ['ownership_scope' => 'my_flats']) }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-person-check-fill text-emerald-400"></i>
-                        <span>Flats Added By Me</span>
-                    </a>
-                    <a href="{{ route('ews.developer.flats.create') }}" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white text-xs font-medium transition-all">
-                        <i class="bi bi-plus-circle text-slate-400"></i>
-                        <span>Register Flat</span>
-                    </a>
-                </div>
-            </div>
-
-            <div>
-                <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Logs</span>
-                <div class="space-y-1">
-                    <a href="#" class="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-slate-800 text-white text-xs font-bold transition-all shadow-sm">
-                        <i class="bi bi-journal-text text-sky-400"></i>
-                        <span>Developer Logs</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Session Details -->
-        <div class="p-4 border-t border-slate-800 bg-slate-950 flex flex-col gap-2 shrink-0">
-            <a href="{{ route('ews.developer.logout') }}" class="w-full py-1.5 bg-red-500/20 hover:bg-red-600 text-red-300 rounded-lg text-[9px] font-black uppercase transition-all flex items-center justify-center gap-1 border border-red-500/30">
-                <i class="bi bi-power"></i>
-                <span>Logout Session</span>
-            </a>
-        </div>
-    </aside>
+    @include('ews.developer.partials.sidebar')
 
     <!-- MAIN CONTAINER -->
     <div class="flex-1 flex flex-col overflow-hidden h-full">
@@ -88,7 +37,7 @@
                 </div>
                 <div>
                     <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">System Audit Trail Logs</h2>
-                    <p class="text-[8px] text-slate-450 font-mono uppercase">Developer Action Logger Console</p>
+                    <p class="text-[8px] text-slate-450 font-mono uppercase">STP Action Logger Console</p>
                 </div>
             </div>
 
@@ -97,11 +46,11 @@
                 <div class="text-right">
                     <div class="text-[10px] text-slate-650 font-bold flex items-center gap-1 justify-end">
                         <span>{{ $user->name }}</span>
-                        @if(!empty($user->district_name))
-                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ strtoupper($user->district_name) }})</span>
+                        @if(!empty($displayZoneName))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
                         @endif
                     </div>
-                    <div class="text-[8.5px] text-slate-500 font-mono">District: <span class="font-bold text-slate-700 uppercase">{{ $user->district_name ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
+                    <div class="text-[8.5px] text-slate-500 font-mono">Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
                 </div>
             </div>
         </header>
