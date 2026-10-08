@@ -877,10 +877,10 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'v.Phase',
+                                        $phase
+                                    )
                             );
                     })
                     ->select([
@@ -919,10 +919,10 @@ class SuperAdminController extends Controller
                                     ->when(
                                         $phase !== null,
                                         fn($subQuery) =>
-                                        $subQuery->where(
-                                            'v.Phase',
-                                            $phase
-                                        )
+                                            $subQuery->where(
+                                                'v.Phase',
+                                                $phase
+                                            )
                                     );
                             }
                         )
@@ -1162,7 +1162,6 @@ class SuperAdminController extends Controller
             )
         );
     }
-
     public function possessionView($secureId)
     {
         $application = DB::table('mmgay_possession_applications as p')
@@ -1730,10 +1729,10 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'v.Phase',
+                                        $phase
+                                    )
                             );
                     })
                     ->select([
@@ -1792,10 +1791,10 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'v.Phase',
+                                        $phase
+                                    )
                             );
                     })
 
@@ -2099,11 +2098,6 @@ class SuperAdminController extends Controller
             ? (int) $request->input('district_id')
             : null;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Cache key
-        |--------------------------------------------------------------------------
-        */
         $cacheKey = 'district_report_v5_' . md5(
             json_encode([
                 'phase' => $phase,
@@ -2115,14 +2109,7 @@ class SuperAdminController extends Controller
             $cacheKey,
             now()->addMinutes(5),
             function () use ($phase, $districtId) {
-
-                /*
-                |--------------------------------------------------------------------------
-                | Relevant districts and village count
-                |--------------------------------------------------------------------------
-                | केवल plots > 0 वाले villages और selected phase consider होंगे।
-                |--------------------------------------------------------------------------
-                */
+                
                 $villageRows = DB::table('villagemaster as v')
                     ->where('v.plots', '>', 0)
 
@@ -2153,12 +2140,7 @@ class SuperAdminController extends Controller
 
                     ->groupBy('v.DistrictId')
                     ->get();
-
-                /*
-                |--------------------------------------------------------------------------
-                | Only districts having villages with plots
-                |--------------------------------------------------------------------------
-                */
+                
                 $reportDistrictIds = $villageRows
                     ->pluck('DistrictId')
                     ->filter()
@@ -2167,12 +2149,7 @@ class SuperAdminController extends Controller
                     )
                     ->unique()
                     ->values();
-
-                /*
-                |--------------------------------------------------------------------------
-                | No matching district
-                |--------------------------------------------------------------------------
-                */
+                
                 if ($reportDistrictIds->isEmpty()) {
                     return [
                         'report' => collect(),
@@ -3200,10 +3177,10 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'v.Phase',
+                                        $phase
+                                    )
                             );
                     })
 
@@ -3498,10 +3475,10 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'v.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'v.Phase',
+                                        $phase
+                                    )
                             );
                     })
 
@@ -4599,28 +4576,28 @@ class SuperAdminController extends Controller
                             ->when(
                                 $phase !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.Phase',
-                                    $phase
-                                )
+                                    $subQuery->where(
+                                        'vo.Phase',
+                                        $phase
+                                    )
                             )
 
                             ->when(
                                 $districtId !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.DistrictId',
-                                    $districtId
-                                )
+                                    $subQuery->where(
+                                        'vo.DistrictId',
+                                        $districtId
+                                    )
                             )
 
                             ->when(
                                 $blockId !== null,
                                 fn($subQuery) =>
-                                $subQuery->where(
-                                    'vo.BlockId',
-                                    $blockId
-                                )
+                                    $subQuery->where(
+                                        'vo.BlockId',
+                                        $blockId
+                                    )
                             );
                     })
 
@@ -7272,35 +7249,6 @@ class SuperAdminController extends Controller
     {
         DB::disableQueryLog();
 
-        /*
-        |--------------------------------------------------------------------------
-        | REGISTRY DONE - SAME LOGIC AS DASHBOARD
-        |--------------------------------------------------------------------------
-        |
-        | Eligible beneficiary:
-        |   IsApproved = 1
-        |   IsPaid = 1
-        |   IsAllotmentCancelled = 0
-        |
-        | OLD Registry:
-        |   registary.flatid IS NULL
-        |   registary.SecondPartyMobile = ownermaster.MobileNo
-        |
-        | NEW Registry:
-        |   registary.flatid > 0
-        |   registary.flatid = ownermaster.FlatId
-        |
-        | UNION keeps one OwnerId only once.
-        |--------------------------------------------------------------------------
-        */
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | OLD REGISTRY
-        |--------------------------------------------------------------------------
-        */
-
         $oldRegistryOwnerIds = DB::table('ownermaster as o')
             ->join('registary as r', function ($join) {
                 $join->on(
@@ -7483,7 +7431,58 @@ class SuperAdminController extends Controller
                 'b.BlockName',
 
                 'f.FlatNo',
-            ]);
+            ])
+
+            /*
+            |--------------------------------------------------------------------------
+            | REGISTRY DETAILS
+            |--------------------------------------------------------------------------
+            | Prefer NEW registry by FlatId.
+            | Otherwise OLD registry by SecondPartyMobile.
+            | Latest registry record is selected.
+            |--------------------------------------------------------------------------
+            */
+            ->addSelect([
+                'RegistryNumber' => DB::table('registary as rr')
+                    ->select('rr.RegistaryNumber')
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->where('rr.flatid', '>', 0)
+                                ->whereColumn('rr.flatid', 'o.FlatId');
+                        })
+                            ->orWhere(function ($q) {
+                                $q->whereNull('rr.flatid')
+                                    ->whereColumn(
+                                        'rr.SecondPartyMobile',
+                                        'o.MobileNo'
+                                    );
+                            });
+                    })
+                    ->orderByDesc('rr.RegistaryDate')
+                    ->orderByDesc('rr.id')
+                    ->limit(1),
+
+                'RegistryDate' => DB::table('registary as rr')
+                    ->select('rr.RegistaryDate')
+                    ->where(function ($q) {
+                        $q->where(function ($q) {
+                            $q->where('rr.flatid', '>', 0)
+                                ->whereColumn('rr.flatid', 'o.FlatId');
+                        })
+                            ->orWhere(function ($q) {
+                                $q->whereNull('rr.flatid')
+                                    ->whereColumn(
+                                        'rr.SecondPartyMobile',
+                                        'o.MobileNo'
+                                    );
+                            });
+                    })
+                    ->orderByDesc('rr.RegistaryDate')
+                    ->orderByDesc('rr.id')
+                    ->limit(1),
+
+                'RegistryStatus' => DB::raw("'Registry Done'"),
+            ]); // <-- YE SEMICOLON IMPORTANT HAI
 
 
         /*
@@ -7689,6 +7688,371 @@ class SuperAdminController extends Controller
                 'villages'
             )
         );
+    }
+
+    /**
+     * Registry Done CSV Export.
+     *
+     * Same filters as Registry Done listing.
+     * Includes registry number, date and status.
+     */
+    public function registryDoneCsv(Request $request)
+    {
+        DB::disableQueryLog();
+
+        $fileName = 'Registry_Done_'
+            . now()->format('d-m-Y_H-i-s')
+            . '.csv';
+
+        return response()->streamDownload(function () use ($request) {
+
+            $file = fopen('php://output', 'w');
+
+            /*
+            |--------------------------------------------------------------------------
+            | UTF-8 BOM
+            |--------------------------------------------------------------------------
+            */
+            fprintf(
+                $file,
+                chr(0xEF) . chr(0xBB) . chr(0xBF)
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | CSV HEADER
+            |--------------------------------------------------------------------------
+            */
+            fputcsv($file, [
+                'Sr. No.',
+                'Application No.',
+                'Owner ID',
+                'Applicant Name',
+                'Father / Husband Name',
+                'Mobile',
+                'District',
+                'Block',
+                'Village',
+                'Phase',
+                'Flat No.',
+                'Flat ID',
+                'Registry Number',
+                'Registry Date',
+                'Registry Status',
+            ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | OLD REGISTRY
+            |--------------------------------------------------------------------------
+            */
+            $oldRegistry = DB::table('ownermaster as o')
+                ->join('registary as r', function ($join) {
+                    $join->on(
+                        'r.SecondPartyMobile',
+                        '=',
+                        'o.MobileNo'
+                    );
+                })
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereRaw(
+                    'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                )
+                ->whereNull('r.flatid')
+                ->whereNotNull('o.MobileNo')
+                ->where('o.MobileNo', '<>', '');
+
+            /*
+            |--------------------------------------------------------------------------
+            | NEW REGISTRY
+            |--------------------------------------------------------------------------
+            */
+            $newRegistry = DB::table('ownermaster as o')
+                ->join('registary as r', function ($join) {
+                    $join->on(
+                        'r.flatid',
+                        '=',
+                        'o.FlatId'
+                    );
+                })
+                ->where('o.IsApproved', 1)
+                ->where('o.IsPaid', 1)
+                ->whereRaw(
+                    'COALESCE(o.IsAllotmentCancelled, 0) = 0'
+                )
+                ->whereNotNull('r.flatid')
+                ->where('r.flatid', '>', 0);
+
+            /*
+            |--------------------------------------------------------------------------
+            | SAME FILTERS AS REGISTRY DONE PAGE
+            |--------------------------------------------------------------------------
+            */
+            if ($request->filled('phase')) {
+                $oldRegistry->where(
+                    'o.Phase',
+                    $request->phase
+                );
+
+                $newRegistry->where(
+                    'o.Phase',
+                    $request->phase
+                );
+            }
+
+            if ($request->filled('district_id')) {
+                $oldRegistry->where(
+                    'o.DistrictId',
+                    $request->district_id
+                );
+
+                $newRegistry->where(
+                    'o.DistrictId',
+                    $request->district_id
+                );
+            }
+
+            if ($request->filled('block_id')) {
+                $oldRegistry->where(
+                    'o.BlockId',
+                    $request->block_id
+                );
+
+                $newRegistry->where(
+                    'o.BlockId',
+                    $request->block_id
+                );
+            }
+
+            if ($request->filled('village_id')) {
+                $oldRegistry->where(
+                    'o.VillageId',
+                    $request->village_id
+                );
+
+                $newRegistry->where(
+                    'o.VillageId',
+                    $request->village_id
+                );
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | UNIQUE OWNER IDS
+            |--------------------------------------------------------------------------
+            */
+            $oldOwnerIds = $oldRegistry
+                ->select('o.OwnerId')
+                ->distinct();
+
+            $newOwnerIds = $newRegistry
+                ->select('o.OwnerId')
+                ->distinct();
+
+            $registryOwnerIds = $oldOwnerIds
+                ->union($newOwnerIds);
+
+            /*
+            |--------------------------------------------------------------------------
+            | MAIN CSV QUERY
+            |--------------------------------------------------------------------------
+            */
+            $query = DB::query()
+                ->fromSub(
+                    $registryOwnerIds,
+                    'rd'
+                )
+                ->join(
+                    'ownermaster as o',
+                    'o.OwnerId',
+                    '=',
+                    'rd.OwnerId'
+                )
+                ->leftJoin(
+                    'villagemaster as v',
+                    'v.VillageId',
+                    '=',
+                    'o.VillageId'
+                )
+                ->leftJoin(
+                    'districtmaster as d',
+                    'd.DistrictId',
+                    '=',
+                    'o.DistrictId'
+                )
+                ->leftJoin(
+                    'blockmaster as b',
+                    'b.BlockId',
+                    '=',
+                    'o.BlockId'
+                )
+                ->leftJoin(
+                    'flatmaster as f',
+                    'f.FlatId',
+                    '=',
+                    'o.FlatId'
+                )
+                ->select([
+                    'o.OwnerId',
+                    'o.OwnerName',
+                    'o.FatherHusbandName',
+                    'o.MobileNo',
+                    'o.RegistrationNo',
+                    'o.FlatId',
+                    'o.Phase',
+
+                    'v.VillageName',
+
+                    'd.DistrictName',
+
+                    'b.BlockName',
+
+                    'f.FlatNo',
+                ])
+                ->addSelect([
+                    'RegistryNumber' => DB::table('registary as rr')
+                        ->select('rr.RegistaryNumber')
+                        ->where(function ($q) {
+                            $q->where(function ($q) {
+                                $q->where('rr.flatid', '>', 0)
+                                    ->whereColumn(
+                                        'rr.flatid',
+                                        'o.FlatId'
+                                    );
+                            })
+                                ->orWhere(function ($q) {
+                                    $q->whereNull('rr.flatid')
+                                        ->whereColumn(
+                                            'rr.SecondPartyMobile',
+                                            'o.MobileNo'
+                                        );
+                                });
+                        })
+                        ->orderByDesc('rr.RegistaryDate')
+                        ->orderByDesc('rr.id')
+                        ->limit(1),
+
+                    'RegistryDate' => DB::table('registary as rr')
+                        ->select('rr.RegistaryDate')
+                        ->where(function ($q) {
+                            $q->where(function ($q) {
+                                $q->where('rr.flatid', '>', 0)
+                                    ->whereColumn(
+                                        'rr.flatid',
+                                        'o.FlatId'
+                                    );
+                            })
+                                ->orWhere(function ($q) {
+                                    $q->whereNull('rr.flatid')
+                                        ->whereColumn(
+                                            'rr.SecondPartyMobile',
+                                            'o.MobileNo'
+                                        );
+                                });
+                        })
+                        ->orderByDesc('rr.RegistaryDate')
+                        ->orderByDesc('rr.id')
+                        ->limit(1),
+
+                    'RegistryStatus' => DB::raw(
+                        "'Registry Done'"
+                    ),
+                ])
+                ->orderBy('o.OwnerId');
+
+            /*
+            |--------------------------------------------------------------------------
+            | SEARCH
+            |--------------------------------------------------------------------------
+            */
+            if ($request->filled('search')) {
+
+                $search = trim($request->search);
+
+                $query->where(function ($q) use ($search) {
+
+                    $q->where(
+                        'o.OwnerName',
+                        'like',
+                        '%' . $search . '%'
+                    )
+                        ->orWhere(
+                            'o.FatherHusbandName',
+                            'like',
+                            '%' . $search . '%'
+                        )
+                        ->orWhere(
+                            'o.MobileNo',
+                            'like',
+                            '%' . $search . '%'
+                        )
+                        ->orWhere(
+                            'o.RegistrationNo',
+                            'like',
+                            '%' . $search . '%'
+                        )
+                        ->orWhere(
+                            'o.OwnerId',
+                            'like',
+                            '%' . $search . '%'
+                        );
+                });
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | STREAM CSV
+            |--------------------------------------------------------------------------
+            */
+            $serial = 0;
+
+            foreach ($query->cursor() as $row) {
+
+                $serial++;
+
+                $registryDate = '';
+
+                if (!empty($row->RegistryDate)) {
+                    $timestamp = strtotime(
+                        (string) $row->RegistryDate
+                    );
+
+                    if ($timestamp !== false) {
+                        $registryDate = date(
+                            'd-m-Y',
+                            $timestamp
+                        );
+                    }
+                }
+
+                fputcsv($file, [
+                    $serial,
+                    $row->RegistrationNo ?? '',
+                    $row->OwnerId ?? '',
+                    $row->OwnerName ?? '',
+                    $row->FatherHusbandName ?? '',
+                    $row->MobileNo ?? '',
+                    $row->DistrictName ?? '',
+                    $row->BlockName ?? '',
+                    $row->VillageName ?? '',
+                    $row->Phase ?? '',
+                    $row->FlatNo ?? '',
+                    $row->FlatId ?? '',
+                    $row->RegistryNumber ?? '',
+                    $registryDate,
+                    $row->RegistryStatus ?? 'Registry Done',
+                ]);
+            }
+
+            fclose($file);
+
+        }, $fileName, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
     }
 
 

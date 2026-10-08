@@ -467,6 +467,9 @@ Route::prefix('super-admin')
         Route::get('/registry-done/options', [SuperAdminController::class, 'registryDoneOptions'])
             ->name('superadmin.registry_done.options');
 
+        Route::get('/registry-done/csv', [SuperAdminController::class, 'registryDoneCsv'])
+            ->name('superadmin.registry_done.csv');
+
         Route::get('/registry-done/{secureId}/print', [SuperAdminController::class, 'registryDonePrint'])
             ->name('superadmin.registry_done.print');
 

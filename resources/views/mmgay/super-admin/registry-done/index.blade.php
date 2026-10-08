@@ -316,8 +316,8 @@
         }
 
         /* =========================================================
-       Registry Done - Select Dropdown
-       ========================================================= */
+                       Registry Done - Select Dropdown
+                       ========================================================= */
 
         .rd-select-row {
             position: relative;
@@ -429,10 +429,28 @@
                     </div>
                 </div>
 
-                <button type="button" onclick="window.print()" class="rd-btn rd-btn-print rd-no-print">
-                    <span class="material-symbols-outlined text-[19px]">print</span>
-                    Print List
-                </button>
+                <div class="flex flex-wrap items-center gap-2 rd-no-print">
+
+                    {{-- CSV --}}
+                    <a href="{{ route('superadmin.registry_done.csv', request()->query()) }}"
+                        class="rd-btn rd-btn-secondary">
+                        <span class="material-symbols-outlined text-[19px]">
+                            table_view
+                        </span>
+
+                        CSV
+                    </a>
+
+                    {{-- PRINT --}}
+                    <button type="button" onclick="window.print()" class="rd-btn rd-btn-print">
+                        <span class="material-symbols-outlined text-[19px]">
+                            print
+                        </span>
+
+                        Print List
+                    </button>
+
+                </div>
             </div>
         </section>
 
@@ -734,14 +752,51 @@
                 <table class="rd-table">
                     <thead>
                         <tr>
-                            <th class="w-[60px]">#</th>
-                            <th>Application</th>
-                            <th>Applicant</th>
-                            <th>Mobile</th>
-                            <th>Location</th>
-                            <th>Phase</th>
-                            <th>Flat</th>
-                            <th class="text-center">Action</th>
+
+                            <th class="w-[60px]">
+                                #
+                            </th>
+
+                            <th>
+                                Application
+                            </th>
+
+                            <th>
+                                Applicant
+                            </th>
+
+                            <th>
+                                Mobile
+                            </th>
+
+                            <th>
+                                Location
+                            </th>
+
+                            <th>
+                                Phase
+                            </th>
+
+                            <th>
+                                Flat
+                            </th>
+
+                            <th>
+                                Registry Number
+                            </th>
+
+                            <th>
+                                Registry Date
+                            </th>
+
+                            <th class="text-center">
+                                Status
+                            </th>
+
+                            <th class="text-center">
+                                Action
+                            </th>
+
                         </tr>
                     </thead>
 
@@ -815,17 +870,90 @@
                                         ID: {{ $row->FlatId ?? '-' }}
                                     </div>
                                 </td>
+                                {{-- Registry Number --}}
+                                <td>
+                                    <div class="font-extrabold text-slate-800">
+                                        {{ $row->RegistryNumber ?? '-' }}
+                                    </div>
+
+                                    <div class="mt-1 text-[10px] text-slate-400">
+                                        Registry No.
+                                    </div>
+                                </td>
+
+
+                                {{-- Registry Date --}}
+                                <td>
+                                    <div class="font-bold text-slate-700">
+                                        @if (!empty($row->RegistryDate))
+                                            {{ \Carbon\Carbon::parse($row->RegistryDate)->format('d-m-Y') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </div>
+                                </td>
+
+
+                                {{-- Status --}}
+                                <td class="text-center">
+
+                                    <span
+                                        class="inline-flex items-center gap-1.5 rounded-full
+               bg-emerald-50 px-3 py-1.5
+               text-[10px] font-extrabold
+               text-emerald-700
+               ring-1 ring-inset ring-emerald-200">
+
+                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+
+                                        {{ $row->RegistryStatus ?? 'Registry Done' }}
+
+                                    </span>
+
+                                </td>
 
                                 <td class="text-center">
-                                    <a href="{{ route('superadmin.registry_done.show', $secureId) }}" class="rd-action">
-                                        <span class="material-symbols-outlined text-[16px]">visibility</span>
-                                        Details
-                                    </a>
+
+                                    <div class="flex items-center justify-center gap-2">
+
+                                        {{-- Details --}}
+                                        <a href="{{ route('superadmin.registry_done.show', $secureId) }}"
+                                            class="rd-action" title="View Registry Details">
+                                            <span class="material-symbols-outlined text-[16px]">
+                                                visibility
+                                            </span>
+
+                                            Details
+                                        </a>
+
+                                        {{-- Print --}}
+                                        <a href="{{ route('superadmin.registry_done.print', $secureId) }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1.5
+                   rounded-lg
+                   bg-red-50
+                   px-3 py-2
+                   text-[11px]
+                   font-extrabold
+                   text-red-600
+                   ring-1 ring-inset ring-red-200
+                   transition
+                   hover:bg-red-100"
+                                            title="Print Registry">
+                                            <span class="material-symbols-outlined text-[16px]">
+                                                print
+                                            </span>
+
+                                            Print
+                                        </a>
+
+                                    </div>
+
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8">
+                                <td colspan="11">
                                     <div class="rd-empty">
                                         <div class="rd-empty-icon">
                                             <span class="material-symbols-outlined text-[28px]">inventory_2</span>
