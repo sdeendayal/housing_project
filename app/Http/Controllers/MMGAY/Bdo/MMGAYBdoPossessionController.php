@@ -1909,6 +1909,26 @@ class MMGAYBdoPossessionController extends Controller
             $decodedJson = json_decode($responseBody, true);
             if (isset($decodedJson['payload']) && is_array($decodedJson['payload'])) {
                 $payloadRecords = $decodedJson['payload'];
+                foreach ($payloadRecords as &$reg) {
+                    $token = $reg['uniqueToken'] ?? $reg['flatnumber'] ?? $reg['flatid'] ?? $reg['pppId'] ?? null;
+                    $regNo = $reg['registrationNo'] ?? null;
+                    $flatid = $reg['flatid'] ?? null;
+                    $flatnumber = $reg['flatnumber'] ?? null;
+
+                    $exists = DB::table('registary')
+                        ->where(function ($q) use ($token, $regNo, $flatid, $flatnumber) {
+                            $hasClause = false;
+                            if (!empty($token)) { $q->orWhere('Token', $token); $hasClause = true; }
+                            if (!empty($regNo)) { $q->orWhere('registrationNo', $regNo); $hasClause = true; }
+                            if (!empty($flatid)) { $q->orWhere('flatid', $flatid); $hasClause = true; }
+                            if (!empty($flatnumber)) { $q->orWhere('flatnumber', $flatnumber); $hasClause = true; }
+                            if (!$hasClause) { $q->whereRaw('0 = 1'); }
+                        })
+                        ->exists();
+
+                    $reg['in_db'] = $exists;
+                }
+                unset($reg);
             }
         }
 
@@ -1925,6 +1945,199 @@ class MMGAYBdoPossessionController extends Controller
             'records_count' => count($payloadRecords),
             'payload_records' => $payloadRecords,
         ]);
+    }
+
+    /**
+     * Fetch land registry records from HFA API from 01-10-2025 up to today (or custom range),
+     * filter out records that already exist in the registary table (skipping duplicates),
+     * and save missing records into the registary table.
+     */
+    public function hfaApiSyncMissing(Request $request)
+    {
+        $fromDate = $request->input('from_date', '2025-10-01');
+        $toDate = $request->input('to_date', date('Y-m-d'));
+
+        // Fallback if empty or invalid
+        if (empty($fromDate) || strtotime($fromDate) === false) {
+            $fromDate = '2025-10-01';
+        }
+        if (empty($toDate) || strtotime($toDate) === false) {
+            $toDate = date('Y-m-d');
+        }
+
+        $apiUrl = 'https://api.revenueharyana.gov.in/api/LandRegistration/getRegistrationforHFALand';
+        $headers = [
+            'X-API-KEY' => 'HFA26@hry#',
+            'Accept' => 'application/json',
+        ];
+
+        $queryParams = [
+            'RegFromDate' => $fromDate,
+            'RegToDate' => $toDate,
+        ];
+
+        $startTime = microtime(true);
+        $statusCode = null;
+        $responseBody = null;
+        $responseHeaders = [];
+        $errorMessage = null;
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(90)
+                ->withHeaders($headers)
+                ->get($apiUrl, $queryParams);
+
+            $statusCode = $response->status();
+            $responseBody = $response->body();
+            $responseHeaders = $response->headers();
+        } catch (\Exception $e) {
+            $errorMessage = $e->getMessage();
+            Log::error("HFA API Sync Missing Exception: " . $errorMessage);
+        }
+
+        $responseTime = round((microtime(true) - $startTime) * 1000, 2);
+
+        if ($errorMessage || !$statusCode || $statusCode < 200 || $statusCode >= 300) {
+            return redirect()->back()->withInput()->with('error', 'HFA API से संपर्क विफल रहा: ' . ($errorMessage ?: "HTTP Status {$statusCode}"));
+        }
+
+        $decodedJson = json_decode($responseBody, true);
+        $payloadRecords = $decodedJson['payload'] ?? [];
+
+        if (empty($payloadRecords) || !is_array($payloadRecords)) {
+            return redirect()->back()->withInput()->with('info', "दी गई तारीख सीमा ({$fromDate} से {$toDate}) में HFA API से कोई रिकॉर्ड नहीं मिला।");
+        }
+
+        $totalFetched = count($payloadRecords);
+        $insertedCount = 0;
+        $skippedCount = 0;
+        $processedRecords = [];
+
+        foreach ($payloadRecords as $reg) {
+            $token = $reg['uniqueToken'] ?? $reg['flatnumber'] ?? $reg['flatid'] ?? $reg['pppId'] ?? null;
+            $registrationNo = $reg['registrationNo'] ?? null;
+            $flatid = $reg['flatid'] ?? null;
+            $flatnumber = $reg['flatnumber'] ?? null;
+
+            // Check if record already exists in registary table (duplicate prevention)
+            $exists = DB::table('registary')
+                ->where(function ($q) use ($token, $registrationNo, $flatid, $flatnumber) {
+                    $hasClause = false;
+                    if (!empty($token)) {
+                        $q->orWhere('Token', $token);
+                        $hasClause = true;
+                    }
+                    if (!empty($registrationNo)) {
+                        $q->orWhere('registrationNo', $registrationNo);
+                        $hasClause = true;
+                    }
+                    if (!empty($flatid)) {
+                        $q->orWhere('flatid', $flatid);
+                        $hasClause = true;
+                    }
+                    if (!empty($flatnumber)) {
+                        $q->orWhere('flatnumber', $flatnumber);
+                        $hasClause = true;
+                    }
+                    if (!$hasClause) {
+                        $q->whereRaw('0 = 1');
+                    }
+                })
+                ->exists();
+
+            if ($exists) {
+                $skippedCount++;
+                $reg['sync_status'] = 'duplicate';
+                $reg['in_db'] = true;
+                $processedRecords[] = $reg;
+            } else {
+                // Parse TotalArea and Bhag
+                $bhag = $reg['bhag'] ?? null;
+                $totalArea = null;
+                if ($bhag && strpos($bhag, '/') !== false) {
+                    $parts = explode('/', $bhag);
+                    $totalArea = trim($parts[1] ?? '');
+                }
+                if (empty($totalArea)) {
+                    $totalArea = $reg['area'] ?? null;
+                }
+
+                // Parse registryDate
+                $regDate = null;
+                if (!empty($reg['registryDate'])) {
+                    try {
+                        $regDate = Carbon::parse($reg['registryDate'])->format('Y-m-d H:i:s');
+                    } catch (\Exception $ex) {
+                        $regDate = null;
+                    }
+                }
+
+                $dbData = [
+                    'District' => $reg['districtName'] ?? null,
+                    'TehsilName' => $reg['tehsilName'] ?? null,
+                    'Village' => $reg['villageName'] ?? null,
+                    'Token' => $token,
+                    'Khewat' => $reg['khewat'] ?? null,
+                    'FirstParty' => $reg['firstPartyName'] ?? 'Government/HFA',
+                    'TotalArea' => $totalArea,
+                    'Bhag' => $bhag,
+                    'TransferArea' => $reg['transferHissaInMarla'] ?? $reg['area'] ?? null,
+                    'SecondParty' => $reg['secondPartyName'] ?? $reg['fullname'] ?? null,
+                    'SecondPartyMobile' => $reg['secondPartyMobile'] ?? null,
+                    'RegistaryNumber' => $reg['registryNumber'] ?? $reg['registrationNo'] ?? null,
+                    'RegistaryDate' => $regDate,
+
+                    'flatid' => $reg['flatid'] ?? null,
+                    'flatnumber' => $reg['flatnumber'] ?? null,
+                    'registrationNo' => $reg['registrationNo'] ?? null,
+                    'pppId' => $reg['pppId'] ?? null,
+                    'area' => $reg['area'] ?? null,
+                    'unit' => $reg['unit'] ?? null,
+                    'ownerid' => $reg['ownerid'] ?? null,
+                    'fullname' => $reg['fullname'] ?? null,
+                    'fatherName' => $reg['fatherName'] ?? null,
+                    'dues' => $reg['dues'] ?? null,
+                    'acceptFlag' => $reg['acceptFlag'] ?? null,
+                    'propertyCategory' => $reg['propertyCategory'] ?? null,
+                    'transferHissaInMarla' => $reg['transferHissaInMarla'] ?? null,
+
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+
+                DB::table('registary')->insert($dbData);
+                $insertedCount++;
+                $reg['sync_status'] = 'saved';
+                $reg['in_db'] = true;
+                $processedRecords[] = $reg;
+            }
+        }
+
+        Log::info("HFA API Sync Missing: Range {$fromDate} to {$toDate}. Fetched {$totalFetched}, Inserted {$insertedCount}, Skipped {$skippedCount}");
+
+        return redirect()->back()->withInput()->with('sync_result', [
+            'total_fetched' => $totalFetched,
+            'inserted_count' => $insertedCount,
+            'skipped_count' => $skippedCount,
+            'from_date' => $fromDate,
+            'to_date' => $toDate,
+            'time_ms' => $responseTime,
+        ])->with('api_result', [
+            'api_mode' => 'date_range',
+            'url' => $apiUrl . '?' . http_build_query($queryParams),
+            'headers_sent' => $headers,
+            'status' => $statusCode,
+            'time_ms' => $responseTime,
+            'error' => null,
+            'response_headers' => $responseHeaders,
+            'raw_body' => $responseBody,
+            'decoded_json' => $decodedJson,
+            'records_count' => count($processedRecords),
+            'payload_records' => $processedRecords,
+            'is_sync' => true,
+            'inserted_count' => $insertedCount,
+            'skipped_count' => $skippedCount,
+        ])->with('success', "सफलतापूर्वक सिंक हुआ: कुल {$totalFetched} रिकॉर्ड्स मिले। छूटे हुए {$insertedCount} रिकॉर्ड्स registary टेबल में सेव किए गए, एवं {$skippedCount} डुप्लीकेट रिकॉर्ड्स स्वतः छोड़ दिए गए। (तारीख: " . date('d-m-Y', strtotime($fromDate)) . " से " . date('d-m-Y', strtotime($toDate)) . " तक)");
     }
 
     /**

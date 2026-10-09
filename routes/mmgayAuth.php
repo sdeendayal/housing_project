@@ -253,6 +253,7 @@ Route::middleware(['auth', 'mmgay', 'role:mmgav_bdeo'])->prefix('mmgay/bdo')->na
     // HFA API Test Tool
     Route::get('/hfa-api-test', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'hfaApiTestForm'])->name('hfa-api-test');
     Route::post('/hfa-api-test', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'hfaApiTestSubmit'])->name('hfa-api-test.submit');
+    Route::post('/hfa-api-sync-missing', [App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController::class, 'hfaApiSyncMissing'])->name('hfa-api-sync-missing');
 });
 
 // Villager Possession Routes

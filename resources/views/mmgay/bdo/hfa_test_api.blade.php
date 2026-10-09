@@ -60,7 +60,41 @@
                 </button>
             </div>
 
-            <!-- Error Alerts -->
+            <!-- Session Status Alerts -->
+            @if (session('success'))
+                <div class="p-3 bg-emerald-50 border border-emerald-300 text-emerald-800 rounded-xl text-xs shadow-sm flex items-start gap-2.5">
+                    <span class="material-symbols-outlined text-emerald-600 text-lg shrink-0 mt-0.5">check_circle</span>
+                    <div class="flex-1">
+                        <div class="font-bold text-emerald-900 flex items-center gap-1.5">
+                            <span>सफलता (Sync Success)</span>
+                            <span class="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-200 text-emerald-800 font-bold">registary Table Updated</span>
+                        </div>
+                        <div class="text-[11px] leading-relaxed mt-0.5 text-emerald-950 font-medium">{{ session('success') }}</div>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('error'))
+                <div class="p-3 bg-red-50 border border-red-300 text-red-800 rounded-xl text-xs shadow-sm flex items-start gap-2.5">
+                    <span class="material-symbols-outlined text-red-600 text-lg shrink-0 mt-0.5">error</span>
+                    <div class="flex-1">
+                        <div class="font-bold text-red-900">त्रुटि (Error):</div>
+                        <div class="text-[11px] leading-relaxed mt-0.5">{{ session('error') }}</div>
+                    </div>
+                </div>
+            @endif
+
+            @if (session('info'))
+                <div class="p-3 bg-blue-50 border border-blue-300 text-blue-800 rounded-xl text-xs shadow-sm flex items-start gap-2.5">
+                    <span class="material-symbols-outlined text-blue-600 text-lg shrink-0 mt-0.5">info</span>
+                    <div class="flex-1">
+                        <div class="font-bold text-blue-900">सूचना (Notice):</div>
+                        <div class="text-[11px] leading-relaxed mt-0.5">{{ session('info') }}</div>
+                    </div>
+                </div>
+            @endif
+
+            <!-- Form Validation Error Alerts -->
             @if ($errors->any())
                 <div class="p-2.5 bg-red-50/90 border border-red-200 text-red-700 rounded-xl text-[11px] shadow-sm">
                     <div class="font-bold flex items-center gap-1 mb-0.5">
@@ -93,18 +127,18 @@
                 <div class="p-2 bg-blue-50/70 border border-blue-100/80 rounded-lg text-[11px] text-blue-900 flex items-start gap-1.5">
                     <span class="material-symbols-outlined text-blue-600 text-sm mt-0.5">auto_awesome</span>
                     <div class="leading-relaxed">
-                        <span class="font-bold text-blue-800">ऑटो-प्रीफिल्ड:</span> कल की तारीख (<span class="font-semibold text-blue-900">{{ date('d M Y', strtotime('-1 day')) }}</span>) स्वतः चुनी हुई है। 1 क्लिक में कल की सभी रजिस्ट्रियां फेच करें।
+                        <span class="font-bold text-blue-800">ऑटो-प्रीफिल्ड:</span> कल की तारीख (<span class="font-semibold text-blue-900">{{ date('d M Y', strtotime('-1 day')) }}</span>) स्वतः चुनी हुई है। नीचे दिए बटन से सीधे छूटी हुई रजिस्ट्रियां सेव भी कर सकते हैं।
                     </div>
                 </div>
 
-                <form action="{{ route('mmgay.bdo.hfa-api-test.submit') }}" method="POST" class="space-y-3">
+                <form id="dateWiseFetchForm" action="{{ route('mmgay.bdo.hfa-api-test.submit') }}" method="POST" class="space-y-3">
                     @csrf
                     <input type="hidden" name="api_mode" value="date_range">
 
                     <!-- Quick Preset Buttons -->
                     <div>
                         <span class="block text-[10px] font-bold text-slate-500 mb-1">Quick Date Presets:</span>
-                        <div class="grid grid-cols-4 gap-1.5">
+                        <div class="grid grid-cols-4 gap-1.5 mb-1.5">
                             <button type="button" onclick="setDateRange('{{ $yesterdayDate }}', '{{ $yesterdayDate }}')" 
                                     class="py-1 px-1.5 rounded-md text-[10px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-center transition flex items-center justify-center gap-0.5">
                                 <span>⚡ कल</span>
@@ -122,6 +156,11 @@
                                 इस माह
                             </button>
                         </div>
+                        <button type="button" onclick="setDateRange('2025-10-01', '{{ $todayDate }}')" 
+                                class="w-full py-1.5 px-2 rounded-md text-[10px] font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-center transition flex items-center justify-center gap-1.5">
+                            <span class="material-symbols-outlined text-[13px] text-indigo-600">calendar_month</span>
+                            <span>01-10-2025 से आज तक ({{ date('d-m-Y') }}) Preset</span>
+                        </button>
                     </div>
 
                     <!-- Date Range Inputs -->
@@ -150,12 +189,54 @@
                         <span class="text-[9px] font-bold text-blue-600 bg-blue-50 px-1 py-0.2 rounded border border-blue-200 shrink-0">HFA API</span>
                     </div>
 
-                    <!-- Submit Button -->
+                    <!-- Button 1: Live Fetch Preview Only -->
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.99] text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm shadow-blue-500/20">
                         <span class="material-symbols-outlined text-base">cloud_download</span>
-                        <span>Fetch Date-Wise Registrations</span>
+                        <span>Fetch Date-Wise Registrations (Preview)</span>
                     </button>
                 </form>
+
+                <!-- Dedicated Action Section: Fetch & Save Missing to registary Table (01-10-2025 to Today) -->
+                <div class="pt-2.5 border-t border-slate-200/80 flex flex-col gap-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-1.5">
+                            <span class="material-symbols-outlined text-emerald-600 text-sm">database</span>
+                            <span class="text-[11px] font-black text-slate-800">छूटी हुई रजिस्ट्रियां ऑटो-सेव:</span>
+                        </div>
+                        <span class="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full border border-emerald-200">
+                            01-10-2025 से आज
+                        </span>
+                    </div>
+
+                    <div class="p-2 bg-emerald-50/60 rounded-lg border border-emerald-200/80 text-[10px] text-emerald-950 flex flex-col gap-0.5">
+                        <div class="flex items-center gap-1 text-emerald-900 font-bold">
+                            <span class="material-symbols-outlined text-xs text-emerald-700">task_alt</span>
+                            <span>registary टेबल में जो छूट गए हैं, सीधे सेव होंगे:</span>
+                        </div>
+                        <p class="text-slate-600 leading-snug pl-4">
+                            01-10-2025 से आज तक का लाइव HFA डेटा फेच होगा। जो रिकॉर्ड्स पहले से टेबल में हैं (Duplicate) वे स्वतः छूट जाएंगे और केवल नए छूटे रिकॉर्ड्स इंसर्ट होंगे।
+                        </p>
+                    </div>
+
+                    <form id="syncMissingForm" action="{{ route('mmgay.bdo.hfa-api-sync-missing') }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="from_date" id="sync_from_date" value="2025-10-01">
+                        <input type="hidden" name="to_date" id="sync_to_date" value="{{ $todayDate }}">
+
+                        <button type="button" onclick="submitSyncMissingForm()" id="syncMissingBtn"
+                                class="w-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 active:scale-[0.99] text-white py-2.5 px-3 rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/25 flex flex-col items-center justify-center gap-0.5 group cursor-pointer border border-emerald-500/30">
+                            <div class="flex items-center gap-1.5 text-white font-extrabold text-[12px] tracking-tight">
+                                <span class="material-symbols-outlined text-lg group-hover:rotate-180 transition-transform duration-500">sync_saved_locally</span>
+                                <span>01-10-2025 से आज तक छूटी रजिस्ट्रियां सेव करें</span>
+                            </div>
+                            <span class="text-[9px] font-medium text-emerald-100 flex items-center gap-1 mt-0.5">
+                                <span>⚡ Auto-Save Missing to registary</span>
+                                <span>•</span>
+                                <span class="text-emerald-200 font-bold">Duplicates Skip (छोड़ दिए जाएंगे)</span>
+                            </span>
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Form Card 2: Part 1 - Single Beneficiary by Registration Number -->
@@ -256,8 +337,42 @@
                     $records = $res['payload_records'] ?? [];
                     $recordsCount = $res['records_count'] ?? 0;
                     $initialView = ($recordsCount > 0) ? 'table' : 'json';
+                    $syncRes = session('sync_result');
                 @endphp
                 <div class="space-y-2.5">
+                    @if($syncRes)
+                        <!-- Highlighted Sync Outcome Strip -->
+                        <div class="p-3 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-300 rounded-xl text-emerald-900 shadow-sm flex flex-col gap-2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-black shadow-xs">
+                                        ✓
+                                    </div>
+                                    <span class="font-bold text-xs text-emerald-950">
+                                        रजिस्ट्री टेबल सिंक संपन्न (01-10-2025 से {{ date('d-m-Y', strtotime($syncRes['to_date'])) }})
+                                    </span>
+                                </div>
+                                <span class="text-[10px] font-mono font-semibold text-emerald-800 bg-white/80 px-2 py-0.5 rounded border border-emerald-200">
+                                    {{ $syncRes['time_ms'] ?? 0 }} ms
+                                </span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-2 pt-1 border-t border-emerald-200/70 text-center">
+                                <div class="bg-white/90 rounded-lg p-1.5 border border-emerald-200/70 shadow-2xs">
+                                    <span class="block text-[8px] text-slate-500 font-bold uppercase tracking-wider">कुल फेच</span>
+                                    <span class="text-sm font-black text-slate-800">{{ $syncRes['total_fetched'] }}</span>
+                                </div>
+                                <div class="bg-emerald-100/80 rounded-lg p-1.5 border border-emerald-300 shadow-2xs">
+                                    <span class="block text-[8px] text-emerald-800 font-black uppercase tracking-wider">नया सेव (Missing)</span>
+                                    <span class="text-sm font-black text-emerald-800">+{{ $syncRes['inserted_count'] }}</span>
+                                </div>
+                                <div class="bg-slate-100/90 rounded-lg p-1.5 border border-slate-300 shadow-2xs">
+                                    <span class="block text-[8px] text-slate-600 font-bold uppercase tracking-wider">डुप्लीकेट (छोड़ा)</span>
+                                    <span class="text-sm font-black text-slate-600">{{ $syncRes['skipped_count'] }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                     <!-- Status Strip Badges -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-1.5">
                         <div class="p-1.5 rounded-lg border border-slate-200/70 bg-slate-50/60">
@@ -282,7 +397,13 @@
                         <div class="p-1.5 rounded-lg border border-slate-200/70 bg-slate-50/60">
                             <span class="block text-[8px] font-bold text-slate-400 uppercase tracking-wider">Mode</span>
                             <span class="text-[10px] font-bold text-slate-700">
-                                {{ ($res['api_mode'] ?? '') === 'date_range' ? 'Date-Wise' : 'Reg No' }}
+                                @if(!empty($res['is_sync']))
+                                    <span class="text-emerald-700">Auto-Sync (Saved)</span>
+                                @elseif(($res['api_mode'] ?? '') === 'date_range')
+                                    Date-Wise
+                                @else
+                                    Reg No
+                                @endif
                             </span>
                         </div>
                     </div>
@@ -304,9 +425,16 @@
                         @if($recordsCount > 0)
                             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
                                 <div class="px-2.5 py-1.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between text-[10px]">
-                                    <span class="font-bold text-slate-700">
-                                        Beneficiary Records ({{ $recordsCount }})
-                                    </span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-bold text-slate-700">
+                                            Beneficiary Records ({{ $recordsCount }})
+                                        </span>
+                                        @if(!empty($res['is_sync']))
+                                            <span class="text-[9px] font-bold text-emerald-800 bg-emerald-100 px-1.5 py-0.2 rounded border border-emerald-200">
+                                                Saved: {{ $res['inserted_count'] ?? 0 }} | Skipped: {{ $res['skipped_count'] ?? 0 }}
+                                            </span>
+                                        @endif
+                                    </div>
                                     <input type="text" id="tableFilterInput" onkeyup="filterResultTable()" 
                                            placeholder="Filter table..." 
                                            class="px-2 py-0.5 text-[10px] border border-slate-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 w-32">
@@ -316,6 +444,7 @@
                                         <thead class="bg-slate-100 text-slate-600 font-bold text-[9px] tracking-wider uppercase sticky top-0 border-b border-slate-200">
                                             <tr>
                                                 <th class="px-2.5 py-1.5">#</th>
+                                                <th class="px-2.5 py-1.5">DB Status</th>
                                                 <th class="px-2.5 py-1.5">Beneficiary / Father</th>
                                                 <th class="px-2.5 py-1.5">Reg No / Flat</th>
                                                 <th class="px-2.5 py-1.5">Location</th>
@@ -327,6 +456,27 @@
                                             @foreach($records as $index => $row)
                                                 <tr class="hover:bg-blue-50/40 transition">
                                                     <td class="px-2.5 py-1.5 font-mono text-slate-400 text-[10px]">{{ $index + 1 }}</td>
+                                                    <td class="px-2.5 py-1.5 whitespace-nowrap">
+                                                        @if(($row['sync_status'] ?? '') === 'saved')
+                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span> नया सेव हुआ
+                                                            </span>
+                                                        @elseif(($row['sync_status'] ?? '') === 'duplicate')
+                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span> डुप्लीकेट (छोड़ा)
+                                                            </span>
+                                                        @elseif(isset($row['in_db']) && $row['in_db'])
+                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-medium bg-blue-50 text-blue-700 border border-blue-200">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> टेबल में मौजूद
+                                                            </span>
+                                                        @elseif(isset($row['in_db']) && !$row['in_db'])
+                                                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-black bg-amber-50 text-amber-800 border border-amber-300">
+                                                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> छूटा हुआ (Missing)
+                                                            </span>
+                                                        @else
+                                                            <span class="text-slate-400 text-[10px]">—</span>
+                                                        @endif
+                                                    </td>
                                                     <td class="px-2.5 py-1.5">
                                                         <div class="font-bold text-slate-800">{{ $row['fullname'] ?? '—' }}</div>
                                                         <div class="text-[9px] text-slate-500">S/o: {{ $row['fatherName'] ?? '—' }}</div>
@@ -498,6 +648,37 @@
             const text = trs[i].textContent || trs[i].innerText;
             trs[i].style.display = text.toLowerCase().indexOf(filter) > -1 ? '' : 'none';
         }
+    }
+
+    function submitSyncMissingForm() {
+        const todayFormatted = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const confirmed = confirm(
+            "क्या आप 01-10-2025 से आज (" + todayFormatted + ") तक की सभी छूटी हुई रजिस्ट्रियों को फेच कर registary टेबल में सेव करना चाहते हैं?\n\n" +
+            "✓ केवल वही रिकॉर्ड्स सेव होंगे जो टेबल में छूटे हुए (Missing) हैं।\n" +
+            "✓ डुप्लीकेट (पहले से मौजूद) रिकॉर्ड्स स्वतः छोड़ दिए जाएंगे।"
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        const btn = document.getElementById('syncMissingBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-not-allowed', 'pointer-events-none');
+            btn.innerHTML = `
+                <div class="flex items-center gap-2 py-1">
+                    <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span class="font-black text-xs text-white">HFA से फेच व registary में सेव किया जा रहा है...</span>
+                </div>
+                <span class="text-[9px] text-emerald-200">कृपया प्रतीक्षा करें (कुछ सेकंड का समय लग सकता है)</span>
+            `;
+        }
+
+        document.getElementById('syncMissingForm').submit();
     }
 </script>
 @endsection
