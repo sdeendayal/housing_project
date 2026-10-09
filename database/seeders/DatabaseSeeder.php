@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
             RegistarySeeder::class,
             CitizenUserSeeder::class,
             DepartmentUserSeeder::class,
-            DistrictOfficerSeeder::class,
+            // DistrictOfficerSeeder::class, // Site Engineer Users (Role: district_officer)
             PhysicalPossessionUserSeeder::class,
             LedgerSeeder::class,
             InstallmentDueSeeder::class,
@@ -95,7 +95,7 @@ class DatabaseSeeder extends Seeder
             EwsAllottedSeeder::class,
             EwsAllottedSecureIdSeeder::class,
             EwsWaitingListSeeder::class,
-            EwsDeveloperSeeder::class,
+            // EwsDeveloperSeeder::class, // STP User (Mobile: 9999999999, Role: ews_stp)
             MmsayOldRegistrationDataSeeder::class,
             MmsayEligibleBeneficiariesSeeder::class,
             AdcNotVerifiedSeeder::class,

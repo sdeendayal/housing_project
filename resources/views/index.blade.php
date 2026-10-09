@@ -691,7 +691,7 @@
                                     code
                                 </span>
 
-                                DTP Login
+                                STP Login
                             </a>
 
                             <a href="{{ route('ews.department.login') }}"
