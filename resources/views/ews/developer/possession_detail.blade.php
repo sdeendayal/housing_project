@@ -512,11 +512,11 @@
                                         <div class="grid grid-cols-2 gap-2">
                                             <div>
                                                 <span class="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">Latitude</span>
-                                                <input type="text" id="latitude" name="latitude" value="" placeholder="e.g. 28.89551" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-slate-800 focus:ring-1 focus:ring-sky-500 focus:outline-none" required />
+                                                <input type="text" id="latitude" name="latitude" value="{{ old('latitude', $possession->latitude ?? '') }}" placeholder="e.g. 28.89551" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-100 font-mono text-xs font-bold text-slate-700 cursor-not-allowed select-none focus:outline-none" readonly required />
                                             </div>
                                             <div>
                                                 <span class="block text-[9.5px] uppercase font-bold text-slate-400 mb-0.5">Longitude</span>
-                                                <input type="text" id="longitude" name="longitude" value="" placeholder="e.g. 76.60661" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white font-mono text-xs font-bold text-slate-800 focus:ring-1 focus:ring-sky-500 focus:outline-none" required />
+                                                <input type="text" id="longitude" name="longitude" value="{{ old('longitude', $possession->longitude ?? '') }}" placeholder="e.g. 76.60661" class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-100 font-mono text-xs font-bold text-slate-700 cursor-not-allowed select-none focus:outline-none" readonly required />
                                             </div>
                                         </div>
 
@@ -593,17 +593,20 @@
         });
 
         // Live GPS Geolocation
-        function detectLiveGps() {
+        function detectLiveGps(isAuto = false) {
             const btn = $('#btn-detect-gps');
             const statusMsg = $('#gps-status-msg');
             const mapsLink = $('#gps-maps-link');
 
             if (!navigator.geolocation) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'GPS Not Supported',
-                    text: 'Your browser or device does not support GPS Geolocation.'
-                });
+                if (!isAuto) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'GPS Not Supported',
+                        text: 'Your browser or device does not support GPS Geolocation.'
+                    });
+                }
+                statusMsg.html('<span class="text-rose-600">Geolocation is not supported by this browser.</span>');
                 return;
             }
 
@@ -626,12 +629,14 @@
                 },
                 function (err) {
                     btn.prop('disabled', false).html('<i class="bi bi-crosshair"></i> Auto-Detect Live GPS');
-                    statusMsg.html('<span class="text-rose-600 font-bold"><i class="bi bi-exclamation-triangle"></i> Location permission denied or timed out.</span>');
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Location Permission Denied',
-                        text: 'Please allow location permission in your browser or enter the coordinates manually.'
-                    });
+                    statusMsg.html('<span class="text-rose-600 font-bold"><i class="bi bi-exclamation-triangle"></i> Location permission needed. Please click "Auto-Detect" to grant access.</span>');
+                    if (!isAuto) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Location Permission Denied',
+                            text: 'Please allow location permission in your browser to capture GPS coordinates.'
+                        });
+                    }
                 },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
@@ -810,7 +815,7 @@
         // Auto-detect live GPS location on page load if coordinates are not already set
         $(document).ready(function() {
             if (!$('#latitude').val() || !$('#longitude').val()) {
-                detectLocation();
+                detectLiveGps(true);
             }
         });
     </script>
