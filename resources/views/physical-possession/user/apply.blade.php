@@ -246,11 +246,7 @@
                 title: 'Enter OTP',
                 html: '<p class="text-[12px] text-slate-600 mb-2">OTP sent to your registered mobile number.</p>' +
                       '<input type="text" id="swalOtpInput" class="swal2-input" placeholder="Enter 6-digit OTP" maxlength="6" inputmode="numeric" style="font-size:18px;letter-spacing:4px;text-align:center;">' +
-                      '<button type="button" id="swalResendOtpBtn" class="swal2-styled" style="background:#64748b;margin-top:8px;">Resend OTP</button>' +
-                      @if(app()->environment('local'))
-                      '<p class="text-[10px] text-amber-600 mt-1">Local: use OTP <strong>111111</strong></p>' +
-                      @endif
-                      '',
+                      '<button type="button" id="swalResendOtpBtn" class="swal2-styled" style="background:#64748b;margin-top:8px;">Resend OTP</button>',
                 showCancelButton: true,
                 confirmButtonText: 'Verify OTP',
                 cancelButtonText: 'Cancel',

@@ -153,7 +153,7 @@ class OtpAuthController extends Controller
 
         return view($config['verify_view'], [
             'mobile' => $mobile,
-            'usesFixedOtp' => OtpVerificationService::usesFixedTestOtp($mobile, $config['otp_purpose']),
+            'usesFixedOtp' => false,
         ]);
     }
 

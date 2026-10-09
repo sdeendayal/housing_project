@@ -118,16 +118,6 @@
                             <p class="text-[10px] text-slate-450 font-medium">Passcode sent to +91 {{ $mobile }}</p>
                         </div>
 
-                        @if ($usesFixedOtp)
-                        <!-- Fixed OTP Alert for Local -->
-                        <div class="p-2.5 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-2">
-                            <i class="bi bi-info-circle-fill text-blue-900 text-xs mt-0.5"></i>
-                            <p class="text-[10px] text-slate-700 leading-relaxed font-light">
-                                <strong>Local Testing Mode:</strong> Use the test OTP <strong class="text-blue-900 font-bold">111111</strong> to log in.
-                            </p>
-                        </div>
-                        @endif
-
                         <form id="verifyOtpForm" action="{{ route('ews.citizen.login.verify') }}" method="POST" class="space-y-3.5">
                             @csrf
 

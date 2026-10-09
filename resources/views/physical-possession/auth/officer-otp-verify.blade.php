@@ -8,12 +8,6 @@
 @endsection
 
 @section('loginForm')
-@if(\App\Services\OtpVerificationService::usesFixedTestOtp('', ''))
-<div class="alert alert-info py-1 px-2 small mb-2">
-    Local environment: use OTP <strong>111111</strong>
-</div>
-@endif
-
 <form method="POST" action="{{ route('pp.officer.login.verify') }}" id="ppOfficerVerifyOtpForm" data-pp-loading>
     @csrf
     <div class="field">

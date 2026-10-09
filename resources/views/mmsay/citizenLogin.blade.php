@@ -451,7 +451,7 @@
                         autocomplete="tel"
                         placeholder="10-digit mobile"
                         maxlength="10"
-                        value="{{ old('mobile', '9306977546') }}"
+                        value="{{ old('mobile') }}"
                         required>
                   </div>
                </div>

@@ -121,7 +121,7 @@
                         <label for="mobile" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Registered STP Mobile</label>
                         <div class="flex rounded-lg overflow-hidden border border-slate-250 bg-slate-50 focus-within:border-amber-500 focus-within:ring-1 focus-within:ring-amber-500 transition-all">
                             <span class="flex items-center justify-center px-3 text-slate-400 border-r border-slate-200 text-[11px] font-mono bg-slate-100">+91</span>
-                            <input type="text" id="mobile" name="mobile" maxlength="10" placeholder="9999999999" value="{{ old('mobile', '9999999999') }}"
+                            <input type="text" id="mobile" name="mobile" maxlength="10" placeholder="Enter 10-digit mobile" value="{{ old('mobile') }}"
                                 class="w-full bg-transparent border-0 px-3 py-1.5 text-xs text-slate-800 focus:ring-0 focus:outline-none placeholder-slate-400 font-mono font-medium" required>
                         </div>
                     </div>
