@@ -754,43 +754,39 @@
                         <tr>
 
                             <th class="w-[60px]">
-                                #
+                                S. No.
                             </th>
 
                             <th>
-                                Application
+                                District
                             </th>
 
                             <th>
-                                Applicant
+                                Block
                             </th>
 
                             <th>
-                                Mobile
+                                Village
                             </th>
 
                             <th>
-                                Location
+                                Name of allottee
                             </th>
 
                             <th>
-                                Phase
+                                Father/Husband Name
                             </th>
 
                             <th>
-                                Flat
+                                Plot Number
                             </th>
 
                             <th>
                                 Registry Number
                             </th>
 
-                            <th>
-                                Registry Date
-                            </th>
-
                             <th class="text-center">
-                                Status
+                                Date of Registry
                             </th>
 
                             <th class="text-center">
@@ -815,13 +811,19 @@
                                 </td>
 
                                 <td>
-                                    <div class="font-extrabold text-slate-800">
-                                        {{ $row->RegistrationNo ?? '-' }}
+                                    <div class="font-bold text-slate-700">
+                                        {{ $row->DistrictName ?? '-' }}
                                     </div>
-                                    <div class="mt-1 text-[10px] font-medium text-slate-400">
-                                        Owner ID:
-                                        <span class="font-bold text-slate-500">{{ $row->OwnerId ?? '-' }}</span>
-                                    </div>
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-700">
+                                        {{ $row->BlockName ?? '-' }}
+                                    </div>                                    
+                                </td>
+                                <td>
+                                    <div class="font-bold text-slate-700">
+                                        {{ $row->VillageName ?? '-' }}
+                                    </div>                                    
                                 </td>
 
                                 <td>
@@ -830,59 +832,34 @@
                                         <div class="min-w-0">
                                             <div class="truncate font-extrabold text-slate-800">
                                                 {{ $row->OwnerName ?? '-' }}
-                                            </div>
-                                            <div class="mt-1 truncate text-[10px] text-slate-400">
-                                                {{ $row->FatherHusbandName ?? '-' }}
-                                            </div>
+                                            </div>                                            
                                         </div>
                                     </div>
                                 </td>
 
                                 <td>
-                                    <div class="font-bold text-slate-700">
-                                        {{ $row->MobileNo ?? '-' }}
+                                    <div class="flex items-center gap-3">
+                                        
+                                        <div class="min-w-0">
+                                            <div class="truncate font-extrabold text-slate-800">
+                                                {{ $row->FatherHusbandName ?? '-' }}
+                                            </div>                                            
+                                        </div>
                                     </div>
-                                </td>
-
-                                <td>
-                                    <div class="font-bold text-slate-700">
-                                        {{ $row->VillageName ?? '-' }}
-                                    </div>
-                                    <div class="mt-1 text-[10px] text-slate-400">
-                                        {{ $row->BlockName ?? '-' }}
-                                        <span class="mx-1">•</span>
-                                        {{ $row->DistrictName ?? '-' }}
-                                    </div>
-                                </td>
-
-                                <td>
-                                    <span
-                                        class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-extrabold text-slate-600">
-                                        {{ $row->Phase ?? '-' }}
-                                    </span>
                                 </td>
 
                                 <td>
                                     <div class="font-extrabold text-slate-800">
                                         {{ $row->FlatNo ?? '-' }}
-                                    </div>
-                                    <div class="mt-1 text-[10px] text-slate-400">
-                                        ID: {{ $row->FlatId ?? '-' }}
-                                    </div>
+                                    </div>                                    
                                 </td>
-                                {{-- Registry Number --}}
+
                                 <td>
                                     <div class="font-extrabold text-slate-800">
                                         {{ $row->RegistryNumber ?? '-' }}
                                     </div>
-
-                                    <div class="mt-1 text-[10px] text-slate-400">
-                                        Registry No.
-                                    </div>
                                 </td>
 
-
-                                {{-- Registry Date --}}
                                 <td>
                                     <div class="font-bold text-slate-700">
                                         @if (!empty($row->RegistryDate))
@@ -891,26 +868,7 @@
                                             -
                                         @endif
                                     </div>
-                                </td>
-
-
-                                {{-- Status --}}
-                                <td class="text-center">
-
-                                    <span
-                                        class="inline-flex items-center gap-1.5 rounded-full
-               bg-emerald-50 px-3 py-1.5
-               text-[10px] font-extrabold
-               text-emerald-700
-               ring-1 ring-inset ring-emerald-200">
-
-                                        <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
-
-                                        {{ $row->RegistryStatus ?? 'Registry Done' }}
-
-                                    </span>
-
-                                </td>
+                                </td>                                
 
                                 <td class="text-center">
 

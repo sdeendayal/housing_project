@@ -7724,21 +7724,15 @@ class SuperAdminController extends Controller
             |--------------------------------------------------------------------------
             */
             fputcsv($file, [
-                'Sr. No.',
-                'Application No.',
-                'Owner ID',
-                'Applicant Name',
-                'Father / Husband Name',
-                'Mobile',
+                'S. NO.',
                 'District',
                 'Block',
                 'Village',
-                'Phase',
-                'Flat No.',
-                'Flat ID',
+                'Name of allottee',
+                'Father/Husband Name',
+                'Plot Number',
                 'Registry Number',
-                'Registry Date',
-                'Registry Status',
+                'Date of Registry',
             ]);
 
             /*
@@ -8028,20 +8022,14 @@ class SuperAdminController extends Controller
 
                 fputcsv($file, [
                     $serial,
-                    $row->RegistrationNo ?? '',
-                    $row->OwnerId ?? '',
-                    $row->OwnerName ?? '',
-                    $row->FatherHusbandName ?? '',
-                    $row->MobileNo ?? '',
                     $row->DistrictName ?? '',
                     $row->BlockName ?? '',
                     $row->VillageName ?? '',
-                    $row->Phase ?? '',
+                    $row->OwnerName ?? '',
+                    $row->FatherHusbandName ?? '',
                     $row->FlatNo ?? '',
-                    $row->FlatId ?? '',
                     $row->RegistryNumber ?? '',
                     $registryDate,
-                    $row->RegistryStatus ?? 'Registry Done',
                 ]);
             }
 
