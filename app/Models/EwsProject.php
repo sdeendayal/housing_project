@@ -18,7 +18,19 @@ class EwsProject extends Model
         'town_id',
         'town_name',
         'name',
+        'register_flat',
         'project_abbr',
+        'address',
+        'address_of_project',
+        'sector_no',
+        'developer_name',
+        'license_no',
+        'area_of_project',
+        'developer_plan',
+        'approved_building_plan',
+        'building_plan_approval_date',
+        'building_plan_copy',
+        'oc_status_yn',
     ];
 
     public function district(): BelongsTo

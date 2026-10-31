@@ -8,6 +8,7 @@ use App\Models\EwsProject;
 use App\Models\EwsBlock;
 use App\Models\EwsTown;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Yajra\DataTables\Facades\DataTables;
@@ -77,8 +78,9 @@ class EwsDeveloperDashboardController extends Controller
             });
         }
 
-        // My Flats Query
+        // My Flats Query (developer's own registered flats)
         $myFlatsQuery = EwsBuilderFlat::where('created_by', $user->id);
+        $myFlatsCount = (clone $myFlatsQuery)->count();
 
         // Zone Allotted Flats from ews_allotted_8 (out of 4,211 master pool)
         $zoneAllottedQuery = DB::table('ews_allotted_8');
@@ -90,34 +92,80 @@ class EwsDeveloperDashboardController extends Controller
         $zoneAllottedCount = (clone $zoneAllottedQuery)->count();
         $stateAllottedTotal = DB::table('ews_allotted_8')->count();
 
+        // Fetch only the flats created by THIS developer (strictly what appears in the table)
+        $myFlats = EwsBuilderFlat::where('created_by', $user->id)
+            ->whereNotNull('district_id')
+            ->get(['district_id', 'district_name', 'town_id', 'town_name', 'project_id', 'project_name']);
+
+        // 1. Districts present in developer's flats (frontend table)
+        $myDistrictIds = $myFlats->pluck('district_id')->filter()->unique()->values()->toArray();
+        $districtsDb = !empty($myDistrictIds)
+            ? DB::table('ews_districts')->whereIn('id', $myDistrictIds)->get()->keyBy('id')
+            : collect();
+
+        $districts = collect($myDistrictIds)->map(function($distId) use ($districtsDb, $myFlats) {
+            $dbDist = $districtsDb->get($distId);
+            $flatDist = $myFlats->firstWhere('district_id', $distId);
+            $name = $dbDist->name ?? $flatDist->district_name ?? ('District #' . $distId);
+            return (object)[
+                'id' => (string)$distId,
+                'name' => strtoupper(trim($name))
+            ];
+        })->unique('id')->sortBy('name')->values();
+
+        // 2. Towns present in developer's flats (frontend table)
+        $myTownIds = $myFlats->pluck('town_id')->filter()->unique()->values()->toArray();
+        $townsDb = !empty($myTownIds)
+            ? EwsTown::whereIn('id', $myTownIds)->get()->keyBy('id')
+            : collect();
+
+        $townsList = $myFlats->filter(fn($f) => !empty($f->town_id))->map(function($f) use ($townsDb) {
+            $dbTown = $townsDb->get($f->town_id);
+            $name = $dbTown->name ?? $f->town_name ?? ('Town #' . $f->town_id);
+            return (object)[
+                'id' => (string)$f->town_id,
+                'name' => strtoupper(trim($name)),
+                'district_id' => (string)$f->district_id
+            ];
+        })->unique('id')->sortBy('name')->values();
+
+        // 3. Projects present in developer's flats (frontend table)
+        $myProjectIds = $myFlats->pluck('project_id')->filter()->unique()->values()->toArray();
+        $projectsDb = !empty($myProjectIds)
+            ? EwsProject::whereIn('id', $myProjectIds)->get()->keyBy('id')
+            : collect();
+
+        $projectsList = $myFlats->filter(fn($f) => !empty($f->project_id))->map(function($f) use ($projectsDb) {
+            $dbProj = $projectsDb->get($f->project_id);
+            $name = $dbProj->name ?? $f->project_name ?? ('Project #' . $f->project_id);
+            return (object)[
+                'id' => (string)$f->project_id,
+                'name' => strtoupper(trim($name)),
+                'district_id' => (string)$f->district_id,
+                'town_id' => (string)$f->town_id
+            ];
+        })->unique('id')->sortBy('name')->values();
+
         $stats = [
             'total_allotted' => $zoneAllottedCount,
             'state_allotted_total' => $stateAllottedTotal,
-            'total_flats' => (clone $districtFlatsQuery)->count(),
-            'my_flats' => (clone $myFlatsQuery)->count(),
-            'total_projects' => !empty($zoneDistrictIds) 
-                ? EwsProject::whereIn('district_id', $zoneDistrictIds)->count()
-                : (!empty($user->district_id) ? EwsProject::where('district_id', $user->district_id)->count() : EwsProject::count()),
-            'total_towns' => !empty($zoneDistrictIds) 
-                ? EwsTown::whereIn('district_id', $zoneDistrictIds)->count()
-                : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->count() : EwsTown::count()),
+            'total_flats' => $myFlatsCount,
+            'my_flats' => $myFlatsCount,
+            'total_projects' => $projectsList->count(),
+            'total_towns' => $townsList->count(),
             'total_logs' => EwsDeveloperLog::where('user_id', $user->id)->count(),
         ];
 
         $currentView = $request->query('view', 'dashboard');
 
-        $projectsList = !empty($zoneDistrictIds) 
-            ? EwsProject::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
-            : (!empty($user->district_id) ? EwsProject::where('district_id', $user->district_id)->orderBy('name')->get() : EwsProject::orderBy('name')->get());
-        $townsList = !empty($zoneDistrictIds) 
-            ? EwsTown::whereIn('district_id', $zoneDistrictIds)->orderBy('name')->get()
-            : (!empty($user->district_id) ? EwsTown::where('district_id', $user->district_id)->orderBy('name')->get() : EwsTown::orderBy('name')->get());
+        // Build hierarchical tree for frontend cascading
+        $developerFilterTree = [
+            'districts' => $districts->map(fn($d) => ['id' => (string)$d->id, 'name' => strtoupper($d->name)])->values(),
+            'towns' => $townsList->map(fn($t) => ['id' => (string)$t->id, 'name' => strtoupper($t->name), 'district_id' => (string)$t->district_id])->values(),
+            'projects' => $projectsList->map(fn($p) => ['id' => (string)$p->id, 'name' => strtoupper($p->name), 'district_id' => (string)$p->district_id, 'town_id' => (string)$p->town_id])->values(),
+        ];
 
-        $districts = !empty($zoneDistrictIds) 
-            ? DB::table('ews_districts')->whereIn('id', $zoneDistrictIds)->orderBy('name')->get()
-            : DB::table('ews_districts')->orderBy('name')->get();
-
-        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'displayZoneName'));
+        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'displayZoneName', 'developerFilterTree'));
     }
 
     /**
@@ -125,33 +173,9 @@ class EwsDeveloperDashboardController extends Controller
      */
     private function getFilteredQuery(Request $request)
     {
-        $query = EwsBuilderFlat::query();
         $user = Auth::user();
-
-        // 1. Ownership Scope Filter (My Flats vs All Zone Flats)
-        if ($request->input('ownership_scope') === 'my_flats' || $request->input('my_flats') == '1') {
-            $query->where('created_by', $user->id);
-        } else {
-            // Lock flats data strictly to developer's assigned zone
-            if (!empty($user->zone_id)) {
-                $zoneDistrictIds = DB::table('ews_districts')->where('zone_id', $user->zone_id)->pluck('id')->toArray();
-                $query->where(function ($q) use ($user, $zoneDistrictIds) {
-                    $q->where('zone_id', $user->zone_id);
-                    if (!empty($zoneDistrictIds)) {
-                        $q->orWhereIn('district_id', $zoneDistrictIds);
-                    }
-                });
-            } elseif ($user && !empty($user->district_name)) {
-                $userDist = strtoupper(trim($user->district_name));
-                $query->where(function ($q) use ($user, $userDist) {
-                    $q->where('district_name', $userDist)
-                      ->orWhere('district_name', $user->district_name);
-                    if (!empty($user->district_id)) {
-                        $q->orWhere('district_id', $user->district_id);
-                    }
-                });
-            }
-        }
+        // Strictly show only flats registered by this developer
+        $query = EwsBuilderFlat::where('created_by', $user->id);
 
         // 2. Specific District Filter
         if ($request->filled('district_id')) {
@@ -250,8 +274,7 @@ class EwsDeveloperDashboardController extends Controller
                     return '<span class="px-2 py-0.5 ' . $color . ' border rounded text-[9px] font-black uppercase inline-flex items-center gap-1"><i class="bi bi-houses"></i> ' . $status . '</span>';
                 })
                 ->addColumn('actions', function($r) {
-                    $url = route('ews.developer.possession.index');
-                    return '<div class="inline-flex justify-end w-full"><a href="' . $url . '" class="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-500 hover:text-white text-amber-700 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-1 border border-amber-200 shadow-sm"><i class="bi bi-key-fill"></i> Possession</a></div>';
+                    return '<div class="inline-flex justify-end w-full"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase border border-slate-200"><i class="bi bi-info-circle me-1"></i> Record</span></div>';
                 })
                 ->rawColumns(['district_name', 'town_name', 'project_name', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'added_by', 'actions'])
                 ->make(true);
@@ -261,40 +284,121 @@ class EwsDeveloperDashboardController extends Controller
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('added_by', function ($row) use ($user) {
-                if ($row->created_by == $user->id) {
-                    return '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-sm"><i class="bi bi-person-check-fill"></i> Added By Me</span>';
-                }
-                return '<span class="px-2 py-0.5 bg-slate-100 text-slate-600 border border-slate-200 rounded text-[9px] font-black uppercase inline-flex items-center gap-1"><i class="bi bi-building"></i> District Record</span>';
-            })
+            ->editColumn('district_name', fn($r) => strtoupper($r->district_name ?? ''))
+            ->editColumn('town_name', fn($r) => ucwords(strtolower($r->town_name ?? '')))
+            ->editColumn('project_name', fn($r) => ucwords(strtolower($r->project_name ?? '')))
+            ->editColumn('block_tower_number', fn($r) => strtoupper($r->block_tower_number ?? ''))
+            ->editColumn('floor', fn($r) => ucfirst($r->floor ?? ''))
             ->addColumn('actions', function ($row) {
                 $secureId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
-                $editUrl = route('ews.developer.flats.edit', $secureId);
-                $destroyRoute = route('ews.developer.flats.destroy', $secureId);
-                $csrf = csrf_field();
-                $method = method_field('DELETE');
+                $viewUrl = route('ews.developer.flats.show', $secureId);
 
                 return '
-                    <div class="inline-flex gap-1.5 justify-end w-full">
-                        <a href="'.$editUrl.'"
-                            class="px-2.5 py-1.5 bg-sky-50 hover:bg-sky-500 hover:text-white text-sky-600 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-0.5 border border-sky-100 shadow-sm">
-                            <i class="bi bi-pencil-square"></i>
-                            <span>Edit</span>
+                    <div class="inline-flex justify-end w-full">
+                        <a href="'.$viewUrl.'" title="View Flat Details"
+                            class="w-8 h-8 rounded-lg bg-sky-50 hover:bg-sky-600 text-sky-600 hover:text-white border border-sky-200/80 flex items-center justify-center transition-all shadow-2xs hover:shadow-sm group">
+                            <i class="bi bi-eye-fill text-sm transition-transform group-hover:scale-115"></i>
                         </a>
-                        <form action="'.$destroyRoute.'" method="POST" class="inline m-0" id="delete-form-'.$secureId.'">
-                            '.$csrf.'
-                            '.$method.'
-                            <button type="button" onclick="confirmDelete(\''.$secureId.'\')"
-                                class="px-2.5 py-1.5 bg-red-50 hover:bg-red-500 hover:text-white text-red-500 rounded-lg text-[9px] font-black uppercase transition-all flex items-center gap-0.5 border border-red-100 shadow-sm">
-                                <i class="bi bi-trash3"></i>
-                                <span>Delete</span>
-                            </button>
-                        </form>
                     </div>
                 ';
             })
-            ->rawColumns(['added_by', 'actions'])
+            ->rawColumns(['actions'])
             ->make(true);
+    }
+
+    /**
+     * Show flat comprehensive dossier details on a dedicated page
+     */
+    public function show($secureId)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
+            abort(403);
+        }
+
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
+        if (!$flat && is_numeric($secureId)) {
+            $flat = EwsBuilderFlat::find($secureId);
+        }
+
+        if (!$flat) {
+            abort(404, 'Flat record not found.');
+        }
+
+        // Must belong to this developer
+        if ($flat->created_by != $user->id) {
+            abort(403, 'Unauthorized access to this flat record.');
+        }
+
+        $project = !empty($flat->project_id) ? EwsProject::find($flat->project_id) : null;
+        $displayZoneName = !empty($flat->zone_name) ? $flat->zone_name : ($user->district_name ?? 'Zone');
+
+        return view('ews.developer.show', compact('user', 'flat', 'project', 'displayZoneName'));
+    }
+
+    /**
+     * Return comprehensive flat record details in JSON for modal view
+     */
+    public function showDetails($secureId)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
+        }
+
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
+        if (!$flat && is_numeric($secureId)) {
+            $flat = EwsBuilderFlat::find($secureId);
+        }
+
+        if (!$flat) {
+            return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
+        }
+
+        // Project fallback if any field missing
+        $project = !empty($flat->project_id) ? EwsProject::find($flat->project_id) : null;
+
+        $data = [
+            'id' => $flat->id,
+            'secure_id' => $flat->secure_id,
+            'flat_code' => $flat->flat_code ?: 'N/A',
+            'flat_number' => $flat->flat_number ?: 'N/A',
+            'floor' => $flat->floor ?: 'N/A',
+            'block_tower_number' => $flat->block_tower_number ?: 'N/A',
+            'register_flat' => $flat->register_flat ? ucfirst(str_replace('_', ' ', $flat->register_flat)) : 'Standard EWS Flat',
+            'zone_name' => $flat->zone_name ?: ($project->zone_name ?? 'N/A'),
+            'district_name' => $flat->district_name ?: ($project->district_name ?? 'N/A'),
+            'town_name' => $flat->town_name ?: ($project->town_name ?? 'N/A'),
+            'project_name' => $flat->project_name ?: ($project->name ?? 'N/A'),
+            'sector_no' => $flat->sector_no ?: ($project->sector_no ?? 'N/A'),
+            'address_of_project' => $flat->address_of_project ?: ($project->address ?? 'N/A'),
+            'area_of_project' => $flat->area_of_project ?: ($project->area_of_project ?? 'N/A'),
+            'developer_name' => $flat->developer_name ?: ($project->developer_name ?? $user->name),
+            'license_no' => $flat->license_no ?: ($project->license_no ?? 'N/A'),
+            
+            // Planning & Approvals
+            'approved_building_plan' => strtolower($flat->approved_building_plan ?: ($project->approved_building_plan ?? 'no')),
+            'building_plan_approval_date' => $flat->building_plan_approval_date ? \Carbon\Carbon::parse($flat->building_plan_approval_date)->format('d M, Y') : ($project && $project->building_plan_approval_date ? \Carbon\Carbon::parse($project->building_plan_approval_date)->format('d M, Y') : 'N/A'),
+            'developer_plan_url' => ($flat->developer_plan ?: ($project->developer_plan ?? null)) ? asset('storage/' . ($flat->developer_plan ?: $project->developer_plan)) : null,
+            'building_plan_copy_url' => ($flat->building_plan_copy ?: ($project->building_plan_copy ?? null)) ? asset('storage/' . ($flat->building_plan_copy ?: $project->building_plan_copy)) : null,
+
+            // Occupation Certificate (OC) Details
+            'oc_status_yn' => strtolower($flat->oc_status_yn ?: ($project->oc_status_yn ?? 'no')),
+            'oc_status' => $flat->oc_status ? ucfirst($flat->oc_status) : 'N/A',
+            'oc_date' => $flat->oc_date ? \Carbon\Carbon::parse($flat->oc_date)->format('d M, Y') : 'N/A',
+            'oc_copy_url' => $flat->oc_copy_file ? asset('storage/' . $flat->oc_copy_file) : null,
+
+            // Project Flat Inventory Metrics
+            'total_flats_in_project' => $flat->total_flats_in_project !== null ? number_format($flat->total_flats_in_project) : ($project && $project->total_flats_in_project ? number_format($project->total_flats_in_project) : 'N/A'),
+            'total_ews_flats_in_project' => $flat->total_ews_flats_in_project !== null ? number_format($flat->total_ews_flats_in_project) : ($project && $project->total_ews_flats_in_project ? number_format($project->total_ews_flats_in_project) : 'N/A'),
+            'flats_offered_for_draw' => $flat->flats_offered_for_draw !== null ? number_format($flat->flats_offered_for_draw) : 'N/A',
+            'remaining_flats_for_oc' => $flat->remaining_flats_for_oc !== null ? number_format($flat->remaining_flats_for_oc) : 'N/A',
+
+            // Timestamp
+            'created_at' => $flat->created_at ? $flat->created_at->format('d M, Y h:i A') : 'N/A',
+        ];
+
+        return response()->json(['success' => true, 'data' => $data]);
     }
 
     public function create()
@@ -304,37 +408,25 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
-        // 1. Resolve Zone directly from ews_stp_districts master table
+        // Fetch all active zones from ews_stp_districts
+        $zones = DB::table('ews_stp_districts')
+            ->where('is_active', 1)
+            ->orderBy('name', 'asc')
+            ->get();
+        if ($zones->isEmpty()) {
+            $zones = DB::table('ews_stp_districts')->orderBy('name', 'asc')->get();
+        }
+
         $zone = null;
         if (!empty($user->zone_id)) {
             $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
         }
-        if (!$zone && !empty($user->zone_name)) {
-            $cleanZoneName = strtoupper(trim(str_replace(' ZONE', '', $user->zone_name)));
-            $zone = DB::table('ews_stp_districts')->where('name', $cleanZoneName)->first();
-        }
-        if (!$zone && !empty($user->district_name)) {
-            $cleanName = strtoupper(trim(str_replace(' ZONE', '', $user->district_name)));
-            $zone = DB::table('ews_stp_districts')->where('name', $cleanName)->first();
-            if (!$zone) {
-                $dist = DB::table('ews_districts')->where('name', $cleanName)->first();
-                if ($dist && $dist->zone_id) {
-                    $zone = DB::table('ews_stp_districts')->where('id', $dist->zone_id)->first();
-                }
-            }
-        }
 
-        // 2. Fetch ONLY districts that belong to this STP's Zone!
-        if ($zone) {
-            $districts = DB::table('ews_districts')
-                ->where('zone_id', $zone->id)
-                ->orderBy('name', 'asc')
-                ->get();
-        } else {
-            $districts = DB::table('ews_districts')->orderBy('name', 'asc')->get();
-        }
+        $districts = $zone 
+            ? DB::table('ews_districts')->where('zone_id', $zone->id)->orderBy('name', 'asc')->get()
+            : DB::table('ews_districts')->orderBy('name', 'asc')->get();
 
-        // Do not auto-preselect district; user must select everything manually while zone remains frozen
+        $selectedZoneId = null;
         $selectedDistrictId = null;
         $towns = collect();
         $projects = collect();
@@ -344,7 +436,18 @@ class EwsDeveloperDashboardController extends Controller
         }
         $displayZoneName = $this->resolveDisplayZoneName($user);
 
-        return view('ews.developer.create', compact('user', 'zone', 'districts', 'towns', 'projects', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
+        return view('ews.developer.create', compact('user', 'zone', 'zones', 'selectedZoneId', 'districts', 'towns', 'projects', 'townTypes', 'selectedDistrictId', 'displayZoneName'));
+    }
+
+    public function getDistricts(Request $request)
+    {
+        $zoneId = $request->query('zone_id');
+        $query = DB::table('ews_districts');
+        if ($zoneId) {
+            $query->where('zone_id', $zoneId);
+        }
+        $districts = $query->orderBy('name', 'asc')->get(['id', 'name', 'zone_id']);
+        return response()->json($districts);
     }
 
     public function store(Request $request)
@@ -354,17 +457,45 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
+        if ($request->input('approved_building_plan') === 'no') {
+            return back()->withInput()->with('error', "Validation Error: Approved Building Plan is mandatory for registering flats. Without approval, flats cannot be registered.");
+        }
+        if ($request->input('oc_status_yn') === 'no') {
+            return back()->withInput()->with('error', "Validation Error: Occupation Certificate (OC) is mandatory to offer flats for allotment.");
+        }
+
         // Validate basic parameters
         $request->validate([
+            'register_flat' => 'required|string|max:255',
             'district_id' => 'required|exists:ews_districts,id',
+            'zone_id' => 'nullable',
+            'developer_name' => 'required|string|max:255',
+            'license_no' => 'required|string|max:150',
             'town_id' => 'required',
             'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
             'new_town_type' => 'required_if:town_id,new|nullable|string|max:255',
             'custom_town_type' => 'required_if:new_town_type,other|nullable|string|max:255',
             'project_id' => 'required',
             'new_project_name' => 'required_if:project_id,new|nullable|string|max:255',
+            'new_project_address' => 'nullable|string|max:500',
+            'new_project_sector' => 'nullable|string|max:100',
+            'address_of_project' => 'nullable|string|max:500',
+            'sector_no' => 'nullable|string|max:100',
+            'area_of_project' => 'required|string|max:150',
+            'developer_plan' => 'nullable|file|mimes:pdf|max:512',
+            'approved_building_plan' => 'required|in:yes,no',
+            'building_plan_approval_date' => 'required_if:approved_building_plan,yes|nullable|date',
+            'building_plan_copy' => 'nullable|file|mimes:pdf|max:10240',
+            'oc_status_yn' => 'required|in:yes,no',
+            'oc_status' => 'required_if:oc_status_yn,yes|nullable|in:part,complete',
             'block_id' => 'required',
             'new_block_name' => 'required_if:block_id,new|nullable|string|max:255',
+            'oc_date' => 'nullable|date',
+            'oc_copy' => 'nullable|file|mimes:pdf|max:10240',
+            'total_flats_in_project' => 'nullable|numeric',
+            'total_ews_flats_in_project' => 'nullable|numeric',
+            'flats_offered_for_draw' => 'nullable|numeric',
+            'remaining_flats_for_oc' => 'nullable|numeric',
         ]);
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
@@ -372,9 +503,39 @@ class EwsDeveloperDashboardController extends Controller
             return back()->withInput()->with('error', "Invalid district selected.");
         }
 
+        // Handle Developer Plan PDF upload (max 500KB)
+        $developerPlanPath = null;
+        if ($request->hasFile('developer_plan') && $request->file('developer_plan')->isValid()) {
+            $file = $request->file('developer_plan');
+            $filename = 'dev_plan_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('developer_plans', $filename, 'public');
+            $developerPlanPath = $path;
+        }
+
+        // Handle Building Plan Copy PDF upload
+        $buildingPlanCopyPath = null;
+        if ($request->hasFile('building_plan_copy') && $request->file('building_plan_copy')->isValid()) {
+            $file = $request->file('building_plan_copy');
+            $filename = 'bldg_plan_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('building_plans', $filename, 'public');
+            $buildingPlanCopyPath = $path;
+        }
+
+        // Handle OC PDF Document Upload
+        $ocFilePath = null;
+        if ($request->hasFile('oc_copy') && $request->file('oc_copy')->isValid()) {
+            $file = $request->file('oc_copy');
+            $filename = 'oc_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('oc_documents', $filename, 'public');
+            $ocFilePath = $path;
+        }
+
         // Resolve Zone
         $zone = null;
-        if ($district->zone_id) {
+        if ($request->filled('zone_id')) {
+            $zone = DB::table('ews_stp_districts')->where('id', $request->zone_id)->first();
+        }
+        if (!$zone && $district->zone_id) {
             $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
         }
         if (!$zone && !empty($user->zone_id)) {
@@ -439,20 +600,38 @@ class EwsDeveloperDashboardController extends Controller
                 'town_id' => $townId,
                 'town_name' => $townName,
                 'name' => $cleanProjName,
+                'address' => $request->address_of_project ?? $request->new_project_address,
+                'sector_no' => $request->sector_no ?? $request->new_project_sector,
+                'developer_name' => $request->developer_name,
+                'license_no' => $request->license_no,
+                'area_of_project' => $request->area_of_project,
+                'developer_plan' => $developerPlanPath,
+                'approved_building_plan' => $request->approved_building_plan,
+                'building_plan_approval_date' => $request->building_plan_approval_date,
+                'building_plan_copy' => $buildingPlanCopyPath,
+                'oc_status_yn' => $request->oc_status_yn,
             ]);
             $projectId = $project->id;
             $projectName = $project->name;
         } else {
             $project = EwsProject::where('district_id', $district->id)->where('id', $request->project_id)->firstOrFail();
-            if (empty($project->town_id) && $townId) {
-                $project->update([
-                    'zone_id' => $project->zone_id ?? $zoneId,
-                    'zone_name' => $project->zone_name ?? $zoneName,
-                    'district_name' => $project->district_name ?? $district->name,
-                    'town_id' => $townId,
-                    'town_name' => $townName,
-                ]);
-            }
+            $project->update([
+                'zone_id' => $project->zone_id ?? $zoneId,
+                'zone_name' => $project->zone_name ?? $zoneName,
+                'district_name' => $project->district_name ?? $district->name,
+                'town_id' => $townId ?: $project->town_id,
+                'town_name' => $townName ?: $project->town_name,
+                'address' => $project->address ?? ($request->address_of_project ?? $request->new_project_address),
+                'sector_no' => $project->sector_no ?? ($request->sector_no ?? $request->new_project_sector),
+                'developer_name' => $project->developer_name ?? $request->developer_name,
+                'license_no' => $project->license_no ?? $request->license_no,
+                'area_of_project' => $project->area_of_project ?? $request->area_of_project,
+                'developer_plan' => $developerPlanPath ?: $project->developer_plan,
+                'approved_building_plan' => $project->approved_building_plan ?? $request->approved_building_plan,
+                'building_plan_approval_date' => $project->building_plan_approval_date ?? $request->building_plan_approval_date,
+                'building_plan_copy' => $buildingPlanCopyPath ?: $project->building_plan_copy,
+                'oc_status_yn' => $project->oc_status_yn ?? $request->oc_status_yn,
+            ]);
             $projectId = $project->id;
             $projectName = $project->name;
         }
@@ -513,10 +692,33 @@ class EwsDeveloperDashboardController extends Controller
             $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
         }
         $zoneId = $zone ? $zone->id : ($user->zone_id ?? null);
-        $zoneName = $zone ? $zone->name . ' ZONE' : ($user->zone_name ?? ($district ? $district->name . ' ZONE' : 'N/A'));
+        $zoneName = $zone ? $zone->name . ' ZONE' : ($user->zone_name ?? ($district ? $district->name . ' ZONE' : 'ZONE'));
+
+        $bulkMode = (string)$request->input('bulk_mode') === '1';
+
+        // Sanitize floor_number in case multiple inputs were submitted
+        $floorInput = $request->input('floor_number');
+        if (is_array($floorInput)) {
+            $floorInput = $bulkMode ? end($floorInput) : reset($floorInput);
+            $request->merge(['floor_number' => $floorInput]);
+        }
+
+        // Clean OC quota parameters based on OC status
+        $ocStatusVal = $request->input('oc_status');
+        $flatsOffered = ($ocStatusVal === 'part' && $request->filled('flats_offered_for_draw')) ? (int)$request->flats_offered_for_draw : null;
+        $remainingFlats = ($ocStatusVal === 'part' && $request->filled('remaining_flats_for_oc')) ? (int)$request->remaining_flats_for_oc : null;
 
         // Bulk Mode Generation
-        if ($request->input('bulk_mode') == '1') {
+        if ($bulkMode) {
+            // Nullify single mode field to prevent conflicting data
+            $request->merge(['flat_number' => null]);
+
+            if ($request->flat_number_type === 'custom') {
+                $request->merge(['from_flat' => null, 'to_flat' => null]);
+            } else {
+                $request->merge(['custom_flat_numbers' => null]);
+            }
+
             $request->validate([
                 'floor_number' => 'required|integer|min:0|max:100',
                 'flat_number_type' => 'required|in:range,custom',
@@ -531,16 +733,6 @@ class EwsDeveloperDashboardController extends Controller
             ], [
                 'custom_flat_numbers.regex' => 'The flat numbers list must only contain numbers, commas, and spaces.',
             ]);
-
-            if ($request->flat_number_type === 'custom') {
-                if ($request->filled('from_flat') || $request->filled('to_flat')) {
-                    return back()->withInput()->with('error', "Validation Error: Range fields must be empty when selecting Custom List.");
-                }
-            } else {
-                if ($request->filled('custom_flat_numbers')) {
-                    return back()->withInput()->with('error', "Validation Error: Custom list field must be empty when selecting Numerical Range.");
-                }
-            }
 
             $floorNum = (int)$request->floor_number;
             if ($request->flat_number_type === 'range') {
@@ -597,6 +789,7 @@ class EwsDeveloperDashboardController extends Controller
                     }
 
                     $flatData = [
+                        'register_flat' => $request->register_flat,
                         'zone_id' => $zoneId,
                         'zone_name' => $zoneName,
                         'district_id' => $district->id,
@@ -607,11 +800,28 @@ class EwsDeveloperDashboardController extends Controller
                         'town_id' => $townId,
                         'project_name' => $projectName,
                         'project_id' => $projectId,
+                        'sector_no' => $request->sector_no ?? ($project->sector_no ?? null),
+                        'address_of_project' => $request->address_of_project ?? ($project->address ?? null),
                         'block_tower_number' => $blockName,
                         'block_id' => $blockId,
                         'floor' => $floorLabel,
                         'flat_number' => $flatNumberStr,
                         'created_by' => $user->id,
+                        'developer_name' => $request->developer_name,
+                        'license_no' => $request->license_no,
+                        'area_of_project' => $request->area_of_project ?? ($project->area_of_project ?? null),
+                        'developer_plan' => $developerPlanPath ?: ($project->developer_plan ?? null),
+                        'approved_building_plan' => $request->approved_building_plan ?? ($project->approved_building_plan ?? null),
+                        'building_plan_approval_date' => $request->building_plan_approval_date ?? ($project->building_plan_approval_date ?? null),
+                        'building_plan_copy' => $buildingPlanCopyPath ?: ($project->building_plan_copy ?? null),
+                        'oc_status_yn' => $request->oc_status_yn ?? ($project->oc_status_yn ?? null),
+                        'oc_status' => $request->oc_status,
+                        'oc_date' => $request->oc_date,
+                        'oc_copy_file' => $ocFilePath,
+                        'total_flats_in_project' => $request->total_flats_in_project ? (int)$request->total_flats_in_project : null,
+                        'total_ews_flats_in_project' => $request->total_ews_flats_in_project ? (int)$request->total_ews_flats_in_project : null,
+                        'flats_offered_for_draw' => $flatsOffered,
+                        'remaining_flats_for_oc' => $remainingFlats,
                         'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
                         'flat_code' => EwsHelper::generateFlatCode(
                             $townName,
@@ -643,6 +853,14 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         // Single Mode Generation
+        $request->merge([
+            'from_flat' => null,
+            'to_flat' => null,
+            'custom_flat_numbers' => null,
+            'flat_number_type' => null,
+            'floor_prefix_enabled' => null,
+        ]);
+
         $request->validate([
             'floor_number' => 'required|integer|min:0|max:100',
             'flat_number' => 'required|string|max:255',
@@ -675,6 +893,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $flat = EwsBuilderFlat::create([
+            'register_flat' => $request->register_flat,
             'zone_id' => $zoneId,
             'zone_name' => $zoneName,
             'district_id' => $district->id,
@@ -685,11 +904,28 @@ class EwsDeveloperDashboardController extends Controller
             'town_id' => $townId,
             'project_name' => $projectName,
             'project_id' => $projectId,
+            'sector_no' => $request->sector_no ?? ($project->sector_no ?? null),
+            'address_of_project' => $request->address_of_project ?? ($project->address ?? null),
             'block_tower_number' => $blockName,
             'block_id' => $blockId,
             'floor' => $floorLabel,
             'flat_number' => $request->flat_number,
             'created_by' => $user->id,
+            'developer_name' => $request->developer_name,
+            'license_no' => $request->license_no,
+            'area_of_project' => $request->area_of_project ?? ($project->area_of_project ?? null),
+            'developer_plan' => $developerPlanPath ?: ($project->developer_plan ?? null),
+            'approved_building_plan' => $request->approved_building_plan ?? ($project->approved_building_plan ?? null),
+            'building_plan_approval_date' => $request->building_plan_approval_date ?? ($project->building_plan_approval_date ?? null),
+            'building_plan_copy' => $buildingPlanCopyPath ?: ($project->building_plan_copy ?? null),
+            'oc_status_yn' => $request->oc_status_yn ?? ($project->oc_status_yn ?? null),
+            'oc_status' => $request->oc_status,
+            'oc_date' => $request->oc_date,
+            'oc_copy_file' => $ocFilePath,
+            'total_flats_in_project' => $request->total_flats_in_project ? (int)$request->total_flats_in_project : null,
+            'total_ews_flats_in_project' => $request->total_ews_flats_in_project ? (int)$request->total_ews_flats_in_project : null,
+            'flats_offered_for_draw' => $flatsOffered,
+            'remaining_flats_for_oc' => $remainingFlats,
             'secure_id' => md5(uniqid("flat_" . microtime() . rand(), true)),
             'flat_code' => EwsHelper::generateFlatCode(
                 $townName,
@@ -1375,7 +1611,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $projects = $query->orderBy('name', 'asc')
-            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id']);
+            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id', 'address', 'sector_no', 'developer_name', 'license_no', 'area_of_project', 'developer_plan', 'approved_building_plan', 'building_plan_approval_date', 'building_plan_copy', 'oc_status_yn']);
 
         return response()->json($projects);
     }
@@ -1395,27 +1631,27 @@ class EwsDeveloperDashboardController extends Controller
 
         if ($projectId) {
             $query->where('project_id', $projectId);
-        }
+        } else {
+            if ($townId) {
+                $query->where(function ($q) use ($townId) {
+                    $q->where('town_id', $townId)
+                      ->orWhereNull('town_id');
+                });
+            }
 
-        if ($townId) {
-            $query->where(function ($q) use ($townId) {
-                $q->where('town_id', $townId)
-                  ->orWhereNull('town_id');
-            });
-        }
+            if ($districtId) {
+                $query->where(function ($q) use ($districtId) {
+                    $q->where('district_id', $districtId)
+                      ->orWhereNull('district_id');
+                });
+            }
 
-        if ($districtId) {
-            $query->where(function ($q) use ($districtId) {
-                $q->where('district_id', $districtId)
-                  ->orWhereNull('district_id');
-            });
-        }
-
-        if ($zoneId) {
-            $query->where(function ($q) use ($zoneId) {
-                $q->where('zone_id', $zoneId)
-                  ->orWhereNull('zone_id');
-            });
+            if ($zoneId) {
+                $query->where(function ($q) use ($zoneId) {
+                    $q->where('zone_id', $zoneId)
+                      ->orWhereNull('zone_id');
+                });
+            }
         }
 
         $blocks = $query->orderBy('name', 'asc')
@@ -1515,6 +1751,11 @@ class EwsDeveloperDashboardController extends Controller
             'district_id' => 'required|exists:ews_districts,id',
             'town_id' => 'nullable|exists:ews_towns,id',
             'project_name' => 'required|string|max:255',
+            'address' => 'nullable|string|max:500',
+            'sector_no' => 'nullable|string|max:100',
+            'developer_name' => 'nullable|string|max:255',
+            'license_no' => 'nullable|string|max:150',
+            'zone_id' => 'nullable',
         ]);
 
         $districtId = (int)$request->district_id;
@@ -1526,7 +1767,10 @@ class EwsDeveloperDashboardController extends Controller
 
         // Resolve Zone
         $zone = null;
-        if ($district && $district->zone_id) {
+        if ($request->filled('zone_id')) {
+            $zone = DB::table('ews_stp_districts')->where('id', $request->zone_id)->first();
+        }
+        if (!$zone && $district && $district->zone_id) {
             $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
         }
         if (!$zone && !empty($user->zone_id)) {
@@ -1564,6 +1808,10 @@ class EwsDeveloperDashboardController extends Controller
             'town_id' => $townId,
             'town_name' => $town ? $town->name : null,
             'name' => $cleanName,
+            'address' => $request->address,
+            'sector_no' => $request->sector_no,
+            'developer_name' => $request->developer_name ?: null,
+            'license_no' => $request->license_no,
         ]);
 
         return response()->json([
@@ -1572,6 +1820,8 @@ class EwsDeveloperDashboardController extends Controller
             'project' => [
                 'id' => $project->id,
                 'name' => $project->name,
+                'address' => $project->address,
+                'sector_no' => $project->sector_no,
             ]
         ]);
     }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS STP - Possession Audit Trail</title>
+    <title>EWS Developer - Possession Audit Trail</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -82,7 +82,7 @@
                                         </div>
                                     </td>
                                     <td class="py-3 px-4">
-                                        <div class="font-bold text-slate-800">{{ $log->stp_user_name ?: 'STP User' }}</div>
+                                        <div class="font-bold text-slate-800">{{ $log->stp_user_name ?: 'Developer User' }}</div>
                                         <div class="text-[10px] text-slate-400 font-mono">UID: {{ $log->stp_user_id }}</div>
                                     </td>
                                     <td class="py-3 px-4 font-mono text-[11px]">

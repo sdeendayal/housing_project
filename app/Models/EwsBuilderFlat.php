@@ -10,6 +10,7 @@ class EwsBuilderFlat extends Model
     protected $table = 'ews_builder_flats';
 
     protected $fillable = [
+        'register_flat',
         'zone_id',
         'zone_name',
         'district_id',
@@ -18,8 +19,17 @@ class EwsBuilderFlat extends Model
         'dist_name',
         'town_name',
         'town_id',
+        'developer_name',
         'project_name',
         'project_id',
+        'sector_no',
+        'address_of_project',
+        'area_of_project',
+        'developer_plan',
+        'approved_building_plan',
+        'building_plan_approval_date',
+        'building_plan_copy',
+        'oc_status_yn',
         'block_tower_number',
         'block_id',
         'floor',
@@ -27,6 +37,14 @@ class EwsBuilderFlat extends Model
         'flat_code',
         'created_by',
         'secure_id',
+        'license_no',
+        'oc_status',
+        'oc_date',
+        'oc_copy_file',
+        'total_flats_in_project',
+        'total_ews_flats_in_project',
+        'flats_offered_for_draw',
+        'remaining_flats_for_oc',
     ];
 
     protected static function booted()

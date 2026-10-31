@@ -17,6 +17,8 @@ class Otp extends Model
 
     public const PURPOSE_EWS_DEVELOPER_LOGIN = 'ews_developer_login';
 
+    public const PURPOSE_EWS_DEVELOPER_REGISTRATION = 'ews_developer_registration';
+
     public const PURPOSE_POSSESSION_CERTIFICATE = 'verify_possession_certificate';
 
     public const PURPOSE_ALLOTMENT_LETTER = 'verify_allotment_letter';

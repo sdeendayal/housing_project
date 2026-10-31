@@ -1,178 +1,430 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50 text-slate-800">
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS STP Portal - OTP Verification</title>
+    <title>EWS Developer Portal - Login OTP Verification | Haryana</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
+        html, body {
+            height: 100vh;
+            max-height: 100vh;
+            overflow: hidden !important;
+        }
         body {
             font-family: 'Inter', sans-serif;
         }
-        h1, h2, h3, h4, h5, h6 {
+        h1, h2, h3, h4, h5, h6, .brand-font {
             font-family: 'Outfit', sans-serif;
         }
         .code-font {
             font-family: 'Fira Code', monospace;
         }
-        .dev-shadow {
-            box-shadow: 0 10px 30px -10px rgba(139, 92, 246, 0.15);
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .luxury-shadow {
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+        .orbital-spinner {
+            border: 3px solid rgba(99, 102, 241, 0.15);
+            border-top: 3px solid #6366f1;
+            border-right: 3px solid #10b981;
+            border-radius: 50%;
+            animation: spin 1s cubic-bezier(0.55, 0.25, 0.25, 0.7) infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .otp-box:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background-color: #ffffff;
         }
     </style>
 </head>
-<body class="h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden relative bg-gradient-to-tr from-slate-100 via-slate-50 to-slate-100">
+<body class="h-screen max-h-screen w-screen overflow-hidden flex items-center justify-center p-2 sm:p-4 bg-[#080c14] select-none relative">
     
-    <!-- Tech grid background pattern -->
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30 pointer-events-none"></div>
+    <!-- Background Accents -->
+    <div class="fixed inset-0 bg-[radial-gradient(ellipse_75%_75%_at_50%_-15%,rgba(99,102,241,0.18),rgba(255,255,255,0))] pointer-events-none"></div>
+    <div class="fixed inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:3.5rem_3.5rem] opacity-20 pointer-events-none"></div>
 
-    <!-- Soft colored ambient background glows -->
-    <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-violet-500/5 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
-
-    <!-- Main Container -->
-    <div class="w-full max-w-5xl h-full max-h-[85vh] bg-white border border-slate-200 rounded-2xl overflow-hidden flex flex-col md:flex-row shadow-2xl dev-shadow z-10">
+    <!-- Main Container: Compact, High-Density Enterprise Layout -->
+    <div class="w-full max-w-5xl max-h-[92vh] rounded-[24px] overflow-hidden flex flex-col lg:flex-row luxury-shadow border border-slate-700/60 z-10 relative bg-slate-950">
         
-        <!-- Left Side: Generated Developer Banner (5/12 width) -->
-        <div class="hidden md:flex md:w-5/12 h-full flex-col justify-between p-7 text-slate-355 relative overflow-hidden">
-            <!-- Background Image with Overlay -->
-            <div class="absolute inset-0 bg-cover bg-center transition-transform duration-[8000ms] hover:scale-110" 
-                 style="background-image: url('{{ asset('developer_login_banner.png') }}');"></div>
-            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/80 to-transparent"></div>
+        <!-- LEFT PANEL: Multi-Factor Authentication Dossier (42% width) -->
+        <div class="hidden lg:flex lg:w-5/12 flex-col justify-between p-6 text-white relative overflow-hidden bg-slate-950 border-r border-slate-800">
+            <!-- Architectural Background -->
+            <div class="absolute inset-0 bg-cover bg-center opacity-40" 
+                 style="background-image: url('{{ asset('developer_portal_hero.jpg') }}');"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/92 to-slate-950/70"></div>
             
-            <!-- Branding Header -->
+            <!-- Header Branding -->
             <div class="relative z-10 flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-violet-500/20 border border-violet-500/40 backdrop-blur-md flex items-center justify-center shadow-lg">
-                    <i class="bi bi-shield-fill-check text-violet-400 text-sm"></i>
+                <div class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-400/30 backdrop-blur-xl flex items-center justify-center text-indigo-400 shrink-0">
+                    <i class="bi bi-shield-lock-fill text-base"></i>
                 </div>
                 <div>
-                    <h4 class="text-xs font-black tracking-wider text-violet-400 uppercase">EWS STP Hub</h4>
-                    <div class="text-[8px] text-slate-400 tracking-widest font-extrabold uppercase font-mono">AUTH CONSOLE</div>
+                    <div class="text-[9px] tracking-[0.2em] font-extrabold uppercase text-indigo-400 font-mono">GOVERNMENT OF HARYANA</div>
+                    <h4 class="text-xs font-black tracking-wide text-white uppercase brand-font">Housing For All • Developer Security Gateway</h4>
                 </div>
             </div>
 
-            <!-- Central Content Display -->
-            <div class="relative z-10 space-y-3 my-auto">
-                <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-violet-500/20 border border-violet-500/30 text-[8px] font-extrabold text-violet-405 tracking-wider uppercase font-mono backdrop-blur-md">
-                    <i class="bi bi-key-fill"></i> MFA: OTP CHALLENGE
-                </span>
-                <h2 class="text-xl font-black leading-tight tracking-tight text-white uppercase">
-                    MULTI-FACTOR IDENTITY<br>VERIFICATION PORT
-                </h2>
-                <p class="text-slate-300 text-[10px] font-light leading-relaxed max-w-xs">
-                    Please provide the active verification code generated for your EWS administrative session to finalize access.
-                </p>
+            <!-- Central Content: Auth Context & Security Snapshot -->
+            <div class="relative z-10 space-y-3.5 my-auto py-2">
+                
+                <!-- Status Badge -->
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-[9px] font-bold text-indigo-300 tracking-wider uppercase font-mono">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                    <span>MULTI-FACTOR SESSION AUTHENTICATION</span>
+                </div>
+
+                <div>
+                    <h2 class="text-xl font-extrabold leading-tight text-white uppercase brand-font">
+                        Authorize Your<br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-300 via-teal-200 to-emerald-300">
+                            Developer Session
+                        </span>
+                    </h2>
+                    <p class="text-slate-400 text-[11px] leading-relaxed mt-1">
+                        High-security access terminal. Enter the 6-digit one-time authorization code sent to your registered mobile number to proceed.
+                    </p>
+                </div>
+
+                <!-- Session Security Dossier -->
+                <div class="p-3 rounded-xl bg-white/[0.06] border border-white/10 backdrop-blur-md space-y-2 text-[11px]">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+                        <span class="text-[9px] uppercase font-bold text-indigo-300 font-mono tracking-wider flex items-center gap-1">
+                            <i class="bi bi-person-check-fill"></i> Authorized Session Target
+                        </span>
+                        <span class="text-[9px] text-slate-400 font-mono">ENCRYPTED SESSION</span>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <div class="text-[9px] text-slate-400 uppercase font-mono">Target Mobile</div>
+                            <div class="font-mono font-bold text-indigo-300 text-xs">+91 ******{{ substr($mobile, -4) }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-slate-400 uppercase font-mono">Challenge Protocol</div>
+                            <div class="text-slate-300 font-mono text-[10px]">SMS Dual-Factor (2FA)</div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-slate-400 uppercase font-mono">Security Tier</div>
+                            <div class="text-emerald-400 font-bold text-xs flex items-center gap-1">
+                                <i class="bi bi-shield-fill-check text-[10px]"></i> Enterprise 256-Bit
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-[9px] text-slate-400 uppercase font-mono">Passcode Validity</div>
+                            <div class="text-slate-300 font-mono text-[10px]">10 Minutes Remaining</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Security Checklist -->
+                <div class="space-y-1.5 bg-slate-900/80 p-2.5 rounded-xl border border-white/10 text-[10px]">
+                    <div class="flex items-center gap-2 text-slate-300">
+                        <i class="bi bi-check2-circle text-emerald-400 text-xs"></i>
+                        <span>Registered Developer credential verified in state registry</span>
+                    </div>
+                    <div class="flex items-center gap-2 text-slate-300">
+                        <i class="bi bi-shield-check text-indigo-400 text-xs"></i>
+                        <span>End-to-end encrypted session dispatch via Govt Gateway</span>
+                    </div>
+                </div>
+
+                <!-- Legal / Compliance Notice -->
+                <div class="p-2 rounded-lg bg-indigo-950/30 border border-indigo-500/20 text-[9px] text-slate-300 leading-tight flex items-start gap-1.5">
+                    <i class="bi bi-info-circle text-indigo-400 text-xs shrink-0 mt-0.5"></i>
+                    <span>All sessions are logged with IP & timestamp. Unauthorized access attempts are monitored under the IT Act 2000.</span>
+                </div>
+
             </div>
 
-            <!-- Left Footer guidelines -->
-            <div class="relative z-10 flex items-center justify-between text-[8px] text-slate-400 border-t border-slate-800/80 pt-3">
-                <span>Housing For All, Haryana.</span>
-                <span class="font-mono text-violet-450">v2.4-stable</span>
+            <!-- Footer Badge -->
+            <div class="relative z-10 flex items-center justify-between text-[9px] text-slate-400 border-t border-white/10 pt-2 font-mono">
+                <span>Haryana EWS Portal v2.6</span>
+                <span class="text-indigo-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> Gateway Secured
+                </span>
             </div>
         </div>
 
-        <!-- Right Side: Developer OTP Verify Form (7/12 width) -->
-        <div class="w-full md:w-7/12 h-full flex flex-col justify-between p-6 sm:p-8 bg-white relative overflow-y-auto custom-scroll">
+        <!-- RIGHT PANEL: Compact, High-Information OTP Verification Console (58% width) -->
+        <div class="w-full lg:w-7/12 glass-panel p-5 sm:p-7 flex flex-col justify-between text-slate-800 relative bg-white">
             
-            <!-- Mobile Header logo -->
-            <div class="flex md:hidden items-center justify-between border-b border-slate-200 pb-3">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded bg-violet-50 border border-violet-100 flex items-center justify-center">
-                        <i class="bi bi-shield-fill-check text-violet-650 text-xs"></i>
+            <div class="space-y-4 max-w-lg mx-auto w-full">
+                
+                <!-- Header with Breadcrumb & Timer Badge -->
+                <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                    <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-900 text-[10px] font-bold uppercase tracking-wider">
+                        <i class="bi bi-shield-lock-fill text-xs text-indigo-700"></i> Session Verification
                     </div>
-                    <span class="font-black text-slate-800 text-xs tracking-wider">EWS STP MFA</span>
-                </div>
-                <span class="text-[8px] text-violet-600 bg-violet-50 px-2 py-0.5 rounded border border-violet-100 font-bold font-mono">VERIFY</span>
-            </div>
-
-            <!-- Spacer -->
-            <div class="hidden md:block h-1"></div>
-
-            <!-- Developer OTP Form Container (Centered & Clean) -->
-            <div class="w-full max-w-sm mx-auto space-y-4 my-auto">
-                <div class="text-center md:text-left space-y-1">
-                    <h3 class="text-base font-black tracking-tight text-slate-800 uppercase">OTP Verification</h3>
-                    <p class="text-slate-400 text-[10px] font-light">Enter 6-digit OTP code sent to +91 ******{{ substr($mobile, -4) }}.</p>
+                    <div class="flex items-center gap-1 text-[11px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        <i class="bi bi-clock-history text-slate-600"></i>
+                        <span>Validity: <span class="text-indigo-700">10 Mins</span></span>
+                    </div>
                 </div>
 
+                <!-- Title & Context -->
+                <div class="space-y-1">
+                    <h3 class="text-xl sm:text-2xl font-black text-slate-900 brand-font uppercase tracking-tight">
+                        Enter Passcode Code
+                    </h3>
+                    <p class="text-slate-600 text-xs leading-relaxed">
+                        A secure 6-digit one-time authorization code has been dispatched via SMS to 
+                        <strong class="text-slate-900 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">+91 ******{{ substr($mobile, -4) }}</strong>.
+                    </p>
+                </div>
+
+                <!-- Flash Messages -->
                 @if(session('error'))
-                    <div class="bg-red-50 border border-red-100 text-red-655 p-2.5 rounded-lg text-xs flex items-start gap-2">
-                        <i class="bi bi-exclamation-triangle-fill text-xs shrink-0 mt-0.5"></i>
-                        <span>{{ session('error') }}</span>
+                    <div class="bg-rose-50 border border-rose-200 text-rose-800 p-2.5 rounded-xl text-xs flex items-center gap-2 shadow-sm">
+                        <i class="bi bi-exclamation-circle-fill text-rose-600 text-sm shrink-0"></i>
+                        <span class="font-medium text-[11px]">{{ session('error') }}</span>
                     </div>
                 @endif
 
                 @if(session('success'))
-                    <div class="bg-emerald-50 border border-emerald-100 text-emerald-650 p-2.5 rounded-lg text-xs flex items-start gap-2">
-                        <i class="bi bi-check-circle-fill text-xs shrink-0 mt-0.5"></i>
-                        <span>{{ session('success') }}</span>
+                    <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-2.5 rounded-xl text-xs flex items-center gap-2 shadow-sm">
+                        <i class="bi bi-check-circle-fill text-emerald-600 text-sm shrink-0"></i>
+                        <span class="font-medium text-[11px]">{{ session('success') }}</span>
                     </div>
                 @endif
 
-                <form method="POST" action="{{ route('ews.developer.login.verify') }}" class="space-y-3" id="devOtpForm">
+                <!-- Form: Segmented 6-Digit Code Inputs -->
+                <form id="otpForm" method="POST" action="{{ route('ews.developer.login.verify') }}" class="space-y-4" onsubmit="showThemeLoader('Authorizing Developer Session & Launching Dashboard...')">
                     @csrf
+                    
+                    <!-- Hidden real input containing the 6 digits -->
+                    <input type="hidden" id="otp" name="otp" required>
 
-                    <!-- OTP Input -->
-                    <div class="space-y-1.5">
-                        <label for="otp" class="block text-[9px] font-black uppercase text-slate-500 tracking-wider">Verification OTP Code</label>
-                        <input type="text" id="otp" name="otp" maxlength="6" placeholder="111111" value="{{ old('otp', '111111') }}" autocomplete="off"
-                            class="w-full bg-slate-50 border border-slate-250 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 focus:outline-none rounded-lg px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 font-mono text-center tracking-widest font-bold" required>
+                    <!-- Segmented Inputs Container -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="block text-[11px] font-bold uppercase text-slate-700 tracking-wider">
+                                6-Digit Passcode <span class="text-rose-500">*</span>
+                            </label>
+                            <span class="text-[10px] text-slate-400 font-mono">Auto-advances on type</span>
+                        </div>
+
+                        <!-- 6 Boxes -->
+                        <div class="flex items-center justify-between gap-2 sm:gap-2.5" id="otpBoxContainer">
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="0" autofocus autocomplete="off">
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="1" autocomplete="off">
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="2" autocomplete="off">
+                            <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="3" autocomplete="off">
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="4" autocomplete="off">
+                            <input type="text" maxlength="1" pattern="[0-9]" inputmode="numeric" class="otp-box w-11 h-12 sm:w-12 sm:h-12 bg-slate-50 border-2 border-slate-200 rounded-xl text-center text-xl font-mono font-black text-slate-900 transition-all cursor-pointer" data-index="5" autocomplete="off">
+                        </div>
                     </div>
 
-                    <!-- Sandbox Alert Banner -->
-                    @if(app()->environment('local'))
-                        <div class="bg-amber-50 border border-amber-200 rounded-lg p-2 text-[9px] text-amber-800 font-mono">
-                            <span class="font-bold uppercase">Sandbox:</span> Use test OTP <span class="bg-amber-200 border border-amber-300 px-1 py-0.5 rounded text-amber-900 font-black">111111</span> to proceed.
+                    <!-- Compact Enterprise Advisory Guidelines (Kam Jgha me Jyada Shabad) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] text-slate-600">
+                        <div class="flex items-start gap-1.5">
+                            <i class="bi bi-shield-shaded text-indigo-600 text-xs shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="text-slate-800 block font-semibold">Strict Privacy</strong>
+                                <span>Never share OTP with anyone, including staff.</span>
+                            </div>
                         </div>
-                    @else
-                        <div class="bg-yellow-50 border border-yellow-150 rounded-lg p-2 text-[9px] text-yellow-750 font-mono">
-                            <span class="font-bold uppercase">Production:</span> Enter code sent to your registered phone.
+                        <div class="flex items-start gap-1.5">
+                            <i class="bi bi-hourglass-split text-rose-600 text-xs shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="text-slate-800 block font-semibold">Max 5 Attempts</strong>
+                                <span>Exceeding attempts locks session for 15m.</span>
+                            </div>
                         </div>
-                    @endif
+                        <div class="flex items-start gap-1.5">
+                            <i class="bi bi-speedometer2 text-emerald-600 text-xs shrink-0 mt-0.5"></i>
+                            <div>
+                                <strong class="text-slate-800 block font-semibold">Instant Access</strong>
+                                <span>Direct authorization to developer dashboard.</span>
+                            </div>
+                        </div>
+                    </div>
 
-                    <!-- Buttons Group -->
-                    <button type="submit"
-                        class="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-900 font-black uppercase tracking-wider rounded-lg text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer border border-amber-400/30">
-                        <span>Authorize Login</span>
-                        <i class="bi bi-shield-check-fill text-sm"></i>
+                    <!-- Submit Button -->
+                    <button type="submit" id="submitBtn"
+                        class="w-full bg-gradient-to-r from-indigo-600 via-indigo-700 to-slate-900 hover:from-indigo-700 hover:via-indigo-800 hover:to-black text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-600/35 transition-all flex items-center justify-center gap-2 text-xs uppercase tracking-wider group cursor-pointer">
+                        <i class="bi bi-unlock-fill text-sm"></i>
+                        <span>Authorize Login & Access Dashboard</span>
+                        <i class="bi bi-arrow-right text-xs group-hover:translate-x-1.5 transition-transform duration-200"></i>
                     </button>
                 </form>
 
-                <!-- Resend OTP and Change Number -->
-                <div class="flex items-center justify-between text-[10px] text-slate-450 pt-1 font-mono">
-                    <form method="POST" action="{{ route('ews.developer.login.resend-otp') }}" class="m-0">
+                <!-- Resend & Change Number Options -->
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-3 text-xs">
+                    <form method="POST" action="{{ route('ews.developer.login.resend-otp') }}">
                         @csrf
-                        <button type="submit" class="text-violet-600 hover:text-violet-700 font-bold transition">
-                            <i class="bi bi-arrow-clockwise text-[11px]"></i> Resend OTP
+                        <button type="submit" id="resendBtn" class="text-indigo-600 hover:text-indigo-900 font-bold flex items-center gap-1.5 text-xs cursor-pointer">
+                            <i class="bi bi-arrow-clockwise"></i>
+                            <span>Resend Passcode</span>
+                            <span id="countdown" class="text-slate-400 font-mono font-normal"></span>
                         </button>
                     </form>
-                    <a href="{{ route('ews.developer.login') }}" class="text-slate-400 hover:text-slate-650 transition">
-                        <i class="bi bi-arrow-left text-[11px]"></i> Change Mobile
+
+                    <a href="{{ route('ews.developer.login') }}" class="text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1.5 text-xs transition">
+                        <i class="bi bi-arrow-left"></i>
+                        <span>Change Mobile Number</span>
                     </a>
                 </div>
+
+                <!-- Support & Helpdesk Row (High information density) -->
+                <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-[10px] text-slate-500">
+                    <div class="flex items-center gap-1.5">
+                        <i class="bi bi-headset text-slate-700 text-xs"></i>
+                        <span>Support: <strong>1800-180-2022</strong> (Toll Free, 9AM-5PM)</span>
+                    </div>
+                    <div class="hidden sm:flex items-center gap-1 text-slate-400 font-mono">
+                        <i class="bi bi-envelope"></i> support-hfa@hry.gov.in
+                    </div>
+                </div>
+
             </div>
 
-            <!-- Mobile/Desktop Footer guidelines -->
-            <div class="flex items-center justify-between text-[8px] text-slate-400 pt-3 border-t border-slate-200">
-                <span>© 2026 Housing For All, Haryana.</span>
-                <span class="font-mono text-violet-500/50">ENV: LOCAL</span>
+            <!-- Footer Compliance -->
+            <div class="text-center pt-2 text-[10px] text-slate-400 border-t border-slate-100 flex items-center justify-between">
+                <span>Department of Housing For All, Haryana</span>
+                <span>Protected by IT Act 2000 & Cloudflare SSL</span>
             </div>
 
-            <div class="hidden md:block h-1"></div>
+        </div>
+
+    </div>
+
+    <!-- Theme Loader Modal -->
+    <div id="themeLoader" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 hidden flex-col items-center justify-center">
+        <div class="flex flex-col items-center max-w-sm text-center p-6 rounded-2xl bg-slate-900/95 border border-slate-700/60 shadow-2xl">
+            <div class="relative w-16 h-16 mb-4">
+                <div class="orbital-spinner w-16 h-16"></div>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-indigo-500 to-emerald-400 flex items-center justify-center text-white shadow-lg">
+                        <i class="bi bi-shield-check text-sm"></i>
+                    </div>
+                </div>
+            </div>
+            <h4 class="text-base font-black text-white uppercase brand-font tracking-wide mb-1" id="loaderTitle">
+                Authorizing Session
+            </h4>
+            <p class="text-[11px] text-slate-400 font-normal leading-relaxed" id="loaderSubtitle">
+                Validating security OTP & opening your Developer Registry space...
+            </p>
         </div>
     </div>
 
     <script>
-        document.getElementById('devOtpForm').addEventListener('submit', function (e) {
-            const btn = this.querySelector('button[type="submit"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="flex items-center justify-center gap-1.5"><i class="bi bi-arrow-repeat animate-spin"></i> Verifying OTP...</span>';
-                btn.classList.add('opacity-75', 'cursor-not-allowed');
+        function showThemeLoader(subtitleText = null) {
+            const loader = document.getElementById('themeLoader');
+            if (loader) {
+                if (subtitleText) {
+                    const sub = document.getElementById('loaderSubtitle');
+                    if (sub) sub.innerText = subtitleText;
+                }
+                loader.classList.remove('hidden');
+                loader.classList.add('flex');
+            }
+        }
+
+        // Countdown timer for Resend button
+        let secondsLeft = 60;
+        const countdownEl = document.getElementById('countdown');
+        const resendBtn = document.getElementById('resendBtn');
+        const timer = setInterval(() => {
+            if (secondsLeft > 0) {
+                countdownEl.innerText = `(${secondsLeft}s)`;
+                secondsLeft--;
+            } else {
+                clearInterval(timer);
+                countdownEl.innerText = '';
+            }
+        }, 1000);
+
+        // 6-digit segmented OTP Box Handler
+        const boxes = document.querySelectorAll('.otp-box');
+        const hiddenOtpInput = document.getElementById('otp');
+        const form = document.getElementById('otpForm');
+
+        function updateHiddenOtp() {
+            let code = '';
+            boxes.forEach(box => {
+                code += box.value.trim();
+            });
+            hiddenOtpInput.value = code;
+        }
+
+        boxes.forEach((box, index) => {
+            box.addEventListener('input', (e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                e.target.value = val ? val[0] : '';
+                updateHiddenOtp();
+
+                if (val && index < boxes.length - 1) {
+                    boxes[index + 1].focus();
+                    boxes[index + 1].select();
+                }
+            });
+
+            box.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (!box.value && index > 0) {
+                        boxes[index - 1].focus();
+                        boxes[index - 1].select();
+                    } else {
+                        box.value = '';
+                        updateHiddenOtp();
+                    }
+                } else if (e.key === 'ArrowLeft' && index > 0) {
+                    boxes[index - 1].focus();
+                } else if (e.key === 'ArrowRight' && index < boxes.length - 1) {
+                    boxes[index + 1].focus();
+                }
+            });
+
+            box.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '');
+                if (pastedData) {
+                    for (let i = 0; i < boxes.length; i++) {
+                        if (pastedData[i]) {
+                            boxes[i].value = pastedData[i];
+                        }
+                    }
+                    updateHiddenOtp();
+                    const nextFocusIndex = Math.min(pastedData.length, boxes.length - 1);
+                    boxes[nextFocusIndex].focus();
+                }
+            });
+        });
+
+        // Ensure OTP is populated on form submit
+        form.addEventListener('submit', function(e) {
+            updateHiddenOtp();
+            if (hiddenOtpInput.value.length !== 6) {
+                e.preventDefault();
+                const loader = document.getElementById('themeLoader');
+                if (loader) {
+                    loader.classList.add('hidden');
+                    loader.classList.remove('flex');
+                }
+                alert('Please enter all 6 digits of the verification passcode.');
+                for (let i = 0; i < boxes.length; i++) {
+                    if (!boxes[i].value) {
+                        boxes[i].focus();
+                        break;
+                    }
+                }
             }
         });
     </script>
