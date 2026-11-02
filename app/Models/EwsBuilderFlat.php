@@ -45,6 +45,12 @@ class EwsBuilderFlat extends Model
         'total_ews_flats_in_project',
         'flats_offered_for_draw',
         'remaining_flats_for_oc',
+        'is_aproved_by_dtp',
+        'is_approved_by_dtp',
+        'dtp_approved_at',
+        'dtp_approved_by',
+        'dtp_user_name',
+        'dtp_approval_remarks',
     ];
 
     protected static function booted()
@@ -84,5 +90,10 @@ class EwsBuilderFlat extends Model
     public function block(): BelongsTo
     {
         return $this->belongsTo(EwsBlock::class, 'block_id');
+    }
+
+    public function isApprovedByDtp(): bool
+    {
+        return (int)($this->is_aproved_by_dtp ?? $this->is_approved_by_dtp ?? 0) === 1;
     }
 }

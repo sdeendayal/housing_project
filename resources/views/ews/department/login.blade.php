@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS Department Login | Housing for All Haryana</title>
+    <title>EWS Department / TCP Login | Housing for All Haryana</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts & Material Icons -->
@@ -76,8 +76,8 @@
                 <!-- Central Emblem & Title -->
                 <div class="text-center mb-8">
                     <img src="{{ asset('Haryana_emblem.png') }}" class="w-14 h-14 mx-auto mb-4 object-contain" alt="Haryana Govt Emblem">
-                    <h2 class="text-lg font-black tracking-tight text-white uppercase">EWS Department Portal</h2>
-                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-black mt-1">Authorized Administration Sign In</p>
+                    <h2 class="text-lg font-black tracking-tight text-white uppercase">{{ request()->routeIs('ews.tcp.*') ? 'EWS TCP Portal' : 'EWS Department / TCP Portal' }}</h2>
+                    <p class="text-[9px] uppercase tracking-widest text-slate-500 font-black mt-1">Authorized Department & TCP Sign In</p>
                 </div>
 
                 <!-- Alert Messages -->
@@ -118,7 +118,7 @@
                         <label for="email" class="block text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1.5">Email Address / Mobile Number</label>
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3.5 top-3 text-emerald-500 text-base">person</span>
-                            <input type="text" name="email" id="email" required value="{{ old('email', 'ews_department@gmail.com') }}" placeholder="Email address or 10-digit mobile" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
+                            <input type="text" name="email" id="email" required value="{{ old('email', request()->routeIs('ews.tcp.*') ? 'ews_tcp@gmail.com' : 'ews_department@gmail.com') }}" placeholder="Email address or 10-digit mobile" class="w-full text-xs bg-slate-900/50 border border-slate-800 focus:border-emerald-500 rounded-lg pl-10 pr-3 py-3.5 text-white placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 transition font-bold">
                         </div>
                     </div>
 

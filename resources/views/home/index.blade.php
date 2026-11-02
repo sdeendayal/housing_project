@@ -465,7 +465,7 @@
                                                         <span>Flats</span>
                                                         <span class="text-[9px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full leading-tight">4 Portals</span>
                                                     </div>
-                                                    <div class="text-[10.5px] text-slate-500">Citizen • Developer • STP • Dept</div>
+                                                    <div class="text-[10.5px] text-slate-500">Citizen • Developer • STP • Dept/TCP</div>
                                                 </div>
                                             </div>
                                             <span id="ewsFlatsChevron" class="material-symbols-outlined text-slate-400 group-hover/flat:text-orange-600 text-[18px] transition-transform duration-300">
@@ -505,12 +505,12 @@
                                                 <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
                                             </a>
 
-                                            <!-- Department Login -->
+                                            <!-- Department / TCP Login -->
                                             <a href="{{ route('ews.department.login') }}"
                                                 class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-950 transition-all text-xs font-medium border-t border-slate-100/60 group/item">
                                                 <div class="flex items-center gap-2">
                                                     <span class="material-symbols-outlined text-emerald-600 text-[17px]">business</span>
-                                                    <span>Department Login</span>
+                                                    <span>Department / TCP Login</span>
                                                 </div>
                                                 <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
                                             </a>
@@ -1141,7 +1141,7 @@
                         <div class="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2">
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
-                                <span class="text-slate-800"><strong>EWS Flats:</strong> Citizen, Developer, STP और Department Login चालू हैं।</span>
+                                <span class="text-slate-800"><strong>EWS Flats:</strong> Citizen, Developer, STP और Department/TCP Login चालू हैं।</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="material-symbols-outlined text-orange-600 text-[18px]">pending_actions</span>

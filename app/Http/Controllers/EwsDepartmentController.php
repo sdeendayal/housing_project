@@ -11,18 +11,25 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\RoleType;
 use App\Models\EwsBuilderFlat;
+use App\Models\EwsProject;
+use App\Models\EwsTown;
 use App\Models\EwsDeveloperLog;
 use App\Helpers\EwsHelper;
 use Illuminate\Support\Facades\Schema;
+use App\Traits\EwsBuilderFlatsMatrixTrait;
 
 class EwsDepartmentController extends Controller
 {
+    use EwsBuilderFlatsMatrixTrait;
     public function showLogin()
     {
         if (Auth::check()) {
             $user = Auth::user();
-            if ($user->hasRole('ews_department')) {
+            if ($user->hasRole('ews_department') || $user->role === 'ews_department') {
                 return redirect()->route('ews.department.dashboard');
+            }
+            if ($user->hasRole('ews_tcp') || in_array($user->role, ['ews_tcp', 'tcp'])) {
+                return redirect()->route('ews.tcp.dashboard');
             }
         }
         return view('ews.department.login');
@@ -47,14 +54,19 @@ class EwsDepartmentController extends Controller
 
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
-            if ($user->hasRole('ews_department')) {
+            if ($user->hasRole('ews_department') || $user->role === 'ews_department') {
                 $request->session()->regenerate();
                 return redirect()->route('ews.department.dashboard')->with('success', 'Logged in successfully! Welcome back, ' . $user->name);
             }
+
+            if ($user->hasRole('ews_tcp') || in_array($user->role, ['ews_tcp', 'tcp'])) {
+                $request->session()->regenerate();
+                return redirect()->route('ews.tcp.dashboard')->with('success', 'Logged in successfully! Welcome back, ' . $user->name);
+            }
             
-            // Logout if authenticated user is not ews_department
+            // Logout if authenticated user is not ews_department or ews_tcp
             Auth::logout();
-            return redirect()->back()->with('error', 'Unauthorized: Only EWS Department accounts are permitted.');
+            return redirect()->back()->with('error', 'Unauthorized: Only EWS Department and TCP accounts are permitted.');
         }
 
         return redirect()->back()->with('error', 'Invalid login credentials.');
@@ -1175,33 +1187,206 @@ class EwsDepartmentController extends Controller
         return redirect()->back()->with('success', 'STP account deleted successfully!');
     }
 
-    public function developerFlatsIndex(Request $request)
+    /**
+     * EWS Offered Builder Flats Master Matrix (Department Monitoring View).
+     */
+    public function builderFlatsIndex(Request $request)
     {
         $user = Auth::user();
-        
-        // Designated 5 Haryana TCP Zones
-        $stpZones = DB::table('ews_stp_districts')
-            ->where('is_active', 1)
-            ->orderBy('name')
-            ->get();
-
-        if ($stpZones->isEmpty()) {
-            $stpZones = collect([
-                (object)['id' => 1, 'name' => 'ROHTAK', 'code' => 'ROH'],
-                (object)['id' => 2, 'name' => 'FARIDABAD', 'code' => 'FBD'],
-                (object)['id' => 3, 'name' => 'PANCHKULA', 'code' => 'PKL'],
-                (object)['id' => 4, 'name' => 'GURUGRAM', 'code' => 'GGN'],
-                (object)['id' => 5, 'name' => 'HISAR', 'code' => 'HSR'],
-            ]);
+        if (!$user) {
+            return redirect()->route('ews.department.login');
         }
 
+        if (!in_array($user->role, ['ews_department', 'admin', 'super_admin'])) {
+            abort(403, 'Unauthorized access to Department portal.');
+        }
+
+        // Summary Statistics (Haryana Statewide)
+        $stats = $this->getMatrixSummaryStats();
+
+        // Cascading Filter Dropdown Masters
+        $zonesList = DB::table('ews_stp_districts')->where('is_active', 1)->orderBy('name')->get();
+        $districts = DB::table('ews_districts')->orderBy('name')->get();
+        $townsList = DB::table('ews_towns')->orderBy('name')->get();
+        $projectsList = DB::table('ews_projects')->orderBy('name')->get(['id', 'name', 'license_no']);
+        $licensesList = $this->getMatrixLicensesList();
+
+        // Sidebar badge counts
         $developerCount = User::whereIn('role', ['ews_stp', 'stp', 'ews_developer'])->count();
         $developerFlatsCount = DB::table('ews_builder_flats')->count();
         $developerLogsCount = DB::table('ews_developer_logs')->count();
 
-        return view('ews.department.developers.flats', compact(
-            'user', 'stpZones', 'developerCount', 'developerFlatsCount', 'developerLogsCount'
+        $currentView = $request->query('view', 'dashboard');
+
+        return view('ews.department.builder_flats', compact(
+            'user',
+            'stats',
+            'zonesList',
+            'districts',
+            'townsList',
+            'projectsList',
+            'licensesList',
+            'developerCount',
+            'developerFlatsCount',
+            'developerLogsCount',
+            'currentView'
         ));
+    }
+
+    /**
+     * Server-side DataTables AJAX source for Department Matrix.
+     */
+    public function getBuilderFlatsData(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_department', 'admin', 'super_admin'])) {
+            abort(403, 'Unauthorized.');
+        }
+
+        return $this->buildMatrixDataTable($request);
+    }
+
+    /**
+     * Dynamic District list cascading endpoint by Zone for Department Matrix.
+     */
+    public function getBuilderFlatsDistricts(Request $request)
+    {
+        $query = DB::table('ews_districts')->orderBy('name', 'asc');
+        if ($request->filled('zone_id')) {
+            $query->where('zone_id', $request->zone_id);
+        }
+        return response()->json($query->get(['id', 'name', 'zone_id']));
+    }
+
+    /**
+     * Cascading Towns for Department Matrix.
+     */
+    public function getBuilderFlatsTowns(Request $request)
+    {
+        $query = EwsTown::orderBy('name', 'asc');
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        } elseif ($request->filled('zone_id')) {
+            $zoneDistIds = DB::table('ews_districts')->where('zone_id', $request->zone_id)->pluck('id')->toArray();
+            $query->where(function($q) use ($request, $zoneDistIds) {
+                $q->where('zone_id', $request->zone_id);
+                if (!empty($zoneDistIds)) $q->orWhereIn('district_id', $zoneDistIds);
+            });
+        }
+        return response()->json($query->get(['id', 'name']));
+    }
+
+    /**
+     * Cascading Projects for Department Matrix.
+     */
+    public function getBuilderFlatsProjects(Request $request)
+    {
+        $query = EwsProject::orderBy('name', 'asc');
+        if ($request->filled('district_id')) {
+            $query->where('district_id', $request->district_id);
+        } elseif ($request->filled('zone_id')) {
+            $zoneDistIds = DB::table('ews_districts')->where('zone_id', $request->zone_id)->pluck('id')->toArray();
+            $query->where(function($q) use ($request, $zoneDistIds) {
+                $q->where('zone_id', $request->zone_id);
+                if (!empty($zoneDistIds)) $q->orWhereIn('district_id', $zoneDistIds);
+            });
+        }
+        if ($request->filled('town_id')) {
+            $query->where('town_id', $request->town_id);
+        }
+        return response()->json($query->get(['id', 'name', 'license_no']));
+    }
+
+    /**
+     * Cascading Licenses for Department Matrix.
+     */
+    public function getBuilderFlatsLicenses(Request $request)
+    {
+        $licenses = $this->getMatrixLicensesList(
+            $request->input('zone_id'),
+            $request->input('district_id'),
+            $request->input('town_id'),
+            $request->input('project_id')
+        );
+        return response()->json($licenses);
+    }
+
+    /**
+     * Dedicated Single Flat Comprehensive Bio-Data Page for Department (Read-Only).
+     */
+    public function showBuilderFlat(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_department', 'admin', 'super_admin'])) {
+            abort(403, 'Unauthorized access to Department portal.');
+        }
+
+        $flat = \App\Models\EwsBuilderFlat::where('secure_id', $id)
+            ->orWhere('id', $id)
+            ->first();
+
+        if (!$flat && is_numeric(\App\Helpers\EwsHelper::decodeSecureId($id))) {
+            $flat = \App\Models\EwsBuilderFlat::find(\App\Helpers\EwsHelper::decodeSecureId($id));
+        }
+
+        if (!$flat) {
+            abort(404, 'Flat dossier record not found.');
+        }
+
+        $project = null;
+        if (!empty($flat->project_id)) {
+            $project = EwsProject::find($flat->project_id);
+        }
+        if (!$project && !empty($flat->project_name)) {
+            $project = EwsProject::where('name', $flat->project_name)->first();
+        }
+
+        $creator = null;
+        if (!empty($flat->created_by)) {
+            $creator = User::find($flat->created_by);
+        }
+
+        $backUrl = route('ews.department.builder-flats');
+        $stats = $this->getMatrixSummaryStats();
+
+        return view('ews.tcp.flat_view', compact('user', 'flat', 'project', 'creator', 'backUrl', 'stats'));
+    }
+
+    /**
+     * Single Flat Comprehensive Bio-Data (Read-Only JSON) for Department.
+     */
+    public function getBuilderFlatDetails(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_department', 'admin', 'super_admin'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        return $this->getFlatBioDataPayload($id);
+    }
+
+    /**
+     * Export Offered Flats Matrix for Department (CSV, Excel, PDF).
+     */
+    public function exportBuilderFlatsMatrix(Request $request, $format)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_department', 'admin', 'super_admin'])) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if ($format === 'pdf') {
+            return $this->exportMatrixPdfFile($request, 'department_ews');
+        } elseif ($format === 'excel') {
+            return $this->exportMatrixExcelFile($request, 'department_ews');
+        }
+
+        return $this->exportMatrixCsvFile($request, 'department_ews');
+    }
+
+    public function developerFlatsIndex(Request $request)
+    {
+        return $this->builderFlatsIndex($request);
     }
 
     public function getDeveloperFlatsData(Request $request)

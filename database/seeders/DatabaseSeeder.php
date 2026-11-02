@@ -96,6 +96,7 @@ class DatabaseSeeder extends Seeder
             EwsAllottedSecureIdSeeder::class,
             EwsWaitingListSeeder::class,
             EwsDeveloperSeeder::class,
+            EwsTcpSeeder::class,
             MmsayOldRegistrationDataSeeder::class,
             MmsayEligibleBeneficiariesSeeder::class,
             AdcNotVerifiedSeeder::class,

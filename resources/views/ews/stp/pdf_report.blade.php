@@ -71,12 +71,13 @@
         <thead>
             <tr>
                 <th style="width: 5%;">S.No.</th>
-                <th style="width: 15%;">District Name</th>
-                <th style="width: 15%;">Town Name</th>
-                <th style="width: 25%;">Project Name</th>
-                <th style="width: 15%;">Block / Tower No.</th>
-                <th style="width: 15%;">Floor Details</th>
-                <th style="width: 10%;">Flat No.</th>
+                <th style="width: 14%;">District Name</th>
+                <th style="width: 13%;">Town Name</th>
+                <th style="width: 22%;">Project Name</th>
+                <th style="width: 14%;">License No.</th>
+                <th style="width: 12%;">Block / Tower No.</th>
+                <th style="width: 11%;">Floor Details</th>
+                <th style="width: 9%;">Flat No.</th>
             </tr>
         </thead>
         <tbody>
@@ -86,13 +87,14 @@
                     <td><strong>{{ $flat->district_name }}</strong></td>
                     <td>{{ $flat->town_name }}</td>
                     <td>{{ $flat->project_name }}</td>
+                    <td style="font-family: monospace; font-weight: bold; color: #0369a1;">{{ $flat->license_no ?? '-' }}</td>
                     <td>{{ $flat->block_tower_number }}</td>
                     <td>{{ $flat->floor }}</td>
                     <td style="color: #4f46e5; font-weight: bold;">{{ $flat->flat_number }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #666;">No registered EWS flat records found.</td>
+                    <td colspan="8" style="text-align: center; color: #666;">No registered EWS flat records found.</td>
                 </tr>
             @endforelse
         </tbody>

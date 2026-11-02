@@ -88,6 +88,7 @@ class User extends Authenticatable
             'ews_user' => route('ews.dashboard'),
             'ews_developer' => route('ews.developer.dashboard'),
             'ews_stp', 'stp' => route('ews.stp.dashboard'),
+            'ews_tcp', 'tcp' => route('ews.tcp.dashboard'),
             'mmgay-dtp' => route('pp.dtp.dashboard'),
             default => route('home'),
         };

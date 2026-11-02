@@ -789,7 +789,7 @@
             });
 
             $.ajax({
-                url: "{{ url('ews/developer/possession/beneficiary') }}/${beneficiaryId}",
+                url: "{{ url('ews/stp/possession/beneficiary') }}/${beneficiaryId}",
                 type: 'GET',
                 success: function(response) {
                     Swal.close();
@@ -949,7 +949,7 @@
             btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat animate-spin"></i> Saving...');
 
             $.ajax({
-                url: "{{ url('ews/developer/possession/submit') }}/${beneficiaryId}",
+                url: "{{ url('ews/stp/possession/submit') }}/${beneficiaryId}",
                 type: 'POST',
                 data: formData,
                 processData: false,
@@ -998,7 +998,7 @@
             });
 
             $.ajax({
-                url: "{{ url('ews/developer/possession/beneficiary') }}/${beneficiaryId}",
+                url: "{{ url('ews/stp/possession/beneficiary') }}/${beneficiaryId}",
                 type: 'GET',
                 success: function(res) {
                     Swal.close();

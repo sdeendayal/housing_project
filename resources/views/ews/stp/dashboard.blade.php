@@ -1,407 +1,337 @@
+@php
+    $rawZone = $displayZoneName ?? (!empty($user->district_name) ? $user->district_name : (!empty($user->zone_name) ? $user->zone_name : 'Zone'));
+    $zoneTitle = str_contains(strtoupper($rawZone), 'ZONE') ? strtoupper($rawZone) : strtoupper($rawZone) . ' ZONE';
+@endphp
 <!DOCTYPE html>
 <html lang="en" class="h-full bg-[#f4f7fa] text-slate-800">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS STP - Registry Dashboard</title>
+    <title>STP {{ $zoneTitle }} - EWS Builder Flats Master Matrix | Haryana Government</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
+    <!-- Google Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <!-- jQuery & DataTables CDN -->
+    <!-- jQuery, DataTables & SweetAlert2 CDN -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Outfit', sans-serif;
-        }
-        .code-font {
-            font-family: 'Fira Code', monospace;
-        }
-        .custom-scroll::-webkit-scrollbar {
-            width: 5px;
-            height: 5px;
-        }
-        .custom-scroll::-webkit-scrollbar-track {
-            background: #f8fafc;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .custom-scroll::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        .dev-shadow {
-            box-shadow: 0 10px 30px -15px rgba(59, 130, 246, 0.08);
-        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        .custom-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-        /* Custom DataTables Styling to align with clean design */
+        /* Compact DataTables Styling (Single Viewport Fit) */
         table.dataTable {
             border-bottom: 1px solid #e2e8f0 !important;
-            margin-top: 15px !important;
-            margin-bottom: 15px !important;
+            margin-top: 6px !important;
+            margin-bottom: 6px !important;
         }
         table.dataTable thead th {
             background-color: #f8fafc !important;
             color: #1e293b !important;
             font-weight: 800 !important;
             text-transform: uppercase !important;
-            font-size: 9px !important;
+            font-size: 8.5px !important;
             letter-spacing: 0.05em !important;
             border-bottom: 1px solid #cbd5e1 !important;
-            padding: 12px 10px !important;
+            padding: 6px 8px !important;
+            white-space: nowrap !important;
         }
         table.dataTable tbody td {
-            font-size: 11px !important;
-            padding: 12px 10px !important;
+            font-size: 10.5px !important;
+            padding: 5px 8px !important;
             color: #334155 !important;
             border-bottom: 1px solid #f1f5f9 !important;
         }
-        table.dataTable tbody tr:hover {
-            background-color: #f8fafc !important;
-        }
+        table.dataTable tbody tr:hover { background-color: #f8fafc !important; }
         .dataTables_wrapper .dataTables_length select {
             background-color: #ffffff;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 4px 20px 4px 8px;
-            font-size: 10px;
+            padding: 2px 16px 2px 6px;
+            font-size: 9.5px;
             font-weight: bold;
             outline: none;
             color: #334155;
+            height: 24px;
         }
         .dataTables_wrapper .dataTables_filter input {
             background-color: #ffffff;
             border: 1px solid #cbd5e1;
             border-radius: 6px;
-            padding: 5px 10px;
-            font-size: 10px;
+            padding: 3px 8px;
+            font-size: 9.5px;
             font-weight: 500;
             outline: none;
-            margin-left: 8px;
+            margin-left: 6px;
             color: #334155;
+            height: 24px;
         }
         .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 4px 10px !important;
-            margin-left: 3px !important;
-            border-radius: 6px !important;
+            padding: 2px 7px !important;
+            margin-left: 2px !important;
+            border-radius: 4px !important;
             border: 1px solid #cbd5e1 !important;
             background: #ffffff !important;
-            font-size: 10px !important;
+            font-size: 9.5px !important;
             font-weight: bold !important;
             color: #334155 !important;
         }
         .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-            background: #3b82f6 !important;
+            background: #0284c7 !important;
             color: #ffffff !important;
-            border-color: #3b82f6 !important;
+            border-color: #0284c7 !important;
         }
-        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-            background: #f1f5f9 !important;
-            color: #1e3a8a !important;
+
+        /* Full Page Indeterminate Progress Animation */
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%) scaleX(0.2); }
+            50% { transform: translateX(0%) scaleX(0.6); }
+            100% { transform: translateX(100%) scaleX(0.2); }
         }
-        .dataTables_wrapper .dataTables_info {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 12px;
-        }
-        .dataTables_wrapper .dataTables_paginate {
-            margin-top: 12px;
+        .animate-indeterminate {
+            animation: indeterminate 1.4s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+            transform-origin: left;
         }
     </style>
 </head>
-<body class="h-full flex overflow-hidden bg-[#f4f7fa]">
+<body class="h-full flex overflow-hidden bg-[#f4f7fa] text-slate-800">
 
+    <!-- 1. Left Sidebar -->
     @include('ews.stp.partials.sidebar')
 
-    <!-- RIGHT CONTAINER WORKSPACE -->
+    <!-- 2. Right Workspace Container -->
     <div class="flex-1 flex flex-col overflow-hidden h-full">
-        
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
-            <div class="flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600">
-                    <i class="bi bi-shield-fill-check"></i>
-                </div>
-                <div>
-                    <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">
-                        @if($currentView === 'district')
-                            {{ !empty($user->district_name) ? (str_contains(strtoupper($user->district_name), 'ZONE') ? strtoupper($user->district_name) : strtoupper($user->district_name) . ' Zone') : 'Zone' }} Master Registry
-                        @elseif($currentView === 'my_flats')
-                            My Registered Flats Inventory
-                        @else
-                            STP Command Dashboard
-                        @endif
-                    </h2>
-                    <p class="text-[8px] text-slate-455 font-mono uppercase">EWS Builder Housing Administration</p>
-                </div>
-            </div>
 
-            <!-- Profile context details -->
-            <div class="flex items-center gap-3">
-                <div class="text-right">
-                    <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
-                        <span>{{ $user->name }}</span>
-                        @if(!empty($displayZoneName))
-                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
-                        @endif
-                        <i class="bi bi-person-circle text-sky-600"></i>
-                    </div>
-                    <div class="text-[8.5px] text-slate-500 font-mono">
-                        Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}
+        <!-- Top Navigation Header (Ultra Compact, Height: 44px) -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-2xs shrink-0">
+            <div class="w-full px-3 sm:px-4 flex items-center justify-between h-11">
+                <!-- Brand / Logo -->
+                <div class="flex items-center gap-2.5">
+                    <img src="{{ asset('Haryana_emblem.png') }}" class="w-7 h-7 object-contain" alt="Haryana Emblem">
+                    <div>
+                        <div class="flex items-center gap-1.5 leading-none">
+                            <h1 class="text-xs font-black uppercase tracking-wider text-slate-900">Special Town Planning</h1>
+                            <span class="px-1.5 py-0.2 bg-cyan-100 text-cyan-800 border border-cyan-200 rounded text-[7.5px] font-black uppercase tracking-wider">STP Portal</span>
+                            <span class="px-1.5 py-0.2 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded text-[7.5px] font-bold uppercase tracking-wider hidden sm:inline-block">Zone Oversight</span>
+                        </div>
+                        <p class="text-[8px] text-slate-400 font-bold uppercase tracking-wider hidden md:block">Government of Haryana • EWS Colony & Builder Compliance Matrix</p>
                     </div>
                 </div>
-                <a href="{{ route('ews.stp.logout') }}" class="md:hidden px-3 py-1.5 bg-red-50 text-red-650 rounded-lg text-[9px] font-black uppercase border border-red-100">
-                    Logout
-                </a>
+
+                <!-- Right Side User & Session -->
+                <div class="flex items-center gap-2">
+                    <div class="hidden sm:flex items-center gap-2 px-2 py-0.5 bg-slate-100/90 rounded-lg border border-slate-200">
+                        <div class="w-5 h-5 rounded-md bg-cyan-600 text-white flex items-center justify-center text-[10px] font-bold shadow-2xs">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="text-left leading-tight">
+                            <span class="block text-[9px] font-black uppercase text-slate-800 truncate max-w-[130px]">{{ $user->name ?? 'STP Officer' }}</span>
+                            <span class="block text-[7.5px] text-cyan-700 font-bold uppercase tracking-wider font-mono">{{ $zoneTitle }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Logout Button -->
+                    <a href="{{ route('ews.stp.logout') }}"
+                        class="px-2.5 py-1 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 hover:border-rose-600 rounded-md text-[9.5px] font-black uppercase tracking-wider transition-all flex items-center gap-1 shadow-2xs">
+                        <i class="bi bi-box-arrow-right text-[10px]"></i>
+                        <span>Logout</span>
+                    </a>
+                </div>
             </div>
         </header>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scroll">
-            
-            @if($currentView === 'dashboard')
-                <!-- DASHBOARD VIEW: OVERVIEW TELEMETRY & PROJECT BREAKDOWN -->
+        <!-- Main Content Workspace (Ultra High Density, Viewport Optimized) -->
+        <main class="flex-1 overflow-y-auto px-3 sm:px-4 py-2 space-y-2 custom-scroll flex flex-col">
+
+            <!-- Hidden Filter Inputs for AJAX DataTables -->
+            <input type="hidden" id="filter-ownership" value="all">
+
+            <!-- SECTION 1: Top 4 Telemetry KPI Cards (Single Sleek Row) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 shrink-0">
                 
-                <!-- Sleek Compact Welcome Header -->
-                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-xl px-4 py-2.5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 relative overflow-hidden">
-                    <div class="flex items-center gap-3 relative z-10">
-                        <div class="w-8 h-8 rounded-lg bg-sky-500/20 border border-sky-400/30 flex items-center justify-center text-sky-400 shrink-0">
-                            <i class="bi bi-speedometer2 text-sm"></i>
+                <!-- Card 1: Total Allotted Flats (Physical Possession Module Navigation) -->
+                <a href="{{ route('ews.stp.possession.index') }}" id="card-physical-possession"
+                    class="cursor-pointer bg-white hover:bg-amber-50/50 border border-slate-200 hover:border-amber-400 rounded-xl px-3 py-1.5 shadow-2xs transition-all hover:shadow-xs flex items-center justify-between group">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="bi bi-houses-fill"></i>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-2.5 gap-y-0.5">
-                            <h2 class="text-xs font-black tracking-tight text-white uppercase">Welcome, {{ $user->name }}</h2>
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-sky-500/20 text-sky-300 border border-sky-500/30 rounded text-[8.5px] font-black uppercase">
-                                <i class="bi bi-geo-alt-fill text-[8px]"></i> {{ $displayZoneName ?? 'ZONE' }}
-                            </span>
-                            <span class="text-[9px] text-slate-400 font-mono hidden md:inline">| EWS Registry Console</span>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0 relative z-10">
-                        <a href="{{ route('ews.stp.flats.create') }}" class="px-3 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-700 text-white rounded-lg text-[9.5px] font-black uppercase tracking-wider shadow-sm flex items-center gap-1 transition-all">
-                            <i class="bi bi-plus-lg text-[10px]"></i>
-                            <span>Register New Flat</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Telemetry Stats Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-                    <!-- Stat 1: Zone Allotted Flats from 4,211 State Pool -->
-                    <a href="{{ route('ews.stp.dashboard', ['view' => 'allotted']) }}" class="bg-white border border-amber-200/80 hover:border-amber-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-amber-600">Total Allotted Flats</span>
-                            <h4 class="text-xl font-black text-amber-600 font-mono mt-0.5">{{ number_format($stats['total_allotted']) }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">From 4,211 State Pool</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center border border-amber-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-houses-fill text-lg"></i>
-                        </div>
-                    </a>
-
-                    <!-- Stat 2: Total Zone Offered Flats -->
-                    <a href="{{ route('ews.stp.dashboard', ['view' => 'district']) }}" class="bg-white border border-sky-200/80 hover:border-sky-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-sky-600">All {{ strtoupper(trim(str_ireplace('ZONE', '', $displayZoneName ?? 'ROHTAK'))) }} Offered Flats</span>
-                            <h4 class="text-xl font-black text-sky-600 font-mono mt-0.5">{{ $stats['total_flats'] }}</h4>
-                            <span class="block text-[8px] text-slate-400 font-mono uppercase mt-1">Total Offered In Zone</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-building text-lg"></i>
-                        </div>
-                    </a>
-
-                    <!-- Stat 3: Offered By Me -->
-                    <a href="{{ route('ews.stp.dashboard', ['view' => 'my_flats']) }}" class="bg-white border border-emerald-200/80 hover:border-emerald-400 rounded-xl p-4 shadow-sm dev-shadow flex items-center justify-between transition-all group">
-                        <div>
-                            <span class="block text-[9px] font-black uppercase tracking-wider text-emerald-600">Offered By Me</span>
-                            <h4 class="text-xl font-black text-emerald-600 font-mono mt-0.5">{{ $stats['my_flats'] }}</h4>
-                            <span class="block text-[8px] text-emerald-500 font-mono uppercase mt-1">Flats Offered By Me</span>
-                        </div>
-                        <div class="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-all">
-                            <i class="bi bi-person-check-fill text-lg"></i>
-                        </div>
-                    </a>
-                </div>
-
-
-            @elseif($currentView === 'allotted')
-                <!-- Compact Zone Allotted Header -->
-                <div class="bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
-                            <i class="bi bi-houses-fill text-xs"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool</h2>
-                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Pool</span>
+                        <div class="min-w-0">
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Total Allotted Flats</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-lg font-black font-mono text-amber-600 leading-none">{{ number_format($stats['total_allotted'] ?? 639) }}</span>
+                                <span class="text-[8px] text-slate-400 font-bold">Possession</span>
                             </div>
-                            <p class="text-[8.5px] text-amber-100 font-mono">{{ number_format($stats['total_allotted']) }} flats in {{ $displayZoneName ?? 'Zone' }} (out of {{ number_format($stats['state_allotted_total'] ?? 4211) }} state total)</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="text-base font-black font-mono leading-none">{{ number_format($stats['total_allotted']) }}</span>
-                        <span class="block text-[7px] uppercase tracking-widest text-amber-200">Allotted</span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">Module</span>
+                        <i class="bi bi-arrow-right text-[10px] text-amber-600 group-hover:translate-x-0.5 transition-transform"></i>
                     </div>
-                </div>
-            @elseif($currentView === 'district')
-                <!-- Compact Zone Master Header -->
-                <div class="bg-gradient-to-r from-sky-600 to-indigo-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
-                            <i class="bi bi-building text-xs"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xs font-black uppercase tracking-wider">{{ $displayZoneName ?? 'Zone' }} Master EWS Flats</h2>
-                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">Master</span>
-                            </div>
-                            <p class="text-[8.5px] text-sky-100 font-mono">Viewing all allotment proforma flats registered under {{ $displayZoneName ?? 'Zone' }} Authority</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-base font-black font-mono leading-none">{{ $stats['total_flats'] }}</span>
-                        <span class="block text-[7px] uppercase tracking-widest text-sky-200">Zone Total</span>
-                    </div>
-                </div>
-            @elseif($currentView === 'my_flats')
-                <!-- Compact Personal Inventory Header -->
-                <div class="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-xl px-4 py-2 text-white shadow-sm flex items-center justify-between">
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-white shrink-0">
-                            <i class="bi bi-person-check-fill text-xs"></i>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <h2 class="text-xs font-black uppercase tracking-wider">Flats Registered By My Account</h2>
-                                <span class="px-1.5 py-0.2 bg-white/20 text-white rounded text-[8px] font-black uppercase">My Entries</span>
-                            </div>
-                            <p class="text-[8.5px] text-emerald-100 font-mono">Viewing flats created directly by your developer account (ID: #{{ $user->id }})</p>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-base font-black font-mono leading-none">{{ $stats['my_flats'] }}</span>
-                        <span class="block text-[7px] uppercase tracking-widest text-emerald-200">My Total</span>
-                    </div>
-                </div>
-            @endif
+                </a>
 
-            <!-- REGISTRY DATABASE TABLE SECTION -->
-            <section id="table-section" class="bg-white border border-slate-200/80 rounded-xl shadow-sm dev-shadow overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
-                    <div>
-                        <h3 id="table-heading-title" class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                            <i class="bi bi-file-earmark-text text-sky-500 text-sm"></i>
-                            @if($currentView === 'allotted')
-                                {{ $displayZoneName ?? 'Zone' }} Allotted Flats Pool (From 4,211 State Allotments)
-                            @elseif($currentView === 'my_flats')
-                                Flats Offered By Me
-                            @else
-                                All {{ $displayZoneName ?? 'Zone' }} Offered Builder Flats
-                            @endif
-                            @if(!empty($displayZoneName))
-                                <span class="px-2 py-0.5 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[9px] font-black uppercase">
-                                    <i class="bi bi-geo-alt-fill me-0.5"></i> {{ $displayZoneName }}
+                <!-- Card 2: All Zone Offered Builder Flats -->
+                <div id="card-scope-all" onclick="setOwnershipFilter('all')"
+                    class="cursor-pointer bg-sky-50/60 border-2 border-sky-500 rounded-xl px-3 py-1.5 shadow-2xs ring-2 ring-sky-400/20 transition-all hover:shadow-xs flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-sm shrink-0">
+                            <i class="bi bi-building"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">All {{ strtoupper(trim(str_ireplace('ZONE', '', $displayZoneName ?? 'Rohtak'))) }} Offered</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-lg font-black font-mono text-sky-700 leading-none">{{ number_format($stats['total_flats'] ?? 0) }}</span>
+                                <span class="text-[8px] text-slate-400 font-bold">Flats</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-sky-100 text-sky-800">Zone</span>
+                        <i class="bi bi-chevron-right text-[10px] text-sky-600"></i>
+                    </div>
+                </div>
+
+                <!-- Card 3: Approved by DTP -->
+                <div id="card-scope-dtp-approved" onclick="setOwnershipFilter('dtp_approved')"
+                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-xs flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Approved By DTP</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-lg font-black font-mono text-emerald-600 leading-none">{{ number_format($stats['dtp_approved_flats'] ?? 0) }}</span>
+                                <span class="text-[8px] text-slate-400 font-bold">Units</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">Certified</span>
+                        <i class="bi bi-chevron-right text-[10px] text-emerald-600"></i>
+                    </div>
+                </div>
+
+                <!-- Card 4: Pending DTP Approval -->
+                <div id="card-scope-dtp-pending" onclick="setOwnershipFilter('dtp_pending')"
+                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-amber-300 transition-all hover:shadow-xs flex items-center justify-between">
+                    <div class="flex items-center gap-2.5 min-w-0">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Pending DTP Approval</span>
+                            <div class="flex items-baseline gap-1.5">
+                                <span class="text-lg font-black font-mono text-amber-600 leading-none">{{ number_format($stats['dtp_pending_flats'] ?? 0) }}</span>
+                                <span class="text-[8px] text-slate-400 font-bold">Awaiting</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">Pending</span>
+                        <i class="bi bi-chevron-right text-[10px] text-amber-600"></i>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- SECTION 2 & 3: Master Data Matrix Panel (High Density) -->
+            <section class="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden flex flex-col flex-1 min-h-0">
+                
+                <!-- Table Header Bar with Export Controls -->
+                <div class="px-3.5 py-1.5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 bg-white shrink-0">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md bg-sky-50 text-sky-700 border border-sky-200 flex items-center justify-center text-xs shrink-0">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5 leading-none">
+                                <h2 class="text-xs font-black uppercase tracking-wider text-slate-900" id="table-heading-title">
+                                    <span>All {{ $zoneTitle }} Offered Builder Flats</span>
+                                </h2>
+                                <span class="px-1.5 py-0.5 bg-sky-100 text-sky-800 text-[8px] font-black uppercase rounded flex items-center gap-1 border border-sky-200">
+                                    <i class="bi bi-shield-lock-fill text-[8px] text-sky-600"></i>
+                                    <span>{{ $zoneTitle }} (LOCKED)</span>
                                 </span>
-                            @endif
-                        </h3>
+                            </div>
+                            <p class="text-[8px] text-slate-400 font-mono uppercase">EWS Builder Housing Master Matrix • STP Oversight</p>
+                        </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2.5 self-end sm:self-auto">
-                        <!-- Ownership Scope Filter Tabs -->
-                        <div class="inline-flex bg-slate-200/80 p-0.5 rounded-lg text-[10px] font-bold">
-                            <button type="button" id="btn-scope-all" onclick="setOwnershipFilter('all')"
-                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ in_array($currentView, ['my_flats', 'allotted']) ? 'text-slate-600 font-bold' : 'bg-white text-sky-700 shadow-sm font-black' }}">
-                                <i class="bi bi-building me-1"></i> All {{ trim(str_ireplace('ZONE', '', $displayZoneName ?? 'Rohtak')) }} Offered ({{ $stats['total_flats'] }})
-                            </button>
-                            <button type="button" id="btn-scope-my" onclick="setOwnershipFilter('my_flats')"
-                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'my_flats' ? 'bg-white text-emerald-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">
-                                <i class="bi bi-person-check-fill me-1"></i> Offered By Me ({{ $stats['my_flats'] }})
-                            </button>
-                            <button type="button" id="btn-scope-allotted" onclick="setOwnershipFilter('allotted')"
-                                class="px-3 py-1 rounded-md transition-all uppercase tracking-wider {{ $currentView === 'allotted' ? 'bg-white text-amber-700 shadow-sm font-black' : 'text-slate-600 font-bold' }}">
-                                <i class="bi bi-houses-fill me-1"></i> Zone Allotted ({{ number_format($stats['total_allotted']) }})
-                            </button>
-                        </div>
-
-                        <input type="hidden" id="filter-ownership" value="{{ $currentView === 'allotted' ? 'allotted' : ($currentView === 'my_flats' ? 'my_flats' : 'all') }}">
-
-                        <div class="w-px h-5 bg-slate-200 mx-1"></div>
-
-                        <!-- Filter-wise Exports (CSV, EXCEL, PDF) -->
-                        <div class="inline-flex gap-1 items-center bg-slate-100 p-1 rounded-lg">
-                            <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider px-1">Export:</span>
-                            <button type="button" onclick="triggerExport('csv')"
-                                class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
-                                <i class="bi bi-file-earmark-spreadsheet text-emerald-600"></i>
-                                <span>CSV</span>
-                            </button>
-                            <button type="button" onclick="triggerExport('excel')"
-                                class="px-2 py-1 bg-white hover:bg-green-50 text-slate-700 hover:text-green-700 border border-slate-200 hover:border-green-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
-                                <i class="bi bi-file-earmark-excel-fill text-green-600"></i>
-                                <span>EXCEL</span>
-                            </button>
-                            <button type="button" onclick="triggerExport('pdf')"
-                                class="px-2 py-1 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
-                                <i class="bi bi-file-pdf-fill text-rose-600"></i>
-                                <span>PDF</span>
-                            </button>
-                        </div>
-
-                        <div class="w-px h-5 bg-slate-200 mx-1"></div>
-
-                        <!-- Dedicated Page Add Link -->
-                        <a href="{{ route('ews.stp.flats.create') }}"
-                            class="px-3.5 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-750 text-white font-black uppercase tracking-wider rounded-lg text-[9px] shadow-md flex items-center gap-1 transition-all">
-                            <i class="bi bi-plus-lg"></i>
-                            <span>Register EWS Flat</span>
-                        </a>
+                    <!-- Export Toolbar -->
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[8.5px] font-black uppercase text-slate-400 tracking-wider">Export:</span>
+                        <button type="button" onclick="triggerExport('csv')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 rounded text-[9px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer transition-all">
+                            <i class="bi bi-filetype-csv text-emerald-600"></i>
+                            <span>CSV</span>
+                        </button>
+                        <button type="button" onclick="triggerExport('excel')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 rounded text-[9px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer transition-all">
+                            <i class="bi bi-file-earmark-excel text-emerald-700"></i>
+                            <span>Excel</span>
+                        </button>
+                        <button type="button" onclick="triggerExport('pdf')" class="px-2 py-0.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-250 rounded text-[9px] font-bold flex items-center gap-1 shadow-2xs cursor-pointer transition-all">
+                            <i class="bi bi-file-earmark-pdf text-rose-600"></i>
+                            <span>PDF</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Cascading Filter Console (Zone -> District -> Town -> Project) -->
-                <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-                        <!-- Step 1: District Filter (Filtered by Zone) -->
-                        <div class="lg:col-span-3 space-y-1">
-                            <label for="filter-district" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                <!-- Cascading Filter Console (Locked Zone -> 2 District -> 3 Town -> 4 Project -> 5 License No -> Reset) -->
+                <div class="px-3 py-1.5 bg-slate-50/90 border-b border-slate-200 shrink-0">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-end">
+                        
+                        <!-- Step 1: Assigned Zone (Permanently Locked) -->
+                        <div id="filter-zone-box" class="lg:col-span-2 space-y-0.5">
+                            <label class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider flex items-center justify-between whitespace-nowrap">
                                 <span class="flex items-center gap-1">
-                                    <span class="px-1 py-0.2 rounded text-[8px] bg-sky-100 text-sky-800 font-black">1</span>
+                                    <span class="px-1 py-0.2 rounded text-[7.5px] bg-slate-200 text-slate-700 font-black">1</span>
+                                    <span>Assigned Zone</span>
+                                </span>
+                                <span class="text-[7.5px] text-cyan-600 font-mono font-bold">LOCKED</span>
+                            </label>
+                            <div class="w-full bg-slate-100 border border-slate-300 rounded-md px-2 py-0.5 text-xs text-slate-700 font-bold flex items-center gap-1.5 h-[28px] cursor-not-allowed select-none shadow-2xs">
+                                <i class="bi bi-lock-fill text-slate-400 text-xs"></i>
+                                <span class="truncate">{{ $zoneTitle }}</span>
+                            </div>
+                            <input type="hidden" id="filter-zone" value="{{ $user->zone_id }}">
+                        </div>
+
+                        <!-- Step 2: Select District (Zone-Scoped) -->
+                        <div id="filter-district-box" class="lg:col-span-2 space-y-0.5">
+                            <label for="filter-district" class="block text-[8.5px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between whitespace-nowrap">
+                                <span class="flex items-center gap-1">
+                                    <span class="px-1 py-0.2 rounded text-[7.5px] bg-sky-100 text-sky-800 font-black">2</span>
                                     <span>Select District</span>
                                 </span>
-                                <span class="text-[8px] text-slate-400 font-mono font-bold">{{ count($districts ?? []) }} In Zone</span>
+                                <span class="text-[7.5px] text-slate-400 font-mono font-bold" id="district-count-badge">{{ count($districts ?? []) }} In Zone</span>
                             </label>
-                            <div class="relative">
-                                <select id="filter-district" onchange="onDistrictFilterChange()"
-                                    class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs">
-                                    <option value="">All {{ $displayZoneName ?? 'Zone' }} Districts</option>
-                                    @foreach($districts ?? [] as $d)
-                                        <option value="{{ $d->id }}">{{ strtoupper($d->name) }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <select id="filter-district" onchange="onDistrictFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-md px-2 py-0.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs h-[28px]">
+                                <option value="">All {{ $zoneTitle }} Districts</option>
+                                @foreach($districts ?? [] as $d)
+                                    <option value="{{ $d->id }}" data-zone="{{ $d->zone_id }}">{{ strtoupper($d->name) }}</option>
+                                @endforeach
+                            </select>
                         </div>
 
-                        <!-- Step 2: Town Filter (Cascading) -->
-                        <div id="filter-town-box" class="lg:col-span-3 space-y-1">
-                            <label for="filter-town" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
-                                <span class="px-1 py-0.2 rounded text-[8px] bg-violet-100 text-violet-800 font-black">2</span>
+                        <!-- Step 3: Name of Town -->
+                        <div id="filter-town-box" class="lg:col-span-2 space-y-0.5">
+                            <label for="filter-town" class="block text-[8.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1 whitespace-nowrap">
+                                <span class="px-1 py-0.2 rounded text-[7.5px] bg-violet-100 text-violet-800 font-black">3</span>
                                 <span>Name of Town</span>
                             </label>
                             <select id="filter-town" onchange="onTownFilterChange()"
-                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none shadow-2xs">
+                                class="w-full bg-white border border-slate-250 rounded-md px-2 py-0.5 text-xs text-slate-800 font-bold focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none shadow-2xs h-[28px]">
                                 <option value="">All Towns</option>
                                 @foreach($townsList ?? [] as $t)
                                     <option value="{{ $t->id }}">{{ strtoupper($t->name) }}</option>
@@ -409,200 +339,165 @@
                             </select>
                         </div>
 
-                        <!-- Step 3: Project Filter (Cascading) -->
-                        <div id="filter-project-box" class="lg:col-span-4 space-y-1">
-                            <label for="filter-project" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
-                                <span class="px-1 py-0.2 rounded text-[8px] bg-indigo-100 text-indigo-800 font-black">3</span>
+                        <!-- Step 4: Name of Project -->
+                        <div id="filter-project-box" class="lg:col-span-3 space-y-0.5">
+                            <label for="filter-project" class="block text-[8.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1 whitespace-nowrap">
+                                <span class="px-1 py-0.2 rounded text-[7.5px] bg-indigo-100 text-indigo-800 font-black">4</span>
                                 <span>Name of Project</span>
                             </label>
                             <select id="filter-project" onchange="onProjectFilterChange()"
-                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none shadow-2xs">
+                                class="w-full bg-white border border-slate-250 rounded-md px-2 py-0.5 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none shadow-2xs h-[28px]">
                                 <option value="">All Projects</option>
                                 @foreach($projectsList ?? [] as $p)
-                                    <option value="{{ $p->id }}">{{ strtoupper($p->name) }}</option>
+                                    <option value="{{ $p->id }}" data-license="{{ $p->license_no ?? '' }}">{{ strtoupper($p->name) }}</option>
                                 @endforeach
                             </select>
                         </div>
 
-                        <!-- Reset Filter Button -->
-                        <div class="lg:col-span-2 flex items-center">
-                            <button type="button" onclick="resetAllFilters()"
-                                class="w-full px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5">
+                        <!-- Step 5: License Number -->
+                        <div id="filter-license-box" class="lg:col-span-2 space-y-0.5">
+                            <label for="filter-license" class="block text-[8.5px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between whitespace-nowrap">
+                                <span class="flex items-center gap-1">
+                                    <span class="px-1 py-0.2 rounded text-[7.5px] bg-emerald-100 text-emerald-800 font-black">5</span>
+                                    <span>License No.</span>
+                                </span>
+                                <span class="text-[7.5px] text-emerald-700 font-mono font-bold" id="license-count-badge">{{ count($licensesList ?? []) }} Active</span>
+                            </label>
+                            <select id="filter-license" onchange="onLicenseFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-md px-2 py-0.5 text-xs text-slate-800 font-bold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs h-[28px]">
+                                <option value="">All Licenses</option>
+                                @foreach($licensesList ?? [] as $lic)
+                                    <option value="{{ $lic }}">{{ $lic }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Reset Button -->
+                        <div class="lg:col-span-1">
+                            <button type="button" onclick="resetAllFilters()" title="Reset All Filters"
+                                class="w-full h-[28px] bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-md text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 shadow-2xs cursor-pointer">
                                 <i class="bi bi-arrow-counterclockwise text-xs"></i>
-                                <span>Reset Filters</span>
+                                <span>Reset</span>
                             </button>
                         </div>
+
                     </div>
                 </div>
 
-                <!-- Table Content (Yajra Server-side) -->
-                <div class="p-5">
-                    <table class="w-full text-left border-collapse" id="flats-table">
+                <!-- Server-Side Yajra DataTable Container -->
+                <div class="px-3 py-1 flex-1 overflow-x-auto min-h-0">
+                    <table id="flats-table" class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-55/30 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
-                                <th style="width: 5%;">S.No.</th>
-                                <th id="th-col-1">{{ $currentView === 'allotted' ? 'District' : 'District Name' }}</th>
+                            <tr>
+                                <th class="w-8 text-center">S.No.</th>
+                                <th id="th-col-1">District Name</th>
                                 <th id="th-col-2">Town Name</th>
                                 <th id="th-col-3">Project Name</th>
-                                <th id="th-col-4">Block / Tower No.</th>
-                                <th id="th-col-5">{{ $currentView === 'allotted' ? 'Allottee Name' : 'Floor Details' }}</th>
+                                <th id="th-col-license">License No.</th>
+                                <th id="th-col-4">Block / Tower</th>
+                                <th id="th-col-5">Floor</th>
                                 <th id="th-col-6">Flat No.</th>
-                                <th id="th-col-7">{{ $currentView === 'allotted' ? 'Mobile No.' : 'Unique Flat Code' }}</th>
-                                <th id="th-col-8">{{ $currentView === 'allotted' ? 'Possession Status' : 'Ownership' }}</th>
-                                <th style="text-align: right; width: 14%;">Actions</th>
+                                <th id="th-col-7">Unique Flat Code</th>
+                                <th id="th-col-8">DTP Status</th>
+                                <th class="text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="text-[11px] font-medium text-slate-655">
-                            <!-- Populated dynamically via Ajax Datatables -->
+                        <tbody>
+                            <!-- Server-side populated by AJAX -->
                         </tbody>
                     </table>
                 </div>
+
             </section>
 
-        </div>
-    </div>
+        </main>
 
-    <!-- Projects Modal -->
-    <div id="projects-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col max-h-[80vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="projects-modal-content">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50">
-                <div class="flex items-center gap-2 text-indigo-700">
-                    <i class="bi bi-diagram-3-fill text-lg"></i>
-                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Projects in {{ strtoupper($user->district_name ?? 'District') }}</h3>
+        <!-- Footer (Ultra Compact) -->
+        <footer class="bg-white border-t border-slate-200 py-1 shrink-0">
+            <div class="w-full px-3 text-center">
+                <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
+                    Special Town Planning Department • Government of Haryana • EWS Regulatory Cell
+                </p>
+            </div>
+        </footer>
+
+    </div><!-- End Right Workspace Container -->
+
+    <!-- Full-Page Ultra-Premium Loader Overlay -->
+    <div id="full-page-loader" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs transition-all duration-300 opacity-0 pointer-events-none">
+        <div class="relative bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center max-w-xs w-full mx-4 text-center transform scale-95 transition-all duration-300" id="loader-card">
+            <!-- Ambient Background Glow -->
+            <div class="absolute -top-6 -left-6 w-24 h-24 bg-cyan-400/20 rounded-full blur-xl pointer-events-none"></div>
+            <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-blue-500/20 rounded-full blur-xl pointer-events-none"></div>
+
+            <!-- Multi-ring Spinner with Emblem -->
+            <div class="relative w-16 h-16 flex items-center justify-center mb-3">
+                <div class="absolute inset-0 rounded-full border-3 border-transparent border-t-cyan-500 border-r-blue-600 animate-spin"></div>
+                <div class="absolute inset-1.5 rounded-full border-2 border-transparent border-b-emerald-500 border-l-cyan-400 animate-spin" style="animation-direction: reverse; animation-duration: 1.2s;"></div>
+                <div class="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-md shadow-cyan-500/30">
+                    <img src="{{ asset('Haryana_emblem.png') }}" class="w-6 h-6 object-contain brightness-0 invert" alt="Haryana">
                 </div>
-                <button onclick="closeProjectsModal()" class="w-6 h-6 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all">
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
             </div>
-            <!-- Body -->
-            <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
-                @forelse($projectsList as $index => $proj)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
-                        <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($proj->name) }}</span>
-                    </div>
-                @empty
-                    <div class="text-center py-6 text-slate-400 text-xs font-medium">No projects registered in {{ $user->district_name }}.</div>
-                @endforelse
-            </div>
-            <!-- Footer -->
-            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 text-right">
-                <button onclick="closeProjectsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-750 font-bold uppercase rounded-lg text-[9.5px] transition-all">
-                    Close View
-                </button>
+
+            <!-- Loading Text -->
+            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900" id="loader-title">
+                Syncing EWS Matrix...
+            </h3>
+            <p class="text-[9px] text-slate-500 font-semibold mt-0.5" id="loader-subtitle">
+                Filtering official {{ $zoneTitle }} compliance records
+            </p>
+
+            <!-- Animated Gradient Progress Bar -->
+            <div class="w-full bg-slate-100 rounded-full h-1 mt-3.5 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-emerald-500 rounded-full animate-indeterminate"></div>
             </div>
         </div>
     </div>
 
-    <!-- Towns Modal -->
-    <div id="towns-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col max-h-[80vh] overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="towns-modal-content">
-            <!-- Header -->
-            <div class="px-6 py-4 border-b border-slate-150 flex items-center justify-between bg-slate-50">
-                <div class="flex items-center gap-2 text-violet-750">
-                    <i class="bi bi-pin-map-fill text-lg"></i>
-                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Towns in {{ strtoupper($user->district_name ?? 'District') }}</h3>
-                </div>
-                <button onclick="closeTownsModal()" class="w-6 h-6 rounded-full hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all">
-                    <i class="bi bi-x-lg text-xs"></i>
-                </button>
-            </div>
-            <!-- Body -->
-            <div class="p-6 overflow-y-auto space-y-2 flex-1 custom-scroll">
-                @forelse($townsList as $index => $town)
-                    <div class="px-4 py-3 bg-slate-50 border border-slate-150 rounded-xl flex items-center hover:bg-slate-100/70 transition-all">
-                        <span class="text-xs font-bold text-slate-700">{{ $index + 1 }}. {{ strtoupper($town->name) }}</span>
-                    </div>
-                @empty
-                    <div class="text-center py-6 text-slate-400 text-xs font-medium">No towns mapped in {{ $user->district_name }}.</div>
-                @endforelse
-            </div>
-            <!-- Footer -->
-            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 text-right">
-                <button onclick="closeTownsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-350 text-slate-750 font-bold uppercase rounded-lg text-[9.5px] transition-all">
-                    Close View
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Alert / Toast Messages via SweetAlert -->
+    <!-- JavaScript Application Logic -->
     <script>
         let table;
 
-        function openProjectsModal(e) {
-            if (e) e.preventDefault();
-            const modal = document.getElementById('projects-modal');
-            const content = document.getElementById('projects-modal-content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+        // Full Page High-Density Loader Overlay Control
+        function showFullPageLoader(title = 'Syncing EWS Matrix...', subtitle = 'Filtering official Haryana State compliance records') {
+            $('#loader-title').text(title);
+            $('#loader-subtitle').text(subtitle);
+            $('#full-page-loader').removeClass('hidden pointer-events-none').addClass('flex');
             setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
+                $('#full-page-loader').removeClass('opacity-0').addClass('opacity-100');
+                $('#loader-card').removeClass('scale-95').addClass('scale-100');
             }, 10);
         }
 
-        function closeProjectsModal() {
-            const modal = document.getElementById('projects-modal');
-            const content = document.getElementById('projects-modal-content');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
+        function hideFullPageLoader() {
+            $('#full-page-loader').removeClass('opacity-100').addClass('opacity-0');
+            $('#loader-card').removeClass('scale-100').addClass('scale-95');
             setTimeout(() => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            }, 300);
+                $('#full-page-loader').removeClass('flex').addClass('hidden pointer-events-none');
+            }, 250);
         }
 
-        function openTownsModal(e) {
-            if (e) e.preventDefault();
-            const modal = document.getElementById('towns-modal');
-            const content = document.getElementById('towns-modal-content');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-            setTimeout(() => {
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 10);
-        }
+        // Step 1: Cascading Zone Filter Change
+        function onZoneFilterChange() {
+            const zoneId = $('#filter-zone').val();
+            showFullPageLoader('Filtering Zone...', 'Updating districts and project matrix...');
 
-        function closeTownsModal() {
-            const modal = document.getElementById('towns-modal');
-            const content = document.getElementById('towns-modal-content');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => {
-                modal.classList.remove('flex');
-                modal.classList.add('hidden');
-            }, 300);
-        }
+            // 1. Fetch cascading districts for selected zone
+            let distUrl = "{{ route('ews.stp.districts') }}";
+            if (zoneId) distUrl += "?zone_id=" + zoneId;
 
-        function triggerExport(type) {
-            const scope = $('#filter-ownership').val();
-            const districtId = $('#filter-district').val();
-            const townId = $('#filter-town').val();
-            const projectId = $('#filter-project').val();
-            const searchVal = table ? table.search() : '';
-            let baseUrl = '';
-            if (type === 'csv') baseUrl = "{{ route('ews.stp.flats.export.csv') }}";
-            else if (type === 'excel') baseUrl = "{{ route('ews.stp.flats.export.excel') }}";
-            else if (type === 'pdf') baseUrl = "{{ route('ews.stp.flats.export.pdf') }}";
+            $.getJSON(distUrl, function(data) {
+                let options = '<option value="">' + (zoneId ? 'All Zone Districts' : 'All Districts') + '</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '" data-zone="' + item.zone_id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-district').html(options);
+                $('#district-count-badge').text(data.length + ' Districts');
+            });
 
-            const url = new URL(baseUrl, window.location.origin);
-            if (scope) url.searchParams.append('ownership_scope', scope);
-            if (districtId) url.searchParams.append('district_id', districtId);
-            if (townId) url.searchParams.append('town_id', townId);
-            if (projectId) url.searchParams.append('project_id', projectId);
-            if (searchVal) url.searchParams.append('search', searchVal);
-
-            window.location.href = url.toString();
-        }
-
-        function onDistrictFilterChange() {
-            const districtId = $('#filter-district').val();
-
-            // Fetch towns for selected district
+            // 2. Fetch cascading towns for selected zone
             let townUrl = "{{ route('ews.stp.towns') }}";
-            if (districtId) townUrl += "?district_id=" + districtId;
+            if (zoneId) townUrl += "?zone_id=" + zoneId;
 
             $.getJSON(townUrl, function(data) {
                 let options = '<option value="">All Towns</option>';
@@ -612,220 +507,329 @@
                 $('#filter-town').html(options);
             });
 
-            // Fetch projects for selected district
+            // 3. Fetch cascading projects for selected zone
             let projUrl = "{{ route('ews.stp.projects') }}";
-            if (districtId) projUrl += "?district_id=" + districtId;
+            if (zoneId) projUrl += "?zone_id=" + zoneId;
 
             $.getJSON(projUrl, function(data) {
                 let options = '<option value="">All Projects</option>';
                 $.each(data, function(i, item) {
-                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                    options += '<option value="' + item.id + '" data-license="' + (item.license_no || '') + '">' + item.name.toUpperCase() + '</option>';
                 });
                 $('#filter-project').html(options);
             });
 
-            if (table) {
-                table.draw();
-            }
+            // 4. Fetch cascading licenses for selected zone
+            let licUrl = "{{ route('ews.stp.licenses') }}";
+            if (zoneId) licUrl += "?zone_id=" + zoneId;
+
+            $.getJSON(licUrl, function(data) {
+                let options = '<option value="">All Licenses</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item + '">' + item + '</option>';
+                });
+                $('#filter-license').html(options);
+                $('#license-count-badge').text(data.length + ' Active');
+            });
+
+            if (table) table.draw();
         }
 
+        // Step 2: Cascading District Filter Change
+        function onDistrictFilterChange() {
+            const zoneId = $('#filter-zone').val();
+            const districtId = $('#filter-district').val();
+            showFullPageLoader('Filtering District...', 'Narrowing towns, projects and licenses...');
+
+            // Fetch cascading towns
+            let townUrl = "{{ route('ews.stp.towns') }}";
+            let params = [];
+            if (districtId) params.push("district_id=" + districtId);
+            else if (zoneId) params.push("zone_id=" + zoneId);
+            if (params.length) townUrl += "?" + params.join("&");
+
+            $.getJSON(townUrl, function(data) {
+                let options = '<option value="">All Towns</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-town').html(options);
+            });
+
+            // Fetch cascading projects
+            let projUrl = "{{ route('ews.stp.projects') }}";
+            let projParams = [];
+            if (districtId) projParams.push("district_id=" + districtId);
+            else if (zoneId) projParams.push("zone_id=" + zoneId);
+            if (projParams.length) projUrl += "?" + projParams.join("&");
+
+            $.getJSON(projUrl, function(data) {
+                let options = '<option value="">All Projects</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item.id + '" data-license="' + (item.license_no || '') + '">' + item.name.toUpperCase() + '</option>';
+                });
+                $('#filter-project').html(options);
+            });
+
+            // Fetch cascading licenses
+            let licUrl = "{{ route('ews.stp.licenses') }}";
+            let licParams = [];
+            if (districtId) licParams.push("district_id=" + districtId);
+            else if (zoneId) licParams.push("zone_id=" + zoneId);
+            if (licParams.length) licUrl += "?" + licParams.join("&");
+
+            $.getJSON(licUrl, function(data) {
+                let options = '<option value="">All Licenses</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item + '">' + item + '</option>';
+                });
+                $('#filter-license').html(options);
+                $('#license-count-badge').text(data.length + ' Active');
+            });
+
+            if (table) table.draw();
+        }
+
+        // Step 3: Cascading Town Filter Change
         function onTownFilterChange() {
+            const zoneId = $('#filter-zone').val();
             const districtId = $('#filter-district').val();
             const townId = $('#filter-town').val();
 
             let projUrl = "{{ route('ews.stp.projects') }}";
             let params = [];
             if (districtId) params.push("district_id=" + districtId);
+            else if (zoneId) params.push("zone_id=" + zoneId);
             if (townId) params.push("town_id=" + townId);
             if (params.length) projUrl += "?" + params.join("&");
 
             $.getJSON(projUrl, function(data) {
                 let options = '<option value="">All Projects</option>';
                 $.each(data, function(i, item) {
-                    options += '<option value="' + item.id + '">' + item.name.toUpperCase() + '</option>';
+                    options += '<option value="' + item.id + '" data-license="' + (item.license_no || '') + '">' + item.name.toUpperCase() + '</option>';
                 });
                 $('#filter-project').html(options);
             });
 
-            if (table) {
-                table.draw();
-            }
+            let licUrl = "{{ route('ews.stp.licenses') }}";
+            let licParams = [];
+            if (districtId) licParams.push("district_id=" + districtId);
+            else if (zoneId) licParams.push("zone_id=" + zoneId);
+            if (townId) licParams.push("town_id=" + townId);
+            if (licParams.length) licUrl += "?" + licParams.join("&");
+
+            $.getJSON(licUrl, function(data) {
+                let options = '<option value="">All Licenses</option>';
+                $.each(data, function(i, item) {
+                    options += '<option value="' + item + '">' + item + '</option>';
+                });
+                $('#filter-license').html(options);
+                $('#license-count-badge').text(data.length + ' Active');
+            });
+
+            if (table) table.draw();
         }
 
+        // Step 4: Cascading Project Filter Change
         function onProjectFilterChange() {
-            if (table) {
-                table.draw();
+            const selectedOpt = $('#filter-project option:selected');
+            const lic = selectedOpt.data('license');
+            if (lic) {
+                if ($('#filter-license option[value="' + lic + '"]').length) {
+                    $('#filter-license').val(lic);
+                }
             }
+            if (table) table.draw();
         }
 
+        // Step 5: License Filter Change
+        function onLicenseFilterChange() {
+            if (table) table.draw();
+        }
+
+        // Reset All Cascading Filters
         function resetAllFilters() {
             $('#filter-district').val('');
+            $('#filter-town').val('');
+            $('#filter-project').val('');
+            $('#filter-license').val('');
             onDistrictFilterChange();
         }
 
-        function setOwnershipFilter(scope) {
-            $('#filter-ownership').val(scope);
+        // Active Sidebar Navigation Handler
+        function activateStpNav(target) {
+            let label = 'Dashboard';
+            if (target === 'all') label = 'Total Offered Flats';
+            if (target === 'dtp_approved') label = 'Approved (DTP) Units';
+            if (target === 'dtp_pending') label = 'Pending Approval Units';
+            showFullPageLoader('Loading ' + label + '...', 'Retrieving filtered records from master database...');
 
-            // Reset button active styling
-            $('#btn-scope-all').removeClass('bg-white text-sky-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
-            $('#btn-scope-my').removeClass('bg-white text-emerald-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
-            $('#btn-scope-allotted').removeClass('bg-white text-amber-700 shadow-sm font-black').addClass('text-slate-600 font-bold');
+            // 1. Reset all sidebar links to inactive
+            $('.stp-nav-item')
+                .removeClass('bg-slate-800 text-white font-bold shadow-xs ring-1 ring-cyan-500/30 ring-sky-500/30 ring-emerald-500/30 ring-amber-500/30')
+                .addClass('text-slate-300 hover:bg-slate-800 hover:text-white font-medium');
+            
+            // Hide all dots
+            $('.stp-nav-dot').addClass('hidden');
 
-            if (scope === 'my_flats') {
-                $('#btn-scope-my').addClass('bg-white text-emerald-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
-                $('#table-heading-title').html('<i class="bi bi-person-check-fill text-emerald-500 text-sm"></i> Flats Offered By Me');
+            // 2. Activate only the selected link
+            let ringColor = 'ring-cyan-500/30';
+            if (target === 'dtp_approved') ringColor = 'ring-emerald-500/30';
+            if (target === 'dtp_pending') ringColor = 'ring-amber-500/30';
+            if (target === 'all') ringColor = 'ring-sky-500/30';
 
-                if (table) {
-                    table.columns([2, 3, 4]).visible(true);
-                }
-
-                $('#th-col-1').text('District Name');
-                $('#th-col-2').text('Town Name');
-                $('#th-col-3').text('Project Name');
-                $('#th-col-4').text('Block / Tower No.');
-                $('#th-col-5').text('Floor Details');
-                $('#th-col-6').text('Flat No.');
-                $('#th-col-7').text('Unique Flat Code');
-                $('#th-col-8').text('Ownership');
-
-                $('#filter-town-box, #filter-project-box').show();
-
-                // Sidebar Menu Active Toggle
-                $('#nav-my-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
-                $('#nav-district-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
-            } else if (scope === 'allotted') {
-                $('#btn-scope-allotted').addClass('bg-white text-amber-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
-                $('#table-heading-title').html('<i class="bi bi-houses-fill text-amber-500 text-sm"></i> {{ $displayZoneName ?? "Zone" }} Allotted Flats Pool (From 4,211 State Allotments)');
-
-                if (table) {
-                    table.columns([2, 3, 4]).visible(false);
-                }
-
-                $('#th-col-1').text('District');
-                $('#th-col-5').text('Allottee Name');
-                $('#th-col-6').text('Flat No.');
-                $('#th-col-7').text('Mobile No.');
-                $('#th-col-8').text('Possession Status');
-
-                // For allotted pool, town & project are consolidated, district filter operates directly
-                $('#filter-town-box, #filter-project-box').hide();
-
-                // Sidebar Menu Active Toggle
-                $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
-                $('#nav-district-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
-            } else {
-                $('#btn-scope-all').addClass('bg-white text-sky-700 shadow-sm font-black').removeClass('text-slate-600 font-bold');
-                $('#table-heading-title').html('<i class="bi bi-file-earmark-text text-sky-500 text-sm"></i> All {{ $displayZoneName ?? "Zone" }} Offered Builder Flats');
-
-                if (table) {
-                    table.columns([2, 3, 4]).visible(true);
-                }
-
-                $('#th-col-1').text('District Name');
-                $('#th-col-2').text('Town Name');
-                $('#th-col-3').text('Project Name');
-                $('#th-col-4').text('Block / Tower No.');
-                $('#th-col-5').text('Floor Details');
-                $('#th-col-6').text('Flat No.');
-                $('#th-col-7').text('Unique Flat Code');
-                $('#th-col-8').text('Ownership');
-
-                $('#filter-town-box, #filter-project-box').show();
-
-                // Sidebar Menu Active Toggle
-                $('#nav-district-flats').addClass('bg-slate-800 text-white font-bold').removeClass('text-slate-300 font-medium');
-                $('#nav-my-flats').removeClass('bg-slate-800 text-white font-bold').addClass('text-slate-300 font-medium');
+            const activeEl = $('#sidebar-nav-' + target);
+            if (activeEl.length) {
+                activeEl
+                    .removeClass('text-slate-300 hover:bg-slate-800 hover:text-white font-medium')
+                    .addClass('bg-slate-800 text-white font-bold shadow-xs ring-1 ' + ringColor);
+                activeEl.find('.stp-nav-dot').removeClass('hidden');
             }
-            if (table) {
-                table.draw();
+
+            // 3. Trigger ownership filter
+            if (target === 'dashboard') {
+                setOwnershipFilter('all', false);
+                $('main').animate({ scrollTop: 0 }, 150);
+            } else {
+                setOwnershipFilter(target, false);
             }
         }
 
-        // Trigger Swal alert on Laravel session flash messages
-        @if(session('success'))
-            Swal.fire({
-                icon: 'success',
-                title: 'SUCCESS',
-                text: "{{ session('success') }}",
-                toast: true,
-                position: 'top-end',
-                showConfirmButton: false,
-                timer: 3000,
-                background: '#ffffff',
-                color: '#1e293b',
-                iconColor: '#3b82f6'
-            });
-        @endif
+        // Top 3 Telemetry Card Filter Trigger
+        function setOwnershipFilter(scope, updateSidebar = true) {
+            $('#filter-ownership').val(scope);
 
-        // Delete confirmation trigger
-        function confirmDelete(id) {
-            Swal.fire({
-                title: 'DELETE RECORD?',
-                text: "This will permanently remove the EWS flat details from registry database and generate system deletion log.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#cbd5e1',
-                confirmButtonText: 'CONFIRM DELETE',
-                cancelButtonText: 'CANCEL',
-                background: '#ffffff',
-                color: '#1e293b',
-                iconColor: '#ef4444'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    document.getElementById(`delete-form-${id}`).submit();
+            $('#card-scope-all')
+                .removeClass('border-sky-500 bg-sky-50/60 shadow-2xs ring-2 ring-sky-400/20')
+                .addClass('border-slate-200 bg-white');
+            $('#card-scope-dtp-approved')
+                .removeClass('border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
+                .addClass('border-slate-200 bg-white');
+            $('#card-scope-dtp-pending')
+                .removeClass('border-amber-500 bg-amber-50/60 shadow-2xs ring-2 ring-amber-400/20')
+                .addClass('border-slate-200 bg-white');
+
+            if (scope === 'dtp_approved') {
+                $('#card-scope-dtp-approved')
+                    .addClass('border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
+                    .removeClass('border-slate-200 bg-white');
+                $('#table-heading-title').find('span:first').text('Approved EWS Flats (Certified by DTP)');
+            } else if (scope === 'dtp_pending') {
+                $('#card-scope-dtp-pending')
+                    .addClass('border-amber-500 bg-amber-50/60 shadow-2xs ring-2 ring-amber-400/20')
+                    .removeClass('border-slate-200 bg-white');
+                $('#table-heading-title').find('span:first').text('Pending EWS Flats (Awaiting DTP Clearance)');
+            } else {
+                $('#card-scope-all')
+                    .addClass('border-sky-500 bg-sky-50/60 shadow-2xs ring-2 ring-sky-400/20')
+                    .removeClass('border-slate-200 bg-white');
+                $('#table-heading-title').find('span:first').text('All {{ $zoneTitle }} Offered Builder Flats');
+            }
+
+            // Sync sidebar link active state when filter is changed from cards
+            if (updateSidebar) {
+                $('.stp-nav-item')
+                    .removeClass('bg-slate-800 text-white font-bold shadow-xs ring-1 ring-cyan-500/30 ring-sky-500/30 ring-emerald-500/30 ring-amber-500/30')
+                    .addClass('text-slate-300 hover:bg-slate-800 hover:text-white font-medium');
+                $('.stp-nav-dot').addClass('hidden');
+
+                let navKey = (scope === 'all') ? 'all' : scope;
+                let ringColor = (scope === 'dtp_approved') ? 'ring-emerald-500/30' : ((scope === 'dtp_pending') ? 'ring-amber-500/30' : 'ring-sky-500/30');
+                const activeNav = $('#sidebar-nav-' + navKey);
+                if (activeNav.length) {
+                    activeNav
+                        .removeClass('text-slate-300 hover:bg-slate-800 hover:text-white font-medium')
+                        .addClass('bg-slate-800 text-white font-bold shadow-xs ring-1 ' + ringColor);
+                    activeNav.find('.stp-nav-dot').removeClass('hidden');
                 }
+            }
+
+            if (table) table.draw();
+        }
+
+        // Export Functionality
+        function triggerExport(format) {
+            let url = new URL("{{ route('ews.stp.flats.export', ['format' => ':fmt']) }}".replace(':fmt', format));
+            url.searchParams.set('ownership_scope', $('#filter-ownership').val());
+            url.searchParams.set('zone_id', $('#filter-zone').val());
+            url.searchParams.set('district_id', $('#filter-district').val());
+            url.searchParams.set('town_id', $('#filter-town').val());
+            url.searchParams.set('project_id', $('#filter-project').val());
+            url.searchParams.set('license_no', $('#filter-license').val());
+            if (table) {
+                let searchVal = table.search();
+                if (searchVal) url.searchParams.set('search', searchVal);
+            }
+
+            Swal.fire({
+                icon: 'info',
+                title: 'EXPORT MATRIX',
+                text: 'Your ' + format.toUpperCase() + ' download is starting natively...',
+                timer: 2500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
             });
+
+            window.location.href = url.toString();
         }
 
         // Initialize Yajra Server-side DataTables
         $(document).ready(function() {
-            // Apply initial column labels if starting on allotted view
-            const initScope = $('#filter-ownership').val();
-            if (initScope === 'allotted') {
-                $('#th-col-1').text('District');
-                $('#th-col-5').text('Allottee Name');
-                $('#th-col-6').text('Flat No.');
-                $('#th-col-7').text('Mobile No.');
-                $('#th-col-8').text('Possession Status');
-                $('#filter-town-box, #filter-project-box').hide();
-            }
-
             table = $('#flats-table').DataTable({
-                processing: true,
+                processing: false, // We use the custom full-page overlay instead
                 serverSide: true,
-                pageLength: 50,
-                lengthMenu: [[10, 25, 50, 100, 250], [10, 25, 50, 100, 250]],
+                searchDelay: 350,
+                pageLength: 10,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                 ajax: {
                     url: "{{ route('ews.stp.flats.data') }}",
                     data: function (d) {
                         d.ownership_scope = $('#filter-ownership').val();
+                        d.zone_id = $('#filter-zone').val();
                         d.district_id = $('#filter-district').val();
                         d.town_id = $('#filter-town').val();
                         d.project_id = $('#filter-project').val();
+                        d.license_no = $('#filter-license').val();
                     }
                 },
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
-                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase' },
-                    { data: 'town_name', name: 'town_name', visible: initScope !== 'allotted' },
-                    { data: 'project_name', name: 'project_name', class: 'text-slate-500', visible: initScope !== 'allotted' },
-                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold', visible: initScope !== 'allotted' },
-                    { data: 'floor', name: 'floor', class: 'font-bold text-slate-800' },
-                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono' },
-                    { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono' },
-                    { data: 'added_by', name: 'added_by', orderable: false, searchable: false },
-                    { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, class: 'text-center font-mono text-[9px] text-slate-500' },
+                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase whitespace-nowrap' },
+                    { data: 'town_name', name: 'town_name', class: 'whitespace-nowrap text-slate-700' },
+                    { data: 'project_name', name: 'project_name', class: 'text-slate-800 font-bold whitespace-nowrap uppercase' },
+                    { data: 'license_no', name: 'license_no', class: 'font-mono text-slate-700 whitespace-nowrap' },
+                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold whitespace-nowrap' },
+                    { data: 'floor', name: 'floor', class: 'font-bold text-slate-800 whitespace-nowrap' },
+                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono whitespace-nowrap' },
+                    { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono whitespace-nowrap' },
+                    { data: 'dtp_status', name: 'dtp_status', orderable: false, searchable: false, class: 'whitespace-nowrap' },
+                    { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right whitespace-nowrap' }
                 ],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search matrix...",
-                    processing: '<div class="flex items-center justify-center p-2 text-indigo-600 font-bold text-[10px]"><i class="bi bi-arrow-repeat animate-spin mr-1"></i> Fetching records...</div>'
                 },
-                pageLength: 10,
-                lengthMenu: [10, 25, 50, 100],
-                order: [] // Disable default ordering, sorting resolved server-side
+                order: []
             });
+
+            // Hook DataTables AJAX Lifecycle to Full-Page Loader Overlay
+            table.on('preXhr.dt', function () {
+                showFullPageLoader('Syncing EWS Matrix...', 'Fetching official {{ $zoneTitle }} compliance dataset...');
+            });
+            table.on('xhr.dt', function () {
+                hideFullPageLoader();
+            });
+            table.on('error.dt', function () {
+                hideFullPageLoader();
+            });
+
+            // Auto-activate scope if passed in URL query param
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialScope = urlParams.get('scope') || urlParams.get('view');
+            if (initialScope && ['all', 'dtp_approved', 'dtp_pending', 'dashboard'].includes(initialScope)) {
+                activateStpNav(initialScope);
+            }
         });
     </script>
 </body>

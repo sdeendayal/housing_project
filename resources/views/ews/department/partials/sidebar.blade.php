@@ -53,6 +53,16 @@
             <span class="sidebar-text">Overview Dashboard</span>
         </a>
 
+        <!-- EWS Builder Flats Master Matrix (Offered Flats Bio-Data) -->
+        <a href="{{ route('ews.department.builder-flats') }}" class="w-full flex items-center justify-between rounded-xl px-4 py-2.5 transition-all text-left font-bold {{ request()->routeIs('ews.department.builder-flats*') ? 'bg-white/65 text-emerald-700 shadow-sm border border-white/50 backdrop-blur-md font-extrabold ring-1 ring-emerald-500/20' : 'hover:bg-white/40 hover:text-slate-950 text-slate-600 border border-transparent' }}">
+            <div class="flex items-center gap-3">
+                <span class="material-symbols-outlined text-[18px] {{ request()->routeIs('ews.department.builder-flats*') ? 'text-emerald-600 font-bold' : 'text-slate-500' }}">apartment</span>
+                <span class="sidebar-text">Offered Flats Matrix</span>
+            </div>
+            @php $flatsBadgeCount = $developerFlatsCount ?? \Illuminate\Support\Facades\DB::table('ews_builder_flats')->count(); @endphp
+            <span class="text-[9px] font-black bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-sm shadow-emerald-600/20 sidebar-badge">{{ number_format($flatsBadgeCount) }}</span>
+        </a>
+
         <!-- 1. EWS Registry Funnel Dropdown Toggle -->
         <button type="button" onclick="toggleFunnelSubmenu()" class="w-full flex items-center justify-between rounded-xl px-4 py-2.5 transition-all text-left font-bold {{ $isFunnelActive ? 'bg-white/40 text-slate-900 border border-white/20' : 'hover:bg-white/40 hover:text-slate-955 text-slate-600 border border-transparent' }}">
             <div class="flex items-center gap-3">
@@ -249,10 +259,10 @@
                 </a>
 
                 <!-- Developer Flat Submissions / Form Data -->
-                <a href="{{ route('ews.department.developer-flats.index') }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-white/40 hover:text-slate-955 transition-all text-left {{ request()->routeIs('ews.department.developer-flats.*') ? 'bg-white/50 text-indigo-700 font-extrabold shadow-sm border border-white/30' : '' }}">
+                <a href="{{ route('ews.department.builder-flats') }}" class="w-full flex items-center justify-between rounded-lg px-3 py-1.5 hover:bg-white/40 hover:text-slate-955 transition-all text-left {{ (request()->routeIs('ews.department.developer-flats.*') || request()->routeIs('ews.department.builder-flats*')) ? 'bg-white/50 text-indigo-700 font-extrabold shadow-sm border border-white/30' : '' }}">
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-sm {{ request()->routeIs('ews.department.developer-flats.*') ? 'text-indigo-600 font-bold' : 'text-slate-450' }}">apartment</span>
-                        <span class="sidebar-text">Flat Submissions</span>
+                        <span class="material-symbols-outlined text-sm {{ (request()->routeIs('ews.department.developer-flats.*') || request()->routeIs('ews.department.builder-flats*')) ? 'text-indigo-600 font-bold' : 'text-slate-450' }}">apartment</span>
+                        <span class="sidebar-text">Flat Submissions (Matrix)</span>
                     </div>
                     @if(isset($developerFlatsCount))
                         <span class="text-[9px] font-bold bg-indigo-600 text-white px-1.5 py-0.5 rounded-full shadow-sm shadow-indigo-600/10 sidebar-badge">{{ number_format($developerFlatsCount) }}</span>

@@ -148,7 +148,7 @@ class EwsStpPossessionWebController extends Controller
 
         $scopeName = "All {$displayZoneName} Projects ({$projects->count()} Projects)";
 
-        return view('ews.developer.possession', compact(
+        return view('ews.stp.possession', compact(
             'user',
             'assignedZoneId',
             'displayZoneName',
@@ -356,7 +356,7 @@ class EwsStpPossessionWebController extends Controller
             ->addColumn('action', function ($row) {
                 $isGiven = (int)($row->is_possession_given ?? 0);
                 $identifier = $row->secure_id;
-                $pageUrl = url("/ews/developer/possession/{$identifier}");
+                $pageUrl = route('ews.stp.possession.show', ['secure_id' => $identifier]);
                 if ($isGiven) {
                     $btn = '<a href="' . $pageUrl . '" title="View Possession Details" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition-all shadow-xs inline-flex items-center gap-1 whitespace-nowrap"><i class="bi bi-eye text-[10px]"></i> View</a>';
                 } else {
@@ -381,7 +381,7 @@ class EwsStpPossessionWebController extends Controller
             ->first();
 
         if (!$beneficiary) {
-            return redirect()->route('ews.developer.possession.index')
+            return redirect()->route('ews.stp.possession.index')
                 ->with('error', 'Beneficiary record not found. Access is strictly restricted to valid 32-digit Secure ID.');
         }
 
@@ -424,7 +424,7 @@ class EwsStpPossessionWebController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        return view('ews.developer.possession_detail', [
+        return view('ews.stp.possession_detail', [
             'user' => $user,
             'zoneData' => $zoneData,
             'displayZoneName' => $zoneData['zone_name'] ?? 'Assigned Zone',
@@ -771,6 +771,6 @@ class EwsStpPossessionWebController extends Controller
 
         $logs = EwsPossessionAuditLog::orderBy('id', 'desc')->paginate(30);
 
-        return view('ews.developer.possession_logs', compact('user', 'displayZoneName', 'logs'));
+        return view('ews.stp.possession_logs', compact('user', 'displayZoneName', 'logs'));
     }
 }

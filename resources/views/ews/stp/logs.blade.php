@@ -93,23 +93,34 @@
                                 @endif
                             </div>
 
-                            <div class="flex-1 space-y-0.5">
+                            <div class="flex-1 space-y-1">
                                 <div class="flex flex-wrap items-center justify-between gap-1">
-                                    <div class="font-bold text-slate-850">
+                                    <div class="font-bold text-slate-800 flex items-center gap-2 flex-wrap">
                                         @if($log->action === 'CREATED')
-                                            <span class="text-emerald-700 font-extrabold uppercase text-[9px] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-mono mr-1.5">CREATED</span>
-                                        @elseif($log->action === 'UPDATED')
-                                            <span class="text-sky-750 font-extrabold uppercase text-[9px] bg-sky-50 border border-sky-100 px-1.5 py-0.5 rounded font-mono mr-1.5">UPDATED</span>
+                                            <span class="text-emerald-700 font-extrabold uppercase text-[9px] bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded font-mono">CREATED</span>
+                                        @elseif(str_contains($log->action, 'UPDATE'))
+                                            <span class="text-amber-700 font-extrabold uppercase text-[9px] bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded font-mono">MODIFIED</span>
                                         @elseif($log->action === 'DELETED')
-                                            <span class="text-red-700 font-extrabold uppercase text-[9px] bg-red-50 border border-red-100 px-1.5 py-0.5 rounded font-mono mr-1.5">DELETED</span>
+                                            <span class="text-red-700 font-extrabold uppercase text-[9px] bg-red-50 border border-red-100 px-1.5 py-0.5 rounded font-mono">DELETED</span>
                                         @else
-                                            <span class="text-slate-650 font-extrabold uppercase text-[9px] bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-mono mr-1.5">{{ $log->action }}</span>
+                                            <span class="text-slate-650 font-extrabold uppercase text-[9px] bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded font-mono">{{ $log->action }}</span>
                                         @endif
-                                        <span class="text-slate-450 font-mono text-[10px]">IP: {{ $log->ip_address }}</span>
+                                        <span class="text-slate-700 font-bold text-xs flex items-center gap-1">
+                                            <i class="bi bi-person-fill text-slate-400"></i>
+                                            <span>{{ $log->developer->name ?? 'System User' }}</span>
+                                            @if(!empty($log->developer->role))
+                                                <span class="text-[8.5px] uppercase font-mono px-1 py-0.2 rounded bg-slate-100 text-slate-600 border border-slate-200">({{ $log->developer->role }})</span>
+                                            @endif
+                                        </span>
+                                        <span class="text-slate-400 font-mono text-[9.5px]">IP: {{ $log->ip_address ?: '127.0.0.1' }}</span>
                                     </div>
-                                    <span class="text-[10px] text-slate-400 font-mono">{{ $log->created_at->format('Y-m-d H:i:s') }}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                                        <i class="bi bi-clock text-[9px]"></i> {{ $log->created_at->format('Y-m-d H:i:s') }}
+                                    </span>
                                 </div>
-                                <p class="text-slate-600 text-[11px] leading-relaxed">{{ $log->details }}</p>
+                                <div class="text-slate-700 text-xs bg-slate-50/80 rounded-lg p-2.5 border border-slate-150 leading-relaxed font-medium">
+                                    {{ $log->details }}
+                                </div>
                             </div>
                         </div>
                     @empty

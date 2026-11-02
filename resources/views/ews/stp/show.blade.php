@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#f4f7fa] text-slate-800">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EWS STP Dossier - {{ $flat->flat_code ?? $flat->flat_number }}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+        .font-mono { font-family: 'Fira Code', monospace; }
+        .dev-shadow { box-shadow: 0 10px 30px -15px rgba(59, 130, 246, 0.08); }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @media print {
+            body { background: white !important; }
+            aside, header, #action-toolbar, #btn-back-top, .no-print { display: none !important; }
+            .print-clean { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            #printable-area { width: 100% !important; margin: 0 !important; padding: 0 !important; }
+        }
+    </style>
+</head>
+<body class="h-full flex overflow-hidden bg-[#f4f7fa]">
+
+    @include('ews.stp.partials.sidebar')
+
+    <!-- RIGHT CONTAINER WORKSPACE -->
+    <div class="flex-1 flex flex-col overflow-hidden h-full">
+        
+        <!-- Header -->
+        <header class="h-16 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-xs z-10 gap-3">
+            <!-- Left: Back Navigation + Breadcrumb & Title -->
+            <div class="flex items-center gap-3 min-w-0">
+                <a href="{{ route('ews.stp.verify') }}" id="btn-back-top" title="Back to Verification Table"
+                    class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-sky-50 hover:text-sky-600 text-slate-700 border border-slate-200 flex items-center justify-center transition-all shadow-2xs shrink-0 group">
+                    <i class="bi bi-arrow-left text-base transition-transform group-hover:-translate-x-0.5"></i>
+                </a>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400 whitespace-nowrap overflow-hidden">
+                        <a href="{{ route('ews.stp.verify') }}" class="hover:text-sky-600 transition-colors">STP Verify</a>
+                        <i class="bi bi-chevron-right text-[9px] text-slate-300"></i>
+                        <span class="text-slate-600">Unit Dossier</span>
+                        <i class="bi bi-chevron-right text-[9px] text-slate-300"></i>
+                        <span class="font-mono text-sky-700 font-bold truncate">{{ $flat->flat_code ?? $flat->flat_number }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-0.5 whitespace-nowrap">
+                        <h2 class="text-xs sm:text-sm font-black tracking-tight text-slate-900 uppercase">
+                            Flat Unit {{ $flat->flat_number }}
+                            <span class="text-slate-400 font-medium font-sans">({{ $flat->block_tower_number ?? 'Block' }}, {{ $flat->floor ?? 'Floor' }})</span>
+                        </h2>
+                        <span class="hidden sm:inline-flex px-2 py-0.5 rounded-full text-[8.5px] font-black uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            Verified Master Unit
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Action Buttons Toolbar -->
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <div id="action-toolbar" class="flex items-center gap-2 shrink-0">
+                    <!-- Print Button -->
+                    <button type="button" onclick="window.print()" title="Print Dossier"
+                        class="px-2.5 sm:px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 rounded-lg text-xs font-bold border border-slate-200 shadow-2xs flex items-center gap-1.5 transition-all shrink-0">
+                        <i class="bi bi-printer text-slate-500"></i>
+                        <span class="hidden md:inline">Print</span>
+                    </button>
+
+                    <!-- Edit Flat Button -->
+                    <a href="{{ route('ews.stp.flats.edit', $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id)) }}" title="Edit Flat Specifications"
+                        class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs shrink-0 whitespace-nowrap">
+                        <i class="bi bi-pencil-square text-xs"></i>
+                        <span>Edit Flat</span>
+                    </a>
+
+                    <!-- DTP Approval Action / Badge -->
+                    @if($flat->is_aproved_by_dtp)
+                        <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center gap-1.5 shadow-2xs shrink-0 whitespace-nowrap">
+                            <i class="bi bi-patch-check-fill text-emerald-600 text-sm"></i>
+                            <div class="text-left leading-none">
+                                <div class="text-[9.5px] font-black uppercase text-emerald-800">DTP Approved</div>
+                                <div class="text-[8px] font-mono text-emerald-600 mt-0.5">{{ $flat->dtp_approved_at ? \Carbon\Carbon::parse($flat->dtp_approved_at)->format('d M, Y') : 'Certified' }}</div>
+                            </div>
+                        </div>
+                    @else
+                        <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
+                            class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap">
+                            <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
+                            <span>Approve (DTP)</span>
+                        </button>
+                    @endif
+                </div>
+
+                <div class="w-px h-6 bg-slate-200 hidden xl:block shrink-0"></div>
+
+                <!-- Profile Context -->
+                <div class="text-right hidden xl:block shrink-0">
+                    <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
+                        <span>{{ $user->name }}</span>
+                        <span class="px-1.5 py-0.2 bg-sky-100 text-sky-800 text-[8.5px] font-extrabold rounded uppercase">STP</span>
+                    </div>
+                    <div class="text-[8.5px] text-slate-500 font-mono">{{ $displayZoneName ?? 'Rohtak Zone' }}</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Scrollable Workspace -->
+        <div id="printable-area" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scroll">
+
+            @if(session('success'))
+                <div class="p-3 bg-emerald-50 border border-emerald-300 rounded-xl text-emerald-800 text-xs font-bold flex items-center justify-between shadow-xs">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-emerald-600 text-sm"></i>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                    <span class="text-[9px] font-mono uppercase text-emerald-600">Audit Log Created</span>
+                </div>
+            @endif
+
+            <!-- Compact Hero Identity Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-xl px-5 py-3 text-white shadow-md relative overflow-hidden print-clean">
+                <div class="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3.5">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-400 to-indigo-600 flex items-center justify-center text-white text-lg font-black shadow-md shadow-sky-500/20 shrink-0 border border-white/20">
+                            <i class="bi bi-building-check"></i>
+                        </div>
+                        <div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h1 class="text-base sm:text-lg font-black tracking-tight text-white font-mono">
+                                    {{ $flat->flat_code ?? $flat->flat_number }}
+                                </h1>
+                                <button type="button" onclick="copyCode('{{ $flat->flat_code ?? $flat->flat_number }}')" title="Copy Code" class="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-slate-200 rounded text-[9.5px] font-bold transition flex items-center gap-1">
+                                    <i class="bi bi-clipboard text-[10px]"></i> Copy
+                                </button>
+                                <span class="px-2 py-0.5 bg-sky-500/25 border border-sky-400/40 text-sky-200 rounded text-[9.5px] font-black uppercase tracking-wider">
+                                    Block / Tower: {{ strtoupper($flat->block_tower_number ?? '-') }}
+                                </span>
+                                <span class="px-2 py-0.5 bg-violet-500/25 border border-violet-400/40 text-violet-200 rounded text-[9.5px] font-black uppercase tracking-wider">
+                                    {{ ucfirst($flat->floor ?? '-') }}
+                                </span>
+                                <span class="px-2 py-0.5 bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 rounded text-[9.5px] font-black uppercase tracking-wider">
+                                    Flat No. {{ $flat->flat_number }}
+                                </span>
+                                @if($flat->is_aproved_by_dtp)
+                                    <span class="px-2 py-0.5 bg-teal-400/25 border border-teal-300/50 text-teal-200 rounded text-[9.5px] font-black uppercase tracking-wider inline-flex items-center gap-1">
+                                        <i class="bi bi-patch-check-fill text-teal-300"></i> DTP Certified
+                                    </span>
+                                @else
+                                    <span class="px-2 py-0.5 bg-amber-400/25 border border-amber-300/50 text-amber-200 rounded text-[9.5px] font-black uppercase tracking-wider inline-flex items-center gap-1">
+                                        <i class="bi bi-hourglass-split text-amber-300"></i> DTP Pending
+                                    </span>
+                                @endif
+                            </div>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-[11px] text-slate-300">
+                                <span class="flex items-center gap-1 font-semibold">
+                                    <i class="bi bi-building text-sky-400 text-[10px]"></i>
+                                    <span>Project: <strong>{{ ucwords(strtolower($flat->project_name ?? ($project->name ?? 'N/A'))) }}</strong></span>
+                                </span>
+                                <span class="text-slate-500 text-[9px]">•</span>
+                                <span class="flex items-center gap-1 text-slate-300">
+                                    <i class="bi bi-person-badge-fill text-indigo-400 text-[10px]"></i>
+                                    <span>Colonizer: <strong>{{ ucwords(strtolower($flat->developer_name ?: ($project->developer_name ?? 'N/A'))) }}</strong></span>
+                                </span>
+                                <span class="text-slate-500 text-[9px]">•</span>
+                                <span class="flex items-center gap-1 text-slate-300">
+                                    <i class="bi bi-geo-alt-fill text-rose-400 text-[10px]"></i>
+                                    <span>{{ ucwords(strtolower($flat->town_name ?? 'N/A')) }}, {{ strtoupper($flat->district_name ?? 'N/A') }}</span>
+                                </span>
+                                @if(!empty($flat->sector_no))
+                                    <span class="text-slate-500 text-[9px]">•</span>
+                                    <span class="text-amber-300 font-bold">Sec {{ $flat->sector_no }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex sm:flex-col items-center sm:items-end justify-between border-t sm:border-t-0 sm:border-l border-white/10 pt-2 sm:pt-0 sm:pl-4 shrink-0 gap-1 text-right">
+                        <span class="text-[8px] uppercase tracking-widest font-mono text-slate-400 font-bold">Registration Timestamp</span>
+                        <div class="flex sm:flex-col items-baseline sm:items-end gap-1.5 sm:gap-0 font-mono">
+                            <span class="text-[11px] font-bold text-emerald-400">
+                                {{ $flat->created_at ? $flat->created_at->format('d M, Y') : 'Registered' }}
+                            </span>
+                            <span class="text-[8.5px] text-slate-400">
+                                {{ $flat->created_at ? $flat->created_at->format('h:i A') : '' }}
+                            </span>
+                        </div>
+                        @if($auditLogs->count() > 0)
+                            <span class="px-2 py-0.5 bg-amber-400/20 text-amber-300 rounded text-[8.5px] font-mono font-bold mt-1">
+                                Modified {{ $auditLogs->count() }} times
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main High-Density Grid (Pack Maximum Data Cleanly) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+                <!-- Column Left: Flat Identity & Project Specs (7 Cols) -->
+                <div class="lg:col-span-7 space-y-4">
+                    
+                    <!-- 1. Flat Architectural Identity -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-houses-fill text-sky-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">Flat Architectural Identity</h3>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-100">Unit Dossier</span>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                            <div class="p-2.5 bg-slate-50/80 rounded-lg border border-slate-150">
+                                <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Flat Number</span>
+                                <span class="text-base font-black font-mono text-violet-700 mt-0.5 block">{{ $flat->flat_number }}</span>
+                            </div>
+                            <div class="p-2.5 bg-slate-50/80 rounded-lg border border-slate-150">
+                                <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Block / Tower</span>
+                                <span class="text-base font-black font-mono text-indigo-700 mt-0.5 block uppercase">{{ $flat->block_tower_number ?? '-' }}</span>
+                            </div>
+                            <div class="p-2.5 bg-slate-50/80 rounded-lg border border-slate-150">
+                                <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Floor Level</span>
+                                <span class="text-sm font-bold text-slate-800 mt-0.5 block capitalize">{{ $flat->floor ?? '-' }}</span>
+                            </div>
+                            <div class="p-2.5 bg-slate-50/80 rounded-lg border border-slate-150">
+                                <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Unique Flat Code</span>
+                                <div class="flex items-center justify-between mt-0.5">
+                                    <span class="text-xs font-black font-mono text-emerald-700 truncate" title="{{ $flat->flat_code }}">{{ $flat->flat_code }}</span>
+                                    <button type="button" onclick="copyCode('{{ $flat->flat_code }}')" title="Copy Code" class="text-slate-400 hover:text-sky-600 text-xs no-print ml-1">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Project Specifications & Developer Profile -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-building text-indigo-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">Project & Colonizer Profile</h3>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">License & RERA</span>
+                        </div>
+                        <div class="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Project Name</span>
+                                <span class="font-bold text-slate-900 text-sm capitalize">{{ ucwords(strtolower($flat->project_name ?? ($project->name ?? 'N/A'))) }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Colonizer / Developer Name</span>
+                                <span class="font-bold text-slate-800 capitalize">{{ ucwords(strtolower($flat->developer_name ?: ($project->developer_name ?? 'N/A'))) }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">License Number</span>
+                                <span class="font-mono font-bold text-indigo-700 bg-indigo-50/80 px-2.5 py-0.5 rounded text-[11px] inline-block border border-indigo-100 mt-0.5 uppercase">
+                                    {{ strtoupper($flat->license_no ?: ($project->license_no ?? 'N/A')) }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Sector Number</span>
+                                <span class="font-bold text-slate-800">{{ $flat->sector_no ?: ($project->sector_no ?? 'N/A') }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Total Project Area</span>
+                                <span class="font-bold text-slate-800 capitalize">{{ ucfirst($flat->area_of_project ?: ($project->area_of_project ?? 'N/A')) }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Location & Jurisdiction</span>
+                                <span class="font-bold text-slate-800 capitalize">{{ ucwords(strtolower($flat->town_name ?? 'N/A')) }}, District: {{ strtoupper($flat->district_name ?? 'N/A') }}</span>
+                            </div>
+                            <div class="sm:col-span-2 pt-1 border-t border-slate-100">
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Project Registered Address</span>
+                                <span class="font-medium text-slate-700 leading-relaxed capitalize">{{ ucfirst($flat->address_of_project ?: ($project->address ?? 'N/A')) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Project Inventory Quota Telemetry -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-pie-chart-fill text-amber-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">Project Flat Inventory Telemetry</h3>
+                            </div>
+                            <span class="text-[9px] font-mono font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">Draw Limits</span>
+                        </div>
+                        <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-150">
+                                <span class="block text-[8px] font-mono uppercase text-slate-400 font-bold">Total Project Flats</span>
+                                <span class="text-base font-black font-mono text-slate-800 mt-0.5 block">
+                                    {{ $flat->total_flats_in_project !== null ? number_format($flat->total_flats_in_project) : ($project && $project->total_flats_in_project ? number_format($project->total_flats_in_project) : 'N/A') }}
+                                </span>
+                            </div>
+                            <div class="p-2.5 bg-sky-50/70 rounded-xl border border-sky-150">
+                                <span class="block text-[8px] font-mono uppercase text-sky-700 font-bold">Total EWS Flats</span>
+                                <span class="text-base font-black font-mono text-sky-700 mt-0.5 block">
+                                    {{ $flat->total_ews_flats_in_project !== null ? number_format($flat->total_ews_flats_in_project) : ($project && $project->total_ews_flats_in_project ? number_format($project->total_ews_flats_in_project) : 'N/A') }}
+                                </span>
+                            </div>
+                            <div class="p-2.5 bg-emerald-50/70 rounded-xl border border-emerald-150">
+                                <span class="block text-[8px] font-mono uppercase text-emerald-700 font-bold">Offered For Draw</span>
+                                <span class="text-base font-black font-mono text-emerald-700 mt-0.5 block">
+                                    @if(strtolower($flat->oc_status ?? '') === 'complete')
+                                        All (Complete OC)
+                                    @elseif($flat->flats_offered_for_draw !== null)
+                                        {{ number_format($flat->flats_offered_for_draw) }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="p-2.5 bg-amber-50/70 rounded-xl border border-amber-150">
+                                <span class="block text-[8px] font-mono uppercase text-amber-700 font-bold">Remaining for OC</span>
+                                <span class="text-base font-black font-mono text-amber-700 mt-0.5 block">
+                                    @if(strtolower($flat->oc_status ?? '') === 'complete')
+                                        0 (Full Cleared)
+                                    @elseif($flat->remaining_flats_for_oc !== null)
+                                        {{ number_format($flat->remaining_flats_for_oc) }}
+                                    @else
+                                        N/A
+                                    @endif
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Column Right: Planning, Approvals, OC & DTP Status (5 Cols) -->
+                <div class="lg:col-span-5 space-y-4">
+                    
+                    <!-- 4. Planning & Building Plan Approvals -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-file-earmark-check-fill text-indigo-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">Sanction & Plan Approvals</h3>
+                            </div>
+                            @php
+                                $planApproved = strtolower($flat->approved_building_plan ?: ($project->approved_building_plan ?? 'no')) === 'yes';
+                            @endphp
+                            @if($planApproved)
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill"></i> Approved
+                                </span>
+                            @else
+                                <span class="px-2 py-0.5 bg-rose-100 text-rose-800 border border-rose-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="bi bi-x-circle-fill"></i> Not Approved
+                                </span>
+                            @endif
+                        </div>
+                        <div class="p-4 space-y-2.5 text-xs">
+                            <div class="flex items-center justify-between p-2.5 bg-slate-50 rounded-lg border border-slate-150">
+                                <div>
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Building Plan Approval Date</span>
+                                    <span class="font-mono font-bold text-slate-800 text-xs">
+                                        {{ $flat->building_plan_approval_date ? \Carbon\Carbon::parse($flat->building_plan_approval_date)->format('d M, Y') : ($project && $project->building_plan_approval_date ? \Carbon\Carbon::parse($project->building_plan_approval_date)->format('d M, Y') : 'N/A') }}
+                                    </span>
+                                </div>
+                                <i class="bi bi-calendar-check text-indigo-500 text-base"></i>
+                            </div>
+
+                            <!-- Developer Plan PDF -->
+                            @php
+                                $devPlanFile = $flat->developer_plan ?: ($project->developer_plan ?? null);
+                            @endphp
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-pdf-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="block text-[9.5px] font-bold text-slate-800 truncate">Developer Layout Plan</span>
+                                        <span class="block text-[8px] text-slate-400 font-mono">Architecture PDF</span>
+                                    </div>
+                                </div>
+                                @if(!empty($devPlanFile))
+                                    <a href="{{ asset('storage/' . $devPlanFile) }}" target="_blank"
+                                        class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 shadow-sm shrink-0 transition-all no-print">
+                                        <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                                        <span>View PDF</span>
+                                    </a>
+                                @else
+                                    <span class="text-[9px] text-slate-400 font-mono font-bold shrink-0">Not Uploaded</span>
+                                @endif
+                            </div>
+
+                            <!-- Building Plan Sanction Copy PDF -->
+                            @php
+                                $bldgPlanCopyFile = $flat->building_plan_copy ?: ($project->building_plan_copy ?? null);
+                            @endphp
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-text-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="block text-[9.5px] font-bold text-slate-800 truncate">Sanctioned Building Plan</span>
+                                        <span class="block text-[8px] text-slate-400 font-mono">Approval Copy</span>
+                                    </div>
+                                </div>
+                                @if(!empty($bldgPlanCopyFile))
+                                    <a href="{{ asset('storage/' . $bldgPlanCopyFile) }}" target="_blank"
+                                        class="px-2.5 py-1 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 shadow-sm shrink-0 transition-all no-print">
+                                        <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                                        <span>View PDF</span>
+                                    </a>
+                                @else
+                                    <span class="text-[9px] text-slate-400 font-mono font-bold shrink-0">Not Uploaded</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Occupation Certificate (OC) Verification -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-shield-check text-emerald-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">Occupation Certificate (OC)</h3>
+                            </div>
+                            @php
+                                $ocApproved = strtolower($flat->oc_status_yn ?: ($project->oc_status_yn ?? 'no')) === 'yes';
+                            @endphp
+                            @if($ocApproved)
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill"></i> Received
+                                </span>
+                            @else
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1">
+                                    <i class="bi bi-hourglass-split"></i> Pending
+                                </span>
+                            @endif
+                        </div>
+                        <div class="p-4 space-y-2.5 text-xs">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">OC Category</span>
+                                    <span class="font-bold text-slate-800 text-xs uppercase mt-0.5 block">
+                                        {{ $flat->oc_status ? ucfirst($flat->oc_status) : 'Pending' }}
+                                    </span>
+                                </div>
+                                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">OC Issue Date</span>
+                                    <span class="font-mono font-bold text-slate-800 text-xs mt-0.5 block">
+                                        {{ $flat->oc_date ? \Carbon\Carbon::parse($flat->oc_date)->format('d M, Y') : 'N/A' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- OC Copy PDF -->
+                            @php
+                                $ocFile = $flat->oc_copy_file;
+                            @endphp
+                            <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-between gap-2">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                                        <i class="bi bi-file-earmark-check-fill text-base"></i>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="block text-[9.5px] font-bold text-slate-800 truncate">Occupation Certificate Copy</span>
+                                        <span class="block text-[8px] text-slate-400 font-mono">Official Authority Copy</span>
+                                    </div>
+                                </div>
+                                @if(!empty($ocFile))
+                                    <a href="{{ asset('storage/' . $ocFile) }}" target="_blank"
+                                        class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[9px] font-black uppercase flex items-center gap-1 shadow-sm shrink-0 transition-all no-print">
+                                        <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                                        <span>View OC</span>
+                                    </a>
+                                @else
+                                    <span class="text-[9px] text-slate-400 font-mono font-bold shrink-0">Not Uploaded</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. DTP Statutory Approval Status -->
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                        <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <i class="bi bi-patch-check-fill text-teal-600 text-xs"></i>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">DTP Statutory Approval Status</h3>
+                            </div>
+                            @if($flat->is_aproved_by_dtp)
+                                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
+                                    <i class="bi bi-check-circle-fill"></i> DTP Approved
+                                </span>
+                            @else
+                                <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
+                                    <i class="bi bi-hourglass-split"></i> Pending DTP
+                                </span>
+                            @endif
+                        </div>
+                        <div class="p-4 space-y-2.5 text-xs">
+                            <div class="p-3 {{ $flat->is_aproved_by_dtp ? 'bg-emerald-50/60 border-emerald-200' : 'bg-amber-50/60 border-amber-200' }} rounded-xl border flex items-center justify-between">
+                                <div>
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-500 font-bold">Clearance Status</span>
+                                    <span class="text-xs font-black {{ $flat->is_aproved_by_dtp ? 'text-emerald-800' : 'text-amber-800' }} mt-0.5 block">
+                                        {{ $flat->is_aproved_by_dtp ? 'APPROVED & CERTIFIED BY DTP' : 'PENDING OFFICIAL DTP CERTIFICATION' }}
+                                    </span>
+                                    <span class="text-[8.5px] font-mono {{ $flat->is_aproved_by_dtp ? 'text-emerald-700' : 'text-slate-500' }}">
+                                        Database Field: <strong>is_aproved_by_DTP = {{ $flat->is_aproved_by_dtp ? '1' : '0' }}</strong>
+                                    </span>
+                                </div>
+                                <div class="w-9 h-9 rounded-xl {{ $flat->is_aproved_by_dtp ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700' }} flex items-center justify-center text-base font-black shrink-0">
+                                    <i class="bi {{ $flat->is_aproved_by_dtp ? 'bi-shield-fill-check' : 'bi-shield-exclamation' }}"></i>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2 text-xs">
+                                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Approved By Official</span>
+                                    <span class="font-bold text-slate-800 text-xs mt-0.5 block truncate">
+                                        {{ $flat->dtp_user_name ?? ($flat->is_aproved_by_dtp ? 'DTP Official' : 'Pending Verification') }}
+                                    </span>
+                                </div>
+                                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
+                                    <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Approval Date & Time</span>
+                                    <span class="font-mono font-bold text-slate-800 text-xs mt-0.5 block">
+                                        {{ $flat->dtp_approved_at ? \Carbon\Carbon::parse($flat->dtp_approved_at)->format('d M, Y h:i A') : 'Awaiting Review' }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if(!$flat->is_aproved_by_dtp)
+                                <div class="pt-1">
+                                    <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
+                                        class="w-full py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer">
+                                        <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
+                                        <span>Approve & Certify Under DTP Authority</span>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Card 7: Audit Logs & Modification History (FULL WIDTH AT BOTTOM) -->
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
+                <div class="px-5 py-3 bg-slate-900 text-white flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-clock-history text-amber-400 text-sm"></i>
+                        <h3 class="text-xs font-black uppercase tracking-wider">Audit Logs & Modification History</h3>
+                    </div>
+                    <span class="text-[9px] font-mono font-bold text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded border border-amber-400/30">
+                        {{ $auditLogs->count() }} Total Modification(s)
+                    </span>
+                </div>
+
+                <div class="p-4">
+                    @if($auditLogs->isEmpty())
+                        <div class="text-center py-6 border border-dashed border-slate-200 rounded-xl bg-slate-50/50">
+                            <i class="bi bi-shield-check text-slate-400 text-2xl"></i>
+                            <h4 class="text-xs font-bold text-slate-700 mt-1 uppercase">Original Registry Entry</h4>
+                            <p class="text-[11px] text-slate-400 mt-0.5">No subsequent edits or modifications recorded yet. Any updates made via the Edit button will create a detailed audit log here.</p>
+                        </div>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border border-slate-200 rounded-lg">
+                                <thead class="bg-slate-50 border-b border-slate-200 text-[9.5px] uppercase font-mono text-slate-500">
+                                    <tr>
+                                        <th class="py-2.5 px-3">#</th>
+                                        <th class="py-2.5 px-3">Date & Time</th>
+                                        <th class="py-2.5 px-3">Action</th>
+                                        <th class="py-2.5 px-3">Modified By</th>
+                                        <th class="py-2.5 px-3">IP Address</th>
+                                        <th class="py-2.5 px-3">Modified Fields & Values (Old ➔ New)</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-150">
+                                    @foreach($auditLogs as $index => $log)
+                                        <tr class="hover:bg-slate-50/80 transition-colors">
+                                            <td class="py-2.5 px-3 font-mono font-bold text-slate-400">
+                                                #{{ $auditLogs->count() - $index }}
+                                            </td>
+                                            <td class="py-2.5 px-3 whitespace-nowrap">
+                                                <div class="font-bold text-slate-800">{{ $log->created_at ? $log->created_at->format('d M, Y') : '-' }}</div>
+                                                <div class="text-[9px] text-slate-400 font-mono">{{ $log->created_at ? $log->created_at->format('h:i:s A') : '-' }}</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 whitespace-nowrap">
+                                                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider {{ $log->action === 'UPDATED' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-sky-100 text-sky-800 border border-sky-200' }}">
+                                                    {{ $log->action }}
+                                                </span>
+                                            </td>
+                                            <td class="py-2.5 px-3 whitespace-nowrap">
+                                                <div class="font-bold text-slate-900">{{ $log->user_name ?: 'System' }}</div>
+                                                <div class="text-[9px] text-slate-500 font-mono uppercase">{{ $log->user_role ?: 'User' }}</div>
+                                            </td>
+                                            <td class="py-2.5 px-3 font-mono text-slate-500 text-[10px] whitespace-nowrap">
+                                                {{ $log->ip_address ?: '-' }}
+                                            </td>
+                                            <td class="py-2.5 px-3">
+                                                @if(!empty($log->changed_fields) && is_array($log->changed_fields))
+                                                    <div class="flex flex-wrap gap-1.5">
+                                                        @foreach($log->changed_fields as $fieldKey => $fDiff)
+                                                            <div class="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 border border-slate-200 text-[10px]">
+                                                                <span class="font-bold text-slate-700 uppercase font-mono text-[9px]">{{ $fDiff['label'] ?? $fieldKey }}:</span>
+                                                                <span class="line-through text-rose-600 bg-rose-50 px-1 rounded">{{ $fDiff['old'] ?? '-' }}</span>
+                                                                <i class="bi bi-arrow-right text-[9px] text-slate-400"></i>
+                                                                <span class="font-bold text-emerald-700 bg-emerald-50 px-1 rounded">{{ $fDiff['new'] ?? '-' }}</span>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span class="text-slate-600 text-[11px]">{{ $log->summary ?: 'No field diffs recorded' }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function copyCode(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'COPIED',
+                    text: 'Code copied: ' + text,
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    background: '#ffffff',
+                    color: '#1e293b'
+                });
+            });
+        }
+
+        // SweetAlert Confirmation and AJAX Approval for DTP
+        function approveFlatDtp(secureId, flatNum, blockName) {
+            Swal.fire({
+                title: 'Official DTP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under DTP Authority?<br><br>
+                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
+                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
+                    <div>&bull; Action will be recorded in digital audit logs with your officer credentials.</div>
+                </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve Now',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Recording DTP Approval...',
+                        text: 'Please wait while digital clearance is authenticated.',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch("{{ url('ews/stp/flats') }}/" + secureId + "/approve-dtp", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Flat Approved Successfully',
+                                text: data.message,
+                                confirmButtonColor: '#059669'
+                            }).then(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Approval Failed',
+                                text: data.message || 'Could not record approval',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Failed to communicate with server. Please try again.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    });
+                }
+            });
+        }
+    </script>
+</body>
+</html>
