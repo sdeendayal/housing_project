@@ -727,11 +727,11 @@
                                     <span>Save Changes</span>
                                 </button>
 
-                                <!-- DTP Approve & Submit Button -->
+                                <!-- STP Approve & Submit Button -->
                                 <button type="button" onclick="confirmDtpApproveAndSubmit()" id="btn_dtp_approve_submit"
                                     class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
                                     <i class="bi bi-patch-check-fill text-sm text-emerald-200"></i>
-                                    <span>Approve & Submit (DTP)</span>
+                                    <span>Approve & Submit (STP)</span>
                                 </button>
                             </div>
                         </div>
@@ -1206,7 +1206,7 @@
             }
         });
 
-        // DTP Approve and Submit with SweetAlert Confirmation
+        // STP Approve and Submit with SweetAlert Confirmation
         function confirmDtpApproveAndSubmit() {
             if ($('#approved_building_plan').val() !== 'yes') {
                 Swal.fire({
@@ -1251,8 +1251,8 @@
             const blockName = $('#block_id option:selected').text() || 'Block';
 
             Swal.fire({
-                title: 'Official DTP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) of <strong>${projName}</strong> under DTP Authority?<br><br>
+                title: 'Official STP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) of <strong>${projName}</strong> under STP Authority?<br><br>
                 <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
                     <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
                     <div>&bull; Digital audit trail will record your timestamp & officer signature.</div>

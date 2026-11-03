@@ -157,67 +157,67 @@
             <!-- Hidden Filter Inputs for AJAX DataTables -->
             <input type="hidden" id="filter-ownership" value="all">
 
-            <!-- SECTION 1: Top 3 Telemetry KPI Cards (Single Sleek Row) -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 shrink-0">
+            <!-- SECTION 1: Telemetry KPI Cards (Builder Flats Oversight) -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0">
                 
                 <!-- Card 1: All Haryana Offered Builder Flats -->
                 <div id="card-scope-all" onclick="setOwnershipFilter('all')"
-                    class="cursor-pointer bg-emerald-50/60 border-2 border-emerald-500 rounded-xl px-3 py-1.5 shadow-2xs ring-2 ring-emerald-400/20 transition-all hover:shadow-xs flex items-center justify-between">
+                    class="cursor-pointer bg-sky-50/60 border-2 border-sky-500 rounded-xl px-3 py-2 shadow-2xs ring-2 ring-sky-400/20 transition-all hover:shadow-xs flex items-center justify-between">
                     <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0">
+                        <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-sm shrink-0">
                             <i class="bi bi-building"></i>
                         </div>
                         <div class="min-w-0">
                             <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">All Haryana Offered</span>
                             <div class="flex items-baseline gap-1.5">
-                                <span class="text-lg font-black font-mono text-emerald-700 leading-none">{{ number_format($stats['total_flats'] ?? 0) }}</span>
+                                <span class="text-lg font-black font-mono text-sky-700 leading-none">{{ number_format($stats['total_flats'] ?? 0) }}</span>
                                 <span class="text-[8px] text-slate-400 font-bold">Flats</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
-                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">State</span>
-                        <i class="bi bi-chevron-right text-[10px] text-emerald-600"></i>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-sky-100 text-sky-800">State</span>
+                        <i class="bi bi-chevron-right text-[10px] text-sky-600"></i>
                     </div>
                 </div>
 
-                <!-- Card 2: Approved by DTP -->
+                <!-- Card 2: Approved by STP -->
                 <div id="card-scope-dtp-approved" onclick="setOwnershipFilter('dtp_approved')"
-                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-xs flex items-center justify-between">
+                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-xs flex items-center justify-between">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-sm shrink-0">
                             <i class="bi bi-patch-check-fill"></i>
                         </div>
                         <div class="min-w-0">
-                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Approved By DTP</span>
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Approved By STP</span>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-lg font-black font-mono text-emerald-600 leading-none">{{ number_format($stats['dtp_approved_flats'] ?? 0) }}</span>
                                 <span class="text-[8px] text-slate-400 font-bold">Units</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="flex items-center gap-1 shrink-0">
                         <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800">Certified</span>
                         <i class="bi bi-chevron-right text-[10px] text-emerald-600"></i>
                     </div>
                 </div>
 
-                <!-- Card 3: Pending DTP Approval -->
+                <!-- Card 3: Pending STP Approval -->
                 <div id="card-scope-dtp-pending" onclick="setOwnershipFilter('dtp_pending')"
-                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-amber-300 transition-all hover:shadow-xs flex items-center justify-between">
+                    class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-2xs hover:border-amber-300 transition-all hover:shadow-xs flex items-center justify-between">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-sm shrink-0">
                             <i class="bi bi-hourglass-split"></i>
                         </div>
                         <div class="min-w-0">
-                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Pending DTP Approval</span>
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Pending STP Approval</span>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-lg font-black font-mono text-amber-600 leading-none">{{ number_format($stats['dtp_pending_flats'] ?? 0) }}</span>
                                 <span class="text-[8px] text-slate-400 font-bold">Awaiting</span>
                             </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 shrink-0">
+                    <div class="flex items-center gap-1 shrink-0">
                         <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-amber-100 text-amber-800">Pending</span>
                         <i class="bi bi-chevron-right text-[10px] text-amber-600"></i>
                     </div>
@@ -379,7 +379,7 @@
                                 <th id="th-col-5">Floor Details</th>
                                 <th id="th-col-6">Flat No.</th>
                                 <th id="th-col-7">Unique Flat Code</th>
-                                <th id="th-col-8">DTP Status</th>
+                                <th id="th-col-8">STP Status</th>
                                 <th style="text-align: right; width: 6%;">Action</th>
                             </tr>
                         </thead>
@@ -563,7 +563,7 @@
                         <span class="text-slate-400 ml-1" id="bio-created-at">—</span>
                     </div>
                     <div>
-                        <span class="text-slate-400 uppercase font-bold">DTP Approval:</span>
+                        <span class="text-slate-400 uppercase font-bold">STP Approval:</span>
                         <span class="font-bold font-mono text-emerald-700" id="bio-dtp-info">Pending Certification</span>
                     </div>
                 </div>
@@ -814,12 +814,13 @@
             onZoneFilterChange();
         }
 
-        // Top 3 Telemetry Card Filter Trigger
+        // Top 3 Builder Flat Telemetry Card Filter Trigger
         function setOwnershipFilter(scope) {
             $('#filter-ownership').val(scope);
 
+            // Reset all 3 card active states
             $('#card-scope-all')
-                .removeClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
+                .removeClass('border-2 border-sky-500 bg-sky-50/60 shadow-2xs ring-2 ring-sky-400/20')
                 .addClass('border border-slate-200 bg-white');
             $('#card-scope-dtp-approved')
                 .removeClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
@@ -832,20 +833,45 @@
                 $('#card-scope-dtp-approved')
                     .addClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
                     .removeClass('border border-slate-200 bg-white');
-                $('#table-heading-title').find('span:first').text('Approved EWS Flats (Certified by DTP)');
+                restoreStandardHeaders();
+                $('#table-heading-title').find('span:first').text('Approved EWS Flats (Certified by STP)');
             } else if (scope === 'dtp_pending') {
                 $('#card-scope-dtp-pending')
                     .addClass('border-2 border-amber-500 bg-amber-50/60 shadow-2xs ring-2 ring-amber-400/20')
                     .removeClass('border border-slate-200 bg-white');
-                $('#table-heading-title').find('span:first').text('Pending EWS Flats (Awaiting DTP Clearance)');
+                restoreStandardHeaders();
+                $('#table-heading-title').find('span:first').text('Pending EWS Flats (Awaiting STP Clearance)');
             } else {
                 $('#card-scope-all')
-                    .addClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
+                    .addClass('border-2 border-sky-500 bg-sky-50/60 shadow-2xs ring-2 ring-sky-400/20')
                     .removeClass('border border-slate-200 bg-white');
+                restoreStandardHeaders();
                 $('#table-heading-title').find('span:first').text('All Haryana State Offered Builder Flats');
             }
 
             if (table) table.draw();
+        }
+            } else {
+                $('#card-scope-all')
+                    .addClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
+                    .removeClass('border border-slate-200 bg-white');
+                restoreStandardHeaders();
+                $('#table-heading-title').find('span:first').text('All Haryana State Offered Builder Flats');
+            }
+
+            if (table) table.draw();
+        }
+
+        function setAllottedHeaders() {
+            $('#th-col-1').text('District');
+            $('#th-col-2').text('Category / Pool');
+            $('#th-col-3').text('Project Code');
+            $('#th-col-license').text('Pool Ref');
+            $('#th-col-4').text('Application No.');
+            $('#th-col-5').text('Allottee Name');
+            $('#th-col-6').text('Flat Number');
+            $('#th-col-7').text('Mobile (Masked)');
+            $('#th-col-8').text('Possession Status');
         }
 
         function restoreStandardHeaders() {
@@ -857,7 +883,7 @@
             $('#th-col-5').text('Floor Details');
             $('#th-col-6').text('Flat No.');
             $('#th-col-7').text('Unique Flat Code');
-            $('#th-col-8').text('DTP Status');
+            $('#th-col-8').text('STP Status');
             $('#filter-town-box, #filter-project-box, #filter-license-box').show();
         }
 
@@ -901,12 +927,12 @@
                     $('#bio-block').text(d.block_tower_number || '—');
                     $('#bio-code').text(d.flat_code || '—');
 
-                    // DTP Badge
+                    // STP Badge
                     if (d.is_aproved_by_dtp) {
-                        $('#bio-dtp-badge').html('<span class="px-2 py-0.5 rounded text-[8.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="bi bi-patch-check-fill text-emerald-600"></i> DTP Approved</span>');
-                        $('#bio-dtp-info').html('<span class="text-emerald-700 font-bold">' + (d.dtp_approved_at || 'Certified') + '</span> by ' + (d.dtp_user_name || 'DTP'));
+                        $('#bio-dtp-badge').html('<span class="px-2 py-0.5 rounded text-[8.5px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="bi bi-patch-check-fill text-emerald-600"></i> STP Approved</span>');
+                        $('#bio-dtp-info').html('<span class="text-emerald-700 font-bold">' + (d.dtp_approved_at || 'Certified') + '</span> by ' + (d.dtp_user_name || 'STP'));
                     } else {
-                        $('#bio-dtp-badge').html('<span class="px-2 py-0.5 rounded text-[8.5px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300"><i class="bi bi-hourglass-split text-amber-600"></i> Pending DTP</span>');
+                        $('#bio-dtp-badge').html('<span class="px-2 py-0.5 rounded text-[8.5px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300"><i class="bi bi-hourglass-split text-amber-600"></i> Pending STP</span>');
                         $('#bio-dtp-info').html('<span class="text-amber-700 font-bold">Awaiting Clearance</span>');
                     }
 
@@ -1023,7 +1049,7 @@
             // Auto-activate scope if passed in URL query param
             const urlParams = new URLSearchParams(window.location.search);
             const initialScope = urlParams.get('scope') || urlParams.get('view');
-            if (initialScope && ['all', 'dtp_approved', 'dtp_pending'].includes(initialScope)) {
+            if (initialScope && ['all', 'dtp_approved', 'dtp_pending', 'allotted', 'possession_given', 'possession_pending'].includes(initialScope)) {
                 setOwnershipFilter(initialScope);
             }
         });

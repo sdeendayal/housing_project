@@ -805,6 +805,14 @@ Route::middleware(['auth', 'role:ews_tcp,tcp,ews_department,super_admin,admin'])
     Route::get('/ews/tcp/flats/{id}/details', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getFlatDetails'])->name('ews.tcp.flats.details');
     Route::get('/ews/tcp/flats/{id}/view', [\App\Http\Controllers\EwsTcpDashboardController::class, 'showFlat'])->name('ews.tcp.flats.show');
     Route::get('/ews/tcp/flats/export/{format}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'exportFlats'])->name('ews.tcp.flats.export');
+
+    // Physical Possession Module (4,211 Master Allotted Beneficiaries Pool)
+    Route::get('/ews/tcp/possession', [\App\Http\Controllers\EwsTcpDashboardController::class, 'possession'])->name('ews.tcp.possession');
+    Route::get('/ews/tcp/possession/data', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getPossessionData'])->name('ews.tcp.possession.data');
+    Route::get('/ews/tcp/possession/view/{id}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'showPossession'])->name('ews.tcp.possession.show');
+    Route::get('/ews/tcp/possession/beneficiary/{id}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getPossessionBeneficiary'])->name('ews.tcp.possession.beneficiary');
+    Route::get('/ews/tcp/possession/export/{format}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'exportPossession'])->name('ews.tcp.possession.export');
+
     Route::get('/ews/tcp/logout', [\App\Http\Controllers\EwsTcpDashboardController::class, 'logout'])->name('ews.tcp.logout');
 });
 

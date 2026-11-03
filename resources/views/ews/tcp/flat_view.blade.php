@@ -73,7 +73,7 @@
                 </div>
             </div>
 
-            <!-- Right: Action Bar (Print + Copy Code + DTP Badge) -->
+            <!-- Right: Action Bar (Print + Copy Code + STP Badge) -->
             <div class="flex items-center gap-1.5 shrink-0">
                 <!-- Flat Unique Code Copy Badge -->
                 <div class="hidden sm:flex items-center gap-1 bg-slate-100 hover:bg-slate-200 border border-slate-300/80 px-2 py-0.5 rounded cursor-pointer transition-all" onclick="copyFlatCode()" title="Click to Copy Unique Flat Code">
@@ -82,11 +82,11 @@
                     <i class="bi bi-copy text-[9px] text-slate-400 hover:text-slate-700 ml-0.5"></i>
                 </div>
 
-                <!-- DTP Status Badge -->
+                <!-- STP Status Badge -->
                 @if($flat->is_aproved_by_dtp)
                     <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
-                        <span>DTP Approved</span>
+                        <span>STP Approved</span>
                     </span>
                 @else
                     <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
@@ -341,14 +341,14 @@
                         </div>
                     </div>
 
-                    <!-- DTP Certification Audit Box -->
+                    <!-- STP Certification Audit Box -->
                     <div class="mt-1.5 pt-1.5 border-t border-slate-150">
                         <div class="flex items-center justify-between text-[8.5px]">
-                            <span class="font-bold text-slate-400 uppercase">DTP Clearance:</span>
+                            <span class="font-bold text-slate-400 uppercase">STP Clearance:</span>
                             @if($flat->is_aproved_by_dtp)
                                 <span class="font-mono font-bold text-emerald-700 flex items-center gap-0.5">
                                     <i class="bi bi-patch-check-fill text-emerald-600"></i>
-                                    <span>{{ $flat->dtp_user_name ?? 'DTP' }} ({{ $flat->dtp_approved_at ? date('d/m/Y', strtotime($flat->dtp_approved_at)) : 'Approved' }})</span>
+                                    <span>{{ $flat->dtp_user_name ?? 'STP' }} ({{ $flat->dtp_approved_at ? date('d/m/Y', strtotime($flat->dtp_approved_at)) : 'Approved' }})</span>
                                 </span>
                             @else
                                 <span class="font-mono font-bold text-amber-700 flex items-center gap-0.5">

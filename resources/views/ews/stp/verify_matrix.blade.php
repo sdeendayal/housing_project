@@ -82,7 +82,7 @@
         <!-- Main Workspace -->
         <div id="printable-area" class="flex-1 overflow-y-auto p-4 sm:p-5 space-y-3.5 custom-scroll">
             
-            <!-- Compact KPI Ribbon (Including DTP Clearance Telemetry) -->
+            <!-- Compact KPI Ribbon (Including STP Clearance Telemetry) -->
             <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
                 <div class="bg-white p-3 rounded-xl border border-slate-200/90 shadow-2xs flex items-center gap-3">
                     <div class="w-9 h-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 text-base">
@@ -99,7 +99,7 @@
                         <i class="bi bi-patch-check-fill"></i>
                     </div>
                     <div>
-                        <span class="block text-[8.5px] uppercase font-mono text-emerald-700 font-bold">Approved by DTP</span>
+                        <span class="block text-[8.5px] uppercase font-mono text-emerald-700 font-bold">Approved by STP</span>
                         <span class="text-base font-black font-mono text-emerald-800">
                             {{ $flats->where('is_aproved_by_dtp', 1)->count() }} Units
                         </span>
@@ -111,7 +111,7 @@
                         <i class="bi bi-hourglass-split"></i>
                     </div>
                     <div>
-                        <span class="block text-[8.5px] uppercase font-mono text-amber-700 font-bold">Pending DTP</span>
+                        <span class="block text-[8.5px] uppercase font-mono text-amber-700 font-bold">Pending STP</span>
                         <span class="text-base font-black font-mono text-amber-800">
                             {{ $flats->where('is_aproved_by_dtp', 0)->count() }} Units
                         </span>
@@ -175,7 +175,7 @@
                                 <th class="px-3 py-2.5">OC Status</th>
                                 <th class="px-3 py-2.5">Draw Quota</th>
                                 <th class="px-3 py-2.5">Documents</th>
-                                <th class="px-3 py-2.5">DTP Status</th>
+                                <th class="px-3 py-2.5">STP Status</th>
                                 <th class="px-3 py-2.5 text-right">Actions</th>
                             </tr>
                         </thead>
@@ -282,10 +282,10 @@
                                         </div>
                                     </td>
 
-                                    <!-- DTP Approval Status -->
+                                    <!-- STP Approval Status -->
                                     <td class="px-3 py-2 whitespace-nowrap">
                                         @if($f->is_aproved_by_dtp)
-                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs" title="Approved by {{ $f->dtp_user_name ?? 'DTP' }} on {{ $f->dtp_approved_at ?? '' }}">
+                                            <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs" title="Approved by {{ $f->dtp_user_name ?? 'STP' }} on {{ $f->dtp_approved_at ?? '' }}">
                                                 <i class="bi bi-patch-check-fill text-emerald-600"></i> Approved
                                             </span>
                                         @else
@@ -307,7 +307,7 @@
                                                 <i class="bi bi-pencil-square"></i> Edit
                                             </a>
                                             @if(!$f->is_aproved_by_dtp)
-                                                <button type="button" onclick="approveFlatDtpFromMatrix('{{ $f->secure_id }}', '{{ $f->flat_number }}', '{{ $f->block_tower_number }}')" title="Approve under DTP Authority"
+                                                <button type="button" onclick="approveFlatDtpFromMatrix('{{ $f->secure_id }}', '{{ $f->flat_number }}', '{{ $f->block_tower_number }}')" title="Approve under STP Authority"
                                                     class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs cursor-pointer">
                                                     <i class="bi bi-patch-check-fill text-emerald-200"></i> Approve
                                                 </button>
@@ -390,11 +390,11 @@
             URL.revokeObjectURL(url);
         }
 
-        // SweetAlert Confirmation and AJAX Approval for DTP in Matrix
+        // SweetAlert Confirmation and AJAX Approval for STP in Matrix
         function approveFlatDtpFromMatrix(secureId, flatNum, blockName) {
             Swal.fire({
-                title: 'Official DTP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under DTP Authority?<br><br>
+                title: 'Official STP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under STP Authority?<br><br>
                 <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
                     <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
                     <div>&bull; Action will be recorded in digital audit logs with your officer credentials.</div>
@@ -409,7 +409,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
-                        title: 'Recording DTP Approval...',
+                        title: 'Recording STP Approval...',
                         text: 'Please wait while digital clearance is authenticated.',
                         allowOutsideClick: false,
                         didOpen: () => Swal.showLoading()

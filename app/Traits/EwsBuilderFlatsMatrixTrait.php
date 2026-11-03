@@ -32,12 +32,31 @@ trait EwsBuilderFlatsMatrixTrait
             COALESCE(SUM(CASE WHEN is_aproved_by_dtp = 0 OR is_aproved_by_dtp IS NULL THEN 1 ELSE 0 END), 0) as dtp_pending_flats
         ')->first();
 
+        // 4,211 Master Allotted Pool Telemetry
+        $allottedQuery = DB::table('ews_allotted_8');
+        if (!empty($zoneId)) {
+            $zoneDistIds = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('id')->toArray();
+            if (!empty($zoneDistIds)) {
+                $allottedQuery->whereIn('dist_id', $zoneDistIds);
+            }
+        }
+
+        $totalAllotted = (clone $allottedQuery)->count();
+        $possessionGiven = (clone $allottedQuery)->where(function ($q) {
+            $q->where('is_possession_given', 1)
+              ->orWhere('possession_status', 'Possession Given')
+              ->orWhere('possession_status', 'GIVEN');
+        })->count();
+        $possessionPending = max(0, $totalAllotted - $possessionGiven);
+
         return [
             'total_flats' => (int) ($row->total_flats ?? 0),
             'dtp_approved_flats' => (int) ($row->dtp_approved_flats ?? 0),
             'dtp_pending_flats' => (int) ($row->dtp_pending_flats ?? 0),
-            'total_allotted' => 0,
-            'state_allotted_total' => 0,
+            'total_allotted' => (int) $totalAllotted,
+            'possession_given' => (int) $possessionGiven,
+            'possession_pending' => (int) $possessionPending,
+            'state_allotted_total' => (int) DB::table('ews_allotted_8')->count(),
         ];
     }
 
@@ -161,8 +180,10 @@ trait EwsBuilderFlatsMatrixTrait
      */
     public function buildMatrixDataTable(Request $request)
     {
+        $ownershipScope = $request->input('ownership_scope');
+
         // Check if viewing Allotted Pool (from ews_allotted_8)
-        if ($request->input('ownership_scope') === 'allotted') {
+        if (in_array($ownershipScope, ['allotted', 'possession_given', 'possession_pending'])) {
             $query = DB::table('ews_allotted_8');
             if ($request->filled('zone_id')) {
                 $zoneDistIds = DB::table('ews_districts')->where('zone_id', $request->zone_id)->pluck('id')->toArray();
@@ -172,6 +193,24 @@ trait EwsBuilderFlatsMatrixTrait
             }
             if ($request->filled('district_id')) {
                 $query->where('dist_id', $request->district_id);
+            }
+
+            if ($ownershipScope === 'possession_given') {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 1)
+                      ->orWhere('possession_status', 'Possession Given')
+                      ->orWhere('possession_status', 'GIVEN');
+                });
+            } elseif ($ownershipScope === 'possession_pending') {
+                $query->where(function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->where('is_possession_given', 0)->orWhereNull('is_possession_given');
+                    })->where(function ($sq) {
+                        $sq->whereNull('possession_status')
+                          ->orWhere('possession_status', '!=', 'Possession Given')
+                          ->where('possession_status', '!=', 'GIVEN');
+                    });
+                });
             }
 
             $searchValue = '';
@@ -204,10 +243,11 @@ trait EwsBuilderFlatsMatrixTrait
                 ->addColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono">' . e($r->flat_no) . '</span>')
                 ->addColumn('flat_code', fn($r) => '<span class="text-emerald-700 font-bold font-mono">' . ($r->mobile_number ? substr($r->mobile_number, 0, 2) . '******' . substr($r->mobile_number, -2) : 'N/A') . '</span>')
                 ->addColumn('dtp_status', function($r) {
-                    $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given');
-                    $status = $isGiven ? 'Possession Given' : ($r->possession_status ?: 'Allotted');
+                    $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given' || $r->possession_status === 'GIVEN');
+                    $status = $isGiven ? 'Possession Given' : ($r->possession_status ?: 'Pending Possession');
                     $color = $isGiven ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
-                    return '<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ' . $color . ' border inline-flex items-center gap-1"><i class="bi bi-check2-circle text-[9px]"></i> ' . e($status) . '</span>';
+                    $icon = $isGiven ? 'bi-check2-circle' : 'bi-hourglass-split';
+                    return '<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ' . $color . ' border inline-flex items-center gap-1"><i class="bi ' . $icon . ' text-[9px]"></i> ' . e($status) . '</span>';
                 })
                 ->addColumn('actions', fn($r) => '<span class="text-slate-400 font-mono text-[9px] italic">Read-only Record</span>')
                 ->rawColumns(['district_name', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'dtp_status', 'actions'])
@@ -351,10 +391,34 @@ trait EwsBuilderFlatsMatrixTrait
      */
     public function exportMatrixCsvFile(Request $request, $prefix = 'ews_matrix')
     {
-        if ($request->input('ownership_scope') === 'allotted') {
+        $ownershipScope = $request->input('ownership_scope');
+        if (in_array($ownershipScope, ['allotted', 'possession_given', 'possession_pending'])) {
             $query = DB::table('ews_allotted_8');
+            if ($request->filled('zone_id')) {
+                $zoneDistIds = DB::table('ews_districts')->where('zone_id', $request->zone_id)->pluck('id')->toArray();
+                if (!empty($zoneDistIds)) {
+                    $query->whereIn('dist_id', $zoneDistIds);
+                }
+            }
             if ($request->filled('district_id')) {
                 $query->where('dist_id', $request->district_id);
+            }
+            if ($ownershipScope === 'possession_given') {
+                $query->where(function ($q) {
+                    $q->where('is_possession_given', 1)
+                      ->orWhere('possession_status', 'Possession Given')
+                      ->orWhere('possession_status', 'GIVEN');
+                });
+            } elseif ($ownershipScope === 'possession_pending') {
+                $query->where(function ($q) {
+                    $q->where(function ($sq) {
+                        $sq->where('is_possession_given', 0)->orWhereNull('is_possession_given');
+                    })->where(function ($sq) {
+                        $sq->whereNull('possession_status')
+                          ->orWhere('possession_status', '!=', 'Possession Given')
+                          ->where('possession_status', '!=', 'GIVEN');
+                    });
+                });
             }
             if ($request->filled('search')) {
                 $s = $request->search;
@@ -380,7 +444,7 @@ trait EwsBuilderFlatsMatrixTrait
                 $file = fopen('php://output', 'w');
                 fputcsv($file, ['S.No.', 'District Name', 'Application Number', 'Allottee Name', 'Mobile Number', 'Flat No.', 'Possession Status']);
                 foreach ($allotted as $index => $row) {
-                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given');
+                    $isGiven = ($row->is_possession_given == 1 || $row->possession_status === 'Possession Given' || $row->possession_status === 'GIVEN');
                     fputcsv($file, [
                         $index + 1,
                         $row->dist_name,
@@ -388,7 +452,7 @@ trait EwsBuilderFlatsMatrixTrait
                         $row->full_name,
                         $row->mobile_number,
                         $row->flat_no,
-                        $isGiven ? 'Possession Given' : ($row->possession_status ?: 'Allotted'),
+                        $isGiven ? 'Possession Given' : ($row->possession_status ?: 'Pending Possession'),
                     ]);
                 }
                 fclose($file);
@@ -407,7 +471,7 @@ trait EwsBuilderFlatsMatrixTrait
 
         return response()->stream(function () use ($flats) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['S.No.', 'District Name', 'Town Name', 'Project Name', 'License No.', 'Block/Tower No.', 'Floor Details', 'Flat No.', 'Flat Code', 'DTP Status', 'Registered At']);
+            fputcsv($file, ['S.No.', 'District Name', 'Town Name', 'Project Name', 'License No.', 'Block/Tower No.', 'Floor Details', 'Flat No.', 'Flat Code', 'STP Status', 'Registered At']);
             foreach ($flats as $index => $flat) {
                 fputcsv($file, [
                     $index + 1,

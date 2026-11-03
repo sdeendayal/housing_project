@@ -201,7 +201,7 @@
                     </div>
                 </div>
 
-                <!-- Card 3: Approved by DTP -->
+                <!-- Card 3: Approved by STP -->
                 <div id="card-scope-dtp-approved" onclick="setOwnershipFilter('dtp_approved')"
                     class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-emerald-300 transition-all hover:shadow-xs flex items-center justify-between">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -209,7 +209,7 @@
                             <i class="bi bi-patch-check-fill"></i>
                         </div>
                         <div class="min-w-0">
-                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Approved By DTP</span>
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Approved By STP</span>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-lg font-black font-mono text-emerald-600 leading-none">{{ number_format($stats['dtp_approved_flats'] ?? 0) }}</span>
                                 <span class="text-[8px] text-slate-400 font-bold">Units</span>
@@ -222,7 +222,7 @@
                     </div>
                 </div>
 
-                <!-- Card 4: Pending DTP Approval -->
+                <!-- Card 4: Pending STP Approval -->
                 <div id="card-scope-dtp-pending" onclick="setOwnershipFilter('dtp_pending')"
                     class="cursor-pointer bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs hover:border-amber-300 transition-all hover:shadow-xs flex items-center justify-between">
                     <div class="flex items-center gap-2.5 min-w-0">
@@ -230,7 +230,7 @@
                             <i class="bi bi-hourglass-split"></i>
                         </div>
                         <div class="min-w-0">
-                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Pending DTP Approval</span>
+                            <span class="block text-[8.5px] font-black uppercase text-slate-500 tracking-wider truncate">Pending STP Approval</span>
                             <div class="flex items-baseline gap-1.5">
                                 <span class="text-lg font-black font-mono text-amber-600 leading-none">{{ number_format($stats['dtp_pending_flats'] ?? 0) }}</span>
                                 <span class="text-[8px] text-slate-400 font-bold">Awaiting</span>
@@ -398,7 +398,7 @@
                                 <th id="th-col-5">Floor</th>
                                 <th id="th-col-6">Flat No.</th>
                                 <th id="th-col-7">Unique Flat Code</th>
-                                <th id="th-col-8">DTP Status</th>
+                                <th id="th-col-8">STP Status</th>
                                 <th class="text-right">Action</th>
                             </tr>
                         </thead>
@@ -416,7 +416,7 @@
         <footer class="bg-white border-t border-slate-200 py-1 shrink-0">
             <div class="w-full px-3 text-center">
                 <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
-                    Special Town Planning Department • Government of Haryana • EWS Regulatory Cell
+                    Senior Town Planning Department • Government of Haryana • EWS Regulatory Cell
                 </p>
             </div>
         </footer>
@@ -660,7 +660,7 @@
         function activateStpNav(target) {
             let label = 'Dashboard';
             if (target === 'all') label = 'Total Offered Flats';
-            if (target === 'dtp_approved') label = 'Approved (DTP) Units';
+            if (target === 'dtp_approved') label = 'Approved (STP) Units';
             if (target === 'dtp_pending') label = 'Pending Approval Units';
             showFullPageLoader('Loading ' + label + '...', 'Retrieving filtered records from master database...');
 
@@ -713,12 +713,12 @@
                 $('#card-scope-dtp-approved')
                     .addClass('border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
                     .removeClass('border-slate-200 bg-white');
-                $('#table-heading-title').find('span:first').text('Approved EWS Flats (Certified by DTP)');
+                $('#table-heading-title').find('span:first').text('Approved EWS Flats (Certified by STP)');
             } else if (scope === 'dtp_pending') {
                 $('#card-scope-dtp-pending')
                     .addClass('border-amber-500 bg-amber-50/60 shadow-2xs ring-2 ring-amber-400/20')
                     .removeClass('border-slate-200 bg-white');
-                $('#table-heading-title').find('span:first').text('Pending EWS Flats (Awaiting DTP Clearance)');
+                $('#table-heading-title').find('span:first').text('Pending EWS Flats (Awaiting STP Clearance)');
             } else {
                 $('#card-scope-all')
                     .addClass('border-sky-500 bg-sky-50/60 shadow-2xs ring-2 ring-sky-400/20')

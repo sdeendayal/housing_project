@@ -21,7 +21,7 @@
         </div>
         <div class="overflow-hidden">
             <h1 class="text-xs font-black tracking-tight text-white uppercase truncate leading-tight">STP {{ $zoneTitle }}</h1>
-            <p class="text-[7.5px] text-cyan-400 font-mono tracking-wider uppercase truncate">Special Town Planner</p>
+            <p class="text-[7.5px] text-cyan-400 font-mono tracking-wider uppercase truncate">Senior Town Planner</p>
         </div>
     </div>
 
@@ -58,7 +58,7 @@
                     class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ $isApprovedActive ? 'bg-slate-800 text-white font-bold shadow-xs ring-1 ring-emerald-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all cursor-pointer">
                     <div class="flex items-center gap-2">
                         <i class="bi bi-patch-check-fill text-emerald-400 text-sm"></i>
-                        <span>Approved (DTP)</span>
+                        <span>Approved (STP)</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                         <span class="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-slate-800 text-emerald-300 border border-slate-700">{{ number_format($stats['dtp_approved_flats'] ?? 0) }}</span>

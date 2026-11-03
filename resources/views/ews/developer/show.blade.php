@@ -82,12 +82,12 @@
                         <span>Edit Flat</span>
                     </a>
 
-                    <!-- DTP Approval Action / Badge -->
+                    <!-- STP Approval Action / Badge -->
                     @if($flat->is_aproved_by_dtp)
                         <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center gap-1.5 shadow-2xs shrink-0 whitespace-nowrap">
                             <i class="bi bi-patch-check-fill text-emerald-600 text-sm"></i>
                             <div class="text-left leading-none">
-                                <div class="text-[9.5px] font-black uppercase text-emerald-800">DTP Approved</div>
+                                <div class="text-[9.5px] font-black uppercase text-emerald-800">STP Approved</div>
                                 <div class="text-[8px] font-mono text-emerald-600 mt-0.5">{{ $flat->dtp_approved_at ? \Carbon\Carbon::parse($flat->dtp_approved_at)->format('d M, Y') : 'Certified' }}</div>
                             </div>
                         </div>
@@ -95,7 +95,7 @@
                         <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
                             class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap">
                             <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
-                            <span>Approve (DTP)</span>
+                            <span>Approve (STP)</span>
                         </button>
                     @endif
                 </div>
@@ -139,11 +139,11 @@
                                 </span>
                                 @if($flat->is_aproved_by_dtp)
                                     <span class="px-2 py-0.5 bg-teal-400/25 border border-teal-300/50 text-teal-200 rounded text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                        <i class="bi bi-patch-check-fill text-teal-300"></i> DTP Certified
+                                        <i class="bi bi-patch-check-fill text-teal-300"></i> STP Certified
                                     </span>
                                 @else
                                     <span class="px-2 py-0.5 bg-amber-400/25 border border-amber-300/50 text-amber-200 rounded text-[9px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                        <i class="bi bi-hourglass-split text-amber-300"></i> DTP Pending
+                                        <i class="bi bi-hourglass-split text-amber-300"></i> STP Pending
                                     </span>
                                 @endif
                             </div>
@@ -304,7 +304,7 @@
 
                 </div>
 
-                <!-- Column Right: Planning, Approvals, OC & DTP Status (5 Cols) -->
+                <!-- Column Right: Planning, Approvals, OC & STP Status (5 Cols) -->
                 <div class="lg:col-span-5 space-y-4">
                     
                     <!-- 4. Planning & Building Plan Approvals -->
@@ -453,20 +453,20 @@
                         </div>
                     </div>
 
-                    <!-- 6. DTP Statutory Approval Status -->
+                    <!-- 6. STP Statutory Approval Status -->
                     <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden print-clean">
                         <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-150 flex items-center justify-between">
                             <div class="flex items-center gap-2">
                                 <i class="bi bi-patch-check-fill text-teal-600 text-xs"></i>
-                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">DTP Statutory Approval Status</h3>
+                                <h3 class="text-[10.5px] font-black uppercase tracking-wider text-slate-800">STP Statutory Approval Status</h3>
                             </div>
                             @if($flat->is_aproved_by_dtp)
                                 <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
-                                    <i class="bi bi-check-circle-fill"></i> DTP Approved
+                                    <i class="bi bi-check-circle-fill"></i> STP Approved
                                 </span>
                             @else
                                 <span class="px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-200 rounded text-[8.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs">
-                                    <i class="bi bi-hourglass-split"></i> Pending DTP
+                                    <i class="bi bi-hourglass-split"></i> Pending STP
                                 </span>
                             @endif
                         </div>
@@ -475,7 +475,7 @@
                                 <div>
                                     <span class="block text-[8.5px] font-mono uppercase text-slate-500 font-bold">Clearance Status</span>
                                     <span class="text-xs font-black {{ $flat->is_aproved_by_dtp ? 'text-emerald-800' : 'text-amber-800' }} mt-0.5 block">
-                                        {{ $flat->is_aproved_by_dtp ? 'APPROVED & CERTIFIED BY DTP' : 'PENDING OFFICIAL DTP CERTIFICATION' }}
+                                        {{ $flat->is_aproved_by_dtp ? 'APPROVED & CERTIFIED BY STP' : 'PENDING OFFICIAL STP CERTIFICATION' }}
                                     </span>
                                     <span class="text-[8.5px] font-mono {{ $flat->is_aproved_by_dtp ? 'text-emerald-700' : 'text-slate-500' }}">
                                         Database Field: <strong>is_aproved_by_DTP = {{ $flat->is_aproved_by_dtp ? '1' : '0' }}</strong>
@@ -490,7 +490,7 @@
                                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
                                     <span class="block text-[8.5px] font-mono uppercase text-slate-400 font-bold">Approved By Official</span>
                                     <span class="font-bold text-slate-800 text-xs mt-0.5 block truncate">
-                                        {{ $flat->dtp_user_name ?? ($flat->is_aproved_by_dtp ? 'DTP Official' : 'Pending Verification') }}
+                                        {{ $flat->dtp_user_name ?? ($flat->is_aproved_by_dtp ? 'STP Official' : 'Pending Verification') }}
                                     </span>
                                 </div>
                                 <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-150">
@@ -506,7 +506,7 @@
                                     <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
                                         class="w-full py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer">
                                         <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
-                                        <span>Approve & Certify Under DTP Authority</span>
+                                        <span>Approve & Certify Under STP Authority</span>
                                     </button>
                                 </div>
                             @endif
@@ -537,11 +537,11 @@
             });
         }
 
-        // SweetAlert Confirmation and AJAX Approval for DTP
+        // SweetAlert Confirmation and AJAX Approval for STP
         function approveFlatDtp(secureId, flatNum, blockName) {
             Swal.fire({
-                title: 'Official DTP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under DTP Authority?<br><br>
+                title: 'Official STP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under STP Authority?<br><br>
                 <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
                     <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
                     <div>&bull; Action will be recorded in digital audit logs with your officer credentials.</div>
@@ -556,7 +556,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
-                        title: 'Recording DTP Approval...',
+                        title: 'Recording STP Approval...',
                         text: 'Please wait while digital clearance is authenticated.',
                         allowOutsideClick: false,
                         didOpen: () => Swal.showLoading()

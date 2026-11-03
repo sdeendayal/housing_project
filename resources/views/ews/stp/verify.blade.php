@@ -264,13 +264,13 @@
                             </div>
                         </div>
 
-                        <!-- Card 2: Approved by DTP -->
+                        <!-- Card 2: Approved by STP -->
                         <div onclick="setApprovalCardFilter('approved')" id="card-filter-approved"
                             class="group relative bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs hover:shadow-md hover:border-emerald-300 cursor-pointer transition-all duration-200">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-black uppercase text-emerald-800 tracking-wider flex items-center gap-1">
                                     <i class="bi bi-patch-check-fill text-emerald-600"></i>
-                                    <span>Approved by DTP</span>
+                                    <span>Approved by STP</span>
                                 </span>
                                 <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-xs">
                                     <i class="bi bi-shield-check"></i>
@@ -286,7 +286,7 @@
                             </div>
                         </div>
 
-                        <!-- Card 3: Pending DTP Approval -->
+                        <!-- Card 3: Pending STP Approval -->
                         <div onclick="setApprovalCardFilter('pending')" id="card-filter-pending"
                             class="group relative bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs hover:shadow-md hover:border-amber-300 cursor-pointer transition-all duration-200">
                             <div class="flex items-center justify-between">
@@ -312,7 +312,7 @@
                         <div class="bg-gradient-to-br from-slate-900 to-indigo-950 text-white rounded-xl p-3.5 shadow-xs flex flex-col justify-between">
                             <div class="flex items-center justify-between">
                                 <span class="text-[9px] font-black uppercase text-slate-300 tracking-wider">Clearance Ratio</span>
-                                <span class="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-white/10 text-emerald-300 border border-white/15" id="card-clearance-status">DTP Quota</span>
+                                <span class="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold bg-white/10 text-emerald-300 border border-white/15" id="card-clearance-status">STP Quota</span>
                             </div>
                             <div class="mt-2">
                                 <div class="flex items-baseline justify-between">
@@ -324,7 +324,7 @@
                                 </div>
                             </div>
                             <div class="mt-1 text-[8px] font-mono text-slate-400 flex items-center justify-between">
-                                <span>Authority: DTP</span>
+                                <span>Authority: STP</span>
                                 <span class="text-emerald-300 font-bold">100% Certified</span>
                             </div>
                         </div>
@@ -395,7 +395,7 @@
                                         <th class="px-4 py-3">Colonizer</th>
                                         <th class="px-4 py-3">Location</th>
                                         <th class="px-4 py-3">OC Status</th>
-                                        <th class="px-4 py-3">DTP Status</th>
+                                        <th class="px-4 py-3">STP Status</th>
                                         <th class="px-4 py-3 text-right">Actions</th>
                                     </tr>
                                 </thead>
@@ -645,7 +645,7 @@
             $('#card-badge-pending-pct').text((100 - approvalRate) + '%');
             $('#card-val-rate').text(approvalRate + '%');
             $('#card-progress-bar').css('width', approvalRate + '%');
-            $('#card-clearance-status').text(approvalRate === 100 ? '100% Cleared' : (approvedFlats > 0 ? `${approvedFlats}/${totalFlats} Cleared` : 'Pending DTP'));
+            $('#card-clearance-status').text(approvalRate === 100 ? '100% Cleared' : (approvedFlats > 0 ? `${approvedFlats}/${totalFlats} Cleared` : 'Pending STP'));
 
             // 1. Table Header License & Count
             $('#res-table-license-badge').text(currentVerifyData.license_no);
@@ -724,7 +724,7 @@
 
                     const isDtpApproved = (f.is_aproved_by_dtp == 1);
                     const dtpBadge = isDtpApproved
-                        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono shadow-2xs" title="${f.dtp_approved_at ? 'Approved: ' + f.dtp_approved_at : 'Approved by DTP'}"><i class="bi bi-shield-check text-emerald-600"></i> Approved</span>`
+                        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono shadow-2xs" title="${f.dtp_approved_at ? 'Approved: ' + f.dtp_approved_at : 'Approved by STP'}"><i class="bi bi-shield-check text-emerald-600"></i> Approved</span>`
                         : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 font-mono shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>`;
 
                     const safeProjectName = projectName.replace(/'/g, "\\'");
@@ -787,11 +787,11 @@
             filterFlatsTable();
         }
 
-        // Direct DTP Approval from table row with SweetAlert confirmation
+        // Direct STP Approval from table row with SweetAlert confirmation
         function approveFlatDtpFromTable(secureId, flatNumber, flatCode, projectName) {
             Swal.fire({
-                title: 'Approve Flat by DTP?',
-                html: `Are you sure you want to officially approve Flat <strong>${flatNumber}</strong> (${flatCode}) of project <strong>${projectName}</strong> under DTP authority?<br><br><span class="text-xs text-emerald-700 font-bold">This will update is_aproved_by_DTP = 1 and record a verified audit log.</span>`,
+                title: 'Approve Flat by STP?',
+                html: `Are you sure you want to officially approve Flat <strong>${flatNumber}</strong> (${flatCode}) of project <strong>${projectName}</strong> under STP authority?<br><br><span class="text-xs text-emerald-700 font-bold">This will update is_aproved_by_DTP = 1 and record a verified audit log.</span>`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonText: '<i class="bi bi-check-circle-fill"></i> Yes, Approve & Certify',
@@ -812,7 +812,7 @@
                             if (resp.success) {
                                 Swal.fire({
                                     icon: 'success',
-                                    title: 'DTP Approved',
+                                    title: 'STP Approved',
                                     text: resp.message || 'Flat approved successfully.',
                                     timer: 2000,
                                     showConfirmButton: false
