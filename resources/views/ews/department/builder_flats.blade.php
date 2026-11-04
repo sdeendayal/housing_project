@@ -378,7 +378,6 @@
                                 <th id="th-col-4">Block / Tower No.</th>
                                 <th id="th-col-5">Floor Details</th>
                                 <th id="th-col-6">Flat No.</th>
-                                <th id="th-col-7">Unique Flat Code</th>
                                 <th id="th-col-8">STP Status</th>
                                 <th style="text-align: right; width: 6%;">Action</th>
                             </tr>
@@ -581,8 +580,8 @@
     </div>
 
     <!-- Full-Page Ultra-Premium Loader Overlay -->
-    <div id="full-page-loader" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/40 backdrop-blur-xs transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="relative bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center max-w-xs w-full mx-4 text-center transform scale-95 transition-all duration-300" id="loader-card">
+    <div id="full-page-loader" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs transition-all duration-300 opacity-100">
+        <div class="relative bg-white/95 backdrop-blur-md border border-slate-200/80 rounded-2xl p-6 shadow-2xl flex flex-col items-center justify-center max-w-xs w-full mx-4 text-center transform scale-100 transition-all duration-300" id="loader-card">
             <!-- Ambient Background Glow -->
             <div class="absolute -top-6 -left-6 w-24 h-24 bg-cyan-400/20 rounded-full blur-xl pointer-events-none"></div>
             <div class="absolute -bottom-6 -right-6 w-24 h-24 bg-blue-500/20 rounded-full blur-xl pointer-events-none"></div>
@@ -851,28 +850,6 @@
 
             if (table) table.draw();
         }
-            } else {
-                $('#card-scope-all')
-                    .addClass('border-2 border-emerald-500 bg-emerald-50/60 shadow-2xs ring-2 ring-emerald-400/20')
-                    .removeClass('border border-slate-200 bg-white');
-                restoreStandardHeaders();
-                $('#table-heading-title').find('span:first').text('All Haryana State Offered Builder Flats');
-            }
-
-            if (table) table.draw();
-        }
-
-        function setAllottedHeaders() {
-            $('#th-col-1').text('District');
-            $('#th-col-2').text('Category / Pool');
-            $('#th-col-3').text('Project Code');
-            $('#th-col-license').text('Pool Ref');
-            $('#th-col-4').text('Application No.');
-            $('#th-col-5').text('Allottee Name');
-            $('#th-col-6').text('Flat Number');
-            $('#th-col-7').text('Mobile (Masked)');
-            $('#th-col-8').text('Possession Status');
-        }
 
         function restoreStandardHeaders() {
             $('#th-col-1').text('District Name');
@@ -882,7 +859,6 @@
             $('#th-col-4').text('Block / Tower No.');
             $('#th-col-5').text('Floor Details');
             $('#th-col-6').text('Flat No.');
-            $('#th-col-7').text('Unique Flat Code');
             $('#th-col-8').text('STP Status');
             $('#filter-town-box, #filter-project-box, #filter-license-box').show();
         }
@@ -998,8 +974,22 @@
 
         // Initialize Yajra Server-side DataTables
         $(document).ready(function() {
+            // Safety timeout: ensure loader never remains permanently stuck
+            const loaderSafetyTimer = setTimeout(function() {
+                hideFullPageLoader();
+            }, 5000);
+
+            // Hook DataTables AJAX Lifecycle BEFORE initialization so the very first request is handled
+            $('#flats-table').on('preXhr.dt', function () {
+                showFullPageLoader('Syncing EWS Matrix...', 'Fetching official Haryana compliance dataset...');
+            });
+            $('#flats-table').on('xhr.dt error.dt draw.dt', function () {
+                clearTimeout(loaderSafetyTimer);
+                hideFullPageLoader();
+            });
+
             table = $('#flats-table').DataTable({
-                processing: false, // We use the custom full-page overlay instead
+                processing: false, // We use the premium full-page overlay instead (prevents duplicate loader)
                 serverSide: true,
                 searchDelay: 350,
                 pageLength: 10,
@@ -1024,26 +1014,16 @@
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold whitespace-nowrap' },
                     { data: 'floor', name: 'floor', class: 'font-bold text-slate-800 whitespace-nowrap' },
                     { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono whitespace-nowrap' },
-                    { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono whitespace-nowrap' },
                     { data: 'dtp_status', name: 'dtp_status', orderable: false, searchable: false, class: 'whitespace-nowrap' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right whitespace-nowrap' }
                 ],
                 language: {
                     search: "_INPUT_",
                     searchPlaceholder: "Search matrix...",
+                    emptyTable: '<div class="py-12 text-center text-slate-400 font-medium"><i class="bi bi-inbox text-3xl text-slate-300 block mb-2"></i>No offered flats found in Haryana registry matching the criteria.</div>',
+                    zeroRecords: '<div class="py-12 text-center text-slate-400 font-medium"><i class="bi bi-search text-3xl text-slate-300 block mb-2"></i>No records matching your search query.</div>'
                 },
                 order: []
-            });
-
-            // Hook DataTables AJAX Lifecycle to Full-Page Loader Overlay
-            table.on('preXhr.dt', function () {
-                showFullPageLoader('Syncing EWS Matrix...', 'Fetching official Haryana compliance dataset...');
-            });
-            table.on('xhr.dt', function () {
-                hideFullPageLoader();
-            });
-            table.on('error.dt', function () {
-                hideFullPageLoader();
             });
 
             // Auto-activate scope if passed in URL query param
