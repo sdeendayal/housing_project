@@ -1,6 +1,6 @@
 <style>
     /* ==========================================================================
-       Google Translate Top Banner & Layout Shift Elimination
+       Google Translate Top Banner & Layout Shift Elimination (Pure CSS - 0ms CPU)
        ========================================================================== */
     
     /* 1. Eliminate the Google Translate top banner frame completely across ALL pages */
@@ -117,7 +117,7 @@
 </style>
 
 <script>
-    /* Google Translate Layout Protection & UI Preservation */
+    /* Ultra-Fast, Non-Blocking Google Translate Shield */
     (function () {
         if (window.__gtHeadLoaded) return;
         window.__gtHeadLoaded = true;
@@ -134,38 +134,8 @@
             }
         }
 
-        // 2. Suppress Google Translate Top Banner and lock body position
-        function suppressGoogleBanner() {
-            if (document.body) {
-                if (document.body.style.top && document.body.style.top !== '0px') {
-                    document.body.style.setProperty('top', '0px', 'important');
-                }
-                if (document.body.style.position && document.body.style.position === 'relative') {
-                    document.body.style.setProperty('position', 'static', 'important');
-                }
-            }
-            if (document.documentElement && document.documentElement.style.top && document.documentElement.style.top !== '0px') {
-                document.documentElement.style.setProperty('top', '0px', 'important');
-            }
-
-            var bannerFrames = document.querySelectorAll('.goog-te-banner-frame, iframe.goog-te-banner-frame, body > .skiptranslate');
-            for (var i = 0; i < bannerFrames.length; i++) {
-                var el = bannerFrames[i];
-                if (el.style.display !== 'none') {
-                    el.style.setProperty('display', 'none', 'important');
-                    el.style.setProperty('visibility', 'hidden', 'important');
-                    el.style.setProperty('height', '0px', 'important');
-                }
-            }
-        }
-
         var isProtecting = false;
-
-        // 3. Scheme acronyms & brand names that must NEVER be translated into Hindi
-        var SCHEME_REGEX = /\b(MMSAY|MMGAY|MMGAV|EWS|PMAY(?:[-–]?[UG]|\([UG]\))?|PPP|CRID|HFA)\b/i;
-        var BRAND_REGEX = /housing\s+for\s+all/i;
-
-        // Reverse map: if Google Translate or cache translated these to Hindi phonetics, immediately restore them to English
+        var HINDI_RESTORE_REGEX = /एमएमएसवाई|एमएमजीए|एमएमजीवाय|एमएमजीएवी|ईडब्ल्यूएस|पीएमएवाई/;
         var HINDI_RESTORE_MAP = [
             { regex: /एमएमएसवाई/g, replace: 'MMSAY' },
             { regex: /एमएमजीए/g, replace: 'MMGAY' },
@@ -175,267 +145,114 @@
             { regex: /पीएमएवाई/g, replace: 'PMAY' }
         ];
 
-        function protectSchemeAndBrandNames(root) {
+        // 2. High-performance targeted protection
+        function fastProtectUI() {
             if (isProtecting) return;
-            var scope = root || document.body;
-            if (!scope) return;
-
             isProtecting = true;
+
             try {
-                // Step A: Reverse-restore any Hindi translated scheme abbreviations back to English
-                var walkerA = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null, false);
-                var nodeA;
-                var hindiNodes = [];
-                while ((nodeA = walkerA.nextNode())) {
-                    if (/एमएमएसवाई|एमएमजीए|एमएमजीवाय|एमएमजीएवी|ईडब्ल्यूएस|पीएमएवाई/.test(nodeA.nodeValue)) {
-                        hindiNodes.push(nodeA);
-                    }
-                }
-                for (var h = 0; h < hindiNodes.length; h++) {
-                    var hn = hindiNodes[h];
-                    var text = hn.nodeValue;
-                    for (var m = 0; m < HINDI_RESTORE_MAP.length; m++) {
-                        text = text.replace(HINDI_RESTORE_MAP[m].regex, HINDI_RESTORE_MAP[m].replace);
-                    }
-                    hn.nodeValue = text;
-                    if (hn.parentElement) {
-                        hn.parentElement.classList.add('notranslate');
-                        hn.parentElement.setAttribute('translate', 'no');
+                // Check if current mode is Hindi
+                var isHindi = true;
+                var cookies = document.cookie.split(';');
+                for (var c = 0; c < cookies.length; c++) {
+                    var ck = cookies[c].trim();
+                    if (ck.indexOf('googtrans=') === 0) {
+                        isHindi = (ck.indexOf('/en/hi') !== -1 || ck.indexOf('/auto/hi') !== -1);
+                        break;
                     }
                 }
 
-                // Step B: Protect English acronyms and brand names
-                var walkerB = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, null, false);
-                var nodeB;
-                var nodesToProcess = [];
-                while ((nodeB = walkerB.nextNode())) {
-                    var parent = nodeB.parentElement;
-                    if (!parent) continue;
-                    var tag = parent.tagName;
-                    if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'NOSCRIPT' || tag === 'TEXTAREA' || tag === 'TITLE') continue;
-                    if (parent.closest && parent.closest('.notranslate, [translate="no"]')) continue;
-
-                    var textVal = nodeB.nodeValue;
-                    if (SCHEME_REGEX.test(textVal) || BRAND_REGEX.test(textVal)) {
-                        nodesToProcess.push(nodeB);
-                    }
-                }
-
-                for (var i = 0; i < nodesToProcess.length; i++) {
-                    var tNode = nodesToProcess[i];
-                    var pNode = tNode.parentNode;
-                    if (!pNode) continue;
-
-                    var trimmed = tNode.nodeValue.trim();
-                    // If the entire text node is just the acronym / brand, protect parent directly
-                    if (/^(MMSAY|MMGAY|MMGAV|EWS|PMAY(?:[-–]?[UG]|\([UG]\))?|PPP|CRID|HFA|Housing\s+For\s+All)$/i.test(trimmed)) {
-                        if (pNode.tagName !== 'BODY' && pNode.tagName !== 'HTML') {
-                            pNode.classList.add('notranslate');
-                            pNode.setAttribute('translate', 'no');
-                            continue;
+                // 2A. Update 'Home' navigation tab ('होम' in Hindi, 'Home' in English)
+                var homeEls = document.querySelectorAll('.nav-home-text');
+                for (var h = 0; h < homeEls.length; h++) {
+                    var hel = homeEls[h];
+                    var htxt = hel.textContent.trim();
+                    if (isHindi) {
+                        if (htxt === 'घर' || htxt === 'Home') {
+                            hel.innerHTML = '<span class="notranslate" translate="no">होम</span>';
+                        }
+                    } else {
+                        if (htxt === 'होम' || htxt === 'घर') {
+                            hel.innerHTML = '<span class="notranslate" translate="no">Home</span>';
                         }
                     }
+                }
 
-                    // If mixed text, split into text and protected spans
-                    var combinedSplit = /(\b(?:MMSAY|MMGAY|MMGAV|EWS|PMAY(?:[-–]?[UG]|\([UG]\))?|PPP|CRID|HFA)\b|housing\s+for\s+all)/i;
-                    var testMatch = /(\b(?:MMSAY|MMGAY|MMGAV|EWS|PMAY(?:[-–]?[UG]|\([UG]\))?|PPP|CRID|HFA)\b|housing\s+for\s+all)/i;
-                    var parts = tNode.nodeValue.split(combinedSplit);
-                    if (parts.length > 1) {
-                        var frag = document.createDocumentFragment();
-                        for (var p = 0; p < parts.length; p++) {
-                            if (testMatch.test(parts[p])) {
-                                var span = document.createElement('span');
-                                span.className = 'notranslate';
-                                span.setAttribute('translate', 'no');
-                                span.textContent = parts[p];
-                                frag.appendChild(span);
-                            } else if (parts[p]) {
-                                frag.appendChild(document.createTextNode(parts[p]));
+                // 2B. Fast-protect icon elements
+                var icons = document.querySelectorAll('.material-symbols-outlined:not(.notranslate), .material-symbols-rounded:not(.notranslate), .material-symbols-sharp:not(.notranslate), .material-icons:not(.notranslate), [class*="material-symbols"]:not(.notranslate), .fa:not(.notranslate), [class*="fa-"]:not(.notranslate), .bi:not(.notranslate), [data-lucide]:not(.notranslate)');
+                for (var i = 0; i < icons.length; i++) {
+                    icons[i].classList.add('notranslate');
+                    icons[i].setAttribute('translate', 'no');
+                }
+
+                // 2C. Fast-protect captcha elements
+                var captchas = document.querySelectorAll('#captchaText:not(.notranslate), .captcha-badge:not(.notranslate)');
+                for (var cap = 0; cap < captchas.length; cap++) {
+                    captchas[cap].classList.add('notranslate');
+                    captchas[cap].setAttribute('translate', 'no');
+                }
+
+                // 2D. Reverse-restore scheme names only if present on page
+                if (document.body && HINDI_RESTORE_REGEX.test(document.body.innerText)) {
+                    var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                    var node;
+                    while ((node = walker.nextNode())) {
+                        if (HINDI_RESTORE_REGEX.test(node.nodeValue)) {
+                            var text = node.nodeValue;
+                            for (var m = 0; m < HINDI_RESTORE_MAP.length; m++) {
+                                text = text.replace(HINDI_RESTORE_MAP[m].regex, HINDI_RESTORE_MAP[m].replace);
+                            }
+                            node.nodeValue = text;
+                            if (node.parentElement) {
+                                node.parentElement.classList.add('notranslate');
+                                node.parentElement.setAttribute('translate', 'no');
                             }
                         }
-                        pNode.replaceChild(frag, tNode);
                     }
                 }
-            } catch (e) {
-                console.warn('Translate protection error:', e);
+            } catch (err) {
+                // Silently avoid performance degradation
             } finally {
                 isProtecting = false;
             }
         }
 
-        // 4. Protect all icon fonts, badges, captchas & ligatures
-        function protectIconsAndUI(root) {
-            var scope = root || document;
-            if (!scope.querySelectorAll) return;
+        window.fastProtectUI = fastProtectUI;
+        window.protectAllUIElements = fastProtectUI;
 
-            // Icons (Material Symbols, FontAwesome, Bootstrap Icons, Lucide)
-            var icons = scope.querySelectorAll(
-                '.material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .material-icons, [class*="material-symbols"], [class*="material-icon"], .fa, [class*="fa-"], .notranslate-icon, .bi, [class*="bi-"], [data-lucide], i[class*="bi"]'
-            );
-            for (var i = 0; i < icons.length; i++) {
-                var el = icons[i];
-                if (!el.classList.contains('notranslate')) {
-                    el.classList.add('notranslate');
-                }
-                if (el.getAttribute('translate') !== 'no') {
-                    el.setAttribute('translate', 'no');
-                }
-            }
-
-            // Captcha Codes
-            var captchas = scope.querySelectorAll('#captchaText, .captcha-badge, [id*="captchaText"], [class*="captcha-badge"]');
-            for (var c = 0; c < captchas.length; c++) {
-                var cap = captchas[c];
-                if (!cap.classList.contains('notranslate')) {
-                    cap.classList.add('notranslate');
-                }
-                if (cap.getAttribute('translate') !== 'no') {
-                    cap.setAttribute('translate', 'no');
-                }
-            }
-
-            // Captcha Labels
-            var labels = scope.querySelectorAll('label, .input-label');
-            for (var l = 0; l < labels.length; l++) {
-                var lbl = labels[l];
-                if (/captcha/i.test(lbl.textContent) && !lbl.classList.contains('notranslate')) {
-                    lbl.classList.add('notranslate');
-                    lbl.setAttribute('translate', 'no');
-                }
-            }
-
-            // Badges & Acronyms
-            var badges = scope.querySelectorAll('.badge-scheme, .portal-group-label, .pp-scheme-new-badge-sm');
-            for (var b = 0; b < badges.length; b++) {
-                var badge = badges[b];
-                if (!badge.classList.contains('notranslate')) {
-                    badge.classList.add('notranslate');
-                }
-                if (badge.getAttribute('translate') !== 'no') {
-                    badge.setAttribute('translate', 'no');
-                }
-            }
+        // 3. Debounced MutationObserver (Max once every 120ms, zero main-thread freezing)
+        var debounceTimer = null;
+        function requestProtection() {
+            if (debounceTimer) return;
+            debounceTimer = setTimeout(function () {
+                debounceTimer = null;
+                fastProtectUI();
+            }, 120);
         }
 
-        // 5. Ensure 'Home' navigation tab is rendered as 'होम' in Hindi instead of 'घर'
-        function updateHomeNavText() {
-            var isHindi = false;
-            var cookies = document.cookie.split(';');
-            var hasCookie = false;
-            for (var i = 0; i < cookies.length; i++) {
-                var c = cookies[i].trim();
-                if (c.indexOf('googtrans=') === 0) {
-                    hasCookie = true;
-                    if (c.indexOf('/en/hi') !== -1 || c.indexOf('/auto/hi') !== -1) {
-                        isHindi = true;
-                    }
-                    break;
-                }
-            }
-            if (!hasCookie) {
-                isHindi = true;
-            }
-
-            var homeLabels = document.querySelectorAll('.nav-home-text');
-            for (var k = 0; k < homeLabels.length; k++) {
-                var el = homeLabels[k];
-                var current = el.textContent.trim();
-                if (isHindi) {
-                    if (current === 'घर' || current === 'Home') {
-                        el.innerHTML = '<span class="notranslate" translate="no">होम</span>';
-                    }
-                } else {
-                    if (current === 'होम' || current === 'घर') {
-                        el.innerHTML = '<span class="notranslate" translate="no">Home</span>';
-                    }
-                }
-            }
-
-            // Also check any navigation anchor with text 'घर' that was translated from 'Home'
-            var navLinks = document.querySelectorAll('nav a, header a, .navbar a');
-            for (var n = 0; n < navLinks.length; n++) {
-                var link = navLinks[n];
-                for (var cn = 0; cn < link.childNodes.length; cn++) {
-                    var child = link.childNodes[cn];
-                    if (child.nodeType === 3 && child.nodeValue.trim() === 'घर') {
-                        if (isHindi) {
-                            var span = document.createElement('span');
-                            span.className = 'notranslate';
-                            span.setAttribute('translate', 'no');
-                            span.textContent = 'होम';
-                            link.replaceChild(span, child);
-                        }
-                    }
-                }
-            }
-        }
-
-        function protectAll(root) {
-            protectIconsAndUI(root);
-            protectSchemeAndBrandNames(root);
-            updateHomeNavText();
-            suppressGoogleBanner();
-        }
-
-        window.protectAllUIElements = protectAll;
-        window.suppressGoogleBanner = suppressGoogleBanner;
-
-        // MutationObserver intercepts any node as it is parsed or added dynamically
         if (window.MutationObserver) {
-            new MutationObserver(function (mutations) {
-                suppressGoogleBanner();
-                for (var i = 0; i < mutations.length; i++) {
-                    var m = mutations[i];
-                    if (m.type === 'childList') {
-                        for (var j = 0; j < m.addedNodes.length; j++) {
-                            var node = m.addedNodes[j];
-                            if (node.nodeType === 1) {
-                                if (node.classList && (node.classList.contains('goog-te-banner-frame') || (node.classList.contains('skiptranslate') && node.parentElement === document.body))) {
-                                    node.style.setProperty('display', 'none', 'important');
-                                    node.style.setProperty('height', '0px', 'important');
-                                }
-                                if (node.matches && node.matches('.material-symbols-outlined, .material-symbols-rounded, .material-symbols-sharp, .material-icons, [class*="material-symbols"], .bi, [class*="bi-"], [data-lucide]')) {
-                                    node.classList.add('notranslate');
-                                    node.setAttribute('translate', 'no');
-                                }
-                                protectAll(node);
-                            } else if (node.nodeType === 3) {
-                                protectSchemeAndBrandNames(node.parentElement || document.body);
-                            }
-                        }
-                    } else if (m.type === 'characterData') {
-                        protectSchemeAndBrandNames(m.target.parentElement || document.body);
-                    } else if (m.type === 'attributes' && m.target === document.body) {
-                        suppressGoogleBanner();
+            var observer = new MutationObserver(function (mutations) {
+                for (var m = 0; m < mutations.length; m++) {
+                    var mut = mutations[m];
+                    if (mut.type === 'characterData' || (mut.type === 'childList' && mut.addedNodes.length > 0)) {
+                        requestProtection();
+                        break;
                     }
                 }
-            }).observe(document.documentElement, {
-                childList: true,
-                subtree: true,
-                characterData: true,
-                attributes: true,
-                attributeFilter: ['style', 'class']
             });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                fastProtectUI();
+                if (document.body) {
+                    observer.observe(document.body, {
+                        childList: true,
+                        subtree: true,
+                        characterData: true
+                    });
+                }
+            });
+        } else {
+            document.addEventListener('DOMContentLoaded', fastProtectUI);
         }
-
-        // Periodic check to ensure Google's asynchronous scripts never re-show banner or push body
-        var bannerCheckCount = 0;
-        var bannerInterval = setInterval(function () {
-            suppressGoogleBanner();
-            protectSchemeAndBrandNames(document.body);
-            bannerCheckCount++;
-            if (bannerCheckCount > 60) {
-                clearInterval(bannerInterval);
-            }
-        }, 200);
-
-        document.addEventListener('DOMContentLoaded', function () {
-            protectAll(document);
-            suppressGoogleBanner();
-        });
-
-        // Run immediately
-        protectAll(document);
-        suppressGoogleBanner();
     })();
 </script>

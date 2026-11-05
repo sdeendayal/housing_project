@@ -9,6 +9,9 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
 class GlobalGoogleTranslateMiddleware
 {
+    private static ?string $cachedHead = null;
+    private static ?string $cachedBody = null;
+
     /**
      * Handle an incoming request and automatically inject Google Translate & layout protection.
      */
@@ -42,11 +45,13 @@ class GlobalGoogleTranslateMiddleware
         }
 
         try {
-            // Render the universal CSS & protection snippet for <head>
-            $headSnippet = view('partials.google-translate-head')->render();
-
-            // Render the widget initialization & tidy script for <body>
-            $bodySnippet = view('partials.google-translate')->render();
+            // Render and cache the snippets in memory to avoid disk I/O on every request
+            if (self::$cachedHead === null) {
+                self::$cachedHead = view('partials.google-translate-head')->render();
+            }
+            if (self::$cachedBody === null) {
+                self::$cachedBody = view('partials.google-translate')->render();
+            }
 
             // 4. Auto-detect if the page already has a language switcher element
             // If NOT present, automatically provide a clean, elegant floating badge in top-right
@@ -61,13 +66,13 @@ class GlobalGoogleTranslateMiddleware
             // 5. Inject before </head>
             $headPos = strripos($content, '</head>');
             if ($headPos !== false) {
-                $content = substr_replace($content, $headSnippet . "\n</head>", $headPos, strlen('</head>'));
+                $content = substr_replace($content, self::$cachedHead . "\n</head>", $headPos, strlen('</head>'));
             }
 
             // 6. Inject floating container (if needed) & body script before </body>
             $bodyPos = strripos($content, '</body>');
             if ($bodyPos !== false) {
-                $injection = $floatingWidget . "\n" . $bodySnippet . "\n</body>";
+                $injection = $floatingWidget . "\n" . self::$cachedBody . "\n</body>";
                 $content = substr_replace($content, $injection, $bodyPos, strlen('</body>'));
             }
 
