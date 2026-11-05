@@ -26,7 +26,7 @@
                     <img src="{{ asset('Haryana_emblem.png') }}" alt="Government of Haryana">
                 </div>
                 <p class="pp-auth-card__dept mb-0">Government of Haryana</p>
-                <p class="pp-auth-card__scheme mb-0">Housing For All — Physical Possession Portal</p>
+                <p class="pp-auth-card__scheme mb-0"><span class="notranslate" translate="no">Housing For All</span> — Physical Possession Portal</p>
                 @unless($isOfficer)
                     <span class="pp-auth-chip">New Portal</span>
                 @endunless

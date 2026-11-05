@@ -424,10 +424,10 @@
       <div class="cl-card">
          <div class="cl-brand">
             <div class="cl-brand__icon">
-               <span class="material-symbols-outlined">apartment</span>
+               <span class="material-symbols-outlined notranslate" translate="no">apartment</span>
             </div>
             <div>
-               <p class="cl-brand__title">Housing For All (MMGAV)</p>
+               <p class="cl-brand__title"><span class="notranslate" translate="no">Housing For All</span> (MMGAV)</p>
                <p class="cl-brand__sub">Citizen Portal</p>
             </div>
          </div>
@@ -435,7 +435,7 @@
          <div class="cl-body">
             <div class="cl-head">
                <div class="cl-head__icon">
-                  <span class="material-symbols-outlined">lock</span>
+                  <span class="material-symbols-outlined notranslate" translate="no">lock</span>
                </div>
                <div>
                   <p class="cl-head__title">Verify OTP</p>
@@ -444,8 +444,8 @@
             </div>
 
             <div class="cl-tags">
-               <span class="cl-tag"><span class="material-symbols-outlined">sms</span> OTP Verification</span>
-               <span class="cl-tag"><span class="material-symbols-outlined">schedule</span> Valid 10 min</span>
+               <span class="cl-tag"><span class="material-symbols-outlined notranslate" translate="no">sms</span> OTP Verification</span>
+               <span class="cl-tag"><span class="material-symbols-outlined notranslate" translate="no">schedule</span> Valid 10 min</span>
             </div>
 
             @if($usesFixedOtp ?? false)
@@ -457,7 +457,7 @@
             <div class="cl-field">
                <label class="cl-label">Mobile Number <span class="req">*</span></label>
                <div class="cl-mobile cl-mobile--readonly">
-                  <span class="cl-mobile__code">+91</span>
+                  <span class="cl-mobile__code notranslate" translate="no">+91</span>
                   <input
                      type="text"
                      class="cl-mobile__input"
@@ -492,7 +492,7 @@
                <button type="submit" class="cl-btn" id="verifyOtpBtn">
                   <span class="btn-label-default">
                      Verify OTP
-                     <span class="material-symbols-outlined">arrow_forward</span>
+                     <span class="material-symbols-outlined notranslate" translate="no">arrow_forward</span>
                   </span>
                   <span class="btn-label-loading">
                      <span class="btn-spinner" aria-hidden="true"></span>

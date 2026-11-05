@@ -24,13 +24,13 @@
 
                     </div>
 
-                    <h2 class="text-2xl md:text-3xl font-bold text-civic-blue mb-4">
+                    <h2 class="text-2xl md:text-3xl font-bold text-civic-blue mb-4 notranslate" translate="no">
                         Department of Housing For All
                     </h2>
 
                     <p class="max-w-4xl mx-auto text-slate-600 text-base leading-7">
                         The State Government vide notification dated 15.12.2020 has created a new Department
-                        <span class="font-semibold text-civic-blue">“Housing For All”</span>
+                        <span class="font-semibold text-civic-blue notranslate" translate="no">“Housing For All”</span>
                         with the objective to work as the Nodal Agency for promotion, development and facilitation
                         of housing requirements especially for socio-economically marginalized sections of society
                         in urban and rural areas of the State.

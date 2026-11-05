@@ -26,7 +26,7 @@
 
     {{-- Header actions --}}
     <div class="flex items-center gap-3">        
-        
+        <div id="google_translate_element"></div>
 
         {{-- Date --}}
         <div

@@ -6,7 +6,7 @@
         <button id="logoPrev"
             class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
 
-            <span class="material-symbols-outlined text-slate-700">
+            <span class="material-symbols-outlined notranslate text-slate-700" translate="no">
                 chevron_left
             </span>
 
@@ -79,7 +79,7 @@
         <button id="logoNext"
             class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
 
-            <span class="material-symbols-outlined text-slate-700">
+            <span class="material-symbols-outlined notranslate text-slate-700" translate="no">
                 chevron_right
             </span>
 

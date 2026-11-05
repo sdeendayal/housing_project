@@ -4,11 +4,13 @@
             <!-- Placeholder for Department Logo -->
             <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
             <div>
-                <h1 class="text-2xl font-bold leading-tight">Department of Housing For All</h1>
+                <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">Department of Housing For All</h1>
                 <p class="text-sm opacity-90">Government of Haryana</p>
             </div>
         </div>
-        <!-- National Emblem Placeholder -->
-       
+        <!-- Google Translate Element -->
+        <div class="flex items-center space-x-3 shrink-0">
+            <div id="google_translate_element"></div>
+        </div>
     </div>
 </header>

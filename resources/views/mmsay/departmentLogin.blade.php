@@ -1,13 +1,3 @@
-<!-- Bootstrap -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- Google Font -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<!-- Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
-<script>
-    document.addEventListener(...)
-</script>
-
 @extends('layouts.auth')
 @section('title', 'MMSAY - Department Login')
 @section('content')
@@ -84,9 +74,16 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            gap: 16px;
+            overflow-y: auto;
         }
 
         /* Branding Header */
+        .branding-header {
+            margin-bottom: 12px;
+            flex-shrink: 0;
+        }
+
         .branding-header .emblem-img {
             height: 45px !important;
             width: auto;
@@ -94,33 +91,36 @@
         }
 
         .branding-header .dept-title {
-            font-size: 13.5px !important;
+            font-size: 14px !important;
             font-weight: 800;
             letter-spacing: 0.8px;
             color: #ffffff;
             margin: 0;
+            line-height: 1.35;
         }
 
         .branding-header .dept-sub {
-            font-size: 10.5px !important;
+            font-size: 11px !important;
             color: #fbd38d;
             font-weight: 600;
             margin: 0;
             text-transform: uppercase;
+            line-height: 1.4;
+            display: block;
         }
 
         /* Hero presentation */
         .hero-section {
             width: 100%;
             max-width: 720px;
-            margin-top: -10px;
-            transform: translateY(-24px);
+            margin-top: 14px;
+            transform: none !important;
         }
 
         .hero-title {
             font-size: 26px !important;
             font-weight: 800;
-            line-height: 1.25;
+            line-height: 1.35 !important;
             color: #ffffff;
             margin-bottom: 12px !important;
             text-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
@@ -684,29 +684,29 @@
                 <div class="branding-header d-flex align-items-center gap-3">
                     <img src="{{ asset('Haryana_emblem.png') }}" alt="Haryana Emblem" class="emblem-img">
                     <div>
-                        <h2 class="dept-title">Housing For All</h2>
+                        <h2 class="dept-title notranslate" translate="no">Housing For All</h2>
                         <p class="dept-sub">Government of Haryana</p>
                     </div>
                 </div>
 
                 <!-- Hero Section -->
                 <div class="hero-section">
-                    <h1 class="hero-title">Mukhyamantri Shehri Awas Yojana <span class="badge-scheme">MMSAY</span></h1>
+                    <h1 class="hero-title">Mukhyamantri Shehri Awas Yojana <span class="badge-scheme notranslate" translate="no">MMSAY</span></h1>
                     <p class="hero-desc">Building affordable, secure, and sustainable homes for every citizen of Haryana.
                         Access official records, approve registrations, and manage scheme allotments.</p>
 
                     <!-- Quick stats / badges -->
                     <div class="scheme-pill-container d-flex flex-wrap gap-2 mt-4">
                         <div class="scheme-pill">
-                            <span class="material-symbols-outlined">analytics</span>
+                            <span class="material-symbols-outlined notranslate" translate="no">analytics</span>
                             <span>1.38 Lakh+ Records Seeding</span>
                         </div>
                         <div class="scheme-pill">
-                            <span class="material-symbols-outlined">apartment</span>
+                            <span class="material-symbols-outlined notranslate" translate="no">apartment</span>
                             <span>Urban Development</span>
                         </div>
                         <div class="scheme-pill">
-                            <span class="material-symbols-outlined">security</span>
+                            <span class="material-symbols-outlined notranslate" translate="no">security</span>
                             <span>Secure Officer Portal</span>
                         </div>
                     </div>
@@ -716,84 +716,84 @@
                         <p class="portal-links-subtitle">Choose the portal applicable to your role.</p>
 
                         <div class="portal-link-group portal-link-group--mmsay">
-                            <p class="portal-group-label">MMSAY</p>
+                            <p class="portal-group-label notranslate" translate="no">MMSAY</p>
                             <div class="portal-link-list">
                                 <a href="{{ url('mmsay-citizen-login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">person</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">person</span></span>
                                     <span class="portal-link-copy">
                                         <span class="portal-link-name">Citizen Login</span>
                                         <span class="portal-link-scheme">MMSAY Portal</span>
                                     </span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
 
                                 <a href="{{ url('physical-possession/department/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">engineering</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">engineering</span></span>
                                     <span class="portal-link-copy">
                                         <span class="portal-link-name">Site Engineer Login</span>
                                         <span class="portal-link-scheme">Physical Possession</span>
                                     </span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
                             </div>
                         </div>
 
                         <div class="portal-link-group portal-link-group--mmgay">
-                            <p class="portal-group-label">MMGAY</p>
+                            <p class="portal-group-label notranslate" translate="no">MMGAY</p>
                             <div class="portal-link-list">
                                 <a href="{{ url('mmgav/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">how_to_reg</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">how_to_reg</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">Applicant
                                             Login</span><span class="portal-link-scheme">MMGAY Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
 
                                 <a href="{{ url('mmgay/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">badge</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">badge</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">Officer Login</span><span
                                             class="portal-link-scheme">MMGAY Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
 
                                 <a href="{{ url('mmgay/bdo/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">admin_panel_settings</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">admin_panel_settings</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">BDPO Login</span><span
                                             class="portal-link-scheme">MMGAY Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
                             </div>
                         </div>
 
                         <div class="portal-link-group portal-link-group--ews">
-                            <p class="portal-group-label">EWS</p>
+                            <p class="portal-group-label notranslate" translate="no">EWS</p>
                             <div class="portal-link-list">
                                 <a href="{{ url('ews/citizen/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">person</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">person</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">Citizen Login</span><span
                                             class="portal-link-scheme">EWS Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
 
                                 <a href="{{ url('ews/developer/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">developer_mode</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">developer_mode</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">DTP
                                             Login</span><span class="portal-link-scheme">EWS Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
 
                                 <a href="{{ url('ews/department/login') }}" class="portal-login-link">
                                     <span class="portal-link-icon"><span
-                                            class="material-symbols-outlined">apartment</span></span>
+                                            class="material-symbols-outlined notranslate" translate="no">apartment</span></span>
                                     <span class="portal-link-copy"><span class="portal-link-name">Department
                                             Login</span><span class="portal-link-scheme">EWS Portal</span></span>
-                                    <span class="material-symbols-outlined portal-arrow">arrow_forward</span>
+                                    <span class="material-symbols-outlined notranslate portal-arrow" translate="no">arrow_forward</span>
                                 </a>
                             </div>
                         </div>
@@ -802,18 +802,23 @@
 
                 <!-- Simple Left Footer -->
                 <div class="left-footer">
-                    <p>© 2026 Department of Housing For All, Haryana. Designed by CRID.</p>
+                    <p>© 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Haryana. Designed by CRID.</p>
                 </div>
             </div>
         </div>
 
         <!-- RIGHT PANEL: Officer Login Form -->
         <div class="mmsay-form-panel d-flex align-items-center justify-content-center">
+            <!-- Floating Language Selector for Department Login -->
+            <div style="position: fixed; top: 16px; right: 20px; z-index: 9999;">
+                <div id="google_translate_element"></div>
+            </div>
+
             <!-- Floating Mobile Branding -->
             <div class="mobile-branding d-none">
                 <img src="{{ asset('Haryana_emblem.png') }}" alt="Haryana Emblem" class="emblem-img-mobile">
                 <div>
-                    <h2 class="dept-title-mobile">Department of Housing For All</h2>
+                    <h2 class="dept-title-mobile notranslate" translate="no">Department of Housing For All</h2>
                     <p class="dept-sub-mobile">Government of Haryana</p>
                 </div>
             </div>
@@ -822,7 +827,7 @@
                 <!-- Header -->
                 <div class="login-header">
                     <div class="login-badge-icon">
-                        <span class="material-symbols-outlined">admin_panel_settings</span>
+                        <span class="material-symbols-outlined notranslate" translate="no">admin_panel_settings</span>
                     </div>
                     <h3 class="login-title">Department Login</h3>
                     <p class="login-subtitle">Access authorized departmental functions</p>
@@ -836,7 +841,7 @@
                     <div class="input-field-group mb-2">
                         <label class="input-label">Email Address / Mobile</label>
                         <div class="input-container-premium">
-                            <span class="material-symbols-outlined input-icon-pre">mail</span>
+                            <span class="material-symbols-outlined notranslate input-icon-pre" translate="no">mail</span>
                             <input type="text" class="form-input-premium" name="email"
                                 placeholder="Enter official email or mobile" required>
                         </div>
@@ -846,7 +851,7 @@
                     <div class="input-field-group mb-2">
                         <label class="input-label">Password</label>
                         <div class="input-container-premium">
-                            <span class="material-symbols-outlined input-icon-pre">lock</span>
+                            <span class="material-symbols-outlined notranslate input-icon-pre" translate="no">lock</span>
                             <input type="password" class="form-input-premium" name="password"
                                 placeholder="Enter account password" required>
                         </div>
@@ -854,13 +859,13 @@
 
                     <!-- Input Group: CAPTCHA -->
                     <div class="input-field-group mb-2">
-                        <label class="input-label">
-                            Captcha Verification
+                        <label class="input-label notranslate" translate="no">
+                            CAPTCHA Verification
                         </label>
 
                         {{-- Captcha and refresh row --}}
                         <div class="captcha-row d-flex align-items-center gap-2">
-                            <div id="captchaText" class="captcha-badge flex-grow-1 w-100">
+                            <div id="captchaText" class="captcha-badge flex-grow-1 w-100 notranslate" translate="no">
                                 {{ $captcha }}
                             </div>
 
@@ -868,7 +873,7 @@
                                 class="captcha-spin-btn flex-shrink-0"
                                 style="width: 44px !important; min-width: 44px !important; height: 34px !important;">
 
-                                <span class="material-symbols-outlined">
+                                <span class="material-symbols-outlined notranslate" translate="no">
                                     refresh
                                 </span>
                             </button>
@@ -886,7 +891,7 @@
                         id="loginBtn">
                         <span id="btnText" class="d-flex align-items-center justify-content-center gap-2">
                             Secure Access Portal
-                            <span class="material-symbols-outlined font-bold"
+                            <span class="material-symbols-outlined notranslate font-bold" translate="no"
                                 style="font-size: 18px;">arrow_forward</span>
                         </span>
                         <span id="btnLoader" style="display: none !important;"

@@ -27,7 +27,7 @@
                 <img alt="Haryana" class="w-6 h-6 object-contain brightness-0 invert" src="Haryana_emblem.png" />
             </div>
             <div class="min-w-0 sidebar-brand-text">
-                <p class="text-[12px] font-extrabold text-slate-800 leading-tight truncate">Housing For All</p>
+                <p class="text-[12px] font-extrabold text-slate-800 leading-tight truncate notranslate" translate="no">Housing For All</p>
                 <p class="text-[9px] font-semibold text-indigo-500">Govt. of Haryana</p>
             </div>
         </div>

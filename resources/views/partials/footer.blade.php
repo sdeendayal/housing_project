@@ -8,27 +8,27 @@
         <div class="pb-4 border-b border-slate-700 flex flex-wrap justify-center gap-4 text-sm text-slate-400">
 
             <a href="#" class="hover:text-white transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">language</span>
+                <span class="material-symbols-outlined notranslate text-[16px]" translate="no">language</span>
                 Web Information Manager
             </a>
 
             <a href="#" class="hover:text-white transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">feedback</span>
+                <span class="material-symbols-outlined notranslate text-[16px]" translate="no">feedback</span>
                 Feedback
             </a>
 
             <a href="#" class="hover:text-white transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">privacy_tip</span>
+                <span class="material-symbols-outlined notranslate text-[16px]" translate="no">privacy_tip</span>
                 Privacy Policy
             </a>
 
             <a href="#" class="hover:text-white transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">copyright</span>
+                <span class="material-symbols-outlined notranslate text-[16px]" translate="no">copyright</span>
                 Copyright Policy
             </a>
 
             <a href="#" class="hover:text-white transition flex items-center gap-1">
-                <span class="material-symbols-outlined text-[16px]">gavel</span>
+                <span class="material-symbols-outlined notranslate text-[16px]" translate="no">gavel</span>
                 Terms & Conditions
             </a>
 
@@ -40,7 +40,7 @@
             <div>
 
                 <p class="text-base font-semibold text-white">
-                    © 2026 Department of Housing For All, Government of Haryana
+                    © 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Government of Haryana
                 </p>
 
                 <p class="text-sm text-slate-400 mt-1">

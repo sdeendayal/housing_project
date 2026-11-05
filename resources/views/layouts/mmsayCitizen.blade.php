@@ -34,6 +34,7 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
+                    <div id="google_translate_element"></div>
                     <a href="{{ route('citizen.profile') }}" class="btn-v2-primary btn-v2-sm">
                         <span class="material-symbols-outlined text-[14px]">account_circle</span>
                         <span class="hidden sm:inline">Profile</span>
@@ -51,7 +52,7 @@
 
         <footer class="footer-v2 py-2 px-2.5 sm:px-4">
             <div class="max-w-[1280px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
-                <p class="text-[10px] font-bold text-slate-600">Housing For All · Govt. of Haryana</p>
+                <p class="text-[10px] font-bold text-slate-600"><span class="notranslate" translate="no">Housing For All</span> · Govt. of Haryana</p>
                 <p class="text-[9px] text-slate-400">© 2026 CRID Haryana</p>
             </div>
         </footer>

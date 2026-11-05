@@ -7,7 +7,7 @@
     {{-- Payment status banner (top of dashboard) --}}
     <div class="citizen-payment-banner {{ $isFullyPaid ? 'citizen-payment-banner--success' : 'citizen-payment-banner--warning' }}">
         <div class="citizen-payment-banner__icon">
-            <span class="material-symbols-outlined">{{ $isFullyPaid ? 'check_circle' : 'info' }}</span>
+            <span class="material-symbols-outlined notranslate" translate="no">{{ $isFullyPaid ? 'check_circle' : 'info' }}</span>
         </div>
         <div class="citizen-payment-banner__body">
             @if ($isFullyPaid)
@@ -30,7 +30,7 @@
         @unless ($isFullyPaid)
         <a href="{{ route('citizen.payment-status') }}" class="citizen-payment-banner__action">
             Pay EMI
-            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">arrow_forward</span>
         </a>
         @endunless
     </div>
@@ -75,7 +75,7 @@
                 <div class="rounded-lg border border-slate-100 bg-slate-50 p-2.5">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-600 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[14px]">account_balance_wallet</span>
+                            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">account_balance_wallet</span>
                         </span>
                         <p class="text-[9px] font-bold uppercase text-slate-600">Total Amount</p>
                     </div>
@@ -84,7 +84,7 @@
                 <div class="rounded-lg border border-emerald-100 bg-emerald-50/60 p-2.5">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-6 h-6 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[14px]">check_circle</span>
+                            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">check_circle</span>
                         </span>
                         <p class="text-[9px] font-bold uppercase text-emerald-700/80">Total Paid</p>
                     </div>
@@ -93,7 +93,7 @@
                 <div class="rounded-lg border {{ $hasOutstanding ? 'border-red-100 bg-red-50/60' : 'border-slate-100 bg-slate-50' }} p-2.5">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-6 h-6 rounded-md {{ $hasOutstanding ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-500' }} flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[14px]">pending</span>
+                            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">pending</span>
                         </span>
                         <p class="text-[9px] font-bold uppercase {{ $hasOutstanding ? 'text-red-700/80' : 'text-slate-500' }}">Outstanding</p>
                     </div>
@@ -102,7 +102,7 @@
                 <div class="rounded-lg border border-indigo-100 bg-indigo-50/60 p-2.5">
                     <div class="flex items-center gap-1.5 mb-1">
                         <span class="w-6 h-6 rounded-md bg-indigo-100 text-indigo-600 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[14px]">percent</span>
+                            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">percent</span>
                         </span>
                         <p class="text-[9px] font-bold uppercase text-indigo-700/80">Completed</p>
                     </div>
@@ -124,12 +124,12 @@
                 @if ($hasOutstanding)
                 <p class="text-[10px] text-slate-500 m-0">Outstanding amount pending</p>
                 <a href="{{ route('citizen.payment-status') }}" class="btn-v2-primary btn-v2-sm no-underline shrink-0">
-                    <span class="material-symbols-outlined text-[14px]">payment</span>
+                    <span class="material-symbols-outlined text-[14px] notranslate" translate="no">payment</span>
                     Pay Now
                 </a>
                 @else
                 <p class="text-[10px] text-emerald-600 font-semibold m-0 flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[14px]">verified</span>
+                    <span class="material-symbols-outlined text-[14px] notranslate" translate="no">verified</span>
                     All payments cleared
                 </p>
                 <a href="{{ route('citizen.payment-status') }}" class="text-[10px] font-bold text-indigo-600 hover:underline no-underline shrink-0">View full details</a>
@@ -239,21 +239,21 @@
                 <div class="flex flex-wrap gap-2">
                     @if($ppStatus === 'Visit Scheduled' || $ppStatus === 'Rejected')
                         <a href="{{ route('pp.citizen.submit') }}" class="btn-v2-primary btn-v2-sm no-underline">
-                            <span class="material-symbols-outlined text-[14px]">calendar_month</span>
+                            <span class="material-symbols-outlined text-[14px] notranslate" translate="no">calendar_month</span>
                             {{ $ppStatus === 'Rejected' ? 'Re-select Visit Slot' : 'Select Visit Slot' }}
                         </a>
                     @endif
                     
                     @if($latestPpApplication && $latestPpApplication->possession_certificate)
                         <a href="{{ asset('storage/' . $latestPpApplication->possession_certificate) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 text-[10px] font-bold text-emerald-700 no-underline hover:bg-emerald-100">
-                            <span class="material-symbols-outlined text-[16px]">verified_user</span>
+                            <span class="material-symbols-outlined text-[16px] notranslate" translate="no">verified_user</span>
                             Download Signed Possession Certificate
                         </a>
                     @endif
 
                     @if($latestPpApplication && $latestPpApplication->site_engineer_file)
                         <a href="{{ asset('storage/' . $latestPpApplication->site_engineer_file) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[10px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
-                            <span class="material-symbols-outlined text-[16px]">description</span>
+                            <span class="material-symbols-outlined text-[16px] notranslate" translate="no">description</span>
                             Download Final Possession Letter
                         </a>
                     @endif
@@ -269,16 +269,16 @@
         </div>
         <div class="p-3 flex flex-wrap gap-2">
             <a href="{{ route('citizen.profile') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700 no-underline hover:bg-slate-100">
-                <span class="material-symbols-outlined text-[16px]">account_circle</span>
+                <span class="material-symbols-outlined text-[16px] notranslate" translate="no">account_circle</span>
                 My Profile
             </a>
             <a href="{{ route('citizen.payment-status') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[11px] font-bold text-slate-700 no-underline hover:bg-slate-100">
-                <span class="material-symbols-outlined text-[16px]">payments</span>
+                <span class="material-symbols-outlined text-[16px] notranslate" translate="no">payments</span>
                 Payment Status
             </a>
             @if ($latestPpApplication && in_array($latestPpApplication->physical_possession_status, ['Visit Scheduled', 'Rejected']))
             <a href="{{ route('pp.citizen.submit') }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-indigo-200 bg-indigo-50 text-[11px] font-bold text-indigo-700 no-underline hover:bg-indigo-100">
-                <span class="material-symbols-outlined text-[16px]">calendar_month</span>
+                <span class="material-symbols-outlined text-[16px] notranslate" translate="no">calendar_month</span>
                 Select Visit Slot
             </a>
             @endif

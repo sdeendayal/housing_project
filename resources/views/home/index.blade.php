@@ -16,13 +16,13 @@
                     <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
 
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[20px]">
+                            <span class="material-symbols-outlined notranslate text-[20px]" translate="no">
                                 campaign
                             </span>
                             <span>Latest News</span>
                         </div>
 
-                        <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full">
+                        <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full notranslate" translate="no">
                             LIVE
                         </span>
 
@@ -65,7 +65,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Charki Dadri under MMSAY
+                                        Draw Results of Charki Dadri under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
@@ -74,7 +74,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Fatehabad under MMSAY
+                                        Draw Results of Fatehabad under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                     <span
                                         class="relative inline-block bg-red-600 text-yellow-300 font-bold text-[9px] px-1.5 py-[1px] rounded-sm border border-red-700 leading-none animate-pulse">
@@ -90,7 +90,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Gohana under MMSAY
+                                        Draw Results of Gohana under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                     <span
                                         class="relative inline-block bg-red-600 text-yellow-300 font-bold text-[9px] px-1.5 py-[1px] rounded-sm border border-red-700 leading-none animate-pulse">
@@ -106,7 +106,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Jagadhri under MMSAY
+                                        Draw Results of Jagadhri under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
@@ -115,7 +115,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Jhajjar under MMSAY
+                                        Draw Results of Jhajjar under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
@@ -124,7 +124,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Rohtak under MMSAY
+                                        Draw Results of Rohtak under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
@@ -162,14 +162,14 @@
                             <a class="flex items-start space-x-2" href="#">
                                 <span class="text-green-500 mt-0.5">●</span>
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">List of
-                                    Approved MMSAY
+                                    Approved <span class="notranslate" translate="no">MMSAY</span>
                                     Beneficiaries</span>
                             </a>
                         </li>
                         <li class="p-3 hover:bg-slate-50">
                             <a class="flex items-start space-x-2" href="#">
                                 <span class="text-green-500 mt-0.5">●</span>
-                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">MMGAY
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200"><span class="notranslate" translate="no">MMGAY</span>
                                     Progress
                                     Reports</span>
                             </a>
@@ -204,12 +204,12 @@
                                 
                                 <span class="absolute bottom-0 left-0 w-full h-1 bg-blue-600"></span>
 
-                                <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                <span class="material-symbols-outlined notranslate text-primary text-4xl" translate="no" style="font-variation-settings: 'FILL' 1;">
                                     apartment
                                 </span>
 
                                 <div class="flex flex-col items-start">
-                                    <div class="text-sm font-bold text-primary leading-tight">
+                                    <div class="text-sm font-bold text-primary leading-tight notranslate" translate="no">
                                         MMSAY
                                     </div>
                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
@@ -230,13 +230,14 @@
                                 </span>
 
                                 <span
-                                    class="material-symbols-outlined text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    class="material-symbols-outlined notranslate text-primary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    translate="no"
                                     style="font-variation-settings: 'FILL' 0;">
                                     apartment
                                 </span>
 
                                 <div>
-                                    <div class="text-sm font-bold text-primary">
+                                    <div class="text-sm font-bold text-primary notranslate" translate="no">
                                         MMSAY
                                     </div>
                                 </div>
@@ -302,12 +303,12 @@
                                 
                                 <span class="absolute bottom-0 left-0 w-full h-1 bg-green-600"></span>
 
-                                <span class="material-symbols-outlined text-secondary text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                <span class="material-symbols-outlined notranslate text-secondary text-4xl" translate="no" style="font-variation-settings: 'FILL' 1;">
                                     domain
                                 </span>
 
                                 <div class="flex flex-col items-start">
-                                    <div class="text-sm font-bold text-primary leading-tight">
+                                    <div class="text-sm font-bold text-primary leading-tight notranslate" translate="no">
                                         MMGAY
                                     </div>
                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
@@ -328,13 +329,14 @@
                                 </span>
 
                                 <span
-                                    class="material-symbols-outlined text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    class="material-symbols-outlined notranslate text-secondary text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    translate="no"
                                     style="font-variation-settings: 'FILL' 0;">
                                     domain
                                 </span>
 
                                 <div>
-                                    <div class="text-sm font-bold text-primary">
+                                    <div class="text-sm font-bold text-primary notranslate" translate="no">
                                         MMGAY
                                     </div>
                                 </div>
@@ -389,12 +391,12 @@
                                 
                                 <span class="absolute bottom-0 left-0 w-full h-1 bg-orange-600"></span>
 
-                                <span class="material-symbols-outlined text-on-tertiary-container text-4xl" style="font-variation-settings: 'FILL' 1;">
+                                <span class="material-symbols-outlined notranslate text-on-tertiary-container text-4xl" translate="no" style="font-variation-settings: 'FILL' 1;">
                                     foundation
                                 </span>
 
                                 <div class="flex flex-col items-start">
-                                    <div class="text-sm font-bold text-primary leading-tight">
+                                    <div class="text-sm font-bold text-primary leading-tight notranslate" translate="no">
                                         EWS
                                     </div>
                                     <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 text-[7.5px] font-bold tracking-wider uppercase select-none mt-1">
@@ -417,15 +419,16 @@
                                 </span>
 
                                 <span
-                                    class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    class="material-symbols-outlined notranslate text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    translate="no"
                                     style="font-variation-settings: 'FILL' 0;">
                                     foundation
                                 </span>
 
                                 <div class="flex-1 min-w-0">
                                     <div class="text-sm font-bold text-primary flex items-center justify-between">
-                                        <span>EWS</span>
-                                        <span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform duration-300 group-hover:rotate-180" id="ewsMainChevron">
+                                        <span class="notranslate" translate="no">EWS</span>
+                                        <span class="material-symbols-outlined notranslate text-slate-400 text-[18px] transition-transform duration-300 group-hover:rotate-180" translate="no" id="ewsMainChevron">
                                             expand_more
                                         </span>
                                     </div>
@@ -547,8 +550,8 @@
                                 <!-- Footer Helper -->
                                 <div class="px-3 py-1.5 bg-slate-50/80 border-t border-slate-100 text-center">
                                     <span class="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-1">
-                                        <span class="material-symbols-outlined text-slate-400 text-[13px]">verified_user</span>
-                                        Department of Housing For All, Haryana
+                                        <span class="material-symbols-outlined notranslate text-slate-400 text-[13px]" translate="no">verified_user</span>
+                                        <span class="notranslate" translate="no">Department of Housing For All</span>, Haryana
                                     </span>
                                 </div>
 
@@ -588,7 +591,7 @@
                         <button id="prevBtn"
                             class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10">
 
-                            <span class="material-symbols-outlined">
+                            <span class="material-symbols-outlined notranslate" translate="no">
                                 chevron_left
                             </span>
 
@@ -598,7 +601,7 @@
                         <button id="nextBtn"
                             class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-2 rounded-full z-10">
 
-                            <span class="material-symbols-outlined">
+                            <span class="material-symbols-outlined notranslate" translate="no">
                                 chevron_right
                             </span>
 
@@ -665,7 +668,7 @@
                                 class="material-symbols-outlined text-secondary-container text-sm">calendar_today</span>
                             <div>
                                 <div class="text-[10px] text-on-surface-variant mb-0.5">28 Apr, 2024</div>
-                                <p class="text-xs text-on-surface font-medium">MMGAY Phase 3 online applications open.</p>
+                                <p class="text-xs text-on-surface font-medium"><span class="notranslate" translate="no">MMGAY</span> Phase 3 online applications open.</p>
                             </div>
                         </div>
                     </div>
@@ -679,13 +682,13 @@
                     <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
 
                         <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-[20px]">
+                            <span class="material-symbols-outlined notranslate text-[20px]" translate="no">
                                 policy
                             </span>
                             <span>Policy / Guidelines</span>
                         </div>
 
-                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full">
+                        <span class="text-xs bg-white/20 px-2 py-1 rounded-full notranslate" translate="no">
                             Docs
                         </span>
 
@@ -698,7 +701,7 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
 
@@ -710,19 +713,19 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
 
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Redesignation of Department of Housing for All
+                                        Redesignation of <span class="notranslate" translate="no">Department of Housing for All</span>
                                     </span>
                                 </a>
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
 
@@ -734,7 +737,7 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
 
@@ -746,10 +749,8 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
-                                    </span>
-
                                     </span>
 
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
@@ -760,7 +761,7 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined text-sky-500 text-[20px]">
+                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
 
@@ -854,7 +855,7 @@
                     class="bg-white rounded-[28px] border border-slate-200 shadow-lg p-8 md:p-10 hover:shadow-xl transition duration-300">
 
                     <!-- Heading -->
-                    <h2 class="text-[30px] font-bold text-slate-800 text-center">
+                    <h2 class="text-[30px] font-bold text-slate-800 text-center notranslate" translate="no">
                         Department of Housing For All
                     </h2>
 
@@ -870,7 +871,7 @@
                         Speech of the financial year 2020–2021 on 28.02.2020 had stated
                         that there will be a department namely
 
-                        <span class="font-semibold text-slate-800">
+                        <span class="font-semibold text-slate-800 notranslate" translate="no">
                             ‘Department of Housing for All’
                         </span>
 

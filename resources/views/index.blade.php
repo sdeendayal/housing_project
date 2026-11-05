@@ -118,6 +118,10 @@
                     <p class="text-[10px] text-slate-300">Hon'ble Chief Minister of Haryana</p>
                 </div>
             </div>
+            <!-- Google Translate Element -->
+            <div class="flex items-center space-x-3">
+                <div id="google_translate_element" class="d-none d-lg-block"></div>
+            </div>
         </div>
     </header>
     <!-- END: Header -->

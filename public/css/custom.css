@@ -843,3 +843,132 @@
     }
 }
 
+/* ==========================================================================
+   Google Translate Widget Custom Styles
+   ========================================================================== */
+#google_translate_element {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+#google_translate_element select,
+.goog-te-combo,
+.form-select.form-select-sm {
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    padding: 6px 30px 6px 12px !important;
+    outline: none !important;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-position: right 0.5rem center !important;
+    background-repeat: no-repeat !important;
+    background-size: 1.15em 1.15em !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    transition: all 0.2s ease !important;
+    height: 36px !important;
+    line-height: normal !important;
+}
+
+#google_translate_element select:hover,
+#google_translate_element select:focus,
+.goog-te-combo:hover,
+.goog-te-combo:focus {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Hide Google Gadget extra text & "Powered by Google" */
+.goog-te-gadget {
+    color: transparent !important;
+    font-size: 0px !important;
+    line-height: 0 !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+    margin: 0 !important;
+}
+
+/* Hide top banner and prevent body shift */
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+}
+
+body {
+    top: 0px !important;
+    position: static !important;
+}
+
+body > .skiptranslate {
+    display: none !important;
+}
+
+#google_translate_element .skiptranslate {
+    display: inline-block !important;
+}
+
+/* Hide tooltips on text hover */
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-tooltip,
+.goog-tooltip:hover {
+    display: none !important;
+}
+
+.goog-text-highlight {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Display utility helpers */
+.d-none {
+    display: none;
+}
+@media (min-width: 992px) {
+    .d-lg-block {
+        display: block !important;
+    }
+}
+@media (max-width: 991.98px) {
+    .d-none.d-lg-block {
+        display: none !important;
+    }
+}
+
+/* Prevent Google Translate from breaking icons & font ligatures */
+.material-symbols-outlined,
+.material-symbols-rounded,
+.material-symbols-sharp,
+.material-icons,
+[class*="material-symbols"] {
+    font-family: 'Material Symbols Outlined' !important;
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    user-select: none !important;
+    font-feature-settings: 'liga' !important;
+    -webkit-font-feature-settings: 'liga' !important;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    word-wrap: normal !important;
+    direction: ltr !important;
+    -webkit-font-smoothing: antialiased !important;
+}
+
+.notranslate,
+[translate="no"] {
+    font-style: normal;
+}
+
+
+

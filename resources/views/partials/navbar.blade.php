@@ -6,8 +6,8 @@
             <a href="{{ route('home') }}"
                 class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors
                 {{ request()->routeIs('home') ? 'text-civic-blue border-b-2 border-civic-accent bg-slate-50' : 'text-slate-600 hover:text-civic-blue hover:bg-slate-50' }}">
-                <span class="material-symbols-outlined text-[18px]">home</span>
-                Home
+                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">home</span>
+                <span class="nav-home-text">Home</span>
             </a>
 
             {{-- About Us --}}
@@ -17,9 +17,9 @@
                     {{ request()->routeIs('introduction','organisation.chart','whos.who')
                         ? 'text-civic-blue border-b-2 border-civic-accent bg-slate-50'
                         : 'text-slate-600 hover:text-civic-blue hover:bg-slate-50' }}">
-                    <span class="material-symbols-outlined text-[18px]">info</span>
+                    <span class="material-symbols-outlined notranslate text-[18px]" translate="no">info</span>
                     About Us
-                    <span class="material-symbols-outlined text-[18px] transition-transform group-hover:rotate-180">
+                    <span class="material-symbols-outlined notranslate text-[18px] transition-transform group-hover:rotate-180" translate="no">
                         expand_more
                     </span>
                 </button>
@@ -31,7 +31,7 @@
                         {{ request()->routeIs('introduction')
                             ? 'bg-blue-50 text-civic-blue border-civic-accent font-medium'
                             : 'text-slate-700 border-transparent hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined text-[18px]">description</span>
+                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">description</span>
                         Introduction
                     </a>
 
@@ -40,7 +40,7 @@
                         {{ request()->routeIs('organisation.chart')
                             ? 'bg-blue-50 text-civic-blue font-medium'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined text-[18px]">account_tree</span>
+                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">account_tree</span>
                         Organisation Chart
                     </a>
 
@@ -49,7 +49,7 @@
                         {{ request()->routeIs('whos.who')
                             ? 'bg-blue-50 text-civic-blue font-medium'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined text-[18px]">groups</span>
+                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">groups</span>
                         Who's Who
                     </a>
                 </div>
@@ -58,14 +58,14 @@
             {{-- Our Vision --}}
             <a href="{{ route('vision') }}"
                 class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors">
-                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">visibility</span>
                 Our Vision
             </a>
 
             {{-- Gallery --}}
             <a href="{{ route('gallery') }}"
                 class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors">
-                <span class="material-symbols-outlined text-[18px]">photo_library</span>
+                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">photo_library</span>
                 Gallery
             </a>
 
@@ -75,7 +75,7 @@
                 {{ request()->routeIs('help')
                     ? 'bg-white text-civic-blue ring-2 ring-civic-blue/20'
                     : 'bg-white text-civic-blue hover:bg-slate-50' }}">
-                <span class="material-symbols-outlined text-[18px]">help</span>
+                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">help</span>
                 Help
             </a>
 
@@ -83,7 +83,7 @@
             @if(Auth::check())
                 <a href="{{ route('citizen.logout', ['redirect_to' => route('home')]) }}"
                     class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide border border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700">
-                    <span class="material-symbols-outlined text-[18px]">logout</span>
+                    <span class="material-symbols-outlined notranslate text-[18px]" translate="no">logout</span>
                     Logout
                 </a>
             @endif
