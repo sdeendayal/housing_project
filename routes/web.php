@@ -359,11 +359,13 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay-possession-certificate', [PpUserController::class, 'viewPossessionCertificate'])
         ->name('citizen.possession-certificate');
 
-    Route::get('/mmsay/citizen/grievances', [GrievanceController::class, 'index'])
-        ->name('citizen.grievances.index');
+    Route::get('/mmsay/citizen/grievances', function () {
+        return redirect()->away('https://cmharyanacell.nic.in/index');
+    })->name('citizen.grievances.index');
 
-    Route::get('/mmsay/citizen/grievances/create', [GrievanceController::class, 'create'])
-        ->name('citizen.grievances.create');
+    Route::get('/mmsay/citizen/grievances/create', function () {
+        return redirect()->away('https://cmharyanacell.nic.in/index');
+    })->name('citizen.grievances.create');
 
     Route::post('/mmsay/citizen/grievances', [GrievanceController::class, 'store'])
         ->name('citizen.grievances.store');

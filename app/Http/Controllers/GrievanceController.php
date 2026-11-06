@@ -13,100 +13,14 @@ use Illuminate\View\View;
 
 class GrievanceController extends Controller
 {
-    public function index(): View
+    public function index(): RedirectResponse
     {
-        $user = Auth::user();
-
-        if ($user->private_purchaser_id) {
-            $purchaser = DB::table('property_private_purchasers as ppp')
-                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-                ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
-                ->select('ppp.*', 'd.DistrictName')
-                ->first();
-        } else {
-            $mobile = $user->mobile;
-            $purchaser = null;
-
-            if ($mobile) {
-                $variants = array_unique([$mobile, '91'.$mobile, (int) $mobile]);
-
-                $purchaser = DB::table('property_private_purchasers as ppp')
-                    ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-                    ->where('ppp.IsActive', 1)
-                    ->where('ppp.IsDeleted', 0)
-                    ->where(function ($query) use ($variants, $mobile) {
-                        $query->whereIn('ppp.MobileNo', $variants)
-                            ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
-                    })
-                    ->select('ppp.*', 'd.DistrictName')
-                    ->orderBy('ppp.PrivatePurchaserId')
-                    ->first();
-            }
-        }
-
-        $applicationNo = $purchaser?->ApplicationNo;
-        $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
-        $applicationId = $applicationNo
-            ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
-            : ($purchaser?->PPPId ?? '—');
-        $displayName = trim($user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'));
-        $mobileNumber = (string) ($user->mobile ?? ($purchaser?->MobileNo ?? ''));
-
-        $grievances = Grievance::query()
-            ->where('mobile_number', $mobileNumber)
-            ->latest()
-            ->get();
-
-        return view('grievances.index', [
-            'grievances' => $grievances,
-            'displayName' => $displayName,
-            'applicationId' => $applicationId,
-        ]);
+        return redirect()->away('https://cmharyanacell.nic.in/index');
     }
 
-    public function create(): View
+    public function create(): RedirectResponse
     {
-        $user = Auth::user();
-
-        if ($user->private_purchaser_id) {
-            $purchaser = DB::table('property_private_purchasers as ppp')
-                ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-                ->where('ppp.PrivatePurchaserId', $user->private_purchaser_id)
-                ->select('ppp.*', 'd.DistrictName')
-                ->first();
-        } else {
-            $mobile = $user->mobile;
-            $purchaser = null;
-
-            if ($mobile) {
-                $variants = array_unique([$mobile, '91'.$mobile, (int) $mobile]);
-
-                $purchaser = DB::table('property_private_purchasers as ppp')
-                    ->leftJoin('districts as d', 'ppp.DistrictId', '=', 'd.DistrictId')
-                    ->where('ppp.IsActive', 1)
-                    ->where('ppp.IsDeleted', 0)
-                    ->where(function ($query) use ($variants, $mobile) {
-                        $query->whereIn('ppp.MobileNo', $variants)
-                            ->orWhereRaw('RIGHT(CAST(ppp.MobileNo AS CHAR), 10) = ?', [$mobile]);
-                    })
-                    ->select('ppp.*', 'd.DistrictName')
-                    ->orderBy('ppp.PrivatePurchaserId')
-                    ->first();
-            }
-        }
-
-        $applicationNo = $purchaser?->ApplicationNo;
-        $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
-        $applicationId = $applicationNo
-            ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
-            : ($purchaser?->PPPId ?? '—');
-        $displayName = trim($user->name ?: ($purchaser?->PrivatePurchaserName ?? 'Citizen'));
-
-        return view('grievances.create', [
-            'displayName' => $displayName,
-            'applicationId' => $applicationId,
-            'subjectOptions' => Grievance::SUBJECT_OPTIONS,
-        ]);
+        return redirect()->away('https://cmharyanacell.nic.in/index');
     }
 
     public function store(Request $request): RedirectResponse
