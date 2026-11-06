@@ -724,13 +724,18 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
-                                        description
-                                    </span>
+                                <a class="flex items-center justify-between space-x-2 no-underline group" href="https://pmayg.dord.gov.in/" target="_blank" rel="noopener noreferrer">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="material-symbols-outlined notranslate text-emerald-600 text-[20px]" translate="no">
+                                            cottage
+                                        </span>
 
-                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Pradhan Mantri Awaas Yojana (Gramin)
+                                        <span class="text-slate-700 group-hover:text-emerald-700 font-medium transition-colors duration-200">
+                                            Pradhan Mantri Awaas Yojana (Gramin)
+                                        </span>
+                                    </div>
+                                    <span class="material-symbols-outlined notranslate text-slate-400 group-hover:text-emerald-600 text-[16px] transition-colors" translate="no">
+                                        open_in_new
                                     </span>
                                 </a>
                             </li>
@@ -748,13 +753,18 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
-                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
-                                        description
-                                    </span>
+                                <a class="flex items-center justify-between space-x-2 no-underline group" href="https://pmaymis.gov.in/pmaymis2_2024/PMAY_SURVEY/Applicant_Login.aspx" target="_blank" rel="noopener noreferrer">
+                                    <div class="flex items-center space-x-3">
+                                        <span class="material-symbols-outlined notranslate text-sky-600 text-[20px]" translate="no">
+                                            apartment
+                                        </span>
 
-                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Pradhan Mantri Awaas Yojana (Urban)
+                                        <span class="text-slate-700 group-hover:text-sky-700 font-medium transition-colors duration-200">
+                                            Pradhan Mantri Awaas Yojana (Urban)
+                                        </span>
+                                    </div>
+                                    <span class="material-symbols-outlined notranslate text-slate-400 group-hover:text-sky-600 text-[16px] transition-colors" translate="no">
+                                        open_in_new
                                     </span>
                                 </a>
                             </li>
