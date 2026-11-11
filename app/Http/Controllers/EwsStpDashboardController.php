@@ -116,6 +116,26 @@ class EwsStpDashboardController extends Controller
             }
         }
 
+        // Auto-heal any builder flats missing zone_id or zone_name from ews_districts
+        try {
+            DB::statement("
+                UPDATE ews_builder_flats f
+                JOIN ews_districts d ON (f.district_id = d.id OR f.dist_id = d.id OR UPPER(TRIM(f.district_name)) = UPPER(TRIM(d.name)))
+                SET f.zone_id = d.zone_id,
+                    f.district_id = COALESCE(f.district_id, d.id),
+                    f.dist_id = COALESCE(f.dist_id, d.id),
+                    f.district_name = COALESCE(f.district_name, d.name),
+                    f.dist_name = COALESCE(f.dist_name, d.name)
+                WHERE (f.zone_id IS NULL OR f.zone_id = 0) AND d.zone_id IS NOT NULL
+            ");
+            DB::statement("
+                UPDATE ews_builder_flats f
+                JOIN ews_stp_districts z ON f.zone_id = z.id
+                SET f.zone_name = CONCAT(z.name, ' ZONE')
+                WHERE f.zone_id IS NOT NULL AND (f.zone_name IS NULL OR f.zone_name = '')
+            ");
+        } catch (\Throwable $e) {}
+
         $displayZoneName = $this->resolveDisplayZoneName($user);
 
         $zoneDistrictIds = [];

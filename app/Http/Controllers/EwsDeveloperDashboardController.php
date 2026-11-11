@@ -687,9 +687,12 @@ class EwsDeveloperDashboardController extends Controller
             $blockName = $block->name;
         }
 
-        // Resolve Zone directly from ews_stp_districts master table
+        // Resolve Zone directly from ews_stp_districts master table or via district's zone_id
         $zone = null;
-        if (!empty($user->zone_id)) {
+        if ($district && !empty($district->zone_id)) {
+            $zone = DB::table('ews_stp_districts')->where('id', $district->zone_id)->first();
+        }
+        if (!$zone && !empty($user->zone_id)) {
             $zone = DB::table('ews_stp_districts')->where('id', $user->zone_id)->first();
         }
         if (!$zone && !empty($user->district_name)) {
@@ -700,8 +703,8 @@ class EwsDeveloperDashboardController extends Controller
             $cleanDist = strtoupper(trim(str_replace(' ZONE', '', $district->name)));
             $zone = DB::table('ews_stp_districts')->where('name', $cleanDist)->first();
         }
-        $zoneId = $zone ? $zone->id : ($user->zone_id ?? null);
-        $zoneName = $zone ? $zone->name . ' ZONE' : ($user->zone_name ?? ($district ? $district->name . ' ZONE' : 'ZONE'));
+        $zoneId = $zone ? $zone->id : ($district->zone_id ?? $user->zone_id ?? null);
+        $zoneName = $zone ? $zone->name . ' ZONE' : ($district ? $district->name . ' ZONE' : 'ZONE');
 
         $bulkMode = (string)$request->input('bulk_mode') === '1';
 

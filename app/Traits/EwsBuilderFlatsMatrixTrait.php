@@ -23,7 +23,25 @@ trait EwsBuilderFlatsMatrixTrait
     {
         $flatsQuery = DB::table('ews_builder_flats');
         if (!empty($zoneId)) {
-            $flatsQuery->where('zone_id', $zoneId);
+            $zoneDistIds = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('id')->toArray();
+            $zoneDistNames = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('name')->toArray();
+            $zoneModel = DB::table('ews_stp_districts')->where('id', $zoneId)->first();
+            $zoneName = $zoneModel ? $zoneModel->name : null;
+
+            $flatsQuery->where(function ($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
+                $q->where('zone_id', $zoneId);
+                if (!empty($zoneDistIds)) {
+                    $q->orWhereIn('district_id', $zoneDistIds)
+                      ->orWhereIn('dist_id', $zoneDistIds);
+                }
+                if (!empty($zoneDistNames)) {
+                    $q->orWhereIn('district_name', $zoneDistNames)
+                      ->orWhereIn('dist_name', $zoneDistNames);
+                }
+                if ($zoneName) {
+                    $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
+                }
+            });
         }
 
         $row = $flatsQuery->selectRaw('
@@ -71,10 +89,22 @@ trait EwsBuilderFlatsMatrixTrait
 
         if ($zoneId) {
             $zoneDistIds = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('id')->toArray();
-            $flatQuery->where(function($q) use ($zoneId, $zoneDistIds) {
+            $zoneDistNames = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('name')->toArray();
+            $zoneModel = DB::table('ews_stp_districts')->where('id', $zoneId)->first();
+            $zoneName = $zoneModel ? $zoneModel->name : null;
+
+            $flatQuery->where(function($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
                 $q->where('zone_id', $zoneId);
                 if (!empty($zoneDistIds)) {
-                    $q->orWhereIn('district_id', $zoneDistIds);
+                    $q->orWhereIn('district_id', $zoneDistIds)
+                      ->orWhereIn('dist_id', $zoneDistIds);
+                }
+                if (!empty($zoneDistNames)) {
+                    $q->orWhereIn('district_name', $zoneDistNames)
+                      ->orWhereIn('dist_name', $zoneDistNames);
+                }
+                if ($zoneName) {
+                    $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
                 }
             });
         }
@@ -118,14 +148,42 @@ trait EwsBuilderFlatsMatrixTrait
     {
         $query = EwsBuilderFlat::query();
 
-        // 1. Zone Filter (Direct high-speed indexed lookup)
+        // 1. Zone Filter (Include all flats matching zone_id OR any of its constituent districts)
         if ($request->filled('zone_id')) {
-            $query->where('zone_id', $request->zone_id);
+            $zoneId = $request->zone_id;
+            $zoneDistIds = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('id')->toArray();
+            $zoneDistNames = DB::table('ews_districts')->where('zone_id', $zoneId)->pluck('name')->toArray();
+            $zoneModel = DB::table('ews_stp_districts')->where('id', $zoneId)->first();
+            $zoneName = $zoneModel ? $zoneModel->name : null;
+
+            $query->where(function ($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
+                $q->where('zone_id', $zoneId);
+                if (!empty($zoneDistIds)) {
+                    $q->orWhereIn('district_id', $zoneDistIds)
+                      ->orWhereIn('dist_id', $zoneDistIds);
+                }
+                if (!empty($zoneDistNames)) {
+                    $q->orWhereIn('district_name', $zoneDistNames)
+                      ->orWhereIn('dist_name', $zoneDistNames);
+                }
+                if ($zoneName) {
+                    $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
+                }
+            });
         }
 
-        // 2. District Filter (Direct indexed lookup)
+        // 2. District Filter (Direct indexed lookup or fallback to name/dist_id)
         if ($request->filled('district_id')) {
-            $query->where('district_id', $request->district_id);
+            $distId = $request->district_id;
+            $distName = DB::table('ews_districts')->where('id', $distId)->value('name');
+            $query->where(function ($q) use ($distId, $distName) {
+                $q->where('district_id', $distId)
+                  ->orWhere('dist_id', $distId);
+                if ($distName) {
+                    $q->orWhere('district_name', $distName)
+                      ->orWhere('dist_name', $distName);
+                }
+            });
         }
 
         // 3. Town Filter (Direct indexed lookup)
