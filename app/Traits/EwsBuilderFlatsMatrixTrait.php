@@ -355,11 +355,32 @@ trait EwsBuilderFlatsMatrixTrait
             ->addColumn('actions', function ($r) {
                 $secureId = !empty($r->secure_id) ? $r->secure_id : EwsHelper::encodeSecureId($r->id);
                 $viewUrl = route('ews.tcp.flats.show', $secureId);
+                $isStp = request()->routeIs('ews.stp.*') || (Auth::check() && in_array(Auth::user()->role, ['ews_stp', 'stp']));
+
                 if (request()->routeIs('ews.department.*')) {
                     $viewUrl = route('ews.department.builder-flats.show', $secureId);
-                } elseif (request()->routeIs('ews.stp.*')) {
+                } elseif ($isStp) {
                     $viewUrl = route('ews.stp.flats.show', $secureId);
+                    $editUrl = route('ews.stp.flats.edit', $secureId);
+                    $isApproved = (int)$r->is_aproved_by_dtp === 1;
+
+                    $approveBtn = $isApproved
+                        ? '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-patch-check-fill text-emerald-600"></i> Certified</span>'
+                        : '<button type="button" onclick="approveFlatDtp(\''.$secureId.'\', \''.e($r->flat_number).'\', \''.e($r->block_tower_number ?? '-').'\')" class="px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-xs cursor-pointer whitespace-nowrap"><i class="bi bi-patch-check-fill text-emerald-200"></i> Approve</button>';
+
+                    return '
+                        <div class="inline-flex items-center gap-1">
+                            <a href="'.$viewUrl.'" class="px-2 py-0.5 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">
+                                <i class="bi bi-eye text-[9px]"></i> <span>View</span>
+                            </a>
+                            <a href="'.$editUrl.'" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-300 hover:border-amber-500 rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">
+                                <i class="bi bi-pencil-square text-[9px]"></i> <span>Edit</span>
+                            </a>
+                            '.$approveBtn.'
+                        </div>
+                    ';
                 }
+
                 return '
                     <a href="'.$viewUrl.'"
                         class="px-2 py-0.5 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">

@@ -264,6 +264,10 @@ class OtpAuthController extends Controller
             return back()->with('error', 'Login failed. Please try again.');
         }
 
+        if ($context === 'ews_stp' || ($user && in_array($user->role, ['ews_stp', 'stp']))) {
+            return redirect()->route('ews.stp.dashboard')->with('success', 'Login successful! Welcome to STP Portal.');
+        }
+
         return redirect()->intended($user->dashboardRoute())
             ->with('success', 'Login successful! Welcome back.');
     }

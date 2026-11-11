@@ -69,6 +69,17 @@ class User extends Authenticatable
 
     public function dashboardRoute(): string
     {
+        $roleSlug = $this->roleSlug();
+        if (in_array($roleSlug, ['ews_stp', 'stp']) || $this->role === 'ews_stp') {
+            return route('ews.stp.dashboard');
+        }
+        if ($roleSlug === 'ews_developer' || $this->role === 'ews_developer') {
+            return route('ews.developer.dashboard');
+        }
+        if (in_array($roleSlug, ['ews_tcp', 'tcp']) || $this->role === 'ews_tcp') {
+            return route('ews.tcp.dashboard');
+        }
+
         // 1. Check database role routing (highly dynamic, does not require editing code)
         $role = $this->assignedRole();
         if ($role) {

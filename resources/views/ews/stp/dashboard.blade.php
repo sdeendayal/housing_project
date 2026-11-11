@@ -831,6 +831,74 @@
                 activateStpNav(initialScope);
             }
         });
+
+        // SweetAlert Confirmation and AJAX Approval for STP
+        function approveFlatDtp(secureId, flatNum, blockName) {
+            Swal.fire({
+                title: 'Official STP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under STP Authority?<br><br>
+                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
+                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
+                    <div>&bull; Action will be recorded in digital audit logs with your STP credentials.</div>
+                </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve Now',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Recording STP Approval...',
+                        text: 'Please wait while digital clearance is authenticated.',
+                        allowOutsideClick: false,
+                        didOpen: () => Swal.showLoading()
+                    });
+
+                    fetch("{{ url('ews/stp/flats') }}/" + secureId + "/approve-dtp", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Flat Approved Successfully',
+                                text: data.message,
+                                confirmButtonColor: '#059669'
+                            }).then(() => {
+                                if (typeof table !== 'undefined' && table) {
+                                    table.ajax.reload(null, false);
+                                } else {
+                                    window.location.reload();
+                                }
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Approval Failed',
+                                text: data.message || 'Could not record approval',
+                                confirmButtonColor: '#ef4444'
+                            });
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Server Error',
+                            text: 'Failed to communicate with server. Please try again.',
+                            confirmButtonColor: '#ef4444'
+                        });
+                    });
+                }
+            });
+        }
     </script>
 </body>
 </html>
