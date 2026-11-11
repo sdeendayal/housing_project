@@ -19,9 +19,7 @@ use App\Http\Controllers\MMGAY\Bdo\MMGAYBdoPossessionController;
 
 class MmgayBdoApiController extends Controller
 {
-    /**
-     * Show BDO Dashboard stats and recent applications.
-     */
+    
     public function dashboard(Request $request)
     {
         $bdo = Auth::user();
