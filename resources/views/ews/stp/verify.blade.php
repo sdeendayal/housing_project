@@ -430,7 +430,8 @@
                     <!-- Populated dynamically -->
                 </div>
             </div>
-            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 text-right">
+            <div class="px-6 py-3 bg-slate-50 border-t border-slate-150 flex items-center justify-between">
+                <div class="flex items-center gap-2" id="modal-flat-actions"></div>
                 <button onclick="closeInspectModal()" class="px-4 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold uppercase rounded-lg text-xs transition-all">
                     Close
                 </button>
@@ -440,6 +441,7 @@
 
     <script>
         // Global State
+        const flatShowBaseUrl = "{{ url('ews/stp/flats') }}";
         let currentVerifyData = null;
         let activeRecordId = 'all';
         let currentApprovalFilter = 'all';
@@ -729,7 +731,7 @@
 
                     const safeProjectName = projectName.replace(/'/g, "\\'");
                     const approveBtn = !isDtpApproved
-                        ? `<button type="button" onclick="approveFlatDtpFromTable('${f.secure_id || f.id}', '${f.flat_number || ''}', '${f.flat_code || ''}', '${safeProjectName}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white border border-emerald-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs cursor-pointer"><i class="bi bi-check-circle-fill"></i> Approve</button>`
+                        ? `<button type="button" onclick="approveFlatDtpFromTable('${f.id}', '${f.flat_number || ''}', '${f.flat_code || ''}', '${safeProjectName}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white border border-emerald-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs cursor-pointer"><i class="bi bi-check-circle-fill"></i> Approve</button>`
                         : `<span class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-2xs"><i class="bi bi-patch-check-fill text-emerald-600"></i> Done</span>`;
 
                     rows += `
@@ -767,12 +769,12 @@
                             </td>
                             <td class="px-4 py-2.5 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <a href="/ews/stp/flats/${f.secure_id || f.id}" target="_blank"
-                                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs">
+                                    <button type="button" onclick="inspectFlatById(${f.id})"
+                                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Quick View">
                                         <i class="bi bi-eye text-xs"></i> View
-                                    </a>
-                                    <a href="/ews/stp/flats/${f.secure_id || f.id}/edit" target="_blank"
-                                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs">
+                                    </button>
+                                    <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank"
+                                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Edit Flat">
                                         <i class="bi bi-pencil-square text-xs"></i> Edit
                                     </a>
                                     ${approveBtn}
@@ -802,7 +804,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: `/ews/stp/flats/${secureId}/approve-dtp`,
+                        url: `${flatShowBaseUrl}/${secureId}/approve-dtp`,
                         type: 'POST',
                         data: {
                             _token: "{{ csrf_token() }}",
@@ -938,6 +940,14 @@
             }
 
             $('#modal-flat-grid').html(gridHtml);
+            $('#modal-flat-actions').html(`
+                <a href="${flatShowBaseUrl}/${f.id}" target="_blank" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-box-arrow-up-right"></i> Full Page View
+                </a>
+                <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-pencil-square"></i> Edit Flat
+                </a>
+            `);
             $('#inspect-modal').removeClass('hidden').addClass('flex');
         }
 

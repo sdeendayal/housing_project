@@ -35,7 +35,7 @@
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
             <div class="flex items-center gap-3">
-                <a href="{{ route('ews.stp.flats.show', $flat->secure_id ?? $secureId) }}" class="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-600 hover:text-white transition-all shadow-sm" title="Back to Dossier">
+                <a href="{{ route('ews.stp.flats.show', $flat->id) }}" class="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-600 hover:text-white transition-all shadow-sm" title="Back to Dossier">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <div>
@@ -108,12 +108,12 @@
                             </p>
                         </div>
                         <div class="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                            SECURE ID: {{ $flat->secure_id ?? $secureId }}
+                            UNIT ID: #{{ $flat->id }}
                         </div>
                     </div>
 
                     <!-- Form Content -->
-                    <form method="POST" action="{{ route('ews.stp.flats.update', $flat->secure_id ?? $secureId) }}" enctype="multipart/form-data" class="p-6 space-y-4" id="stpEditForm">
+                    <form method="POST" action="{{ route('ews.stp.flats.update', $flat->id) }}" enctype="multipart/form-data" class="p-6 space-y-4" id="stpEditForm">
                         @csrf
                         @method('PUT')
 
@@ -707,7 +707,7 @@
                         <!-- Form Actions Bar (Refined & Balanced) -->
                         <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
                             <div class="flex items-center gap-2 w-full sm:w-auto">
-                                <a href="{{ route('ews.stp.flats.show', $flat->secure_id ?? $secureId) }}"
+                                <a href="{{ route('ews.stp.flats.show', $flat->id) }}"
                                     class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-300 shadow-2xs w-full sm:w-auto">
                                     <i class="bi bi-arrow-left"></i>
                                     <span>Cancel & Return</span>

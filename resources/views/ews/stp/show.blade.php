@@ -77,7 +77,7 @@
                     </button>
 
                     <!-- Edit Flat Button -->
-                    <a href="{{ route('ews.stp.flats.edit', $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id)) }}" title="Edit Flat Specifications"
+                    <a href="{{ route('ews.stp.flats.edit', $flat->id) }}" title="Edit Flat Specifications"
                         class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs shrink-0 whitespace-nowrap">
                         <i class="bi bi-pencil-square text-xs"></i>
                         <span>Edit Flat</span>
@@ -93,7 +93,7 @@
                             </div>
                         </div>
                     @else
-                        <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
+                        <button type="button" onclick="approveFlatDtp('{{ $flat->id }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
                             class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap">
                             <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
                             <span>Approve (STP)</span>

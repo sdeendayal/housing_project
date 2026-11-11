@@ -164,6 +164,10 @@ Route::middleware(['auth', 'role:ews_stp,stp'])->group(function () {
         ->name('ews.stp.flats.create');
     Route::post('/ews/stp/flats', [\App\Http\Controllers\EwsStpDashboardController::class, 'store'])
         ->name('ews.stp.flats.store');
+    Route::get('/ews/stp/flat-view', [\App\Http\Controllers\EwsStpDashboardController::class, 'show'])
+        ->name('ews.stp.flat.view');
+    Route::get('/ews/stp/flat-edit', [\App\Http\Controllers\EwsStpDashboardController::class, 'edit'])
+        ->name('ews.stp.flat.edit');
     Route::get('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'show'])
         ->name('ews.stp.flats.show');
     Route::get('/ews/stp/verify/flat/{identifier}', [\App\Http\Controllers\EwsStpDashboardController::class, 'show'])

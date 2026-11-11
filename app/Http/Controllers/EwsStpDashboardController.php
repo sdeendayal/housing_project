@@ -755,22 +755,27 @@ class EwsStpDashboardController extends Controller
     /**
      * Show Comprehensive Dossier for Single EWS Builder Flat
      */
-    public function show($secureId)
+    public function show($secureId = null)
     {
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_stp', 'stp'])) {
             abort(403, 'Unauthorized access to STP dossier.');
         }
 
+        $id = $secureId ?: request('id');
+        if (empty($id)) {
+            abort(404, 'Flat identifier is required.');
+        }
+
         $this->ensureAuditTableExists();
 
-        // Support lookup by secure_id, integer ID, or decoded secure ID
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)
-            ->orWhere('id', $secureId)
+        // Support lookup by integer ID, secure_id, or decoded secure ID
+        $flat = EwsBuilderFlat::where('id', $id)
+            ->orWhere('secure_id', $id)
             ->first();
 
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($secureId))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($secureId));
+        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
+            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
         }
 
         if (!$flat) {
@@ -819,20 +824,25 @@ class EwsStpDashboardController extends Controller
         return view('ews.tcp.flat_view', compact('user', 'flat', 'project', 'creator', 'backUrl', 'stats', 'auditLogs', 'displayZoneName'));
     }
 
-    public function edit($secureId)
+    public function edit($secureId = null)
     {
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_stp', 'stp'])) {
             abort(403);
         }
 
-        // Support lookup by secure_id, integer ID, or decoded secure ID
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)
-            ->orWhere('id', $secureId)
+        $id = $secureId ?: request('id');
+        if (empty($id)) {
+            abort(404, 'Flat identifier is required.');
+        }
+
+        // Support lookup by integer ID, secure_id, or decoded secure ID
+        $flat = EwsBuilderFlat::where('id', $id)
+            ->orWhere('secure_id', $id)
             ->first();
 
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($secureId))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($secureId));
+        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
+            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
         }
 
         if (!$flat) {
@@ -1014,16 +1024,29 @@ class EwsStpDashboardController extends Controller
         return view('ews.stp.edit', compact('user', 'flat', 'project', 'zone', 'districts', 'secureId', 'towns', 'townTypes', 'projects', 'blocks', 'displayZoneName'));
     }
 
-    public function update(Request $request, $secureId)
+    public function update(Request $request, $secureId = null)
     {
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_stp', 'stp'])) {
             abort(403);
         }
 
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)
-            ->orWhere('id', $secureId)
-            ->firstOrFail();
+        $id = $secureId ?: $request->input('id');
+        if (empty($id)) {
+            abort(404, 'Flat identifier is required.');
+        }
+
+        $flat = EwsBuilderFlat::where('id', $id)
+            ->orWhere('secure_id', $id)
+            ->first();
+
+        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
+            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        }
+
+        if (!$flat) {
+            abort(404, 'Flat not found');
+        }
 
         // Resolve user's zone if set as zone_id or zone_name/district_name
         $userZoneId = $user->zone_id;
@@ -2448,19 +2471,20 @@ class EwsStpDashboardController extends Controller
     /**
      * Direct DTP Approval API (Single Click Action with Audit Logging)
      */
-    public function approveDtp(Request $request, $secureId)
+    public function approveDtp(Request $request, $secureId = null)
     {
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_stp', 'stp', 'mmgay-dtp', 'ews_tcp', 'tcp'])) {
             return response()->json(['success' => false, 'message' => 'Unauthorized action for DTP authority.'], 403);
         }
 
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)
-            ->orWhere('id', $secureId)
+        $id = $secureId ?: $request->input('id') ?: $request->input('secure_id');
+        $flat = EwsBuilderFlat::where('id', $id)
+            ->orWhere('secure_id', $id)
             ->first();
 
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($secureId))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($secureId));
+        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
+            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
         }
 
         if (!$flat) {
