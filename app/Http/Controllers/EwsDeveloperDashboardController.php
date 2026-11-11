@@ -1447,21 +1447,8 @@ class EwsDeveloperDashboardController extends Controller
             $request->flat_number
         );
 
-        // Step DTP Approval Handling (Approved & Submit = 1)
-        if ($request->filled('is_aproved_by_dtp') || $request->has('approve_and_submit')) {
-            $approvedVal = (int)$request->input('is_aproved_by_dtp', 1);
-            $flat->is_aproved_by_dtp = $approvedVal;
-            $flat->is_approved_by_dtp = $approvedVal;
-            if ($approvedVal === 1) {
-                $flat->dtp_approved_at = $flat->dtp_approved_at ?: now();
-                $flat->dtp_approved_by = $user->id;
-                $flat->dtp_user_name = $user->name;
-            } else {
-                $flat->dtp_approved_at = null;
-                $flat->dtp_approved_by = null;
-                $flat->dtp_user_name = null;
-            }
-        }
+        // Developer cannot approve or change DTP/STP statutory certification
+        // STP certification is strictly performed by authorized STP / DTP officers
 
         $flat->save();
 
@@ -2106,8 +2093,8 @@ class EwsDeveloperDashboardController extends Controller
     public function approveDtp(Request $request, $secureId)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['ews_stp', 'stp', 'mmgay-dtp', 'ews_tcp', 'tcp', 'ews_developer'])) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        if (!$user || !in_array($user->role, ['ews_stp', 'stp', 'mmgay-dtp', 'ews_tcp', 'tcp'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action. STP/DTP authority only.'], 403);
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)

@@ -82,7 +82,7 @@
                         <span>Edit Flat</span>
                     </a>
 
-                    <!-- STP Approval Action / Badge -->
+                    <!-- STP Status Badge (Read-Only for Developer) -->
                     @if($flat->is_aproved_by_dtp)
                         <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center gap-1.5 shadow-2xs shrink-0 whitespace-nowrap">
                             <i class="bi bi-patch-check-fill text-emerald-600 text-sm"></i>
@@ -92,11 +92,13 @@
                             </div>
                         </div>
                     @else
-                        <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
-                            class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs cursor-pointer shrink-0 whitespace-nowrap">
-                            <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
-                            <span>Approve (STP)</span>
-                        </button>
+                        <div class="px-3 py-1.5 bg-amber-50 border border-amber-300 rounded-lg flex items-center gap-1.5 shadow-2xs shrink-0 whitespace-nowrap">
+                            <i class="bi bi-hourglass-split text-amber-600 text-sm"></i>
+                            <div class="text-left leading-none">
+                                <div class="text-[9.5px] font-black uppercase text-amber-800">STP Pending</div>
+                                <div class="text-[8px] font-mono text-amber-600 mt-0.5">Awaiting Review</div>
+                            </div>
+                        </div>
                     @endif
                 </div>
 
@@ -502,12 +504,9 @@
                             </div>
 
                             @if(!$flat->is_aproved_by_dtp)
-                                <div class="pt-1">
-                                    <button type="button" onclick="approveFlatDtp('{{ $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}', '{{ $flat->flat_number }}', '{{ $flat->block_tower_number ?? '-' }}')"
-                                        class="w-full py-2 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer">
-                                        <i class="bi bi-patch-check-fill text-emerald-200 text-sm"></i>
-                                        <span>Approve & Certify Under STP Authority</span>
-                                    </button>
+                                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200 text-slate-500 text-[11px] flex items-center gap-2">
+                                    <i class="bi bi-info-circle text-amber-600 text-xs shrink-0"></i>
+                                    <span>Verification and statutory certification is strictly conducted by Senior Town Planner (STP) authority.</span>
                                 </div>
                             @endif
                         </div>
@@ -534,70 +533,6 @@
                     background: '#ffffff',
                     color: '#1e293b'
                 });
-            });
-        }
-
-        // SweetAlert Confirmation and AJAX Approval for STP
-        function approveFlatDtp(secureId, flatNum, blockName) {
-            Swal.fire({
-                title: 'Official STP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) under STP Authority?<br><br>
-                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
-                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
-                    <div>&bull; Action will be recorded in digital audit logs with your officer credentials.</div>
-                </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve Now',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#059669',
-                cancelButtonColor: '#64748b',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Recording STP Approval...',
-                        text: 'Please wait while digital clearance is authenticated.',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-
-                    fetch("{{ url('ews/developer/flats') }}/" + secureId + "/approve-dtp", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                        }
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Flat Approved Successfully',
-                                text: data.message,
-                                confirmButtonColor: '#059669'
-                            }).then(() => {
-                                window.location.reload();
-                            });
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Approval Failed',
-                                text: data.message || 'Could not record approval',
-                                confirmButtonColor: '#ef4444'
-                            });
-                        }
-                    })
-                    .catch(err => {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Server Error',
-                            text: 'Failed to communicate with server. Please try again.',
-                            confirmButtonColor: '#ef4444'
-                        });
-                    });
-                }
             });
         }
     </script>

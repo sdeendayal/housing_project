@@ -718,20 +718,11 @@
                             </div>
 
                             <div class="flex items-center gap-2.5 w-full sm:w-auto flex-wrap justify-end">
-                                <input type="hidden" name="is_aproved_by_dtp" id="is_aproved_by_dtp_input" value="{{ $flat->is_aproved_by_dtp ?? 0 }}">
-
                                 <!-- Regular Save Button -->
                                 <button type="submit" id="btn_submit_changes"
-                                    class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow active:scale-95 cursor-pointer">
+                                    class="w-full sm:w-auto px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow active:scale-95 cursor-pointer">
                                     <i class="bi bi-floppy2-fill text-slate-300"></i>
                                     <span>Save Changes</span>
-                                </button>
-
-                                <!-- STP Approve & Submit Button -->
-                                <button type="button" onclick="confirmDtpApproveAndSubmit()" id="btn_dtp_approve_submit"
-                                    class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
-                                    <i class="bi bi-patch-check-fill text-sm text-emerald-200"></i>
-                                    <span>Approve & Submit (STP)</span>
                                 </button>
                             </div>
                         </div>
@@ -1205,72 +1196,6 @@
                 $('#remaining_flats_for_oc').val('');
             }
         });
-
-        // STP Approve and Submit with SweetAlert Confirmation
-        function confirmDtpApproveAndSubmit() {
-            if ($('#approved_building_plan').val() !== 'yes') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Approved Building Plan Mandatory',
-                    text: 'Approved Building Plan is mandatory before submitting.',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-
-            if ($('#oc_status_yn').val() !== 'yes') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'OC Mandatory',
-                    text: 'Occupation Certificate (OC) is mandatory before submitting.',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-
-            if (!$('#building_plan_approval_date').val()) {
-                Swal.fire('Warning', 'Please enter Building Plan Approval Date.', 'warning');
-                $('#building_plan_approval_date').focus();
-                return;
-            }
-
-            if (!$('#oc_status').val()) {
-                Swal.fire('Warning', 'Please select OC Category.', 'warning');
-                $('#oc_status').focus();
-                return;
-            }
-
-            if ($('#oc_status').val() === 'part' && $('#flats_offered_for_draw').val() === '') {
-                Swal.fire('Warning', 'Please enter Flats Offered for Draw for Part OC.', 'warning');
-                $('#flats_offered_for_draw').focus();
-                return;
-            }
-
-            const flatNum = $('#flat_number').val() || 'Flat Unit';
-            const projName = $('#project_id option:selected').text() || 'Project';
-            const blockName = $('#block_id option:selected').text() || 'Block';
-
-            Swal.fire({
-                title: 'Official STP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) of <strong>${projName}</strong> under STP Authority?<br><br>
-                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
-                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
-                    <div>&bull; Digital audit trail will record your timestamp & officer signature.</div>
-                </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve & Submit',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#059669',
-                cancelButtonColor: '#64748b',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('#is_aproved_by_dtp_input').val('1');
-                    $('#devEditForm').submit();
-                }
-            });
-        }
     </script>
 </body>
 </html>
