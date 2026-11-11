@@ -118,6 +118,10 @@
                     <p class="text-[10px] text-slate-300">Hon'ble Chief Minister of Haryana</p>
                 </div>
             </div>
+            <!-- Google Translate Element -->
+            <div class="flex items-center space-x-3">
+                <div id="google_translate_element" class="d-none d-lg-block"></div>
+            </div>
         </div>
     </header>
     <!-- END: Header -->
@@ -648,66 +652,157 @@
                 @else
                     <div class="relative group">
 
-                        <a href="#"
-                            class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden">
+                        <div class="relative group" id="ewsSchemeGroup">
+                            <a href="javascript:void(0)"
+                                id="ewsSchemeCardBtn"
+                                onclick="toggleEwsDropdown(event)"
+                                class="relative bg-surface-container-lowest border border-surface-container-highest rounded-lg p-4 flex items-center gap-3 hover:shadow-xl hover:-translate-y-1 hover:bg-orange-50 transition-all duration-300 overflow-hidden cursor-pointer select-none">
 
-                            <!-- Bottom Line -->
-                            <span
-                                class="absolute bottom-0 left-0 w-full h-1 bg-orange-200 group-hover:bg-orange-600 transition-all duration-300">
-                            </span>
+                                <!-- Bottom Line -->
+                                <span
+                                    class="absolute bottom-0 left-0 w-full h-1 bg-orange-200 group-hover:bg-orange-600 transition-all duration-300">
+                                </span>
 
-                            <span
-                                class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
-                                style="font-variation-settings: 'FILL' 0;">
-                                foundation
-                            </span>
+                                <span
+                                    class="material-symbols-outlined text-on-tertiary-container text-4xl group-hover:scale-110 transition-transform duration-300"
+                                    style="font-variation-settings: 'FILL' 0;">
+                                    foundation
+                                </span>
 
-                            <div>
-                                <div class="text-sm font-bold text-primary">
-                                    EWS
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-bold text-primary flex items-center justify-between">
+                                        <span>EWS</span>
+                                        <span class="material-symbols-outlined text-slate-400 text-[18px] transition-transform duration-300 group-hover:rotate-180" id="ewsMainChevron">
+                                            expand_more
+                                        </span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 font-medium">Flats &amp; Plots</div>
                                 </div>
+
+                            </a>
+
+                            <!-- Dropdown -->
+                            <div id="ewsDropdownMenu"
+                                class="ews-dropdown absolute left-0 top-full mt-2 w-64 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-200/90 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
+
+                                <!-- Header Tag -->
+                                <div class="px-3.5 py-2.5 bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border-b border-orange-100 flex items-center justify-between">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                                        <span class="text-[11px] font-bold tracking-wider text-orange-950 uppercase">EWS Category</span>
+                                    </div>
+                                    <span class="text-[9.5px] font-semibold text-orange-800 bg-orange-100/90 border border-orange-200 px-1.5 py-0.5 rounded-md">
+                                        Select Type
+                                    </span>
+                                </div>
+
+                                <div class="p-2 space-y-1">
+                                    <!-- Option 1: Flats -->
+                                    <div class="rounded-xl border border-transparent transition-all duration-200" id="ewsFlatsContainer">
+                                        <button type="button"
+                                            id="ewsFlatsBtn"
+                                            onclick="toggleEwsFlats(event)"
+                                            class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-orange-50/80 transition-all duration-200 text-left group/flat cursor-pointer focus:outline-none">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover/flat:scale-105 transition-transform duration-200">
+                                                    <span class="material-symbols-outlined text-[19px]">apartment</span>
+                                                </div>
+                                                <div>
+                                                    <div class="text-xs font-bold text-slate-800 group-hover/flat:text-orange-700 flex items-center gap-1.5">
+                                                        <span>Flats</span>
+                                                        <span class="text-[9px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full leading-tight">4 Portals</span>
+                                                    </div>
+                                                    <div class="text-[10.5px] text-slate-500">Citizen • Developer • STP • Dept/TCP</div>
+                                                </div>
+                                            </div>
+                                            <span id="ewsFlatsChevron" class="material-symbols-outlined text-slate-400 group-hover/flat:text-orange-600 text-[18px] transition-transform duration-300">
+                                                expand_more
+                                            </span>
+                                        </button>
+
+                                        <!-- Nested Logins for Flats -->
+                                        <div id="ewsFlatsSubmenu" class="hidden pl-2 pr-1 pt-1 pb-1 space-y-1 border-l-2 border-orange-300 ml-5 my-1 transition-all duration-300">
+                                            <!-- Citizen Login -->
+                                            <a href="{{ route('ews.citizen.login') }}"
+                                                class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-950 transition-all text-xs font-medium group/item">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-blue-600 text-[17px]">person</span>
+                                                    <span>Citizen Login</span>
+                                                </div>
+                                                <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
+                                            </a>
+
+                                            <!-- Developer Login -->
+                                            <a href="{{ route('ews.developer.login') }}"
+                                                class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-950 transition-all text-xs font-medium border-t border-slate-100/60 group/item">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-purple-600 text-[17px]">engineering</span>
+                                                    <span>Developer Login</span>
+                                                </div>
+                                                <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
+                                            </a>
+
+                                            <!-- STP Login -->
+                                            <a href="{{ route('ews.stp.login') }}"
+                                                class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-950 transition-all text-xs font-medium border-t border-slate-100/60 group/item">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-amber-600 text-[17px]">account_balance</span>
+                                                    <span>STP Login</span>
+                                                </div>
+                                                <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
+                                            </a>
+
+                                            <!-- Department / TCP Login -->
+                                            <a href="{{ route('ews.department.login') }}"
+                                                class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-orange-50 text-slate-700 hover:text-orange-950 transition-all text-xs font-medium border-t border-slate-100/60 group/item">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-emerald-600 text-[17px]">business</span>
+                                                    <span>Department / TCP Login</span>
+                                                </div>
+                                                <span class="material-symbols-outlined text-slate-300 group-hover/item:text-orange-600 text-sm group-hover/item:translate-x-0.5 transition-transform">chevron_right</span>
+                                            </a>
+                                        </div>
+                                    </div>
+
+                                    <!-- Option 2: Plots -->
+                                    <div class="rounded-xl border border-transparent transition-all duration-200">
+                                        <button type="button"
+                                            onclick="showEwsPlotsAlert(event)"
+                                            class="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-amber-50/80 transition-all duration-200 text-left group/plot cursor-pointer focus:outline-none">
+                                            <div class="flex items-center gap-2.5">
+                                                <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover/plot:scale-105 transition-transform duration-200">
+                                                    <span class="material-symbols-outlined text-[19px]">landscape</span>
+                                                </div>
+                                                <div>
+                                                    <div class="text-xs font-bold text-slate-800 group-hover/plot:text-amber-800 flex items-center gap-1.5">
+                                                        <span>Plots</span>
+                                                        <span class="inline-flex items-center gap-1 text-[9px] font-semibold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full border border-amber-200 leading-tight">
+                                                            <span class="w-1 h-1 rounded-full bg-amber-500 animate-pulse"></span>
+                                                            Notice
+                                                        </span>
+                                                    </div>
+                                                    <div class="text-[10.5px] text-slate-500">Scheme Info &amp; Status</div>
+                                                </div>
+                                            </div>
+                                            <span class="material-symbols-outlined text-slate-400 group-hover/plot:text-amber-600 text-[18px] group-hover/plot:scale-110 transition-transform">
+                                                info
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Helper -->
+                                <div class="px-3 py-1.5 bg-slate-50/80 border-t border-slate-100 text-center">
+                                    <span class="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-1">
+                                        <span class="material-symbols-outlined text-slate-400 text-[13px]">verified_user</span>
+                                        Department of Housing For All, Haryana
+                                    </span>
+                                </div>
+
                             </div>
 
-                        </a>
-
-                        <!-- Dropdown -->
-                        <div
-                            class="absolute left-0 top-full mt-2 w-52 bg-white rounded-xl shadow-xl border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible translate-y-2 group-hover:translate-y-0 transition-all duration-300 z-50 overflow-hidden">
-
-                            <a href="{{ route('ews.citizen.login') }}"
-                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all">
-
-                                <span class="material-symbols-outlined text-[18px]">
-                                    person
-                                </span>
-
-                                Citizen Login
-                            </a>
-
-                            <a href="{{ route('ews.developer.login') }}"
-                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
-
-                                <span class="material-symbols-outlined text-[18px]">
-                                    code
-                                </span>
-
-                                STP Login
-                            </a>
-
-                            <a href="{{ route('ews.department.login') }}"
-                                class="flex items-center gap-2 px-4 py-3 hover:bg-orange-50 text-sm font-medium text-gray-700 transition-all border-t border-gray-100">
-
-                                <span class="material-symbols-outlined text-[18px]">
-                                    business
-                                </span>
-
-                                Department Login
-                            </a>
-
                         </div>
-
-                    </div>
-                @endif
+                    @endif
 
             </div>
             <!-- Main Visual / Carousel Area -->
@@ -1458,6 +1553,149 @@
 
             moveLogos();
         }, 2500);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .ews-dropdown.is-open {
+            opacity: 1 !important;
+            visibility: visible !important;
+            transform: translateY(0) !important;
+            pointer-events: auto !important;
+        }
+
+        .ews-custom-swal-popup {
+            border-radius: 1.25rem !important;
+            padding: 1.5rem 1.25rem !important;
+            border: 1px solid #fed7aa !important;
+            box-shadow: 0 25px 50px -12px rgba(234, 88, 12, 0.25) !important;
+            font-family: 'Poppins', sans-serif !important;
+        }
+
+        .ews-custom-swal-confirm {
+            background: linear-gradient(135deg, #ea580c 0%, #c2410c 100%) !important;
+            color: #ffffff !important;
+            border: none !important;
+            border-radius: 0.75rem !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 600 !important;
+            font-size: 0.875rem !important;
+            box-shadow: 0 4px 14px rgba(234, 88, 12, 0.35) !important;
+            transition: all 0.2s ease !important;
+            cursor: pointer !important;
+        }
+
+        .ews-custom-swal-confirm:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 6px 20px rgba(234, 88, 12, 0.45) !important;
+        }
+    </style>
+    <script>
+        function toggleEwsDropdown(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const dropdown = document.getElementById('ewsDropdownMenu');
+            const chevron = document.getElementById('ewsMainChevron');
+            if (!dropdown) return;
+
+            const isOpen = dropdown.classList.contains('is-open');
+            if (isOpen) {
+                dropdown.classList.remove('is-open');
+                if (chevron) chevron.classList.remove('rotate-180');
+            } else {
+                dropdown.classList.add('is-open');
+                if (chevron) chevron.classList.add('rotate-180');
+            }
+        }
+
+        function toggleEwsFlats(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const submenu = document.getElementById('ewsFlatsSubmenu');
+            const chevron = document.getElementById('ewsFlatsChevron');
+            const container = document.getElementById('ewsFlatsContainer');
+            if (!submenu) return;
+
+            const isHidden = submenu.classList.contains('hidden');
+            if (isHidden) {
+                submenu.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+                if (container) {
+                    container.classList.add('bg-orange-50/60', 'border-orange-200/80');
+                    container.classList.remove('border-transparent');
+                }
+            } else {
+                submenu.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+                if (container) {
+                    container.classList.remove('bg-orange-50/60', 'border-orange-200/80');
+                    container.classList.add('border-transparent');
+                }
+            }
+        }
+
+        function showEwsPlotsAlert(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '<div class="flex items-center justify-center gap-2 text-lg font-bold text-slate-800"><span class="material-symbols-outlined text-orange-600 text-2xl">landscape</span> ई.डब्ल्यू.एस. प्लॉट्स योजना</div><div class="text-xs font-semibold text-orange-600 tracking-wide mt-0.5">EWS Plots Scheme • Housing For All Haryana</div>',
+                    html: `
+                        <div class="text-left text-xs md:text-sm text-slate-600 space-y-3 mt-3">
+                            <div class="bg-amber-50 border-l-4 border-amber-500 p-3 rounded-r-xl">
+                                <div class="font-bold text-amber-900 text-xs flex items-center gap-1.5 uppercase tracking-wide">
+                                    <span>📢</span> महत्वपूर्ण सूचना / Important Notice
+                                </div>
+                                <p class="text-amber-800 text-xs mt-1 leading-relaxed">
+                                    ई.डब्ल्यू.एस. योजना के अंतर्गत वर्तमान में <strong>ई.डब्ल्यू.एस. फ्लैट्स (Flats)</strong> के लिए ऑनलाइन आवेदन व लॉगिन सेवाएं सक्रिय हैं।
+                                </p>
+                            </div>
+
+                            <div class="p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-emerald-600 text-[18px]">check_circle</span>
+                                    <span class="text-slate-800"><strong>EWS Flats:</strong> Citizen, Developer, STP और Department/TCP Login चालू हैं।</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-orange-600 text-[18px]">pending_actions</span>
+                                    <span class="text-orange-900 font-medium"><strong>EWS Plots:</strong> ऑनलाइन पंजीकरण व आवंटन प्रक्रिया शीघ्र उपलब्ध होगी।</span>
+                                </div>
+                            </div>
+
+                            <p class="text-[11px] text-slate-500 text-center italic m-0">
+                                प्लॉट्स सम्बन्धी किसी भी नवीनतम सूचना व अपडेट के लिए पोर्टल पर जुड़े रहें।
+                            </p>
+                        </div>
+                    `,
+                    showCloseButton: true,
+                    confirmButtonText: 'समझ गया (Close)',
+                    customClass: {
+                        popup: 'ews-custom-swal-popup',
+                        confirmButton: 'ews-custom-swal-confirm'
+                    },
+                    buttonsStyling: false
+                });
+            } else {
+                alert('ई.डब्ल्यू.एस. प्लॉट्स (EWS Plots) योजना की ऑनलाइन सेवाएं शीघ्र शुरू की जाएंगी। वर्तमान में EWS Flats के लिए लॉगिन सक्रिय है।');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            const group = document.getElementById('ewsSchemeGroup');
+            const dropdown = document.getElementById('ewsDropdownMenu');
+            const chevron = document.getElementById('ewsMainChevron');
+
+            if (group && dropdown && !group.contains(e.target)) {
+                dropdown.classList.remove('is-open');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        });
     </script>
 </body>
 

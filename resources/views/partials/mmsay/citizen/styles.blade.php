@@ -8,6 +8,16 @@
     body {
         font-size: 12px;
         background: #f4f6fb;
+        top: 0px !important;
+        position: static !important;
+    }
+
+    .goog-te-banner-frame,
+    iframe.goog-te-banner-frame,
+    body > .skiptranslate {
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
     }
 
     .material-symbols-outlined { font-size: 18px; }

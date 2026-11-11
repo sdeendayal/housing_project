@@ -6,7 +6,7 @@
     $zoneTitle = str_contains(strtoupper($rawZone), 'ZONE') ? strtoupper($rawZone) : strtoupper($rawZone) . ' Zone';
 
     // Current route & view checks
-    $isDashboardRoute = request()->routeIs('ews.developer.dashboard');
+    $isDashboardRoute = request()->routeIs('ews.developer.dashboard') || request()->routeIs('ews.developer.flats.show');
     $currentViewParam = request('view') ?? ($currentView ?? null);
     $ownershipScopeParam = request('ownership_scope') ?? null;
 
@@ -14,11 +14,7 @@
     $isDistrictActive = ($isDashboardRoute && $currentViewParam === 'district') || request()->routeIs('ews.developer.districts-stats');
     $isMyFlatsActive = $isDashboardRoute && ($currentViewParam === 'my_flats' || $ownershipScopeParam === 'my_flats');
     $isRegisterFlatActive = request()->routeIs('ews.developer.flats.create') || request()->routeIs('ews.developer.flats.edit');
-    $isPossessionActive = request()->routeIs('ews.developer.possession.index') 
-        || request()->routeIs('ews.developer.possession.show') 
-        || request()->routeIs('ews.developer.possession.beneficiary-details');
-    $isPossessionLogsActive = request()->routeIs('ews.developer.possession.logs');
-    $isStpLogsActive = request()->routeIs('ews.developer.logs');
+    $isDeveloperLogsActive = request()->routeIs('ews.developer.logs');
 @endphp
 
 <!-- DEEP NAVY / SLATE SIDEBAR -->
@@ -30,7 +26,7 @@
         </div>
         <div>
             <h1 class="text-xs font-black tracking-tight text-white uppercase">EWS Portal</h1>
-            <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">STP Hub</p>
+            <p class="text-[8px] text-slate-500 font-mono tracking-widest uppercase">Developer Hub</p>
         </div>
     </div>
 
@@ -46,32 +42,11 @@
                     <span>Dashboard</span>
                 </a>
 
-                <!-- 2. Zone Flats -->
-                <a href="{{ route('ews.developer.dashboard', ['view' => 'district']) }}" id="nav-district-flats"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isDistrictActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <i class="bi bi-building text-sky-400"></i>
-                    <span>{{ $zoneTitle }} Flats</span>
-                </a>
-
-                <!-- 3. Flats Added By Me -->
-                <a href="{{ route('ews.developer.dashboard', ['view' => 'my_flats']) }}" id="nav-my-flats"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isMyFlatsActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <i class="bi bi-person-check-fill text-emerald-400"></i>
-                    <span>Flats Added By Me</span>
-                </a>
-
-                <!-- 4. Register Flat -->
+                <!-- 2. Register Flat -->
                 <a href="{{ route('ews.developer.flats.create') }}" id="nav-register-flat"
                     class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isRegisterFlatActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
                     <i class="bi bi-plus-circle {{ $isRegisterFlatActive ? 'text-sky-400' : 'text-slate-400' }}"></i>
                     <span>Register Flat</span>
-                </a>
-
-                <!-- 5. Physical Possession -->
-                <a href="{{ route('ews.developer.possession.index') }}" id="nav-possession"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isPossessionActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <i class="bi bi-key-fill text-amber-400"></i>
-                    <span>Physical Possession</span>
                 </a>
             </div>
         </div>
@@ -80,18 +55,12 @@
         <div class="d-none hidden" style="display: none;">
             <span class="block px-3 text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2">Audit & Activity</span>
             <div class="space-y-1">
-                <!-- 6. Possession Audit Logs -->
-                <a href="{{ route('ews.developer.possession.logs') }}" id="nav-possession-logs"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isPossessionLogsActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <i class="bi bi-clock-history text-indigo-400"></i>
-                    <span>Possession Audit Logs</span>
-                </a>
 
-                <!-- 7. STP Logs -->
-                <a href="{{ route('ews.developer.logs') }}" id="nav-stp-logs"
-                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isStpLogsActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <i class="bi bi-journal-text {{ $isStpLogsActive ? 'text-sky-400' : 'text-slate-400' }}"></i>
-                    <span>STP Logs</span>
+                <!-- 7. Developer Logs -->
+                <a href="{{ route('ews.developer.logs') }}" id="nav-developer-logs"
+                    class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs {{ $isDeveloperLogsActive ? 'bg-slate-800 text-white font-bold shadow-sm' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
+                    <i class="bi bi-journal-text {{ $isDeveloperLogsActive ? 'text-sky-400' : 'text-slate-400' }}"></i>
+                    <span>Developer Logs</span>
                 </a>
             </div>
         </div>

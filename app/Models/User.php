@@ -86,7 +86,9 @@ class User extends Authenticatable
             'admin', 'director', 'departmental' => route('mmsay.dashboard'),
             'ews_department' => route('ews.department.dashboard'),
             'ews_user' => route('ews.dashboard'),
-            'ews_developer', 'ews_stp', 'stp' => route('ews.developer.dashboard'),
+            'ews_developer' => route('ews.developer.dashboard'),
+            'ews_stp', 'stp' => route('ews.stp.dashboard'),
+            'ews_tcp', 'tcp' => route('ews.tcp.dashboard'),
             'mmgay-dtp' => route('pp.dtp.dashboard'),
             default => route('home'),
         };

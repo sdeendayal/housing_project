@@ -128,6 +128,7 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    <div id="google_translate_element"></div>
                     <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-0.5 rounded-lg text-[9px] font-extrabold">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                         <span class="text-emerald-600 tracking-wider">SECURE PORTAL</span>

@@ -162,7 +162,7 @@
                         <span class="material-symbols-outlined text-white text-[18px] font-bold">real_estate_agent</span>
                     </div>
                     <div>
-                        <h1 class="text-xs font-extrabold tracking-wide uppercase text-slate-100">Housing For All</h1>
+                        <h1 class="text-xs font-extrabold tracking-wide uppercase text-slate-100 notranslate" translate="no">Housing For All</h1>
                         <p class="text-[8px] text-slate-500 font-bold uppercase tracking-wider leading-none mt-0.5">MMGAY Scheme</p>
                     </div>
                 </div>
@@ -262,7 +262,8 @@
                             <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider leading-none mt-1">Mukhyamantri Grameen Awas Yojana</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3">
+                        <div id="google_translate_element"></div>
                         <div class="hidden sm:flex items-center gap-2 pr-4 border-r border-slate-200">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                             <span class="text-[10px] text-slate-500 font-bold font-mono">Verified Villager session</span>
@@ -1132,7 +1133,7 @@
                 <!-- Footer -->
                 <footer class="bg-slate-900 border-t border-slate-800 text-slate-500 py-3 text-center z-10 flex-shrink-0">
                     <div class="max-w-full mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-1 text-[9px] leading-none">
-                        <p>© 2026 Department of Housing For All, Government of Haryana. All rights reserved.</p>
+                        <p>© 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Government of Haryana. All rights reserved.</p>
                         <p class="text-slate-600/90 font-medium font-mono">Designed by Citizen Resources Information Department, Haryana (CRID)</p>
                     </div>
                 </footer>

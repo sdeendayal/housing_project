@@ -1,4 +1,4 @@
-<section class="bg-white border-t border-slate-200 py-6">
+ <section class="bg-white border-t border-slate-200 py-6">
 
     <div class="max-w-7xl mx-auto px-4 relative">
 
@@ -6,7 +6,7 @@
         <button id="logoPrev"
             class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
 
-            <span class="material-symbols-outlined text-slate-700">
+            <span class="material-symbols-outlined notranslate text-slate-700" translate="no">
                 chevron_left
             </span>
 
@@ -41,10 +41,16 @@
                         src="govt-of-haryana.png" />
                 </a>
 
-                <a href="https://pmaymis.gov.in/" target="_blank">
-                    <img alt="PMAY"
+                <a href="https://pmaymis.gov.in/pmaymis2_2024/PMAY_SURVEY/Applicant_Login.aspx" target="_blank" rel="noopener noreferrer" title="PMAY (Urban) - Applicant Login & Survey">
+                    <img alt="PMAY Urban"
                         class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
-                        src="pmay-logo.jpg" />
+                        src="{{ asset('pmay-logo.jpg') }}" />
+                </a>
+
+                <a href="https://pmayg.dord.gov.in/" target="_blank" rel="noopener noreferrer" title="PMAY (Gramin) - Official Portal">
+                    <img alt="PMAY Gramin"
+                        class="h-20 min-w-[170px] object-contain border border-slate-200 rounded-xl p-3 bg-white shadow-sm hover:shadow-md transition"
+                        src="{{ asset('pmay-logo.jpg') }}" />
                 </a>
 
                 <a href="https://nhb.org.in/" target="_blank">
@@ -79,7 +85,7 @@
         <button id="logoNext"
             class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white shadow-md border border-slate-200 rounded-full p-2 hover:bg-slate-100 transition">
 
-            <span class="material-symbols-outlined text-slate-700">
+            <span class="material-symbols-outlined notranslate text-slate-700" translate="no">
                 chevron_right
             </span>
 

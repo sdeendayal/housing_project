@@ -411,10 +411,10 @@
       <div class="cl-card">
          <div class="cl-brand">
             <div class="cl-brand__icon">
-               <span class="material-symbols-outlined">apartment</span>
+               <span class="material-symbols-outlined notranslate" translate="no">apartment</span>
             </div>
             <div>
-               <p class="cl-brand__title">Housing For All</p>
+               <p class="cl-brand__title notranslate" translate="no">Housing For All</p>
                <p class="cl-brand__sub">Citizen Portal</p>
             </div>
          </div>
@@ -422,7 +422,7 @@
          <div class="cl-body">
             <div class="cl-head">
                <div class="cl-head__icon">
-                  <span class="material-symbols-outlined">account_circle</span>
+                  <span class="material-symbols-outlined notranslate" translate="no">account_circle</span>
                </div>
                <div>
                   <p class="cl-head__title">Citizen Login</p>
@@ -431,17 +431,17 @@
             </div>
 
             <div class="cl-tags">
-               <span class="cl-tag"><span class="material-symbols-outlined">verified_user</span> Secure</span>
-               <span class="cl-tag"><span class="material-symbols-outlined">sms</span> OTP</span>
+               <span class="cl-tag"><span class="material-symbols-outlined notranslate" translate="no">verified_user</span> Secure</span>
+               <span class="cl-tag"><span class="material-symbols-outlined notranslate" translate="no">sms</span> OTP</span>
             </div>
 
             <form id="sendOtpForm" action="{{ route('citizen.login.send-otp') }}" method="POST">
                @csrf
 
                <div class="cl-field">
-                  <label class="cl-label" for="mobileInput">Mobile Number <span class="req">*</span></label>
+                  <label class="cl-label notranslate" for="mobileInput" translate="no">Mobile Number <span class="req">*</span></label>
                   <div class="cl-mobile">
-                     <span class="cl-mobile__code">+91</span>
+                     <span class="cl-mobile__code notranslate" translate="no">+91</span>
                      <input
                         type="text"
                         class="cl-mobile__input"
@@ -457,9 +457,9 @@
                </div>
 
                <div class="cl-field">
-                  <label class="cl-label" for="captchaInput">Captcha <span class="req">*</span></label>
+                  <label class="cl-label notranslate" for="captchaInput" translate="no">Captcha <span class="req">*</span></label>
                   <div class="cl-captcha">
-                     <div class="cl-captcha__box" id="captchaText">{{ $captcha }}</div>
+                     <div class="cl-captcha__box notranslate" id="captchaText" translate="no">{{ $captcha }}</div>
                      <div
                         role="button"
                         tabindex="0"
@@ -467,7 +467,7 @@
                         onclick="refreshCaptcha(this)"
                         onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();refreshCaptcha(this);}"
                         class="cl-captcha__refresh captcha-refresh-btn">
-                        <span class="material-symbols-outlined">refresh</span>
+                        <span class="material-symbols-outlined notranslate" translate="no">refresh</span>
                      </div>
                      <div class="cl-captcha__input-wrap">
                         <input
@@ -484,7 +484,7 @@
                <button type="submit" class="cl-btn" id="sendOtpBtn">
                   <span class="btn-label-default">
                      Send OTP
-                     <span class="material-symbols-outlined">arrow_forward</span>
+                     <span class="material-symbols-outlined notranslate" translate="no">arrow_forward</span>
                   </span>
                   <span class="btn-label-loading">
                      <span class="btn-spinner" aria-hidden="true"></span>

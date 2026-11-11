@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>EWS STP - Physical Possession Module</title>
+    <title>EWS Developer - Physical Possession Module</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -141,7 +141,7 @@
             <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm dev-shadow">
                 <form id="filter-form" onsubmit="return false;" class="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
                     
-                    <!-- 1. Frozen Assigned Zone (Locked to Logged-in STP) -->
+                    <!-- 1. Frozen Assigned Zone (Locked to Logged-in Developer) -->
                     <div class="md:col-span-3">
                         <label class="block text-[10px] font-black uppercase text-slate-600 mb-1 tracking-wider flex items-center justify-between">
                             <span><i class="bi bi-shield-lock-fill text-sky-600"></i> Assigned Zone</span>
@@ -1068,7 +1068,7 @@
                                             <span>${log.action}</span>
                                             <span class="text-[10px] px-1.5 py-0.2 rounded bg-slate-100 text-slate-600">${log.new_status}</span>
                                         </div>
-                                        <div class="text-[10px] text-slate-500">Performed by: <strong class="text-slate-700">${log.performed_by || 'STP Officer'}</strong></div>
+                                        <div class="text-[10px] text-slate-500">Performed by: <strong class="text-slate-700">${log.performed_by || 'Developer User'}</strong></div>
                                     </div>
                                     <div class="text-right text-[10px] font-mono text-slate-400">
                                         <div>${log.timestamp}</div>

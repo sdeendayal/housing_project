@@ -31,28 +31,34 @@ class EwsDeveloperSeeder extends Seeder
         $rohtakZone = DB::table('ews_stp_districts')->whereRaw('UPPER(name) LIKE ?', ['%ROHTAK%'])->first();
         $zoneId = $rohtakZone ? $rohtakZone->id : 5;
 
-        // Create STP user with mobile 9999999999 assigned to Rohtak Zone
-        $user = User::create([
-            'name' => 'STP Rohtak Zone',
-            'email' => 'ews_stp@gmail.com',
-            'mobile' => '9999999999',
-            'password' => Hash::make('password'),
-            'role' => 'ews_stp',
-            'scheme' => 'EWS',
-            'Is_Active' => '1',
-            'Is_Deleted' => '0',
-            'district_id' => null,
-            'district_name' => 'ROHTAK ZONE',
-            'zone_id' => $zoneId,
-            'zone_name' => 'ROHTAK ZONE',
-        ]);
+        // Create or update STP user with mobile 9999999999 assigned to Rohtak Zone
+        $user = User::updateOrCreate(
+            ['email' => 'ews_stp@gmail.com'],
+            [
+                'name' => 'STP Rohtak Zone',
+                'mobile' => '9999999999',
+                'password' => Hash::make('password'),
+                'role' => 'ews_stp',
+                'scheme' => 'EWS',
+                'Is_Active' => '1',
+                'Is_Deleted' => '0',
+                'district_id' => null,
+                'district_name' => 'ROHTAK ZONE',
+                'zone_id' => $zoneId,
+                'zone_name' => 'ROHTAK ZONE',
+            ]
+        );
 
-        RoleType::create([
-            'user_id' => $user->id,
-            'role_id' => $role->id,
-            'Is_Active' => '1',
-            'Is_Deleted' => '0',
-        ]);
+        $stpRole = Role::where('slug', 'ews_stp')->first() ?? $role;
+
+        RoleType::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'role_id' => $stpRole->id,
+                'Is_Active' => '1',
+                'Is_Deleted' => '0',
+            ]
+        );
 
         $this->command->info('EWS Developer seeded successfully. Mobile: 9999999999, OTP: 111111 (Local)');
     }

@@ -19,6 +19,7 @@ class OtpVerificationService
         Otp::PURPOSE_DEPARTMENT_LOGIN,
         Otp::PURPOSE_EWS_CITIZEN_LOGIN,
         Otp::PURPOSE_EWS_DEVELOPER_LOGIN,
+        Otp::PURPOSE_EWS_DEVELOPER_REGISTRATION,
     ];
 
     private const DOCUMENT_OTP_PURPOSES = [

@@ -205,7 +205,7 @@
                             <div class="p-2 rounded-lg bg-slate-50 border border-slate-100">
                                 <span class="block text-[9.5px] uppercase font-bold text-slate-400">Action Officer</span>
                                 <span class="font-bold text-slate-800 truncate block">
-                                    {{ $possession->stp_user_name ?? ($possession ? 'STP User' : 'Pending') }}
+                                    {{ $possession->stp_user_name ?? ($possession ? 'Developer User' : 'Pending') }}
                                 </span>
                             </div>
                         </div>

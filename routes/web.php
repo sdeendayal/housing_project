@@ -98,36 +98,155 @@ Route::middleware(['auth', 'role:ews_user'])->group(function () {
         ->name('ews.logout');
 });
 
-// ─── EWS Developer Login (OTP — shared OtpAuthController) ─────────────────────────
+// ─── EWS Developer Login & Self-Registration ──────────────────────────────────────────
 Route::middleware('')->group(function () {
-    Route::get('/ews/developer/login', [OtpAuthController::class, 'showLogin'])
-        ->defaults('context', 'ews_developer')
+    Route::get('/ews/developer/login', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'showAuth'])
         ->name('ews.developer.login');
+    Route::get('/ews/developer/register', fn() => redirect()->route('ews.developer.login', ['tab' => 'register']))
+        ->name('ews.developer.register');
 
-    Route::post('/ews/developer/login/send-otp', [OtpAuthController::class, 'sendOtp'])
-        ->defaults('context', 'ews_developer')
+    Route::post('/ews/developer/login/send-otp', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'sendLoginOtp'])
         ->middleware('throttle:5,1')
         ->name('ews.developer.login.send-otp');
-
-    Route::get('/ews/developer/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
-        ->defaults('context', 'ews_developer')
+    Route::get('/ews/developer/login/verify', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'showLoginVerify'])
         ->name('ews.developer.login.verify-page');
-
-    Route::post('/ews/developer/login/verify', [OtpAuthController::class, 'verifyOtp'])
-        ->defaults('context', 'ews_developer')
+    Route::post('/ews/developer/login/verify', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'verifyLoginOtp'])
         ->name('ews.developer.login.verify');
-
-    Route::post('/ews/developer/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
-        ->defaults('context', 'ews_developer')
+    Route::post('/ews/developer/login/resend-otp', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'resendLoginOtp'])
         ->middleware('throttle:5,1')
         ->name('ews.developer.login.resend-otp');
 
-    // STP Login URL alias
-    Route::get('/ews/stp/login', fn() => redirect()->route('ews.developer.login'))->name('ews.stp.login');
+    // Registration routes with OTP
+    Route::post('/ews/developer/register/send-otp', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'sendRegisterOtp'])
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.register.send-otp');
+    Route::get('/ews/developer/register/verify', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'showRegisterVerify'])
+        ->name('ews.developer.register.verify-page');
+    Route::post('/ews/developer/register/verify', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'verifyRegisterOtp'])
+        ->name('ews.developer.register.verify');
+    Route::post('/ews/developer/register/resend-otp', [\App\Http\Controllers\EwsDeveloperAuthController::class, 'resendRegisterOtp'])
+        ->middleware('throttle:5,1')
+        ->name('ews.developer.register.resend-otp');
 });
 
-// EWS Developer / STP Protected Routes
-Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function () {
+// ─── EWS STP Login (OTP — shared OtpAuthController) ─────────────────────────
+Route::middleware('')->group(function () {
+    Route::get('/ews/stp/login', [OtpAuthController::class, 'showLogin'])
+        ->defaults('context', 'ews_stp')
+        ->name('ews.stp.login');
+
+    Route::post('/ews/stp/login/send-otp', [OtpAuthController::class, 'sendOtp'])
+        ->defaults('context', 'ews_stp')
+        ->middleware('throttle:5,1')
+        ->name('ews.stp.login.send-otp');
+
+    Route::get('/ews/stp/login/verify', [OtpAuthController::class, 'showVerifyOtp'])
+        ->defaults('context', 'ews_stp')
+        ->name('ews.stp.login.verify-page');
+
+    Route::post('/ews/stp/login/verify', [OtpAuthController::class, 'verifyOtp'])
+        ->defaults('context', 'ews_stp')
+        ->name('ews.stp.login.verify');
+
+    Route::post('/ews/stp/login/resend-otp', [OtpAuthController::class, 'resendOtp'])
+        ->defaults('context', 'ews_stp')
+        ->middleware('throttle:5,1')
+        ->name('ews.stp.login.resend-otp');
+});
+
+// EWS STP Protected Routes
+Route::middleware(['auth', 'role:ews_stp,stp'])->group(function () {
+    Route::get('/ews/stp/dashboard', [\App\Http\Controllers\EwsStpDashboardController::class, 'index'])
+        ->name('ews.stp.dashboard');
+    Route::get('/ews/stp/flats/data', [\App\Http\Controllers\EwsStpDashboardController::class, 'getFlatsData'])
+        ->name('ews.stp.flats.data');
+    Route::get('/ews/stp/flats/create', [\App\Http\Controllers\EwsStpDashboardController::class, 'create'])
+        ->name('ews.stp.flats.create');
+    Route::post('/ews/stp/flats', [\App\Http\Controllers\EwsStpDashboardController::class, 'store'])
+        ->name('ews.stp.flats.store');
+    Route::get('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'show'])
+        ->name('ews.stp.flats.show');
+    Route::get('/ews/stp/verify/flat/{identifier}', [\App\Http\Controllers\EwsStpDashboardController::class, 'show'])
+        ->name('ews.stp.verify.flat.show');
+    Route::get('/ews/stp/flats/{secure_id}/edit', [\App\Http\Controllers\EwsStpDashboardController::class, 'edit'])
+        ->name('ews.stp.flats.edit');
+    Route::put('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'update'])
+        ->name('ews.stp.flats.update');
+    Route::post('/ews/stp/flats/{secure_id}/approve-dtp', [\App\Http\Controllers\EwsStpDashboardController::class, 'approveDtp'])
+        ->name('ews.stp.flats.approve-dtp');
+    Route::delete('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'destroy'])
+        ->name('ews.stp.flats.destroy');
+    Route::get('/ews/stp/flats/export/csv', [\App\Http\Controllers\EwsStpDashboardController::class, 'exportCsv'])
+        ->name('ews.stp.flats.export.csv');
+    Route::get('/ews/stp/flats/export/excel', [\App\Http\Controllers\EwsStpDashboardController::class, 'exportExcel'])
+        ->name('ews.stp.flats.export.excel');
+    Route::get('/ews/stp/flats/export/pdf', [\App\Http\Controllers\EwsStpDashboardController::class, 'exportPdf'])
+        ->name('ews.stp.flats.export.pdf');
+    Route::get('/ews/stp/flats/export/{format}', [\App\Http\Controllers\EwsStpDashboardController::class, 'exportFlats'])
+        ->name('ews.stp.flats.export');
+    Route::get('/ews/stp/districts', [\App\Http\Controllers\EwsStpDashboardController::class, 'getDistricts'])
+        ->name('ews.stp.districts');
+    Route::get('/ews/stp/licenses', [\App\Http\Controllers\EwsStpDashboardController::class, 'getLicenses'])
+        ->name('ews.stp.licenses');
+    Route::get('/ews/stp/logs', [\App\Http\Controllers\EwsStpDashboardController::class, 'logs'])
+        ->name('ews.stp.logs');
+    Route::get('/ews/stp/districts-stats', [\App\Http\Controllers\EwsStpDashboardController::class, 'districtStats'])
+        ->name('ews.stp.districts-stats');
+    Route::get('/ews/stp/projects', [\App\Http\Controllers\EwsStpDashboardController::class, 'getProjects'])
+        ->name('ews.stp.projects');
+    Route::get('/ews/stp/blocks', [\App\Http\Controllers\EwsStpDashboardController::class, 'getBlocks'])
+        ->name('ews.stp.blocks');
+    Route::get('/ews/stp/towns', [\App\Http\Controllers\EwsStpDashboardController::class, 'getTowns'])
+        ->name('ews.stp.towns');
+    Route::post('/ews/stp/towns/store-ajax', [\App\Http\Controllers\EwsStpDashboardController::class, 'storeTownAjax'])
+        ->name('ews.stp.towns.store-ajax');
+    Route::post('/ews/stp/projects/store-ajax', [\App\Http\Controllers\EwsStpDashboardController::class, 'storeProjectAjax'])
+        ->name('ews.stp.projects.store-ajax');
+    Route::post('/ews/stp/blocks/store-ajax', [\App\Http\Controllers\EwsStpDashboardController::class, 'storeBlockAjax'])
+        ->name('ews.stp.blocks.store-ajax');
+
+    // STP License & Flat Verification Module
+    Route::get('/ews/stp/verify', [\App\Http\Controllers\EwsStpDashboardController::class, 'verifyView'])
+        ->name('ews.stp.verify');
+    Route::get('/ews/stp/verify/matrix', [\App\Http\Controllers\EwsStpDashboardController::class, 'verifyMatrixView'])
+        ->name('ews.stp.verify.matrix');
+    Route::get('/ews/stp/verify/licenses', [\App\Http\Controllers\EwsStpDashboardController::class, 'getVerifyLicenses'])
+        ->name('ews.stp.verify.licenses');
+    Route::get('/ews/stp/verify/records', [\App\Http\Controllers\EwsStpDashboardController::class, 'getVerifyRecords'])
+        ->name('ews.stp.verify.records');
+
+    // STP Physical Possession Web Module
+    Route::get('/ews/stp/possession', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'index'])
+        ->name('ews.stp.possession.index');
+    Route::get('/ews/stp/possession/district-projects', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getDistrictProjects'])
+        ->name('ews.stp.possession.district-projects');
+    Route::get('/ews/stp/possession/project-stats', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getProjectStats'])
+        ->name('ews.stp.possession.project-stats');
+    Route::get('/ews/stp/possession/beneficiaries-data', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiariesData'])
+        ->name('ews.stp.possession.beneficiaries-data');
+    Route::get('/ews/stp/possession/beneficiary/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getBeneficiaryDetails'])
+        ->name('ews.stp.possession.beneficiary-details')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+    Route::post('/ews/stp/possession/submit/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'submitPossession'])
+        ->name('ews.stp.possession.submit')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+    Route::get('/ews/stp/possession/logs', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'auditLogs'])
+        ->name('ews.stp.possession.logs');
+    Route::get('/ews/stp/possession/{secure_id}', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'show'])
+        ->name('ews.stp.possession.show')
+        ->where('secure_id', '[a-zA-Z0-9]{32}');
+
+    // Developer possession alias to prevent 404 when clicking handover links
+    Route::get('/ews/developer/possession/{secure_id}', function ($secure_id) {
+        return redirect()->route('ews.stp.possession.show', ['secure_id' => $secure_id]);
+    })->where('secure_id', '[a-zA-Z0-9]{32}');
+
+    Route::get('/ews/stp/logout', [OtpAuthController::class, 'logout'])
+        ->name('ews.stp.logout');
+});
+
+// EWS Developer Protected Routes
+Route::middleware(['auth', 'role:ews_developer,developer'])->group(function () {
     Route::get('/ews/developer/dashboard', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'index'])
         ->name('ews.developer.dashboard');
     Route::get('/ews/developer/flats/data', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getFlatsData'])
@@ -136,10 +255,16 @@ Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function ()
         ->name('ews.developer.flats.create');
     Route::post('/ews/developer/flats', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'store'])
         ->name('ews.developer.flats.store');
+    Route::get('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'show'])
+        ->name('ews.developer.flats.show');
     Route::get('/ews/developer/flats/{secure_id}/edit', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'edit'])
         ->name('ews.developer.flats.edit');
+    Route::get('/ews/developer/flats/{secure_id}/details', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'showDetails'])
+        ->name('ews.developer.flats.details');
     Route::put('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'update'])
         ->name('ews.developer.flats.update');
+    Route::post('/ews/developer/flats/{secure_id}/approve-dtp', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'approveDtp'])
+        ->name('ews.developer.flats.approve-dtp');
     Route::delete('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
         ->name('ews.developer.flats.destroy');
     Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])
@@ -156,6 +281,8 @@ Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function ()
         ->name('ews.developer.projects');
     Route::get('/ews/developer/blocks', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getBlocks'])
         ->name('ews.developer.blocks');
+    Route::get('/ews/developer/districts', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getDistricts'])
+        ->name('ews.developer.districts');
     Route::get('/ews/developer/towns', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'getTowns'])
         ->name('ews.developer.towns');
     Route::post('/ews/developer/towns/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeTownAjax'])
@@ -165,7 +292,7 @@ Route::middleware(['auth', 'role:ews_developer,ews_stp,stp'])->group(function ()
     Route::post('/ews/developer/blocks/store-ajax', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'storeBlockAjax'])
         ->name('ews.developer.blocks.store-ajax');
 
-    // STP Physical Possession Web Module
+    // Developer Physical Possession
     Route::get('/ews/developer/possession', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'index'])
         ->name('ews.developer.possession.index');
     Route::get('/ews/developer/possession/district-projects', [\App\Http\Controllers\EwsStpPossessionWebController::class, 'getDistrictProjects'])
@@ -232,11 +359,13 @@ Route::middleware(['auth', 'role:citizen'])->group(function () {
     Route::get('/mmsay-possession-certificate', [PpUserController::class, 'viewPossessionCertificate'])
         ->name('citizen.possession-certificate');
 
-    Route::get('/mmsay/citizen/grievances', [GrievanceController::class, 'index'])
-        ->name('citizen.grievances.index');
+    Route::get('/mmsay/citizen/grievances', function () {
+        return redirect()->away('https://cmharyanacell.nic.in/index');
+    })->name('citizen.grievances.index');
 
-    Route::get('/mmsay/citizen/grievances/create', [GrievanceController::class, 'create'])
-        ->name('citizen.grievances.create');
+    Route::get('/mmsay/citizen/grievances/create', function () {
+        return redirect()->away('https://cmharyanacell.nic.in/index');
+    })->name('citizen.grievances.create');
 
     Route::post('/mmsay/citizen/grievances', [GrievanceController::class, 'store'])
         ->name('citizen.grievances.store');
@@ -652,7 +781,41 @@ Route::middleware(['auth', 'role:ews_department'])->group(function () {
     Route::get('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'showProfile'])->name('ews.department.profile.show');
     Route::put('/ews/department/profile/{secure_id}', [\App\Http\Controllers\EwsDepartmentController::class, 'updateProfile'])->name('ews.department.profile.update');
 
+    // ─── EWS Offered Builder Flats Master Matrix (Department Monitoring View) ─────────
+    Route::get('/ews/department/builder-flats', [\App\Http\Controllers\EwsDepartmentController::class, 'builderFlatsIndex'])->name('ews.department.builder-flats');
+    Route::get('/ews/department/builder-flats/data', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatsData'])->name('ews.department.builder-flats.data');
+    Route::get('/ews/department/builder-flats/districts', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatsDistricts'])->name('ews.department.builder-flats.districts');
+    Route::get('/ews/department/builder-flats/towns', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatsTowns'])->name('ews.department.builder-flats.towns');
+    Route::get('/ews/department/builder-flats/projects', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatsProjects'])->name('ews.department.builder-flats.projects');
+    Route::get('/ews/department/builder-flats/licenses', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatsLicenses'])->name('ews.department.builder-flats.licenses');
+    Route::get('/ews/department/builder-flats/{id}/details', [\App\Http\Controllers\EwsDepartmentController::class, 'getBuilderFlatDetails'])->name('ews.department.builder-flats.details');
+    Route::get('/ews/department/builder-flats/{id}/view', [\App\Http\Controllers\EwsDepartmentController::class, 'showBuilderFlat'])->name('ews.department.builder-flats.show');
+    Route::get('/ews/department/builder-flats/export/{format}', [\App\Http\Controllers\EwsDepartmentController::class, 'exportBuilderFlatsMatrix'])->name('ews.department.builder-flats.export');
+
     Route::get('/ews/department/logout', [\App\Http\Controllers\EwsDepartmentController::class, 'logout'])->name('ews.department.logout');
+});
+
+// ─── EWS TCP (Town & Country Planning) Routes ───────────────────
+Route::get('/ews/tcp/login', [\App\Http\Controllers\EwsDepartmentController::class, 'showLogin'])->name('ews.tcp.login');
+Route::middleware(['auth', 'role:ews_tcp,tcp,ews_department,super_admin,admin'])->group(function () {
+    Route::get('/ews/tcp/dashboard', [\App\Http\Controllers\EwsTcpDashboardController::class, 'dashboard'])->name('ews.tcp.dashboard');
+    Route::get('/ews/tcp/flats/data', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getFlatsData'])->name('ews.tcp.flats.data');
+    Route::get('/ews/tcp/districts', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getDistricts'])->name('ews.tcp.districts');
+    Route::get('/ews/tcp/towns', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getTowns'])->name('ews.tcp.towns');
+    Route::get('/ews/tcp/projects', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getProjects'])->name('ews.tcp.projects');
+    Route::get('/ews/tcp/licenses', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getLicenses'])->name('ews.tcp.licenses');
+    Route::get('/ews/tcp/flats/{id}/details', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getFlatDetails'])->name('ews.tcp.flats.details');
+    Route::get('/ews/tcp/flats/{id}/view', [\App\Http\Controllers\EwsTcpDashboardController::class, 'showFlat'])->name('ews.tcp.flats.show');
+    Route::get('/ews/tcp/flats/export/{format}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'exportFlats'])->name('ews.tcp.flats.export');
+
+    // Physical Possession Module (4,211 Master Allotted Beneficiaries Pool)
+    Route::get('/ews/tcp/possession', [\App\Http\Controllers\EwsTcpDashboardController::class, 'possession'])->name('ews.tcp.possession');
+    Route::get('/ews/tcp/possession/data', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getPossessionData'])->name('ews.tcp.possession.data');
+    Route::get('/ews/tcp/possession/view/{id}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'showPossession'])->name('ews.tcp.possession.show');
+    Route::get('/ews/tcp/possession/beneficiary/{id}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'getPossessionBeneficiary'])->name('ews.tcp.possession.beneficiary');
+    Route::get('/ews/tcp/possession/export/{format}', [\App\Http\Controllers\EwsTcpDashboardController::class, 'exportPossession'])->name('ews.tcp.possession.export');
+
+    Route::get('/ews/tcp/logout', [\App\Http\Controllers\EwsTcpDashboardController::class, 'logout'])->name('ews.tcp.logout');
 });
 
 // Fallback route for handling any unmatched URLs

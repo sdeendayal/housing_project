@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STP Flat Submissions | EWS Department</title>
+    <title>Developer Flat Submissions | EWS Department</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts & Material Icons -->
@@ -42,7 +42,7 @@
                     <span class="text-xs font-bold uppercase">Dashboard</span>
                 </a>
                 <div class="h-5 w-[1px] bg-slate-200"></div>
-                <span class="text-xs text-slate-500 font-medium">Senior Town Planner (STP) Zone Flats Registry</span>
+                <span class="text-xs text-slate-500 font-medium">Developer Zone Flats Registry</span>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -64,9 +64,9 @@
                     <div>
                         <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                             <span class="material-symbols-outlined text-emerald-600 text-lg">apartment</span>
-                            <span>STP Flat Form Submissions</span>
+                            <span>Developer Flat Form Submissions</span>
                         </h3>
-                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Showing all flat records entered by Senior Town Planners across Haryana Zones</p>
+                        <p class="text-[9px] text-slate-400 font-semibold uppercase mt-0.5">Showing all flat records entered by Developers across Haryana Zones</p>
                     </div>
 
                     <div class="flex items-center gap-3">
@@ -107,7 +107,7 @@
                                 <th>Floor</th>
                                 <th>Flat Number</th>
                                 <th>Unique Flat Code</th>
-                                <th>Submitted By (STP)</th>
+                                <th>Submitted By (Developer)</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs">

@@ -3,78 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS STP - Edit Flat Registry</title>
+    <title>EWS Developer - Edit Flat Specifications</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <!-- Select2 CSS & JS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6 {
-            font-family: 'Outfit', sans-serif;
-        }
-        .dev-shadow {
-            box-shadow: 0 10px 30px -15px rgba(59, 130, 246, 0.08);
-        }
-        /* Custom Select2 Tailwind Styling */
-        .select2-container {
-            width: 100% !important;
-        }
-        .select2-container--default .select2-selection--single {
-            background-color: #f8fafc !important; /* bg-slate-50 */
-            border: 1px solid #cbd5e1 !important; /* border-slate-250 */
-            border-radius: 0.5rem !important; /* rounded-lg */
-            height: 38px !important;
-            padding: 5px 12px !important;
-            display: flex;
-            align-items: center;
-            outline: none !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            color: #1e293b !important; /* text-slate-800 */
-            font-size: 0.75rem !important; /* text-xs */
-            font-weight: 700 !important;
-            padding-left: 0 !important;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px !important;
-            right: 8px !important;
-        }
-        .select2-container--default.select2-container--open .select2-selection--single {
-            border-color: #3b82f6 !important; /* focus:border-sky-500 */
-            box-shadow: 0 0 0 1px #3b82f6 !important;
-        }
-        .select2-dropdown {
-            background-color: #ffffff !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 0.5rem !important;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
-            font-size: 0.75rem !important;
-            font-weight: 600 !important;
-            overflow: hidden;
-            z-index: 9999;
-        }
-        .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #3b82f6 !important; /* bg-sky-500 */
-        }
-        .select2-container--default .select2-search--dropdown .select2-search__field {
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 0.375rem !important;
-            padding: 6px 10px !important;
-            font-size: 0.75rem !important;
-            outline: none !important;
-        }
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Outfit', sans-serif; }
+        .code-font { font-family: 'Fira Code', monospace; }
+        .dev-shadow { box-shadow: 0 10px 30px -15px rgba(59, 130, 246, 0.08); }
+        .custom-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="h-full flex overflow-hidden bg-[#f4f7fa]">
@@ -87,106 +35,162 @@
         <!-- Header -->
         <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shrink-0 shadow-sm z-10">
             <div class="flex items-center gap-3">
-                <a href="{{ route('ews.developer.dashboard') }}" class="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-600 hover:text-white transition-all shadow-sm">
+                <a href="{{ route('ews.developer.flats.show', $flat->secure_id ?? $secureId) }}" class="w-8 h-8 rounded-lg bg-sky-50 border border-sky-100 flex items-center justify-center text-sky-600 hover:bg-sky-600 hover:text-white transition-all shadow-sm" title="Back to Dossier">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <div>
-                    <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">Edit EWS Flat Details</h2>
+                    <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase flex items-center gap-2">
+                        <span>Edit EWS Flat Details</span>
+                        <span class="px-2 py-0.5 rounded text-[8.5px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-200">
+                            {{ $flat->flat_code ?? $flat->flat_number }}
+                        </span>
+                    </h2>
                     <p class="text-[8px] text-slate-400 font-mono uppercase">Modify Registered Registry Entry</p>
                 </div>
             </div>
 
-            <div class="text-right">
-                <div class="text-[10px] text-slate-650 font-bold flex items-center gap-1 justify-end">
-                    <span>{{ $user->name }}</span>
-                    @if(!empty($displayZoneName))
-                        <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
-                    @endif
+            <div class="flex items-center gap-3">
+                <a href="{{ route('ews.developer.dashboard') }}" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-grid-fill"></i> <span class="hidden sm:inline">Dashboard</span>
+                </a>
+                <div class="text-right">
+                    <div class="text-[10px] text-slate-700 font-bold flex items-center gap-1 justify-end">
+                        <span>{{ $user->name }}</span>
+                        @if(!empty($displayZoneName))
+                            <span class="text-[9px] bg-sky-100 text-sky-800 font-extrabold uppercase px-1.5 py-0.5 rounded border border-sky-200">({{ $displayZoneName }})</span>
+                        @endif
+                    </div>
+                    <div class="text-[8.5px] text-slate-500 font-mono">Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
                 </div>
-                <div class="text-[8.5px] text-slate-500 font-mono">Zone: <span class="font-bold text-slate-700 uppercase">{{ $displayZoneName ?? 'N/A' }}</span> | Mobile: {{ $user->mobile }}</div>
             </div>
         </header>
 
         <!-- Form Workspace -->
-        <div class="flex-1 overflow-y-auto p-6">
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 custom-scroll">
             
-            <div class="w-full max-w-4xl mx-auto">
+            <div class="w-full max-w-4xl mx-auto space-y-4">
                 
-                <!-- Edit Form Card -->
-                <div class="bg-white border border-slate-200 rounded-xl shadow-sm dev-shadow overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-150 bg-slate-50/50 flex justify-between items-center">
-                        <div>
-                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                                <i class="bi bi-pencil-square text-sky-500 text-sm"></i>
-                                Edit Flat Registry Entry
-                            </h3>
-                            <p class="text-[8px] text-slate-400 font-mono mt-0.5 uppercase">Modify EWS Allotment Record</p>
+                @if(session('error'))
+                    <div class="p-3.5 bg-rose-50 border border-rose-300 rounded-xl text-rose-800 text-xs font-bold flex items-center gap-2 shadow-xs">
+                        <i class="bi bi-exclamation-octagon-fill text-rose-600 text-base shrink-0"></i>
+                        <span>{{ session('error') }}</span>
+                    </div>
+                @endif
+
+                @if($errors->any())
+                    <div class="p-3.5 bg-rose-50 border border-rose-300 rounded-xl text-rose-800 text-xs shadow-xs space-y-1">
+                        <div class="font-black uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="bi bi-exclamation-triangle-fill text-rose-600"></i> Please resolve the following errors:
                         </div>
-                        <span class="text-[8px] text-slate-400 font-mono font-bold">SECURE ID: {{ $secureId ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id) }}</span>
+                        <ul class="list-disc list-inside text-[11px] font-medium space-y-0.5">
+                            @foreach($errors->all() as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <!-- Form Card -->
+                <div class="bg-white border border-slate-200 rounded-xl shadow-sm dev-shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b border-slate-150 bg-slate-50/50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                                    <i class="bi bi-pencil-square text-sky-500 text-sm"></i>
+                                    Edit Flat Registry Form
+                                </h3>
+                                <span class="text-[8.5px] font-black uppercase px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200">
+                                    Full Parity Registry
+                                </span>
+                            </div>
+                            <p class="text-[8px] text-slate-400 font-mono mt-0.5 uppercase">
+                                Modify EWS Allotment Record with statutory verification data.
+                            </p>
+                        </div>
+                        <div class="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                            SECURE ID: {{ $flat->secure_id ?? $secureId }}
+                        </div>
                     </div>
 
                     <!-- Form Content -->
-                    <form method="POST" action="{{ route('ews.developer.flats.update', $secureId ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id)) }}" class="p-6 space-y-4" id="devEditForm">
+                    <form method="POST" action="{{ route('ews.developer.flats.update', $flat->secure_id ?? $secureId) }}" enctype="multipart/form-data" class="p-6 space-y-4" id="devEditForm">
                         @csrf
                         @method('PUT')
 
-                        <!-- Row 1: Zone (Locked) & District (Filtered by Zone) -->
+                        <!-- Row 1: Register Flat & Zone -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Assigned Zone (Frozen/Locked) -->
-                            @php
-                                $displayZoneName = $zone ? $zone->name : ($flat->zone_name ?? ($flat->district_name ?? ($user->district_name ?? '')));
-                                $displayZoneName = strtoupper(trim(str_replace(' ZONE', '', $displayZoneName))) . ' ZONE';
-                                $selectedDistrictId = $flat->district_id ?? ($districts->first()->id ?? $user->district_id);
-                                $selectedZoneId = $zone->id ?? ($flat->zone_id ?? ($user->zone_id ?? ''));
-                            @endphp
+                            <!-- Step 1: Register Flat Input Field -->
                             <div class="space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <label class="block text-[10px] font-black uppercase text-slate-500 tracking-wider">
-                                        Assigned Zone <span class="text-red-500">*</span>
-                                    </label>
-                                    <span class="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                                        <span class="material-symbols-outlined text-[11px]">lock</span> Locked
-                                    </span>
-                                </div>
-                                <input type="hidden" name="zone_id" id="zone_id" value="{{ $selectedZoneId }}">
-                                <input type="hidden" name="zone_name" id="zone_name" value="{{ $displayZoneName }}">
+                                <label for="register_flat" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 me-1.5">Step 1</span>
+                                    <span>Register Flat / Title</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
                                 <div class="relative">
-                                    <input type="text" readonly disabled
-                                        value="{{ $displayZoneName }}"
-                                        class="w-full bg-slate-100 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-700 font-extrabold cursor-not-allowed uppercase shadow-inner" />
-                                    <span class="absolute right-3 top-2 text-slate-400">
-                                        <span class="material-symbols-outlined text-base">lock</span>
+                                    <input type="text" id="register_flat" name="register_flat" 
+                                        value="{{ old('register_flat', $flat->register_flat ?: ($flat->flat_code ?: ('Flat Unit ' . $flat->flat_number))) }}" 
+                                        placeholder="Enter flat title / registry name" required autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-pencil-square"></i>
                                     </span>
                                 </div>
                             </div>
 
-                            <!-- Select District (Only districts of this zone) -->
+                            <!-- Step 2: Zone Dropdown -->
+                            @php
+                                $selectedZoneId = $zone->id ?? ($flat->zone_id ?? ($user->zone_id ?? ''));
+                                $zoneLabel = $displayZoneName ?? ($zone->name ?? 'ZONE');
+                                if (!str_contains(strtoupper($zoneLabel), 'ZONE')) {
+                                    $zoneLabel .= ' ZONE';
+                                }
+                            @endphp
                             <div class="space-y-1">
-                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 1</span>
+                                <div class="flex items-center justify-between">
+                                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 2</span>
+                                        <span>Assigned Zone</span> <span class="text-red-500 ms-0.5">*</span>
+                                    </label>
+                                    <span class="text-[8.5px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.2 rounded flex items-center gap-1">
+                                        <i class="bi bi-lock-fill text-[9px]"></i> Locked
+                                    </span>
+                                </div>
+                                <input type="hidden" name="zone_id" id="zone_id" value="{{ $selectedZoneId }}">
+                                <input type="hidden" name="zone_name" id="zone_name" value="{{ $zoneLabel }}">
+                                <div class="relative">
+                                    <input type="text" readonly disabled
+                                        value="{{ strtoupper($zoneLabel) }}"
+                                        class="w-full bg-slate-100 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-700 font-extrabold cursor-not-allowed uppercase shadow-inner" />
+                                    <span class="absolute right-3 top-2 text-slate-400">
+                                        <i class="bi bi-shield-lock-fill text-sky-600"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 2: District & Town -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Step 3: District Dropdown -->
+                            <div class="space-y-1">
+                                <label for="district_id" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 3</span>
                                     <span>Select District</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
-                                <select id="district_id" name="district_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    @if(count($districts) > 1)
-                                        <option value="" disabled>Choose a district in {{ $displayZoneName }}...</option>
-                                    @endif
-                                    @foreach($districts as $district)
-                                        <option value="{{ $district->id }}" {{ (old('district_id', $selectedDistrictId) == $district->id) ? 'selected' : '' }}>
-                                            {{ strtoupper($district->name) }}
+                                <select id="district_id" name="district_id" required onchange="onDistrictChanged()"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                    <option value="" disabled>Choose a district...</option>
+                                    @foreach($districts as $d)
+                                        <option value="{{ $d->id }}" {{ (old('district_id', $flat->district_id) == $d->id) ? 'selected' : '' }}>
+                                            {{ strtoupper($d->name) }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
-                        </div>
 
-                        <!-- Row 2: Town & Project -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Town -->
+                            <!-- Step 4: Town Dropdown -->
                             <div class="space-y-1">
                                 <div class="flex items-center justify-between">
-                                    <label for="town_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 2</span>
+                                    <label for="town_id" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 4</span>
                                         <span>Name of Town</span> <span class="text-red-500 ms-0.5">*</span>
                                     </label>
                                     <button type="button" onclick="openAddTownModal()" class="inline-flex items-center gap-1 text-[9.5px] font-bold text-sky-600 hover:text-sky-800 bg-sky-50 hover:bg-sky-100 border border-sky-200 hover:border-sky-300 px-2 py-0.5 rounded shadow-2xs transition-all cursor-pointer">
@@ -194,8 +198,8 @@
                                         <span>Add Town</span>
                                     </button>
                                 </div>
-                                <select id="town_id" name="town_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                <select id="town_id" name="town_id" required onchange="onTownChanged()"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled>Choose a town...</option>
                                     @foreach($towns as $town)
                                         <option value="{{ $town->id }}" {{ old('town_id', $flat->town_id) == $town->id ? 'selected' : '' }}>
@@ -205,141 +209,531 @@
                                     <option value="new">+ Add New Town</option>
                                 </select>
                             </div>
+                        </div>
 
-                            <!-- Project Selection -->
+                        <!-- Row 3: Developer Name & Name of Project -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Step 5: Developer Name -->
                             <div class="space-y-1">
-                                <label for="project_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 3</span>
-                                    <span>Name of Project</span> <span class="text-red-500 ms-0.5">*</span>
+                                <label for="developer_name" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 5</span>
+                                    <span>Colonizer / Developer Name</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
-                                <select id="project_id" name="project_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                <div class="relative">
+                                    <input type="text" id="developer_name" name="developer_name" 
+                                        value="{{ old('developer_name', $flat->developer_name ?: ($project->developer_name ?? '')) }}" 
+                                        autocomplete="off" placeholder="Enter developer / colonizer name" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-building"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Step 6: Project Selection with "+ Add Project" -->
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="project_id" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 6</span>
+                                        <span>Name of Project</span> <span class="text-red-500 ms-0.5">*</span>
+                                    </label>
+                                    <button type="button" onclick="toggleNewProjectInline()" 
+                                        class="inline-flex items-center gap-1 text-[9.5px] font-bold text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 hover:border-emerald-400 px-2.5 py-0.5 rounded shadow-2xs transition-all cursor-pointer">
+                                        <i class="bi bi-plus-circle-fill text-[10px]"></i>
+                                        <span>Add Project</span>
+                                    </button>
+                                </div>
+                                <select id="project_id" name="project_id" required onchange="onProjectChanged()"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
                                     <option value="" disabled>Choose a project...</option>
                                     @foreach($projects as $proj)
-                                        <option value="{{ $proj->id }}" {{ old('project_id', $flat->project_id) == $proj->id ? 'selected' : '' }}>
+                                        <option value="{{ $proj->id }}" {{ old('project_id', $flat->project_id) == $proj->id ? 'selected' : '' }}
+                                            data-developer="{{ $proj->developer_name ?? '' }}"
+                                            data-sector="{{ $proj->sector_no ?? '' }}" 
+                                            data-address="{{ $proj->address ?? '' }}"
+                                            data-license="{{ $proj->license_no ?? '' }}" 
+                                            data-area="{{ $proj->area_of_project ?? '' }}"
+                                            data-approved="{{ $proj->approved_building_plan ?? '' }}"
+                                            data-approval-date="{{ $proj->building_plan_approval_date ?? '' }}"
+                                            data-oc-yn="{{ $proj->oc_status_yn ?? '' }}">
                                             {{ strtoupper($proj->name) }}
                                         </option>
                                     @endforeach
                                     <option value="new">+ Add New Project</option>
                                 </select>
-                                
-                                <!-- New Project Input -->
+
+                                <!-- Inline Add Project Input -->
                                 <div id="new_project_container" class="hidden mt-2">
                                     <div class="flex items-center gap-2">
-                                        <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name (e.g. TDI City Kingsbury)"
+                                        <input type="text" id="new_project_name" name="new_project_name" placeholder="Enter new project name"
                                             class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
-                                        <button type="button" id="btn_save_project_ajax" onclick="saveNewProjectAjax()"
-                                            class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0">
+                                        <button type="button" onclick="saveNewProjectAjax()"
+                                            class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-black uppercase whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0 cursor-pointer">
                                             <i class="bi bi-plus-circle-fill"></i>
                                             <span>Save Project</span>
                                         </button>
                                     </div>
-                                    <div id="project_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
-                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                                        <div>
-                                            <span id="project_similarity_msg"></span>
-                                        </div>
-                                    </div>
-                                    <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Project' to instantly save into ews_projects, or auto-saves on form submit.</p>
+                                    <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Project' to immediately persist in master projects table.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Row 3: Block & Floor -->
+                        <!-- Row 4: Address of Project & Sector No. -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Block / Tower No. Selection -->
+                            <!-- Step 7: Address of Project -->
                             <div class="space-y-1">
-                                <label for="block_id" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 4</span>
-                                    <span>Block / Tower No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                <label for="address_of_project" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 7</span>
+                                    <span>Address of Project</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
-                                <select id="block_id" name="block_id" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    <option value="" disabled>Choose a block/tower...</option>
-                                    @foreach($blocks as $blk)
-                                        <option value="{{ $blk->id }}" {{ old('block_id', $flat->block_id) == $blk->id ? 'selected' : '' }}>
-                                            {{ strtoupper($blk->name) }}
-                                        </option>
-                                    @endforeach
-                                    <option value="new">+ Add New Block/Tower</option>
-                                </select>
-                                
-                                <!-- New Block Input -->
-                                <div id="new_block_container" class="hidden mt-2">
-                                    <div class="flex items-center gap-2">
-                                        <input type="text" id="new_block_name" name="new_block_name" placeholder="Enter new block/tower number (e.g. T-02)"
-                                            class="w-full bg-white border border-sky-400 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
-                                        <button type="button" id="btn_save_block_ajax" onclick="saveNewBlockAjax()"
-                                            class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[11px] font-black uppercase tracking-wider whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0">
-                                            <i class="bi bi-plus-circle-fill"></i>
-                                            <span>Save Block</span>
+                                <div class="relative">
+                                    <textarea id="address_of_project" name="address_of_project" rows="2" placeholder="Enter complete project site address" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none resize-none">{{ old('address_of_project', $flat->address_of_project ?: ($project->address ?? '')) }}</textarea>
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-signpost-2-fill text-emerald-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Step 8: Sector No. -->
+                            <div class="space-y-1">
+                                <label for="sector_no" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 8</span>
+                                    <span>Sector No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="sector_no" name="sector_no" 
+                                        value="{{ old('sector_no', $flat->sector_no ?: ($project->sector_no ?? '')) }}" 
+                                        placeholder="e.g. 89 or Sector 89" required autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-geo-alt-fill text-sky-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 5: License No., Area of Project & Developer Plan (PDF) -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3.5 bg-slate-50/90 border border-slate-200 rounded-xl">
+                            <!-- Step 9: License No. -->
+                            <div class="space-y-1">
+                                <label for="license_no" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 9</span>
+                                    <span>License No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="license_no" name="license_no" 
+                                        value="{{ old('license_no', $flat->license_no ?: ($project->license_no ?? '')) }}" 
+                                        placeholder="e.g. LIC-hr-01" required autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-mono">
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-card-checklist text-sky-600"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Area of Project -->
+                            <div class="space-y-1">
+                                <label for="area_of_project" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                    <span>Area of Project</span> <span class="text-red-500 ms-0.5">*</span>
+                                </label>
+                                <div class="relative">
+                                    <input type="text" id="area_of_project" name="area_of_project" 
+                                        value="{{ old('area_of_project', $flat->area_of_project ?: ($project->area_of_project ?? '')) }}" 
+                                        placeholder="e.g. 5.5 Acres / 26,000 Sq. Yds" required autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
+                                    <span class="absolute right-3 top-2.5 text-slate-400">
+                                        <i class="bi bi-aspect-ratio text-indigo-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+
+                            <!-- Developer Plan (PDF Max 500 KB) -->
+                            <div class="space-y-1">
+                                <div class="flex items-center justify-between">
+                                    <label for="developer_plan" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                        <span>Developer Plan (PDF)</span>
+                                    </label>
+                                    @php
+                                        $currentDevPlan = $flat->developer_plan ?: ($project->developer_plan ?? null);
+                                    @endphp
+                                    @if(!empty($currentDevPlan))
+                                        <a href="{{ asset('storage/' . $currentDevPlan) }}" target="_blank" 
+                                            class="px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-sky-100 text-sky-800 border border-sky-200 inline-flex items-center gap-0.5">
+                                            <i class="bi bi-file-earmark-pdf"></i> View Current PDF
+                                        </a>
+                                    @else
+                                        <span class="px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-amber-100 text-amber-800">Max 500 KB</span>
+                                    @endif
+                                </div>
+                                <input type="file" id="developer_plan" name="developer_plan" accept=".pdf"
+                                    class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[9.5px] file:font-black file:uppercase file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 file:cursor-pointer border border-slate-250 rounded-lg bg-white p-1">
+                                <p class="text-[8px] text-slate-400 font-mono">Leave empty to keep existing document attached.</p>
+                            </div>
+                        </div>
+
+                        <!-- Row 6: Approved of Building Plan -->
+                        <div class="border border-indigo-200/80 rounded-xl p-4 bg-gradient-to-br from-white to-indigo-50/30 space-y-3">
+                            <div class="flex items-center justify-between border-b border-indigo-150 pb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 rounded-md bg-indigo-500/15 text-indigo-700 flex items-center justify-center font-bold text-xs">
+                                        <i class="bi bi-building-check"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-indigo-100 text-indigo-800">Step 10</span>
+                                            <span>Approved of Building Plan</span>
+                                        </h4>
+                                        <p class="text-[9px] text-slate-400 font-mono">Town & Country Planning statutory building approval</p>
+                                    </div>
+                                </div>
+                                <span class="text-[9px] font-black text-indigo-800 bg-indigo-100 border border-indigo-200 px-2 py-0.5 rounded uppercase font-mono">
+                                    Statutory Plan
+                                </span>
+                            </div>
+
+                            @php
+                                $planApprovedVal = old('approved_building_plan', $flat->approved_building_plan ?: ($project->approved_building_plan ?? 'yes'));
+                            @endphp
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Dropdown: Approved of Building Plan (Yes/No) -->
+                                <div class="space-y-1">
+                                    <label for="approved_building_plan" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                        Approved of Building Plan <span class="text-red-500">*</span>
+                                    </label>
+                                    <select id="approved_building_plan" name="approved_building_plan" onchange="handleApprovedBuildingPlanChange()" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                                        <option value="yes" {{ strtolower($planApprovedVal) === 'yes' ? 'selected' : '' }}>Yes (Approved)</option>
+                                        <option value="no" {{ strtolower($planApprovedVal) === 'no' ? 'selected' : '' }}>No (Not Approved)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Date of Approved -->
+                                <div id="building_plan_date_wrapper" class="space-y-1 {{ strtolower($planApprovedVal) === 'yes' ? '' : 'hidden' }}">
+                                    <label for="building_plan_approval_date" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                        Date of Approved
+                                    </label>
+                                    <input type="date" id="building_plan_approval_date" name="building_plan_approval_date" 
+                                        value="{{ old('building_plan_approval_date', $flat->building_plan_approval_date ?: ($project->building_plan_approval_date ?? '')) }}"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none font-mono">
+                                </div>
+
+                                <!-- Building Plan Copy -->
+                                <div id="building_plan_copy_wrapper" class="space-y-1 {{ strtolower($planApprovedVal) === 'yes' ? '' : 'hidden' }}">
+                                    <div class="flex items-center justify-between">
+                                        <label for="building_plan_copy" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                            <span>Building Plan Copy (PDF)</span>
+                                        </label>
+                                        @php
+                                            $currentBldgPlan = $flat->building_plan_copy ?: ($project->building_plan_copy ?? null);
+                                        @endphp
+                                        <span id="existing_bldg_plan_preview" class="{{ (!empty($currentBldgPlan) && strtolower($planApprovedVal) === 'yes') ? '' : 'hidden' }}">
+                                            @if(!empty($currentBldgPlan))
+                                                <a href="{{ asset('storage/' . $currentBldgPlan) }}" target="_blank" 
+                                                    class="px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-indigo-100 text-indigo-800 border border-indigo-200 inline-flex items-center gap-0.5">
+                                                    <i class="bi bi-file-earmark-pdf"></i> View Current PDF
+                                                </a>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <input type="file" id="building_plan_copy" name="building_plan_copy" accept=".pdf"
+                                        class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[9.5px] file:font-black file:uppercase file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 file:cursor-pointer border border-slate-250 rounded-lg bg-white p-1">
+                                    <p class="text-[8px] text-slate-400 font-mono">Leave empty to keep existing sanction document.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Row 7: Status of OC Verification Section -->
+                        <div class="border border-teal-200/90 rounded-2xl p-4 bg-gradient-to-br from-white via-teal-50/20 to-slate-50/50 space-y-3 shadow-xs">
+                            <div class="flex items-center justify-between border-b border-teal-150 pb-2.5">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-teal-500/15 text-teal-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                                        <i class="bi bi-file-earmark-check-fill text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-teal-100 text-teal-800 border border-teal-200">Step 11</span>
+                                            <span>Status of OC (Occupation Certificate)</span>
+                                        </h4>
+                                        <p class="text-[9px] text-slate-400 font-mono">Statutory OC categorization and unit draw allotment limits</p>
+                                    </div>
+                                </div>
+                                <span class="text-[9px] font-black text-teal-800 bg-teal-100 border border-teal-200 px-2.5 py-0.5 rounded-full uppercase font-mono shadow-2xs">
+                                    Clearance Matrix
+                                </span>
+                            </div>
+
+                            @php
+                                $ocYnVal = old('oc_status_yn', $flat->oc_status_yn ?: ($project->oc_status_yn ?? 'yes'));
+                                $ocCatVal = old('oc_status', $flat->oc_status ?: 'part');
+                            @endphp
+
+                            <!-- Status of OC & Category Selector (2 Columns) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="space-y-1">
+                                    <label for="oc_status_yn" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                        <span>Status of OC <span class="text-red-500">*</span></span>
+                                        <span class="text-[8.5px] font-mono text-slate-400">Yes / No</span>
+                                    </label>
+                                    <select id="oc_status_yn" name="oc_status_yn" onchange="handleOcStatusYnChange(true)" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none transition-all">
+                                        <option value="yes" {{ strtolower($ocYnVal) === 'yes' ? 'selected' : '' }}>Yes (OC Received)</option>
+                                        <option value="no" {{ strtolower($ocYnVal) === 'no' ? 'selected' : '' }}>No (OC Not Received)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Part/Complete Dropdown -->
+                                <div id="oc_category_wrapper" class="space-y-1 {{ strtolower($ocYnVal) === 'yes' ? '' : 'hidden' }}">
+                                    <label for="oc_status" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                        <span>OC Category (Part / Complete) <span class="text-red-500">*</span></span>
+                                        <span class="text-[8.5px] font-mono text-teal-700">Allotment Scope</span>
+                                    </label>
+                                    <select id="oc_status" name="oc_status" onchange="handleOcStatusChange()"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none transition-all">
+                                        <option value="part" {{ strtolower($ocCatVal) === 'part' ? 'selected' : '' }}>Part (Partial Allotment)</option>
+                                        <option value="complete" {{ strtolower($ocCatVal) === 'complete' ? 'selected' : '' }}>Complete (Full Project Completion)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Dynamic OC Fields Container (Grid 4 Symmetrical Columns) -->
+                            <div id="oc_fields_container" class="{{ strtolower($ocYnVal) === 'yes' ? '' : 'hidden' }} space-y-3 pt-2 border-t border-slate-200">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
+                                    <!-- 1. Date of OC -->
+                                    <div class="space-y-1">
+                                        <label for="oc_date" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                            Date of OC
+                                        </label>
+                                        <input type="date" id="oc_date" name="oc_date" 
+                                            value="{{ old('oc_date', $flat->oc_date ?? '') }}"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono">
+                                    </div>
+
+                                    <!-- 2. Copy Attached OC (PDF) -->
+                                    <div class="space-y-1">
+                                        <div class="flex items-center justify-between">
+                                            <label for="oc_copy" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                                <span>Copy OC (PDF)</span>
+                                            </label>
+                                            <span id="existing_oc_preview" class="{{ (!empty($flat->oc_copy_file) && strtolower($ocYnVal) === 'yes') ? '' : 'hidden' }}">
+                                                @if(!empty($flat->oc_copy_file))
+                                                    <a href="{{ asset('storage/' . $flat->oc_copy_file) }}" target="_blank" 
+                                                        class="px-1.5 py-0.2 rounded text-[8px] font-extrabold bg-teal-100 text-teal-800 border border-teal-200 inline-flex items-center gap-0.5 hover:bg-teal-200 transition-all">
+                                                        <i class="bi bi-file-earmark-pdf"></i> View PDF
+                                                    </a>
+                                                @endif
+                                            </span>
+                                        </div>
+                                        <input type="file" id="oc_copy" name="oc_copy" accept=".pdf"
+                                            class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-[9px] file:font-black file:uppercase file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100 file:cursor-pointer border border-slate-250 rounded-lg bg-white p-1">
+                                    </div>
+
+                                    <!-- 3. Total Flats in Project -->
+                                    <div class="space-y-1">
+                                        <label for="total_flats_in_project" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                            <span>Total Flats in Project</span>
+                                            <span class="text-[8px] font-mono text-slate-400">Total Units</span>
+                                        </label>
+                                        <input type="number" min="1" id="total_flats_in_project" name="total_flats_in_project" 
+                                            value="{{ old('total_flats_in_project', $flat->total_flats_in_project ?: ($project->total_flats_in_project ?? '')) }}" 
+                                            placeholder="e.g. 500"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+                                    </div>
+
+                                    <!-- 4. Total EWS Flats in Project -->
+                                    <div class="space-y-1">
+                                        <label for="total_ews_flats_in_project" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                            <span>Total EWS Flats</span>
+                                            <span class="text-[8px] font-mono text-teal-700 font-bold">EWS Quota</span>
+                                        </label>
+                                        <input type="number" min="1" id="total_ews_flats_in_project" name="total_ews_flats_in_project" 
+                                            value="{{ old('total_ews_flats_in_project', $flat->total_ews_flats_in_project ?: ($project->total_ews_flats_in_project ?? '')) }}" 
+                                            placeholder="e.g. 100"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+                                    </div>
+                                </div>
+
+                                <!-- Part OC Specific Breakdown (Clean Symmetrical Grid) -->
+                                <div id="part_oc_breakdown_section" class="{{ (strtolower($ocYnVal) === 'yes' && strtolower($ocCatVal) === 'part') ? '' : 'hidden' }} grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-slate-200">
+                                    <!-- Flats Offered for Draw -->
+                                    <div class="space-y-1">
+                                        <label for="flats_offered_for_draw" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                            Flats Offered for Draw <span class="text-red-500">*</span>
+                                        </label>
+                                        <input type="number" min="0" id="flats_offered_for_draw" name="flats_offered_for_draw" 
+                                            value="{{ old('flats_offered_for_draw', $flat->flats_offered_for_draw ?? '') }}" 
+                                            placeholder="Enter flats offered for draw"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+                                    </div>
+
+                                    <!-- Remaining Flats for OC -->
+                                    <div class="space-y-1">
+                                        <label for="remaining_flats_for_oc" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
+                                            Remaining Flats for OC
+                                        </label>
+                                        <input type="number" min="0" id="remaining_flats_for_oc" name="remaining_flats_for_oc" 
+                                            value="{{ old('remaining_flats_for_oc', $flat->remaining_flats_for_oc ?? '') }}" 
+                                            placeholder="Enter remaining flats for OC"
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 12, 13 & 14: Unit Identification Strip (3 Harmonious Columns) -->
+                        <div class="border border-slate-200 rounded-2xl p-4 bg-gradient-to-br from-white to-slate-50 space-y-3 shadow-xs">
+                            <div class="flex items-center justify-between border-b border-slate-150 pb-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-7 h-7 rounded-lg bg-indigo-500/15 text-indigo-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                                        <i class="bi bi-geo-alt-fill text-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-indigo-100 text-indigo-800 border border-indigo-200">Steps 12 - 14</span>
+                                            <span>Unit Coordinates & Physical Identification</span>
+                                        </h4>
+                                        <p class="text-[9px] text-slate-400 font-mono">Block / Tower, Floor Position & Flat Registry Number</p>
+                                    </div>
+                                </div>
+                                <span class="text-[9px] font-black text-indigo-800 bg-indigo-100 border border-indigo-200 px-2.5 py-0.5 rounded-full uppercase font-mono shadow-2xs">
+                                    Unit Matrix
+                                </span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <!-- Col 1: Step 12: Block / Tower No. Selection -->
+                                <div class="space-y-1">
+                                    <div class="flex items-center justify-between">
+                                        <label for="block_id" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 12</span>
+                                            <span>Block / Tower</span> <span class="text-red-500 ms-0.5">*</span>
+                                        </label>
+                                        <button type="button" onclick="openAddBlockInline()" class="inline-flex items-center gap-1 text-[9px] font-bold text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 border border-sky-200 px-2 py-0.5 rounded shadow-2xs transition-all cursor-pointer">
+                                            <i class="bi bi-plus-circle-fill text-[9.5px]"></i>
+                                            <span>Add Block</span>
                                         </button>
                                     </div>
-                                    <div id="block_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mt-2 flex items-start gap-2 shadow-xs transition-all">
-                                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                                        <div>
-                                            <span id="block_similarity_msg"></span>
+                                    <select id="block_id" name="block_id" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
+                                        <option value="" disabled>Choose a block/tower...</option>
+                                        @foreach($blocks as $blk)
+                                            <option value="{{ $blk->id }}" {{ old('block_id', $flat->block_id) == $blk->id ? 'selected' : '' }}>
+                                                {{ strtoupper($blk->name) }}
+                                            </option>
+                                        @endforeach
+                                        <option value="new">+ Add New Block/Tower</option>
+                                    </select>
+                                    
+                                    <!-- Inline Add Block Input -->
+                                    <div id="new_block_container" class="hidden mt-2">
+                                        <div class="flex items-center gap-2">
+                                            <input type="text" id="new_block_name" name="new_block_name" placeholder="e.g. T-02"
+                                                class="w-full bg-white border border-sky-400 rounded-lg px-3 py-1.5 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                                            <button type="button" onclick="saveNewBlockAjax()"
+                                                class="px-2.5 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-[10px] font-black uppercase whitespace-nowrap flex items-center gap-1 shadow-sm transition-all shrink-0 cursor-pointer">
+                                                <i class="bi bi-plus-circle-fill"></i>
+                                                <span>Save</span>
+                                            </button>
                                         </div>
                                     </div>
-                                    <p class="text-[8.5px] text-slate-400 mt-1 italic">Click 'Save Block' to instantly save into ews_blocks, or auto-saves on form submit.</p>
+                                </div>
+
+                                <!-- Col 2: Step 13: Floor Level -->
+                                @php
+                                    $floorStr = strtolower(trim($flat->floor ?? '0'));
+                                    $selectedFloor = 0;
+                                    if (str_contains($floorStr, 'ground') || $floorStr === '0') {
+                                        $selectedFloor = 0;
+                                    } elseif (str_contains($floorStr, 'first') || $floorStr === '1') {
+                                        $selectedFloor = 1;
+                                    } elseif (str_contains($floorStr, 'second') || $floorStr === '2') {
+                                        $selectedFloor = 2;
+                                    } elseif (str_contains($floorStr, 'third') || $floorStr === '3') {
+                                        $selectedFloor = 3;
+                                    } elseif (preg_match('/(\d+)/', $floorStr, $m)) {
+                                        $selectedFloor = (int)$m[1];
+                                    }
+                                @endphp
+                                <div class="space-y-1">
+                                    <label for="floor_number" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-indigo-100 text-indigo-800 me-1.5">Step 13</span>
+                                        <span>Floor Level</span> <span class="text-red-500 ms-0.5">*</span>
+                                    </label>
+                                    <select id="floor_number" name="floor_number" required
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                                        <option value="0" {{ old('floor_number', $selectedFloor) == 0 ? 'selected' : '' }}>Ground Floor (0)</option>
+                                        @for($f = 1; $f <= 100; $f++)
+                                            <option value="{{ $f }}" {{ old('floor_number', $selectedFloor) == $f ? 'selected' : '' }}>Floor {{ $f }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+
+                                <!-- Col 3: Step 14: Flat / Unit Number -->
+                                <div class="space-y-1">
+                                    <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                        <span class="flex items-center">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-violet-100 text-violet-800 me-1.5">Step 14</span>
+                                            <span>Flat / Unit No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                        </span>
+                                        <span class="text-[8.5px] font-mono text-violet-700 font-bold">Numeric / Code</span>
+                                    </label>
+                                    <div class="relative">
+                                        <input type="text" id="flat_number" name="flat_number" 
+                                            value="{{ old('flat_number', $flat->flat_number) }}" required
+                                            class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 font-black focus:border-violet-500 focus:ring-1 focus:ring-violet-500 focus:outline-none font-mono tracking-wider">
+                                        <span class="absolute right-3 top-2.5 text-violet-500 font-bold text-xs">
+                                            #
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- Floor Details -->
-                            <div class="space-y-1">
-                                <label for="floor_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 5</span>
-                                    <span>Floor (Number)</span> <span class="text-red-500 ms-0.5">*</span>
-                                </label>
-                                <select id="floor_number" name="floor_number" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none font-bold">
-                                    @php
-                                        $floorStr = strtolower(trim($flat->floor));
-                                        $selectedFloor = 0;
-                                        if ($floorStr === 'ground floor' || $floorStr === 'ground' || $floorStr === '0') {
-                                            $selectedFloor = 0;
-                                        } elseif ($floorStr === 'first floor' || $floorStr === 'first' || $floorStr === '1') {
-                                            $selectedFloor = 1;
-                                        } elseif ($floorStr === 'second floor' || $floorStr === 'second' || $floorStr === '2') {
-                                            $selectedFloor = 2;
-                                        } elseif ($floorStr === 'third floor' || $floorStr === 'third' || $floorStr === '3') {
-                                            $selectedFloor = 3;
-                                        } elseif (preg_match('/(\d+)/', $floorStr, $matches)) {
-                                            $selectedFloor = (int)$matches[1];
-                                        }
-                                    @endphp
-                                    <option value="0" {{ $selectedFloor === 0 ? 'selected' : '' }}>Ground Floor (0)</option>
-                                    @for($f = 1; $f <= 100; $f++)
-                                        <option value="{{ $f }}" {{ $selectedFloor === $f ? 'selected' : '' }}>Floor {{ $f }}</option>
-                                    @endfor
-                                </select>
+                            <!-- Live Flat Code Preview Banner -->
+                            <div class="flex items-center justify-between px-3 py-2 bg-slate-900 text-white rounded-xl border border-slate-800 shadow-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded-md bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xs">
+                                        <i class="bi bi-fingerprint"></i>
+                                    </span>
+                                    <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-300">System Unique Flat Code</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span id="preview_flat_code" class="px-2.5 py-0.5 rounded-md text-[10.5px] font-black font-mono bg-cyan-950 text-cyan-300 border border-cyan-800/80 tracking-wider">
+                                        {{ $flat->flat_code ?: 'AUTO-GENERATED' }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Row 4: Flat Number -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div class="space-y-1">
-                                <label for="flat_number" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 5</span>
-                                    <span>Flat Number</span> <span class="text-red-500 ms-0.5">*</span>
-                                </label>
-                                <input type="text" id="flat_number" name="flat_number" value="{{ $flat->flat_number }}" required
-                                    class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-medium">
+                        <!-- Form Actions Bar (Refined & Balanced) -->
+                        <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+                            <div class="flex items-center gap-2 w-full sm:w-auto">
+                                <a href="{{ route('ews.developer.flats.show', $flat->secure_id ?? $secureId) }}"
+                                    class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-300 shadow-2xs w-full sm:w-auto">
+                                    <i class="bi bi-arrow-left"></i>
+                                    <span>Cancel & Return</span>
+                                </a>
+                                <span class="hidden md:inline-flex items-center gap-1.5 text-[9px] font-bold text-slate-500 bg-slate-100 px-3 py-2 rounded-xl border border-slate-200">
+                                    <i class="bi bi-shield-check text-emerald-600"></i> Audit Log Matrix Active
+                                </span>
                             </div>
-                        </div>
 
-                        <div class="border-b border-slate-100 pt-3"></div>
+                            <div class="flex items-center gap-2.5 w-full sm:w-auto flex-wrap justify-end">
+                                <input type="hidden" name="is_aproved_by_dtp" id="is_aproved_by_dtp_input" value="{{ $flat->is_aproved_by_dtp ?? 0 }}">
 
-                        <!-- Actions -->
-                        <div class="pt-2 flex gap-3">
-                            <a href="{{ route('ews.developer.dashboard') }}"
-                                class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-655 font-bold uppercase tracking-wider rounded-lg text-[9px] transition-all text-center">
-                                Cancel & Go Back
-                            </a>
-                            <button type="submit"
-                                class="w-1/2 py-2.5 bg-gradient-to-r from-sky-500 to-indigo-650 hover:from-sky-600 hover:to-indigo-700 text-white font-black uppercase tracking-wider rounded-lg text-[9px] transition-all flex items-center justify-center gap-1 shadow-md">
-                                <i class="bi bi-save-fill"></i> Save Changes
-                            </button>
+                                <!-- Regular Save Button -->
+                                <button type="submit" id="btn_submit_changes"
+                                    class="w-full sm:w-auto px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-bold uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow active:scale-95 cursor-pointer">
+                                    <i class="bi bi-floppy2-fill text-slate-300"></i>
+                                    <span>Save Changes</span>
+                                </button>
+
+                                <!-- STP Approve & Submit Button -->
+                                <button type="button" onclick="confirmDtpApproveAndSubmit()" id="btn_dtp_approve_submit"
+                                    class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                                    <i class="bi bi-patch-check-fill text-sm text-emerald-200"></i>
+                                    <span>Approve & Submit (STP)</span>
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -351,18 +745,15 @@
 
     <!-- Modal: Add New Town Popup -->
     <div id="modal_add_town" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300" onclick="if(event.target === this) closeAddTownModal()">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden transform scale-95 opacity-0 transition-all duration-300" id="modal_add_town_content">
-            <!-- Modal Header -->
-            <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-sky-50 via-white to-slate-50">
+        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 flex flex-col overflow-hidden" id="modal_add_town_content">
+            <div class="px-5 py-4 border-b border-slate-150 flex items-center justify-between bg-gradient-to-r from-sky-50 via-white to-slate-50">
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center shadow-xs shrink-0">
                         <i class="bi bi-geo-alt-fill text-sm"></i>
                     </div>
                     <div>
                         <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">Add New Town</h3>
-                        <p class="text-[10px] text-slate-500 font-medium" id="modal_town_context_info">
-                            District: <span class="font-bold text-slate-700" id="modal_town_dist_name">-</span> &bull; Zone: <span class="font-bold text-sky-700" id="modal_town_zone_name">-</span>
-                        </p>
+                        <p class="text-[10px] text-slate-500 font-medium">Link new municipality to selected district</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeAddTownModal()" class="w-7 h-7 rounded-lg hover:bg-slate-200 text-slate-400 hover:text-slate-700 flex items-center justify-center transition-all cursor-pointer">
@@ -370,24 +761,15 @@
                 </button>
             </div>
 
-            <!-- Modal Body -->
             <div class="p-5 space-y-3.5">
-                <!-- Town Name Input -->
                 <div class="space-y-1">
                     <label for="modal_new_town_name" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
                         Town Name <span class="text-red-500">*</span>
                     </label>
                     <input type="text" id="modal_new_town_name" placeholder="Enter town name (e.g. Kharkhoda, Samalkha)"
                         class="w-full bg-slate-50 border border-slate-300 focus:border-sky-500 focus:bg-white rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:outline-none transition-all">
-                    <div id="modal_town_similarity_alert" class="hidden text-[10.5px] font-bold text-amber-800 bg-amber-50 border border-amber-300 rounded-lg p-2.5 flex items-start gap-2 shadow-xs transition-all mt-1">
-                        <i class="bi bi-exclamation-triangle-fill text-amber-600 text-sm mt-0.5 shrink-0"></i>
-                        <div>
-                            <span id="modal_town_similarity_msg"></span>
-                        </div>
-                    </div>
                 </div>
 
-                <!-- Town Type (Municipality) Selection -->
                 <div class="space-y-1">
                     <label for="modal_new_town_type" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider">
                         Town Type (Municipality) <span class="text-red-500">*</span>
@@ -404,26 +786,16 @@
                     </select>
                 </div>
 
-                <!-- Custom Municipality Type (if 'other') -->
                 <div id="modal_custom_town_type_container" class="hidden space-y-1 bg-sky-50/60 p-2.5 rounded-lg border border-sky-200">
                     <label for="modal_custom_town_type" class="block text-[9px] font-black uppercase text-sky-800 tracking-wider">
                         Specify Municipality Type <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="modal_custom_town_type" placeholder="e.g. Nagar Panchayat / Special Area"
+                    <input type="text" id="modal_custom_town_type" placeholder="e.g. Special Development Area"
                         class="w-full bg-white border border-sky-400 focus:border-sky-600 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:outline-none">
-                </div>
-
-                <!-- Auto Zone & District Notice -->
-                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-start gap-2.5">
-                    <i class="bi bi-info-circle-fill text-sky-600 text-sm mt-0.5 shrink-0"></i>
-                    <div class="text-[10px] text-slate-600 leading-relaxed">
-                        This town will be linked to <strong class="text-slate-800 font-bold" id="modal_notice_dist">-</strong> and assigned to <strong class="text-sky-700 font-bold" id="modal_notice_zone">-</strong> in the master database.
-                    </div>
                 </div>
             </div>
 
-            <!-- Modal Footer -->
-            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2">
+            <div class="px-5 py-3.5 bg-slate-50 border-t border-slate-150 flex items-center justify-end gap-2">
                 <button type="button" onclick="closeAddTownModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold uppercase rounded-lg text-[10px] tracking-wider transition-all cursor-pointer">
                     Cancel
                 </button>
@@ -436,1170 +808,469 @@
     </div>
 
     <script>
-        // AJAX and Dynamic Fields Logic for Towns, Projects, and Blocks
-        const districtSelect = document.getElementById('district_id');
-        const townSelect = document.getElementById('town_id');
-
-        const projectSelect = document.getElementById('project_id');
-        const newProjectContainer = document.getElementById('new_project_container');
-        const newProjectInput = document.getElementById('new_project_name');
-        
-        const blockSelect = document.getElementById('block_id');
-        const newBlockContainer = document.getElementById('new_block_container');
-        const newBlockInput = document.getElementById('new_block_name');
-
-        $(document).ready(function() {
-            // Initialize Select2 search elements
-            if ($('#district_id').is('select')) {
-                $('#district_id').select2();
-                $('#district_id').on('select2:select select2:unselect', function() {
-                    districtSelect.dispatchEvent(new Event('change'));
-                });
-            }
-            $('#town_id').select2();
-            $('#project_id').select2();
-            $('#block_id').select2();
-
-            $('#town_id').on('select2:select select2:unselect change', function() {
-                townSelect.dispatchEvent(new Event('change'));
-            });
-            $('#project_id').on('select2:select select2:unselect change', function() {
-                projectSelect.dispatchEvent(new Event('change'));
-            });
-            $('#block_id').on('select2:select select2:unselect change', function() {
-                blockSelect.dispatchEvent(new Event('change'));
-            });
-
-            // SweetAlert2 notifications
-            @if(session('success'))
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success!',
-                    text: {!! json_encode(session('success')) !!},
-                    confirmButtonColor: '#3b82f6'
-                });
-            @endif
-
-            @if(session('error'))
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Error',
-                    text: {!! json_encode(session('error')) !!},
-                    confirmButtonColor: '#3b82f6'
-                });
-            @endif
-
-            @if($errors->any())
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Validation Errors',
-                    html: `<ul class="text-left list-disc list-inside text-xs space-y-1">
-                        @foreach($errors->all() as $error)
-                            <li>{!! $error !!}</li>
-                        @endforeach
-                    </ul>`,
-                    confirmButtonColor: '#3b82f6'
-                });
-            @endif
-
-            // Initialize sequential locking based on initial values
-            initSequentialLockState();
-        });
-
-        function updateSelectLock(selectEl, enabled, placeholderText = null, clearOptions = true) {
-            if (!selectEl) return;
-            const $el = $(selectEl);
-            const $s2 = $el.next('.select2-container');
-
-            if (enabled) {
-                $el.prop('disabled', false);
-                selectEl.disabled = false;
-                selectEl.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                if ($s2.length) {
-                    $s2.removeClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
-                    $s2.find('.select2-selection').removeClass('bg-slate-100 cursor-not-allowed opacity-60');
-                    $s2.find('.select2-selection').attr('tabindex', '0').attr('aria-disabled', 'false');
-                }
-                if (placeholderText && selectEl.options && selectEl.options.length > 0) {
-                    selectEl.options[0].textContent = placeholderText;
-                }
-            } else {
-                $el.prop('disabled', true);
-                selectEl.disabled = true;
-                selectEl.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                if ($s2.length) {
-                    $s2.addClass('opacity-60 cursor-not-allowed pointer-events-none select2-container--disabled');
-                    $s2.find('.select2-selection').addClass('bg-slate-100 cursor-not-allowed opacity-60');
-                    $s2.find('.select2-selection').attr('tabindex', '-1').attr('aria-disabled', 'true');
-                }
-                if (placeholderText) {
-                    if (clearOptions) {
-                        selectEl.innerHTML = `<option value="" disabled selected>${placeholderText}</option>`;
-                    } else if (selectEl.options && selectEl.options.length > 0) {
-                        selectEl.options[0].textContent = placeholderText;
-                    }
-                }
-            }
-
-            // Immediately update Select2 visible text
-            const select2Container = document.getElementById(`select2-${selectEl.id}-container`);
-            if (select2Container && placeholderText) {
-                const currentText = selectEl.value && selectEl.selectedIndex >= 0 
-                    ? selectEl.options[selectEl.selectedIndex].textContent 
-                    : placeholderText;
-                select2Container.textContent = currentText;
-                select2Container.title = currentText;
-            }
-
-            $el.trigger('change.select2');
-        }
-
-        function setFlatInputsLock(locked) {
-            const floorEl = document.getElementById('floor_number');
-            const flatNumEl = document.getElementById('flat_number');
-            const submitBtn = document.querySelector('button[type="submit"]');
-
-            const inputs = [floorEl, flatNumEl];
-            inputs.forEach(el => {
-                if (!el) return;
-                el.disabled = locked;
-                if (locked) {
-                    el.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                } else {
-                    el.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-60');
-                }
-            });
-
-            if (submitBtn) {
-                if (locked) {
-                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                } else {
-                    submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            }
-        }
-
-        function initSequentialLockState() {
-            const hasDist = districtSelect && districtSelect.value;
-            const hasTown = townSelect && townSelect.value;
-            const hasProj = projectSelect && projectSelect.value;
-            const hasBlock = blockSelect && blockSelect.value;
-
-            if (!hasDist) {
-                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
-                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
-                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
-                setFlatInputsLock(true);
-            } else if (!hasProj) {
-                updateSelectLock(townSelect, true);
-                updateSelectLock(projectSelect, true, "Choose a project...", false);
-                updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...", true);
-                setFlatInputsLock(true);
-            } else if (!hasBlock) {
-                updateSelectLock(townSelect, true);
-                updateSelectLock(projectSelect, true);
-                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
-                setFlatInputsLock(true);
-            } else {
-                updateSelectLock(townSelect, true);
-                updateSelectLock(projectSelect, true);
-                updateSelectLock(blockSelect, true);
-                setFlatInputsLock(false);
-            }
-            if (projectSelect && projectSelect.value === 'new') {
-                newProjectContainer.classList.remove('hidden');
-                newProjectInput.required = true;
-            }
-            if (blockSelect && blockSelect.value === 'new') {
-                newBlockContainer.classList.remove('hidden');
-                newBlockInput.required = true;
-            }
-        }
-
-        function fetchTowns(districtId, selectedTownId = null) {
-            if (!districtId) {
-                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
-                return;
-            }
-            
-            townSelect.innerHTML = '<option value="" disabled selected>Loading towns...</option>';
-            $(townSelect).trigger('change.select2');
-            
-            fetch(`{{ route('ews.developer.towns') }}?district_id=${districtId}`)
-                .then(res => res.json())
-                .then(data => {
-                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option>';
-                    data.forEach(t => {
-                        const isSel = selectedTownId && selectedTownId == t.id ? 'selected' : '';
-                        const typeBadge = t.type ? ` (${t.type.toUpperCase()})` : '';
-                        townSelect.innerHTML += `<option value="${t.id}" ${isSel}>${t.name.toUpperCase()}${typeBadge}</option>`;
-                    });
-                    townSelect.innerHTML += '<option value="new">+ Add New Town</option>';
-                    
-                    updateSelectLock(townSelect, true);
-                    
-                    if (selectedTownId) {
-                        $(townSelect).val(selectedTownId).trigger('change.select2');
-                        townSelect.dispatchEvent(new Event('change'));
-                    } else {
-                        handleTownChange();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching towns:', err);
-                    townSelect.innerHTML = '<option value="" disabled selected>Choose a town...</option><option value="new">+ Add New Town</option>';
-                    $(townSelect).trigger('change.select2');
-                });
-        }
-
-        function fetchProjects(districtId, townId = null, selectedProjectId = null) {
-            if (!districtId) {
-                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
-                clearBlocks();
-                return;
-            }
-
-            if (!townId || townId === 'new') {
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
-                clearBlocks();
-                return;
-            }
-            
-            projectSelect.innerHTML = '<option value="" disabled selected>Loading projects...</option>';
-            $(projectSelect).trigger('change.select2');
-            
-            const zoneInput = document.getElementById('zone_id');
-            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
-
-            fetch(`{{ route('ews.developer.projects') }}?district_id=${districtId}&town_id=${townId}${zoneParam}`)
-                .then(res => res.json())
-                .then(data => {
-                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option>';
-                    if (Array.isArray(data) && data.length > 0) {
-                        data.forEach(proj => {
-                            const isSel = selectedProjectId && selectedProjectId == proj.id ? 'selected' : '';
-                            const abbrTag = proj.project_abbr ? ` [${proj.project_abbr}]` : '';
-                            projectSelect.innerHTML += `<option value="${proj.id}" ${isSel}>${proj.name.toUpperCase()}${abbrTag}</option>`;
-                        });
-                    }
-                    projectSelect.innerHTML += '<option value="new">+ Add New Project</option>';
-                    
-                    updateSelectLock(projectSelect, true, "Choose a project...", false);
-                    $(projectSelect).select2();
-
-                    if (selectedProjectId) {
-                        $(projectSelect).val(selectedProjectId).trigger('change.select2');
-                        projectSelect.dispatchEvent(new Event('change'));
-                    } else {
-                        handleProjectChange();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching projects:', err);
-                    projectSelect.innerHTML = '<option value="" disabled selected>Choose a project...</option><option value="new">+ Add New Project</option>';
-                    $(projectSelect).select2();
-                    updateSelectLock(projectSelect, true, "Choose a project...", false);
-                });
-        }
-
-        // Client-Side Fuzzy & Duplicate Similarity Detection Engine
-        function normalizeStr(str) {
-            if (!str) return '';
-            let s = str.toLowerCase().trim();
-            s = s.replace(/\s*\([^)]*\)/g, '');
-            return s.replace(/[^a-z0-9]/g, '');
-        }
-
-        function collapseRepeats(str) {
-            if (!str) return '';
-            return str.replace(/(.)\1+/g, '$1');
-        }
-
-        function levenshteinDistance(s1, s2) {
-            const m = s1.length, n = s2.length;
-            const d = [];
-            for (let i = 0; i <= m; i++) d[i] = [i];
-            for (let j = 0; j <= n; j++) d[0][j] = j;
-            for (let j = 1; j <= n; j++) {
-                for (let i = 1; i <= m; i++) {
-                    if (s1[i - 1] === s2[j - 1]) {
-                        d[i][j] = d[i - 1][j - 1];
-                    } else {
-                        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + 1);
-                    }
-                }
-            }
-            return d[m][n];
-        }
-
-        function calculateSimilarityScore(s1, s2) {
-            const lev = levenshteinDistance(s1, s2);
-            const maxLen = Math.max(s1.length, s2.length);
-            if (maxLen === 0) return 100;
-            return ((maxLen - lev) / maxLen) * 100;
-        }
-
-        function findDuplicateOrSimilar(input, optionsList, threshold = 85.0) {
-            const cleanInput = (input || '').trim();
-            if (!cleanInput) return null;
-
-            const normInput = normalizeStr(cleanInput);
-            if (!normInput) return null;
-
-            const collapsedInput = collapseRepeats(normInput);
-
-            for (let i = 0; i < optionsList.length; i++) {
-                let opt = optionsList[i];
-                let rawText = typeof opt === 'string' ? opt : (opt.text || opt.name || '');
-                let cleanOpt = rawText.trim();
-                if (!cleanOpt || cleanOpt.startsWith('+ Add') || cleanOpt.startsWith('Choose') || cleanOpt.startsWith('🔒') || cleanOpt.startsWith('Loading')) {
-                    continue;
-                }
-
-                // 1. Exact case-insensitive match
-                if (cleanInput.toLowerCase() === cleanOpt.toLowerCase()) {
-                    return { match: true, existing: cleanOpt, reason: 'Exact match' };
-                }
-
-                const normOpt = normalizeStr(cleanOpt);
-                if (!normOpt) continue;
-
-                // 2. Canonical match (without spaces, hyphens, punctuation)
-                if (normInput === normOpt) {
-                    return { match: true, existing: cleanOpt, reason: 'Identical (ignoring spaces & punctuation)' };
-                }
-
-                // 3. Repeated character match (e.g. behaat vs behat, aanandkamboj vs anand kamboj)
-                const collapsedOpt = collapseRepeats(normOpt);
-                if (collapsedInput === collapsedOpt) {
-                    return { match: true, existing: cleanOpt, reason: 'Duplicate with repeated characters' };
-                }
-
-                // 4. Levenshtein / Edit distance
-                const lev = levenshteinDistance(normInput, normOpt);
-                const score = calculateSimilarityScore(normInput, normOpt);
-                const minLen = Math.min(normInput.length, normOpt.length);
-
-                if (minLen >= 3 && lev === 1 && score >= 80.0) {
-                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
-                }
-                if (minLen >= 8 && lev <= 2 && score >= 85.0) {
-                    return { match: true, existing: cleanOpt, reason: 'Almost identical spelling' };
-                }
-                if (score >= threshold && minLen >= 4) {
-                    return { match: true, existing: cleanOpt, reason: Math.round(score) + '% similar name' };
-                }
-            }
-            return null;
-        }
-
-        let previousTownValue = '{{ old("town_id", $flat->town_id) }}';
-
         function openAddTownModal() {
-            const distId = districtSelect ? districtSelect.value : '';
-            const distText = districtSelect && districtSelect.selectedIndex >= 0 && districtSelect.options[districtSelect.selectedIndex] ? 
-                districtSelect.options[districtSelect.selectedIndex].text.trim() : '';
-            const zoneName = (document.getElementById('zone_name') ? document.getElementById('zone_name').value : '') || 'Zone';
-
-            if (!distId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'District Required',
-                    text: 'Please select a District first before adding a Town.',
-                    confirmButtonColor: '#0284c7'
-                });
-                if (townSelect && townSelect.value === 'new') {
-                    townSelect.value = previousTownValue || '';
-                    $(townSelect).val(previousTownValue || '').trigger('change.select2');
-                }
-                return;
-            }
-
-            // Populate context labels
-            const distSpan = document.getElementById('modal_town_dist_name');
-            const zoneSpan = document.getElementById('modal_town_zone_name');
-            const noticeDist = document.getElementById('modal_notice_dist');
-            const noticeZone = document.getElementById('modal_notice_zone');
-            if (distSpan) distSpan.textContent = distText;
-            if (zoneSpan) zoneSpan.textContent = zoneName;
-            if (noticeDist) noticeDist.textContent = distText;
-            if (noticeZone) noticeZone.textContent = zoneName;
-
-            // Reset inputs
-            const townInput = document.getElementById('modal_new_town_name');
-            const typeSelect = document.getElementById('modal_new_town_type');
-            const customTypeInput = document.getElementById('modal_custom_town_type');
-            if (townInput) townInput.value = '';
-            if (typeSelect) typeSelect.value = '';
-            if (customTypeInput) customTypeInput.value = '';
-            toggleCustomTownTypeModal('');
-
-            const modal = document.getElementById('modal_add_town');
-            const content = document.getElementById('modal_add_town_content');
-            if (modal && content) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-                setTimeout(() => {
-                    content.classList.remove('scale-95', 'opacity-0');
-                    content.classList.add('scale-100', 'opacity-100');
-                    if (townInput) townInput.focus();
-                }, 20);
-            }
+            $('#modal_add_town').removeClass('hidden').addClass('flex');
+            $('#modal_new_town_name').val('').focus();
+            $('#modal_new_town_type').val('');
+            $('#modal_custom_town_type_container').addClass('hidden');
         }
 
         function closeAddTownModal() {
-            const modal = document.getElementById('modal_add_town');
-            const content = document.getElementById('modal_add_town_content');
-            if (modal && content) {
-                content.classList.remove('scale-100', 'opacity-100');
-                content.classList.add('scale-95', 'opacity-0');
-                setTimeout(() => {
-                    modal.classList.remove('flex');
-                    modal.classList.add('hidden');
-                }, 200);
-            }
-
-            // If townSelect is on 'new', reset to previous value
-            if (townSelect && townSelect.value === 'new') {
-                townSelect.value = previousTownValue || '';
-                $(townSelect).val(previousTownValue || '').trigger('change.select2');
-            }
+            $('#modal_add_town').addClass('hidden').removeClass('flex');
         }
 
         function toggleCustomTownTypeModal(val) {
-            const customContainer = document.getElementById('modal_custom_town_type_container');
-            const customInput = document.getElementById('modal_custom_town_type');
             if (val === 'other') {
-                if (customContainer) customContainer.classList.remove('hidden');
-                if (customInput) {
-                    customInput.required = true;
-                    customInput.focus();
-                }
+                $('#modal_custom_town_type_container').removeClass('hidden');
             } else {
-                if (customContainer) customContainer.classList.add('hidden');
-                if (customInput) {
-                    customInput.required = false;
-                    customInput.value = '';
-                }
+                $('#modal_custom_town_type_container').addClass('hidden');
             }
         }
 
         function saveNewTownAjax() {
-            const districtId = districtSelect ? districtSelect.value : '';
-            const townInput = document.getElementById('modal_new_town_name');
-            const townName = townInput ? townInput.value.trim() : '';
-            const townTypeSelect = document.getElementById('modal_new_town_type');
-            let townType = townTypeSelect ? townTypeSelect.value : '';
-
-            if (!districtId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'District Required',
-                    text: 'Please select a district first before creating a town.',
-                    confirmButtonColor: '#0284c7'
-                });
-                return;
+            const districtId = $('#district_id').val();
+            const townName = $('#modal_new_town_name').val().trim();
+            let townType = $('#modal_new_town_type').val();
+            if (townType === 'other') {
+                townType = $('#modal_custom_town_type').val().trim();
             }
 
             if (!townName) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Town Name Required',
-                    text: 'Please enter the new town name.',
-                    confirmButtonColor: '#0284c7'
-                });
-                if (townInput) townInput.focus();
+                Swal.fire('Required', 'Please enter a town name.', 'warning');
                 return;
             }
 
-            // Client-side Duplicate & Similarity Check
-            const townOptions = Array.from(townSelect.options).map(o => o.text);
-            const dupCheck = findDuplicateOrSimilar(townName, townOptions);
-            if (dupCheck) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Already Exists / Similar Name Found',
-                    html: `Town '<strong>${townName}</strong>' already exists or is too similar to existing town '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
-                    confirmButtonColor: '#f59e0b'
-                });
-                if (townInput) townInput.focus();
-                return;
-            }
-
-            if (townType === 'other') {
-                const customTypeInput = document.getElementById('modal_custom_town_type');
-                townType = customTypeInput ? customTypeInput.value.trim() : '';
-                if (!townType) {
-                    Swal.fire({
-                        icon: 'warning',
-                        title: 'Type Required',
-                        text: 'Please enter the custom municipality type.',
-                        confirmButtonColor: '#0284c7'
-                    });
-                    if (customTypeInput) customTypeInput.focus();
-                    return;
-                }
-            } else if (!townType) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Type Required',
-                    text: 'Please select a Municipality / Town Type.',
-                    confirmButtonColor: '#0284c7'
-                });
-                if (townTypeSelect) townTypeSelect.focus();
-                return;
-            }
-
-            const saveBtn = document.getElementById('modal_btn_save_town');
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> <span>Saving...</span>';
-            }
-
-            fetch('{{ route("ews.developer.towns.store-ajax") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
+            $.ajax({
+                url: "{{ route('ews.stp.towns.store-ajax') }}",
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
                     district_id: districtId,
-                    town_name: townName,
-                    town_type: townType
-                })
-            })
-            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
-            .then(({ ok, data }) => {
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
-                }
-
-                if (!ok || !data.success) {
-                    Swal.fire({
-                        icon: data.duplicate ? 'warning' : 'error',
-                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Town',
-                        text: data.message || 'Could not save town.',
-                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
-                    });
-                    return;
-                }
-
-                if (data.success && data.town) {
-                    let opt = Array.from(townSelect.options).find(o => o.value == data.town.id);
-                    const typeBadge = data.town.type ? ` (${data.town.type.toUpperCase()})` : '';
-                    if (!opt) {
-                        const newOption = document.createElement('option');
-                        newOption.value = data.town.id;
-                        newOption.textContent = `${data.town.name.toUpperCase()}${typeBadge}`;
-                        
-                        const addNewOpt = Array.from(townSelect.options).find(o => o.value === 'new');
-                        if (addNewOpt) {
-                            townSelect.insertBefore(newOption, addNewOpt);
-                        } else {
-                            townSelect.appendChild(newOption);
-                        }
+                    name: townName,
+                    type: townType
+                },
+                success: function(resp) {
+                    if (resp.success && resp.town) {
+                        const newOpt = new Option(resp.town.name.toUpperCase(), resp.town.id, true, true);
+                        $('#town_id').append(newOpt).trigger('change');
+                        closeAddTownModal();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Town Added',
+                            text: resp.message || 'New town registered successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Error', resp.message || 'Could not save town.', 'error');
                     }
-
-                    // Add new type to modal type dropdown if it was custom
-                    if (data.town.type && townTypeSelect) {
-                        const existsType = Array.from(townTypeSelect.options).some(o => o.value.toLowerCase() === data.town.type.toLowerCase());
-                        if (!existsType) {
-                            const newTypeOpt = document.createElement('option');
-                            newTypeOpt.value = data.town.type;
-                            newTypeOpt.textContent = data.town.type;
-                            const otherOpt = Array.from(townTypeSelect.options).find(o => o.value === 'other');
-                            if (otherOpt) {
-                                townTypeSelect.insertBefore(newTypeOpt, otherOpt);
-                            } else {
-                                townTypeSelect.appendChild(newTypeOpt);
-                            }
-                        }
-                    }
-
-                    previousTownValue = data.town.id;
-                    townSelect.value = data.town.id;
-                    $(townSelect).val(data.town.id).trigger('change');
-                    townSelect.dispatchEvent(new Event('change'));
-                    
-                    closeAddTownModal();
-
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'success',
-                        title: data.message || `Town '${data.town.name}' saved successfully!`
-                    });
-
-                    handleTownChange();
+                },
+                error: function(err) {
+                    Swal.fire('Error', err.responseJSON?.message || 'Server error while saving town.', 'error');
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill text-xs"></i> <span>Save Town</span>';
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'An error occurred while saving the town.',
-                    confirmButtonColor: '#ef4444'
-                });
             });
+        }
+
+        function toggleNewProjectInline() {
+            $('#new_project_container').toggleClass('hidden');
+            if (!$('#new_project_container').hasClass('hidden')) {
+                $('#new_project_name').focus();
+            }
         }
 
         function saveNewProjectAjax() {
-            const districtId = districtSelect ? districtSelect.value : '';
-            const townId = townSelect ? townSelect.value : '';
-            const projInput = document.getElementById('new_project_name');
-            const projName = projInput ? projInput.value.trim() : '';
-            const saveBtn = document.getElementById('btn_save_project_ajax');
-
-            if (!districtId) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'District Required',
-                    text: 'Please select a district first before creating a project.',
-                    confirmButtonColor: '#0284c7'
-                });
-                return;
-            }
+            const districtId = $('#district_id').val();
+            const townId = $('#town_id').val();
+            const projName = $('#new_project_name').val().trim();
 
             if (!projName) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Project Name Required',
-                    text: 'Please enter the new project name.',
-                    confirmButtonColor: '#0284c7'
-                });
-                if (projInput) projInput.focus();
+                Swal.fire('Required', 'Please enter project name.', 'warning');
                 return;
             }
 
-            // Client-side Duplicate & Similarity Check
-            const projOptions = Array.from(projectSelect.options).map(o => o.text);
-            const dupCheck = findDuplicateOrSimilar(projName, projOptions);
-            if (dupCheck) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Already Exists / Similar Name Found',
-                    html: `Project '<strong>${projName}</strong>' already exists or is too similar to existing project '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}).<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
-                    confirmButtonColor: '#f59e0b'
-                });
-                if (projInput) projInput.focus();
-                return;
-            }
-
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
-            }
-
-            fetch('{{ route("ews.developer.projects.store-ajax") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
+            $.ajax({
+                url: "{{ route('ews.stp.projects.store-ajax') }}",
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
                     district_id: districtId,
                     town_id: townId,
-                    project_name: projName
-                })
-            })
-            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
-            .then(({ ok, data }) => {
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
-                }
-
-                if (!ok || !data.success) {
-                    Swal.fire({
-                        icon: data.duplicate ? 'warning' : 'error',
-                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Project',
-                        text: data.message || 'Could not save project.',
-                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
-                    });
-                    return;
-                }
-
-                if (data.success && data.project) {
-                    let opt = Array.from(projectSelect.options).find(o => o.value == data.project.id);
-                    if (!opt) {
-                        const newOption = document.createElement('option');
-                        newOption.value = data.project.id;
-                        newOption.textContent = data.project.name.toUpperCase();
-                        
-                        const addNewOpt = Array.from(projectSelect.options).find(o => o.value === 'new');
-                        if (addNewOpt) {
-                            projectSelect.insertBefore(newOption, addNewOpt);
-                        } else {
-                            projectSelect.appendChild(newOption);
-                        }
+                    name: projName,
+                    developer_name: $('#developer_name').val(),
+                    license_no: $('#license_no').val(),
+                    sector_no: $('#sector_no').val(),
+                    address: $('#address_of_project').val(),
+                    area_of_project: $('#area_of_project').val()
+                },
+                success: function(resp) {
+                    if (resp.success && resp.project) {
+                        const opt = new Option(resp.project.name.toUpperCase(), resp.project.id, true, true);
+                        $('#project_id').append(opt).trigger('change');
+                        $('#new_project_container').addClass('hidden');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Project Saved',
+                            text: resp.message || 'Project registered successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Error', resp.message || 'Could not save project.', 'error');
                     }
-
-                    projectSelect.value = data.project.id;
-                    $(projectSelect).val(data.project.id).trigger('change.select2');
-                    
-                    newProjectContainer.classList.add('hidden');
-                    newProjectInput.required = false;
-                    newProjectInput.value = '';
-                    const alertBox = document.getElementById('project_similarity_alert');
-                    if (alertBox) alertBox.classList.add('hidden');
-
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'success',
-                        title: data.message || `Project '${data.project.name}' saved successfully!`
-                    });
-
-                    handleProjectChange();
+                },
+                error: function(err) {
+                    Swal.fire('Error', err.responseJSON?.message || 'Server error while saving project.', 'error');
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Project</span>';
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'An error occurred while saving the project.',
-                    confirmButtonColor: '#ef4444'
-                });
             });
         }
 
-        function fetchBlocks(projectId, selectedBlockId = null) {
-            if (!projectId || projectId === 'new') {
-                blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
-                $(blockSelect).trigger('change.select2');
-                handleBlockChange();
-                return;
+        function openAddBlockInline() {
+            $('#new_block_container').toggleClass('hidden');
+            if (!$('#new_block_container').hasClass('hidden')) {
+                $('#new_block_name').focus();
             }
-            
-            blockSelect.innerHTML = '<option value="" disabled selected>Loading blocks...</option>';
-            $(blockSelect).trigger('change.select2');
-            
-            const distId = districtSelect ? districtSelect.value : '';
-            const townId = townSelect ? townSelect.value : '';
-            const zoneInput = document.getElementById('zone_id');
-            const zoneParam = zoneInput && zoneInput.value ? `&zone_id=${zoneInput.value}` : '';
-            const distParam = distId ? `&district_id=${distId}` : '';
-            const townParam = townId && townId !== 'new' ? `&town_id=${townId}` : '';
-
-            fetch(`{{ route('ews.developer.blocks') }}?project_id=${projectId}${townParam}${distParam}${zoneParam}`)
-                .then(res => res.json())
-                .then(data => {
-                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option>';
-                    data.forEach(blk => {
-                        const isSel = selectedBlockId && selectedBlockId == blk.id ? 'selected' : '';
-                        blockSelect.innerHTML += `<option value="${blk.id}" ${isSel}>${blk.name.toUpperCase()}</option>`;
-                    });
-                    blockSelect.innerHTML += '<option value="new">+ Add New Block/Tower</option>';
-                    
-                    updateSelectLock(blockSelect, true);
-                    
-                    if (selectedBlockId) {
-                        $(blockSelect).val(selectedBlockId).trigger('change.select2');
-                        blockSelect.dispatchEvent(new Event('change'));
-                    } else {
-                        handleBlockChange();
-                    }
-                })
-                .catch(err => {
-                    console.error('Error fetching blocks:', err);
-                    blockSelect.innerHTML = '<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>';
-                    $(blockSelect).trigger('change.select2');
-                });
         }
 
         function saveNewBlockAjax() {
-            const projectId = projectSelect ? projectSelect.value : '';
-            const blockInput = document.getElementById('new_block_name');
-            const blockName = blockInput ? blockInput.value.trim() : '';
-            const saveBtn = document.getElementById('btn_save_block_ajax');
-
-            if (!projectId || projectId === 'new') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Project Required',
-                    text: 'Please select a valid Project first before creating a Block/Tower.',
-                    confirmButtonColor: '#0284c7'
-                });
-                return;
-            }
+            const projId = $('#project_id').val();
+            const blockName = $('#new_block_name').val().trim();
 
             if (!blockName) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Block/Tower Name Required',
-                    text: 'Please enter the block/tower name or number.',
-                    confirmButtonColor: '#0284c7'
-                });
-                if (blockInput) blockInput.focus();
+                Swal.fire('Required', 'Please enter block / tower name.', 'warning');
                 return;
             }
 
-            // Client-side Duplicate & Similarity Check
-            const blockOptions = Array.from(blockSelect.options).map(o => o.text);
-            const dupCheck = findDuplicateOrSimilar(blockName, blockOptions);
-            if (dupCheck) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Already Exists / Similar Name Found',
-                    html: `Block/Tower '<strong>${blockName}</strong>' already exists or is too similar to existing '<strong>${dupCheck.existing}</strong>' (${dupCheck.reason}) under this project.<br><br>Please select <strong>${dupCheck.existing}</strong> from the dropdown list.`,
-                    confirmButtonColor: '#f59e0b'
-                });
-                if (blockInput) blockInput.focus();
-                return;
-            }
-
-            if (saveBtn) {
-                saveBtn.disabled = true;
-                saveBtn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving...';
-            }
-
-            const distId = districtSelect ? districtSelect.value : '';
-            const townId = townSelect ? townSelect.value : '';
-            const zoneInput = document.getElementById('zone_id');
-            const zoneId = zoneInput ? zoneInput.value : '';
-
-            fetch('{{ route("ews.developer.blocks.store-ajax") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                    'Accept': 'application/json'
+            $.ajax({
+                url: "{{ route('ews.stp.blocks.store-ajax') }}",
+                type: 'POST',
+                data: {
+                    _token: "{{ csrf_token() }}",
+                    project_id: projId,
+                    name: blockName
                 },
-                body: JSON.stringify({
-                    project_id: projectId,
-                    town_id: townId,
-                    district_id: distId,
-                    zone_id: zoneId,
-                    block_name: blockName
-                })
-            })
-            .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
-            .then(({ ok, data }) => {
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
-                }
-
-                if (!ok || !data.success) {
-                    Swal.fire({
-                        icon: data.duplicate ? 'warning' : 'error',
-                        title: data.duplicate ? 'Already Exists / Similar Name' : 'Cannot Save Block',
-                        text: data.message || 'Could not save block/tower.',
-                        confirmButtonColor: data.duplicate ? '#f59e0b' : '#ef4444'
-                    });
-                    return;
-                }
-
-                if (data.success && data.block) {
-                    let opt = Array.from(blockSelect.options).find(o => o.value == data.block.id);
-                    if (!opt) {
-                        const newOption = document.createElement('option');
-                        newOption.value = data.block.id;
-                        newOption.textContent = data.block.name.toUpperCase();
-                        
-                        const addNewOpt = Array.from(blockSelect.options).find(o => o.value === 'new');
-                        if (addNewOpt) {
-                            blockSelect.insertBefore(newOption, addNewOpt);
-                        } else {
-                            blockSelect.appendChild(newOption);
-                        }
+                success: function(resp) {
+                    if (resp.success && resp.block) {
+                        const opt = new Option(resp.block.name.toUpperCase(), resp.block.id, true, true);
+                        $('#block_id').append(opt).trigger('change');
+                        $('#new_block_container').addClass('hidden');
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Block Saved',
+                            text: resp.message || 'Block registered successfully.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire('Error', resp.message || 'Could not save block.', 'error');
                     }
-
-                    blockSelect.value = data.block.id;
-                    $(blockSelect).val(data.block.id).trigger('change.select2');
-                    
-                    newBlockContainer.classList.add('hidden');
-                    newBlockInput.required = false;
-                    newBlockInput.value = '';
-                    const alertBox = document.getElementById('block_similarity_alert');
-                    if (alertBox) alertBox.classList.add('hidden');
-
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true
-                    });
-                    Toast.fire({
-                        icon: 'success',
-                        title: data.message || `Block/Tower '${data.block.name}' saved successfully!`
-                    });
-
-                    handleBlockChange();
+                },
+                error: function(err) {
+                    Swal.fire('Error', err.responseJSON?.message || 'Server error while saving block.', 'error');
                 }
-            })
-            .catch(err => {
-                console.error(err);
-                if (saveBtn) {
-                    saveBtn.disabled = false;
-                    saveBtn.innerHTML = '<i class="bi bi-plus-circle-fill"></i> <span>Save Block</span>';
-                }
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Server Error',
-                    text: 'An error occurred while saving the block.',
-                    confirmButtonColor: '#ef4444'
-                });
             });
         }
 
-        function clearBlocks() {
-            blockSelect.innerHTML = '<option value="" disabled selected>🔒 Step 3: Select Project First...</option>';
-            $(blockSelect).val('').trigger('change.select2');
-            updateSelectLock(blockSelect, false, "🔒 Step 3: Select Project First...");
-            handleBlockChange();
+        function onDistrictChanged() {
+            const districtId = $('#district_id').val();
+            if (!districtId) return;
+
+            // Fetch Towns
+            $.getJSON("{{ route('ews.stp.towns') }}?district_id=" + districtId, function(towns) {
+                let opts = '<option value="" disabled selected>Choose a town...</option>';
+                $.each(towns, function(i, t) {
+                    opts += `<option value="${t.id}">${t.name.toUpperCase()}</option>`;
+                });
+                opts += '<option value="new">+ Add New Town</option>';
+                $('#town_id').html(opts);
+            });
+
+            // Fetch Projects
+            $.getJSON("{{ route('ews.stp.projects') }}?district_id=" + districtId, function(projs) {
+                let opts = '<option value="" disabled selected>Choose a project...</option>';
+                $.each(projs, function(i, p) {
+                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
+                });
+                opts += '<option value="new">+ Add New Project</option>';
+                $('#project_id').html(opts);
+                $('#block_id').html('<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>');
+            });
         }
 
-        function handleTownChange() {
-            const townVal = townSelect ? townSelect.value : '';
-
-            if (townVal === 'new') {
+        function onTownChanged() {
+            const districtId = $('#district_id').val();
+            const townId = $('#town_id').val();
+            if (townId === 'new') {
                 openAddTownModal();
                 return;
             }
+            if (!districtId) return;
 
-            // Step 3 (Project) unlocks ONLY when Town (Step 2) is selected
-            if (townVal && townVal !== '') {
-                previousTownValue = townVal;
-                const distId = districtSelect ? districtSelect.value : '';
-                updateSelectLock(projectSelect, true, "Choose a project...", false);
-                fetchProjects(distId, townVal, projectSelect.value);
-            } else {
-                previousTownValue = '';
-                // Town is not selected -> Keep Step 3 locked (values remain preserved)
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
-                clearBlocks();
-                setFlatInputsLock(true);
-            }
+            let url = "{{ route('ews.stp.projects') }}?district_id=" + districtId;
+            if (townId) url += "&town_id=" + townId;
+
+            $.getJSON(url, function(projs) {
+                let opts = '<option value="" disabled selected>Choose a project...</option>';
+                $.each(projs, function(i, p) {
+                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
+                });
+                opts += '<option value="new">+ Add New Project</option>';
+                $('#project_id').html(opts);
+                $('#block_id').html('<option value="" disabled selected>Choose a block/tower...</option><option value="new">+ Add New Block/Tower</option>');
+            });
         }
 
-        function handleProjectChange() {
-            const val = projectSelect.value;
-            if (val === 'new') {
-                newProjectContainer.classList.remove('hidden');
-                newProjectInput.required = true;
-                
-                updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
-                blockSelect.innerHTML = '<option value="new" selected>+ Add New Block/Tower</option>';
-                $(blockSelect).trigger('change.select2');
-                handleBlockChange();
-            } else {
-                newProjectContainer.classList.add('hidden');
-                newProjectInput.required = false;
-                newProjectInput.value = '';
-                if (val) {
-                    updateSelectLock(blockSelect, true, "Choose a block/tower...", false);
-                    fetchBlocks(val);
-                } else {
-                    clearBlocks();
+        function onProjectChanged() {
+            const projId = $('#project_id').val();
+            if (projId === 'new') {
+                toggleNewProjectInline();
+                return;
+            }
+
+            const selectedOption = $('#project_id option:selected');
+            const devName = selectedOption.data('developer');
+            const sectorNo = selectedOption.data('sector');
+            const address = selectedOption.data('address');
+            const licenseNo = selectedOption.data('license');
+            const area = selectedOption.data('area');
+            const approved = selectedOption.data('approved');
+            const approvalDate = selectedOption.data('approval-date');
+            const ocYn = selectedOption.data('oc-yn');
+
+            if (devName) $('#developer_name').val(devName);
+            if (sectorNo) $('#sector_no').val(sectorNo);
+            if (address) $('#address_of_project').val(address);
+            if (licenseNo) $('#license_no').val(licenseNo);
+            if (area) $('#area_of_project').val(area);
+
+            if (approved) {
+                $('#approved_building_plan').val(approved.toLowerCase());
+                handleApprovedBuildingPlanChange(false);
+            }
+            if (approvalDate && approved && approved.toLowerCase() === 'yes') {
+                $('#building_plan_approval_date').val(approvalDate);
+            }
+            if (ocYn) {
+                $('#oc_status_yn').val(ocYn.toLowerCase());
+                handleOcStatusYnChange(false);
+            }
+
+            $.getJSON("{{ route('ews.stp.blocks') }}?project_id=" + projId, function(blocks) {
+                let opts = '<option value="" disabled selected>Choose a block/tower...</option>';
+                $.each(blocks, function(i, b) {
+                    opts += `<option value="${b.id}">${b.name.toUpperCase()}</option>`;
+                });
+                opts += '<option value="new">+ Add New Block/Tower</option>';
+                $('#block_id').html(opts);
+            });
+        }
+
+        // Building Plan Approved Toggle (Mandatory - Reverts to Yes on 'no')
+        function handleApprovedBuildingPlanChange(showAlert = true) {
+            const val = $('#approved_building_plan').val();
+            if (val === 'no') {
+                if (showAlert) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Approved Building Plan Mandatory',
+                        html: 'Approved Building Plan is <strong>mandatory</strong> for this EWS flat registration.<br><br>Flats cannot be saved or submitted without an Approved Building Plan.',
+                        confirmButtonText: 'Keep Approved (Yes)',
+                        confirmButtonColor: '#4f46e5',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        $('#approved_building_plan').val('yes');
+                        $('#building_plan_date_wrapper').removeClass('hidden');
+                        $('#building_plan_copy_wrapper').removeClass('hidden');
+                        $('#existing_bldg_plan_preview').removeClass('hidden');
+                    });
                 }
-                setFlatInputsLock(true);
+            } else if (val === 'yes') {
+                $('#building_plan_date_wrapper').removeClass('hidden');
+                $('#building_plan_copy_wrapper').removeClass('hidden');
+                $('#existing_bldg_plan_preview').removeClass('hidden');
             }
         }
 
-        function handleBlockChange() {
-            const val = blockSelect.value;
-            if (val === 'new') {
-                newBlockContainer.classList.remove('hidden');
-                newBlockInput.required = true;
-            } else {
-                newBlockContainer.classList.add('hidden');
-                newBlockInput.required = false;
-                newBlockInput.value = '';
-            }
-
-            if (val) {
-                // Block selected -> Unlock Floor and Flat fields!
-                setFlatInputsLock(false);
-            } else {
-                setFlatInputsLock(true);
+        // OC Status YN Toggle (Mandatory - Reverts to Yes on 'no')
+        function handleOcStatusYnChange(showAlert = true) {
+            const val = $('#oc_status_yn').val();
+            if (val === 'no') {
+                if (showAlert) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Occupation Certificate (OC) Mandatory',
+                        html: 'Valid Occupation Certificate (OC) is <strong>mandatory</strong> to offer flats for allotment.<br><br>Flats cannot be saved or submitted without an Occupation Certificate.',
+                        confirmButtonText: 'Keep OC Received (Yes)',
+                        confirmButtonColor: '#0d9488',
+                        allowOutsideClick: false
+                    }).then(() => {
+                        $('#oc_status_yn').val('yes');
+                        $('#oc_category_wrapper').removeClass('hidden');
+                        $('#oc_fields_container').removeClass('hidden');
+                        $('#existing_oc_preview').removeClass('hidden');
+                    });
+                }
+            } else if (val === 'yes') {
+                $('#oc_category_wrapper').removeClass('hidden');
+                if (!$('#oc_status').val()) {
+                    $('#oc_status').val('part');
+                }
+                $('#oc_fields_container').removeClass('hidden');
+                $('#existing_oc_preview').removeClass('hidden');
+                handleOcStatusChange();
             }
         }
 
-        districtSelect.addEventListener('change', function() {
-            const distId = this.value;
-            if (distId) {
-                updateSelectLock(townSelect, true, "Choose a town...", true);
-                fetchTowns(distId);
-                updateSelectLock(projectSelect, false, "🔒 Step 2: Select Town First...", true);
-            } else {
-                updateSelectLock(townSelect, false, "🔒 Step 1: Select District First...", true);
-                updateSelectLock(projectSelect, false, "🔒 Step 1: Select District First...", true);
+        // OC Category Change (Part vs Complete)
+        function handleOcStatusChange() {
+            const ocCat = $('#oc_status').val();
+            if (ocCat === 'complete') {
+                $('#part_oc_breakdown_section').addClass('hidden');
+                $('#flats_offered_for_draw').val('');
+                $('#remaining_flats_for_oc').val('');
+            } else if (ocCat === 'part') {
+                $('#part_oc_breakdown_section').removeClass('hidden');
             }
-            clearBlocks();
-            setFlatInputsLock(true);
+        }
+
+        // Form Submit Guard (Blocks submission on 'no')
+        $('#devEditForm').on('submit', function(e) {
+            const planVal = $('#approved_building_plan').val();
+            if (planVal !== 'yes') {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Blocked',
+                    html: 'Approved Building Plan is <strong>mandatory</strong>.<br><br>Please select <strong>Yes (Approved)</strong> to proceed.',
+                    confirmButtonColor: '#ef4444'
+                });
+                $('#approved_building_plan').val('yes');
+                $('#building_plan_date_wrapper').removeClass('hidden');
+                $('#building_plan_copy_wrapper').removeClass('hidden');
+                return false;
+            }
+
+            const ocYnVal = $('#oc_status_yn').val();
+            if (ocYnVal !== 'yes') {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Submission Blocked',
+                    html: 'Valid Occupation Certificate (OC) is <strong>mandatory</strong>.<br><br>Please select <strong>Yes (OC Received)</strong> to proceed.',
+                    confirmButtonColor: '#ef4444'
+                });
+                $('#oc_status_yn').val('yes');
+                $('#oc_category_wrapper').removeClass('hidden');
+                $('#oc_fields_container').removeClass('hidden');
+                return false;
+            }
+
+            if (!$('#building_plan_approval_date').val()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Building Plan Approval Date Required',
+                    text: 'Please enter Date of Approved for Building Plan.',
+                    confirmButtonColor: '#f59e0b'
+                });
+                $('#building_plan_approval_date').focus();
+                return false;
+            }
+
+            if (!$('#oc_status').val()) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'OC Category Required',
+                    text: 'Please select OC Category (Part / Complete).',
+                    confirmButtonColor: '#f59e0b'
+                });
+                $('#oc_status').focus();
+                return false;
+            }
+
+            if ($('#oc_status').val() === 'part') {
+                if ($('#flats_offered_for_draw').val() === '') {
+                    e.preventDefault();
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Draw Quota Required',
+                        text: 'Please specify the number of flats offered for draw for Part OC.',
+                        confirmButtonColor: '#f59e0b'
+                    });
+                    $('#flats_offered_for_draw').focus();
+                    return false;
+                }
+            } else if ($('#oc_status').val() === 'complete') {
+                $('#flats_offered_for_draw').val('');
+                $('#remaining_flats_for_oc').val('');
+            }
         });
 
-        townSelect.addEventListener('change', handleTownChange);
-        projectSelect.addEventListener('change', handleProjectChange);
-        blockSelect.addEventListener('change', handleBlockChange);
+        // STP Approve and Submit with SweetAlert Confirmation
+        function confirmDtpApproveAndSubmit() {
+            if ($('#approved_building_plan').val() !== 'yes') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Approved Building Plan Mandatory',
+                    text: 'Approved Building Plan is mandatory before submitting.',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
 
-        // Live Input Similarity Checkers
-        const townModalInput = document.getElementById('modal_new_town_name');
-        if (townModalInput) {
-            townModalInput.addEventListener('input', function() {
-                const alertBox = document.getElementById('modal_town_similarity_alert');
-                const alertMsg = document.getElementById('modal_town_similarity_msg');
-                const townOptions = Array.from(townSelect.options).map(o => o.text);
-                const dup = findDuplicateOrSimilar(this.value, townOptions);
-                if (dup && alertBox && alertMsg) {
-                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar town '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
-                    alertBox.classList.remove('hidden');
-                } else if (alertBox) {
-                    alertBox.classList.add('hidden');
+            if ($('#oc_status_yn').val() !== 'yes') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'OC Mandatory',
+                    text: 'Occupation Certificate (OC) is mandatory before submitting.',
+                    confirmButtonColor: '#ef4444'
+                });
+                return;
+            }
+
+            if (!$('#building_plan_approval_date').val()) {
+                Swal.fire('Warning', 'Please enter Building Plan Approval Date.', 'warning');
+                $('#building_plan_approval_date').focus();
+                return;
+            }
+
+            if (!$('#oc_status').val()) {
+                Swal.fire('Warning', 'Please select OC Category.', 'warning');
+                $('#oc_status').focus();
+                return;
+            }
+
+            if ($('#oc_status').val() === 'part' && $('#flats_offered_for_draw').val() === '') {
+                Swal.fire('Warning', 'Please enter Flats Offered for Draw for Part OC.', 'warning');
+                $('#flats_offered_for_draw').focus();
+                return;
+            }
+
+            const flatNum = $('#flat_number').val() || 'Flat Unit';
+            const projName = $('#project_id option:selected').text() || 'Project';
+            const blockName = $('#block_id option:selected').text() || 'Block';
+
+            Swal.fire({
+                title: 'Official STP Approval Confirmation',
+                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) of <strong>${projName}</strong> under STP Authority?<br><br>
+                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
+                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
+                    <div>&bull; Digital audit trail will record your timestamp & officer signature.</div>
+                </div>`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve & Submit',
+                cancelButtonText: 'Cancel',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#64748b',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $('#is_aproved_by_dtp_input').val('1');
+                    $('#devEditForm').submit();
                 }
             });
         }
-
-        const projInputEl = document.getElementById('new_project_name');
-        if (projInputEl) {
-            projInputEl.addEventListener('input', function() {
-                const alertBox = document.getElementById('project_similarity_alert');
-                const alertMsg = document.getElementById('project_similarity_msg');
-                const projOptions = Array.from(projectSelect.options).map(o => o.text);
-                const dup = findDuplicateOrSimilar(this.value, projOptions);
-                if (dup && alertBox && alertMsg) {
-                    alertMsg.innerHTML = `<strong>Attention:</strong> Similar project '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
-                    alertBox.classList.remove('hidden');
-                } else if (alertBox) {
-                    alertBox.classList.add('hidden');
-                }
-            });
-        }
-
-        const blockInputEl = document.getElementById('new_block_name');
-        if (blockInputEl) {
-            blockInputEl.addEventListener('input', function() {
-                const alertBox = document.getElementById('block_similarity_alert');
-                const alertMsg = document.getElementById('block_similarity_msg');
-                const blockOptions = Array.from(blockSelect.options).map(o => o.text);
-                const dup = findDuplicateOrSimilar(this.value, blockOptions);
-                if (dup && alertBox && alertMsg) {
-                    alertMsg.innerHTML = `<strong>Attention:</strong> Block/Tower '<strong>${dup.existing}</strong>' already exists in the dropdown (${dup.reason}). Please select it instead.`;
-                    alertBox.classList.remove('hidden');
-                } else if (alertBox) {
-                    alertBox.classList.add('hidden');
-                }
-            });
-        }
-
-        document.getElementById('devEditForm').addEventListener('submit', function (e) {
-            // Strict Sequential Validation on Form Submission
-            const distVal = districtSelect ? districtSelect.value : '';
-            const townVal = townSelect ? townSelect.value : '';
-            const projVal = projectSelect ? projectSelect.value : '';
-            const blockVal = blockSelect ? blockSelect.value : '';
-            const floorVal = document.getElementById('floor_number').value;
-            const flatNumVal = document.getElementById('flat_number').value.trim();
-
-            if (!distVal) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 1 Incomplete',
-                    text: 'Please select a District first.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return false;
-            }
-
-            if (!townVal || townVal === 'new') {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 2 Incomplete',
-                    text: 'Please select or add a Town from the list.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return false;
-            }
-
-            if (!projVal) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 3 Incomplete',
-                    text: 'Please select a Project before proceeding.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return false;
-            }
-            if (projVal === 'new' && !document.getElementById('new_project_name').value.trim()) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 3 Incomplete',
-                    text: 'Please enter the new Project name.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                document.getElementById('new_project_name').focus();
-                return false;
-            }
-
-            if (!blockVal) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 4 Incomplete',
-                    text: 'Please select a Block / Tower number.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return false;
-            }
-            if (blockVal === 'new' && !document.getElementById('new_block_name').value.trim()) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 4 Incomplete',
-                    text: 'Please enter the new Block / Tower number.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                document.getElementById('new_block_name').focus();
-                return false;
-            }
-
-            if (floorVal === '' || !flatNumVal) {
-                e.preventDefault();
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Step 5 Incomplete',
-                    text: 'Please provide both Floor and Flat Number.',
-                    confirmButtonColor: '#3b82f6'
-                });
-                return false;
-            }
-
-            const btn = this.querySelector('button[type="submit"]');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="bi bi-arrow-repeat animate-spin"></i> Saving Changes...';
-                btn.classList.add('opacity-75', 'cursor-not-allowed');
-            }
-        });
     </script>
 </body>
 </html>

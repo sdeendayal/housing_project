@@ -73,7 +73,7 @@
 
             <!-- Left Footer guidelines -->
             <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-white/10 pt-4">
-                <span>© 2026 Housing For All, Haryana. Protected by NIC.</span>
+                <span>© 2026 <span class="notranslate" translate="no">Housing For All</span>, Haryana. Protected by NIC.</span>
                 <span class="font-mono text-[9px] text-amber-400">v4.8.x-ews</span>
             </div>
         </div>
@@ -100,14 +100,17 @@
                 <div class="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100">
                     
                     <!-- Card brand header -->
-                    <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white">
-                        <div class="w-8.5 h-8.5 rounded-lg bg-white/10 flex items-center justify-center">
-                            <i class="bi bi-houses text-base"></i>
+                    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8.5 h-8.5 rounded-lg bg-white/10 flex items-center justify-center">
+                                <i class="bi bi-houses text-base"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-extrabold tracking-wide uppercase leading-tight">EWS Citizen Gate</h2>
+                                <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Housing Board Haryana</div>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="text-xs font-extrabold tracking-wide uppercase leading-tight">EWS Citizen Gate</h2>
-                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Housing Board Haryana</div>
-                        </div>
+                        <div id="google_translate_element"></div>
                     </div>
 
                     <!-- Card Form body -->
@@ -115,7 +118,7 @@
                         
                         <div class="text-center space-y-1">
                             <h3 class="text-xs font-extrabold text-slate-800">Verify Code</h3>
-                            <p class="text-[10px] text-slate-450 font-medium">Passcode sent to +91 {{ $mobile }}</p>
+                            <p class="text-[10px] text-slate-450 font-medium">Passcode sent to <span class="notranslate" translate="no">+91 {{ $mobile }}</span></p>
                         </div>
 
                         <form id="verifyOtpForm" action="{{ route('ews.citizen.login.verify') }}" method="POST" class="space-y-3.5">

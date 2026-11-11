@@ -73,7 +73,7 @@
 
             <!-- Left Footer guidelines -->
             <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-white/10 pt-4">
-                <span>© 2026 Housing For All, Haryana. Protected by NIC.</span>
+                <span>© 2026 <span class="notranslate" translate="no">Housing For All</span>, Haryana. Protected by NIC.</span>
                 <span class="font-mono text-[9px] text-amber-400">v4.8.x-ews</span>
             </div>
         </div>
@@ -100,14 +100,17 @@
                 <div class="bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100">
                     
                     <!-- Card brand header -->
-                    <div class="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white">
-                        <div class="w-8.5 h-8.5 rounded-lg bg-white/10 flex items-center justify-center">
-                            <i class="bi bi-houses text-base"></i>
+                    <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-blue-900 to-slate-900 text-white">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8.5 h-8.5 rounded-lg bg-white/10 flex items-center justify-center">
+                                <i class="bi bi-houses text-base"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-xs font-extrabold tracking-wide uppercase leading-tight">EWS Citizen Gate</h2>
+                                <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Housing Board Haryana</div>
+                            </div>
                         </div>
-                        <div>
-                            <h2 class="text-xs font-extrabold tracking-wide uppercase leading-tight">EWS Citizen Gate</h2>
-                            <div class="text-[9px] text-orange-400 font-bold uppercase tracking-wider">Housing Board Haryana</div>
-                        </div>
+                        <div id="google_translate_element"></div>
                     </div>
 
                     <!-- Card Form body -->
@@ -123,7 +126,7 @@
                                     <span class="text-red-500 font-bold">*</span>
                                 </label>
                                 <div class="relative flex items-center">
-                                    <span class="absolute left-3 text-xs font-bold text-slate-400 border-r border-slate-200 pr-3">+91</span>
+                                    <span class="absolute left-3 text-xs font-bold text-slate-400 border-r border-slate-200 pr-3 notranslate" translate="no">+91</span>
                                     <input 
                                         type="text" 
                                         id="mobileInput"
@@ -141,13 +144,13 @@
 
                             <!-- Captcha -->
                             <div class="space-y-1">
-                                <label for="captchaInput" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                <label for="captchaInput" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider notranslate" translate="no">
                                     Captcha Code <span class="text-red-500">*</span>
                                 </label>
                                 <div class="grid grid-cols-12 gap-2">
                                     <!-- Box -->
                                     <div class="col-span-8 flex items-center bg-slate-50 border border-slate-200 rounded-xl overflow-hidden px-1 py-1">
-                                        <div id="captchaText" class="w-full text-center text-xs font-mono font-bold tracking-[0.2em] text-slate-700 italic select-none">
+                                        <div id="captchaText" class="w-full text-center text-xs font-mono font-bold tracking-[0.2em] text-slate-700 italic select-none notranslate" translate="no">
                                             {{ $captcha }}
                                         </div>
                                         <button 

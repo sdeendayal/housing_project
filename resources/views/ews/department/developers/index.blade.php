@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>STP Accounts Master Management | EWS Department</title>
+    <title>Developer Accounts Master Management | EWS Department</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts & Material Icons -->
@@ -42,7 +42,7 @@
                     <span class="text-xs font-bold uppercase">Dashboard</span>
                 </a>
                 <div class="h-5 w-[1px] bg-slate-200"></div>
-                <span class="text-xs text-slate-500 font-medium">Senior Town Planner (STP) Accounts Master Management (5 Districts Only)</span>
+                <span class="text-xs text-slate-500 font-medium">Developer Accounts Master Management (5 Designated Zones)</span>
             </div>
             <div class="flex items-center gap-3">
                 <div class="text-right">
@@ -98,13 +98,13 @@
                 <div>
                     <h2 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-600 text-xl">admin_panel_settings</span>
-                        <span>STP Accounts Master Management</span>
+                        <span>Developer Accounts Master Management</span>
                     </h2>
-                    <p class="text-xs text-slate-500 mt-1 font-medium">Create, update, and manage EWS Senior Town Planner (STP) login credentials for 5 designated TCP Zones: <strong class="text-emerald-700 font-bold">Faridabad, Gurugram, Hisar, Panchkula, Rohtak</strong>.</p>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Create, update, and manage EWS Developer login credentials for 5 designated TCP Zones: <strong class="text-emerald-700 font-bold">Faridabad, Gurugram, Hisar, Panchkula, Rohtak</strong>.</p>
                 </div>
                 <button type="button" onclick="openAddModal()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">person_add</span>
-                    <span>Add New STP</span>
+                    <span>Add New Developer</span>
                 </button>
             </div>
 
@@ -113,7 +113,7 @@
                 <div class="pb-4 border-b border-slate-100 mb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                     <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest flex items-center gap-2">
                         <span class="material-symbols-outlined text-emerald-600 text-lg">manage_accounts</span>
-                        <span>All STP Accounts (Senior Town Planner)</span>
+                        <span>All Developer Accounts</span>
                     </h3>
 
                     <!-- Export Action Buttons -->
@@ -138,7 +138,7 @@
                         <thead>
                             <tr class="bg-slate-50 text-slate-500 uppercase text-[9px] font-bold border-b border-slate-100">
                                 <th style="width: 5%;">S.No.</th>
-                                <th>STP Officer / Name</th>
+                                <th>Developer Officer / Name</th>
                                 <th>Mobile Number (Login ID)</th>
                                 <th>Email Address</th>
                                 <th>Assigned Zone</th>
@@ -156,13 +156,13 @@
         </main>
     </div>
 
-    <!-- ADD STP MODAL -->
+    <!-- ADD DEVELOPER MODAL -->
     <div id="add-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-emerald-400">person_add</span>
-                    <h3 class="text-sm font-black uppercase tracking-wider">Add New STP Account</h3>
+                    <h3 class="text-sm font-black uppercase tracking-wider">Add New Developer Account</h3>
                 </div>
                 <button type="button" onclick="closeAddModal()" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xl font-bold cursor-pointer">&times;</button>
             </div>
@@ -170,8 +170,8 @@
             <form action="{{ route('ews.department.developers.store') }}" method="POST" class="p-6 space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">STP Zone / Name *</label>
-                    <input type="text" name="name" required placeholder="e.g. STP Rohtak Zone" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
+                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Developer Zone / Name *</label>
+                    <input type="text" name="name" required placeholder="e.g. Developer Rohtak Zone" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
@@ -181,13 +181,13 @@
 
                 <div>
                     <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Email Address *</label>
-                    <input type="email" name="email" required placeholder="stp@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
+                    <input type="email" name="email" required placeholder="developer@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned Zone * (Designated STP Zones)</label>
+                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned Zone * (Designated Developer Zones)</label>
                     <select name="district_name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500 font-mono">
-                        <option value="">-- SELECT STP ZONE --</option>
+                        <option value="">-- SELECT DEVELOPER ZONE --</option>
                         @foreach($districts as $dist)
                             <option value="{{ $dist->name }}">{{ strtoupper($dist->name) }} ZONE</option>
                         @endforeach
@@ -210,19 +210,19 @@
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
                     <button type="button" onclick="closeAddModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Create STP Account</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Create Developer Account</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- EDIT STP MODAL -->
+    <!-- EDIT DEVELOPER MODAL -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl border border-slate-150 w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-150">
             <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-emerald-400">edit_note</span>
-                    <h3 class="text-sm font-black uppercase tracking-wider">Edit STP Account</h3>
+                    <h3 class="text-sm font-black uppercase tracking-wider">Edit Developer Account</h3>
                 </div>
                 <button type="button" onclick="closeEditModal()" class="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-xl font-bold cursor-pointer">&times;</button>
             </div>
@@ -231,7 +231,7 @@
                 @csrf
                 @method('PUT')
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">STP Zone / Name *</label>
+                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Developer Zone / Name *</label>
                     <input type="text" id="edit-name" name="name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500">
                 </div>
 
@@ -246,7 +246,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned Zone * (Designated STP Zones)</label>
+                    <label class="block text-[10px] font-black uppercase text-slate-600 tracking-wider mb-1">Assigned Zone * (Designated Developer Zones)</label>
                     <select id="edit-district_name" name="district_name" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500 font-mono">
                         @foreach($districts as $dist)
                             <option value="{{ $dist->name }}">{{ strtoupper($dist->name) }} ZONE</option>
@@ -269,7 +269,7 @@
 
                 <div class="pt-3 flex justify-end gap-2 border-t border-slate-100">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition cursor-pointer">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Update STP Account</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition cursor-pointer">Update Developer Account</button>
                 </div>
             </form>
         </div>
@@ -305,7 +305,7 @@
                 ],
                 language: {
                     search: "_INPUT_",
-                    searchPlaceholder: "Search STP accounts...",
+                    searchPlaceholder: "Search Developer accounts...",
                 }
             });
         });
@@ -389,7 +389,7 @@
         function confirmDelete(secureId) {
             Swal.fire({
                 title: 'Are you sure?',
-                text: 'Do you really want to delete this DTP account?',
+                text: 'Do you really want to delete this STP account?',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',

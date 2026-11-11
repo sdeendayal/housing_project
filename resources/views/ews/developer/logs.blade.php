@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EWS STP - Activity Logs</title>
+    <title>EWS Developer - Activity Logs</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Google Fonts -->
@@ -37,7 +37,7 @@
                 </div>
                 <div>
                     <h2 class="text-xs font-black tracking-wider text-slate-800 uppercase">System Audit Trail Logs</h2>
-                    <p class="text-[8px] text-slate-450 font-mono uppercase">STP Action Logger Console</p>
+                    <p class="text-[8px] text-slate-450 font-mono uppercase">Developer Action Logger Console</p>
                 </div>
             </div>
 

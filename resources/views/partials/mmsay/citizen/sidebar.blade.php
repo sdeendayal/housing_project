@@ -27,7 +27,7 @@
                 <img alt="Haryana" class="w-6 h-6 object-contain brightness-0 invert" src="Haryana_emblem.png" />
             </div>
             <div class="min-w-0 sidebar-brand-text">
-                <p class="text-[12px] font-extrabold text-slate-800 leading-tight truncate">Housing For All</p>
+                <p class="text-[12px] font-extrabold text-slate-800 leading-tight truncate notranslate" translate="no">Housing For All</p>
                 <p class="text-[9px] font-semibold text-indigo-500">Govt. of Haryana</p>
             </div>
         </div>
@@ -72,10 +72,13 @@
             <span class="nav-text">Possession Application Request Form</span>
         </a>
 
-        {{-- 7. Grievances --}}
-        <a class="nav-v2 {{ $activeNav === 'grievances' ? 'active' : '' }}" href="{{ route('citizen.grievances.index') }}">
+        {{-- 7. Grievances (Redirects to CM Window Haryana Cell) --}}
+        <a class="nav-v2 {{ $activeNav === 'grievances' ? 'active' : '' }}" href="https://cmharyanacell.nic.in/index" target="_blank" rel="noopener noreferrer">
             <span class="nav-v2-icon"><span class="material-symbols-outlined text-[15px]" @if($activeNav === 'grievances') style="font-variation-settings:'FILL' 1" @endif>support_agent</span></span>
-            <span class="nav-text">Grievances</span>
+            <span class="nav-text flex items-center justify-between flex-1">
+                <span>Grievances</span>
+                <span class="material-symbols-outlined text-[13px] opacity-60">open_in_new</span>
+            </span>
         </a>
 
         {{-- 8. Physical Possession --}}

@@ -84,7 +84,11 @@ class OtpAuthController extends Controller
                 return back()->withInput()->with('error', 'Mobile number is not registered as an EWS citizen account.');
             }
         } elseif ($context === 'ews_developer') {
-            if (!in_array($userRole, ['ews_developer', 'ews_stp', 'stp'], true)) {
+            if (!in_array($userRole, ['ews_developer'], true)) {
+                return back()->withInput()->with('error', 'Mobile number is not registered as an EWS Developer account.');
+            }
+        } elseif ($context === 'ews_stp') {
+            if (!in_array($userRole, ['ews_stp', 'stp'], true)) {
                 return back()->withInput()->with('error', 'Mobile number is not registered as an EWS STP account.');
             }
         } elseif ($context === 'department') {
@@ -201,7 +205,11 @@ class OtpAuthController extends Controller
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS citizen account.');
             }
         } elseif ($context === 'ews_developer') {
-            if (!in_array($userRole, ['ews_developer', 'ews_stp', 'stp'], true)) {
+            if (!in_array($userRole, ['ews_developer'], true)) {
+                return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS Developer account.');
+            }
+        } elseif ($context === 'ews_stp') {
+            if (!in_array($userRole, ['ews_stp', 'stp'], true)) {
                 return redirect()->route($config['login_route'])->with('error', 'Mobile number is not registered as an EWS STP account.');
             }
         } elseif ($context === 'department') {

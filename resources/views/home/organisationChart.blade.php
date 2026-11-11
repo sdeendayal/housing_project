@@ -22,7 +22,7 @@
                 <div
                     class="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl shadow-md px-10 py-3 w-[420px] text-center whitespace-nowrap">
 
-                    <h2 class="font-semibold text-[18px]">
+                    <h2 class="font-semibold text-[18px] notranslate" translate="no">
                         Department of Housing For All
                     </h2>
 
