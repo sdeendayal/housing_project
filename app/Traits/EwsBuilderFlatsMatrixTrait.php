@@ -346,15 +346,15 @@ trait EwsBuilderFlatsMatrixTrait
                 return '<span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>';
             })
             ->addColumn('actions', function ($r) {
-                $flatId = $r->id;
-                $viewUrl = route('ews.tcp.flats.show', $flatId);
+                $flatIdentifier = $r->secure_id;
+                $viewUrl = route('ews.tcp.flats.show', $flatIdentifier);
                 $isStp = request()->routeIs('ews.stp.*') || (Auth::check() && in_array(Auth::user()->role, ['ews_stp', 'stp']));
 
                 if (request()->routeIs('ews.department.*')) {
-                    $viewUrl = route('ews.department.builder-flats.show', $flatId);
+                    $viewUrl = route('ews.department.builder-flats.show', $flatIdentifier);
                 } elseif ($isStp) {
-                    $viewUrl = route('ews.stp.flats.show', $flatId);
-                    $editUrl = route('ews.stp.flats.edit', $flatId);
+                    $viewUrl = route('ews.stp.flats.show', $flatIdentifier);
+                    $editUrl = route('ews.stp.flats.edit', $flatIdentifier);
                     $isApproved = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0) === 1;
 
                     $editBtn = $isApproved
@@ -388,13 +388,11 @@ trait EwsBuilderFlatsMatrixTrait
      */
     public function getFlatBioDataPayload($secureId)
     {
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)
-            ->orWhere('id', $secureId)
-            ->first();
-
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($secureId))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($secureId));
+        if (is_numeric($secureId)) {
+            return response()->json(['success' => false, 'message' => 'Error: Primary ID access is forbidden. Access is permitted strictly via secure_id only.'], 403);
         }
+
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
 
         if (!$flat) {
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);

@@ -1056,7 +1056,7 @@
                 <!-- Modal Body Form -->
                 <form id="form-reconcile-flat" onsubmit="submitReconcileForm(event)" class="flex-1 overflow-y-auto p-5 space-y-4 custom-scroll">
                     @csrf
-                    <input type="hidden" name="id" value="{{ $flat->id }}">
+                    <input type="hidden" name="id" value="{{ $flat->secure_id }}">
                     <input type="hidden" name="secure_id" value="{{ $flat->secure_id }}">
 
                     <!-- Group 1: Project & Colonizer Specifications -->
@@ -1287,7 +1287,7 @@
     <script>
         // Global in-memory cache of current API response
         let currentTcpData = @json($api);
-        const flatId = "{{ $flat->id }}";
+        const flatId = "{{ $flat->secure_id }}";
         const flatSecureId = "{{ $flat->secure_id }}";
 
         function copyFlatCode() {
@@ -1350,7 +1350,7 @@
             $('#btn-fetch-licence').prop('disabled', true);
 
             $.ajax({
-                url: "{{ route('ews.stp.flats.fetch-tcp-licence', $flat->id) }}",
+                url: "{{ route('ews.stp.flats.fetch-tcp-licence', $flat->secure_id) }}",
                 type: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -1520,7 +1520,7 @@
                     };
 
                     $.ajax({
-                        url: "{{ route('ews.stp.flats.reconcile', $flat->id) }}",
+                        url: "{{ route('ews.stp.flats.reconcile', $flat->secure_id) }}",
                         type: 'POST',
                         data: postData,
                         success: function(resp) {
@@ -1671,7 +1671,7 @@
                     };
 
                     $.ajax({
-                        url: "{{ route('ews.stp.flats.reconcile', $flat->id) }}",
+                        url: "{{ route('ews.stp.flats.reconcile', $flat->secure_id) }}",
                         type: 'POST',
                         data: postData,
                         success: function(resp) {
@@ -1718,7 +1718,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: "{{ route('ews.stp.flats.reconcile', $flat->id) }}",
+                        url: "{{ route('ews.stp.flats.reconcile', $flat->secure_id) }}",
                         type: 'POST',
                         data: {
                             _token: $('meta[name="csrf-token"]').attr('content'),
@@ -1743,7 +1743,7 @@
             const formData = $('#form-reconcile-flat').serialize();
 
             $.ajax({
-                url: "{{ route('ews.stp.flats.reconcile', $flat->id) }}",
+                url: "{{ route('ews.stp.flats.reconcile', $flat->secure_id) }}",
                 type: 'POST',
                 data: formData,
                 success: function(resp) {

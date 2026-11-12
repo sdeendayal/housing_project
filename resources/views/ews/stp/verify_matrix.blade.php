@@ -285,12 +285,12 @@
                                     <!-- Action Buttons -->
                                     <td class="px-3 py-2 text-right whitespace-nowrap">
                                         <div class="inline-flex items-center gap-1.5 justify-end no-print">
-                                            <a href="{{ route('ews.stp.flats.show', $f->id) }}" target="_blank" title="View Full Dossier in Dedicated Page"
+                                            <a href="{{ route('ews.stp.flats.show', $f->secure_id) }}" target="_blank" title="View Full Dossier in Dedicated Page"
                                                 class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs">
                                                 <i class="bi bi-eye-fill"></i> View
                                             </a>
                                             @if(!$f->is_aproved_by_dtp)
-                                                <a href="{{ route('ews.stp.flats.edit', $f->id) }}" target="_blank" title="Edit Flat Specifications (Developer Form)"
+                                                <a href="{{ route('ews.stp.flats.edit', $f->secure_id) }}" target="_blank" title="Edit Flat Specifications (Developer Form)"
                                                     class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs">
                                                     <i class="bi bi-pencil-square"></i> Edit
                                                 </a>

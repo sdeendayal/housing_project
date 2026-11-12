@@ -780,19 +780,18 @@ class EwsStpDashboardController extends Controller
             abort(404, 'Flat identifier is required.');
         }
 
-        $this->ensureAuditTableExists();
-
-        // Support lookup by integer ID, secure_id, or decoded secure ID
-        $flat = EwsBuilderFlat::where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->first();
-
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        // Strict security: Primary ID se access block - strictly only secure_id allowed
+        if (is_numeric($id)) {
+            abort(404, 'Error: Flat cannot be opened with Primary ID. Access is strictly permitted via secure_id only.');
         }
 
+        $this->ensureAuditTableExists();
+
+        // Strict lookup strictly by secure_id only
+        $flat = EwsBuilderFlat::where('secure_id', $id)->first();
+
         if (!$flat) {
-            abort(404, 'Flat dossier record not found.');
+            abort(404, 'Flat dossier record not found for this secure identifier.');
         }
 
         // Zone-wise access check
@@ -881,22 +880,20 @@ class EwsStpDashboardController extends Controller
             abort(404, 'Flat identifier is required.');
         }
 
-        // Support lookup by integer ID, secure_id, or decoded secure ID
-        $flat = EwsBuilderFlat::where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->first();
-
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        // Strict security: Primary ID se access block - strictly only secure_id allowed
+        if (is_numeric($id)) {
+            abort(404, 'Error: Flat cannot be opened with Primary ID. Access is strictly permitted via secure_id only.');
         }
 
+        // Strict lookup strictly by secure_id only
+        $flat = EwsBuilderFlat::where('secure_id', $id)->first();
+
         if (!$flat) {
-            abort(404, 'Flat record not found.');
+            abort(404, 'Flat record not found for this secure identifier.');
         }
 
         if (!empty($flat->is_approved_by_dtp)) {
-            $viewTarget = $flat->secure_id ?: $flat->id;
-            return redirect()->route('ews.stp.flats.show', $viewTarget)->with('info', 'This flat has already been approved by STP and is locked from editing.');
+            return redirect()->route('ews.stp.flats.show', $flat->secure_id)->with('info', 'This flat has already been approved by STP and is locked from editing.');
         }
 
         // Resolve user's zone if set as zone_id or zone_name/district_name
@@ -1081,26 +1078,24 @@ class EwsStpDashboardController extends Controller
             abort(403);
         }
 
-        $id = $secureId ?: $request->input('id');
+        $id = $secureId ?: $request->input('secure_id') ?: $request->input('id');
         if (empty($id)) {
             abort(404, 'Flat identifier is required.');
         }
 
-        $flat = EwsBuilderFlat::where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->first();
-
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        // Strict security: Primary ID se access block - strictly only secure_id allowed
+        if (is_numeric($id)) {
+            abort(404, 'Error: Flat cannot be updated with Primary ID. Access is strictly permitted via secure_id only.');
         }
 
+        $flat = EwsBuilderFlat::where('secure_id', $id)->first();
+
         if (!$flat) {
-            abort(404, 'Flat not found');
+            abort(404, 'Flat not found for this secure identifier.');
         }
 
         if (!empty($flat->is_approved_by_dtp)) {
-            $viewTarget = $flat->secure_id ?: $flat->id;
-            return redirect()->route('ews.stp.flats.show', $viewTarget)->with('error', 'This flat is already approved by STP and cannot be edited or updated.');
+            return redirect()->route('ews.stp.flats.show', $flat->secure_id)->with('error', 'This flat is already approved by STP and cannot be edited or updated.');
         }
 
         // Resolve user's zone if set as zone_id or zone_name/district_name
@@ -1601,6 +1596,11 @@ class EwsStpDashboardController extends Controller
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        // Strict security: Primary ID access strictly blocked
+        if (is_numeric($secureId)) {
+            abort(404, 'Error: Flat cannot be deleted with Primary ID. Access is strictly permitted via secure_id only.');
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();
@@ -2551,14 +2551,17 @@ class EwsStpDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized action for DTP authority.'], 403);
         }
 
-        $id = $secureId ?: $request->input('id') ?: $request->input('secure_id');
-        $flat = EwsBuilderFlat::where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->first();
-
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        $id = $secureId ?: $request->input('secure_id') ?: $request->input('id');
+        if (empty($id)) {
+            return response()->json(['success' => false, 'message' => 'Flat identifier required.'], 400);
         }
+
+        // Strict security: Primary ID access strictly blocked
+        if (is_numeric($id)) {
+            return response()->json(['success' => false, 'message' => 'Error: Primary ID access is forbidden. Action is permitted strictly via secure_id only.'], 403);
+        }
+
+        $flat = EwsBuilderFlat::where('secure_id', $id)->first();
 
         if (!$flat) {
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
@@ -2659,17 +2662,17 @@ class EwsStpDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized action for STP.'], 403);
         }
 
-        $id = $secureId ?: $request->input('id') ?: $request->input('secure_id');
+        $id = $secureId ?: $request->input('secure_id') ?: $request->input('id');
         if (empty($id)) {
             return response()->json(['success' => false, 'message' => 'Flat identifier required.'], 400);
         }
 
-        $flat = EwsBuilderFlat::where('id', $id)
-            ->orWhere('secure_id', $id)
-            ->first();
-        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
-            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        // Strict security: Primary ID access strictly blocked
+        if (is_numeric($id)) {
+            return response()->json(['success' => false, 'message' => 'Error: Primary ID access is forbidden. Action is permitted strictly via secure_id only.'], 403);
         }
+
+        $flat = EwsBuilderFlat::where('secure_id', $id)->first();
 
         if (!$flat) {
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
@@ -2966,6 +2969,33 @@ class EwsStpDashboardController extends Controller
             'changed_fields' => $changedFields,
             'is_approved' => (int)($flat->is_aproved_by_dtp ?? 0) === 1,
         ]);
+    }
+
+    /**
+     * Fetch Haryana TCP Licence details for flat reconciliation
+     */
+    public function fetchTcpLicence(Request $request, $secureId = null)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $id = $secureId ?: $request->input('secure_id') ?: $request->input('id');
+        if (is_numeric($id)) {
+            return response()->json(['success' => false, 'message' => 'Error: Primary ID access is forbidden. Action is permitted strictly via secure_id only.'], 403);
+        }
+
+        $licenceNo = $request->input('licence_no');
+        if (empty($licenceNo) && !empty($id)) {
+            $flat = EwsBuilderFlat::where('secure_id', $id)->first();
+            $licenceNo = $flat ? $flat->license_no : null;
+        }
+
+        $service = app(\App\Services\TcpLicenceApiService::class);
+        $result = $service->fetchLicenceDetails($licenceNo);
+
+        return response()->json($result);
     }
 
     /**

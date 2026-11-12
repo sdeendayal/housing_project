@@ -318,10 +318,12 @@ class EwsDeveloperDashboardController extends Controller
             abort(403);
         }
 
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
-        if (!$flat && is_numeric($secureId)) {
-            $flat = EwsBuilderFlat::find($secureId);
+        // Strict security: Primary ID access blocked - strictly secure_id only
+        if (is_numeric($secureId)) {
+            abort(404, 'Error: Flat cannot be opened with Primary ID. Access is strictly permitted via secure_id only.');
         }
+
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
 
         if (!$flat) {
             abort(404, 'Flat record not found.');
@@ -348,10 +350,12 @@ class EwsDeveloperDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized access.'], 403);
         }
 
-        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
-        if (!$flat && is_numeric($secureId)) {
-            $flat = EwsBuilderFlat::find($secureId);
+        // Strict security: Primary ID access blocked - strictly secure_id only
+        if (is_numeric($secureId)) {
+            return response()->json(['success' => false, 'message' => 'Error: Primary ID access is forbidden. Access is permitted strictly via secure_id only.'], 403);
         }
+
+        $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
 
         if (!$flat) {
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
@@ -974,6 +978,11 @@ class EwsDeveloperDashboardController extends Controller
         $user = Auth::user();
         if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
             abort(403);
+        }
+
+        // Strict security: Primary ID access blocked - strictly secure_id only
+        if (is_numeric($secureId)) {
+            abort(404, 'Error: Flat cannot be opened with Primary ID. Access is strictly permitted via secure_id only.');
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->firstOrFail();

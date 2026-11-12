@@ -139,13 +139,12 @@ class EwsTcpDashboardController extends Controller
             abort(403, 'Unauthorized access to TCP portal.');
         }
 
-        $flat = \App\Models\EwsBuilderFlat::where('secure_id', $id)
-            ->orWhere('id', $id)
-            ->first();
-
-        if (!$flat && is_numeric(\App\Helpers\EwsHelper::decodeSecureId($id))) {
-            $flat = \App\Models\EwsBuilderFlat::find(\App\Helpers\EwsHelper::decodeSecureId($id));
+        // Strict security: Primary ID access blocked - strictly secure_id only
+        if (is_numeric($id)) {
+            abort(404, 'Error: Flat cannot be opened with Primary ID. Access is strictly permitted via secure_id only.');
         }
+
+        $flat = \App\Models\EwsBuilderFlat::where('secure_id', $id)->first();
 
         if (!$flat) {
             abort(404, 'Flat dossier record not found.');
