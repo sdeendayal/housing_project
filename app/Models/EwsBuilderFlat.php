@@ -51,6 +51,9 @@ class EwsBuilderFlat extends Model
         'dtp_approved_by',
         'dtp_user_name',
         'dtp_approval_remarks',
+        'tcp_licence_data',
+        'tcp_licence_verified_at',
+        'tcp_licence_status',
     ];
 
     protected static function booted()

@@ -113,6 +113,24 @@
                     </div>
 
                     <!-- Form Content -->
+                    @if(!empty($flat->is_aproved_by_dtp))
+                        <div class="mx-6 mt-6 p-4 bg-emerald-50 border-2 border-emerald-400 rounded-2xl flex items-center justify-between gap-4 shadow-xs">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center text-lg shrink-0 shadow-sm">
+                                    <i class="bi bi-lock-fill"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-black uppercase text-emerald-900 tracking-wide">Dossier Officially Approved & Locked</h4>
+                                    <p class="text-xs text-emerald-700 mt-0.5">This EWS Flat has already been verified and certified by STP. No modifications or re-submissions are permitted.</p>
+                                </div>
+                            </div>
+                            <a href="{{ route('ews.stp.flats.show', $flat->secure_id ?: $flat->id) }}"
+                                class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase rounded-xl shadow-xs transition flex items-center gap-1.5 shrink-0">
+                                <i class="bi bi-eye"></i> View Dossier
+                            </a>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ route('ews.stp.flats.update', $flat->id) }}" enctype="multipart/form-data" class="p-6 space-y-4" id="stpEditForm">
                         @csrf
                         @method('PUT')
@@ -317,9 +335,14 @@
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-3.5 bg-slate-50/90 border border-slate-200 rounded-xl">
                             <!-- Step 9: License No. -->
                             <div class="space-y-1">
-                                <label for="license_no" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
-                                    <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 9</span>
-                                    <span>License No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                <label for="license_no" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 me-1.5">Step 9</span>
+                                        <span>License No.</span> <span class="text-red-500 ms-0.5">*</span>
+                                    </div>
+                                    <button type="button" onclick="fetchTcpLicenceForEditForm()" class="text-[8px] font-bold text-sky-600 hover:text-sky-800 uppercase flex items-center gap-0.5 cursor-pointer">
+                                        <i class="bi bi-cloud-arrow-down-fill"></i> Fetch TCP Haryana
+                                    </button>
                                 </label>
                                 <div class="relative">
                                     <input type="text" id="license_no" name="license_no" 
@@ -718,21 +741,24 @@
                             </div>
 
                             <div class="flex items-center gap-2.5 w-full sm:w-auto flex-wrap justify-end">
-                                <input type="hidden" name="is_aproved_by_dtp" id="is_aproved_by_dtp_input" value="{{ $flat->is_aproved_by_dtp ?? 0 }}">
-
-                                <!-- Regular Save Button -->
-                                <button type="submit" id="btn_submit_changes"
-                                    class="w-full sm:w-auto px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 border border-slate-300 shadow-2xs hover:shadow-xs active:scale-95 cursor-pointer">
-                                    <i class="bi bi-save2 text-sky-600"></i>
-                                    <span>Save Changes</span>
-                                </button>
-
-                                <!-- STP Approve & Submit Button -->
-                                <button type="button" onclick="confirmDtpApproveAndSubmit()" id="btn_dtp_approve_submit"
-                                    class="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
-                                    <i class="bi bi-patch-check-fill text-sm text-emerald-200"></i>
-                                    <span>Approve & Submit (STP)</span>
-                                </button>
+                                @if(!empty($flat->is_aproved_by_dtp))
+                                    <div class="w-full sm:w-auto px-5 py-2.5 bg-emerald-50 text-emerald-800 font-bold uppercase tracking-wider rounded-xl text-xs flex items-center justify-center gap-2 border border-emerald-300 shadow-2xs">
+                                        <i class="bi bi-lock-fill text-emerald-600 text-sm"></i>
+                                        <span>Dossier Approved & Locked (Read-Only)</span>
+                                    </div>
+                                    <a href="{{ route('ews.stp.flats.show', $flat->secure_id ?: $flat->id) }}"
+                                        class="w-full sm:w-auto px-5 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md">
+                                        <i class="bi bi-eye"></i>
+                                        <span>View Verified Dossier</span>
+                                    </a>
+                                @else
+                                    <!-- Regular Save Button (Approval only from View page) -->
+                                    <button type="submit" id="btn_submit_changes"
+                                        class="w-full sm:w-auto px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-black uppercase tracking-wider rounded-xl text-xs transition-all flex items-center justify-center gap-1.5 shadow-md hover:shadow-lg active:scale-95 cursor-pointer">
+                                        <i class="bi bi-save2"></i>
+                                        <span>Save Changes</span>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                     </form>
@@ -1216,68 +1242,56 @@
             }
         });
 
-        // STP Approve and Submit with SweetAlert Confirmation
-        function confirmDtpApproveAndSubmit() {
-            if ($('#approved_building_plan').val() !== 'yes') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Approved Building Plan Mandatory',
-                    text: 'Approved Building Plan is mandatory before submitting.',
-                    confirmButtonColor: '#ef4444'
-                });
+        function fetchTcpLicenceForEditForm() {
+            const licNo = $('#license_no').val().trim();
+            if (!licNo) {
+                Swal.fire({ icon: 'warning', title: 'Licence Number Required', text: 'Please enter a valid licence number (e.g. 242 OF 2007).' });
                 return;
             }
-
-            if ($('#oc_status_yn').val() !== 'yes') {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'OC Mandatory',
-                    text: 'Occupation Certificate (OC) is mandatory before submitting.',
-                    confirmButtonColor: '#ef4444'
-                });
-                return;
-            }
-
-            if (!$('#building_plan_approval_date').val()) {
-                Swal.fire('Warning', 'Please enter Building Plan Approval Date.', 'warning');
-                $('#building_plan_approval_date').focus();
-                return;
-            }
-
-            if (!$('#oc_status').val()) {
-                Swal.fire('Warning', 'Please select OC Category.', 'warning');
-                $('#oc_status').focus();
-                return;
-            }
-
-            if ($('#oc_status').val() === 'part' && $('#flats_offered_for_draw').val() === '') {
-                Swal.fire('Warning', 'Please enter Flats Offered for Draw for Part OC.', 'warning');
-                $('#flats_offered_for_draw').focus();
-                return;
-            }
-
-            const flatNum = $('#flat_number').val() || 'Flat Unit';
-            const projName = $('#project_id option:selected').text() || 'Project';
-            const blockName = $('#block_id option:selected').text() || 'Block';
 
             Swal.fire({
-                title: 'Official STP Approval Confirmation',
-                html: `Are you sure you want to certify and approve Flat <strong>${flatNum}</strong> (${blockName}) of <strong>${projName}</strong> under STP Authority?<br><br>
-                <div class="p-3 bg-emerald-50 rounded-lg text-emerald-900 font-mono text-xs text-left border border-emerald-200 space-y-1">
-                    <div>&bull; Database field <strong>is_aproved_by_DTP</strong> will be set to <strong>1</strong>.</div>
-                    <div>&bull; Digital audit trail will record your timestamp & officer signature.</div>
-                </div>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-patch-check-fill"></i> Yes, Approve & Submit',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#059669',
-                cancelButtonColor: '#64748b',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $('#is_aproved_by_dtp_input').val('1');
-                    $('#stpEditForm').submit();
+                title: 'Querying TCP Haryana Portal...',
+                text: 'Fetching official licence specifications for ' + licNo,
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                url: "{{ route('ews.stp.query-tcp-licence') }}",
+                type: 'POST',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    licence_no: licNo
+                },
+                success: function(resp) {
+                    if (resp.success && resp.data) {
+                        const d = resp.data;
+                        if (d.Developer) $('#developer_name').val(d.Developer);
+                        if (d.AreaInAcre) $('#area_of_project').val(d.AreaInAcre + ' Acres');
+                        if (d.Sector) $('#sector_no').val(d.Sector);
+                        if (d.DevelopmentPlan) $('#address_of_project').val(d.DevelopmentPlan);
+                        if (d.LicenceNo) $('#license_no').val(d.LicenceNo);
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'TCP Licence Data Applied!',
+                            html: `Successfully retrieved and pre-filled specifications for <strong>${d.LicenceNo}</strong>:<br><div class="text-left p-2 mt-2 bg-emerald-50 rounded text-xs font-mono border border-emerald-200"><div>• Developer: ${d.Developer}</div><div>• Colony: ${d.ColonyName}</div><div>• Area: ${d.AreaInAcre} Acres</div><div>• Sector: ${d.Sector}</div><div>• Status: ${d.Status}</div></div>`,
+                            timer: 4000
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No Matching Record',
+                            text: resp.message || 'No licence records found on TCP Haryana portal.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'API Query Failed',
+                        text: xhr.responseJSON?.message || 'Could not connect to TCP Haryana portal.'
+                    });
                 }
             });
         }

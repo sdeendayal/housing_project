@@ -75,6 +75,27 @@ class EwsStpDashboardController extends Controller
         }
     }
 
+    private function ensureTcpLicenceColumnsExist(): void
+    {
+        try {
+            if (Schema::hasTable('ews_builder_flats')) {
+                Schema::table('ews_builder_flats', function (Blueprint $table) {
+                    if (!Schema::hasColumn('ews_builder_flats', 'tcp_licence_data')) {
+                        $table->longText('tcp_licence_data')->nullable()->after('license_no');
+                    }
+                    if (!Schema::hasColumn('ews_builder_flats', 'tcp_licence_verified_at')) {
+                        $table->timestamp('tcp_licence_verified_at')->nullable()->after('tcp_licence_data');
+                    }
+                    if (!Schema::hasColumn('ews_builder_flats', 'tcp_licence_status')) {
+                        $table->string('tcp_licence_status', 50)->nullable()->after('tcp_licence_verified_at');
+                    }
+                });
+            }
+        } catch (\Throwable $e) {
+            // Ignore if schema already exists
+        }
+    }
+
     private function resolveDisplayZoneName($user)
     {
         $zone = null;
@@ -821,7 +842,39 @@ class EwsStpDashboardController extends Controller
         $backUrl = route('ews.stp.dashboard');
         $stats = $this->getMatrixSummaryStats();
 
-        return view('ews.tcp.flat_view', compact('user', 'flat', 'project', 'creator', 'backUrl', 'stats', 'auditLogs', 'displayZoneName'));
+        $this->ensureTcpLicenceColumnsExist();
+
+        // TCP Haryana Licence API Pre-Fetch
+        $tcpLicenceService = app(\App\Services\TcpLicenceApiService::class);
+        $tcpLicenceData = null;
+        if (!empty($flat->license_no)) {
+            $tcpLicenceData = $tcpLicenceService->fetchLicenceDetails($flat->license_no);
+        }
+
+        $userZoneId = $user->zone_id;
+        if (empty($userZoneId)) {
+            $cleanName = strtoupper(trim(str_ireplace(' ZONE', '', ($user->zone_name ?: $user->district_name))));
+            $zoneObj = DB::table('ews_stp_districts')->where('name', $cleanName)->first();
+            if ($zoneObj) {
+                $userZoneId = $zoneObj->id;
+            } else {
+                $distObj = DB::table('ews_districts')->where('name', $cleanName)->first();
+                if ($distObj && $distObj->zone_id) {
+                    $userZoneId = $distObj->zone_id;
+                }
+            }
+        }
+        if (empty($userZoneId) && !empty($flat->zone_id)) {
+            $userZoneId = $flat->zone_id;
+        }
+
+        $distQuery = DB::table('ews_districts')->orderBy('name', 'asc');
+        if (!empty($userZoneId)) {
+            $distQuery->where('zone_id', $userZoneId);
+        }
+        $allDistricts = $distQuery->get();
+
+        return view('ews.tcp.flat_view', compact('user', 'flat', 'project', 'creator', 'backUrl', 'stats', 'auditLogs', 'displayZoneName', 'tcpLicenceData', 'allDistricts'));
     }
 
     public function edit($secureId = null)
@@ -847,6 +900,11 @@ class EwsStpDashboardController extends Controller
 
         if (!$flat) {
             abort(404, 'Flat record not found.');
+        }
+
+        if (!empty($flat->is_aproved_by_dtp)) {
+            $viewTarget = $flat->secure_id ?: $flat->id;
+            return redirect()->route('ews.stp.flats.show', $viewTarget)->with('info', 'This flat has already been approved by STP and is locked from editing.');
         }
 
         // Resolve user's zone if set as zone_id or zone_name/district_name
@@ -1046,6 +1104,11 @@ class EwsStpDashboardController extends Controller
 
         if (!$flat) {
             abort(404, 'Flat not found');
+        }
+
+        if (!empty($flat->is_aproved_by_dtp)) {
+            $viewTarget = $flat->secure_id ?: $flat->id;
+            return redirect()->route('ews.stp.flats.show', $viewTarget)->with('error', 'This flat is already approved by STP and cannot be edited or updated.');
         }
 
         // Resolve user's zone if set as zone_id or zone_name/district_name
@@ -2550,5 +2613,280 @@ class EwsStpDashboardController extends Controller
                 ? "Flat Unit {$flat->flat_number} ({$flat->flat_code}) officially APPROVED by DTP."
                 : "Flat Unit {$flat->flat_number} approval revoked to Pending status."
         ]);
+    }
+
+    /**
+     * Reconcile Flat Specifications with TCP API Official Record & optionally Approve under STP Authority
+     */
+    public function reconcileFlat(Request $request, $secureId = null)
+    {
+        $user = Auth::user();
+        if (!$user || !in_array($user->role, ['ews_stp', 'stp', 'admin', 'super_admin'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action for STP.'], 403);
+        }
+
+        $id = $secureId ?: $request->input('id') ?: $request->input('secure_id');
+        if (empty($id)) {
+            return response()->json(['success' => false, 'message' => 'Flat identifier required.'], 400);
+        }
+
+        $flat = EwsBuilderFlat::where('id', $id)
+            ->orWhere('secure_id', $id)
+            ->first();
+        if (!$flat && is_numeric(EwsHelper::decodeSecureId($id))) {
+            $flat = EwsBuilderFlat::find(EwsHelper::decodeSecureId($id));
+        }
+
+        if (!$flat) {
+            return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
+        }
+
+        $this->ensureAuditTableExists();
+        $this->ensureTcpLicenceColumnsExist();
+        $this->ensureDtpApprovalColumnsExist();
+
+        $isAlreadyApproved = (int)($flat->is_aproved_by_dtp ?? $flat->is_approved_by_dtp ?? 0) === 1;
+        $isRevokeRequest = $request->has('approve_dtp') && (int)$request->input('approve_dtp') === 0;
+
+        // If already approved, block further edits and submissions completely!
+        if ($isAlreadyApproved && !$isRevokeRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This flat dossier is already approved and locked. Further edits or submission are not allowed.'
+            ], 403);
+        }
+
+        // Handle Revoke Approval
+        if ($isRevokeRequest) {
+            $flat->is_aproved_by_dtp = 0;
+            $flat->is_approved_by_dtp = 0;
+            $flat->dtp_approval_remarks = $request->input('stp_remarks', 'STP Approval revoked for re-examination.');
+            $flat->save();
+
+            try {
+                EwsFlatAuditLog::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_role' => $user->role ?? 'ews_stp',
+                    'action' => 'DTP_REVOKED',
+                    'summary' => "STP Approval revoked to Pending Clearance by {$user->name}",
+                    'changed_fields' => [
+                        'is_aproved_by_dtp' => [
+                            'label' => 'DTP Approval Status',
+                            'old' => 'Approved (1)',
+                            'new' => 'Pending (0)',
+                        ]
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+
+            return response()->json(['success' => true, 'message' => 'STP Approval revoked successfully.']);
+        }
+
+        // Fields eligible for reconciliation (license_no is strictly locked and cannot be edited)
+        $allowedFields = [
+            'developer_name' => 'Developer / Colonizer Name',
+            'project_name' => 'Project / Colony Name',
+            'district_name' => 'District Name',
+            'town_name' => 'Town Name',
+            'sector_no' => 'Sector',
+            'area_of_project' => 'Total Project Area',
+            'address_of_project' => 'Site Address',
+        ];
+
+        $changedFields = [];
+        foreach ($allowedFields as $field => $label) {
+            if ($request->has($field)) {
+                $newVal = trim((string)$request->input($field));
+                $oldVal = trim((string)$flat->$field);
+                if ($newVal !== $oldVal) {
+                    $changedFields[$field] = [
+                        'label' => $label,
+                        'old' => $oldVal ?: '—',
+                        'new' => $newVal,
+                    ];
+                    $flat->$field = $newVal;
+                }
+            }
+        }
+
+        // Handle district resolution if district_id or district_name changed
+        $distId = $request->input('district_id');
+        $distName = $request->input('district_name');
+
+        $matchedDist = null;
+        if (!empty($distId) && is_numeric($distId)) {
+            $matchedDist = DB::table('ews_districts')->where('id', $distId)->first();
+        }
+        if (!$matchedDist && !empty($distName)) {
+            $cleanDist = strtoupper(trim($distName));
+            $matchedDist = DB::table('ews_districts')->where('name', $cleanDist)->first();
+            if (!$matchedDist) {
+                if (str_contains($cleanDist, 'GURGAON')) {
+                    $matchedDist = DB::table('ews_districts')->where('name', 'GURUGRAM')->first();
+                } else {
+                    $matchedDist = DB::table('ews_districts')->where('name', 'like', "%{$cleanDist}%")->first();
+                }
+            }
+        }
+
+        if ($matchedDist) {
+            $oldDistId = $flat->district_id ?: $flat->dist_id;
+            $oldDistName = $flat->district_name ?: $flat->dist_name;
+
+            $flat->district_id = $matchedDist->id;
+            $flat->dist_id = $matchedDist->id;
+            $flat->district_name = $matchedDist->name;
+            $flat->dist_name = $matchedDist->name;
+
+            if (!empty($matchedDist->zone_id)) {
+                $flat->zone_id = $matchedDist->zone_id;
+                $stpZone = DB::table('ews_stp_districts')->where('id', $matchedDist->zone_id)->first();
+                if ($stpZone) {
+                    $flat->zone_name = str_contains(strtoupper($stpZone->name), 'ZONE') ? strtoupper($stpZone->name) : strtoupper($stpZone->name) . ' ZONE';
+                }
+            }
+
+            if ((int)$oldDistId !== (int)$matchedDist->id || strtoupper(trim((string)$oldDistName)) !== strtoupper(trim($matchedDist->name))) {
+                $changedFields['district_name'] = [
+                    'label' => 'District (Master: ews_districts)',
+                    'old' => ($oldDistName ?: 'ID: ' . $oldDistId),
+                    'new' => "{$matchedDist->name} (ID: {$matchedDist->id})",
+                ];
+            }
+        }
+
+        // Store TCP API payload if passed
+        if ($request->filled('tcp_api_payload')) {
+            $payload = $request->input('tcp_api_payload');
+            $flat->tcp_licence_data = is_array($payload) ? json_encode($payload) : $payload;
+            $flat->tcp_licence_verified_at = now();
+            $flat->tcp_licence_status = 'RECONCILED';
+        }
+
+        // Handle Direct STP Approval
+        $isApprovedNow = false;
+        if ($request->boolean('approve_dtp') || (int)$request->input('approve_dtp') === 1) {
+            $stpRemarks = trim((string)$request->input('stp_remarks', ''));
+            if ($stpRemarks === '') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'STP Verification & Approval Remarks are required before approving the flat dossier.'
+                ], 422);
+            }
+
+            $oldApproveStatus = (int)($flat->is_aproved_by_dtp ?? $flat->is_approved_by_dtp ?? 0);
+            $flat->is_aproved_by_dtp = 1;
+            $flat->is_approved_by_dtp = 1;
+            $flat->dtp_approved_at = now();
+            $flat->dtp_approved_by = $user->id;
+            $flat->dtp_user_name = $user->name;
+            $flat->dtp_approval_remarks = $stpRemarks;
+            $isApprovedNow = true;
+
+            try {
+                EwsFlatAuditLog::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_role' => $user->role ?? 'ews_stp',
+                    'action' => 'DTP_APPROVED',
+                    'summary' => "Flat certified and marked APPROVED by STP Officer: {$user->name}",
+                    'changed_fields' => [
+                        'is_aproved_by_dtp' => [
+                            'label' => 'DTP Approval Status',
+                            'old' => $oldApproveStatus === 1 ? 'Approved (1)' : 'Pending (0)',
+                            'new' => 'Approved (1)',
+                        ]
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        $flat->save();
+
+        // Synchronize linked project if project fields were updated
+        if (!empty($flat->project_id)) {
+            try {
+                $project = EwsProject::find($flat->project_id);
+                if ($project) {
+                    if (isset($changedFields['project_name'])) $project->name = $flat->project_name;
+                    if (isset($changedFields['developer_name'])) $project->developer_name = $flat->developer_name;
+                    if (isset($changedFields['sector_no'])) $project->sector_no = $flat->sector_no;
+                    if (isset($changedFields['area_of_project'])) $project->area_of_project = $flat->area_of_project;
+                    if (isset($changedFields['address_of_project'])) $project->address_of_project = $flat->address_of_project;
+                    $project->save();
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        // Write Audit Log for field changes
+        if (!empty($changedFields)) {
+            $remarks = $request->input('stp_remarks', 'Reconciled and updated flat specifications with TCP Haryana records.');
+            try {
+                EwsFlatAuditLog::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'user_id' => $user->id,
+                    'user_name' => $user->name,
+                    'user_role' => $user->role ?? 'ews_stp',
+                    'action' => 'STP_RECONCILED',
+                    'summary' => "STP Officer {$user->name} reconciled " . count($changedFields) . " field(s). Remarks: {$remarks}",
+                    'changed_fields' => $changedFields,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+
+            try {
+                EwsDeveloperLog::create([
+                    'user_id' => $user->id,
+                    'action' => 'STP_RECONCILED',
+                    'details' => "Flat {$flat->flat_number} ({$flat->flat_code}): Reconciled with TCP Haryana data by {$user->name}. " . count($changedFields) . " fields updated.",
+                    'ip_address' => $request->ip(),
+                ]);
+            } catch (\Throwable $e) {}
+        }
+
+        $msg = '';
+        if ($isApprovedNow) {
+            $msg = 'Flat specifications reconciled and officially APPROVED under STP authority.';
+        } elseif (count($changedFields) > 0) {
+            $msg = 'Flat specifications updated and reconciled successfully with ' . count($changedFields) . ' field(s) modified.';
+        } else {
+            $msg = 'Specifications verified (all values up-to-date).';
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => $msg,
+            'flat' => $flat,
+            'changed_fields' => $changedFields,
+            'is_approved' => (int)($flat->is_aproved_by_dtp ?? 0) === 1,
+        ]);
+    }
+
+    /**
+     * Standalone query for TCP Licence Details
+     */
+    public function queryTcpLicence(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $licenceNo = $request->input('licence_no');
+        $service = app(\App\Services\TcpLicenceApiService::class);
+        $result = $service->fetchLicenceDetails($licenceNo);
+
+        return response()->json($result);
     }
 }

@@ -610,7 +610,7 @@
     <footer class="bg-white border-t border-slate-200 py-1 shrink-0">
         <div class="w-full px-3 text-center">
             <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
-                Town and Country Planning Department • Government of Haryana • EWS Regulatory Cell
+                Department of Housing for All • Developed by DITECH (CRID)
             </p>
         </div>
     </footer>

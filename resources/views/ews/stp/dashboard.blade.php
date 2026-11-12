@@ -397,7 +397,6 @@
                                 <th id="th-col-4">Block / Tower</th>
                                 <th id="th-col-5">Floor</th>
                                 <th id="th-col-6">Flat No.</th>
-                                <th id="th-col-7">Unique Flat Code</th>
                                 <th id="th-col-8">STP Status</th>
                                 <th class="text-right">Action</th>
                             </tr>
@@ -416,7 +415,7 @@
         <footer class="bg-white border-t border-slate-200 py-1 shrink-0">
             <div class="w-full px-3 text-center">
                 <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
-                    Senior Town Planning Department • Government of Haryana • EWS Regulatory Cell
+                    Department of Housing for All • Developed by DITECH (CRID)
                 </p>
             </div>
         </footer>
@@ -802,7 +801,6 @@
                     { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold whitespace-nowrap' },
                     { data: 'floor', name: 'floor', class: 'font-bold text-slate-800 whitespace-nowrap' },
                     { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono whitespace-nowrap' },
-                    { data: 'flat_code', name: 'flat_code', class: 'text-emerald-600 font-bold font-mono whitespace-nowrap' },
                     { data: 'dtp_status', name: 'dtp_status', orderable: false, searchable: false, class: 'whitespace-nowrap' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right whitespace-nowrap' }
                 ],

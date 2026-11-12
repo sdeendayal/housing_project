@@ -176,6 +176,12 @@ Route::middleware(['auth', 'role:ews_stp,stp'])->group(function () {
         ->name('ews.stp.flats.edit');
     Route::put('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'update'])
         ->name('ews.stp.flats.update');
+    Route::post('/ews/stp/flats/{secure_id}/fetch-tcp-licence', [\App\Http\Controllers\EwsStpDashboardController::class, 'fetchTcpLicence'])
+        ->name('ews.stp.flats.fetch-tcp-licence');
+    Route::post('/ews/stp/flats/{secure_id}/reconcile', [\App\Http\Controllers\EwsStpDashboardController::class, 'reconcileFlat'])
+        ->name('ews.stp.flats.reconcile');
+    Route::post('/ews/stp/query-tcp-licence', [\App\Http\Controllers\EwsStpDashboardController::class, 'queryTcpLicence'])
+        ->name('ews.stp.query-tcp-licence');
     Route::post('/ews/stp/flats/{secure_id}/approve-dtp', [\App\Http\Controllers\EwsStpDashboardController::class, 'approveDtp'])
         ->name('ews.stp.flats.approve-dtp');
     Route::delete('/ews/stp/flats/{secure_id}', [\App\Http\Controllers\EwsStpDashboardController::class, 'destroy'])

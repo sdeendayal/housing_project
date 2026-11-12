@@ -167,7 +167,6 @@
                                 <th class="px-3 py-2.5">Flat No.</th>
                                 <th class="px-3 py-2.5">Block / Tower</th>
                                 <th class="px-3 py-2.5">Floor</th>
-                                <th class="px-3 py-2.5">Unique Code</th>
                                 <th class="px-3 py-2.5">Project Name</th>
                                 <th class="px-3 py-2.5">Colonizer</th>
                                 <th class="px-3 py-2.5">Location</th>
@@ -204,18 +203,6 @@
                                     <!-- Floor -->
                                     <td class="px-3 py-2 font-medium text-slate-700 capitalize whitespace-nowrap">
                                         {{ $f->floor ?? '-' }}
-                                    </td>
-
-                                    <!-- Flat Code -->
-                                    <td class="px-3 py-2 font-mono font-bold text-slate-900 text-[11px] whitespace-nowrap">
-                                        <div class="flex items-center gap-1">
-                                            <span class="text-sky-700">{{ $f->flat_code ?? '-' }}</span>
-                                            @if(!empty($f->flat_code))
-                                                <button type="button" onclick="copyCode('{{ $f->flat_code }}')" title="Copy Code" class="text-slate-400 hover:text-sky-600 text-[11px] no-print">
-                                                    <i class="bi bi-clipboard"></i>
-                                                </button>
-                                            @endif
-                                        </div>
                                     </td>
 
                                     <!-- Project Name -->
@@ -302,18 +289,14 @@
                                                 class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs">
                                                 <i class="bi bi-eye-fill"></i> View
                                             </a>
-                                            <a href="{{ route('ews.stp.flats.edit', $f->id) }}" target="_blank" title="Edit Flat Specifications (Developer Form)"
-                                                class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs">
-                                                <i class="bi bi-pencil-square"></i> Edit
-                                            </a>
                                             @if(!$f->is_aproved_by_dtp)
-                                                <button type="button" onclick="approveFlatDtpFromMatrix('{{ $f->id }}', '{{ $f->flat_number }}', '{{ $f->block_tower_number }}')" title="Approve under STP Authority"
-                                                    class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs cursor-pointer">
-                                                    <i class="bi bi-patch-check-fill text-emerald-200"></i> Approve
-                                                </button>
+                                                <a href="{{ route('ews.stp.flats.edit', $f->id) }}" target="_blank" title="Edit Flat Specifications (Developer Form)"
+                                                    class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition-all flex items-center gap-1 shadow-2xs">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
                                             @else
-                                                <span class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-2xs">
-                                                    <i class="bi bi-check-circle-fill text-emerald-600"></i> Done
+                                                <span class="px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
+                                                    <i class="bi bi-lock-fill text-slate-400"></i> Locked
                                                 </span>
                                             @endif
                                         </div>
@@ -321,7 +304,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="14" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
+                                    <td colspan="13" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
                                         <i class="bi bi-inbox text-3xl block text-slate-300 mb-2"></i>
                                         No flat records found under License {{ $licenseNo }}.
                                     </td>

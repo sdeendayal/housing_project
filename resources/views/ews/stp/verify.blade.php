@@ -258,10 +258,6 @@
                                 <span class="text-xl font-black font-mono text-slate-800" id="card-val-total">0</span>
                                 <span class="text-[9px] font-bold text-sky-700 font-mono">Flats</span>
                             </div>
-                            <div class="mt-1 flex items-center justify-between text-[8.5px] font-mono text-slate-400">
-                                <span>All Project Units</span>
-                                <span class="text-sky-600 font-bold group-hover:underline">Filter All &rarr;</span>
-                            </div>
                         </div>
 
                         <!-- Card 2: Approved by STP -->
@@ -280,10 +276,6 @@
                                 <span class="text-xl font-black font-mono text-emerald-700" id="card-val-approved">0</span>
                                 <span class="text-[9px] font-black text-emerald-700 font-mono px-1.5 py-0.2 rounded bg-emerald-50 border border-emerald-200" id="card-badge-approved-pct">0%</span>
                             </div>
-                            <div class="mt-1 flex items-center justify-between text-[8.5px] font-mono text-slate-400">
-                                <span>is_aproved_by_DTP = 1</span>
-                                <span class="text-emerald-700 font-bold group-hover:underline">Filter Approved &rarr;</span>
-                            </div>
                         </div>
 
                         <!-- Card 3: Pending STP Approval -->
@@ -301,10 +293,6 @@
                             <div class="mt-2 flex items-baseline gap-2">
                                 <span class="text-xl font-black font-mono text-amber-700" id="card-val-pending">0</span>
                                 <span class="text-[9px] font-black text-amber-700 font-mono px-1.5 py-0.2 rounded bg-amber-50 border border-amber-200" id="card-badge-pending-pct">0%</span>
-                            </div>
-                            <div class="mt-1 flex items-center justify-between text-[8.5px] font-mono text-slate-400">
-                                <span>is_aproved_by_DTP = 0</span>
-                                <span class="text-amber-700 font-bold group-hover:underline">Filter Pending &rarr;</span>
                             </div>
                         </div>
 
@@ -336,26 +324,14 @@
                         <!-- Table Top Bar -->
                         <div class="px-5 py-3 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/70">
                             
-                            <!-- Left: License & Flat Count Badges + Project Switcher -->
+                            <!-- Left: Project Switcher (Visible if multiple records exist) -->
                             <div class="flex items-center gap-2.5 flex-wrap">
-                                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-200/60 shrink-0">
-                                    <i class="bi bi-houses-fill text-sm"></i>
-                                </div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <span class="text-xs font-black uppercase font-mono px-2.5 py-1 bg-emerald-100 text-emerald-900 border border-emerald-300 rounded-lg shadow-2xs" id="res-table-license-badge">
-                                        LIC-000
-                                    </span>
-                                    <span class="text-[11px] font-black uppercase font-mono px-2.5 py-1 bg-sky-100 text-sky-800 border border-sky-200 rounded-lg" id="res-flats-count-badge">
-                                        0 Flats Retrieved
-                                    </span>
-
-                                    <!-- Multi-Project Dropdown Switcher (Visible if multiple records exist) -->
-                                    <div id="table-project-filter-container" class="hidden items-center gap-1.5 ml-1">
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase font-mono">Project:</span>
-                                        <select id="table-project-filter" onchange="onTableProjectFilterChange()"
-                                            class="text-xs py-1 px-2.5 bg-white border border-slate-250 rounded-lg font-bold text-slate-800 focus:outline-none focus:border-sky-500 shadow-2xs">
-                                        </select>
-                                    </div>
+                                <!-- Multi-Project Dropdown Switcher (Visible if multiple records exist) -->
+                                <div id="table-project-filter-container" class="hidden items-center gap-1.5">
+                                    <span class="text-[9px] font-bold text-slate-400 uppercase font-mono">Project:</span>
+                                    <select id="table-project-filter" onchange="onTableProjectFilterChange()"
+                                        class="text-xs py-1 px-2.5 bg-white border border-slate-250 rounded-lg font-bold text-slate-800 focus:outline-none focus:border-sky-500 shadow-2xs">
+                                    </select>
                                 </div>
                             </div>
 
@@ -391,7 +367,6 @@
                                         <th class="px-4 py-3">Flat No.</th>
                                         <th class="px-4 py-3">Block / Tower</th>
                                         <th class="px-4 py-3">Floor</th>
-                                        <th class="px-4 py-3">Unique Code</th>
                                         <th class="px-4 py-3">Colonizer</th>
                                         <th class="px-4 py-3">Location</th>
                                         <th class="px-4 py-3">OC Status</th>
@@ -404,11 +379,47 @@
                                 </tbody>
                             </table>
                         </div>
+
+                        <!-- Table Pagination & Page Size Controls -->
+                        <div id="flats-pagination-bar" class="px-5 py-3 border-t border-slate-200 bg-slate-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
+                            <!-- Left: Page Size Selector & Entries Info -->
+                            <div class="flex items-center gap-3 text-slate-600 font-medium flex-wrap">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-slate-500">Show</span>
+                                    <select id="flats-page-size" onchange="changeFlatsPageSize(this.value)"
+                                        class="bg-white border border-slate-300 text-slate-800 text-xs font-bold rounded-lg px-2.5 py-1 focus:ring-1 focus:ring-sky-500 focus:outline-none shadow-2xs cursor-pointer">
+                                        <option value="10" selected>10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                    <span class="text-slate-500">entries</span>
+                                </div>
+                                <span class="text-slate-300 hidden sm:inline">|</span>
+                                <div id="flats-pagination-info" class="text-slate-600 font-mono text-[11px] font-semibold">
+                                    Showing 0 to 0 of 0 entries
+                                </div>
+                            </div>
+
+                            <!-- Right: Pagination Buttons -->
+                            <div id="flats-pagination-buttons" class="flex items-center gap-1 flex-wrap justify-end">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
                     </div>
 
                 </div>
 
             </div>
+
+            <!-- Footer -->
+            <footer class="bg-white border border-slate-200/90 py-2 shrink-0 rounded-xl mt-4">
+                <div class="w-full px-3 text-center">
+                    <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
+                        Department of Housing for All • Developed by DITECH (CRID)
+                    </p>
+                </div>
+            </footer>
 
         </div>
     </div>
@@ -445,6 +456,8 @@
         let currentVerifyData = null;
         let activeRecordId = 'all';
         let currentApprovalFilter = 'all';
+        let flatsCurrentPage = 1;
+        let flatsPageSize = 10;
 
         $(document).ready(function() {
             // Initialize Select2 on License field
@@ -544,6 +557,7 @@
             $('#loading-state').addClass('hidden');
             $('#results-content-state').addClass('hidden');
             currentVerifyData = null;
+            flatsCurrentPage = 1;
         }
 
         // Main AJAX Query to Local Database
@@ -581,6 +595,9 @@
 
                     currentVerifyData = resp;
                     activeRecordId = 'all';
+                    currentApprovalFilter = 'all';
+                    flatsCurrentPage = 1;
+                    $('#flats-search-input').val('');
                     renderCompleteView();
                 },
                 error: function(err) {
@@ -613,6 +630,7 @@
         // Card Click Quick Filter Handler
         function setApprovalCardFilter(filter) {
             currentApprovalFilter = filter;
+            flatsCurrentPage = 1;
             $('#card-filter-all, #card-filter-approved, #card-filter-pending')
                 .removeClass('border-sky-500 border-emerald-500 border-amber-500 ring-2 ring-sky-500/20 ring-emerald-500/20 ring-amber-500/20 border-2')
                 .addClass('border-slate-200');
@@ -680,10 +698,11 @@
         // Project filter change in table header
         function onTableProjectFilterChange() {
             activeRecordId = $('#table-project-filter').val();
+            flatsCurrentPage = 1;
             renderFlatsTable();
         }
 
-        // Render Flats Table according to Active Record & Approval Filter
+        // Render Flats Table according to Active Record, Approval Filter, Search & 10-Item Pagination
         function renderFlatsTable() {
             if (!currentVerifyData) return;
 
@@ -702,21 +721,53 @@
                 flats = flats.filter(f => (f.is_aproved_by_dtp != 1));
             }
 
+            const totalRetrieved = flats.length;
             const filterLabel = currentApprovalFilter === 'approved' ? ' (Approved Only)' : (currentApprovalFilter === 'pending' ? ' (Pending Only)' : '');
-            $('#res-flats-count-badge').text(`${flats.length} Flats Retrieved${filterLabel}`);
+            $('#res-flats-count-badge').text(`${totalRetrieved} Flats Retrieved${filterLabel}`);
+
+            // Apply Text Search Filter (Quick filter across all flats)
+            const searchVal = ($('#flats-search-input').val() || '').toLowerCase().trim();
+            if (searchVal) {
+                flats = flats.filter(f => {
+                    const projectName = (f.record_project_name || f.project_name || '').toLowerCase();
+                    const developerName = (f.developer_name || '').toLowerCase();
+                    const flatNo = String(f.flat_number || '').toLowerCase();
+                    const tower = String(f.block_tower_number || '').toLowerCase();
+                    const floor = String(f.floor || '').toLowerCase();
+                    const loc = [f.town_name, f.district_name, f.sector_no].filter(Boolean).join(' ').toLowerCase();
+                    const ocStatus = String(f.oc_status || '').toLowerCase();
+                    const combined = `${flatNo} ${tower} ${floor} ${projectName} ${developerName} ${loc} ${ocStatus}`;
+                    return combined.indexOf(searchVal) > -1;
+                });
+            }
+
+            const totalFiltered = flats.length;
+            const totalPages = Math.ceil(totalFiltered / flatsPageSize) || 1;
+
+            if (flatsCurrentPage > totalPages) {
+                flatsCurrentPage = totalPages;
+            }
+            if (flatsCurrentPage < 1) {
+                flatsCurrentPage = 1;
+            }
+
+            const startIndex = (flatsCurrentPage - 1) * flatsPageSize;
+            const endIndex = Math.min(startIndex + flatsPageSize, totalFiltered);
+            const pageFlats = flats.slice(startIndex, endIndex);
 
             let rows = '';
-            if (flats.length === 0) {
+            if (totalFiltered === 0) {
                 rows = `
                     <tr>
-                        <td colspan="11" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
+                        <td colspan="10" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
                             <i class="bi bi-inbox text-2xl block text-slate-300 mb-1"></i>
-                            No flats matching filter "${currentApprovalFilter.toUpperCase()}" under this record.
+                            ${searchVal ? `No flats found matching "${searchVal}".` : `No flats matching filter "${currentApprovalFilter.toUpperCase()}" under this record.`}
                         </td>
                     </tr>
                 `;
             } else {
-                $.each(flats, function(i, f) {
+                $.each(pageFlats, function(idx, f) {
+                    const globalSerial = startIndex + idx + 1;
                     const theme = getRecordTheme(f.record_index || 1);
                     const recordLabel = f.record_index ? `#${f.record_index}` : '#1';
                     const projectName = f.record_project_name || f.project_name || 'Project';
@@ -729,14 +780,9 @@
                         ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono shadow-2xs" title="${f.dtp_approved_at ? 'Approved: ' + f.dtp_approved_at : 'Approved by STP'}"><i class="bi bi-shield-check text-emerald-600"></i> Approved</span>`
                         : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 font-mono shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>`;
 
-                    const safeProjectName = projectName.replace(/'/g, "\\'");
-                    const approveBtn = !isDtpApproved
-                        ? `<button type="button" onclick="approveFlatDtpFromTable('${f.id}', '${f.flat_number || ''}', '${f.flat_code || ''}', '${safeProjectName}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white border border-emerald-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs cursor-pointer"><i class="bi bi-check-circle-fill"></i> Approve</button>`
-                        : `<span class="px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-lg text-[10px] font-black uppercase flex items-center gap-1 shadow-2xs"><i class="bi bi-patch-check-fill text-emerald-600"></i> Done</span>`;
-
                     rows += `
-                        <tr class="hover:bg-slate-50 transition-colors flat-row" data-record-id="${f.record_id || ''}" data-search="${(f.flat_number || '') + ' ' + (f.block_tower_number || '') + ' ' + (f.flat_code || '') + ' ' + (f.floor || '') + ' ' + projectName + ' ' + developerName + ' ' + locationText}">
-                            <td class="px-4 py-2.5 font-mono text-slate-400 text-[11px]">${i + 1}</td>
+                        <tr class="hover:bg-slate-50 transition-colors flat-row" data-record-id="${f.record_id || ''}">
+                            <td class="px-4 py-2.5 font-mono text-slate-400 text-[11px]">${globalSerial}</td>
                             <td class="px-4 py-2.5">
                                 <div class="flex items-center gap-1.5 flex-wrap">
                                     <span class="px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase font-mono ${theme.bg} ${theme.text} border ${theme.border}">
@@ -752,7 +798,6 @@
                                 </span>
                             </td>
                             <td class="px-4 py-2.5 font-medium text-slate-600">${f.floor || '—'}</td>
-                            <td class="px-4 py-2.5 font-mono font-bold text-slate-800 text-[11px]">${f.flat_code || '—'}</td>
                             <td class="px-4 py-2.5 font-medium text-slate-700 text-xs">
                                 ${developerName}
                             </td>
@@ -769,15 +814,18 @@
                             </td>
                             <td class="px-4 py-2.5 text-right whitespace-nowrap">
                                 <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <button type="button" onclick="inspectFlatById(${f.id})"
-                                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Quick View">
+                                    <a href="${flatShowBaseUrl}/${f.id}" target="_blank"
+                                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Official TCP Verification & View">
                                         <i class="bi bi-eye text-xs"></i> View
-                                    </button>
+                                    </a>
+                                    ${!isDtpApproved ? `
                                     <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank"
                                         class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Edit Flat">
                                         <i class="bi bi-pencil-square text-xs"></i> Edit
-                                    </a>
-                                    ${approveBtn}
+                                    </a>` : `
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
+                                        <i class="bi bi-lock-fill text-slate-400"></i> Locked
+                                    </span>`}
                                 </div>
                             </td>
                         </tr>
@@ -786,82 +834,111 @@
             }
 
             $('#flats-table-body').html(rows);
-            filterFlatsTable();
+
+            // Update Pagination UI Bar
+            renderFlatsPagination(totalFiltered, totalPages, startIndex, endIndex);
         }
 
-        // Direct STP Approval from table row with SweetAlert confirmation
-        function approveFlatDtpFromTable(secureId, flatNumber, flatCode, projectName) {
-            Swal.fire({
-                title: 'Approve Flat by STP?',
-                html: `Are you sure you want to officially approve Flat <strong>${flatNumber}</strong> (${flatCode}) of project <strong>${projectName}</strong> under STP authority?<br><br><span class="text-xs text-emerald-700 font-bold">This will update is_aproved_by_DTP = 1 and record a verified audit log.</span>`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-check-circle-fill"></i> Yes, Approve & Certify',
-                cancelButtonText: 'Cancel',
-                confirmButtonColor: '#059669',
-                cancelButtonColor: '#64748b',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: `${flatShowBaseUrl}/${secureId}/approve-dtp`,
-                        type: 'POST',
-                        data: {
-                            _token: "{{ csrf_token() }}",
-                            status: 1
-                        },
-                        success: function(resp) {
-                            if (resp.success) {
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'STP Approved',
-                                    text: resp.message || 'Flat approved successfully.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                                // Update in local data
-                                if (currentVerifyData && currentVerifyData.all_flats) {
-                                    const item = currentVerifyData.all_flats.find(x => (x.secure_id === secureId || x.id == secureId));
-                                    if (item) {
-                                        item.is_aproved_by_dtp = 1;
-                                        item.dtp_approved_at = resp.dtp_approved_at || 'Just now';
-                                        item.dtp_user_name = resp.dtp_user_name;
-                                    }
-                                }
-                                if (currentVerifyData && currentVerifyData.records) {
-                                    currentVerifyData.records.forEach(r => {
-                                        const item = (r.flats || []).find(x => (x.secure_id === secureId || x.id == secureId));
-                                        if (item) {
-                                            item.is_aproved_by_dtp = 1;
-                                            item.dtp_approved_at = resp.dtp_approved_at || 'Just now';
-                                            item.dtp_user_name = resp.dtp_user_name;
-                                        }
-                                    });
-                                }
-                                renderCompleteView();
-                            } else {
-                                Swal.fire('Error', resp.message || 'Could not approve flat.', 'error');
-                            }
-                        },
-                        error: function(err) {
-                            Swal.fire('Error', err.responseJSON?.message || 'Server error while approving flat.', 'error');
-                        }
-                    });
+        // Render Pagination Controls & Entry Range
+        function renderFlatsPagination(totalFiltered, totalPages, startIndex, endIndex) {
+            // Keep Page size dropdown in sync
+            $('#flats-page-size').val(flatsPageSize);
+
+            // 1. Info Label
+            if (totalFiltered === 0) {
+                $('#flats-pagination-info').text('Showing 0 to 0 of 0 entries');
+                $('#flats-pagination-buttons').html('');
+                return;
+            }
+
+            const infoStr = `Showing ${startIndex + 1} to ${endIndex} of ${totalFiltered} entries`;
+            $('#flats-pagination-info').text(infoStr);
+
+            // 2. Pagination Navigation Buttons
+            let btnsHtml = '';
+
+            // Previous Button
+            const prevDisabled = (flatsCurrentPage <= 1);
+            btnsHtml += `
+                <button type="button" ${prevDisabled ? 'disabled' : `onclick="goToFlatsPage(${flatsCurrentPage - 1})"`}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all flex items-center gap-1 ${prevDisabled ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-sky-700 border-slate-300 shadow-2xs cursor-pointer'}">
+                    <i class="bi bi-chevron-left text-[10px]"></i> Previous
+                </button>
+            `;
+
+            // Page numbers
+            let pageNumbers = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+            } else {
+                pageNumbers.push(1);
+                if (flatsCurrentPage > 3) {
+                    pageNumbers.push('...');
                 }
-            });
-        }
+                const start = Math.max(2, flatsCurrentPage - 1);
+                const end = Math.min(totalPages - 1, flatsCurrentPage + 1);
+                for (let i = start; i <= end; i++) {
+                    pageNumbers.push(i);
+                }
+                if (flatsCurrentPage < totalPages - 2) {
+                    pageNumbers.push('...');
+                }
+                pageNumbers.push(totalPages);
+            }
 
-        // Quick filter inside table
-        function filterFlatsTable() {
-            const query = $('#flats-search-input').val().toLowerCase().trim();
-            $('.flat-row').each(function() {
-                const text = $(this).attr('data-search').toLowerCase();
-                if (text.indexOf(query) > -1) {
-                    $(this).show();
+            $.each(pageNumbers, function(idx, p) {
+                if (p === '...') {
+                    btnsHtml += `<span class="px-2 py-1 text-xs font-bold text-slate-400 font-mono">...</span>`;
+                } else if (p === flatsCurrentPage) {
+                    btnsHtml += `
+                        <button type="button" class="min-w-[30px] h-[28px] px-2 text-xs font-black rounded-lg bg-sky-600 text-white border border-sky-600 shadow-xs cursor-default">
+                            ${p}
+                        </button>
+                    `;
                 } else {
-                    $(this).hide();
+                    btnsHtml += `
+                        <button type="button" onclick="goToFlatsPage(${p})"
+                            class="min-w-[30px] h-[28px] px-2 text-xs font-bold rounded-lg bg-white text-slate-700 hover:bg-slate-100 hover:text-sky-700 border border-slate-300 transition-all shadow-2xs cursor-pointer">
+                            ${p}
+                        </button>
+                    `;
                 }
             });
+
+            // Next Button
+            const nextDisabled = (flatsCurrentPage >= totalPages);
+            btnsHtml += `
+                <button type="button" ${nextDisabled ? 'disabled' : `onclick="goToFlatsPage(${flatsCurrentPage + 1})"`}
+                    class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all flex items-center gap-1 ${nextDisabled ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50' : 'bg-white text-slate-700 hover:bg-slate-100 hover:text-sky-700 border-slate-300 shadow-2xs cursor-pointer'}">
+                    Next <i class="bi bi-chevron-right text-[10px]"></i>
+                </button>
+            `;
+
+            $('#flats-pagination-buttons').html(btnsHtml);
+        }
+
+        // Go to specific page
+        function goToFlatsPage(page) {
+            if (page < 1) return;
+            flatsCurrentPage = page;
+            renderFlatsTable();
+            const tableEl = document.getElementById('flats-table-card');
+            if (tableEl) {
+                tableEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // Change page size (10, 25, 50, 100)
+        function changeFlatsPageSize(size) {
+            flatsPageSize = parseInt(size, 10) || 10;
+            flatsCurrentPage = 1;
+            renderFlatsTable();
+        }
+
+        // Quick filter inside table: resets to page 1 and re-renders
+        function filterFlatsTable() {
+            flatsCurrentPage = 1;
+            renderFlatsTable();
         }
 
         // Inspect Single Flat Modal
@@ -939,14 +1016,19 @@
                 `;
             }
 
+            const isDtpApproved = (f.is_aproved_by_dtp == 1);
             $('#modal-flat-grid').html(gridHtml);
             $('#modal-flat-actions').html(`
-                <a href="${flatShowBaseUrl}/${f.id}" target="_blank" class="px-3 py-1.5 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
-                    <i class="bi bi-box-arrow-up-right"></i> Full Page View
+                <a href="${flatShowBaseUrl}/${f.id}" target="_blank" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-box-arrow-up-right"></i> Open Verification View
                 </a>
+                ${!isDtpApproved ? `
                 <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
                     <i class="bi bi-pencil-square"></i> Edit Flat
-                </a>
+                </a>` : `
+                <span class="px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
+                    <i class="bi bi-lock-fill"></i> Locked (Approved)
+                </span>`}
             `);
             $('#inspect-modal').removeClass('hidden').addClass('flex');
         }
