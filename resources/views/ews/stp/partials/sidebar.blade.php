@@ -102,15 +102,6 @@
                         <span>Physical Possession</span>
                     </div>
                 </a>
-
-                <!-- 7. Possession Audit Logs -->
-                <a href="{{ route('ews.stp.possession.logs') }}"
-                    class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ request()->routeIs('ews.stp.possession.logs') ? 'bg-slate-800 text-white font-bold ring-1 ring-indigo-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
-                    <div class="flex items-center gap-2">
-                        <i class="bi bi-clock-history text-indigo-400 text-sm"></i>
-                        <span>Audit Logs</span>
-                    </div>
-                </a>
             </div>
         </div>
     </div>
