@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EwsBuilderFlat extends Model
 {
@@ -14,9 +16,7 @@ class EwsBuilderFlat extends Model
         'zone_id',
         'zone_name',
         'district_id',
-        'dist_id',
         'district_name',
-        'dist_name',
         'town_name',
         'town_id',
         'developer_name',
@@ -45,7 +45,6 @@ class EwsBuilderFlat extends Model
         'total_ews_flats_in_project',
         'flats_offered_for_draw',
         'remaining_flats_for_oc',
-        'is_aproved_by_dtp',
         'is_approved_by_dtp',
         'dtp_approved_at',
         'dtp_approved_by',
@@ -54,6 +53,13 @@ class EwsBuilderFlat extends Model
         'tcp_licence_data',
         'tcp_licence_verified_at',
         'tcp_licence_status',
+    ];
+
+    protected $casts = [
+        'is_approved_by_dtp' => 'integer',
+        'dtp_approved_at' => 'datetime',
+        'building_plan_approval_date' => 'date',
+        'oc_date' => 'date',
     ];
 
     protected static function booted()
@@ -95,8 +101,51 @@ class EwsBuilderFlat extends Model
         return $this->belongsTo(EwsBlock::class, 'block_id');
     }
 
+    public function stpApprovals(): HasMany
+    {
+        return $this->hasMany(EwsStpApproval::class, 'flat_id')->orderBy('id', 'desc');
+    }
+
+    public function latestStpApproval(): HasOne
+    {
+        return $this->hasOne(EwsStpApproval::class, 'flat_id')->latestOfMany();
+    }
+
     public function isApprovedByDtp(): bool
     {
-        return (int)($this->is_aproved_by_dtp ?? $this->is_approved_by_dtp ?? 0) === 1;
+        return (int)($this->is_approved_by_dtp ?? 0) === 1;
+    }
+
+    /**
+     * Backward-compatibility accessors and mutators for unified columns
+     */
+    public function getDistIdAttribute()
+    {
+        return $this->district_id;
+    }
+
+    public function setDistIdAttribute($value)
+    {
+        $this->attributes['district_id'] = $value;
+    }
+
+    public function getDistNameAttribute()
+    {
+        return $this->district_name;
+    }
+
+    public function setDistNameAttribute($value)
+    {
+        $this->attributes['district_name'] = $value;
+    }
+
+    public function getIsAprovedByDtpAttribute()
+    {
+        return $this->is_approved_by_dtp;
+    }
+
+    public function setIsAprovedByDtpAttribute($value)
+    {
+        $this->attributes['is_approved_by_dtp'] = $value;
     }
 }

@@ -2112,10 +2112,9 @@ class EwsDeveloperDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
         }
 
-        $oldStatus = (int)($flat->is_aproved_by_dtp ?? $flat->is_approved_by_dtp ?? 0);
+        $oldStatus = (int)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp ?? 0);
         $newStatus = (int)$request->input('status', 1);
 
-        $flat->is_aproved_by_dtp = $newStatus;
         $flat->is_approved_by_dtp = $newStatus;
         $flat->dtp_approved_at = $newStatus === 1 ? now() : null;
         $flat->dtp_approved_by = $newStatus === 1 ? $user->id : null;
@@ -2140,11 +2139,37 @@ class EwsDeveloperDashboardController extends Controller
                     'action' => $action,
                     'summary' => $summary,
                     'changed_fields' => [
-                        'is_aproved_by_dtp' => [
+                        'is_approved_by_dtp' => [
                             'label' => 'DTP Approval Status',
                             'old' => $oldStatus === 1 ? 'Approved (1)' : 'Pending (0)',
                             'new' => $newStatus === 1 ? 'Approved (1)' : 'Pending (0)',
                         ]
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            }
+        } catch (\Throwable $e) {}
+
+        // Dedicated STP / Action History Table
+        try {
+            if (Schema::hasTable('ews_stp_approvals')) {
+                \App\Models\EwsStpApproval::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'stp_user_id' => $user->id,
+                    'stp_user_name' => $user->name,
+                    'stp_role' => $user->role ?? 'developer',
+                    'zone_id' => $flat->zone_id,
+                    'zone_name' => $flat->zone_name,
+                    'district_id' => $flat->district_id,
+                    'district_name' => $flat->district_name,
+                    'action' => $action,
+                    'status' => $newStatus,
+                    'remarks' => $flat->dtp_approval_remarks,
+                    'metadata' => [
+                        'old_status' => $oldStatus,
+                        'new_status' => $newStatus,
                     ],
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
@@ -2163,6 +2188,7 @@ class EwsDeveloperDashboardController extends Controller
 
         return response()->json([
             'success' => true,
+            'is_approved_by_dtp' => $newStatus,
             'is_aproved_by_dtp' => $newStatus,
             'dtp_approved_at' => $flat->dtp_approved_at ? $flat->dtp_approved_at->format('d M, Y H:i') : null,
             'dtp_user_name' => $flat->dtp_user_name,

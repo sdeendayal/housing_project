@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\EwsBuilderFlat;
 use App\Models\EwsDeveloperLog;
 use App\Models\EwsFlatAuditLog;
+use App\Models\EwsStpApproval;
 use App\Models\EwsProject;
 use App\Models\EwsBlock;
 use App\Models\EwsTown;
@@ -50,11 +51,8 @@ class EwsStpDashboardController extends Controller
         try {
             if (Schema::hasTable('ews_builder_flats')) {
                 Schema::table('ews_builder_flats', function (Blueprint $table) {
-                    if (!Schema::hasColumn('ews_builder_flats', 'is_aproved_by_dtp')) {
-                        $table->tinyInteger('is_aproved_by_dtp')->default(0)->index()->after('remaining_flats_for_oc');
-                    }
                     if (!Schema::hasColumn('ews_builder_flats', 'is_approved_by_dtp')) {
-                        $table->tinyInteger('is_approved_by_dtp')->default(0)->index()->after('is_aproved_by_dtp');
+                        $table->tinyInteger('is_approved_by_dtp')->default(0)->index()->after('remaining_flats_for_oc');
                     }
                     if (!Schema::hasColumn('ews_builder_flats', 'dtp_approved_at')) {
                         $table->timestamp('dtp_approved_at')->nullable()->after('is_approved_by_dtp');
@@ -141,12 +139,10 @@ class EwsStpDashboardController extends Controller
         try {
             DB::statement("
                 UPDATE ews_builder_flats f
-                JOIN ews_districts d ON (f.district_id = d.id OR f.dist_id = d.id OR UPPER(TRIM(f.district_name)) = UPPER(TRIM(d.name)))
+                JOIN ews_districts d ON (f.district_id = d.id OR UPPER(TRIM(f.district_name)) = UPPER(TRIM(d.name)))
                 SET f.zone_id = d.zone_id,
                     f.district_id = COALESCE(f.district_id, d.id),
-                    f.dist_id = COALESCE(f.dist_id, d.id),
-                    f.district_name = COALESCE(f.district_name, d.name),
-                    f.dist_name = COALESCE(f.dist_name, d.name)
+                    f.district_name = COALESCE(f.district_name, d.name)
                 WHERE (f.zone_id IS NULL OR f.zone_id = 0) AND d.zone_id IS NOT NULL
             ");
             DB::statement("
@@ -662,9 +658,7 @@ class EwsStpDashboardController extends Controller
                         'zone_id' => $zoneId,
                         'zone_name' => $zoneName,
                         'district_id' => $district->id,
-                        'dist_id' => $district->id,
                         'district_name' => $district->name,
-                        'dist_name' => $district->name,
                         'town_name' => $townName,
                         'town_id' => $townId,
                         'project_name' => $projectName,
@@ -740,9 +734,7 @@ class EwsStpDashboardController extends Controller
             'zone_id' => $zoneId,
             'zone_name' => $zoneName,
             'district_id' => $district->id,
-            'dist_id' => $district->id,
             'district_name' => $district->name,
-            'dist_name' => $district->name,
             'town_name' => $townName,
             'town_id' => $townId,
             'project_name' => $projectName,
@@ -902,7 +894,7 @@ class EwsStpDashboardController extends Controller
             abort(404, 'Flat record not found.');
         }
 
-        if (!empty($flat->is_aproved_by_dtp)) {
+        if (!empty($flat->is_approved_by_dtp)) {
             $viewTarget = $flat->secure_id ?: $flat->id;
             return redirect()->route('ews.stp.flats.show', $viewTarget)->with('info', 'This flat has already been approved by STP and is locked from editing.');
         }
@@ -1106,7 +1098,7 @@ class EwsStpDashboardController extends Controller
             abort(404, 'Flat not found');
         }
 
-        if (!empty($flat->is_aproved_by_dtp)) {
+        if (!empty($flat->is_approved_by_dtp)) {
             $viewTarget = $flat->secure_id ?: $flat->id;
             return redirect()->route('ews.stp.flats.show', $viewTarget)->with('error', 'This flat is already approved by STP and cannot be edited or updated.');
         }
@@ -1432,9 +1424,7 @@ class EwsStpDashboardController extends Controller
 
         // Update Flat Attributes
         $flat->district_id = $district->id;
-        $flat->dist_id = $district->id;
         $flat->district_name = $district->name;
-        $flat->dist_name = $district->name;
         $flat->zone_id = $zoneId;
         $flat->zone_name = $zoneName;
         $flat->town_id = $townId;
@@ -1506,9 +1496,8 @@ class EwsStpDashboardController extends Controller
         );
 
         // Step DTP Approval Handling (Approved & Submit = 1)
-        if ($request->filled('is_aproved_by_dtp') || $request->has('approve_and_submit')) {
-            $approvedVal = (int)$request->input('is_aproved_by_dtp', 1);
-            $flat->is_aproved_by_dtp = $approvedVal;
+        if ($request->filled('is_approved_by_dtp') || $request->filled('is_aproved_by_dtp') || $request->has('approve_and_submit')) {
+            $approvedVal = (int)($request->input('is_approved_by_dtp') ?? $request->input('is_aproved_by_dtp', 1));
             $flat->is_approved_by_dtp = $approvedVal;
             if ($approvedVal === 1) {
                 $flat->dtp_approved_at = $flat->dtp_approved_at ?: now();
@@ -1567,6 +1556,25 @@ class EwsStpDashboardController extends Controller
                 'action' => !empty($changedDiff) ? 'UPDATED' : 'RESUBMITTED',
                 'summary' => $summaryText,
                 'changed_fields' => $changedDiff,
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            // Dedicated STP Approvals / Action Trail Table
+            EwsStpApproval::create([
+                'flat_id' => $flat->id,
+                'flat_code' => $flat->flat_code,
+                'stp_user_id' => $user->id,
+                'stp_user_name' => $user->name,
+                'stp_role' => $user->role ?? 'ews_stp',
+                'zone_id' => $flat->zone_id,
+                'zone_name' => $flat->zone_name,
+                'district_id' => $flat->district_id,
+                'district_name' => $flat->district_name,
+                'action' => isset($approvedVal) && $approvedVal === 1 ? 'DTP_APPROVED' : (!empty($changedDiff) ? 'UPDATED' : 'RESUBMITTED'),
+                'status' => $flat->is_approved_by_dtp ?? 0,
+                'remarks' => $summaryText,
+                'metadata' => $changedDiff,
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
@@ -2399,7 +2407,8 @@ class EwsStpDashboardController extends Controller
                 $fObj['record_index'] = $recordIdx;
                 $fObj['record_project_name'] = $proj->name ?? ($f->project_name ?? 'N/A');
                 $fObj['secure_id'] = $f->secure_id ?: EwsHelper::encodeSecureId($f->id);
-                $fObj['is_aproved_by_dtp'] = (int)($f->is_aproved_by_dtp ?? $f->is_approved_by_dtp ?? 0);
+                $fObj['is_approved_by_dtp'] = (int)($f->is_approved_by_dtp ?? $f->is_aproved_by_dtp ?? 0);
+                $fObj['is_aproved_by_dtp'] = $fObj['is_approved_by_dtp'];
                 $fObj['dtp_approved_at'] = !empty($f->dtp_approved_at) ? \Carbon\Carbon::parse($f->dtp_approved_at)->format('d M, Y H:i') : null;
                 $fObj['dtp_user_name'] = $f->dtp_user_name ?? null;
                 return (object) $fObj;
@@ -2447,7 +2456,8 @@ class EwsStpDashboardController extends Controller
                     $fObj['record_index'] = $recordIdx;
                     $fObj['record_project_name'] = $sampleFlat->project_name ?? 'N/A';
                     $fObj['secure_id'] = $f->secure_id ?: EwsHelper::encodeSecureId($f->id);
-                    $fObj['is_aproved_by_dtp'] = (int)($f->is_aproved_by_dtp ?? $f->is_approved_by_dtp ?? 0);
+                    $fObj['is_approved_by_dtp'] = (int)($f->is_approved_by_dtp ?? $f->is_aproved_by_dtp ?? 0);
+                    $fObj['is_aproved_by_dtp'] = $fObj['is_approved_by_dtp'];
                     $fObj['dtp_approved_at'] = !empty($f->dtp_approved_at) ? \Carbon\Carbon::parse($f->dtp_approved_at)->format('d M, Y H:i') : null;
                     $fObj['dtp_user_name'] = $f->dtp_user_name ?? null;
                     return (object) $fObj;
@@ -2497,7 +2507,7 @@ class EwsStpDashboardController extends Controller
         $districts = array_values(array_unique(array_filter(array_column($records, 'district_name'))));
         $towns = array_values(array_unique(array_filter(array_column($records, 'town_name'))));
 
-        $approvedCount = collect($allFlats)->where('is_aproved_by_dtp', 1)->count();
+        $approvedCount = collect($allFlats)->filter(fn($f) => ($f->is_approved_by_dtp ?? $f->is_aproved_by_dtp ?? 0) == 1)->count();
         $pendingCount = count($allFlats) - $approvedCount;
         $approvalRate = count($allFlats) > 0 ? round(($approvedCount / count($allFlats)) * 100, 1) : 0;
 
@@ -2557,10 +2567,9 @@ class EwsStpDashboardController extends Controller
         $this->ensureDtpApprovalColumnsExist();
         $this->ensureAuditTableExists();
 
-        $oldStatus = (int)($flat->is_aproved_by_dtp ?? $flat->is_approved_by_dtp ?? 0);
+        $oldStatus = (int)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp ?? 0);
         $newStatus = (int)$request->input('status', 1);
 
-        $flat->is_aproved_by_dtp = $newStatus;
         $flat->is_approved_by_dtp = $newStatus;
         $flat->dtp_approved_at = $newStatus === 1 ? now() : null;
         $flat->dtp_approved_by = $newStatus === 1 ? $user->id : null;
@@ -2584,11 +2593,35 @@ class EwsStpDashboardController extends Controller
                 'action' => $action,
                 'summary' => $summary,
                 'changed_fields' => [
-                    'is_aproved_by_dtp' => [
+                    'is_approved_by_dtp' => [
                         'label' => 'DTP Approval Status',
                         'old' => $oldStatus === 1 ? 'Approved (1)' : 'Pending (0)',
                         'new' => $newStatus === 1 ? 'Approved (1)' : 'Pending (0)',
                     ]
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        // Dedicated STP Action History Table
+        try {
+            EwsStpApproval::create([
+                'flat_id' => $flat->id,
+                'flat_code' => $flat->flat_code,
+                'stp_user_id' => $user->id,
+                'stp_user_name' => $user->name,
+                'stp_role' => $user->role ?? 'ews_stp',
+                'zone_id' => $flat->zone_id,
+                'zone_name' => $flat->zone_name,
+                'district_id' => $flat->district_id,
+                'district_name' => $flat->district_name,
+                'action' => $action,
+                'status' => $newStatus,
+                'remarks' => $flat->dtp_approval_remarks,
+                'metadata' => [
+                    'old_status' => $oldStatus,
+                    'new_status' => $newStatus,
                 ],
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
@@ -2606,6 +2639,7 @@ class EwsStpDashboardController extends Controller
 
         return response()->json([
             'success' => true,
+            'is_approved_by_dtp' => $newStatus,
             'is_aproved_by_dtp' => $newStatus,
             'dtp_approved_at' => $flat->dtp_approved_at ? $flat->dtp_approved_at->format('d M, Y H:i') : null,
             'dtp_user_name' => $flat->dtp_user_name,
@@ -2658,7 +2692,6 @@ class EwsStpDashboardController extends Controller
 
         // Handle Revoke Approval
         if ($isRevokeRequest) {
-            $flat->is_aproved_by_dtp = 0;
             $flat->is_approved_by_dtp = 0;
             $flat->dtp_approval_remarks = $request->input('stp_remarks', 'STP Approval revoked for re-examination.');
             $flat->save();
@@ -2673,11 +2706,33 @@ class EwsStpDashboardController extends Controller
                     'action' => 'DTP_REVOKED',
                     'summary' => "STP Approval revoked to Pending Clearance by {$user->name}",
                     'changed_fields' => [
-                        'is_aproved_by_dtp' => [
+                        'is_approved_by_dtp' => [
                             'label' => 'DTP Approval Status',
                             'old' => 'Approved (1)',
                             'new' => 'Pending (0)',
                         ]
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+
+            try {
+                EwsStpApproval::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'stp_user_id' => $user->id,
+                    'stp_user_name' => $user->name,
+                    'stp_role' => $user->role ?? 'ews_stp',
+                    'zone_id' => $flat->zone_id,
+                    'zone_name' => $flat->zone_name,
+                    'district_id' => $flat->district_id,
+                    'district_name' => $flat->district_name,
+                    'action' => 'DTP_REVOKED',
+                    'status' => 0,
+                    'remarks' => $request->input('stp_remarks', 'STP Approval revoked for re-examination.'),
+                    'metadata' => [
+                        'action' => 'revoked',
                     ],
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
@@ -2735,13 +2790,11 @@ class EwsStpDashboardController extends Controller
         }
 
         if ($matchedDist) {
-            $oldDistId = $flat->district_id ?: $flat->dist_id;
-            $oldDistName = $flat->district_name ?: $flat->dist_name;
+            $oldDistId = $flat->district_id;
+            $oldDistName = $flat->district_name;
 
             $flat->district_id = $matchedDist->id;
-            $flat->dist_id = $matchedDist->id;
             $flat->district_name = $matchedDist->name;
-            $flat->dist_name = $matchedDist->name;
 
             if (!empty($matchedDist->zone_id)) {
                 $flat->zone_id = $matchedDist->zone_id;
@@ -2779,8 +2832,7 @@ class EwsStpDashboardController extends Controller
                 ], 422);
             }
 
-            $oldApproveStatus = (int)($flat->is_aproved_by_dtp ?? $flat->is_approved_by_dtp ?? 0);
-            $flat->is_aproved_by_dtp = 1;
+            $oldApproveStatus = (int)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp ?? 0);
             $flat->is_approved_by_dtp = 1;
             $flat->dtp_approved_at = now();
             $flat->dtp_approved_by = $user->id;
@@ -2798,11 +2850,34 @@ class EwsStpDashboardController extends Controller
                     'action' => 'DTP_APPROVED',
                     'summary' => "Flat certified and marked APPROVED by STP Officer: {$user->name}",
                     'changed_fields' => [
-                        'is_aproved_by_dtp' => [
+                        'is_approved_by_dtp' => [
                             'label' => 'DTP Approval Status',
                             'old' => $oldApproveStatus === 1 ? 'Approved (1)' : 'Pending (0)',
                             'new' => 'Approved (1)',
                         ]
+                    ],
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+
+            try {
+                EwsStpApproval::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'stp_user_id' => $user->id,
+                    'stp_user_name' => $user->name,
+                    'stp_role' => $user->role ?? 'ews_stp',
+                    'zone_id' => $flat->zone_id,
+                    'zone_name' => $flat->zone_name,
+                    'district_id' => $flat->district_id,
+                    'district_name' => $flat->district_name,
+                    'action' => 'DTP_APPROVED',
+                    'status' => 1,
+                    'remarks' => $stpRemarks,
+                    'metadata' => [
+                        'reconciled' => true,
+                        'changed_fields' => $changedFields ?? [],
                     ],
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
@@ -2840,6 +2915,26 @@ class EwsStpDashboardController extends Controller
                     'action' => 'STP_RECONCILED',
                     'summary' => "STP Officer {$user->name} reconciled " . count($changedFields) . " field(s). Remarks: {$remarks}",
                     'changed_fields' => $changedFields,
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                ]);
+            } catch (\Throwable $e) {}
+
+            try {
+                EwsStpApproval::create([
+                    'flat_id' => $flat->id,
+                    'flat_code' => $flat->flat_code,
+                    'stp_user_id' => $user->id,
+                    'stp_user_name' => $user->name,
+                    'stp_role' => $user->role ?? 'ews_stp',
+                    'zone_id' => $flat->zone_id,
+                    'zone_name' => $flat->zone_name,
+                    'district_id' => $flat->district_id,
+                    'district_name' => $flat->district_name,
+                    'action' => 'STP_RECONCILED',
+                    'status' => $flat->is_approved_by_dtp ?? 0,
+                    'remarks' => "Reconciled " . count($changedFields) . " field(s). Remarks: {$remarks}",
+                    'metadata' => $changedFields,
                     'ip_address' => $request->ip(),
                     'user_agent' => $request->userAgent(),
                 ]);

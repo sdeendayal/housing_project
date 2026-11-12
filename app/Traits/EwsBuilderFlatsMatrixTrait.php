@@ -31,12 +31,10 @@ trait EwsBuilderFlatsMatrixTrait
             $flatsQuery->where(function ($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
                 $q->where('zone_id', $zoneId);
                 if (!empty($zoneDistIds)) {
-                    $q->orWhereIn('district_id', $zoneDistIds)
-                      ->orWhereIn('dist_id', $zoneDistIds);
+                    $q->orWhereIn('district_id', $zoneDistIds);
                 }
                 if (!empty($zoneDistNames)) {
-                    $q->orWhereIn('district_name', $zoneDistNames)
-                      ->orWhereIn('dist_name', $zoneDistNames);
+                    $q->orWhereIn('district_name', $zoneDistNames);
                 }
                 if ($zoneName) {
                     $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
@@ -46,8 +44,8 @@ trait EwsBuilderFlatsMatrixTrait
 
         $row = $flatsQuery->selectRaw('
             COUNT(*) as total_flats,
-            COALESCE(SUM(CASE WHEN is_aproved_by_dtp = 1 THEN 1 ELSE 0 END), 0) as dtp_approved_flats,
-            COALESCE(SUM(CASE WHEN is_aproved_by_dtp = 0 OR is_aproved_by_dtp IS NULL THEN 1 ELSE 0 END), 0) as dtp_pending_flats
+            COALESCE(SUM(CASE WHEN is_approved_by_dtp = 1 THEN 1 ELSE 0 END), 0) as dtp_approved_flats,
+            COALESCE(SUM(CASE WHEN is_approved_by_dtp = 0 OR is_approved_by_dtp IS NULL THEN 1 ELSE 0 END), 0) as dtp_pending_flats
         ')->first();
 
         // 4,211 Master Allotted Pool Telemetry
@@ -96,12 +94,10 @@ trait EwsBuilderFlatsMatrixTrait
             $flatQuery->where(function($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
                 $q->where('zone_id', $zoneId);
                 if (!empty($zoneDistIds)) {
-                    $q->orWhereIn('district_id', $zoneDistIds)
-                      ->orWhereIn('dist_id', $zoneDistIds);
+                    $q->orWhereIn('district_id', $zoneDistIds);
                 }
                 if (!empty($zoneDistNames)) {
-                    $q->orWhereIn('district_name', $zoneDistNames)
-                      ->orWhereIn('dist_name', $zoneDistNames);
+                    $q->orWhereIn('district_name', $zoneDistNames);
                 }
                 if ($zoneName) {
                     $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
@@ -159,12 +155,10 @@ trait EwsBuilderFlatsMatrixTrait
             $query->where(function ($q) use ($zoneId, $zoneDistIds, $zoneDistNames, $zoneName) {
                 $q->where('zone_id', $zoneId);
                 if (!empty($zoneDistIds)) {
-                    $q->orWhereIn('district_id', $zoneDistIds)
-                      ->orWhereIn('dist_id', $zoneDistIds);
+                    $q->orWhereIn('district_id', $zoneDistIds);
                 }
                 if (!empty($zoneDistNames)) {
-                    $q->orWhereIn('district_name', $zoneDistNames)
-                      ->orWhereIn('dist_name', $zoneDistNames);
+                    $q->orWhereIn('district_name', $zoneDistNames);
                 }
                 if ($zoneName) {
                     $q->orWhere('zone_name', 'LIKE', "%{$zoneName}%");
@@ -172,16 +166,14 @@ trait EwsBuilderFlatsMatrixTrait
             });
         }
 
-        // 2. District Filter (Direct indexed lookup or fallback to name/dist_id)
+        // 2. District Filter (Direct indexed lookup or fallback to name)
         if ($request->filled('district_id')) {
             $distId = $request->district_id;
             $distName = DB::table('ews_districts')->where('id', $distId)->value('name');
             $query->where(function ($q) use ($distId, $distName) {
-                $q->where('district_id', $distId)
-                  ->orWhere('dist_id', $distId);
+                $q->where('district_id', $distId);
                 if ($distName) {
-                    $q->orWhere('district_name', $distName)
-                      ->orWhere('dist_name', $distName);
+                    $q->orWhere('district_name', $distName);
                 }
             });
         }
@@ -203,10 +195,10 @@ trait EwsBuilderFlatsMatrixTrait
 
         // 6. DTP Status Filter (High-speed composite index)
         if ($request->input('ownership_scope') === 'dtp_approved' || $request->input('dtp_filter') === 'approved') {
-            $query->where('is_aproved_by_dtp', 1);
+            $query->where('is_approved_by_dtp', 1);
         } elseif ($request->input('ownership_scope') === 'dtp_pending' || $request->input('dtp_filter') === 'pending') {
             $query->where(function($q) {
-                $q->where('is_aproved_by_dtp', 0)->orWhereNull('is_aproved_by_dtp');
+                $q->where('is_approved_by_dtp', 0)->orWhereNull('is_approved_by_dtp');
             });
         }
 
@@ -327,7 +319,7 @@ trait EwsBuilderFlatsMatrixTrait
                 'floor',
                 'flat_number',
                 'flat_code',
-                'is_aproved_by_dtp',
+                'is_approved_by_dtp',
             ]);
 
         return DataTables::of($query)
@@ -347,7 +339,8 @@ trait EwsBuilderFlatsMatrixTrait
             ->addColumn('flat_number', fn($r) => '<span class="text-violet-655 font-black font-mono">' . e($r->flat_number ?? '—') . '</span>')
             ->addColumn('flat_code', fn($r) => '<span class="text-emerald-600 font-bold font-mono">' . e($r->flat_code ?? '—') . '</span>')
             ->addColumn('dtp_status', function ($r) {
-                if ($r->is_aproved_by_dtp == 1) {
+                $status = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0);
+                if ($status === 1) {
                     return '<span class="px-2.5 py-0.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs" title="Approved by DTP"><i class="bi bi-patch-check-fill text-emerald-600"></i> Approved</span>';
                 }
                 return '<span class="px-2.5 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[9px] font-black uppercase inline-flex items-center gap-1 shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>';
@@ -362,7 +355,7 @@ trait EwsBuilderFlatsMatrixTrait
                 } elseif ($isStp) {
                     $viewUrl = route('ews.stp.flats.show', $flatId);
                     $editUrl = route('ews.stp.flats.edit', $flatId);
-                    $isApproved = (int)$r->is_aproved_by_dtp === 1;
+                    $isApproved = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0) === 1;
 
                     $editBtn = $isApproved
                         ? '<span class="px-2 py-0.5 bg-slate-100 text-slate-400 border border-slate-200 rounded text-[9px] font-bold uppercase inline-flex items-center gap-1 shadow-2xs cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited"><i class="bi bi-lock-fill text-[9px]"></i> Locked</span>'
@@ -452,7 +445,8 @@ trait EwsBuilderFlatsMatrixTrait
                 'total_ews_flats_in_project' => $flat->total_ews_flats_in_project,
                 'flats_offered_for_draw' => $flat->flats_offered_for_draw,
                 'remaining_flats_for_oc' => $flat->remaining_flats_for_oc,
-                'is_aproved_by_dtp' => (bool)$flat->is_aproved_by_dtp,
+                'is_aproved_by_dtp' => (bool)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp),
+                'is_approved_by_dtp' => (bool)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp),
                 'dtp_approved_at' => $flat->dtp_approved_at ? date('d M, Y h:i A', strtotime($flat->dtp_approved_at)) : null,
                 'dtp_user_name' => $flat->dtp_user_name ?? 'Competent DTP Authority',
                 'created_at' => $flat->created_at ? $flat->created_at->format('d M, Y h:i A') : '—',
@@ -559,7 +553,7 @@ trait EwsBuilderFlatsMatrixTrait
                     $flat->floor ?? '—',
                     $flat->flat_number ?? '—',
                     $flat->flat_code ?? '—',
-                    $flat->is_aproved_by_dtp ? 'APPROVED' : 'PENDING',
+                    ($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp) ? 'APPROVED' : 'PENDING',
                     $flat->created_at ? $flat->created_at->format('Y-m-d H:i:s') : '—',
                 ]);
             }
