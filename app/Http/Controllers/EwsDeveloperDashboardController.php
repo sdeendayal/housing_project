@@ -617,6 +617,12 @@ class EwsDeveloperDashboardController extends Controller
                 'sector_no' => $request->sector_no ?? $request->new_project_sector,
                 'developer_name' => $request->developer_name,
                 'license_no' => $request->license_no,
+                'master_development_plan' => $request->master_development_plan,
+                'approved_purpose' => $request->approved_purpose,
+                'licence_validity_date' => $request->licence_validity_date,
+                'grant_status' => $request->grant_status,
+                'case_no' => $request->case_no,
+                'application_no' => $request->application_no,
                 'area_of_project' => $request->area_of_project,
                 'developer_plan' => $developerPlanPath,
                 'approved_building_plan' => $request->approved_building_plan,
@@ -638,6 +644,12 @@ class EwsDeveloperDashboardController extends Controller
                 'sector_no' => $project->sector_no ?? ($request->sector_no ?? $request->new_project_sector),
                 'developer_name' => $project->developer_name ?? $request->developer_name,
                 'license_no' => $project->license_no ?? $request->license_no,
+                'master_development_plan' => $request->master_development_plan ?? ($project->master_development_plan ?? null),
+                'approved_purpose' => $request->approved_purpose ?? ($project->approved_purpose ?? null),
+                'licence_validity_date' => $request->licence_validity_date ?? ($project->licence_validity_date ?? null),
+                'grant_status' => $request->grant_status ?? ($project->grant_status ?? null),
+                'case_no' => $request->case_no ?? ($project->case_no ?? null),
+                'application_no' => $request->application_no ?? ($project->application_no ?? null),
                 'area_of_project' => $project->area_of_project ?? $request->area_of_project,
                 'developer_plan' => $developerPlanPath ?: $project->developer_plan,
                 'approved_building_plan' => $project->approved_building_plan ?? $request->approved_building_plan,
@@ -835,6 +847,12 @@ class EwsDeveloperDashboardController extends Controller
                         'created_by' => $user->id,
                         'developer_name' => $request->developer_name,
                         'license_no' => $request->license_no,
+                        'master_development_plan' => $request->master_development_plan ?? ($project->master_development_plan ?? null),
+                        'approved_purpose' => $request->approved_purpose ?? ($project->approved_purpose ?? null),
+                        'licence_validity_date' => $request->licence_validity_date ?? ($project->licence_validity_date ?? null),
+                        'grant_status' => $request->grant_status ?? ($project->grant_status ?? null),
+                        'case_no' => $request->case_no ?? ($project->case_no ?? null),
+                        'application_no' => $request->application_no ?? ($project->application_no ?? null),
                         'area_of_project' => $request->area_of_project ?? ($project->area_of_project ?? null),
                         'developer_plan' => $developerPlanPath ?: ($project->developer_plan ?? null),
                         'approved_building_plan' => $isPlanApproved ? 'yes' : 'no',
@@ -939,6 +957,12 @@ class EwsDeveloperDashboardController extends Controller
             'created_by' => $user->id,
             'developer_name' => $request->developer_name,
             'license_no' => $request->license_no,
+            'master_development_plan' => $request->master_development_plan ?? ($project->master_development_plan ?? null),
+            'approved_purpose' => $request->approved_purpose ?? ($project->approved_purpose ?? null),
+            'licence_validity_date' => $request->licence_validity_date ?? ($project->licence_validity_date ?? null),
+            'grant_status' => $request->grant_status ?? ($project->grant_status ?? null),
+            'case_no' => $request->case_no ?? ($project->case_no ?? null),
+            'application_no' => $request->application_no ?? ($project->application_no ?? null),
             'area_of_project' => $request->area_of_project ?? ($project->area_of_project ?? null),
             'developer_plan' => $developerPlanPath ?: ($project->developer_plan ?? null),
             'approved_building_plan' => $isPlanApproved ? 'yes' : 'no',
@@ -1397,6 +1421,12 @@ class EwsDeveloperDashboardController extends Controller
         $flat->project_name = $projectName;
         $flat->developer_name = $request->developer_name;
         $flat->license_no = $request->license_no;
+        $flat->master_development_plan = $request->master_development_plan;
+        $flat->approved_purpose = $request->approved_purpose;
+        $flat->licence_validity_date = $request->licence_validity_date;
+        $flat->grant_status = $request->grant_status;
+        $flat->case_no = $request->case_no;
+        $flat->application_no = $request->application_no;
         $flat->sector_no = $request->sector_no;
         $flat->address_of_project = $request->address_of_project;
         $flat->area_of_project = $request->area_of_project;
@@ -1784,6 +1814,23 @@ class EwsDeveloperDashboardController extends Controller
         return redirect()->route('ews.developer.dashboard');
     }
 
+    /**
+     * Standalone live query for TCP Licence Details (Developer Auto-Fill)
+     */
+    public function queryTcpLicence(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $licenceNo = $request->input('licence_no');
+        $service = app(\App\Services\TcpLicenceApiService::class);
+        $result = $service->fetchLicenceDetails($licenceNo);
+
+        return response()->json($result);
+    }
+
     public function getProjects(Request $request)
     {
         $districtId = $request->query('district_id');
@@ -1812,7 +1859,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $projects = $query->orderBy('name', 'asc')
-            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id', 'address', 'sector_no', 'developer_name', 'license_no', 'area_of_project', 'developer_plan', 'approved_building_plan', 'building_plan_approval_date', 'building_plan_copy', 'oc_status_yn']);
+            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id', 'address', 'sector_no', 'developer_name', 'license_no', 'master_development_plan', 'approved_purpose', 'licence_validity_date', 'grant_status', 'case_no', 'application_no', 'area_of_project', 'developer_plan', 'approved_building_plan', 'building_plan_approval_date', 'building_plan_copy', 'oc_status_yn']);
 
         return response()->json($projects);
     }

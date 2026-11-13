@@ -484,6 +484,36 @@
                     </div>
                 </div>
 
+                <!-- 2.5 Official TCP Haryana Grant Specifications -->
+                <div class="bg-slate-50 border border-sky-200/90 rounded-xl p-3.5 space-y-2">
+                    <div class="flex items-center justify-between text-[9px] font-black uppercase text-slate-600 tracking-wider pb-1.5 border-b border-sky-100">
+                        <span class="flex items-center gap-1 text-sky-700"><i class="bi bi-patch-check-fill text-sky-600"></i> Official TCP Grant Specifications</span>
+                        <span class="font-mono text-sky-600 text-[8.5px]">Statutory Licensing Data</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+                        <div>
+                            <span class="block text-[8.5px] font-bold uppercase text-slate-400">Master Development Plan</span>
+                            <span class="block text-xs font-bold text-slate-900 uppercase" id="bio-devplan">—</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8.5px] font-bold uppercase text-slate-400">Approved Scheme / Purpose</span>
+                            <span class="block text-xs font-bold text-slate-800" id="bio-purpose">—</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8.5px] font-bold uppercase text-slate-400">Licence Validity & Status</span>
+                            <span class="block text-xs font-bold text-emerald-700" id="bio-validity-status">—</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8.5px] font-bold uppercase text-slate-400">Govt Case Number</span>
+                            <span class="block text-xs font-mono font-bold text-slate-800 uppercase" id="bio-case-no">—</span>
+                        </div>
+                        <div>
+                            <span class="block text-[8.5px] font-bold uppercase text-slate-400">Govt Application Number</span>
+                            <span class="block text-xs font-mono font-bold text-slate-800 uppercase" id="bio-app-no">—</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 3. Statutory Sanction & Building Plan Compliance (Step 10) -->
                 <div class="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-2">
                     <div class="flex items-center justify-between text-[9px] font-black uppercase text-slate-500 tracking-wider pb-1.5 border-b border-slate-200">
@@ -920,6 +950,16 @@
                     $('#bio-dist-name').text(d.district_name || '—');
                     $('#bio-town-name').text(d.town_name || '—');
                     $('#bio-sector').text(d.sector || '—');
+
+                    // Official TCP Grant Specifications
+                    $('#bio-devplan').text(d.master_development_plan || '—');
+                    $('#bio-purpose').text(d.approved_purpose || '—');
+                    const validityStr = (d.licence_validity_date && d.licence_validity_date !== '—') 
+                        ? d.licence_validity_date + (d.grant_status ? ' (' + d.grant_status + ')' : '')
+                        : (d.grant_status || '—');
+                    $('#bio-validity-status').text(validityStr);
+                    $('#bio-case-no').text(d.case_no || '—');
+                    $('#bio-app-no').text(d.application_no || '—');
 
                     // Statutory Sanction
                     $('#bio-bp-status').text(d.is_approved_of_building_plan || '—');

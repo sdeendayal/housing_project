@@ -279,6 +279,33 @@
                                 <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Location & Jurisdiction</span>
                                 <span class="font-bold text-slate-800 capitalize">{{ ucwords(strtolower($flat->town_name ?? 'N/A')) }}, District: {{ strtoupper($flat->district_name ?? 'N/A') }}</span>
                             </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Master Development Plan</span>
+                                <span class="font-bold text-slate-800 uppercase">{{ $flat->master_development_plan ?: ($project->master_development_plan ?? 'N/A') }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Approved Scheme / Purpose</span>
+                                <span class="font-bold text-slate-800">{{ $flat->approved_purpose ?: ($project->approved_purpose ?? 'N/A') }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Licence Validity & Status</span>
+                                @php
+                                    $stpShowVal = $flat->licence_validity_date ?: ($project->licence_validity_date ?? null);
+                                    $stpShowValClean = 'N/A';
+                                    if (!empty($stpShowVal)) {
+                                        $s = trim(preg_replace('/\s+00:00:00(\.0+)?$/i', '', (string)$stpShowVal));
+                                        $s = trim(preg_replace('/\s+12:00:00\s*AM$/i', '', $s));
+                                        $ts = strtotime($s);
+                                        $stpShowValClean = ($ts !== false) ? date('d-m-Y', $ts) : $s;
+                                    }
+                                    $stpShowStatus = $flat->grant_status ?: ($project->grant_status ?? null);
+                                @endphp
+                                <span class="font-bold text-emerald-700">{{ $stpShowValClean }}{{ $stpShowStatus ? ' (' . $stpShowStatus . ')' : '' }}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Govt Case & App Number</span>
+                                <span class="font-mono font-bold text-slate-800">{{ $flat->case_no ?: ($project->case_no ?? '—') }} / {{ $flat->application_no ?: ($project->application_no ?? '—') }}</span>
+                            </div>
                             <div class="sm:col-span-2 pt-1 border-t border-slate-100">
                                 <span class="block text-[9px] font-mono uppercase text-slate-400 font-bold">Project Registered Address</span>
                                 <span class="font-medium text-slate-700 leading-relaxed capitalize">{{ ucfirst($flat->address_of_project ?: ($project->address ?? 'N/A')) }}</span>

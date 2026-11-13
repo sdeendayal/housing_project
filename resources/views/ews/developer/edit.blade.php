@@ -372,6 +372,122 @@
                             </div>
                         </div>
 
+                        <!-- Row 5.5: Additional Official TCP Haryana Grant Specifications (Spacious 6-Field Matrix) -->
+                        @php
+                            $validityDateClean = old('licence_validity_date', $flat->licence_validity_date ?: ($project->licence_validity_date ?? ''));
+                            if (!empty($validityDateClean)) {
+                                $validityDateClean = trim(preg_replace('/\s+00:00:00(\.0+)?$/i', '', $validityDateClean));
+                                $validityDateClean = trim(preg_replace('/\s+12:00:00\s*AM$/i', '', $validityDateClean));
+                                $ts = strtotime($validityDateClean);
+                                if ($ts !== false) {
+                                    $validityDateClean = date('Y-m-d', $ts);
+                                }
+                            }
+                        @endphp
+                        <div class="border border-sky-200/90 rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white via-sky-50/20 to-indigo-50/30 space-y-4 shadow-xs">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-sky-100 pb-3 gap-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 border border-sky-200">TCP Grant Specs</span>
+                                            <span>Additional Official TCP Haryana Grant Specifications</span>
+                                        </h4>
+                                        <p class="text-[9.5px] text-slate-500 font-medium">Master Plan, Purpose, Statutory Validity Date & Registry Numbers</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" id="btn-dev-fetch-tcp" onclick="fetchDeveloperTcpSpecs()"
+                                        class="px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black uppercase flex items-center gap-1.5 transition shadow-2xs cursor-pointer">
+                                        <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                                        <span id="btn-dev-fetch-text">Auto-Fill from TCP Portal</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 6 Distinct Full-Width Fields (Spacious 3-Column Grid) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- 1. Master Development Plan -->
+                                <div class="space-y-1.5">
+                                    <label for="master_development_plan" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-map-fill text-sky-600"></i>
+                                        <span>Master Development Plan</span>
+                                    </label>
+                                    <input type="text" id="master_development_plan" name="master_development_plan" 
+                                        value="{{ old('master_development_plan', $flat->master_development_plan ?: ($project->master_development_plan ?? '')) }}"
+                                        placeholder="e.g. GURGAON-MANESAR" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Urban Master Planning Area</p>
+                                </div>
+
+                                <!-- 2. Approved Scheme / Purpose -->
+                                <div class="space-y-1.5">
+                                    <label for="approved_purpose" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-houses-fill text-indigo-600"></i>
+                                        <span>Approved Scheme / Purpose</span>
+                                    </label>
+                                    <input type="text" id="approved_purpose" name="approved_purpose" 
+                                        value="{{ old('approved_purpose', $flat->approved_purpose ?: ($project->approved_purpose ?? '')) }}"
+                                        placeholder="e.g. Residential Group Housing" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Permitted Project Land Use</p>
+                                </div>
+
+                                <!-- 3. Licence Grant Status -->
+                                <div class="space-y-1.5">
+                                    <label for="grant_status" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                        <span>Licence Grant Status</span>
+                                    </label>
+                                    <input type="text" id="grant_status" name="grant_status" 
+                                        value="{{ old('grant_status', $flat->grant_status ?: ($project->grant_status ?? 'Granted')) }}"
+                                        placeholder="e.g. Granted" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-800 font-black uppercase focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Statutory Licensing State</p>
+                                </div>
+
+                                <!-- 4. Licence Validity Date -->
+                                <div class="space-y-1.5">
+                                    <label for="licence_validity_date" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-calendar-event-fill text-amber-600"></i>
+                                        <span>Licence Validity Date</span>
+                                    </label>
+                                    <input type="date" id="licence_validity_date" name="licence_validity_date" 
+                                        value="{{ $validityDateClean }}"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Statutory Licence Expiry Date</p>
+                                </div>
+
+                                <!-- 5. Govt Case Number (Dedicated Full Width) -->
+                                <div class="space-y-1.5">
+                                    <label for="case_no" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-folder-fill text-slate-600"></i>
+                                        <span>Govt Case Number</span>
+                                    </label>
+                                    <input type="text" id="case_no" name="case_no" 
+                                        value="{{ old('case_no', $flat->case_no ?: ($project->case_no ?? '')) }}"
+                                        placeholder="e.g. LC-1013" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Govt Case Registry File Number</p>
+                                </div>
+
+                                <!-- 6. Govt Application Number (Dedicated Full Width) -->
+                                <div class="space-y-1.5">
+                                    <label for="application_no" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-file-earmark-text-fill text-slate-600"></i>
+                                        <span>Govt Application Number</span>
+                                    </label>
+                                    <input type="text" id="application_no" name="application_no" 
+                                        value="{{ old('application_no', $flat->application_no ?: ($project->application_no ?? '')) }}"
+                                        placeholder="e.g. LC-1013A" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">TCP Haryana Application Registry Number</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Row 6: Approved of Building Plan -->
                         <div class="border border-indigo-200/80 rounded-xl p-4 bg-gradient-to-br from-white to-indigo-50/30 space-y-3">
                             <div class="flex items-center justify-between border-b border-indigo-150 pb-2">
@@ -1196,6 +1312,106 @@
                 $('#remaining_flats_for_oc').val('');
             }
         });
+
+        // Helper to format any date string into YYYY-MM-DD for date inputs
+        function formatDateForDateInput(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            s = s.replace(/\s+00:00:00(\.0+)?$/i, '');
+            s = s.replace(/\s+12:00:00\s*AM$/i, '');
+            let m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if (m) {
+                let d = m[1].padStart(2, '0');
+                let mo = m[2].padStart(2, '0');
+                let y = m[3];
+                if (parseInt(mo) > 12 && parseInt(d) <= 12) {
+                    return `${y}-${d.padStart(2, '0')}-${mo.padStart(2, '0')}`;
+                }
+                return `${y}-${mo}-${d}`;
+            }
+            let m2 = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+            if (m2) {
+                return `${m2[1]}-${m2[2].padStart(2, '0')}-${m2[3].padStart(2, '0')}`;
+            }
+            let parsed = Date.parse(s);
+            if (!isNaN(parsed)) {
+                let dt = new Date(parsed);
+                let y = dt.getFullYear();
+                let mo = String(dt.getMonth() + 1).padStart(2, '0');
+                let d = String(dt.getDate()).padStart(2, '0');
+                return `${y}-${mo}-${d}`;
+            }
+            return s.split(' ')[0];
+        }
+
+        // Live Auto-fetch TCP Haryana Grant Specifications for Developer
+        function fetchDeveloperTcpSpecs() {
+            const licNo = $('#license_no').val() ? $('#license_no').val().trim() : '';
+            if (!licNo) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'License Number Required',
+                    text: 'Please enter Step 9: License No first to fetch official TCP Haryana records.',
+                    confirmButtonColor: '#0284c7'
+                });
+                return;
+            }
+
+            const btn = $('#btn-dev-fetch-tcp');
+            const textSpan = $('#btn-dev-fetch-text');
+            const originalText = textSpan.text();
+            textSpan.text('Querying TCP Portal...');
+            btn.prop('disabled', true);
+
+            $.ajax({
+                url: "{{ route('ews.developer.query-tcp-licence') }}",
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') || '{{ csrf_token() }}'
+                },
+                data: {
+                    licence_no: licNo
+                },
+                success: function(resp) {
+                    if (resp.success && resp.data) {
+                        const d = resp.data;
+                        if (d.DevelopmentPlan) $('#master_development_plan').val(d.DevelopmentPlan);
+                        if (d.Purpose) $('#approved_purpose').val(d.Purpose);
+                        if (d.LicenceValidUpto) $('#licence_validity_date').val(formatDateForDateInput(d.LicenceValidUpto));
+                        if (d.Status) $('#grant_status').val(d.Status);
+                        if (d.CaseNo) $('#case_no').val(d.CaseNo);
+                        if (d.ApplicationNo) $('#application_no').val(d.ApplicationNo);
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'TCP Grant Specifications Auto-Filled!',
+                            showConfirmButton: false,
+                            timer: 2500
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'No TCP Record Found',
+                            text: resp.message || 'No official grant specifications found for License: ' + licNo,
+                            confirmButtonColor: '#0284c7'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'TCP API Error',
+                        text: xhr.responseJSON?.message || 'Failed to query TCP Haryana portal.'
+                    });
+                },
+                complete: function() {
+                    btn.prop('disabled', false);
+                    textSpan.text(originalText);
+                }
+            });
+        }
     </script>
 </body>
 </html>

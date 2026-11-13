@@ -275,6 +275,8 @@ Route::middleware(['auth', 'role:ews_developer,developer'])->group(function () {
         ->name('ews.developer.flats.update');
     Route::post('/ews/developer/flats/{secure_id}/approve-dtp', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'approveDtp'])
         ->name('ews.developer.flats.approve-dtp');
+    Route::post('/ews/developer/query-tcp-licence', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'queryTcpLicence'])
+        ->name('ews.developer.query-tcp-licence');
     Route::delete('/ews/developer/flats/{secure_id}', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'destroy'])
         ->name('ews.developer.flats.destroy');
     Route::get('/ews/developer/flats/export/csv', [\App\Http\Controllers\EwsDeveloperDashboardController::class, 'exportCsv'])

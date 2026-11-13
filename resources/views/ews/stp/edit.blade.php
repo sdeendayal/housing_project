@@ -271,6 +271,12 @@
                                             data-address="{{ $proj->address ?? '' }}"
                                             data-license="{{ $proj->license_no ?? '' }}" 
                                             data-area="{{ $proj->area_of_project ?? '' }}"
+                                            data-devplan="{{ $proj->master_development_plan ?? '' }}"
+                                            data-purpose="{{ $proj->approved_purpose ?? '' }}"
+                                            data-validity="{{ $proj->licence_validity_date ?? '' }}"
+                                            data-grant-status="{{ $proj->grant_status ?? '' }}"
+                                            data-case-no="{{ $proj->case_no ?? '' }}"
+                                            data-app-no="{{ $proj->application_no ?? '' }}"
                                             data-approved="{{ $proj->approved_building_plan ?? '' }}"
                                             data-approval-date="{{ $proj->building_plan_approval_date ?? '' }}"
                                             data-oc-yn="{{ $proj->oc_status_yn ?? '' }}">
@@ -392,6 +398,122 @@
                                 <input type="file" id="developer_plan" name="developer_plan" accept=".pdf"
                                     class="w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[9.5px] file:font-black file:uppercase file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 file:cursor-pointer border border-slate-250 rounded-lg bg-white p-1">
                                 <p class="text-[8px] text-slate-400 font-mono">Leave empty to keep existing document attached.</p>
+                            </div>
+                        </div>
+
+                        <!-- Row 5.5: Additional Official TCP Haryana Grant Specifications (Spacious 6-Field Matrix) -->
+                        @php
+                            $validityDateClean = old('licence_validity_date', $flat->licence_validity_date ?: ($project->licence_validity_date ?? ''));
+                            if (!empty($validityDateClean)) {
+                                $validityDateClean = trim(preg_replace('/\s+00:00:00(\.0+)?$/i', '', $validityDateClean));
+                                $validityDateClean = trim(preg_replace('/\s+12:00:00\s*AM$/i', '', $validityDateClean));
+                                $ts = strtotime($validityDateClean);
+                                if ($ts !== false) {
+                                    $validityDateClean = date('Y-m-d', $ts);
+                                }
+                            }
+                        @endphp
+                        <div class="border border-sky-200/90 rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white via-sky-50/20 to-indigo-50/30 space-y-4 shadow-xs">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-sky-100 pb-3 gap-2.5">
+                                <div class="flex items-center gap-2.5">
+                                    <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-sky-100 text-sky-800 border border-sky-200">TCP Grant Specs</span>
+                                            <span>Additional Official TCP Haryana Grant Specifications</span>
+                                        </h4>
+                                        <p class="text-[9.5px] text-slate-500 font-medium">Master Plan, Purpose, Statutory Validity Date & Registry Numbers</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" onclick="fetchTcpLicenceForEditForm()"
+                                        class="px-3.5 py-1.5 bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black uppercase flex items-center gap-1.5 transition shadow-2xs cursor-pointer">
+                                        <i class="bi bi-lightning-charge-fill text-amber-300"></i>
+                                        <span>Auto-Fill from TCP Portal</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 6 Distinct Full-Width Fields (Spacious 3-Column Grid) -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <!-- 1. Master Development Plan -->
+                                <div class="space-y-1.5">
+                                    <label for="master_development_plan" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-map-fill text-sky-600"></i>
+                                        <span>Master Development Plan</span>
+                                    </label>
+                                    <input type="text" id="master_development_plan" name="master_development_plan" 
+                                        value="{{ old('master_development_plan', $flat->master_development_plan ?: ($project->master_development_plan ?? '')) }}"
+                                        placeholder="e.g. GURGAON-MANESAR" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Urban Master Planning Area</p>
+                                </div>
+
+                                <!-- 2. Approved Scheme / Purpose -->
+                                <div class="space-y-1.5">
+                                    <label for="approved_purpose" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-houses-fill text-indigo-600"></i>
+                                        <span>Approved Scheme / Purpose</span>
+                                    </label>
+                                    <input type="text" id="approved_purpose" name="approved_purpose" 
+                                        value="{{ old('approved_purpose', $flat->approved_purpose ?: ($project->approved_purpose ?? '')) }}"
+                                        placeholder="e.g. Residential Group Housing" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Permitted Project Land Use</p>
+                                </div>
+
+                                <!-- 3. Licence Grant Status -->
+                                <div class="space-y-1.5">
+                                    <label for="grant_status" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                        <span>Licence Grant Status</span>
+                                    </label>
+                                    <input type="text" id="grant_status" name="grant_status" 
+                                        value="{{ old('grant_status', $flat->grant_status ?: ($project->grant_status ?? 'Granted')) }}"
+                                        placeholder="e.g. Granted" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-emerald-800 font-black uppercase focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Statutory Licensing State</p>
+                                </div>
+
+                                <!-- 4. Licence Validity Date -->
+                                <div class="space-y-1.5">
+                                    <label for="licence_validity_date" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-calendar-event-fill text-amber-600"></i>
+                                        <span>Licence Validity Date</span>
+                                    </label>
+                                    <input type="date" id="licence_validity_date" name="licence_validity_date" 
+                                        value="{{ $validityDateClean }}"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Statutory Licence Expiry Date</p>
+                                </div>
+
+                                <!-- 5. Govt Case Number (Dedicated Full Width) -->
+                                <div class="space-y-1.5">
+                                    <label for="case_no" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-folder-fill text-slate-600"></i>
+                                        <span>Govt Case Number</span>
+                                    </label>
+                                    <input type="text" id="case_no" name="case_no" 
+                                        value="{{ old('case_no', $flat->case_no ?: ($project->case_no ?? '')) }}"
+                                        placeholder="e.g. LC-1013" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">Govt Case Registry File Number</p>
+                                </div>
+
+                                <!-- 6. Govt Application Number (Dedicated Full Width) -->
+                                <div class="space-y-1.5">
+                                    <label for="application_no" class="block text-[11px] font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
+                                        <i class="bi bi-file-earmark-text-fill text-slate-600"></i>
+                                        <span>Govt Application Number</span>
+                                    </label>
+                                    <input type="text" id="application_no" name="application_no" 
+                                        value="{{ old('application_no', $flat->application_no ?: ($project->application_no ?? '')) }}"
+                                        placeholder="e.g. LC-1013A" autocomplete="off"
+                                        class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 font-mono font-bold uppercase focus:border-sky-500 focus:ring-2 focus:ring-sky-100 transition shadow-2xs">
+                                    <p class="text-[9px] text-slate-400 font-mono">TCP Haryana Application Registry Number</p>
+                                </div>
                             </div>
                         </div>
 
@@ -1021,7 +1143,7 @@
             $.getJSON("{{ route('ews.stp.projects') }}?district_id=" + districtId, function(projs) {
                 let opts = '<option value="" disabled selected>Choose a project...</option>';
                 $.each(projs, function(i, p) {
-                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
+                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-devplan="${p.master_development_plan || ''}" data-purpose="${p.approved_purpose || ''}" data-validity="${p.licence_validity_date || ''}" data-grant-status="${p.grant_status || ''}" data-case-no="${p.case_no || ''}" data-app-no="${p.application_no || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
                 });
                 opts += '<option value="new">+ Add New Project</option>';
                 $('#project_id').html(opts);
@@ -1045,7 +1167,7 @@
             $.getJSON(url, function(projs) {
                 let opts = '<option value="" disabled selected>Choose a project...</option>';
                 $.each(projs, function(i, p) {
-                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
+                    opts += `<option value="${p.id}" data-developer="${p.developer_name || ''}" data-sector="${p.sector_no || ''}" data-address="${p.address || ''}" data-license="${p.license_no || ''}" data-area="${p.area_of_project || ''}" data-devplan="${p.master_development_plan || ''}" data-purpose="${p.approved_purpose || ''}" data-validity="${p.licence_validity_date || ''}" data-grant-status="${p.grant_status || ''}" data-case-no="${p.case_no || ''}" data-app-no="${p.application_no || ''}" data-approved="${p.approved_building_plan || ''}" data-approval-date="${p.building_plan_approval_date || ''}" data-oc-yn="${p.oc_status_yn || ''}">${p.name.toUpperCase()}</option>`;
                 });
                 opts += '<option value="new">+ Add New Project</option>';
                 $('#project_id').html(opts);
@@ -1067,6 +1189,12 @@
             const address = selectedOption.data('address');
             const licenseNo = selectedOption.data('license');
             const area = selectedOption.data('area');
+            const devPlan = selectedOption.data('devplan');
+            const purpose = selectedOption.data('purpose');
+            const validity = selectedOption.data('validity');
+            const grantStatus = selectedOption.data('grant-status');
+            const caseNo = selectedOption.data('case-no');
+            const appNo = selectedOption.data('app-no');
             const approved = selectedOption.data('approved');
             const approvalDate = selectedOption.data('approval-date');
             const ocYn = selectedOption.data('oc-yn');
@@ -1076,6 +1204,13 @@
             if (address) $('#address_of_project').val(address);
             if (licenseNo) $('#license_no').val(licenseNo);
             if (area) $('#area_of_project').val(area);
+
+            if (devPlan) $('#master_development_plan').val(devPlan);
+            if (purpose) $('#approved_purpose').val(purpose);
+            if (validity) $('#licence_validity_date').val(formatDateForDateInput(validity));
+            if (grantStatus) $('#grant_status').val(grantStatus);
+            if (caseNo) $('#case_no').val(caseNo);
+            if (appNo) $('#application_no').val(appNo);
 
             if (approved) {
                 $('#approved_building_plan').val(approved.toLowerCase());
@@ -1242,6 +1377,37 @@
             }
         });
 
+        // Helper to format any date string into YYYY-MM-DD for date inputs
+        function formatDateForDateInput(dateStr) {
+            if (!dateStr) return '';
+            let s = String(dateStr).trim();
+            s = s.replace(/\s+00:00:00(\.0+)?$/i, '');
+            s = s.replace(/\s+12:00:00\s*AM$/i, '');
+            let m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+            if (m) {
+                let d = m[1].padStart(2, '0');
+                let mo = m[2].padStart(2, '0');
+                let y = m[3];
+                if (parseInt(mo) > 12 && parseInt(d) <= 12) {
+                    return `${y}-${d.padStart(2, '0')}-${mo.padStart(2, '0')}`;
+                }
+                return `${y}-${mo}-${d}`;
+            }
+            let m2 = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+            if (m2) {
+                return `${m2[1]}-${m2[2].padStart(2, '0')}-${m2[3].padStart(2, '0')}`;
+            }
+            let parsed = Date.parse(s);
+            if (!isNaN(parsed)) {
+                let dt = new Date(parsed);
+                let y = dt.getFullYear();
+                let mo = String(dt.getMonth() + 1).padStart(2, '0');
+                let d = String(dt.getDate()).padStart(2, '0');
+                return `${y}-${mo}-${d}`;
+            }
+            return s.split(' ')[0];
+        }
+
         function fetchTcpLicenceForEditForm() {
             const licNo = $('#license_no').val().trim();
             if (!licNo) {
@@ -1272,10 +1438,17 @@
                         if (d.DevelopmentPlan) $('#address_of_project').val(d.DevelopmentPlan);
                         if (d.LicenceNo) $('#license_no').val(d.LicenceNo);
 
+                        if (d.DevelopmentPlan) $('#master_development_plan').val(d.DevelopmentPlan);
+                        if (d.Purpose) $('#approved_purpose').val(d.Purpose);
+                        if (d.LicenceValidUpto) $('#licence_validity_date').val(formatDateForDateInput(d.LicenceValidUpto));
+                        if (d.Status) $('#grant_status').val(d.Status);
+                        if (d.CaseNo) $('#case_no').val(d.CaseNo);
+                        if (d.ApplicationNo) $('#application_no').val(d.ApplicationNo);
+
                         Swal.fire({
                             icon: 'success',
                             title: 'TCP Licence Data Applied!',
-                            html: `Successfully retrieved and pre-filled specifications for <strong>${d.LicenceNo}</strong>:<br><div class="text-left p-2 mt-2 bg-emerald-50 rounded text-xs font-mono border border-emerald-200"><div>• Developer: ${d.Developer}</div><div>• Colony: ${d.ColonyName}</div><div>• Area: ${d.AreaInAcre} Acres</div><div>• Sector: ${d.Sector}</div><div>• Status: ${d.Status}</div></div>`,
+                            html: `Successfully retrieved and pre-filled specifications for <strong>${d.LicenceNo}</strong>:<br><div class="text-left p-2 mt-2 bg-emerald-50 rounded text-xs font-mono border border-emerald-200"><div>• Developer: ${d.Developer}</div><div>• Colony: ${d.ColonyName}</div><div>• Area: ${d.AreaInAcre} Acres</div><div>• Sector: ${d.Sector}</div><div>• Status: ${d.Status}</div><div>• Case/App: ${d.CaseNo || '—'} / ${d.ApplicationNo || '—'}</div></div>`,
                             timer: 4000
                         });
                     } else {

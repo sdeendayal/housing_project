@@ -1398,6 +1398,12 @@ class EwsStpDashboardController extends Controller
             'sector_no' => 'Sector No.',
             'address_of_project' => 'Project Address',
             'area_of_project' => 'Project Area',
+            'master_development_plan' => 'Master Development Plan',
+            'approved_purpose' => 'Approved Scheme / Purpose',
+            'licence_validity_date' => 'Licence Validity Date',
+            'grant_status' => 'Grant Status',
+            'case_no' => 'Case Number',
+            'application_no' => 'Application Number',
             'approved_building_plan' => 'Approved Building Plan',
             'building_plan_approval_date' => 'Building Plan Approval Date',
             'oc_status_yn' => 'OC Status (Y/N)',
@@ -1428,6 +1434,12 @@ class EwsStpDashboardController extends Controller
         $flat->project_name = $projectName;
         $flat->developer_name = $request->developer_name;
         $flat->license_no = $request->license_no;
+        $flat->master_development_plan = $request->master_development_plan;
+        $flat->approved_purpose = $request->approved_purpose;
+        $flat->licence_validity_date = $request->licence_validity_date;
+        $flat->grant_status = $request->grant_status;
+        $flat->case_no = $request->case_no;
+        $flat->application_no = $request->application_no;
         $flat->sector_no = $request->sector_no;
         $flat->address_of_project = $request->address_of_project;
         $flat->area_of_project = $request->area_of_project;
@@ -1506,6 +1518,22 @@ class EwsStpDashboardController extends Controller
         }
 
         $flat->save();
+
+        // Synchronize linked project specifications
+        if (!empty($flat->project_id)) {
+            try {
+                $proj = EwsProject::find($flat->project_id);
+                if ($proj) {
+                    if ($request->filled('master_development_plan')) $proj->master_development_plan = $request->master_development_plan;
+                    if ($request->filled('approved_purpose')) $proj->approved_purpose = $request->approved_purpose;
+                    if ($request->filled('licence_validity_date')) $proj->licence_validity_date = $request->licence_validity_date;
+                    if ($request->filled('grant_status')) $proj->grant_status = $request->grant_status;
+                    if ($request->filled('case_no')) $proj->case_no = $request->case_no;
+                    if ($request->filled('application_no')) $proj->application_no = $request->application_no;
+                    $proj->save();
+                }
+            } catch (\Throwable $e) {}
+        }
 
         // Calculate Diff and Build Audit Trail
         $changedDiff = [];
@@ -1882,7 +1910,7 @@ class EwsStpDashboardController extends Controller
         }
 
         $projects = $query->orderBy('name', 'asc')
-            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id']);
+            ->get(['id', 'name', 'project_abbr', 'town_id', 'town_name', 'district_id', 'zone_id', 'developer_name', 'license_no', 'sector_no', 'address', 'area_of_project', 'master_development_plan', 'approved_purpose', 'licence_validity_date', 'grant_status', 'case_no', 'application_no']);
 
         return response()->json($projects);
     }
@@ -2754,6 +2782,12 @@ class EwsStpDashboardController extends Controller
             'sector_no' => 'Sector',
             'area_of_project' => 'Total Project Area',
             'address_of_project' => 'Site Address',
+            'master_development_plan' => 'Master Development Plan',
+            'approved_purpose' => 'Approved Scheme / Purpose',
+            'licence_validity_date' => 'Licence Validity Date',
+            'grant_status' => 'Grant Status',
+            'case_no' => 'Govt Case Number',
+            'application_no' => 'Govt Application Number',
         ];
 
         $changedFields = [];
@@ -2900,6 +2934,12 @@ class EwsStpDashboardController extends Controller
                     if (isset($changedFields['sector_no'])) $project->sector_no = $flat->sector_no;
                     if (isset($changedFields['area_of_project'])) $project->area_of_project = $flat->area_of_project;
                     if (isset($changedFields['address_of_project'])) $project->address_of_project = $flat->address_of_project;
+                    if (isset($changedFields['master_development_plan'])) $project->master_development_plan = $flat->master_development_plan;
+                    if (isset($changedFields['approved_purpose'])) $project->approved_purpose = $flat->approved_purpose;
+                    if (isset($changedFields['licence_validity_date'])) $project->licence_validity_date = $flat->licence_validity_date;
+                    if (isset($changedFields['grant_status'])) $project->grant_status = $flat->grant_status;
+                    if (isset($changedFields['case_no'])) $project->case_no = $flat->case_no;
+                    if (isset($changedFields['application_no'])) $project->application_no = $flat->application_no;
                     $project->save();
                 }
             } catch (\Throwable $e) {}

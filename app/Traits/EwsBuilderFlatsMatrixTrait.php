@@ -415,6 +415,15 @@ trait EwsBuilderFlatsMatrixTrait
         $ocPdfUrl = $flat->copy_attached_oc_pdf ? asset($flat->copy_attached_oc_pdf) : null;
         $developerPlanPdfUrl = ($project && $project->developer_plan_pdf) ? asset($project->developer_plan_pdf) : null;
 
+        $rawValidity = $flat->licence_validity_date ?: ($project->licence_validity_date ?? null);
+        $cleanValidityDate = '—';
+        if (!empty($rawValidity)) {
+            $s = trim(preg_replace('/\s+00:00:00(\.0+)?$/i', '', (string)$rawValidity));
+            $s = trim(preg_replace('/\s+12:00:00\s*AM$/i', '', $s));
+            $ts = strtotime($s);
+            $cleanValidityDate = ($ts !== false) ? date('d-m-Y', $ts) : $s;
+        }
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -431,6 +440,12 @@ trait EwsBuilderFlatsMatrixTrait
                 'sector' => $project->sector ?? $flat->sector ?? '—',
                 'colonizer_name' => $project->colonizer_name ?? $creator->name ?? '—',
                 'total_project_area' => $project->total_project_area ?? '—',
+                'master_development_plan' => $flat->master_development_plan ?: ($project->master_development_plan ?? '—'),
+                'approved_purpose' => $flat->approved_purpose ?: ($project->approved_purpose ?? '—'),
+                'licence_validity_date' => $cleanValidityDate,
+                'grant_status' => $flat->grant_status ?: ($project->grant_status ?? 'Granted'),
+                'case_no' => $flat->case_no ?: ($project->case_no ?? '—'),
+                'application_no' => $flat->application_no ?: ($project->application_no ?? '—'),
                 'is_approved_of_building_plan' => $flat->is_approved_of_building_plan,
                 'date_of_approved_building_plan' => $flat->date_of_approved_building_plan,
                 'building_plan_pdf_url' => $buildingPlanPdfUrl,

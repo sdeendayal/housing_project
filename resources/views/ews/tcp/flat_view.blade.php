@@ -54,6 +54,22 @@
     $devTown = $flat->town_name ?? '';
     $devZone = $flat->zone_name ?? 'Zone';
 
+    $devDevPlan = $flat->master_development_plan ?? ($project->master_development_plan ?? '');
+    $devPurpose = $flat->approved_purpose ?? ($project->approved_purpose ?? '');
+    $devValidity = $flat->licence_validity_date ?? ($project->licence_validity_date ?? '');
+    $devGrantStatus = $flat->grant_status ?? ($project->grant_status ?? '');
+    $devCaseNo = $flat->case_no ?? ($project->case_no ?? '');
+    $devAppNo = $flat->application_no ?? ($project->application_no ?? '');
+
+    $cleanDate = function($val) {
+        if (empty($val)) return '';
+        $s = trim((string)$val);
+        $s = preg_replace('/\s+00:00:00(\.0+)?$/i', '', $s);
+        $s = preg_replace('/\s+12:00:00\s*AM$/i', '', $s);
+        return $s;
+    };
+    $cleanDevValidity = $cleanDate($devValidity);
+
     $apiLic = $api['LicenceNo'] ?? null;
     $apiProject = $api['ColonyName'] ?? null;
     $apiDeveloper = $api['Developer'] ?? null;
@@ -63,6 +79,7 @@
     $apiDevPlan = $api['DevelopmentPlan'] ?? null;
     $apiPurpose = $api['Purpose'] ?? null;
     $apiValid = $api['LicenceValidUpto'] ?? null;
+    $cleanApiValidity = $cleanDate($apiValid);
     $apiStatus = $api['Status'] ?? null;
     $apiCase = $api['CaseNo'] ?? null;
     $apiApp = $api['ApplicationNo'] ?? null;
@@ -73,6 +90,10 @@
     $mDistrict = $apiDistrict ? $checkMatch($devDistrict, $apiDistrict) : null;
     $mSector = $apiSector ? $checkMatch($devSector, $apiSector) : null;
     $mArea = $apiArea ? $checkMatch($devArea, $apiArea) : null;
+    $mDevPlan = $apiDevPlan ? $checkMatch($devDevPlan, $apiDevPlan) : null;
+    $mPurpose = $apiPurpose ? $checkMatch($devPurpose, $apiPurpose) : null;
+    $mValidity = ($cleanApiValidity || $apiStatus) ? $checkMatch($cleanDevValidity . ' ' . $devGrantStatus, $cleanApiValidity . ' ' . $apiStatus) : null;
+    $mCaseApp = ($apiCase || $apiApp) ? $checkMatch($devCaseNo . ' ' . $devAppNo, $apiCase . ' ' . $apiApp) : null;
 
     $discrepancyCount = 0;
     if ($api) {
@@ -82,6 +103,10 @@
         if ($apiDistrict && !$mDistrict) $discrepancyCount++;
         if ($apiSector && !$mSector) $discrepancyCount++;
         if ($apiArea && !$mArea) $discrepancyCount++;
+        if ($apiDevPlan && !$mDevPlan && !empty($devDevPlan)) $discrepancyCount++;
+        if ($apiPurpose && !$mPurpose && !empty($devPurpose)) $discrepancyCount++;
+        if (($cleanApiValidity || $apiStatus) && !$mValidity && (!empty($cleanDevValidity) || !empty($devGrantStatus))) $discrepancyCount++;
+        if (($apiCase || $apiApp) && !$mCaseApp && (!empty($devCaseNo) || !empty($devAppNo))) $discrepancyCount++;
     }
 @endphp
 <!DOCTYPE html>
@@ -297,6 +322,26 @@
                             <div class="py-1.5 flex items-center justify-between gap-2">
                                 <span class="text-slate-500 font-medium shrink-0">Total Project Area:</span>
                                 <span class="font-bold text-slate-800" id="card-area">{{ $flat->area_of_project ? $flat->area_of_project . ' Acres' : '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Master Dev Plan:</span>
+                                <span class="font-bold text-slate-800 uppercase text-right" id="card-devplan">{{ $devDevPlan ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Approved Scheme / Purpose:</span>
+                                <span class="font-bold text-slate-800 text-right" id="card-purpose">{{ $devPurpose ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Licence Validity & Status:</span>
+                                <span class="font-bold text-emerald-700 text-right" id="card-validity">
+                                    {{ $cleanDevValidity ?: '—' }}{{ $devGrantStatus ? ' (' . $devGrantStatus . ')' : '' }}
+                                </span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Govt Case & App No:</span>
+                                <span class="font-mono font-bold text-slate-800 text-right" id="card-case-app">
+                                    {{ $devCaseNo ?: '—' }} / {{ $devAppNo ?: '—' }}
+                                </span>
                             </div>
                             <div class="py-1.5 flex items-start justify-between gap-2">
                                 <span class="text-slate-500 font-medium shrink-0">Site Address / Plan:</span>
@@ -833,6 +878,269 @@
 
                 </div>
 
+                <!-- Additional TCP Official Metadata (Development Plan, Purpose, Validity, Case Reference) -->
+                <div class="px-5 pb-5">
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+                        <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-sm font-bold shadow-2xs">
+                                    <i class="bi bi-journal-check"></i>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-black uppercase tracking-wider text-slate-800 block">Additional Official TCP Haryana Grant Specifications</span>
+                                    <span class="text-[10px] text-slate-400 font-medium">Reconcile Master Plan, Purpose, Licence Validity & Case/App Numbers</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                            
+                            <!-- 7. Master Development Plan -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                                <div>
+                                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                                                <i class="bi bi-map"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-black uppercase tracking-wider text-slate-800 block">Master Development Plan</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Urban Master Planning Area</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 mb-3.5">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-person-fill text-slate-400"></i>
+                                                <span>Developer Entry</span>
+                                            </label>
+                                            <input type="text" id="form-inp-devplan" name="master_development_plan" value="{{ $devDevPlan }}"
+                                                class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-slate-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold uppercase transition shadow-2xs min-h-[44px]"
+                                                placeholder="e.g. GURGAON-MANESAR" {{ $isApproved ? 'readonly' : '' }}>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                                <span>TCP Official API Record</span>
+                                            </label>
+                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-devplan" title="{{ $apiDevPlan }}">
+                                                {{ $apiDevPlan ?: '—' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="card-action-devplan" class="pt-1">
+                                    @if($isApproved)
+                                        <div class="text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                                            <i class="bi bi-lock-fill text-slate-400"></i> Locked (Approved)
+                                        </div>
+                                    @elseif($apiDevPlan && $isStp)
+                                        <button type="button" onclick="adoptFieldToInput('devplan', '{{ addslashes($apiDevPlan ?? '') }}')"
+                                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer">
+                                            <i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value
+                                        </button>
+                                    @else
+                                        <div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 8. Approved Scheme / Purpose -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                                <div>
+                                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                                                <i class="bi bi-houses"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-black uppercase tracking-wider text-slate-800 block">Approved Scheme / Purpose</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Permitted Project Land Use</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 mb-3.5">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-person-fill text-slate-400"></i>
+                                                <span>Developer Entry</span>
+                                            </label>
+                                            <input type="text" id="form-inp-purpose" name="approved_purpose" value="{{ $devPurpose }}"
+                                                class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-slate-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-4 py-2.5 text-sm font-bold transition shadow-2xs min-h-[44px]"
+                                                placeholder="e.g. Residential Group Housing" {{ $isApproved ? 'readonly' : '' }}>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                                <span>TCP Official API Record</span>
+                                            </label>
+                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-purpose" title="{{ $apiPurpose }}">
+                                                {{ $apiPurpose ?: '—' }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="card-action-purpose" class="pt-1">
+                                    @if($isApproved)
+                                        <div class="text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                                            <i class="bi bi-lock-fill text-slate-400"></i> Locked (Approved)
+                                        </div>
+                                    @elseif($apiPurpose && $isStp)
+                                        <button type="button" onclick="adoptFieldToInput('purpose', '{{ addslashes($apiPurpose ?? '') }}')"
+                                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer">
+                                            <i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value
+                                        </button>
+                                    @else
+                                        <div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 9. Licence Validity & Grant Status -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                                <div>
+                                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                                                <i class="bi bi-calendar-check"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-black uppercase tracking-wider text-slate-800 block">Licence Validity & Grant Status</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Statutory Expiry & Licensing Grant</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 mb-3.5">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-person-fill text-slate-400"></i>
+                                                <span>Developer Entry</span>
+                                            </label>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <div>
+                                                    <span class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Validity Date:</span>
+                                                    <input type="text" id="form-inp-validity" name="licence_validity_date" value="{{ $cleanDevValidity }}"
+                                                        class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-slate-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold transition shadow-2xs min-h-[44px]"
+                                                        placeholder="Valid Upto (DD-MM-YYYY)" {{ $isApproved ? 'readonly' : '' }}>
+                                                </div>
+                                                <div>
+                                                    <span class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Grant Status:</span>
+                                                    <input type="text" id="form-inp-grant-status" name="grant_status" value="{{ $devGrantStatus ?: 'Granted' }}"
+                                                        class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-emerald-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold uppercase transition shadow-2xs min-h-[44px]"
+                                                        placeholder="Status" {{ $isApproved ? 'readonly' : '' }}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                                <span>TCP Official API Record</span>
+                                            </label>
+                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-validity">
+                                                @if($cleanApiValidity || $apiStatus)
+                                                    Valid: {{ $cleanApiValidity ?: '—' }} ({{ $apiStatus ?? 'Granted' }})
+                                                @else
+                                                    —
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="card-action-validity" class="pt-1">
+                                    @if($isApproved)
+                                        <div class="text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                                            <i class="bi bi-lock-fill text-slate-400"></i> Locked (Approved)
+                                        </div>
+                                    @elseif(($cleanApiValidity || $apiStatus) && $isStp)
+                                        <button type="button" onclick="adoptFieldToInput('validity', '{{ addslashes($cleanApiValidity ?? '') }}', '{{ addslashes($apiStatus ?? '') }}')"
+                                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer">
+                                            <i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value
+                                        </button>
+                                    @else
+                                        <div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- 10. Govt Case & App Number -->
+                            <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                                <div>
+                                    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                                        <div class="flex items-center gap-2.5">
+                                            <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-sm font-bold shadow-2xs">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </div>
+                                            <div>
+                                                <span class="text-xs font-black uppercase tracking-wider text-slate-800 block">Govt Case & App Number</span>
+                                                <span class="text-[10px] text-slate-400 font-medium">Official Government Registry References</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-3 mb-3.5">
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-person-fill text-slate-400"></i>
+                                                <span>Developer Entry</span>
+                                            </label>
+                                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                <div>
+                                                    <span class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Govt Case No:</span>
+                                                    <input type="text" id="form-inp-case-no" name="case_no" value="{{ $devCaseNo }}"
+                                                        class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-slate-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase transition shadow-2xs min-h-[44px]"
+                                                        placeholder="e.g. LC-1013" {{ $isApproved ? 'readonly' : '' }}>
+                                                </div>
+                                                <div>
+                                                    <span class="text-[10px] text-slate-500 font-bold uppercase block mb-1">Govt App No:</span>
+                                                    <input type="text" id="form-inp-app-no" name="application_no" value="{{ $devAppNo }}"
+                                                        class="w-full {{ $isApproved ? 'bg-slate-100 text-slate-600 cursor-not-allowed select-all' : 'bg-white text-slate-800 focus:border-indigo-600 focus:ring-2 focus:ring-indigo-100' }} border border-slate-300 rounded-xl px-3 py-2 text-xs font-mono font-bold uppercase transition shadow-2xs min-h-[44px]"
+                                                        placeholder="e.g. LC-1013A" {{ $isApproved ? 'readonly' : '' }}>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold uppercase tracking-wider text-emerald-800 mb-1.5 flex items-center gap-1.5">
+                                                <i class="bi bi-patch-check-fill text-emerald-600"></i>
+                                                <span>TCP Official API Record</span>
+                                            </label>
+                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-case">
+                                                @if($apiCase || $apiApp)
+                                                    {{ $apiCase ?? '—' }} / {{ $apiApp ?? '—' }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="card-action-case" class="pt-1">
+                                    @if($isApproved)
+                                        <div class="text-xs font-bold text-slate-500 flex items-center justify-center gap-1.5 py-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                                            <i class="bi bi-lock-fill text-slate-400"></i> Locked (Approved)
+                                        </div>
+                                    @elseif(($apiCase || $apiApp) && $isStp)
+                                        <button type="button" onclick="adoptFieldToInput('case_app', '{{ addslashes($apiCase ?? '') }}', '{{ addslashes($apiApp ?? '') }}')"
+                                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer">
+                                            <i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value
+                                        </button>
+                                    @else
+                                        <div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
                 <!-- STP Remarks Textarea Section -->
                 @if($isStp && !$flat->is_aproved_by_dtp)
                     <div class="px-5 py-4 bg-slate-50 border-t border-slate-200">
@@ -903,61 +1211,6 @@
                     @endif
                 </div>
 
-                <!-- Additional TCP Official Metadata (Development Plan, Purpose, Validity, Case Reference) -->
-                <div class="px-4 pb-4">
-                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
-                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
-                            <i class="bi bi-journal-text text-sky-600"></i>
-                            <span>Additional Official TCP Haryana Grant Specifications</span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
-                            
-                            <!-- 1. Development Plan -->
-                            <div class="bg-white p-2.5 rounded-lg border border-slate-200 flex flex-col justify-between">
-                                <div>
-                                    <span class="text-slate-400 font-bold uppercase block text-xs">Master Development Plan</span>
-                                    <span class="font-bold text-slate-800 text-sm block mt-0.5 break-words leading-snug" id="cmp-api-devplan" title="{{ $apiDevPlan }}">{{ $apiDevPlan ?: '—' }}</span>
-                                </div>
-                                <div class="mt-2" id="action-devplan">
-                                    @if($isStp && $apiDevPlan)
-                                        <button type="button" onclick="adoptField('address_of_project', '{{ addslashes($apiDevPlan) }}', 'Site Address / Plan')" class="w-full py-1 px-2 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-300 rounded text-xs font-bold uppercase transition">Apply As Address</button>
-                                    @endif
-                                </div>
-                            </div>
-
-                            <!-- 2. Approved Purpose -->
-                            <div class="bg-white p-2.5 rounded-lg border border-slate-200">
-                                <span class="text-slate-400 font-bold uppercase block text-xs">Approved Scheme / Purpose</span>
-                                <span class="font-bold text-slate-800 text-sm block mt-0.5 break-words leading-snug" id="cmp-api-purpose" title="{{ $apiPurpose }}">{{ $apiPurpose ?: '—' }}</span>
-                            </div>
-
-                            <!-- 3. Licence Validity & Status -->
-                            <div class="bg-white p-2.5 rounded-lg border border-slate-200">
-                                <span class="text-slate-400 font-bold uppercase block text-xs">Licence Validity & Grant Status</span>
-                                <span class="font-bold text-emerald-800 text-sm block mt-0.5" id="cmp-api-validity">
-                                    @if($apiValid || $apiStatus)
-                                        Valid: {{ $apiValid ? date('d/m/Y', strtotime($apiValid)) : '—' }} ({{ $apiStatus ?? 'Granted' }})
-                                    @else
-                                        —
-                                    @endif
-                                </span>
-                            </div>
-
-                            <!-- 4. Case & Application No -->
-                            <div class="bg-white p-2.5 rounded-lg border border-slate-200">
-                                <span class="text-slate-400 font-bold uppercase block text-xs">Govt Case & App Number</span>
-                                <span class="font-mono font-bold text-slate-800 text-sm block mt-0.5" id="cmp-api-case">
-                                    @if($apiCase || $apiApp)
-                                        {{ $apiCase ?? '—' }} / {{ $apiApp ?? '—' }}
-                                    @else
-                                        —
-                                    @endif
-                                </span>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
 
             </section>
 
@@ -1167,6 +1420,79 @@
                         </div>
                     </div>
 
+                    <!-- Group 1.5: Official TCP Haryana Grant Specifications -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
+                            <h4 class="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
+                                <i class="bi bi-journal-check text-sky-600"></i>
+                                <span>Official TCP Haryana Grant Specifications</span>
+                            </h4>
+                            <span class="text-xs font-mono text-slate-400">Statutory Master Grant Details</span>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <!-- Master Development Plan -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="font-bold text-slate-700 uppercase">Master Development Plan</label>
+                                    <button type="button" onclick="copyModalField('inp-mod-devplan', currentTcpData ? currentTcpData.DevelopmentPlan : '{{ addslashes($api['DevelopmentPlan'] ?? '') }}')"
+                                        class="text-xs font-bold text-sky-600 hover:text-sky-800 {{ !empty($api['DevelopmentPlan']) ? '' : 'hidden' }}" id="pill-mod-devplan">
+                                        ⚡ Use API: <span class="font-mono">{{ Str::limit($api['DevelopmentPlan'] ?? '', 35) }}</span>
+                                    </button>
+                                </div>
+                                <input type="text" name="master_development_plan" id="inp-mod-devplan" value="{{ $flat->master_development_plan }}"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none uppercase text-sm">
+                            </div>
+
+                            <!-- Approved Scheme / Purpose -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="font-bold text-slate-700 uppercase">Approved Scheme / Purpose</label>
+                                    <button type="button" onclick="copyModalField('inp-mod-purpose', currentTcpData ? currentTcpData.Purpose : '{{ addslashes($api['Purpose'] ?? '') }}')"
+                                        class="text-xs font-bold text-sky-600 hover:text-sky-800 {{ !empty($api['Purpose']) ? '' : 'hidden' }}" id="pill-mod-purpose">
+                                        ⚡ Use API: <span class="font-mono">{{ Str::limit($api['Purpose'] ?? '', 35) }}</span>
+                                    </button>
+                                </div>
+                                <input type="text" name="approved_purpose" id="inp-mod-purpose" value="{{ $flat->approved_purpose }}"
+                                    class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none text-sm">
+                            </div>
+
+                            <!-- Licence Validity & Grant Status -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="font-bold text-slate-700 uppercase">Validity & Status</label>
+                                    <button type="button" onclick="copyModalField('inp-mod-validity', currentTcpData ? currentTcpData.LicenceValidUpto : '{{ addslashes($api['LicenceValidUpto'] ?? '') }}'); if (currentTcpData && currentTcpData.Status) $('#inp-mod-grant-status').val(currentTcpData.Status);"
+                                        class="text-xs font-bold text-sky-600 hover:text-sky-800 {{ (!empty($api['LicenceValidUpto']) || !empty($api['Status'])) ? '' : 'hidden' }}" id="pill-mod-validity">
+                                        ⚡ Use API: <span class="font-mono">{{ $api['LicenceValidUpto'] ?? '' }} ({{ $api['Status'] ?? 'Granted' }})</span>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" name="licence_validity_date" id="inp-mod-validity" value="{{ $flat->licence_validity_date }}" placeholder="Validity Date"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none text-sm">
+                                    <input type="text" name="grant_status" id="inp-mod-grant-status" value="{{ $flat->grant_status }}" placeholder="Grant Status"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none uppercase text-sm">
+                                </div>
+                            </div>
+
+                            <!-- Govt Case & App Number -->
+                            <div>
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="font-bold text-slate-700 uppercase">Case & App Number</label>
+                                    <button type="button" onclick="copyModalField('inp-mod-case-no', currentTcpData ? currentTcpData.CaseNo : '{{ addslashes($api['CaseNo'] ?? '') }}'); if (currentTcpData && currentTcpData.ApplicationNo) $('#inp-mod-app-no').val(currentTcpData.ApplicationNo);"
+                                        class="text-xs font-bold text-sky-600 hover:text-sky-800 {{ (!empty($api['CaseNo']) || !empty($api['ApplicationNo'])) ? '' : 'hidden' }}" id="pill-mod-case">
+                                        ⚡ Use API: <span class="font-mono">{{ $api['CaseNo'] ?? '' }} / {{ $api['ApplicationNo'] ?? '' }}</span>
+                                    </button>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <input type="text" name="case_no" id="inp-mod-case-no" value="{{ $flat->case_no }}" placeholder="Case No"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-mono font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none uppercase text-sm">
+                                    <input type="text" name="application_no" id="inp-mod-app-no" value="{{ $flat->application_no }}" placeholder="Application No"
+                                        class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-slate-800 font-mono font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 outline-none uppercase text-sm">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Group 2: Architectural Identity -->
                     <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                         <div class="flex items-center justify-between border-b border-slate-200 pb-1.5">
@@ -1289,6 +1615,11 @@
         let currentTcpData = @json($api);
         const flatId = "{{ $flat->secure_id }}";
         const flatSecureId = "{{ $flat->secure_id }}";
+
+        function escapeQuotes(str) {
+            if (!str) return '';
+            return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\r?\n/g, ' ');
+        }
 
         function copyFlatCode() {
             const el = document.getElementById('dossier-flat-code');
@@ -1432,6 +1763,18 @@
                 if (data.AreaInAcre) {
                     $('#card-action-area').html(`<button type="button" onclick="adoptFieldToInput('area', '${escapeQuotes(data.AreaInAcre)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
                 }
+                if (data.DevelopmentPlan) {
+                    $('#card-action-devplan').html(`<button type="button" onclick="adoptFieldToInput('devplan', '${escapeQuotes(data.DevelopmentPlan)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
+                }
+                if (data.Purpose) {
+                    $('#card-action-purpose').html(`<button type="button" onclick="adoptFieldToInput('purpose', '${escapeQuotes(data.Purpose)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
+                }
+                if (data.LicenceValidUpto || data.Status) {
+                    $('#card-action-validity').html(`<button type="button" onclick="adoptFieldToInput('validity', '${escapeQuotes(data.LicenceValidUpto || '')}', '${escapeQuotes(data.Status || 'Granted')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
+                }
+                if (data.CaseNo || data.ApplicationNo) {
+                    $('#card-action-case').html(`<button type="button" onclick="adoptFieldToInput('case_app', '${escapeQuotes(data.CaseNo || '')}', '${escapeQuotes(data.ApplicationNo || '')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
+                }
             @endif
 
             // 3. Update Additional TCP Metadata Tiles
@@ -1440,14 +1783,11 @@
 
             let valStr = '';
             if (data.LicenceValidUpto || data.Status) {
-                valStr = 'Valid: ' + (data.LicenceValidUpto || '—') + ' (' + (data.Status || 'Granted') + ')';
+                let cleanVal = String(data.LicenceValidUpto || '').replace(/\s+00:00:00(\.0+)?$/i, '').replace(/\s+12:00:00\s*AM$/i, '').trim();
+                valStr = 'Valid: ' + (cleanVal || '—') + ' (' + (data.Status || 'Granted') + ')';
             }
             $('#cmp-api-validity').text(valStr || '—');
             $('#cmp-api-case').text((data.CaseNo || '—') + ' / ' + (data.ApplicationNo || '—'));
-
-            if (data.DevelopmentPlan) {
-                $('#action-devplan').html(`<button type="button" onclick="adoptField('address_of_project', '${escapeQuotes(data.DevelopmentPlan)}', 'Site Address / Plan')" class="w-full py-1 px-2 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-300 rounded text-xs font-bold uppercase transition">Apply As Address</button>`);
-            }
 
             // 4. Update Status Badges in Header
             $('#top-api-badge').removeClass('bg-amber-100 text-amber-800 border-amber-300').addClass('bg-emerald-100 text-emerald-800 border-emerald-300');
@@ -1476,6 +1816,17 @@
             }
             if (currentTcpData.DevelopmentPlan) {
                 $('#pill-mod-address').removeClass('hidden').find('span').text(currentTcpData.DevelopmentPlan.slice(0, 45));
+                $('#pill-mod-devplan').removeClass('hidden').find('span').text(currentTcpData.DevelopmentPlan.slice(0, 35));
+            }
+            if (currentTcpData.Purpose) {
+                $('#pill-mod-purpose').removeClass('hidden').find('span').text(currentTcpData.Purpose.slice(0, 35));
+            }
+            if (currentTcpData.LicenceValidUpto || currentTcpData.Status) {
+                let cleanVal = String(currentTcpData.LicenceValidUpto || '').replace(/\s+00:00:00(\.0+)?$/i, '').replace(/\s+12:00:00\s*AM$/i, '').trim();
+                $('#pill-mod-validity').removeClass('hidden').find('span').text((cleanVal || '') + ' (' + (currentTcpData.Status || 'Granted') + ')');
+            }
+            if (currentTcpData.CaseNo || currentTcpData.ApplicationNo) {
+                $('#pill-mod-case').removeClass('hidden').find('span').text((currentTcpData.CaseNo || '') + ' / ' + (currentTcpData.ApplicationNo || ''));
             }
         }
 
@@ -1489,7 +1840,18 @@
             if (currentTcpData.District) $('#inp-mod-district').val(currentTcpData.District);
             if (currentTcpData.Sector) $('#inp-mod-sector').val(currentTcpData.Sector);
             if (currentTcpData.AreaInAcre) $('#inp-mod-area').val(currentTcpData.AreaInAcre);
-            if (currentTcpData.DevelopmentPlan) $('#inp-mod-address').val(currentTcpData.DevelopmentPlan);
+            if (currentTcpData.DevelopmentPlan) {
+                $('#inp-mod-address').val(currentTcpData.DevelopmentPlan);
+                $('#inp-mod-devplan').val(currentTcpData.DevelopmentPlan);
+            }
+            if (currentTcpData.Purpose) $('#inp-mod-purpose').val(currentTcpData.Purpose);
+            if (currentTcpData.LicenceValidUpto) {
+                let cleanVal = String(currentTcpData.LicenceValidUpto).replace(/\s+00:00:00(\.0+)?$/i, '').replace(/\s+12:00:00\s*AM$/i, '').trim();
+                $('#inp-mod-validity').val(cleanVal);
+            }
+            if (currentTcpData.Status) $('#inp-mod-grant-status').val(currentTcpData.Status);
+            if (currentTcpData.CaseNo) $('#inp-mod-case-no').val(currentTcpData.CaseNo);
+            if (currentTcpData.ApplicationNo) $('#inp-mod-app-no').val(currentTcpData.ApplicationNo);
 
             Swal.fire({
                 toast: true,
@@ -1555,8 +1917,8 @@
         }
 
         // Adopt an official TCP value directly into its form input field
-        function adoptFieldToInput(key, val) {
-            if (!val) return;
+        function adoptFieldToInput(key, val, extra) {
+            if (!val && !extra) return;
             if (key === 'district') {
                 const targetName = String(val).trim().toUpperCase();
                 let matched = false;
@@ -1582,6 +1944,16 @@
                     });
                     return;
                 }
+            } else if (key === 'devplan') {
+                $('#form-inp-devplan').val(val);
+            } else if (key === 'purpose') {
+                $('#form-inp-purpose').val(val);
+            } else if (key === 'validity') {
+                if (val) $('#form-inp-validity').val(val);
+                if (extra) $('#form-inp-grant-status').val(extra);
+            } else if (key === 'case_app') {
+                if (val) $('#form-inp-case-no').val(val);
+                if (extra) $('#form-inp-app-no').val(extra);
             } else {
                 $('#form-inp-' + key).val(val);
             }
@@ -1608,6 +1980,10 @@
             if (currentTcpData.District) adoptFieldToInput('district', currentTcpData.District);
             if (currentTcpData.Sector) adoptFieldToInput('sector', currentTcpData.Sector);
             if (currentTcpData.AreaInAcre) adoptFieldToInput('area', currentTcpData.AreaInAcre);
+            if (currentTcpData.DevelopmentPlan) adoptFieldToInput('devplan', currentTcpData.DevelopmentPlan);
+            if (currentTcpData.Purpose) adoptFieldToInput('purpose', currentTcpData.Purpose);
+            if (currentTcpData.LicenceValidUpto || currentTcpData.Status) adoptFieldToInput('validity', currentTcpData.LicenceValidUpto || '', currentTcpData.Status || '');
+            if (currentTcpData.CaseNo || currentTcpData.ApplicationNo) adoptFieldToInput('case_app', currentTcpData.CaseNo || '', currentTcpData.ApplicationNo || '');
 
             Swal.fire({
                 toast: true,
@@ -1627,6 +2003,12 @@
             const districtName = $('#form-inp-district option:selected').data('name') || $('#form-inp-district-name').val() || $('#form-inp-district').val();
             const sectorNo = $('#form-inp-sector').val();
             const areaOfProject = $('#form-inp-area').val();
+            const masterDevelopmentPlan = $('#form-inp-devplan').val();
+            const approvedPurpose = $('#form-inp-purpose').val();
+            const licenceValidityDate = $('#form-inp-validity').val();
+            const grantStatus = $('#form-inp-grant-status').val();
+            const caseNo = $('#form-inp-case-no').val();
+            const applicationNo = $('#form-inp-app-no').val();
             const stpRemarks = ($('#form-stp-remarks').val() || '').trim();
 
             if (!stpRemarks) {
@@ -1666,6 +2048,12 @@
                         district_name: districtName,
                         sector_no: sectorNo,
                         area_of_project: areaOfProject,
+                        master_development_plan: masterDevelopmentPlan,
+                        approved_purpose: approvedPurpose,
+                        licence_validity_date: licenceValidityDate,
+                        grant_status: grantStatus,
+                        case_no: caseNo,
+                        application_no: applicationNo,
                         stp_remarks: stpRemarks,
                         approve_dtp: 1
                     };
@@ -1841,6 +2229,37 @@
             }
             if (flat.sector_no) $('#cmp-dev-sector').text('Sector ' + flat.sector_no);
             if (flat.area_of_project) $('#cmp-dev-area').text(flat.area_of_project + ' Acres');
+
+            // Grant Specifications: Inputs and Comparison boxes
+            if (flat.master_development_plan !== undefined) {
+                $('#form-inp-devplan').val(flat.master_development_plan || '');
+                $('#cmp-dev-devplan').text(flat.master_development_plan || '—');
+                $('#card-devplan').text(flat.master_development_plan || '—');
+            }
+            if (flat.approved_purpose !== undefined) {
+                $('#form-inp-purpose').val(flat.approved_purpose || '');
+                $('#cmp-dev-purpose').text(flat.approved_purpose || '—');
+                $('#card-purpose').text(flat.approved_purpose || '—');
+            }
+            if (flat.licence_validity_date !== undefined) {
+                $('#form-inp-validity').val(flat.licence_validity_date || '');
+            }
+            if (flat.grant_status !== undefined) {
+                $('#form-inp-grant-status').val(flat.grant_status || '');
+            }
+            if (flat.licence_validity_date !== undefined || flat.grant_status !== undefined) {
+                const valStr = (flat.licence_validity_date || '—') + (flat.grant_status ? ' (' + flat.grant_status + ')' : '');
+                $('#card-validity').text(valStr);
+            }
+            if (flat.case_no !== undefined) {
+                $('#form-inp-case-no').val(flat.case_no || '');
+            }
+            if (flat.application_no !== undefined) {
+                $('#form-inp-app-no').val(flat.application_no || '');
+            }
+            if (flat.case_no !== undefined || flat.application_no !== undefined) {
+                $('#card-case-app').text((flat.case_no || '—') + ' / ' + (flat.application_no || '—'));
+            }
 
             // Re-evaluate comparison if API data is present
             if (currentTcpData) {
