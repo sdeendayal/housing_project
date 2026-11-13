@@ -4,12 +4,18 @@
     $rawZone = $displayZoneName ?? (!empty($sidebarUser->district_name) ? $sidebarUser->district_name : (!empty($sidebarUser->zone_name) ? $sidebarUser->zone_name : 'Zone'));
     $zoneTitle = str_contains(strtoupper($rawZone), 'ZONE') ? strtoupper($rawZone) : strtoupper($rawZone) . ' ZONE';
 
-    $isDashboardRoute = request()->routeIs('ews.stp.dashboard');
+    $isDashboardRoute = request()->routeIs('ews.stp.dashboard') || request()->routeIs('ews.stp.districts-stats') || request()->routeIs('ews.stp.logs');
     $currentScope = request('scope', '');
     $isDashboardActive = $isDashboardRoute && empty($currentScope);
     $isAllFlatsActive = $isDashboardRoute && $currentScope === 'all';
     $isApprovedActive = $isDashboardRoute && $currentScope === 'dtp_approved';
     $isPendingActive = $isDashboardRoute && $currentScope === 'dtp_pending';
+
+    $isVerifyActive = request()->routeIs('ews.stp.verify*') 
+        || request()->routeIs('ews.stp.flats.*') 
+        || request()->routeIs('ews.stp.flat.*');
+
+    $isPossessionActive = request()->routeIs('ews.stp.possession.*');
 @endphp
 
 <!-- DEEP NAVY / SLATE STP SIDEBAR (MATCHING TCP STYLING) -->
@@ -86,21 +92,23 @@
             <span class="block px-2 text-[8.5px] font-black uppercase tracking-wider text-slate-400 mb-1.5">STP Operations</span>
             <div class="space-y-1">
                 <!-- 5. STP Verification -->
-                <a href="{{ route('ews.stp.verify') }}"
-                    class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ request()->routeIs('ews.stp.verify*') ? 'bg-slate-800 text-white font-bold ring-1 ring-emerald-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
+                <a href="{{ route('ews.stp.verify') }}" id="sidebar-nav-verify"
+                    class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ $isVerifyActive ? 'bg-slate-800 text-white font-bold shadow-xs ring-1 ring-emerald-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all cursor-pointer">
                     <div class="flex items-center gap-2">
                         <i class="bi bi-patch-check-fill text-emerald-400 text-sm"></i>
                         <span>Verify Developer Flat</span>
                     </div>
+                    <span class="stp-nav-dot {{ $isVerifyActive ? '' : 'hidden' }} w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                 </a>
 
                 <!-- 6. Physical Possession -->
-                <a href="{{ route('ews.stp.possession.index') }}"
-                    class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ request()->routeIs('ews.stp.possession.index') ? 'bg-slate-800 text-white font-bold ring-1 ring-amber-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
+                <a href="{{ route('ews.stp.possession.index') }}" id="sidebar-nav-possession"
+                    class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ $isPossessionActive ? 'bg-slate-800 text-white font-bold shadow-xs ring-1 ring-amber-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all cursor-pointer">
                     <div class="flex items-center gap-2">
                         <i class="bi bi-key-fill text-amber-400 text-sm"></i>
                         <span>Physical Possession</span>
                     </div>
+                    <span class="stp-nav-dot {{ $isPossessionActive ? '' : 'hidden' }} w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
                 </a>
             </div>
         </div>

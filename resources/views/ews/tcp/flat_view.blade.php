@@ -2389,8 +2389,13 @@
 
         // Initialize active sidebar link
         $(document).ready(function() {
-            $('#sidebar-nav-all').removeClass('text-slate-300').addClass('bg-slate-800 text-white font-bold');
-            $('#sidebar-nav-all .tcp-nav-dot, #sidebar-nav-all .stp-nav-dot').removeClass('hidden');
+            @if(Auth::check() && in_array(Auth::user()->role, ['ews_stp', 'stp']))
+                $('#sidebar-nav-verify').removeClass('text-slate-300').addClass('bg-slate-800 text-white font-bold ring-1 ring-emerald-500/30');
+                $('#sidebar-nav-verify .stp-nav-dot').removeClass('hidden');
+            @else
+                $('#sidebar-nav-all').removeClass('text-slate-300').addClass('bg-slate-800 text-white font-bold');
+                $('#sidebar-nav-all .tcp-nav-dot, #sidebar-nav-all .stp-nav-dot').removeClass('hidden');
+            @endif
 
             // If API data exists on load, render comparison statuses
             @if($hasApiSuccess)
