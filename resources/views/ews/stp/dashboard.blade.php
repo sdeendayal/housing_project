@@ -395,7 +395,7 @@
                                 <th id="th-col-license">License No.</th>
                                 <th id="th-col-flat">Flat Details</th>
                                 <th id="th-col-status" class="text-center">STP Status</th>
-                                <th class="text-right" style="width: 8%;">Action</th>
+                                <th class="text-right" style="width: 12%;">Action</th>
                             </tr>
                         </thead>
                         <tbody>

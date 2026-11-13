@@ -134,6 +134,32 @@
                     <form method="POST" action="{{ route('ews.stp.flats.update', $flat->secure_id) }}" enctype="multipart/form-data" class="p-6 space-y-4" id="stpEditForm">
                         @csrf
                         @method('PUT')
+                        @php
+                            $formatInputDate = function($val) {
+                                if (empty($val)) return '';
+                                if ($val instanceof \Carbon\CarbonInterface || $val instanceof \DateTimeInterface) {
+                                    return $val->format('Y-m-d');
+                                }
+                                $clean = trim((string)$val);
+                                $clean = preg_replace('/\s+00:00:00(\.0+)?$/i', '', $clean);
+                                $clean = preg_replace('/\s+12:00:00\s*AM$/i', '', $clean);
+                                $clean = trim($clean);
+                                if (preg_match('/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/', $clean, $m)) {
+                                    return sprintf('%04d-%02d-%02d', $m[1], $m[2], $m[3]);
+                                }
+                                if (preg_match('/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/', $clean, $m)) {
+                                    $d = (int)$m[1];
+                                    $mo = (int)$m[2];
+                                    $y = (int)$m[3];
+                                    if ($mo > 12 && $d <= 12) {
+                                        return sprintf('%04d-%02d-%02d', $y, $d, $mo);
+                                    }
+                                    return sprintf('%04d-%02d-%02d', $y, $mo, $d);
+                                }
+                                $ts = strtotime($clean);
+                                return ($ts !== false) ? date('Y-m-d', $ts) : $clean;
+                            };
+                        @endphp
 
                         <!-- Row 1: Register Flat & Zone -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -403,15 +429,7 @@
 
                         <!-- Row 5.5: Additional Official TCP Haryana Grant Specifications (Spacious 6-Field Matrix) -->
                         @php
-                            $validityDateClean = old('licence_validity_date', $flat->licence_validity_date ?: ($project->licence_validity_date ?? ''));
-                            if (!empty($validityDateClean)) {
-                                $validityDateClean = trim(preg_replace('/\s+00:00:00(\.0+)?$/i', '', $validityDateClean));
-                                $validityDateClean = trim(preg_replace('/\s+12:00:00\s*AM$/i', '', $validityDateClean));
-                                $ts = strtotime($validityDateClean);
-                                if ($ts !== false) {
-                                    $validityDateClean = date('Y-m-d', $ts);
-                                }
-                            }
+                            $validityDateClean = $formatInputDate(old('licence_validity_date', $flat->licence_validity_date ?: ($project->licence_validity_date ?? '')));
                         @endphp
                         <div class="border border-sky-200/90 rounded-2xl p-4 sm:p-5 bg-gradient-to-br from-white via-sky-50/20 to-indigo-50/30 space-y-4 shadow-xs">
                             <div class="flex flex-col sm:flex-row sm:items-center justify-between border-b border-sky-100 pb-3 gap-2.5">
@@ -539,6 +557,7 @@
 
                             @php
                                 $planApprovedVal = old('approved_building_plan', $flat->approved_building_plan ?: ($project->approved_building_plan ?? 'yes'));
+                                $bldgPlanDateClean = $formatInputDate(old('building_plan_approval_date', $flat->building_plan_approval_date ?: ($project->building_plan_approval_date ?? '')));
                             @endphp
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <!-- Dropdown: Approved of Building Plan (Yes/No) -->
@@ -559,7 +578,7 @@
                                         Date of Approved
                                     </label>
                                     <input type="date" id="building_plan_approval_date" name="building_plan_approval_date" 
-                                        value="{{ old('building_plan_approval_date', $flat->building_plan_approval_date ?: ($project->building_plan_approval_date ?? '')) }}"
+                                        value="{{ $bldgPlanDateClean }}"
                                         class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 focus:outline-none font-mono">
                                 </div>
 
@@ -611,6 +630,7 @@
                             @php
                                 $ocYnVal = old('oc_status_yn', $flat->oc_status_yn ?: ($project->oc_status_yn ?? 'yes'));
                                 $ocCatVal = old('oc_status', $flat->oc_status ?: 'part');
+                                $ocDateClean = $formatInputDate(old('oc_date', $flat->oc_date ?? ''));
                             @endphp
 
                             <!-- Status of OC & Category Selector (2 Columns) -->
@@ -650,7 +670,7 @@
                                             Date of OC
                                         </label>
                                         <input type="date" id="oc_date" name="oc_date" 
-                                            value="{{ old('oc_date', $flat->oc_date ?? '') }}"
+                                            value="{{ $ocDateClean }}"
                                             class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-medium focus:border-teal-500 focus:ring-1 focus:ring-teal-500 focus:outline-none font-mono">
                                     </div>
 
@@ -1217,7 +1237,7 @@
                 handleApprovedBuildingPlanChange(false);
             }
             if (approvalDate && approved && approved.toLowerCase() === 'yes') {
-                $('#building_plan_approval_date').val(approvalDate);
+                $('#building_plan_approval_date').val(formatDateForDateInput(approvalDate));
             }
             if (ocYn) {
                 $('#oc_status_yn').val(ocYn.toLowerCase());

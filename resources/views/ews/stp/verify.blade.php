@@ -363,13 +363,13 @@
                                 <thead>
                                     <tr class="bg-slate-50/80 border-b border-slate-200 text-[9.5px] text-slate-600 uppercase font-black tracking-wider">
                                         <th class="px-4 py-3" style="width: 4%;">#</th>
-                                        <th class="px-4 py-3" style="width: 14%;">District & Town</th>
-                                        <th class="px-4 py-3" style="width: 22%;">Project & Colonizer</th>
-                                        <th class="px-4 py-3" style="width: 10%;">Flat No.</th>
-                                        <th class="px-4 py-3" style="width: 15%;">Tower & Floor</th>
+                                        <th class="px-4 py-3" style="width: 13%;">District & Town</th>
+                                        <th class="px-4 py-3" style="width: 21%;">Project & Colonizer</th>
+                                        <th class="px-4 py-3" style="width: 9%;">Flat No.</th>
+                                        <th class="px-4 py-3" style="width: 14%;">Tower & Floor</th>
                                         <th class="px-4 py-3" style="width: 11%;">OC Status</th>
                                         <th class="px-4 py-3 text-center" style="width: 14%;">STP Status</th>
-                                        <th class="px-4 py-3 text-right" style="width: 10%;">Action</th>
+                                        <th class="px-4 py-3 text-right" style="width: 14%;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-150 text-xs text-slate-700" id="flats-table-body">
@@ -802,11 +802,19 @@
                                 ${dtpBadge}
                             </td>
                             <td class="px-4 py-2.5 text-right whitespace-nowrap">
-                                <div class="inline-flex items-center justify-end">
+                                <div class="inline-flex items-center gap-1.5 justify-end">
                                     <a href="${flatShowBaseUrl}/${secureIdentifier}" target="_blank"
                                         class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Official TCP Verification & View">
                                         <i class="bi bi-eye text-xs"></i> View
                                     </a>
+                                    ${!isDtpApproved ? `
+                                    <a href="${flatShowBaseUrl}/${secureIdentifier}/edit" target="_blank"
+                                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Edit Flat">
+                                        <i class="bi bi-pencil-square text-xs"></i> Edit
+                                    </a>` : `
+                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
+                                        <i class="bi bi-lock-fill text-slate-400"></i> Locked
+                                    </span>`}
                                 </div>
                             </td>
                         </tr>
@@ -1003,6 +1011,13 @@
                 <a href="${flatShowBaseUrl}/${f.secure_id || f.id}" target="_blank" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
                     <i class="bi bi-box-arrow-up-right"></i> Open Verification Dossier
                 </a>
+                ${!isDtpApproved ? `
+                <a href="${flatShowBaseUrl}/${f.secure_id || f.id}/edit" target="_blank" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-pencil-square"></i> Edit Flat
+                </a>` : `
+                <span class="px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
+                    <i class="bi bi-lock-fill"></i> Locked (Approved)
+                </span>`}
             `);
             $('#inspect-modal').removeClass('hidden').addClass('flex');
         }

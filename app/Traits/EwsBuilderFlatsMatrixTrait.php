@@ -373,12 +373,19 @@ trait EwsBuilderFlatsMatrixTrait
                     $viewUrl = route('ews.department.builder-flats.show', $flatIdentifier);
                 } elseif ($isStp) {
                     $viewUrl = route('ews.stp.flats.show', $flatIdentifier);
+                    $editUrl = route('ews.stp.flats.edit', $flatIdentifier);
+                    $isApproved = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0) === 1;
+
+                    $editBtn = $isApproved
+                        ? '<span class="px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-[9.5px] font-bold uppercase inline-flex items-center gap-1 shadow-2xs cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited"><i class="bi bi-lock-fill text-[9.5px]"></i> <span>Locked</span></span>'
+                        : '<a href="'.$editUrl.'" class="px-2.5 py-1 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-300 hover:border-amber-500 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-pencil-square text-[9.5px]"></i> <span>Edit</span></a>';
 
                     return '
-                        <div class="inline-flex items-center justify-end w-full">
+                        <div class="inline-flex items-center gap-1.5 justify-end">
                             <a href="'.$viewUrl.'" class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">
                                 <i class="bi bi-eye text-[10px]"></i> <span>View</span>
                             </a>
+                            '.$editBtn.'
                         </div>
                     ';
                 }
