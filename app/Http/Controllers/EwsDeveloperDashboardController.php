@@ -97,7 +97,7 @@ class EwsDeveloperDashboardController extends Controller
         // Fetch only the flats created by THIS developer (strictly what appears in the table)
         $myFlats = EwsBuilderFlat::where('created_by', $user->id)
             ->whereNotNull('district_id')
-            ->get(['district_id', 'district_name', 'town_id', 'town_name', 'project_id', 'project_name']);
+            ->get(['district_id', 'district_name', 'town_id', 'town_name', 'project_id', 'project_name', 'license_no', 'is_approved_by_dtp']);
 
         // 1. Districts present in developer's flats (frontend table)
         $myDistrictIds = $myFlats->pluck('district_id')->filter()->unique()->values()->toArray();
@@ -148,12 +148,24 @@ class EwsDeveloperDashboardController extends Controller
             ];
         })->unique('id')->sortBy('name')->values();
 
+        // 4. Licenses present in developer's flats
+        $licensesList = $myFlats->pluck('license_no')->filter()->unique()->sort()->values();
+
+        // Approved vs Pending STP Clearance counts
+        $approvedFlatsCount = EwsBuilderFlat::where('created_by', $user->id)
+            ->where('is_approved_by_dtp', 1)
+            ->count();
+        $pendingFlatsCount = max(0, $myFlatsCount - $approvedFlatsCount);
+
         $stats = [
             'total_allotted' => $zoneAllottedCount,
             'state_allotted_total' => $stateAllottedTotal,
             'total_flats' => $myFlatsCount,
             'my_flats' => $myFlatsCount,
+            'approved_flats' => $approvedFlatsCount,
+            'pending_flats' => $pendingFlatsCount,
             'total_projects' => $projectsList->count(),
+            'total_licenses' => $licensesList->count(),
             'total_towns' => $townsList->count(),
             'total_logs' => EwsDeveloperLog::where('user_id', $user->id)->count(),
         ];
@@ -165,9 +177,10 @@ class EwsDeveloperDashboardController extends Controller
             'districts' => $districts->map(fn($d) => ['id' => (string)$d->id, 'name' => strtoupper($d->name)])->values(),
             'towns' => $townsList->map(fn($t) => ['id' => (string)$t->id, 'name' => strtoupper($t->name), 'district_id' => (string)$t->district_id])->values(),
             'projects' => $projectsList->map(fn($p) => ['id' => (string)$p->id, 'name' => strtoupper($p->name), 'district_id' => (string)$p->district_id, 'town_id' => (string)$p->town_id])->values(),
+            'licenses' => $licensesList->values(),
         ];
 
-        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'displayZoneName', 'developerFilterTree'));
+        return view('ews.developer.dashboard', compact('user', 'stats', 'currentView', 'districts', 'projectsList', 'townsList', 'licensesList', 'displayZoneName', 'developerFilterTree'));
     }
 
     /**
@@ -194,6 +207,23 @@ class EwsDeveloperDashboardController extends Controller
             $query->where('project_id', $request->project_id);
         }
 
+        // 5. Specific License Filter
+        if ($request->filled('license_no')) {
+            $query->where('license_no', $request->license_no);
+        }
+
+        // 6. STP Status Filter (all / approved / pending)
+        if ($request->filled('status') && in_array(strtolower($request->status), ['approved', 'pending'])) {
+            $st = strtolower($request->status);
+            if ($st === 'approved') {
+                $query->where('is_approved_by_dtp', 1);
+            } elseif ($st === 'pending') {
+                $query->where(function($q) {
+                    $q->whereNull('is_approved_by_dtp')->orWhere('is_approved_by_dtp', 0);
+                });
+            }
+        }
+
         // Search Filter (Standard string parameter or Yajra request array)
         $searchValue = '';
         if ($request->has('search')) {
@@ -210,6 +240,8 @@ class EwsDeveloperDashboardController extends Controller
                 $q->where('district_name', 'like', "%{$searchValue}%")
                   ->orWhere('town_name', 'like', "%{$searchValue}%")
                   ->orWhere('project_name', 'like', "%{$searchValue}%")
+                  ->orWhere('license_no', 'like', "%{$searchValue}%")
+                  ->orWhere('flat_code', 'like', "%{$searchValue}%")
                   ->orWhere('block_tower_number', 'like', "%{$searchValue}%")
                   ->orWhere('floor', 'like', "%{$searchValue}%")
                   ->orWhere('flat_number', 'like', "%{$searchValue}%");
@@ -265,11 +297,11 @@ class EwsDeveloperDashboardController extends Controller
                     $parts = explode('-', $r->flat_no);
                     return count($parts) > 1 ? '<span class="text-slate-700 font-bold">' . $parts[1] . '</span>' : '<span class="text-slate-600 font-bold">EWS Flat</span>';
                 })
+                ->addColumn('license_no', fn($r) => '<span class="text-slate-400 font-mono text-[10px]">—</span>')
                 ->addColumn('block_tower_number', fn($r) => '<span class="text-indigo-600 font-mono font-bold">App #' . $r->application_number . '</span>')
                 ->addColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . $r->full_name . '</span>')
                 ->addColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono">' . $r->flat_no . '</span>')
-                ->addColumn('flat_code', fn($r) => '<span class="text-emerald-700 font-bold font-mono">' . ($r->mobile_number ? substr($r->mobile_number, 0, 2) . '******' . substr($r->mobile_number, -2) : 'N/A') . '</span>')
-                ->addColumn('added_by', function($r) {
+                ->addColumn('stp_status', function($r) {
                     $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given');
                     $status = $isGiven ? 'Possession Given' : ($r->possession_status ?: 'Allotted');
                     $color = $isGiven ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200';
@@ -278,7 +310,7 @@ class EwsDeveloperDashboardController extends Controller
                 ->addColumn('actions', function($r) {
                     return '<div class="inline-flex justify-end w-full"><span class="px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg text-[9px] font-bold uppercase border border-slate-200"><i class="bi bi-info-circle me-1"></i> Record</span></div>';
                 })
-                ->rawColumns(['district_name', 'town_name', 'project_name', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'added_by', 'actions'])
+                ->rawColumns(['district_name', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'stp_status', 'actions'])
                 ->make(true);
         }
 
@@ -289,22 +321,32 @@ class EwsDeveloperDashboardController extends Controller
             ->editColumn('district_name', fn($r) => strtoupper($r->district_name ?? ''))
             ->editColumn('town_name', fn($r) => ucwords(strtolower($r->town_name ?? '')))
             ->editColumn('project_name', fn($r) => ucwords(strtolower($r->project_name ?? '')))
-            ->editColumn('block_tower_number', fn($r) => strtoupper($r->block_tower_number ?? ''))
-            ->editColumn('floor', fn($r) => ucfirst($r->floor ?? ''))
+            ->addColumn('license_no', function($r) {
+                if (empty($r->license_no)) return '<span class="text-slate-400 font-mono text-xs">—</span>';
+                return '<span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200 inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-card-heading text-sky-600"></i> ' . e($r->license_no) . '</span>';
+            })
+            ->editColumn('block_tower_number', fn($r) => '<span class="font-mono font-bold text-indigo-700 uppercase">' . e($r->block_tower_number ?? '—') . '</span>')
+            ->editColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . e($r->floor ?? '—') . '</span>')
+            ->editColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono text-xs">' . e($r->flat_number) . '</span>')
+            ->addColumn('stp_status', function($r) {
+                $isApproved = (int)($r->is_approved_by_dtp ?? 0) === 1;
+                if ($isApproved) {
+                    return '<span class="px-2.5 py-1 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-lg text-[9.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-patch-check-fill text-emerald-600"></i> Approved</span>';
+                }
+                return '<span class="px-2.5 py-1 bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-[9.5px] font-black uppercase inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>';
+            })
             ->addColumn('actions', function ($row) {
                 $secureId = !empty($row->secure_id) ? $row->secure_id : EwsHelper::encodeSecureId($row->id);
                 $viewUrl = route('ews.developer.flats.show', $secureId);
 
-                return '
-                    <div class="inline-flex justify-end w-full">
-                        <a href="'.$viewUrl.'" title="View Flat Details"
-                            class="w-8 h-8 rounded-lg bg-sky-50 hover:bg-sky-600 text-sky-600 hover:text-white border border-sky-200/80 flex items-center justify-center transition-all shadow-2xs hover:shadow-sm group">
-                            <i class="bi bi-eye-fill text-sm transition-transform group-hover:scale-115"></i>
-                        </a>
-                    </div>
-                ';
+                return '<div class="inline-flex items-center justify-end w-full">
+                    <a href="'.$viewUrl.'" title="View Flat Dossier"
+                        class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[9.5px] font-bold uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs group">
+                        <i class="bi bi-eye-fill text-[10px]"></i> <span>View</span>
+                    </a>
+                </div>';
             })
-            ->rawColumns(['actions'])
+            ->rawColumns(['license_no', 'block_tower_number', 'floor', 'flat_number', 'stp_status', 'actions'])
             ->make(true);
     }
 
@@ -1683,18 +1725,21 @@ class EwsDeveloperDashboardController extends Controller
 
         $callback = function () use ($flats) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['S.No.', 'District Name', 'Town Name', 'Project Name', 'Block/Tower No.', 'Floor Details', 'Flat No.', 'Registered At']);
+            fputcsv($file, ['S.No.', 'District Name', 'Town Name', 'Project Name', 'License No.', 'Block/Tower No.', 'Floor Details', 'Flat No.', 'STP Status', 'Registered At']);
 
             foreach ($flats as $index => $flat) {
+                $isApproved = (int)($flat->is_approved_by_dtp ?? 0) === 1;
                 fputcsv($file, [
                     $index + 1,
                     $flat->district_name,
                     $flat->town_name,
                     $flat->project_name,
+                    $flat->license_no ?? '—',
                     $flat->block_tower_number,
                     $flat->floor,
                     $flat->flat_number,
-                    $flat->created_at->format('Y-m-d H:i:s'),
+                    $isApproved ? 'Approved by STP' : 'Pending STP Clearance',
+                    $flat->created_at ? $flat->created_at->format('Y-m-d H:i:s') : '—',
                 ]);
             }
             fclose($file);
@@ -1790,17 +1835,20 @@ class EwsDeveloperDashboardController extends Controller
 
         $callback = function () use ($flats) {
             $file = fopen('php://output', 'w');
-            fputs($file, "S.No.\tDistrict Name\tTown Name\tProject Name\tBlock/Tower No.\tFloor Details\tFlat No.\tRegistered At\n");
+            fputs($file, "S.No.\tDistrict Name\tTown Name\tProject Name\tLicense No.\tBlock/Tower No.\tFloor Details\tFlat No.\tSTP Status\tRegistered At\n");
 
             foreach ($flats as $index => $flat) {
+                $isApproved = (int)($flat->is_approved_by_dtp ?? 0) === 1;
                 fputs($file, ($index + 1) . "\t" .
                     $flat->district_name . "\t" .
                     $flat->town_name . "\t" .
                     $flat->project_name . "\t" .
+                    ($flat->license_no ?? '—') . "\t" .
                     $flat->block_tower_number . "\t" .
                     $flat->floor . "\t" .
                     $flat->flat_number . "\t" .
-                    $flat->created_at->format('Y-m-d H:i:s') . "\n"
+                    ($isApproved ? 'Approved by STP' : 'Pending STP Clearance') . "\t" .
+                    ($flat->created_at ? $flat->created_at->format('Y-m-d H:i:s') : '—') . "\n"
                 );
             }
             fclose($file);
@@ -2168,7 +2216,7 @@ class EwsDeveloperDashboardController extends Controller
             return response()->json(['success' => false, 'message' => 'Flat record not found.'], 404);
         }
 
-        $oldStatus = (int)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp ?? 0);
+        $oldStatus = (int)($flat->is_approved_by_dtp ?? 0);
         $newStatus = (int)$request->input('status', 1);
 
         $flat->is_approved_by_dtp = $newStatus;

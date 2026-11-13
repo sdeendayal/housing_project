@@ -226,44 +226,106 @@
                 </div>
             @endif
 
+            <!-- 3 Executive Telemetry KPI Metric Cards (Interactive Filters) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <!-- Card 1: Total Registered Flats -->
+                <div id="card-stat-all" onclick="setStatusFilter('')"
+                    class="bg-white border-2 border-sky-500 rounded-xl p-3.5 flex items-center justify-between shadow-xs cursor-pointer hover:shadow-md transition-all group ring-2 ring-sky-100">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center text-lg border border-sky-200 shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="bi bi-buildings"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Total Registered Flats</span>
+                                <span class="px-1.5 py-0.2 rounded text-[7.5px] font-black uppercase bg-sky-100 text-sky-800 font-mono">My Flats</span>
+                            </div>
+                            <div class="flex items-baseline gap-1 mt-0.5">
+                                <span class="text-xl font-black text-slate-900 font-mono">{{ number_format($stats['my_flats'] ?? 0) }}</span>
+                                <span class="text-[8.5px] font-bold text-slate-400 uppercase font-mono">Units</span>
+                            </div>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-slate-300 text-xs group-hover:text-sky-600 group-hover:translate-x-0.5 transition-all"></i>
+                </div>
+
+                <!-- Card 2: Approved by STP -->
+                <div id="card-stat-approved" onclick="setStatusFilter('approved')"
+                    class="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-xs cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg border border-emerald-200 shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Approved by STP</span>
+                                <span class="px-1.5 py-0.2 rounded text-[7.5px] font-black uppercase bg-emerald-100 text-emerald-800 font-mono">Certified</span>
+                            </div>
+                            <div class="flex items-baseline gap-1 mt-0.5">
+                                <span class="text-xl font-black text-emerald-600 font-mono">{{ number_format($stats['approved_flats'] ?? 0) }}</span>
+                                <span class="text-[8.5px] font-bold text-emerald-600/70 uppercase font-mono">Certified</span>
+                            </div>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-slate-300 text-xs group-hover:text-emerald-600 group-hover:translate-x-0.5 transition-all"></i>
+                </div>
+
+                <!-- Card 3: Pending STP Clearance -->
+                <div id="card-stat-pending" onclick="setStatusFilter('pending')"
+                    class="bg-white border border-slate-200 rounded-xl p-3.5 flex items-center justify-between shadow-xs cursor-pointer hover:border-amber-400 hover:shadow-md transition-all group">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg border border-amber-200 shrink-0 group-hover:scale-105 transition-transform">
+                            <i class="bi bi-hourglass-split"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9.5px] font-black uppercase tracking-wider text-slate-700">Pending STP Approval</span>
+                                <span class="px-1.5 py-0.2 rounded text-[7.5px] font-black uppercase bg-amber-100 text-amber-800 font-mono">Pending</span>
+                            </div>
+                            <div class="flex items-baseline gap-1 mt-0.5">
+                                <span class="text-xl font-black text-amber-600 font-mono">{{ number_format($stats['pending_flats'] ?? 0) }}</span>
+                                <span class="text-[8.5px] font-bold text-amber-600/70 uppercase font-mono">Awaiting</span>
+                            </div>
+                        </div>
+                    </div>
+                    <i class="bi bi-chevron-right text-slate-300 text-xs group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all"></i>
+                </div>
+            </div>
+
             <!-- REGISTRY DATABASE TABLE SECTION -->
             <section id="table-section" class="bg-white border border-slate-200/80 rounded-xl shadow-sm dev-shadow overflow-hidden">
-                <div class="px-5 py-4 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
-                    <!-- Flat Register By Me Card in Table Header -->
-                    <div class="inline-flex items-center gap-3 bg-white border border-emerald-200/90 rounded-xl px-3.5 py-2 shadow-2xs">
-                        <div class="w-9 h-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center border border-emerald-150 shrink-0">
-                            <i class="bi bi-person-check-fill text-base"></i>
+                <div class="px-5 py-3.5 border-b border-slate-150 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center font-bold text-sm shadow-2xs">
+                            <i class="bi bi-table"></i>
                         </div>
                         <div>
                             <div class="flex items-center gap-2">
-                                <span class="text-[9.5px] font-black uppercase tracking-wider text-emerald-700">Flats Registered By Me</span>
-                                <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 border border-emerald-200 rounded text-[8px] font-black uppercase font-mono">My Flats</span>
-                            </div>
-                            <div class="flex items-baseline gap-1.5 mt-0.5 leading-none">
-                                <h3 id="table-heading-title" class="text-xl font-black text-emerald-600 font-mono tracking-tight">{{ $stats['my_flats'] }}</h3>
-                                <span class="text-[8.5px] text-emerald-600/70 font-mono uppercase font-semibold">Registered Flats</span>
+                                <h3 class="text-xs font-black uppercase tracking-wider text-slate-800">My Registered Builder Flats Matrix</h3>
+                                <span class="px-1.5 py-0.2 bg-sky-100 text-sky-800 border border-sky-200 rounded text-[8px] font-black uppercase font-mono">Developer View</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2.5 self-end sm:self-auto">
                         <input type="hidden" id="filter-ownership" value="my_flats">
+                        <input type="hidden" id="filter-status" value="">
 
                         <!-- Filter-wise Exports (CSV, EXCEL, PDF) -->
                         <div class="inline-flex gap-1 items-center bg-slate-100 p-1 rounded-lg">
                             <span class="text-[8px] font-bold text-slate-400 uppercase tracking-wider px-1">Export:</span>
                             <button type="button" onclick="triggerExport('csv')"
-                                class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
+                                class="px-2 py-1 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all cursor-pointer">
                                 <i class="bi bi-file-earmark-spreadsheet text-emerald-600"></i>
                                 <span>CSV</span>
                             </button>
                             <button type="button" onclick="triggerExport('excel')"
-                                class="px-2 py-1 bg-white hover:bg-green-50 text-slate-700 hover:text-green-700 border border-slate-200 hover:border-green-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
+                                class="px-2 py-1 bg-white hover:bg-green-50 text-slate-700 hover:text-green-700 border border-slate-200 hover:border-green-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all cursor-pointer">
                                 <i class="bi bi-file-earmark-excel-fill text-green-600"></i>
                                 <span>EXCEL</span>
                             </button>
                             <button type="button" onclick="triggerExport('pdf')"
-                                class="px-2 py-1 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all">
+                                class="px-2 py-1 bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-700 border border-slate-200 hover:border-rose-300 font-bold uppercase rounded text-[9px] shadow-sm flex items-center gap-1 transition-all cursor-pointer">
                                 <i class="bi bi-file-pdf-fill text-rose-600"></i>
                                 <span>PDF</span>
                             </button>
@@ -273,14 +335,14 @@
 
                         <!-- Dedicated Page Add Link -->
                         <a href="{{ route('ews.developer.flats.create') }}"
-                            class="px-3.5 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-750 text-white font-black uppercase tracking-wider rounded-lg text-[9px] shadow-md flex items-center gap-1 transition-all">
+                            class="px-3.5 py-1.5 bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-600 hover:to-indigo-750 text-white font-black uppercase tracking-wider rounded-lg text-[9px] shadow-md flex items-center gap-1 transition-all cursor-pointer">
                             <i class="bi bi-plus-lg"></i>
                             <span>Register EWS Flat</span>
                         </a>
                     </div>
                 </div>
 
-                <!-- Cascading Filter Console (Zone -> District -> Town -> Project) -->
+                <!-- Cascading Filter Console (District -> Town -> Project -> License No -> Counter) -->
                 <div class="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200">
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
                         <!-- Step 1: District Filter (Developer's Added Districts) -->
@@ -304,7 +366,7 @@
                         </div>
 
                         <!-- Step 2: Town Filter (Developer's Added Towns) -->
-                        <div id="filter-town-box" class="lg:col-span-3 space-y-1">
+                        <div id="filter-town-box" class="lg:col-span-2 space-y-1">
                             <label for="filter-town" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
                                 <span class="px-1 py-0.2 rounded text-[8px] bg-violet-100 text-violet-800 font-black">2</span>
                                 <span>Name of Town</span>
@@ -333,34 +395,42 @@
                             </select>
                         </div>
 
-                        <!-- Step 4: Live Filtered Count Badge & Reset Filters -->
-                        <div class="lg:col-span-3 space-y-1">
+                        <!-- Step 4: License Filter -->
+                        <div id="filter-license-box" class="lg:col-span-2 space-y-1">
+                            <label for="filter-license" class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
+                                <span class="px-1 py-0.2 rounded text-[8px] bg-emerald-100 text-emerald-800 font-black">4</span>
+                                <span>License No.</span>
+                            </label>
+                            <select id="filter-license" onchange="onLicenseFilterChange()"
+                                class="w-full bg-white border border-slate-250 rounded-lg px-3 py-1.5 text-xs text-slate-800 font-bold focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 focus:outline-none shadow-2xs font-mono">
+                                <option value="">{{ count($licensesList ?? []) > 0 ? 'All Licenses (' . count($licensesList) . ')' : 'All Licenses' }}</option>
+                                @foreach($licensesList ?? [] as $lic)
+                                    <option value="{{ $lic }}">{{ strtoupper($lic) }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <!-- Step 5: Live Filtered Count Badge & Reset Filters -->
+                        <div class="lg:col-span-2 space-y-1">
                             <div class="flex items-center justify-between">
                                 <label class="block text-[9.5px] font-black uppercase text-slate-600 tracking-wider flex items-center gap-1">
                                     <i class="bi bi-funnel-fill text-sky-600 text-[10px]"></i>
-                                    <span>Filtered Records</span>
+                                    <span>Filtered</span>
                                 </label>
                                 <span id="filter-status-pill" class="text-[8px] font-mono font-bold px-1.5 py-0.2 rounded bg-slate-100 text-slate-500 uppercase">
                                     All Records
                                 </span>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-1.5">
                                 <!-- Counter Box -->
-                                <div class="flex-1 bg-white border border-sky-200/90 rounded-lg px-2.5 py-1.5 flex items-center justify-between shadow-2xs h-[34px]">
-                                    <div class="flex items-center gap-1.5 min-w-0">
-                                        <div class="w-5 h-5 rounded bg-sky-50 text-sky-600 flex items-center justify-center text-xs shrink-0">
-                                            <i class="bi bi-buildings"></i>
-                                        </div>
-                                        <span id="filter-count-label" class="text-[9px] font-bold uppercase tracking-wider text-slate-500 truncate">Matched:</span>
-                                    </div>
-                                    <div class="flex items-baseline gap-1 shrink-0">
-                                        <span id="filtered-count-num" class="font-mono font-black text-sm text-sky-700">{{ number_format($stats['my_flats'] ?? 0) }}</span>
-                                    </div>
+                                <div class="flex-1 bg-white border border-sky-200/90 rounded-lg px-2 py-1.5 flex items-center justify-between shadow-2xs h-[34px]">
+                                    <span id="filter-count-label" class="text-[8.5px] font-bold uppercase tracking-wider text-slate-500 truncate">Total:</span>
+                                    <span id="filtered-count-num" class="font-mono font-black text-xs text-sky-700">{{ number_format($stats['my_flats'] ?? 0) }}</span>
                                 </div>
 
                                 <!-- Reset Filter Button -->
                                 <button type="button" onclick="resetAllFilters()" title="Reset All Filters"
-                                    class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1.5 shrink-0 h-[34px]">
+                                    class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 hover:text-slate-900 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all shadow-2xs flex items-center justify-center gap-1 shrink-0 h-[34px] cursor-pointer">
                                     <i class="bi bi-arrow-counterclockwise text-xs"></i>
                                     <span>Reset</span>
                                 </button>
@@ -369,22 +439,24 @@
                     </div>
                 </div>
 
-                <!-- Table Content (Yajra Server-side) -->
+                <!-- Table Content (Yajra Server-side 10 Columns) -->
                 <div class="p-5">
                     <table class="w-full text-left border-collapse" id="flats-table">
                         <thead>
-                            <tr class="bg-slate-55/30 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
-                                <th style="width: 5%;">S.No.</th>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
+                                <th style="width: 4%;" class="text-center">S.No.</th>
                                 <th id="th-col-1">District Name</th>
                                 <th id="th-col-2">Town Name</th>
                                 <th id="th-col-3">Project Name</th>
-                                <th id="th-col-4">Block / Tower No.</th>
-                                <th id="th-col-5">Floor Details</th>
+                                <th id="th-col-license">License No.</th>
+                                <th id="th-col-4">Block / Tower</th>
+                                <th id="th-col-5">Floor</th>
                                 <th id="th-col-6">Flat No.</th>
-                                <th style="text-align: right; width: 12%;">Action</th>
+                                <th id="th-col-status" class="text-center">STP Status</th>
+                                <th style="text-align: right; width: 7%;">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="text-[11px] font-medium text-slate-655">
+                        <tbody class="text-[11px] font-medium text-slate-700">
                             <!-- Populated dynamically via Ajax Datatables -->
                         </tbody>
                     </table>
@@ -513,6 +585,8 @@
             const districtId = $('#filter-district').val();
             const townId = $('#filter-town').val();
             const projectId = $('#filter-project').val();
+            const licenseNo = $('#filter-license').val();
+            const status = $('#filter-status').val();
             const searchVal = table ? table.search() : '';
             let baseUrl = '';
             if (type === 'csv') baseUrl = "{{ route('ews.developer.flats.export.csv') }}";
@@ -524,6 +598,8 @@
             if (districtId) url.searchParams.append('district_id', districtId);
             if (townId) url.searchParams.append('town_id', townId);
             if (projectId) url.searchParams.append('project_id', projectId);
+            if (licenseNo) url.searchParams.append('license_no', licenseNo);
+            if (status) url.searchParams.append('status', status);
             if (searchVal) url.searchParams.append('search', searchVal);
 
             window.location.href = url.toString();
@@ -617,8 +693,47 @@
             }
         }
 
+        function onLicenseFilterChange() {
+            if (table) {
+                table.draw();
+            }
+        }
+
+        function setStatusFilter(status) {
+            $('#filter-status').val(status || '');
+
+            const cardAll = document.getElementById('card-stat-all');
+            const cardApproved = document.getElementById('card-stat-approved');
+            const cardPending = document.getElementById('card-stat-pending');
+
+            // Reset all 3 cards to base inactive border
+            [cardAll, cardApproved, cardPending].forEach(c => {
+                if (!c) return;
+                c.classList.remove('border-2', 'border-sky-500', 'border-emerald-500', 'border-amber-500', 'ring-2', 'ring-sky-100', 'ring-emerald-100', 'ring-amber-100');
+                c.classList.add('border', 'border-slate-200');
+            });
+
+            if (status === 'approved' && cardApproved) {
+                cardApproved.classList.remove('border', 'border-slate-200');
+                cardApproved.classList.add('border-2', 'border-emerald-500', 'ring-2', 'ring-emerald-100');
+            } else if (status === 'pending' && cardPending) {
+                cardPending.classList.remove('border', 'border-slate-200');
+                cardPending.classList.add('border-2', 'border-amber-500', 'ring-2', 'ring-amber-100');
+            } else if (cardAll) {
+                cardAll.classList.remove('border', 'border-slate-200');
+                cardAll.classList.add('border-2', 'border-sky-500', 'ring-2', 'ring-sky-100');
+            }
+
+            if (table) {
+                table.draw();
+            }
+        }
+
         function resetAllFilters() {
             $('#filter-district').val('');
+            $('#filter-license').val('');
+            $('#filter-status').val('');
+            setStatusFilter('');
             if (table) {
                 table.search('');
                 const searchInput = $('div.dataTables_filter input');
@@ -687,16 +802,20 @@
                         d.district_id = $('#filter-district').val();
                         d.town_id = $('#filter-town').val();
                         d.project_id = $('#filter-project').val();
+                        d.license_no = $('#filter-license').val();
+                        d.status = $('#filter-status').val();
                     }
                 },
                 columns: [
-                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, class: 'text-center font-bold text-slate-400' },
                     { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase' },
                     { data: 'town_name', name: 'town_name', class: 'font-semibold text-slate-700 capitalize' },
                     { data: 'project_name', name: 'project_name', class: 'text-slate-600 font-bold capitalize' },
-                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold uppercase' },
+                    { data: 'license_no', name: 'license_no', class: 'font-mono' },
+                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-700 font-mono font-bold uppercase' },
                     { data: 'floor', name: 'floor', class: 'font-bold text-slate-800 capitalize' },
-                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono' },
+                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-700 font-black font-mono' },
+                    { data: 'stp_status', name: 'stp_status', class: 'text-center' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right' }
                 ],
                 drawCallback: function(settings) {
@@ -723,9 +842,11 @@
                     const distVal = $('#filter-district').val();
                     const townVal = $('#filter-town').val();
                     const projVal = $('#filter-project').val();
+                    const licVal = $('#filter-license').val();
+                    const stVal = $('#filter-status').val();
                     const searchVal = (api.search() && typeof api.search() === 'string') ? api.search().trim() : '';
 
-                    const isFiltered = (distVal !== '' || townVal !== '' || projVal !== '' || searchVal !== '');
+                    const isFiltered = (distVal !== '' || townVal !== '' || projVal !== '' || licVal !== '' || stVal !== '' || searchVal !== '');
 
                     if (statusPill) {
                         if (isFiltered) {

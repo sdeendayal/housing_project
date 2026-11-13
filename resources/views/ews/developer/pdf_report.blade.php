@@ -70,29 +70,42 @@
     <table>
         <thead>
             <tr>
-                <th style="width: 5%;">S.No.</th>
-                <th style="width: 15%;">District Name</th>
-                <th style="width: 15%;">Town Name</th>
-                <th style="width: 25%;">Project Name</th>
-                <th style="width: 15%;">Block / Tower No.</th>
-                <th style="width: 15%;">Floor Details</th>
-                <th style="width: 10%;">Flat No.</th>
+                <th style="width: 4%;">S.No.</th>
+                <th style="width: 12%;">District</th>
+                <th style="width: 12%;">Town</th>
+                <th style="width: 18%;">Project Name</th>
+                <th style="width: 14%;">License No.</th>
+                <th style="width: 12%;">Block/Tower</th>
+                <th style="width: 10%;">Floor</th>
+                <th style="width: 8%;">Flat No.</th>
+                <th style="width: 10%; text-align: center;">STP Status</th>
             </tr>
         </thead>
         <tbody>
             @forelse($flats as $index => $flat)
+                @php
+                    $isApproved = (int)($flat->is_approved_by_dtp ?? $flat->is_aproved_by_dtp ?? 0) === 1;
+                @endphp
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td><strong>{{ $flat->district_name }}</strong></td>
                     <td>{{ $flat->town_name }}</td>
                     <td>{{ $flat->project_name }}</td>
+                    <td style="font-family: monospace;">{{ $flat->license_no ?? '—' }}</td>
                     <td>{{ $flat->block_tower_number }}</td>
                     <td>{{ $flat->floor }}</td>
                     <td style="color: #4f46e5; font-weight: bold;">{{ $flat->flat_number }}</td>
+                    <td style="text-align: center;">
+                        @if($isApproved)
+                            <span style="color: #15803d; font-weight: bold;">APPROVED</span>
+                        @else
+                            <span style="color: #b45309; font-weight: bold;">PENDING</span>
+                        @endif
+                    </td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" style="text-align: center; color: #666;">No registered EWS flat records found.</td>
+                    <td colspan="9" style="text-align: center; color: #666;">No registered EWS flat records found.</td>
                 </tr>
             @endforelse
         </tbody>
