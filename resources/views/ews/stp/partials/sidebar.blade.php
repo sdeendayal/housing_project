@@ -90,7 +90,7 @@
                     class="stp-nav-item flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs {{ request()->routeIs('ews.stp.verify*') ? 'bg-slate-800 text-white font-bold ring-1 ring-emerald-500/30' : 'text-slate-300 hover:bg-slate-800 hover:text-white font-medium' }} transition-all">
                     <div class="flex items-center gap-2">
                         <i class="bi bi-patch-check-fill text-emerald-400 text-sm"></i>
-                        <span>Verify Matrix</span>
+                        <span>Verify Developer Flat</span>
                     </div>
                 </a>
 

@@ -240,11 +240,11 @@
                 </div>
             </div>
 
-            <!-- 2. Symmetrical 3-Column Executive Overview Grid (Balanced Height, Clean, No Awkward Scrollbars) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <!-- 2. Symmetrical 3-Column Executive Overview Grid (Balanced Height & Content Distribution) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5 items-stretch">
 
                 <!-- CARD 1: Architectural & Statutory Unit Data -->
-                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between">
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between h-full">
                     <div>
                         <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-150">
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
@@ -255,7 +255,7 @@
                         </div>
 
                         <!-- 4 Key-Value Metric Boxes -->
-                        <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div class="grid grid-cols-2 gap-2 mb-2.5">
                             <div class="bg-slate-50 border border-slate-200 rounded-lg p-2.5">
                                 <span class="block text-xs font-bold text-slate-500 uppercase tracking-wide">Flat Number</span>
                                 <span class="text-2xl font-black font-mono text-violet-700 leading-tight block mt-0.5" id="card-flat-number">{{ $flat->flat_number }}</span>
@@ -274,37 +274,8 @@
                             </div>
                         </div>
 
-
-                    </div>
-                </div>
-
-                <!-- CARD 2: Project & Colonizer Statutory Profile -->
-                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-150">
-                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
-                                <i class="bi bi-buildings-fill text-indigo-600 text-sm"></i>
-                                <span>Project & Colonizer Profile</span>
-                            </h3>
-                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200" id="card-license-badge">
-                                {{ $flat->license_no ? 'Lic #' . $flat->license_no : 'Project' }}
-                            </span>
-                        </div>
-
-                        <!-- Project Specifications Key-Value List -->
+                        <!-- Location & Site Address Details -->
                         <div class="divide-y divide-slate-100 text-xs">
-                            <div class="py-1.5 flex items-start justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Project Name:</span>
-                                <span class="font-bold text-slate-900 text-sm break-words text-right" id="card-project-name" title="{{ $flat->project_name }}">{{ $flat->project_name ?: '—' }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-start justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Developer / Colonizer:</span>
-                                <span class="font-bold text-slate-800 text-sm break-words text-right" id="card-developer-name" title="{{ $devDeveloper }}">{{ $devDeveloper ?: '—' }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">License Number:</span>
-                                <span class="font-mono font-bold text-emerald-700 text-sm" id="card-license-no">{{ $flat->license_no ?: '—' }}</span>
-                            </div>
                             <div class="py-1.5 flex items-center justify-between gap-2">
                                 <span class="text-slate-500 font-medium shrink-0">Administrative Zone:</span>
                                 <span class="font-bold text-slate-700 uppercase" id="card-zone-name">{{ $flat->zone_name ?: 'ROHTAK ZONE' }}</span>
@@ -318,30 +289,6 @@
                             <div class="py-1.5 flex items-center justify-between gap-2">
                                 <span class="text-slate-500 font-medium shrink-0">Town Planning Sector:</span>
                                 <span class="font-bold text-amber-700" id="card-sector-no">Sector {{ $flat->sector_no ?: ($project->sector ?? '—') }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Total Project Area:</span>
-                                <span class="font-bold text-slate-800" id="card-area">{{ $flat->area_of_project ? $flat->area_of_project . ' Acres' : '—' }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Master Dev Plan:</span>
-                                <span class="font-bold text-slate-800 uppercase text-right" id="card-devplan">{{ $devDevPlan ?: '—' }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Approved Scheme / Purpose:</span>
-                                <span class="font-bold text-slate-800 text-right" id="card-purpose">{{ $devPurpose ?: '—' }}</span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Licence Validity & Status:</span>
-                                <span class="font-bold text-emerald-700 text-right" id="card-validity">
-                                    {{ $cleanDevValidity ?: '—' }}{{ $devGrantStatus ? ' (' . $devGrantStatus . ')' : '' }}
-                                </span>
-                            </div>
-                            <div class="py-1.5 flex items-center justify-between gap-2">
-                                <span class="text-slate-500 font-medium shrink-0">Govt Case & App No:</span>
-                                <span class="font-mono font-bold text-slate-800 text-right" id="card-case-app">
-                                    {{ $devCaseNo ?: '—' }} / {{ $devAppNo ?: '—' }}
-                                </span>
                             </div>
                             <div class="py-1.5 flex items-start justify-between gap-2">
                                 <span class="text-slate-500 font-medium shrink-0">Site Address / Plan:</span>
@@ -371,8 +318,63 @@
                     </div>
                 </div>
 
+                <!-- CARD 2: Project & Colonizer Statutory Profile -->
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between h-full">
+                    <div>
+                        <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-150">
+                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
+                                <i class="bi bi-buildings-fill text-indigo-600 text-sm"></i>
+                                <span>Project & Colonizer Profile</span>
+                            </h3>
+                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200" id="card-license-badge">
+                                {{ $flat->license_no ? 'Lic #' . $flat->license_no : 'Project' }}
+                            </span>
+                        </div>
+
+                        <!-- Project Specifications Key-Value List -->
+                        <div class="divide-y divide-slate-100 text-xs">
+                            <div class="py-1.5 flex items-start justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Project Name:</span>
+                                <span class="font-bold text-slate-900 text-sm break-words text-right" id="card-project-name" title="{{ $flat->project_name }}">{{ $flat->project_name ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-start justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Developer / Colonizer:</span>
+                                <span class="font-bold text-slate-800 text-sm break-words text-right" id="card-developer-name" title="{{ $devDeveloper }}">{{ $devDeveloper ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">License Number:</span>
+                                <span class="font-mono font-bold text-emerald-700 text-sm" id="card-license-no">{{ $flat->license_no ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Total Project Area:</span>
+                                <span class="font-bold text-slate-800" id="card-area">{{ $flat->area_of_project ? $flat->area_of_project . ' Acres' : '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Master Dev Plan:</span>
+                                <span class="font-bold text-slate-800 uppercase text-right" id="card-devplan">{{ $devDevPlan ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Approved Scheme / Purpose:</span>
+                                <span class="font-bold text-slate-800 text-right" id="card-purpose">{{ $devPurpose ?: '—' }}</span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Licence Validity & Status:</span>
+                                <span class="font-bold text-emerald-700 text-right" id="card-validity">
+                                    {{ $cleanDevValidity ?: '—' }}{{ $devGrantStatus ? ' (' . $devGrantStatus . ')' : '' }}
+                                </span>
+                            </div>
+                            <div class="py-1.5 flex items-center justify-between gap-2">
+                                <span class="text-slate-500 font-medium shrink-0">Govt Case & App No:</span>
+                                <span class="font-mono font-bold text-slate-800 text-right" id="card-case-app">
+                                    {{ $devCaseNo ?: '—' }} / {{ $devAppNo ?: '—' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- CARD 3: Compliance Sanctions, OC Clearance & Quotas (Steps 10 & 11) -->
-                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between">
+                <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex flex-col justify-between h-full">
                     <div>
                         <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-150">
                             <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 flex items-center gap-1.5">
@@ -537,6 +539,17 @@
                 </div>
 
 
+                <!-- Alert Banner when TCP API data is not received -->
+                <div id="tcp-api-alert-banner" class="{{ $hasApiSuccess ? 'hidden ' : '' }}mx-5 mt-4 p-3.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-3 text-rose-800">
+                    <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-600 flex items-center justify-center shrink-0 text-base">
+                        <i class="bi bi-exclamation-octagon-fill"></i>
+                    </div>
+                    <div class="flex-1 text-xs">
+                        <span class="font-bold block text-rose-900 text-sm">Data Not Received From Town & Country Planning API</span>
+                        <span class="text-rose-600">Official project records could not be retrieved from Town & Country Planning Haryana API for this licence number.</span>
+                    </div>
+                </div>
+
                 <!-- Form Fields Grid (6 Structured Statutory Fields in Spacious 2-Column Grid) -->
                 <div class="p-5 grid grid-cols-1 lg:grid-cols-2 gap-5">
                     
@@ -571,9 +584,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-licence">
-                                        {{ $apiLic ?: '—' }}
-                                    </div>
+                                    @if($apiLic)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-licence">
+                                            {{ $apiLic }}
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs font-mono" id="cmp-api-licence" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -616,9 +636,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-project" title="{{ $apiProject }}">
-                                        {{ $apiProject ?: '—' }}
-                                    </div>
+                                    @if($apiProject)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-project" title="{{ $apiProject }}">
+                                            {{ $apiProject }}
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-project" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -670,9 +697,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-developer" title="{{ $apiDeveloper }}">
-                                        {{ $apiDeveloper ?: '—' }}
-                                    </div>
+                                    @if($apiDeveloper)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-developer" title="{{ $apiDeveloper }}">
+                                            {{ $apiDeveloper }}
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-developer" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -745,9 +779,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-district" title="{{ $apiDistrict }}">
-                                        {{ $apiDistrict ?: '—' }}
-                                    </div>
+                                    @if($apiDistrict)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-district" title="{{ $apiDistrict }}">
+                                            {{ $apiDistrict }}
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-district" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -799,9 +840,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-sector">
-                                        {{ $apiSector ? 'Sector ' . $apiSector : '—' }}
-                                    </div>
+                                    @if($apiSector)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-sector">
+                                            Sector {{ $apiSector }}
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-sector" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -853,9 +901,16 @@
                                         <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                         <span>TCP Official API Record</span>
                                     </label>
-                                    <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-area">
-                                        {{ $apiArea ? $apiArea . ' Acres' : '—' }}
-                                    </div>
+                                    @if($apiArea)
+                                        <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-area">
+                                            {{ $apiArea }} Acres
+                                        </div>
+                                    @else
+                                        <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-area" title="Data not received from Town & Country Planning API">
+                                            <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                            <span>Data not received from Town & Country Planning API</span>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -925,9 +980,16 @@
                                                 <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                                 <span>TCP Official API Record</span>
                                             </label>
-                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-devplan" title="{{ $apiDevPlan }}">
-                                                {{ $apiDevPlan ?: '—' }}
-                                            </div>
+                                            @if($apiDevPlan)
+                                                <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-devplan" title="{{ $apiDevPlan }}">
+                                                    {{ $apiDevPlan }}
+                                                </div>
+                                            @else
+                                                <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-devplan" title="Data not received from Town & Country Planning API">
+                                                    <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                                    <span>Data not received from Town & Country Planning API</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -978,9 +1040,16 @@
                                                 <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                                 <span>TCP Official API Record</span>
                                             </label>
-                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-purpose" title="{{ $apiPurpose }}">
-                                                {{ $apiPurpose ?: '—' }}
-                                            </div>
+                                            @if($apiPurpose)
+                                                <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-purpose" title="{{ $apiPurpose }}">
+                                                    {{ $apiPurpose }}
+                                                </div>
+                                            @else
+                                                <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-purpose" title="Data not received from Town & Country Planning API">
+                                                    <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                                    <span>Data not received from Town & Country Planning API</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -1042,13 +1111,16 @@
                                                 <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                                 <span>TCP Official API Record</span>
                                             </label>
-                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-validity">
-                                                @if($cleanApiValidity || $apiStatus)
+                                            @if($cleanApiValidity || $apiStatus)
+                                                <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-validity">
                                                     Valid: {{ $cleanApiValidity ?: '—' }} ({{ $apiStatus ?? 'Granted' }})
-                                                @else
-                                                    —
-                                                @endif
-                                            </div>
+                                                </div>
+                                            @else
+                                                <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs" id="cmp-api-validity" title="Data not received from Town & Country Planning API">
+                                                    <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                                    <span>Data not received from Town & Country Planning API</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -1110,13 +1182,16 @@
                                                 <i class="bi bi-patch-check-fill text-emerald-600"></i>
                                                 <span>TCP Official API Record</span>
                                             </label>
-                                            <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-case">
-                                                @if($apiCase || $apiApp)
+                                            @if($apiCase || $apiApp)
+                                                <div class="w-full bg-emerald-50/90 border border-emerald-300 rounded-xl px-4 py-2.5 text-sm font-mono font-bold text-emerald-950 break-words whitespace-normal leading-relaxed select-all flex items-center min-h-[44px] shadow-2xs" id="cmp-api-case">
                                                     {{ $apiCase ?? '—' }} / {{ $apiApp ?? '—' }}
-                                                @else
-                                                    —
-                                                @endif
-                                            </div>
+                                                </div>
+                                            @else
+                                                <div class="w-full bg-rose-50/90 border border-rose-200 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 break-words whitespace-normal leading-relaxed flex items-center gap-2 min-h-[44px] shadow-2xs font-mono" id="cmp-api-case" title="Data not received from Town & Country Planning API">
+                                                    <i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i>
+                                                    <span>Data not received from Town & Country Planning API</span>
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                 </div>
@@ -1662,6 +1737,54 @@
             fetchLiveTcpLicence();
         }
 
+        const TCP_NO_DATA_HTML = '<i class="bi bi-exclamation-triangle-fill text-rose-500 shrink-0 text-sm"></i> <span>Data not received from Town & Country Planning API</span>';
+
+        function setApiComparisonField(selector, value, title = '', isMono = false) {
+            const el = $(selector);
+            if (!el.length) return;
+            const trimmedVal = (value !== null && value !== undefined) ? String(value).trim() : '';
+            if (trimmedVal !== '' && trimmedVal !== '—') {
+                el.removeClass('bg-rose-50/90 border-rose-200 text-rose-600 text-xs flex gap-2 font-mono')
+                  .addClass('bg-emerald-50/90 border-emerald-300 text-emerald-950 text-sm flex items-center')
+                  .text(trimmedVal)
+                  .attr('title', title || trimmedVal);
+                if (isMono) el.addClass('font-mono');
+            } else {
+                el.removeClass('bg-emerald-50/90 border-emerald-300 text-emerald-950 text-sm')
+                  .addClass('bg-rose-50/90 border-rose-200 text-rose-600 text-xs flex items-center gap-2')
+                  .html(TCP_NO_DATA_HTML)
+                  .attr('title', 'Data not received from Town & Country Planning API');
+                if (isMono) el.addClass('font-mono');
+            }
+        }
+
+        function resetApiComparisonFields() {
+            setApiComparisonField('#cmp-api-licence', null, '', true);
+            setApiComparisonField('#cmp-api-project', null);
+            setApiComparisonField('#cmp-api-developer', null);
+            setApiComparisonField('#cmp-api-district', null);
+            setApiComparisonField('#cmp-api-sector', null);
+            setApiComparisonField('#cmp-api-area', null);
+            setApiComparisonField('#cmp-api-devplan', null);
+            setApiComparisonField('#cmp-api-purpose', null);
+            setApiComparisonField('#cmp-api-validity', null);
+            setApiComparisonField('#cmp-api-case', null, '', true);
+
+            @if($isStp)
+                $('#card-action-project, #card-action-developer, #card-action-district, #card-action-sector, #card-action-area, #card-action-devplan, #card-action-purpose, #card-action-validity, #card-action-case').html('<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+            @endif
+
+            // Show alert banner
+            $('#tcp-api-alert-banner').removeClass('hidden');
+
+            $('#btn-suite-adopt-all').addClass('opacity-60 pointer-events-none');
+            $('#suite-status-pill').removeClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30').addClass('bg-rose-500/20 text-rose-300 border-rose-400/30');
+            $('#suite-status-text').text('No TCP Data');
+            $('#top-api-badge').removeClass('bg-emerald-100 text-emerald-800 border-emerald-300 bg-amber-100 text-amber-800 border-amber-300').addClass('bg-rose-100 text-rose-800 border-rose-300');
+            $('#top-api-badge-text').text('TCP API No Data');
+            $('#top-api-badge i').removeClass('bi-patch-check-fill text-emerald-600').addClass('bi-exclamation-triangle-fill text-rose-600');
+        }
+
         // Live API Fetch Handler
         function fetchLiveTcpLicence() {
             const licNo = $('#query-licence-input').val().trim();
@@ -1696,10 +1819,11 @@
                         updateModalPills();
 
                         $('#btn-suite-adopt-all').removeClass('opacity-60 pointer-events-none');
-                        $('#suite-status-pill').removeClass('bg-amber-500/20 text-amber-300 border-amber-400/30').addClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30');
+                        $('#suite-status-pill').removeClass('bg-rose-500/20 text-rose-300 border-rose-400/30 bg-amber-500/20 text-amber-300 border-amber-400/30').addClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30');
                         $('#suite-status-text').text('TCP Master Connected');
-                        $('#top-api-badge').removeClass('bg-amber-100 text-amber-800 border-amber-300').addClass('bg-emerald-100 text-emerald-800 border-emerald-300');
+                        $('#top-api-badge').removeClass('bg-rose-100 text-rose-800 border-rose-300 bg-amber-100 text-amber-800 border-amber-300').addClass('bg-emerald-100 text-emerald-800 border-emerald-300');
                         $('#top-api-badge-text').text('TCP API Verified');
+                        $('#top-api-badge i').removeClass('bi-exclamation-triangle-fill text-rose-600 text-amber-600').addClass('bi-patch-check-fill text-emerald-600');
 
                         Swal.fire({
                             toast: true,
@@ -1710,20 +1834,22 @@
                             timer: 2500
                         });
                     } else {
-                        $('#suite-status-pill').removeClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30').addClass('bg-amber-500/20 text-amber-300 border-amber-400/30');
-                        $('#suite-status-text').text('No Record');
+                        currentTcpData = null;
+                        resetApiComparisonFields();
                         Swal.fire({
                             icon: 'warning',
-                            title: 'कोई डेटा नहीं मिला',
-                            text: resp.message || 'इस लाइसेंस नंबर के अगेंस्ट कोई डेटा प्राप्त नहीं हुआ।',
+                            title: 'No Data Received',
+                            text: resp.message || 'Data not received from Town & Country Planning API.',
                         });
                     }
                 },
                 error: function(xhr) {
+                    currentTcpData = null;
+                    resetApiComparisonFields();
                     Swal.fire({
                         icon: 'error',
                         title: 'API Query Failed',
-                        text: xhr.responseJSON?.message || 'Failed to retrieve data from TCP Haryana API.'
+                        text: xhr.responseJSON?.message || 'Data not received from Town & Country Planning API.'
                     });
                 },
                 complete: function() {
@@ -1734,65 +1860,59 @@
             });
         }
 
-        // Render the retrieved TCP data in the 6 Comparison Cards and Metadata Strip
+        // Render the retrieved TCP data in the 10 Comparison Cards and Metadata Strip
         function renderApiComparisonData(data) {
-            if (!data) return;
+            if (!data) {
+                resetApiComparisonFields();
+                return;
+            }
 
-            // 1. Update Official Values in the 6 Cards
-            $('#cmp-api-licence').text(data.LicenceNo || '—');
-            $('#cmp-api-project').text(data.ColonyName || '—').attr('title', data.ColonyName || '');
-            $('#cmp-api-developer').text(data.Developer || '—').attr('title', data.Developer || '');
-            $('#cmp-api-district').text(data.District || '—');
-            $('#cmp-api-sector').text(data.Sector ? 'Sector ' + data.Sector : '—');
-            $('#cmp-api-area').text(data.AreaInAcre ? data.AreaInAcre + ' Acres' : '—');
+            // 1. Update Official Values in the 10 Comparison Cards
+            setApiComparisonField('#cmp-api-licence', data.LicenceNo, '', true);
+            setApiComparisonField('#cmp-api-project', data.ColonyName, data.ColonyName);
+            setApiComparisonField('#cmp-api-developer', data.Developer, data.Developer);
+            setApiComparisonField('#cmp-api-district', data.District, data.District);
+            setApiComparisonField('#cmp-api-sector', data.Sector ? ('Sector ' + data.Sector) : null);
+            setApiComparisonField('#cmp-api-area', data.AreaInAcre ? (data.AreaInAcre + ' Acres') : null);
 
             // 2. Action buttons for STP adoption
             @if($isStp)
-                if (data.ColonyName) {
-                    $('#card-action-project').html(`<button type="button" onclick="adoptFieldToInput('project', '${escapeQuotes(data.ColonyName)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.Developer) {
-                    $('#card-action-developer').html(`<button type="button" onclick="adoptFieldToInput('developer', '${escapeQuotes(data.Developer)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.District) {
-                    $('#card-action-district').html(`<button type="button" onclick="adoptFieldToInput('district', '${escapeQuotes(data.District)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.Sector) {
-                    $('#card-action-sector').html(`<button type="button" onclick="adoptFieldToInput('sector', '${escapeQuotes(data.Sector)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.AreaInAcre) {
-                    $('#card-action-area').html(`<button type="button" onclick="adoptFieldToInput('area', '${escapeQuotes(data.AreaInAcre)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.DevelopmentPlan) {
-                    $('#card-action-devplan').html(`<button type="button" onclick="adoptFieldToInput('devplan', '${escapeQuotes(data.DevelopmentPlan)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.Purpose) {
-                    $('#card-action-purpose').html(`<button type="button" onclick="adoptFieldToInput('purpose', '${escapeQuotes(data.Purpose)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.LicenceValidUpto || data.Status) {
-                    $('#card-action-validity').html(`<button type="button" onclick="adoptFieldToInput('validity', '${escapeQuotes(data.LicenceValidUpto || '')}', '${escapeQuotes(data.Status || 'Granted')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
-                if (data.CaseNo || data.ApplicationNo) {
-                    $('#card-action-case').html(`<button type="button" onclick="adoptFieldToInput('case_app', '${escapeQuotes(data.CaseNo || '')}', '${escapeQuotes(data.ApplicationNo || '')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>`);
-                }
+                $('#card-action-project').html(data.ColonyName ? `<button type="button" onclick="adoptFieldToInput('project', '${escapeQuotes(data.ColonyName)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-developer').html(data.Developer ? `<button type="button" onclick="adoptFieldToInput('developer', '${escapeQuotes(data.Developer)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-district').html(data.District ? `<button type="button" onclick="adoptFieldToInput('district', '${escapeQuotes(data.District)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-sector').html(data.Sector ? `<button type="button" onclick="adoptFieldToInput('sector', '${escapeQuotes(data.Sector)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-area').html(data.AreaInAcre ? `<button type="button" onclick="adoptFieldToInput('area', '${escapeQuotes(data.AreaInAcre)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-devplan').html(data.DevelopmentPlan ? `<button type="button" onclick="adoptFieldToInput('devplan', '${escapeQuotes(data.DevelopmentPlan)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-purpose').html(data.Purpose ? `<button type="button" onclick="adoptFieldToInput('purpose', '${escapeQuotes(data.Purpose)}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-validity').html((data.LicenceValidUpto || data.Status) ? `<button type="button" onclick="adoptFieldToInput('validity', '${escapeQuotes(data.LicenceValidUpto || '')}', '${escapeQuotes(data.Status || 'Granted')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
+                $('#card-action-case').html((data.CaseNo || data.ApplicationNo) ? `<button type="button" onclick="adoptFieldToInput('case_app', '${escapeQuotes(data.CaseNo || '')}', '${escapeQuotes(data.ApplicationNo || '')}')" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-black uppercase flex items-center justify-center gap-2 shadow-sm transition cursor-pointer"><i class="bi bi-lightning-charge-fill text-yellow-300"></i> Adopt Official TCP Value</button>` : '<div class="text-xs text-slate-400 font-mono text-center py-2.5">—</div>');
             @endif
 
             // 3. Update Additional TCP Metadata Tiles
-            $('#cmp-api-devplan').text(data.DevelopmentPlan || '—').attr('title', data.DevelopmentPlan || '');
-            $('#cmp-api-purpose').text(data.Purpose || '—').attr('title', data.Purpose || '');
+            setApiComparisonField('#cmp-api-devplan', data.DevelopmentPlan, data.DevelopmentPlan);
+            setApiComparisonField('#cmp-api-purpose', data.Purpose, data.Purpose);
 
             let valStr = '';
             if (data.LicenceValidUpto || data.Status) {
                 let cleanVal = String(data.LicenceValidUpto || '').replace(/\s+00:00:00(\.0+)?$/i, '').replace(/\s+12:00:00\s*AM$/i, '').trim();
                 valStr = 'Valid: ' + (cleanVal || '—') + ' (' + (data.Status || 'Granted') + ')';
             }
-            $('#cmp-api-validity').text(valStr || '—');
-            $('#cmp-api-case').text((data.CaseNo || '—') + ' / ' + (data.ApplicationNo || '—'));
+            setApiComparisonField('#cmp-api-validity', valStr);
+
+            let caseStr = '';
+            if (data.CaseNo || data.ApplicationNo) {
+                caseStr = (data.CaseNo || '—') + ' / ' + (data.ApplicationNo || '—');
+            }
+            setApiComparisonField('#cmp-api-case', caseStr, '', true);
+
+            // Hide alert banner when data is received
+            $('#tcp-api-alert-banner').addClass('hidden');
 
             // 4. Update Status Badges in Header
-            $('#top-api-badge').removeClass('bg-amber-100 text-amber-800 border-amber-300').addClass('bg-emerald-100 text-emerald-800 border-emerald-300');
+            $('#top-api-badge').removeClass('bg-rose-100 text-rose-800 border-rose-300 bg-amber-100 text-amber-800 border-amber-300').addClass('bg-emerald-100 text-emerald-800 border-emerald-300');
             $('#top-api-badge-text').text('TCP API Verified');
-            $('#suite-status-pill').removeClass('bg-amber-500/20 text-amber-300 border-amber-400/30').addClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30');
+            $('#top-api-badge i').removeClass('bi-exclamation-triangle-fill text-rose-600 text-amber-600').addClass('bi-patch-check-fill text-emerald-600');
+            $('#suite-status-pill').removeClass('bg-rose-500/20 text-rose-300 border-rose-400/30 bg-amber-500/20 text-amber-300 border-amber-400/30').addClass('bg-emerald-500/20 text-emerald-300 border-emerald-400/30');
             $('#suite-status-text').text('TCP Master Connected');
         }
 

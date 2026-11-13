@@ -361,14 +361,15 @@
                         <div class="overflow-x-auto custom-scroll">
                             <table class="w-full text-left border-collapse" id="flats-matrix-table">
                                 <thead>
-                                    <tr class="bg-slate-50/80 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
+                                    <tr class="bg-slate-50/80 border-b border-slate-200 text-[9.5px] text-slate-600 uppercase font-black tracking-wider">
                                         <th class="px-4 py-3" style="width: 4%;">#</th>
-                                        <th class="px-4 py-3">Project & Sector</th>
-                                        <th class="px-4 py-3">Flat No.</th>
-                                        <th class="px-4 py-3">Tower & Floor</th>
-                                        <th class="px-4 py-3">OC Status</th>
-                                        <th class="px-4 py-3 text-center">STP Status</th>
-                                        <th class="px-4 py-3 text-right" style="width: 8%;">Action</th>
+                                        <th class="px-4 py-3" style="width: 14%;">District & Town</th>
+                                        <th class="px-4 py-3" style="width: 22%;">Project & Colonizer</th>
+                                        <th class="px-4 py-3" style="width: 10%;">Flat No.</th>
+                                        <th class="px-4 py-3" style="width: 15%;">Tower & Floor</th>
+                                        <th class="px-4 py-3" style="width: 11%;">OC Status</th>
+                                        <th class="px-4 py-3 text-center" style="width: 14%;">STP Status</th>
+                                        <th class="px-4 py-3 text-right" style="width: 10%;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-150 text-xs text-slate-700" id="flats-table-body">
@@ -756,7 +757,7 @@
             if (totalFiltered === 0) {
                 rows = `
                     <tr>
-                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
+                        <td colspan="8" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
                             <i class="bi bi-inbox text-2xl block text-slate-300 mb-1"></i>
                             ${searchVal ? `No flats found matching "${searchVal}".` : `No flats matching filter "${currentApprovalFilter.toUpperCase()}" under this record.`}
                         </td>
@@ -765,8 +766,6 @@
             } else {
                 $.each(pageFlats, function(idx, f) {
                     const globalSerial = startIndex + idx + 1;
-                    const theme = getRecordTheme(f.record_index || 1);
-                    const recordLabel = f.record_index ? `#${f.record_index}` : '#1';
                     const projectName = f.record_project_name || f.project_name || 'Project';
                     const secureIdentifier = f.secure_id || f.id;
 
@@ -779,8 +778,15 @@
                         <tr class="hover:bg-slate-50 transition-colors flat-row" data-record-id="${f.record_id || ''}">
                             <td class="px-4 py-2.5 font-mono text-slate-400 text-[11px]">${globalSerial}</td>
                             <td class="px-4 py-2.5">
+                                <span class="font-extrabold text-slate-900 text-xs uppercase block">${f.district_name || '—'}</span>
+                                <span class="text-[10px] text-slate-500 font-medium">${f.town_name || ''}</span>
+                            </td>
+                            <td class="px-4 py-2.5">
                                 <div class="font-extrabold text-slate-900 text-xs">${projectName}</div>
-                                ${f.sector_no ? `<span class="block text-[10px] text-slate-400 font-semibold mt-0.5">Sector ${f.sector_no}</span>` : ''}
+                                <div class="text-[10px] text-slate-500 font-medium flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    ${f.developer_name ? `<span><strong class="text-slate-600 font-semibold">By:</strong> ${f.developer_name}</span>` : ''}
+                                    ${f.sector_no ? `<span class="text-amber-700 font-bold">${f.developer_name ? '• ' : ''}Sector ${f.sector_no}</span>` : ''}
+                                </div>
                             </td>
                             <td class="px-4 py-2.5 font-black text-violet-700 font-mono text-sm">${f.flat_number || '—'}</td>
                             <td class="px-4 py-2.5">
@@ -788,7 +794,7 @@
                                 <span class="block text-[10px] text-slate-500 font-medium">${f.floor || '—'}</span>
                             </td>
                             <td class="px-4 py-2.5">
-                                <span class="px-2 py-0.5 rounded text-[9.5px] font-black uppercase font-mono ${f.oc_status && f.oc_status.toLowerCase() !== 'pending' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-600'}">
+                                <span class="px-2.5 py-0.5 rounded text-[9.5px] font-black uppercase font-mono ${f.oc_status && f.oc_status.toLowerCase() !== 'pending' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-600'}">
                                     ${f.oc_status || 'Pending'}
                                 </span>
                             </td>
