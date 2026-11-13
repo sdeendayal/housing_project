@@ -363,15 +363,12 @@
                                 <thead>
                                     <tr class="bg-slate-50/80 border-b border-slate-200 text-[9px] text-slate-500 uppercase font-black tracking-wider">
                                         <th class="px-4 py-3" style="width: 4%;">#</th>
-                                        <th class="px-4 py-3">Project Name</th>
+                                        <th class="px-4 py-3">Project & Sector</th>
                                         <th class="px-4 py-3">Flat No.</th>
-                                        <th class="px-4 py-3">Block / Tower</th>
-                                        <th class="px-4 py-3">Floor</th>
-                                        <th class="px-4 py-3">Colonizer</th>
-                                        <th class="px-4 py-3">Location</th>
+                                        <th class="px-4 py-3">Tower & Floor</th>
                                         <th class="px-4 py-3">OC Status</th>
-                                        <th class="px-4 py-3">STP Status</th>
-                                        <th class="px-4 py-3 text-right">Actions</th>
+                                        <th class="px-4 py-3 text-center">STP Status</th>
+                                        <th class="px-4 py-3 text-right" style="width: 8%;">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-150 text-xs text-slate-700" id="flats-table-body">
@@ -759,7 +756,7 @@
             if (totalFiltered === 0) {
                 rows = `
                     <tr>
-                        <td colspan="10" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
+                        <td colspan="7" class="px-4 py-8 text-center text-slate-400 font-mono text-xs">
                             <i class="bi bi-inbox text-2xl block text-slate-300 mb-1"></i>
                             ${searchVal ? `No flats found matching "${searchVal}".` : `No flats matching filter "${currentApprovalFilter.toUpperCase()}" under this record.`}
                         </td>
@@ -771,61 +768,39 @@
                     const theme = getRecordTheme(f.record_index || 1);
                     const recordLabel = f.record_index ? `#${f.record_index}` : '#1';
                     const projectName = f.record_project_name || f.project_name || 'Project';
-                    const developerName = f.developer_name || '—';
-                    const sectorName = f.sector_no ? `Sec ${f.sector_no}` : '';
-                    const locationText = [f.town_name, f.district_name, sectorName].filter(Boolean).join(', ');
+                    const secureIdentifier = f.secure_id || f.id;
 
                     const isDtpApproved = (f.is_aproved_by_dtp == 1);
                     const dtpBadge = isDtpApproved
-                        ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono shadow-2xs" title="${f.dtp_approved_at ? 'Approved: ' + f.dtp_approved_at : 'Approved by STP'}"><i class="bi bi-shield-check text-emerald-600"></i> Approved</span>`
-                        : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 font-mono shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>`;
+                        ? `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-300 font-mono shadow-2xs" title="${f.dtp_approved_at ? 'Approved: ' + f.dtp_approved_at : 'Approved by STP'}"><i class="bi bi-shield-check text-emerald-600"></i> Approved</span>`
+                        : `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-100 text-amber-800 border border-amber-300 font-mono shadow-2xs"><i class="bi bi-hourglass-split text-amber-600"></i> Pending</span>`;
 
                     rows += `
                         <tr class="hover:bg-slate-50 transition-colors flat-row" data-record-id="${f.record_id || ''}">
                             <td class="px-4 py-2.5 font-mono text-slate-400 text-[11px]">${globalSerial}</td>
                             <td class="px-4 py-2.5">
-                                <div class="flex items-center gap-1.5 flex-wrap">
-                                    <span class="px-1.5 py-0.2 rounded text-[8.5px] font-black uppercase font-mono ${theme.bg} ${theme.text} border ${theme.border}">
-                                        ${recordLabel}
-                                    </span>
-                                    <span class="font-extrabold text-slate-900 text-xs">${projectName}</span>
-                                </div>
+                                <div class="font-extrabold text-slate-900 text-xs">${projectName}</div>
+                                ${f.sector_no ? `<span class="block text-[10px] text-slate-400 font-semibold mt-0.5">Sector ${f.sector_no}</span>` : ''}
                             </td>
                             <td class="px-4 py-2.5 font-black text-violet-700 font-mono text-sm">${f.flat_number || '—'}</td>
                             <td class="px-4 py-2.5">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-mono">
-                                    ${f.block_tower_number || 'Block N/A'}
-                                </span>
-                            </td>
-                            <td class="px-4 py-2.5 font-medium text-slate-600">${f.floor || '—'}</td>
-                            <td class="px-4 py-2.5 font-medium text-slate-700 text-xs">
-                                ${developerName}
-                            </td>
-                            <td class="px-4 py-2.5 text-slate-600 text-[11px]">
-                                ${locationText}
+                                <span class="font-bold text-slate-800 text-xs">${f.block_tower_number ? 'Tower ' + f.block_tower_number : '—'}</span>
+                                <span class="block text-[10px] text-slate-500 font-medium">${f.floor || '—'}</span>
                             </td>
                             <td class="px-4 py-2.5">
                                 <span class="px-2 py-0.5 rounded text-[9.5px] font-black uppercase font-mono ${f.oc_status && f.oc_status.toLowerCase() !== 'pending' ? 'bg-amber-50 text-amber-800 border border-amber-200' : 'bg-slate-100 text-slate-600'}">
                                     ${f.oc_status || 'Pending'}
                                 </span>
                             </td>
-                            <td class="px-4 py-2.5">
+                            <td class="px-4 py-2.5 text-center">
                                 ${dtpBadge}
                             </td>
                             <td class="px-4 py-2.5 text-right whitespace-nowrap">
-                                <div class="inline-flex items-center gap-1.5 justify-end">
-                                    <a href="${flatShowBaseUrl}/${f.id}" target="_blank"
+                                <div class="inline-flex items-center justify-end">
+                                    <a href="${flatShowBaseUrl}/${secureIdentifier}" target="_blank"
                                         class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Official TCP Verification & View">
                                         <i class="bi bi-eye text-xs"></i> View
                                     </a>
-                                    ${!isDtpApproved ? `
-                                    <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank"
-                                        class="px-2.5 py-1 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-[10px] font-black uppercase transition flex items-center gap-1 shadow-2xs" title="Edit Flat">
-                                        <i class="bi bi-pencil-square text-xs"></i> Edit
-                                    </a>` : `
-                                    <span class="px-2.5 py-1 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-[10px] font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
-                                        <i class="bi bi-lock-fill text-slate-400"></i> Locked
-                                    </span>`}
                                 </div>
                             </td>
                         </tr>
@@ -1019,16 +994,9 @@
             const isDtpApproved = (f.is_aproved_by_dtp == 1);
             $('#modal-flat-grid').html(gridHtml);
             $('#modal-flat-actions').html(`
-                <a href="${flatShowBaseUrl}/${f.id}" target="_blank" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
-                    <i class="bi bi-box-arrow-up-right"></i> Open Verification View
+                <a href="${flatShowBaseUrl}/${f.secure_id || f.id}" target="_blank" class="px-3 py-1.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
+                    <i class="bi bi-box-arrow-up-right"></i> Open Verification Dossier
                 </a>
-                ${!isDtpApproved ? `
-                <a href="${flatShowBaseUrl}/${f.id}/edit" target="_blank" class="px-3 py-1.5 bg-amber-50 hover:bg-amber-600 text-amber-800 hover:text-white border border-amber-200 hover:border-amber-600 rounded-lg text-xs font-bold uppercase transition flex items-center gap-1 shadow-2xs">
-                    <i class="bi bi-pencil-square"></i> Edit Flat
-                </a>` : `
-                <span class="px-3 py-1.5 bg-slate-100 text-slate-400 border border-slate-200 rounded-lg text-xs font-bold uppercase flex items-center gap-1 cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited">
-                    <i class="bi bi-lock-fill"></i> Locked (Approved)
-                </span>`}
             `);
             $('#inspect-modal').removeClass('hidden').addClass('flex');
         }

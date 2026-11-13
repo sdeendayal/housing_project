@@ -282,6 +282,7 @@ trait EwsBuilderFlatsMatrixTrait
                 ->smart(false)
                 ->addIndexColumn()
                 ->addColumn('district_name', fn($r) => '<span class="font-bold text-slate-900 uppercase">' . e($r->dist_name) . '</span>')
+                ->addColumn('district_town', fn($r) => '<span class="font-bold text-slate-900 uppercase">' . e($r->dist_name) . '</span><span class="block text-[10px] text-slate-400 font-mono">Zone Allotted</span>')
                 ->addColumn('town_name', fn($r) => '<span class="text-slate-400 font-mono text-[10px]">State Allotted Pool</span>')
                 ->addColumn('project_name', function($r) {
                     $parts = explode('-', $r->flat_no);
@@ -291,6 +292,7 @@ trait EwsBuilderFlatsMatrixTrait
                 ->addColumn('block_tower_number', fn($r) => '<span class="text-indigo-600 font-mono font-bold">App #' . e($r->application_number) . '</span>')
                 ->addColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . e($r->full_name) . '</span>')
                 ->addColumn('flat_number', fn($r) => '<span class="text-violet-700 font-black font-mono">' . e($r->flat_no) . '</span>')
+                ->addColumn('flat_details', fn($r) => '<span class="text-violet-700 font-black font-mono text-xs">' . e($r->flat_no) . '</span><span class="block text-[10px] text-slate-500 font-medium">' . e($r->full_name) . ' • App #' . e($r->application_number) . '</span>')
                 ->addColumn('flat_code', fn($r) => '<span class="text-emerald-700 font-bold font-mono">' . ($r->mobile_number ? substr($r->mobile_number, 0, 2) . '******' . substr($r->mobile_number, -2) : 'N/A') . '</span>')
                 ->addColumn('dtp_status', function($r) {
                     $isGiven = ($r->is_possession_given == 1 || $r->possession_status === 'Possession Given' || $r->possession_status === 'GIVEN');
@@ -300,7 +302,7 @@ trait EwsBuilderFlatsMatrixTrait
                     return '<span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ' . $color . ' border inline-flex items-center gap-1"><i class="bi ' . $icon . ' text-[9px]"></i> ' . e($status) . '</span>';
                 })
                 ->addColumn('actions', fn($r) => '<span class="text-slate-400 font-mono text-[9px] italic">Read-only Record</span>')
-                ->rawColumns(['district_name', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'dtp_status', 'actions'])
+                ->rawColumns(['district_name', 'district_town', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'flat_details', 'flat_code', 'dtp_status', 'actions'])
                 ->make(true);
         }
 
@@ -326,6 +328,13 @@ trait EwsBuilderFlatsMatrixTrait
             ->smart(false)
             ->addIndexColumn()
             ->addColumn('district_name', fn($r) => '<span class="font-bold text-slate-900 uppercase">' . e($r->district_name) . '</span>')
+            ->addColumn('district_town', function ($r) {
+                $dist = '<span class="font-bold text-slate-900 uppercase">' . e($r->district_name) . '</span>';
+                if (!empty($r->town_name)) {
+                    $dist .= '<span class="block text-[10px] text-slate-500 font-semibold">' . e($r->town_name) . '</span>';
+                }
+                return $dist;
+            })
             ->addColumn('town_name', fn($r) => '<span class="text-slate-700 font-semibold uppercase">' . e($r->town_name ?? '—') . '</span>')
             ->addColumn('project_name', fn($r) => '<span class="text-slate-800 font-bold uppercase">' . e($r->project_name ?? '—') . '</span>')
             ->addColumn('license_no', function ($r) {
@@ -337,6 +346,16 @@ trait EwsBuilderFlatsMatrixTrait
             ->addColumn('block_tower_number', fn($r) => '<span class="text-indigo-650 font-mono font-bold">' . e($r->block_tower_number ?? '—') . '</span>')
             ->addColumn('floor', fn($r) => '<span class="font-bold text-slate-800">' . e($r->floor ?? '—') . '</span>')
             ->addColumn('flat_number', fn($r) => '<span class="text-violet-655 font-black font-mono">' . e($r->flat_number ?? '—') . '</span>')
+            ->addColumn('flat_details', function ($r) {
+                $flat = '<span class="text-violet-700 font-black font-mono text-xs">' . e($r->flat_number ?? '—') . '</span>';
+                $details = [];
+                if (!empty($r->block_tower_number)) $details[] = 'Tower ' . e($r->block_tower_number);
+                if (!empty($r->floor)) $details[] = e($r->floor);
+                if (!empty($details)) {
+                    $flat .= '<span class="block text-[10px] text-slate-500 font-medium">' . implode(' • ', $details) . '</span>';
+                }
+                return $flat;
+            })
             ->addColumn('flat_code', fn($r) => '<span class="text-emerald-600 font-bold font-mono">' . e($r->flat_code ?? '—') . '</span>')
             ->addColumn('dtp_status', function ($r) {
                 $status = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0);
@@ -354,19 +373,12 @@ trait EwsBuilderFlatsMatrixTrait
                     $viewUrl = route('ews.department.builder-flats.show', $flatIdentifier);
                 } elseif ($isStp) {
                     $viewUrl = route('ews.stp.flats.show', $flatIdentifier);
-                    $editUrl = route('ews.stp.flats.edit', $flatIdentifier);
-                    $isApproved = (int)($r->is_approved_by_dtp ?? $r->is_aproved_by_dtp ?? 0) === 1;
-
-                    $editBtn = $isApproved
-                        ? '<span class="px-2 py-0.5 bg-slate-100 text-slate-400 border border-slate-200 rounded text-[9px] font-bold uppercase inline-flex items-center gap-1 shadow-2xs cursor-not-allowed" title="Locked: Flat has been approved and cannot be edited"><i class="bi bi-lock-fill text-[9px]"></i> Locked</span>'
-                        : '<a href="'.$editUrl.'" class="px-2 py-0.5 bg-amber-50 hover:bg-amber-500 text-amber-700 hover:text-white border border-amber-300 hover:border-amber-500 rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap"><i class="bi bi-pencil-square text-[9px]"></i> <span>Edit</span></a>';
 
                     return '
-                        <div class="inline-flex items-center gap-1">
-                            <a href="'.$viewUrl.'" class="px-2 py-0.5 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded text-[9px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">
-                                <i class="bi bi-eye text-[9px]"></i> <span>View</span>
+                        <div class="inline-flex items-center justify-end w-full">
+                            <a href="'.$viewUrl.'" class="px-2.5 py-1 bg-sky-50 hover:bg-sky-600 text-sky-700 hover:text-white border border-sky-200 hover:border-sky-600 rounded-lg text-[9.5px] font-black uppercase tracking-wider transition-all inline-flex items-center gap-1 shadow-2xs whitespace-nowrap">
+                                <i class="bi bi-eye text-[10px]"></i> <span>View</span>
                             </a>
-                            '.$editBtn.'
                         </div>
                     ';
                 }
@@ -379,7 +391,7 @@ trait EwsBuilderFlatsMatrixTrait
                     </a>
                 ';
             })
-            ->rawColumns(['district_name', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'flat_code', 'dtp_status', 'actions'])
+            ->rawColumns(['district_name', 'district_town', 'town_name', 'project_name', 'license_no', 'block_tower_number', 'floor', 'flat_number', 'flat_details', 'flat_code', 'dtp_status', 'actions'])
             ->make(true);
     }
 

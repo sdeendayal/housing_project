@@ -390,15 +390,12 @@
                         <thead>
                             <tr>
                                 <th class="w-8 text-center">S.No.</th>
-                                <th id="th-col-1">District Name</th>
-                                <th id="th-col-2">Town Name</th>
-                                <th id="th-col-3">Project Name</th>
+                                <th id="th-col-dist-town">District & Town</th>
+                                <th id="th-col-project">Project Name</th>
                                 <th id="th-col-license">License No.</th>
-                                <th id="th-col-4">Block / Tower</th>
-                                <th id="th-col-5">Floor</th>
-                                <th id="th-col-6">Flat No.</th>
-                                <th id="th-col-8">STP Status</th>
-                                <th class="text-right">Action</th>
+                                <th id="th-col-flat">Flat Details</th>
+                                <th id="th-col-status" class="text-center">STP Status</th>
+                                <th class="text-right" style="width: 8%;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -794,14 +791,11 @@
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, class: 'text-center font-mono text-[9px] text-slate-500' },
-                    { data: 'district_name', name: 'district_name', class: 'font-bold text-slate-900 uppercase whitespace-nowrap' },
-                    { data: 'town_name', name: 'town_name', class: 'whitespace-nowrap text-slate-700' },
+                    { data: 'district_town', name: 'district_name', class: 'whitespace-nowrap' },
                     { data: 'project_name', name: 'project_name', class: 'text-slate-800 font-bold whitespace-nowrap uppercase' },
                     { data: 'license_no', name: 'license_no', class: 'font-mono text-slate-700 whitespace-nowrap' },
-                    { data: 'block_tower_number', name: 'block_tower_number', class: 'text-indigo-650 font-mono font-bold whitespace-nowrap' },
-                    { data: 'floor', name: 'floor', class: 'font-bold text-slate-800 whitespace-nowrap' },
-                    { data: 'flat_number', name: 'flat_number', class: 'text-violet-655 font-black font-mono whitespace-nowrap' },
-                    { data: 'dtp_status', name: 'dtp_status', orderable: false, searchable: false, class: 'whitespace-nowrap' },
+                    { data: 'flat_details', name: 'flat_number', class: 'whitespace-nowrap' },
+                    { data: 'dtp_status', name: 'dtp_status', orderable: false, searchable: false, class: 'text-center whitespace-nowrap' },
                     { data: 'actions', name: 'actions', orderable: false, searchable: false, class: 'text-right whitespace-nowrap' }
                 ],
                 language: {
