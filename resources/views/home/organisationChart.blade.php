@@ -197,14 +197,6 @@ $branches = [
                     </span>
                 </div>
 
-                <select id="orgLanguage"
-                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow-sm">
-
-                    <option value="en">English</option>
-                    <option value="hi" selected>हिन्दी</option>
-
-                </select>
-
             </div>
 
         </div>
@@ -281,37 +273,3 @@ $branches = [
 
 @endsection
 
-@push('scripts')
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const dropdown = document.getElementById('orgLanguage');
-
-    const elements = document.querySelectorAll('[data-org-lang]');
-
-    if (!dropdown) return;
-
-    function changeOrgLanguage(language) {
-
-        elements.forEach(function (element) {
-
-            element.hidden = element.dataset.orgLang !== language;
-
-        });
-
-    }
-
-    dropdown.addEventListener('change', function () {
-
-        changeOrgLanguage(this.value);
-
-    });
-
-    // Default language
-    changeOrgLanguage('hi');
-
-});
-</script>
-
-@endpush

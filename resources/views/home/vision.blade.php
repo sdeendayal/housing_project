@@ -48,22 +48,7 @@
 
                 </div>
 
-                {{-- Language Dropdown --}}
-                <div class="flex items-center gap-2">
-
-                    <label for="visionLanguage" class="text-sm font-semibold text-slate-700">
-                        Language:
-                    </label>
-
-                    <select id="visionLanguage"
-                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
-
-                        <option value="en">English</option>
-                        <option value="hi" selected>हिन्दी</option>
-
-                    </select>
-
-                </div>
+                
 
             </div>
 
@@ -376,50 +361,3 @@
 @include('partials.rightSidebar')
 
 @endsection
-
-
-{{-- Language Switching Script --}}
-@push('scripts')
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const dropdown = document.getElementById('visionLanguage');
-
-    const languageLabels = document.querySelectorAll('[data-vision-lang]');
-    const languageContents = document.querySelectorAll('[data-vision-content]');
-
-    if (!dropdown) return;
-
-    function changeVisionLanguage(language) {
-
-        // Change headings
-        languageLabels.forEach(function (element) {
-
-            element.hidden = element.dataset.visionLang !== language;
-
-        });
-
-        // Change main content
-        languageContents.forEach(function (element) {
-
-            element.hidden = element.dataset.visionContent !== language;
-
-        });
-
-    }
-
-    dropdown.addEventListener('change', function () {
-
-        changeVisionLanguage(this.value);
-
-    });
-
-    // Default Hindi language
-    dropdown.value = 'hi';
-    changeVisionLanguage('hi');
-
-});
-</script>
-
-@endpush

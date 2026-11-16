@@ -39,20 +39,7 @@ $officers = [
                         <span data-who-lang="en">Who's Who</span>
                         <span data-who-lang="hi" hidden>कौन क्या है</span>
                     </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <label for="whoLanguage" class="text-sm font-semibold text-slate-700">
-                        Language:
-                    </label>
-
-                    <select id="whoLanguage"
-                        class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
-
-                        <option value="en" selected>English</option>
-                        <option value="hi" selected>हिन्दी</option>
-                    </select>
-                </div>
+                </div>               
             </div>
 
             {{-- Table Card --}}
@@ -140,36 +127,3 @@ $officers = [
 @include('partials.rightSidebar')
 
 @endsection
-
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const dropdown = document.getElementById('whoLanguage');
-
-    const languageElements = document.querySelectorAll('[data-who-lang]');
-
-    if (!dropdown) return;
-
-    function changeWhoLanguage(language) {
-
-        languageElements.forEach(function (element) {
-
-            element.hidden = element.dataset.whoLang !== language;
-
-        });
-
-    }
-
-    dropdown.addEventListener('change', function () {
-
-        changeWhoLanguage(this.value);
-
-    });
-
-    // Default language
-    changeWhoLanguage('hi');
-
-});
-</script>
-@endpush
