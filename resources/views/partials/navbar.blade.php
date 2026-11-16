@@ -57,9 +57,10 @@
 
             {{-- Our Vision --}}
             <a href="{{ route('vision') }}"
-                class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors">
-                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">visibility</span>
-                Our Vision
+                class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors notranslate" translate="no">
+                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                <span class="lang-show-en">Our Vision</span>
+                <span class="lang-show-hi">हमारा लक्ष्य</span>
             </a>
 
             {{-- Gallery --}}
@@ -71,12 +72,13 @@
 
             {{-- Help --}}
             <a href="{{ route('help') }}"
-                class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide border border-slate-200
+                class="flex items-center gap-2 px-4 py-2 text-sm font-bold rounded-md shadow-sm transition-colors uppercase tracking-wide border border-slate-200 notranslate
                 {{ request()->routeIs('help')
                     ? 'bg-white text-civic-blue ring-2 ring-civic-blue/20'
-                    : 'bg-white text-civic-blue hover:bg-slate-50' }}">
-                <span class="material-symbols-outlined notranslate text-[18px]" translate="no">help</span>
-                Help
+                    : 'bg-white text-civic-blue hover:bg-slate-50' }}" translate="no">
+                <span class="material-symbols-outlined text-[18px]">help</span>
+                <span class="lang-show-en">Help</span>
+                <span class="lang-show-hi">सहायता</span>
             </a>
 
             {{-- PMAY Portals (Central Schemes) Dropdown --}}

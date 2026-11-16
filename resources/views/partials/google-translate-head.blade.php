@@ -207,7 +207,18 @@
             { regex: /Housing [Ff]or All,\s*Haryana/g, replace: 'हाउसिंग फॉर ऑल, हरियाणा' },
             { regex: /Housing [Ff]or All Haryana/g, replace: 'हाउसिंग फॉर ऑल, हरियाणा' },
             { regex: /Housing [Ff]or All/g, replace: 'हाउसिंग फॉर ऑल' },
-            { regex: /HOUSING FOR ALL/g, replace: 'हाउसिंग फॉर ऑल' }
+            { regex: /HOUSING FOR ALL/g, replace: 'हाउसिंग फॉर ऑल' },
+
+            // Location name corrections (Charkhi Dadri & Jagadhri)
+            { regex: /चरकी[\s\-]*दादरी/g, replace: 'चरखी दादरी' },
+            { regex: /जगधरी/g, replace: 'जगाधरी' },
+            { regex: /Charki[\s\-]*Dadri/gi, replace: 'चरखी दादरी' },
+            { regex: /Charkhi[\s\-]*Dadri/gi, replace: 'चरखी दादरी' },
+            { regex: /Jagadhri/gi, replace: 'जगाधरी' },
+
+            // Vision & Help corrections
+            { regex: /हमारा\s+नज़रिया|हमारा\s+नजरिया/g, replace: 'हमारा लक्ष्य' },
+            { regex: /(^|[^\u0900-\u097F])मदद([^\u0900-\u097F]|$)/g, replace: '$1सहायता$2' }
         ];
 
         var ENGLISH_DEPT_REPLACEMENTS = [
@@ -217,7 +228,11 @@
             { regex: /हाउसिंग फॉर ऑल विभाग/g, replace: 'Department of Housing For All' },
             { regex: /हाउसिंग फॉर ऑल निदेशालय/g, replace: 'Directorate of Housing For All' },
             { regex: /हाउसिंग फॉर ऑल,\s*हरियाणा/g, replace: 'Housing For All, Haryana' },
-            { regex: /हाउसिंग फॉर ऑल/g, replace: 'Housing For All' }
+            { regex: /हाउसिंग फॉर ऑल/g, replace: 'Housing For All' },
+            { regex: /चरखी दादरी/g, replace: 'Charkhi Dadri' },
+            { regex: /जगाधरी/g, replace: 'Jagadhri' },
+            { regex: /हमारा लक्ष्य/g, replace: 'Our Vision' },
+            { regex: /सहायता/g, replace: 'Help' }
         ];
 
         // 2. High-performance targeted protection
@@ -229,7 +244,7 @@
                 // Check if current mode is Hindi and update root class
                 var isHindi = updateLangClass();
 
-                // 2A. Update 'Home' navigation tab ('होम' in Hindi, 'Home' in English)
+                // 2A. Update 'Home', 'Our Vision', and 'Help' navigation links
                 var homeEls = document.querySelectorAll('.nav-home-text');
                 for (var h = 0; h < homeEls.length; h++) {
                     var hel = homeEls[h];
@@ -241,6 +256,33 @@
                     } else {
                         if (htxt === 'होम' || htxt === 'घर') {
                             hel.innerHTML = '<span class="notranslate" translate="no">Home</span>';
+                        }
+                    }
+                }
+
+                // Protect and update any Our Vision / Help navigation links without bilingual wrapper
+                var visionLinks = document.querySelectorAll('a[href*="vision"]:not(.notranslate)');
+                for (var vl = 0; vl < visionLinks.length; vl++) {
+                    var vnode = visionLinks[vl];
+                    var vtxt = vnode.textContent.trim();
+                    if (isHindi) {
+                        if (vtxt === 'Our Vision' || vtxt === 'हमारा नज़रिया' || vtxt === 'हमारा नजरिया') {
+                            vnode.innerHTML = '<span class="material-symbols-outlined notranslate text-[18px]" translate="no">visibility</span> <span class="notranslate" translate="no">हमारा लक्ष्य</span>';
+                            vnode.classList.add('notranslate');
+                            vnode.setAttribute('translate', 'no');
+                        }
+                    }
+                }
+
+                var helpLinks = document.querySelectorAll('a[href*="help"]:not(.notranslate)');
+                for (var hl = 0; hl < helpLinks.length; hl++) {
+                    var hnode = helpLinks[hl];
+                    var htxt = hnode.textContent.trim();
+                    if (isHindi) {
+                        if (htxt === 'Help' || htxt === 'मदद' || htxt === 'HELP') {
+                            hnode.innerHTML = '<span class="material-symbols-outlined notranslate text-[18px]" translate="no">help</span> <span class="notranslate" translate="no">सहायता</span>';
+                            hnode.classList.add('notranslate');
+                            hnode.setAttribute('translate', 'no');
                         }
                     }
                 }
@@ -289,10 +331,10 @@
                     }
                 }
 
-                // 2F. Process text nodes across body for Department of Housing For All & Schemes
+                // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
                 var targetDeptRegex = isHindi
-                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास/
-                    : /हाउसिंग फॉर ऑल/;
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद/i
+                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता/;
 
                 var bodyText = document.body ? (document.body.innerText || '') : '';
                 var shouldProcessDept = targetDeptRegex.test(bodyText);

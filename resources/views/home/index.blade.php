@@ -65,7 +65,7 @@
                                 <a class="flex items-start space-x-2" href="#">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Charki Dadri under <span class="notranslate" translate="no">MMSAY</span>
+                                        Draw Results of Charkhi Dadri under <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
