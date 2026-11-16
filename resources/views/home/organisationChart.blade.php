@@ -201,7 +201,7 @@ $branches = [
                     class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow-sm">
 
                     <option value="en">English</option>
-                    <option value="hi">हिन्दी</option>
+                    <option value="hi" selected>हिन्दी</option>
 
                 </select>
 
@@ -309,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Default language
-    changeOrgLanguage('en');
+    changeOrgLanguage('hi');
 
 });
 </script>
