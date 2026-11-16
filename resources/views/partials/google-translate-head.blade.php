@@ -249,7 +249,18 @@
             { regex: /आख़िर|आखिर/g, replace: 'महानिदेशक' },
             { regex: /श्री\s+चन्द्र\s+शेखर\s+खरे[,\s]+आई[\.\s]*एस[\.\s]*एस/g, replace: 'श्री चन्द्र शेखर खरे, आई.ए.एस' },
             { regex: /निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/g, replace: 'महानिदेशक' },
-            { regex: /Director[\s\-]+General/gi, replace: 'महानिदेशक' }
+            { regex: /Director[\s\-]+General/gi, replace: 'महानिदेशक' },
+
+            // Latest News corrections
+            { regex: /ताज़ा\s+खबर|ताजा\s+खबर|ताज़ा\s+ख़बर|ताजा\s+ख़बर/g, replace: 'नवीनतम समाचार' },
+            { regex: /Latest News/gi, replace: 'नवीनतम समाचार' },
+
+            // Physical Possession corrections
+            { regex: /भौतिक\s+स्वामित्व\s+आवेदन\s+पोर्टल|भौतिक\s+कब्जा\s+आवेदन\s+पोर्टल|भौतिक\s+कब्ज़ा\s+आवेदन\s+पोर्टल/g, replace: '1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल' },
+            { regex: /Physical Possession Application Portal/gi, replace: '1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल' },
+            { regex: /भौतिक\s+स्वामित्व\s+योजना|भौतिक\s+कब्जा\s+योजना|भौतिक\s+कब्ज़ा\s+योजना/g, replace: '1 मरला प्लॉट का कब्ज़ा योजना' },
+            { regex: /Physical Possession Scheme/gi, replace: '1 मरला प्लॉट का कब्ज़ा योजना' },
+            { regex: /भौतिक\s+स्वामित्व|भौतिक\s+कब्जा|भौतिक\s+कब्ज़ा/g, replace: '1 मरला प्लॉट का कब्ज़ा' }
         ];
 
         var ENGLISH_DEPT_REPLACEMENTS = [
@@ -266,7 +277,11 @@
             { regex: /सहायता/g, replace: 'Help' },
             { regex: /विभागीय संरचना/g, replace: 'Organisation Chart' },
             { regex: /कौन क्या है/g, replace: "Who's Who" },
-            { regex: /महानिदेशक/g, replace: 'Director General' }
+            { regex: /महानिदेशक/g, replace: 'Director General' },
+            { regex: /नवीनतम समाचार/g, replace: 'Latest News' },
+            { regex: /1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल/g, replace: 'Physical Possession Application Portal' },
+            { regex: /1 मरला प्लॉट का कब्ज़ा योजना/g, replace: 'Physical Possession Scheme' },
+            { regex: /1 मरला प्लॉट का कब्ज़ा/g, replace: 'Physical Possession' }
         ];
 
         // 2. High-performance targeted protection
@@ -385,8 +400,8 @@
 
                 // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
                 var targetDeptRegex = isHindi
-                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|आख़िर|आखिर|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/i
-                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है|महानिदेशक/;
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|आख़िर|आखिर|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल|Latest News|ताज़ा\s+खबर|ताजा\s+खबर|ताज़ा\s+ख़बर|ताजा\s+ख़बर|भौतिक\s+स्वामित्व|भौतिक\s+कब्जा|भौतिक\s+कब्ज़ा|Physical Possession/i
+                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है|महानिदेशक|नवीनतम समाचार|1 मरला प्लॉट का कब्ज़ा/;
 
                 var bodyText = document.body ? (document.body.innerText || '') : '';
                 var shouldProcessDept = targetDeptRegex.test(bodyText);
