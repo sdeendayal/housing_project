@@ -116,16 +116,36 @@
     }
 
     /* 7. Fast bilingual visibility for marked elements without JS wait */
-    html.lang-hi .lang-show-en {
+    html.lang-hi .lang-show-en,
+    html.lang-hi [data-who-lang="en"],
+    html.lang-hi [data-org-lang="en"],
+    html.lang-hi [data-about-language="en"],
+    html.lang-hi [data-vision-lang="en"],
+    html.lang-hi [data-vision-content="en"] {
         display: none !important;
     }
-    html.lang-hi .lang-show-hi {
+    html.lang-hi .lang-show-hi,
+    html.lang-hi [data-who-lang="hi"],
+    html.lang-hi [data-org-lang="hi"],
+    html.lang-hi [data-about-language="hi"],
+    html.lang-hi [data-vision-lang="hi"],
+    html.lang-hi [data-vision-content="hi"] {
         display: inline !important;
     }
-    html.lang-en .lang-show-en {
+    html.lang-en .lang-show-en,
+    html.lang-en [data-who-lang="en"],
+    html.lang-en [data-org-lang="en"],
+    html.lang-en [data-about-language="en"],
+    html.lang-en [data-vision-lang="en"],
+    html.lang-en [data-vision-content="en"] {
         display: inline !important;
     }
-    html.lang-en .lang-show-hi {
+    html.lang-en .lang-show-hi,
+    html.lang-en [data-who-lang="hi"],
+    html.lang-en [data-org-lang="hi"],
+    html.lang-en [data-about-language="hi"],
+    html.lang-en [data-vision-lang="hi"],
+    html.lang-en [data-vision-content="hi"] {
         display: none !important;
     }
 </style>
@@ -225,7 +245,9 @@
             { regex: /कौन कौन है/g, replace: 'कौन क्या है' },
             { regex: /Who's Who/gi, replace: 'कौन क्या है' },
 
-            // Director General corrections
+            // Absolute anti-hallucination / Director General corrections
+            { regex: /आख़िर|आखिर/g, replace: 'महानिदेशक' },
+            { regex: /श्री\s+चन्द्र\s+शेखर\s+खरे[,\s]+आई[\.\s]*एस[\.\s]*एस/g, replace: 'श्री चन्द्र शेखर खरे, आई.ए.एस' },
             { regex: /निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/g, replace: 'महानिदेशक' },
             { regex: /Director[\s\-]+General/gi, replace: 'महानिदेशक' }
         ];
@@ -255,6 +277,24 @@
             try {
                 // Check if current mode is Hindi and update root class
                 var isHindi = updateLangClass();
+
+                // 2A-0. Emergency check: under NO CONDITION should 'आख़िर' or 'आखिर' exist in Hindi mode
+                if (isHindi && document.body) {
+                    var bodyHtml = document.body.innerHTML;
+                    if (bodyHtml.indexOf('आख़िर') !== -1 || bodyHtml.indexOf('आखिर') !== -1) {
+                        var badWalker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+                        var badNode;
+                        while ((badNode = badWalker.nextNode())) {
+                            if (/आख़िर|आखिर/.test(badNode.nodeValue)) {
+                                badNode.nodeValue = badNode.nodeValue.replace(/आख़िर|आखिर/g, 'महानिदेशक');
+                                if (badNode.parentElement) {
+                                    badNode.parentElement.classList.add('notranslate');
+                                    badNode.parentElement.setAttribute('translate', 'no');
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // 2A. Update 'Home', 'Our Vision', and 'Help' navigation links
                 var homeEls = document.querySelectorAll('.nav-home-text');
@@ -345,7 +385,7 @@
 
                 // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
                 var targetDeptRegex = isHindi
-                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/i
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|आख़िर|आखिर|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/i
                     : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है|महानिदेशक/;
 
                 var bodyText = document.body ? (document.body.innerText || '') : '';
@@ -364,18 +404,23 @@
                             continue;
                         }
 
-                        // Skip elements inside bilingual containers with specific data-attributes if in English mode
-                        if (!isHindi && parent.closest && parent.closest('[data-about-language="hi"], [data-org-lang="hi"], [data-vision-lang="hi"], [data-vision-content="hi"], [data-who-lang="hi"]')) {
-                            continue;
-                        }
-
-                        // Skip elements that already have dedicated bilingual classes
-                        if (parent.closest && parent.closest('.lang-show-en, .lang-show-hi')) {
-                            continue;
-                        }
-
                         var text = node.nodeValue;
                         var originalText = text;
+
+                        // Never skip if node contains 'आख़िर' or 'आखिर' in Hindi mode
+                        var isUrgentFix = isHindi && /आख़िर|आखिर/.test(text);
+
+                        if (!isUrgentFix) {
+                            // Skip elements inside bilingual containers with specific data-attributes if in English mode
+                            if (!isHindi && parent.closest && parent.closest('[data-about-language="hi"], [data-org-lang="hi"], [data-vision-lang="hi"], [data-vision-content="hi"], [data-who-lang="hi"]')) {
+                                continue;
+                            }
+
+                            // Skip elements that already have dedicated bilingual classes
+                            if (parent.closest && parent.closest('.lang-show-en, .lang-show-hi')) {
+                                continue;
+                            }
+                        }
 
                         // Restore English scheme acronyms (MMSAY, etc.) if translated
                         if (isHindi && HINDI_RESTORE_REGEX.test(text)) {

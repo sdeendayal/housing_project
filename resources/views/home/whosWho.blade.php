@@ -36,8 +36,8 @@ $officers = [
                 <div class="text-center flex-1">
                     <div class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-xs font-semibold shadow-sm">
                         <span class="material-symbols-outlined text-[17px]">groups</span>
-                        <span data-who-lang="en">Who's Who</span>
-                        <span data-who-lang="hi" hidden>कौन क्या है</span>
+                        <span data-who-lang="en" class="lang-show-en">Who's Who</span>
+                        <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">कौन क्या है</span>
                     </div>
                 </div>
 
@@ -66,28 +66,28 @@ $officers = [
                             <tr class="bg-gradient-to-r from-[#0f75c8] to-[#0b3c74] text-white">
 
                                 <th class="px-4 py-4 font-semibold rounded-tl-xl whitespace-nowrap">
-                                    <span data-who-lang="en">Sr. No.</span>
-                                    <span data-who-lang="hi" hidden>क्रमांक</span>
+                                    <span data-who-lang="en" class="lang-show-en">Sr. No.</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">क्रमांक</span>
                                 </th>
 
                                 <th class="px-4 py-4 font-semibold whitespace-nowrap">
-                                    <span data-who-lang="en">Officer Name</span>
-                                    <span data-who-lang="hi" hidden>अधिकारी का नाम</span>
+                                    <span data-who-lang="en" class="lang-show-en">Officer Name</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">अधिकारी का नाम</span>
                                 </th>
 
                                 <th class="px-4 py-4 font-semibold whitespace-nowrap">
-                                    <span data-who-lang="en">Designation</span>
-                                    <span data-who-lang="hi" hidden>पद</span>
+                                    <span data-who-lang="en" class="lang-show-en">Designation</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">पद</span>
                                 </th>
 
                                 <th class="px-4 py-4 font-semibold whitespace-nowrap">
-                                    <span data-who-lang="en">Telephone</span>
-                                    <span data-who-lang="hi" hidden>दूरभाष</span>
+                                    <span data-who-lang="en" class="lang-show-en">Telephone</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">दूरभाष</span>
                                 </th>
 
                                 <th class="px-4 py-4 font-semibold rounded-tr-xl whitespace-nowrap">
-                                    <span data-who-lang="en">E-mail</span>
-                                    <span data-who-lang="hi" hidden>ई-मेल</span>
+                                    <span data-who-lang="en" class="lang-show-en">E-mail</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">ई-मेल</span>
                                 </th>
 
                             </tr>
@@ -104,13 +104,13 @@ $officers = [
                                 </td>
 
                                 <td class="px-4 py-4 font-medium whitespace-nowrap">
-                                    <span data-who-lang="en">{{ $officer['en'] }}</span>
-                                    <span data-who-lang="hi" hidden>{{ $officer['hi'] }}</span>
+                                    <span data-who-lang="en" class="lang-show-en">{{ $officer['en'] }}</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">{{ $officer['hi'] }}</span>
                                 </td>
 
                                 <td class="px-4 py-4">
-                                    <span data-who-lang="en">{{ $officer['en_designation'] }}</span>
-                                    <span data-who-lang="hi" hidden>{{ $officer['hi_designation'] }}</span>
+                                    <span data-who-lang="en" class="lang-show-en">{{ $officer['en_designation'] }}</span>
+                                    <span data-who-lang="hi" class="lang-show-hi notranslate" translate="no">{{ $officer['hi_designation'] }}</span>
                                 </td>
 
                                 <td class="px-4 py-4 whitespace-nowrap">
@@ -119,7 +119,7 @@ $officers = [
 
                                 <td class="px-4 py-4 text-blue-700">
                                     <a href="mailto:{{ $officer['email'] }}" class="hover:underline">
-                                        {{ $officer['email'] }}
+                                         {{ $officer['email'] }}
                                     </a>
                                 </td>
 
@@ -146,30 +146,66 @@ $officers = [
 document.addEventListener('DOMContentLoaded', function () {
 
     const dropdown = document.getElementById('whoLanguage');
-
     const languageElements = document.querySelectorAll('[data-who-lang]');
 
-    if (!dropdown) return;
-
-    function changeWhoLanguage(language) {
-
-        languageElements.forEach(function (element) {
-
-            element.hidden = element.dataset.whoLang !== language;
-
-        });
-
+    // Absolute sanitization against any Google Translate hallucination ('आख़िर' / 'आखिर')
+    function sanitizeWhoTable() {
+        var table = document.getElementById('whoTable');
+        if (!table) return;
+        var textNodes = document.evaluate(".//text()[contains(., 'आख़िर') or contains(., 'आखिर')]", table, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+        for (var i = 0; i < textNodes.snapshotLength; i++) {
+            var node = textNodes.snapshotItem(i);
+            if (node) {
+                node.nodeValue = node.nodeValue.replace(/आख़िर|आखिर/g, 'महानिदेशक');
+                if (node.parentElement) {
+                    node.parentElement.classList.add('notranslate');
+                    node.parentElement.setAttribute('translate', 'no');
+                }
+            }
+        }
     }
 
-    dropdown.addEventListener('change', function () {
+    function changeWhoLanguage(language) {
+        if (language === 'hi') {
+            document.documentElement.classList.add('lang-hi');
+            document.documentElement.classList.remove('lang-en');
+        } else {
+            document.documentElement.classList.add('lang-en');
+            document.documentElement.classList.remove('lang-hi');
+        }
 
-        changeWhoLanguage(this.value);
+        languageElements.forEach(function (element) {
+            element.hidden = element.dataset.whoLang !== language;
+        });
 
-    });
+        sanitizeWhoTable();
+        if (window.fastProtectUI) {
+            window.fastProtectUI();
+        }
+    }
 
-    // Default language
-    changeWhoLanguage('hi');
+    if (dropdown) {
+        dropdown.addEventListener('change', function () {
+            changeWhoLanguage(this.value);
+        });
+    }
 
+    // Default language synced with current site language
+    var isHindi = document.documentElement.classList.contains('lang-hi') || document.cookie.indexOf('googtrans=/en/hi') !== -1;
+    if (dropdown) {
+        dropdown.value = isHindi ? 'hi' : 'en';
+    }
+    changeWhoLanguage(isHindi ? 'hi' : 'en');
+    sanitizeWhoTable();
+
+    // Observe table mutations to instantly eliminate 'आख़िर' if injected dynamically by Google Translate
+    var tableEl = document.getElementById('whoTable');
+    if (tableEl && window.MutationObserver) {
+        var obs = new MutationObserver(function () {
+            sanitizeWhoTable();
+        });
+        obs.observe(tableEl, { childList: true, subtree: true, characterData: true });
+    }
 });
 </script>
 @endpush

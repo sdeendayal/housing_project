@@ -192,8 +192,8 @@ $branches = [
                 <div class="text-center flex-1">
                     <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-xs font-semibold">
                         <span class="material-symbols-outlined">account_tree</span>
-                        <span data-org-lang="en">Organisation Chart</span>
-                        <span data-org-lang="hi" hidden>विभागीय संरचना</span>
+                        <span data-org-lang="en" class="lang-show-en">Organisation Chart</span>
+                        <span data-org-lang="hi" class="lang-show-hi notranslate" translate="no">विभागीय संरचना</span>
                     </span>
                 </div>
 
@@ -214,11 +214,11 @@ $branches = [
             {{-- Root --}}
             <div class="org-box org-root">
 
-                <span data-org-lang="en">
+                <span data-org-lang="en" class="lang-show-en">
                     Director General / Director (IAS)
                 </span>
 
-                <span data-org-lang="hi" hidden>
+                <span data-org-lang="hi" class="lang-show-hi notranslate" translate="no">
                     महानिदेशक / निदेशक (आई.ए.एस.)
                 </span>
 
@@ -236,11 +236,11 @@ $branches = [
                         {{-- Main Position --}}
                         <div class="org-box">
 
-                            <span data-org-lang="en">
+                            <span data-org-lang="en" class="lang-show-en">
                                 {{ $branch['en'] }}
                             </span>
 
-                            <span data-org-lang="hi" hidden>
+                            <span data-org-lang="hi" class="lang-show-hi notranslate" translate="no">
                                 {{ $branch['hi'] }}
                             </span>
 
@@ -253,11 +253,11 @@ $branches = [
 
                             <div class="org-box">
 
-                                <span data-org-lang="en">
+                                <span data-org-lang="en" class="lang-show-en">
                                     {{ $child['en'] }}
                                 </span>
 
-                                <span data-org-lang="hi" hidden>
+                                <span data-org-lang="hi" class="lang-show-hi notranslate" translate="no">
                                     {{ $child['hi'] }}
                                 </span>
 
@@ -287,29 +287,38 @@ $branches = [
 document.addEventListener('DOMContentLoaded', function () {
 
     const dropdown = document.getElementById('orgLanguage');
-
     const elements = document.querySelectorAll('[data-org-lang]');
 
     if (!dropdown) return;
 
     function changeOrgLanguage(language) {
+        if (language === 'hi') {
+            document.documentElement.classList.add('lang-hi');
+            document.documentElement.classList.remove('lang-en');
+        } else {
+            document.documentElement.classList.add('lang-en');
+            document.documentElement.classList.remove('lang-hi');
+        }
 
         elements.forEach(function (element) {
-
             element.hidden = element.dataset.orgLang !== language;
-
         });
 
+        if (window.fastProtectUI) {
+            window.fastProtectUI();
+        }
     }
 
     dropdown.addEventListener('change', function () {
-
         changeOrgLanguage(this.value);
-
     });
 
-    // Default language
-    changeOrgLanguage('hi');
+    // Default language synced with current site language
+    var isHindi = document.documentElement.classList.contains('lang-hi') || document.cookie.indexOf('googtrans=/en/hi') !== -1;
+    if (dropdown) {
+        dropdown.value = isHindi ? 'hi' : 'en';
+    }
+    changeOrgLanguage(isHindi ? 'hi' : 'en');
 
 });
 </script>
