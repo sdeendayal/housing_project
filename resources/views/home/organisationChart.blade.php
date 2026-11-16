@@ -200,14 +200,8 @@ $branches = [
                 <select id="orgLanguage"
                     class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow-sm">
 
-<<<<<<< HEAD
-                    <h2 class="font-semibold text-[18px] notranslate" translate="no">
-                        Department of Housing For All
-                    </h2>
-=======
                     <option value="en">English</option>
                     <option value="hi" selected>हिन्दी</option>
->>>>>>> fcbb24f84a996bb56e37fa4c793cad8b637acef1
 
                 </select>
 
