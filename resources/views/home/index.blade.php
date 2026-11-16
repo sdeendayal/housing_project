@@ -135,7 +135,7 @@
 
                 </div>
                 <!-- Panel: Data Download -->
-                <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+                {{-- <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
                     <div class="bg-green-500 text-white px-4 py-3 font-semibold text-sm flex items-center justify-between">
 
                         <!-- Left Side -->
@@ -188,7 +188,7 @@
                             </a>
                         </li>
                     </ul>
-                </div>
+                </div> --}}
 
             </aside>
             <!-- CENTER AREA -->
@@ -629,7 +629,7 @@
                         </div>
 
                         <!-- Right Side -->
-                        <a class="flex items-center gap-1 text-sm font-semibold text-sky-600 hover:text-sky-800 transition-all duration-200 hover:underline"
+                        {{-- <a class="flex items-center gap-1 text-sm font-semibold text-sky-600 hover:text-sky-800 transition-all duration-200 hover:underline"
                             href="#">
 
                             View All
@@ -638,7 +638,7 @@
                                 arrow_forward
                             </span>
 
-                        </a>
+                        </a> --}}
 
                     </div>
                     <div class="divide-y divide-surface-container-low max-h-48 overflow-y-auto custom-scroll">
@@ -657,7 +657,7 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="p-3 flex items-start space-x-3"><span
+                        {{-- <div class="p-3 flex items-start space-x-3"><span
                                 class="material-symbols-outlined text-secondary-container text-sm">calendar_today</span>
                             <div>
                                 <div class="text-[10px] text-on-surface-variant mb-0.5">05 May, 2024</div>
@@ -670,7 +670,7 @@
                                 <div class="text-[10px] text-on-surface-variant mb-0.5">28 Apr, 2024</div>
                                 <p class="text-xs text-on-surface font-medium"><span class="notranslate" translate="no">MMGAY</span> Phase 3 online applications open.</p>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
             </section>
@@ -787,7 +787,7 @@
 
                 </div>
                 <!-- Panel: Citizen Services -->
-                <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
+                {{-- <div class="bg-white rounded-lg shadow-md border border-slate-200 overflow-hidden">
                     <div class="bg-green-500 text-white px-4 py-3 font-semibold text-sm flex items-center justify-between">
 
                         <div class="flex items-center gap-2">
@@ -837,7 +837,7 @@
                             </a>
                         </li>
                     </ul>
-                </div>
+                </div> --}}
             </aside>
         </main>
         <section class="py-14 bg-gradient-to-b from-slate-50 to-white">
@@ -901,67 +901,7 @@
                 </div>
             </div>
 
-        </section>
-
-        <section class="py-10 bg-white">
-
-            <div class="max-w-7xl mx-auto px-4">
-
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-5">
-
-                    <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
-
-                        <h3 class="text-3xl font-bold text-sky-600">
-                            25K+
-                        </h3>
-
-                        <p class="text-sm text-slate-600 mt-2">
-                            Houses Approved
-                        </p>
-
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
-
-                        <h3 class="text-3xl font-bold text-green-600">
-                            12K+
-                        </h3>
-
-                        <p class="text-sm text-slate-600 mt-2">
-                            Beneficiaries
-                        </p>
-
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
-
-                        <h3 class="text-3xl font-bold text-orange-500">
-                            22
-                        </h3>
-
-                        <p class="text-sm text-slate-600 mt-2">
-                            District Covered
-                        </p>
-
-                    </div>
-
-                    <div class="bg-white rounded-2xl p-6 shadow-md border hover:-translate-y-1 transition">
-
-                        <h3 class="text-3xl font-bold text-indigo-600">
-                            100%
-                        </h3>
-
-                        <p class="text-sm text-slate-600 mt-2">
-                            Transparency
-                        </p>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
+        </section>        
 
         <section class="py-14 bg-slate-50">
 
@@ -1016,26 +956,8 @@
 
             </div>
 
-        </section>
-        <!-- END: Main Content Layout -->
-        <!-- BEGIN: Bottom Grid Navigation -->
-        <section class="max-w-7xl mx-auto px-4 pb-12">
-            <div
-                class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-0.5 bg-surface-container-highest border border-surface-container-highest rounded-lg overflow-hidden">
-                <a class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">RERA Portal</a><a
-                    class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">Building Code</a><a
-                    class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">Act/Rules</a><a
-                    class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">Fees &amp; Charges</a><a
-                    class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">TDR Calculator</a><a
-                    class="bg-white p-4 text-center text-xs font-bold text-primary hover:bg-surface-container-low transition-colors flex items-center justify-center min-h-[80px]"
-                    href="#">Employee Corner</a>
-            </div>
-        </section>
+        </section>        
+        
     </main>
     {{-- Right Sidebar --}}
     @include('partials.rightSidebar')

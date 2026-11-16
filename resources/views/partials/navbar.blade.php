@@ -63,11 +63,11 @@
             </a>
 
             {{-- Gallery --}}
-            <a href="{{ route('gallery') }}"
+            {{-- <a href="{{ route('gallery') }}"
                 class="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-civic-blue hover:bg-slate-50 rounded-md transition-colors">
                 <span class="material-symbols-outlined notranslate text-[18px]" translate="no">photo_library</span>
                 Gallery
-            </a>
+            </a> --}}
 
             {{-- Help --}}
             <a href="{{ route('help') }}"

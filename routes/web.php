@@ -33,7 +33,7 @@ Route::get('/whos-who', function () {
 })->name('whos.who');
 
 Route::get('/vision', function () {
-    return "Vision page is under construction. Please check back later.";
+    return view('home.vision');
 })->name('vision');
 
 Route::get('/gallery', function () {

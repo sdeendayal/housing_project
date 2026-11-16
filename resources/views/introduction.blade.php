@@ -105,7 +105,7 @@
                 <!-- Placeholder for Department Logo -->
                 <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All</h1>
+                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All1</h1>
                     <p class="text-sm opacity-90">Government of Haryana</p>
                 </div>
             </div>
