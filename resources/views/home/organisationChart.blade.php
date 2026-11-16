@@ -197,14 +197,6 @@ $branches = [
                     </span>
                 </div>
 
-                <select id="orgLanguage"
-                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow-sm">
-
-                    <option value="en">English</option>
-                    <option value="hi" selected>हिन्दी</option>
-
-                </select>
-
             </div>
 
         </div>

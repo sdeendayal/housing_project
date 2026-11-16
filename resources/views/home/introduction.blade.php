@@ -5,16 +5,7 @@
 @section('content')
 <main class="lg:col-span-2">
     <section class="bg-gradient-to-b from-slate-50 to-white py-10 border-b border-slate-200">
-        <div class="max-w-7xl mx-auto px-4">
-
-            {{-- Language selector --}}
-            <div class="flex justify-end mb-6">
-                <label for="aboutLanguage" class="sr-only">Select language</label>
-                <select id="aboutLanguage" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                    <option value="en" selected>English</option>
-                    <option value="hi" selected>हिन्दी</option>
-                </select>
-            </div>
+        <div class="max-w-7xl mx-auto px-4">           
 
             {{-- English content --}}
             <div data-about-language="en">
@@ -157,6 +148,4 @@
 @include('partials.rightSidebar')
 @endsection
 
-@push('scripts')
-    <script src="{{ asset('js/about-us-language.js') }}"></script>
-@endpush
+

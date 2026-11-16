@@ -45,7 +45,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/docs/news/Strategy_to_Implement_AHP-PMAY_(U).pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Strategy to implement AHP-PMAY(U) in Haryana-comments/suggestions thereof
@@ -62,16 +62,16 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193400381597606378.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Charkhi Dadri under <span class="notranslate" translate="no">MMSAY</span>
+                                        Draw Results of Charki Dadri under MMSAY <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/1719340119512277784.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Fatehabad under <span class="notranslate" translate="no">MMSAY</span>
@@ -87,7 +87,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193401541393039896.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Gohana under <span class="notranslate" translate="no">MMSAY</span>
@@ -103,7 +103,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193401961697747858.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Jagadhri under <span class="notranslate" translate="no">MMSAY</span>
@@ -112,7 +112,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/1719340231306711584.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Jhajjar under <span class="notranslate" translate="no">MMSAY</span>
@@ -121,7 +121,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193404852005126767.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Rohtak under <span class="notranslate" translate="no">MMSAY</span>
@@ -703,7 +703,7 @@
                         <ul class="divide-y divide-slate-100 text-sm animate-news-scroll">
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/_Hindi_ARHC_Scheme_Guideline.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
@@ -745,7 +745,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/Final_English_ARHC_User_Guide_12Oct2020.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
@@ -774,7 +774,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/MMGAY.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
