@@ -418,7 +418,11 @@
                <span class="material-symbols-outlined notranslate" translate="no">apartment</span>
             </div>
              <div>
-                <p class="cl-brand__title"><span class="notranslate" translate="no">Housing For All</span> ({{ (isset($context) && str_contains($context, 'mmgav')) || str_contains(request()->url(), 'mmgav') ? 'MMGAV' : 'MMGAY' }})</p>
+                <p class="cl-brand__title notranslate" translate="no">
+                   <span class="lang-show-en">Housing For All</span>
+                   <span class="lang-show-hi">हाउसिंग फॉर ऑल</span> 
+                   ({{ (isset($context) && str_contains($context, 'mmgav')) || str_contains(request()->url(), 'mmgav') ? 'MMGAV' : 'MMGAY' }})
+                </p>
                 {{-- <p class="cl-brand__sub">Villager Portal</p> --}}
              </div>
          </div>

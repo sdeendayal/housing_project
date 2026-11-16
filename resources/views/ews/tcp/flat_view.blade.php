@@ -1340,8 +1340,9 @@
 
         <!-- Compact Bottom Status Footer (Height: 28px) -->
         <footer class="bg-white border-t border-slate-200 py-1.5 px-4 text-center shrink-0">
-            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                Department of Housing for All • Developed by DITECH (CRID)
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider notranslate" translate="no">
+                <span class="lang-show-en">Department of Housing for All • Developed by DITECH (CRID)</span>
+                <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग • Developed by DITECH (CRID)</span>
             </p>
         </footer>
 

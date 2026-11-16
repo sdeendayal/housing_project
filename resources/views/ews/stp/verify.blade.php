@@ -413,8 +413,9 @@
             <!-- Footer -->
             <footer class="bg-white border border-slate-200/90 py-2 shrink-0 rounded-xl mt-4">
                 <div class="w-full px-3 text-center">
-                    <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider">
-                        Department of Housing for All • Developed by DITECH (CRID)
+                    <p class="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing for All • Developed by DITECH (CRID)</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग • Developed by DITECH (CRID)</span>
                     </p>
                 </div>
             </footer>

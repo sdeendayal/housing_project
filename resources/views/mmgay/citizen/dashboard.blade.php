@@ -162,7 +162,10 @@
                         <span class="material-symbols-outlined text-white text-[18px] font-bold">real_estate_agent</span>
                     </div>
                     <div>
-                        <h1 class="text-xs font-extrabold tracking-wide uppercase text-slate-100 notranslate" translate="no">Housing For All</h1>
+                        <h1 class="text-xs font-extrabold tracking-wide uppercase text-slate-100 notranslate" translate="no">
+                            <span class="lang-show-en">Housing For All</span>
+                            <span class="lang-show-hi">हाउसिंग फॉर ऑल</span>
+                        </h1>
                         <p class="text-[8px] text-slate-500 font-bold uppercase tracking-wider leading-none mt-0.5">MMGAY Scheme</p>
                     </div>
                 </div>
@@ -1133,7 +1136,11 @@
                 <!-- Footer -->
                 <footer class="bg-slate-900 border-t border-slate-800 text-slate-500 py-3 text-center z-10 flex-shrink-0">
                     <div class="max-w-full mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-1 text-[9px] leading-none">
-                        <p>© 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Government of Haryana. All rights reserved.</p>
+                        <p class="notranslate" translate="no">
+                            © 2026 
+                            <span class="lang-show-en">Department of Housing For All, Government of Haryana. All rights reserved.</span>
+                            <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार। सर्वाधिकार सुरक्षित।</span>
+                        </p>
                         <p class="text-slate-600/90 font-medium font-mono">Designed by Citizen Resources Information Department, Haryana (CRID)</p>
                     </div>
                 </footer>

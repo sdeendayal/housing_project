@@ -246,8 +246,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 text-center py-4 border-t border-slate-800 text-[10px] mt-auto">
-        &copy; {{ now()->format('Y') }} Department of Housing For All, Government of Haryana. All rights reserved.
+    <footer class="bg-slate-900 text-slate-400 text-center py-4 border-t border-slate-800 text-[10px] mt-auto notranslate" translate="no">
+        &copy; {{ now()->format('Y') }} 
+        <span class="lang-show-en">Department of Housing For All, Government of Haryana. All rights reserved.</span>
+        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार। सर्वाधिकार सुरक्षित।</span>
     </footer>
 
 </body>

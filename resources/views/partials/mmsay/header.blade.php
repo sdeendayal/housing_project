@@ -4,8 +4,14 @@
             <!-- Placeholder for Department Logo -->
             <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
             <div>
-                <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">Department of Housing For All</h1>
-                <p class="text-sm opacity-90">Government of Haryana</p>
+                <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">
+                    <span class="lang-show-en">Department of Housing For All</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                </h1>
+                <p class="text-sm opacity-90 notranslate" translate="no">
+                    <span class="lang-show-en">Government of Haryana</span>
+                    <span class="lang-show-hi">हरियाणा सरकार</span>
+                </p>
             </div>
         </div>
         <!-- Google Translate Element -->

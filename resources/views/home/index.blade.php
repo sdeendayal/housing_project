@@ -551,7 +551,10 @@
                                 <div class="px-3 py-1.5 bg-slate-50/80 border-t border-slate-100 text-center">
                                     <span class="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-1">
                                         <span class="material-symbols-outlined notranslate text-slate-400 text-[13px]" translate="no">verified_user</span>
-                                        <span class="notranslate" translate="no">Department of Housing For All</span>, Haryana
+                                        <span class="notranslate" translate="no">
+                                            <span class="lang-show-en">Department of Housing For All, Haryana</span>
+                                            <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा</span>
+                                        </span>
                                     </span>
                                 </div>
 
@@ -717,8 +720,9 @@
                                         description
                                     </span>
 
-                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Redesignation of <span class="notranslate" translate="no">Department of Housing for All</span>
+                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200 notranslate" translate="no">
+                                        <span class="lang-show-en">Redesignation of Department of Housing for All</span>
+                                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग का पुन:नामकरण</span>
                                     </span>
                                 </a>
                             </li>
@@ -866,7 +870,8 @@
 
                     <!-- Heading -->
                     <h2 class="text-[30px] font-bold text-slate-800 text-center notranslate" translate="no">
-                        Department of Housing For All
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
                     </h2>
 
                     <!-- Underline -->
@@ -882,7 +887,8 @@
                         that there will be a department namely
 
                         <span class="font-semibold text-slate-800 notranslate" translate="no">
-                            ‘Department of Housing for All’
+                            <span class="lang-show-en">‘Department of Housing for All’</span>
+                            <span class="lang-show-hi">‘हाउसिंग फॉर ऑल विभाग’</span>
                         </span>
 
                         by subsuming various housing schemes currently undertaken by

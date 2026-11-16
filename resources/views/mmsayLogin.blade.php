@@ -151,8 +151,14 @@
                 <!-- Placeholder for Department Logo -->
                 <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All</h1>
-                    <p class="text-sm opacity-90">Government of Haryana</p>
+                    <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                    </h1>
+                    <p class="text-sm opacity-90 notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
             <!-- National Emblem Placeholder -->
@@ -426,8 +432,10 @@
 
                 <div>
 
-                    <p class="text-base font-semibold text-white">
-                        © 2026 Department of Housing For All, Government of Haryana
+                    <p class="text-base font-semibold text-white notranslate" translate="no">
+                        © 2026 
+                        <span class="lang-show-en">Department of Housing For All, Government of Haryana</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार</span>
                     </p>
 
                     <p class="text-sm text-slate-400 mt-1">

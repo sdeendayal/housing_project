@@ -302,7 +302,10 @@
 
             <!-- Footer Compliance -->
             <div class="text-center pt-2 text-[10px] text-slate-400 border-t border-slate-100 flex items-center justify-between">
-                <span>Department of Housing For All, Haryana</span>
+                <span class="notranslate" translate="no">
+                    <span class="lang-show-en">Department of Housing For All, Haryana</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा</span>
+                </span>
                 <span>Protected by IT Act 2000 & Cloudflare SSL</span>
             </div>
 

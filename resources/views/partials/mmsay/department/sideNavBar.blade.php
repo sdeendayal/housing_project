@@ -207,10 +207,9 @@
 
         <div class="min-w-0 leading-tight">
 
-            <h1 class="text-[13px] font-bold text-slate-800">
-
-                Housing For All
-
+            <h1 class="text-[13px] font-bold text-slate-800 notranslate" translate="no">
+                <span class="lang-show-en">Housing For All</span>
+                <span class="lang-show-hi">हाउसिंग फॉर ऑल</span>
             </h1>
 
             <p class="mt-1 text-[9px] font-bold uppercase tracking-wider text-indigo-600">

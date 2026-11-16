@@ -105,8 +105,14 @@
                 <!-- Placeholder for Department Logo -->
                 <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All1</h1>
-                    <p class="text-sm opacity-90">Government of Haryana</p>
+                    <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                    </h1>
+                    <p class="text-sm opacity-90 notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
             <!-- National Emblem Placeholder -->
@@ -256,13 +262,17 @@
 
                 </div>
 
-                <h2 class="text-2xl md:text-3xl font-bold text-civic-blue mb-4">
-                    Department of Housing For All
+                <h2 class="text-2xl md:text-3xl font-bold text-civic-blue mb-4 notranslate" translate="no">
+                    <span class="lang-show-en">Department of Housing For All</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
                 </h2>
 
                 <p class="max-w-4xl mx-auto text-slate-600 text-base leading-7">
                     The State Government vide notification dated 15.12.2020 has created a new Department
-                    <span class="font-semibold text-civic-blue">“Housing For All”</span>
+                    <span class="font-semibold text-civic-blue notranslate" translate="no">
+                        <span class="lang-show-en">“Housing For All”</span>
+                        <span class="lang-show-hi">“हाउसिंग फॉर ऑल”</span>
+                    </span>
                     with the objective to work as the Nodal Agency for promotion, development and facilitation
                     of housing requirements especially for socio-economically marginalized sections of society
                     in urban and rural areas of the State.
@@ -626,8 +636,10 @@
 
                 <div>
 
-                    <p class="text-base font-semibold text-white">
-                        © 2026 Department of Housing For All, Government of Haryana
+                    <p class="text-base font-semibold text-white notranslate" translate="no">
+                        © 2026 
+                        <span class="lang-show-en">Department of Housing For All, Government of Haryana</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार</span>
                     </p>
 
                     <p class="text-sm text-slate-400 mt-1">

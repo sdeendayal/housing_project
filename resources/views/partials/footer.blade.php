@@ -39,8 +39,10 @@
 
             <div>
 
-                <p class="text-base font-semibold text-white">
-                    © 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Government of Haryana
+                <p class="text-base font-semibold text-white notranslate" translate="no">
+                    © 2026 
+                    <span class="lang-show-en">Department of Housing For All, Government of Haryana</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार</span>
                 </p>
 
                 <p class="text-sm text-slate-400 mt-1">
