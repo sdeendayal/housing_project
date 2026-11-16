@@ -193,7 +193,7 @@ $branches = [
                     <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-xs font-semibold">
                         <span class="material-symbols-outlined">account_tree</span>
                         <span data-org-lang="en">Organisation Chart</span>
-                        <span data-org-lang="hi" hidden>संगठन चार्ट</span>
+                        <span data-org-lang="hi" hidden>विभागीय संरचना</span>
                     </span>
                 </div>
 

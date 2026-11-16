@@ -216,9 +216,14 @@
             { regex: /Charkhi[\s\-]*Dadri/gi, replace: 'चरखी दादरी' },
             { regex: /Jagadhri/gi, replace: 'जगाधरी' },
 
-            // Vision & Help corrections
+            // Vision, Help, Org Chart & Who's Who corrections
             { regex: /हमारा\s+नज़रिया|हमारा\s+नजरिया/g, replace: 'हमारा लक्ष्य' },
-            { regex: /(^|[^\u0900-\u097F])मदद([^\u0900-\u097F]|$)/g, replace: '$1सहायता$2' }
+            { regex: /(^|[^\u0900-\u097F])मदद([^\u0900-\u097F]|$)/g, replace: '$1सहायता$2' },
+            { regex: /नियमावली/g, replace: 'विभागीय संरचना' },
+            { regex: /संगठन चार्ट/g, replace: 'विभागीय संरचना' },
+            { regex: /Organisation Chart/gi, replace: 'विभागीय संरचना' },
+            { regex: /कौन कौन है/g, replace: 'कौन क्या है' },
+            { regex: /Who's Who/gi, replace: 'कौन क्या है' }
         ];
 
         var ENGLISH_DEPT_REPLACEMENTS = [
@@ -232,7 +237,9 @@
             { regex: /चरखी दादरी/g, replace: 'Charkhi Dadri' },
             { regex: /जगाधरी/g, replace: 'Jagadhri' },
             { regex: /हमारा लक्ष्य/g, replace: 'Our Vision' },
-            { regex: /सहायता/g, replace: 'Help' }
+            { regex: /सहायता/g, replace: 'Help' },
+            { regex: /विभागीय संरचना/g, replace: 'Organisation Chart' },
+            { regex: /कौन क्या है/g, replace: "Who's Who" }
         ];
 
         // 2. High-performance targeted protection
@@ -333,8 +340,8 @@
 
                 // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
                 var targetDeptRegex = isHindi
-                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद/i
-                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता/;
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who/i
+                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है/;
 
                 var bodyText = document.body ? (document.body.innerText || '') : '';
                 var shouldProcessDept = targetDeptRegex.test(bodyText);

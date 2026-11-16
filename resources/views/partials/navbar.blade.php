@@ -13,26 +13,28 @@
             {{-- About Us --}}
             <div class="relative group">
                 <button
-                    class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors
+                    class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors notranslate
                     {{ request()->routeIs('introduction','organisation.chart','whos.who')
                         ? 'text-civic-blue border-b-2 border-civic-accent bg-slate-50'
-                        : 'text-slate-600 hover:text-civic-blue hover:bg-slate-50' }}">
-                    <span class="material-symbols-outlined notranslate text-[18px]" translate="no">info</span>
-                    About Us
-                    <span class="material-symbols-outlined notranslate text-[18px] transition-transform group-hover:rotate-180" translate="no">
+                        : 'text-slate-600 hover:text-civic-blue hover:bg-slate-50' }}" translate="no">
+                    <span class="material-symbols-outlined text-[18px]">info</span>
+                    <span class="lang-show-en">About Us</span>
+                    <span class="lang-show-hi">हमारे बारे में</span>
+                    <span class="material-symbols-outlined text-[18px] transition-transform group-hover:rotate-180">
                         expand_more
                     </span>
                 </button>
 
-                <div class="absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                <div class="absolute left-0 mt-1 w-64 bg-white border border-slate-200 rounded-xl shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden notranslate" translate="no">
 
                     <a href="{{ route('introduction') }}"
                         class="flex items-center gap-3 px-5 py-3 text-sm border-l-4 transition
                         {{ request()->routeIs('introduction')
                             ? 'bg-blue-50 text-civic-blue border-civic-accent font-medium'
                             : 'text-slate-700 border-transparent hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">description</span>
-                        Introduction
+                        <span class="material-symbols-outlined text-[18px]">description</span>
+                        <span class="lang-show-en">Introduction</span>
+                        <span class="lang-show-hi">परिचय</span>
                     </a>
 
                     <a href="{{ route('organisation.chart') }}"
@@ -40,8 +42,9 @@
                         {{ request()->routeIs('organisation.chart')
                             ? 'bg-blue-50 text-civic-blue font-medium'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">account_tree</span>
-                        Organisation Chart
+                        <span class="material-symbols-outlined text-[18px]">account_tree</span>
+                        <span class="lang-show-en">Organisation Chart</span>
+                        <span class="lang-show-hi">विभागीय संरचना</span>
                     </a>
 
                     <a href="{{ route('whos.who') }}"
@@ -49,8 +52,9 @@
                         {{ request()->routeIs('whos.who')
                             ? 'bg-blue-50 text-civic-blue font-medium'
                             : 'text-slate-700 hover:bg-slate-50 hover:text-civic-blue' }}">
-                        <span class="material-symbols-outlined notranslate text-[18px]" translate="no">groups</span>
-                        Who's Who
+                        <span class="material-symbols-outlined text-[18px]">groups</span>
+                        <span class="lang-show-en">Who's Who</span>
+                        <span class="lang-show-hi">कौन क्या है</span>
                     </a>
                 </div>
             </div>
