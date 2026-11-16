@@ -479,7 +479,10 @@
                             <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
                                 <td class="px-4 py-4 font-medium">5</td>
                                 <td class="px-4 py-4 font-medium">Sh. J. Ganesan, IAS</td>
-                                <td class="px-4 py-4">Director General</td>
+                                <td class="px-4 py-4">
+                                    <span class="lang-show-en">Director General</span>
+                                    <span class="lang-show-hi notranslate" translate="no">महानिदेशक</span>
+                                </td>
                                 <td class="px-4 py-4">-</td>
                                 <td class="px-4 py-4">0172-2568006, 0172-2568005 Fax</td>
                                 <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
@@ -488,7 +491,10 @@
                             <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
                                 <td class="px-4 py-4 font-medium">6</td>
                                 <td class="px-4 py-4 font-medium">Sh. Roop Kishore and Smt. Nancy</td>
-                                <td class="px-4 py-4">PA to Director General</td>
+                                <td class="px-4 py-4">
+                                    <span class="lang-show-en">PA to Director General</span>
+                                    <span class="lang-show-hi notranslate" translate="no">पी.ए. से महानिदेशक</span>
+                                </td>
                                 <td class="px-4 py-4">-</td>
                                 <td class="px-4 py-4">0172-2568006</td>
                                 <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>

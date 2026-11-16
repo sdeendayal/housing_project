@@ -223,7 +223,11 @@
             { regex: /संगठन चार्ट/g, replace: 'विभागीय संरचना' },
             { regex: /Organisation Chart/gi, replace: 'विभागीय संरचना' },
             { regex: /कौन कौन है/g, replace: 'कौन क्या है' },
-            { regex: /Who's Who/gi, replace: 'कौन क्या है' }
+            { regex: /Who's Who/gi, replace: 'कौन क्या है' },
+
+            // Director General corrections
+            { regex: /निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/g, replace: 'महानिदेशक' },
+            { regex: /Director[\s\-]+General/gi, replace: 'महानिदेशक' }
         ];
 
         var ENGLISH_DEPT_REPLACEMENTS = [
@@ -239,7 +243,8 @@
             { regex: /हमारा लक्ष्य/g, replace: 'Our Vision' },
             { regex: /सहायता/g, replace: 'Help' },
             { regex: /विभागीय संरचना/g, replace: 'Organisation Chart' },
-            { regex: /कौन क्या है/g, replace: "Who's Who" }
+            { regex: /कौन क्या है/g, replace: "Who's Who" },
+            { regex: /महानिदेशक/g, replace: 'Director General' }
         ];
 
         // 2. High-performance targeted protection
@@ -340,8 +345,8 @@
 
                 // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
                 var targetDeptRegex = isHindi
-                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who/i
-                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है/;
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/i
+                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है|महानिदेशक/;
 
                 var bodyText = document.body ? (document.body.innerText || '') : '';
                 var shouldProcessDept = targetDeptRegex.test(bodyText);

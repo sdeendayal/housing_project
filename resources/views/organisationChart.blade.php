@@ -326,7 +326,8 @@
                     <!-- DG -->
                     <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
                         <h4 class="font-semibold text-[14px] text-blue-900">
-                            Director General
+                            <span class="lang-show-en">Director General</span>
+                            <span class="lang-show-hi notranslate" translate="no">महानिदेशक</span>
                         </h4>
                         <p class="text-slate-600 text-[12px] mt-1">
                             Sh. Ajit Balaji Joshi, I.A.S
