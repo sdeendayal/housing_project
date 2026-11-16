@@ -249,10 +249,16 @@
     <!-- END: Navigation -->
     <!-- BEGIN: Scrolling Ticker -->
     <div class="bg-green-600 text-white py-1.5 px-4 overflow-hidden border-t-2 border-white relative z-30">
-        <div class="whitespace-nowrap animate-[marquee_25s_linear_infinite] text-sm font-medium">
-            <span class="bg-red-500 text-white px-1 py-0.5 rounded text-xs mr-2 animate-pulse">NEW</span>
-            Immediate action required for MMSAY applications submitted before Q3. Final list for MMGAY phase 2 is now
-            available for download.
+        <div class="whitespace-nowrap animate-[marquee_25s_linear_infinite] text-sm font-medium flex items-center">
+            <span class="pp-scheme-new-badge-sm inline-flex items-center mr-3 shrink-0">🔥 NEW</span>
+            <span class="lang-show-en">
+                <strong class="text-yellow-200 mr-2">Physical Possession Scheme:</strong>
+                Eligible beneficiaries can now submit applications online for physical possession of allotted plots.
+            </span>
+            <span class="lang-show-hi notranslate" translate="no">
+                <strong class="text-yellow-200 mr-2">1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल:</strong>
+                पात्र लाभार्थी अब 1 मरला प्लॉट का कब्ज़ा प्राप्त करने के लिए ऑनलाइन आवेदन जमा कर सकते हैं।
+            </span>
         </div>
     </div>
     <style data-purpose="marquee-animation">
@@ -278,13 +284,14 @@
                 <div class="bg-sky-500 text-white px-4 py-2 font-semibold text-sm flex items-center justify-between">
 
                     <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-[20px]">
+                        <span class="material-symbols-outlined notranslate text-[20px]" translate="no">
                             campaign
                         </span>
-                        <span>Latest News</span>
+                        <span class="lang-show-en">Latest News</span>
+                        <span class="lang-show-hi notranslate" translate="no">नवीनतम समाचार</span>
                     </div>
 
-                    <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full">
+                    <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full notranslate" translate="no">
                         LIVE
                     </span>
 
@@ -949,18 +956,6 @@
                                     description
                                 </span>
 
-                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                    ARHC Scheme Guideline
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="p-3 hover:bg-slate-50">
-                            <a class="flex items-center space-x-3 no-underline" href="#">
-                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
-                                    description
-                                </span>
-
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200 notranslate" translate="no">
                                     <span class="lang-show-en">Redesignation of Department of Housing for All</span>
                                     <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग का पुन:नामकरण</span>
@@ -976,18 +971,6 @@
 
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                     Pradhan Mantri Awaas Yojana (Gramin)
-                                </span>
-                            </a>
-                        </li>
-
-                        <li class="p-3 hover:bg-slate-50">
-                            <a class="flex items-center space-x-3 no-underline" href="#">
-                                <span class="material-symbols-outlined text-sky-500 text-[20px]">
-                                    description
-                                </span>
-
-                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                    Affordable Rental Housing Complexes
                                 </span>
                             </a>
                         </li>

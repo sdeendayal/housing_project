@@ -19,7 +19,8 @@
                             <span class="material-symbols-outlined notranslate text-[20px]" translate="no">
                                 campaign
                             </span>
-                            <span>Latest News</span>
+                            <span class="lang-show-en">Latest News</span>
+                            <span class="lang-show-hi notranslate" translate="no">नवीनतम समाचार</span>
                         </div>
 
                         <span class="animate-pulse text-xs bg-white/20 px-2 py-1 rounded-full notranslate" translate="no">
@@ -38,7 +39,8 @@
                                 <a class="flex items-start space-x-2" href="{{ route('citizen.login') }}">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Physical Possession Online Apply — Nayi Scheme Shuru! User Login se apply karein
+                                        <span class="lang-show-en">Physical Possession Online Apply — User Login</span>
+                                        <span class="lang-show-hi notranslate" translate="no">1 मरला प्लॉट का कब्ज़ा ऑनलाइन आवेदन — यूजर लॉगिन से अप्लाई करें</span>
                                     </span>
                                     <span class="pp-scheme-new-badge-sm text-[9px] px-1.5 py-0.5 shrink-0">🔥 NEW</span>
                                 </a>
@@ -651,7 +653,8 @@
                                 <div class="text-[10px] text-on-surface-variant mb-0.5">{{ now()->format('d M, Y') }}</div>
                                 <p class="text-xs text-on-surface font-medium">
                                     <span class="pp-scheme-new-badge-sm text-[8px] px-1 py-0.5 mr-1">NEW</span>
-                                    Physical Possession Application Portal live —
+                                    <span class="lang-show-en">Physical Possession Application Portal live —</span>
+                                    <span class="lang-show-hi notranslate" translate="no">1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल लाइव —</span>
                                     <a href="{{ route('citizen.login') }}"
                                         class="text-sky-600 font-bold hover:underline">User Login</a>
                                     |
@@ -704,18 +707,6 @@
 
                             <li class="p-3 hover:bg-slate-50">
                                 <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/_Hindi_ARHC_Scheme_Guideline.pdf" target="_blank" rel="noopener noreferrer">
-                                    <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
-                                        description
-                                    </span>
-
-                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        ARHC Scheme Guideline
-                                    </span>
-                                </a>
-                            </li>
-
-                            <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>

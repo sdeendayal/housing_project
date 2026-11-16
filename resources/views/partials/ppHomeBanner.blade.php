@@ -13,7 +13,8 @@
 
     {{-- Scheme info below CM --}}
     <span class="pp-scheme-new-badge inline-flex items-center gap-2 mb-2">
-        🔥 NEW - Physical Possession Application Portal
+        <span class="lang-show-en">🔥 NEW - Physical Possession Application Portal</span>
+        <span class="lang-show-hi notranslate" translate="no">🔥 NEW - 1 मरला प्लॉट का कब्ज़ा आवेदन पोर्टल</span>
     </span>
 
     <h2 class="text-lg md:text-xl font-bold text-white mb-2">
