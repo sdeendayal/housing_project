@@ -12,7 +12,7 @@
                 <label for="aboutLanguage" class="sr-only">Select language</label>
                 <select id="aboutLanguage" class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                     <option value="en" selected>English</option>
-                    <option value="hi">हिन्दी</option>
+                    <option value="hi" selected>हिन्दी</option>
                 </select>
             </div>
 
