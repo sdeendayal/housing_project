@@ -1,233 +1,317 @@
+
 @extends('layouts.app')
 
-@section('title', 'About Us - Organisation Chart')
+@section('title', 'Organisation Chart - Housing For All')
 
 @section('content')
 
-    {{-- Main Content --}}
-    <main class="lg:col-span-2">
-        <section class="bg-[#eef2f7] py-10 overflow-x-auto">
-            <div class="min-w-[1250px] flex flex-col items-center text-[12px]">
-                <div class="text-center mb-10">
-                    <div
-                        class="inline-flex items-center gap-2 bg-blue-100 text-civic-blue px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
-                        <span class="material-symbols-outlined text-[16px]">
-                            account_tree
-                        </span>
-                        Organisation Chart
-                    </div>
+@php
+$branches = [
+    [
+        'en' => 'DTP (1)',
+        'hi' => 'डी.टी.पी. (1)',
+        'children' => [
+            ['en'=>'ATP (1)', 'hi'=>'ए.टी.पी. (1)'],
+            ['en'=>'Planning Assistant (2)', 'hi'=>'योजना सहायक (2)'],
+        ]
+    ],
+    [
+        'en' => 'Executive Engineer (1)',
+        'hi' => 'कार्यकारी अभियंता (1)',
+        'children' => [
+            ['en'=>'Asstt. Engineer (2)', 'hi'=>'सहायक अभियंता (2)'],
+            ['en'=>'Jr. Engineer (2)', 'hi'=>'कनिष्ठ अभियंता (2)'],
+        ]
+    ],
+    [
+        'en' => 'Addl. Dir./Jt. Dir. Establishment (1)',
+        'hi' => 'अतिरिक्त निदेशक / संयुक्त निदेशक (स्थापना) (1)',
+        'children' => [
+            ['en'=>'Supdt. (1)', 'hi'=>'अधीक्षक (1)'],
+            ['en'=>'Personal Assistant (1)', 'hi'=>'निजी सहायक (1)'],
+            ['en'=>'Assistant (2), Steno/Clerk (4), Store Keeper (1)', 'hi'=>'सहायक (2), आशुलिपिक / लिपिक (4), भंडारपाल (1)'],
+            ['en'=>'Peon (10)', 'hi'=>'चपरासी (10)'],
+        ]
+    ],
+    [
+        'en' => 'Account Officer (1)',
+        'hi' => 'लेखा अधिकारी (1)',
+        'children' => [
+            ['en'=>'Steno Officer (1)', 'hi'=>'आशुलिपिक अधिकारी (1)'],
+            ['en'=>'Account Asstt. (1)', 'hi'=>'लेखा सहायक (1)'],
+            ['en'=>'Steno/Clerk (2)', 'hi'=>'आशुलिपिक / लिपिक (2)'],
+        ]
+    ],
+    [
+        'en' => 'ADA',
+        'hi' => 'ए.डी.ए.',
+        'children' => [
+            ['en'=>'Steno/Clerk (1)', 'hi'=>'आशुलिपिक / लिपिक (1)'],
+        ]
+    ],
+    [
+        'en' => 'Project Manager (IT) (1)',
+        'hi' => 'परियोजना प्रबंधक (आई.टी.) (1)',
+        'children' => [
+            ['en'=>'Database Administrator (1)', 'hi'=>'डेटाबेस प्रशासक (1)'],
+            ['en'=>'Software Developer (2)', 'hi'=>'सॉफ्टवेयर डेवलपर (2)'],
+            ['en'=>'Network Manager (1)', 'hi'=>'नेटवर्क प्रबंधक (1)'],
+            ['en'=>'Data Analyst (2)', 'hi'=>'डेटा विश्लेषक (2)'],
+            ['en'=>'Data Entry Operator (6)', 'hi'=>'डेटा एंट्री ऑपरेटर (6)'],
+        ]
+    ],
+];
+@endphp
+
+<style>
+
+.org-chart-section {
+    background: #fff;
+    padding: 35px 20px;
+    overflow-x: auto;
+}
+
+.org-chart {
+    width: 1100px;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: Arial, "Noto Sans Devanagari", sans-serif;
+}
+
+.org-box {
+    background: #fff;
+    border: 1px solid #444;
+    border-radius: 9px;
+    padding: 9px 8px;
+    width: 125px;
+    min-height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #222;
+    box-sizing: border-box;
+    box-shadow: none;
+}
+
+.org-root {
+    width: 170px;
+    min-height: 55px;
+    font-size: 12px;
+}
+
+.org-root-arrow {
+    height: 40px;
+    font-size: 24px;
+    line-height: 40px;
+    color: #222;
+}
+
+.org-branches {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    position: relative;
+    gap: 10px;
+    padding-top: 27px;
+}
+
+/* Horizontal connecting line */
+.org-branches::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 4%;
+    right: 4%;
+    height: 1px;
+    background: #333;
+}
+
+/* Vertical branch connectors */
+.org-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: 10px;
+}
+
+/* Branch line */
+.org-branch::before {
+    content: '';
+    position: absolute;
+    top: -27px;
+    height: 27px;
+    width: 1px;
+    background: #333;
+}
+
+.org-branch .org-box {
+    width: 100%;
+    max-width: 145px;
+    min-height: 42px;
+    padding: 8px 5px;
+}
+
+/* Downward arrows */
+.org-arrow {
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    line-height: 1;
+    color: #333;
+}
+
+.org-branch .org-box span {
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 768px) {
+    .org-chart-section {
+        padding: 25px 10px;
+    }
+}
+
+</style>
+
+<main class="lg:col-span-2">
+
+    <section class="org-chart-section">
+
+        {{-- Heading --}}
+        <div class="max-w-7xl mx-auto">
+
+            <div class="flex justify-between items-center mb-8">
+
+                <div class="text-center flex-1">
+                    <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-5 py-2 rounded-full text-xs font-semibold">
+                        <span class="material-symbols-outlined">account_tree</span>
+                        <span data-org-lang="en">Organisation Chart</span>
+                        <span data-org-lang="hi" hidden>संगठन चार्ट</span>
+                    </span>
                 </div>
 
-                <!-- Department -->
-                <div
-                    class="bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl shadow-md px-10 py-3 w-[420px] text-center whitespace-nowrap">
+                <select id="orgLanguage"
+                    class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold shadow-sm">
 
-                    <h2 class="font-semibold text-[18px]">
-                        Department of Housing For All
-                    </h2>
+                    <option value="en">English</option>
+                    <option value="hi">हिन्दी</option>
 
-                </div>
-
-                <!-- Line -->
-                <div class="w-[2px] h-8 bg-red-500"></div>
-                <!-- Minister -->
-                <!-- Minister -->
-                <div
-                    class="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl shadow-lg px-5 py-4 w-[420px] text-center whitespace-nowrap">
-
-                    <h3 class="font-semibold text-[14px]">
-                        Minister-In-Charge - Dr. Kamal Gupta
-                    </h3>
-
-                </div>
-
-                <!-- Line -->
-                <div class="w-[2px] h-8 bg-blue-500"></div>
-                <!-- Secretary -->
-                <div
-                    class="bg-gradient-to-r from-blue-500 to-blue-700 text-white rounded-2xl shadow-lg px-5 py-4 w-[520px] text-center whitespace-nowrap">
-
-                    <h3 class="font-semibold text-[14px]">
-                        Administrative Secretary - Dr. Raja Sekhar Vundru, I.A.S.
-                    </h3>
-
-                </div>
-
-                <!-- Connector -->
-                <div class="relative w-[650px] h-[70px]">
-
-                    <!-- center line -->
-                    <div class="absolute left-1/2 top-0 w-[2px] h-[30px] bg-blue-500"></div>
-
-                    <!-- horizontal -->
-                    <div class="absolute top-[30px] left-[90px] w-[470px] h-[2px] bg-blue-500"></div>
-
-                    <!-- vertical left -->
-                    <div class="absolute left-[90px] top-[30px] w-[2px] h-[40px] bg-blue-500"></div>
-
-                    <!-- vertical right -->
-                    <div class="absolute right-[90px] top-[30px] w-[2px] h-[40px] bg-blue-500"></div>
-                </div>
-
-                <!-- Main Branches -->
-                <div class="flex gap-28">
-
-                    <!-- LEFT SIDE -->
-                    <div class="flex flex-col items-center">
-
-                        <!-- Heading -->
-                        <div
-                            class="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-xl shadow-md px-8 py-3 w-[290px] text-center font-semibold text-[13px]">
-                            Directorate of Housing For All
-                        </div>
-
-                        <div class="w-[2px] h-6 bg-blue-500"></div>
-
-                        <!-- DG -->
-                        <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
-                            <h4 class="font-semibold text-[14px] text-blue-900">
-                                Director General
-                            </h4>
-                            <p class="text-slate-600 text-[12px] mt-1">
-                                Sh. Ajit Balaji Joshi, I.A.S
-                            </p>
-                        </div>
-
-                        <div class="w-[2px] h-6 bg-blue-500"></div>
-
-                        <!-- Joint Director -->
-                        <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
-                            <h4 class="font-semibold text-[14px] text-blue-900">
-                                Joint Director
-                            </h4>
-                            <p class="text-slate-600 text-[12px] mt-1">
-                                Sh. Rakesh Sandhu, H.C.S.
-                            </p>
-                        </div>
-
-                        <!-- Bottom connector -->
-                        <div class="relative w-[320px] h-[50px]">
-
-                            <div class="absolute left-1/2 top-0 w-[2px] h-[20px] bg-blue-500"></div>
-
-                            <div class="absolute top-[20px] left-[35px] w-[250px] h-[2px] bg-blue-500"></div>
-
-                            <div class="absolute left-[35px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-                            <div class="absolute left-1/2 top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-                            <div class="absolute right-[35px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-
-                        </div>
-
-                        <!-- Officers -->
-                        <div class="flex gap-4">
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">
-                                    ATP
-                                </h5>
-                                <p class="text-[11px] text-slate-600 mt-1">
-                                    Sh. Aman Godara
-                                </p>
-                            </div>
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">
-                                    Coordinator
-                                </h5>
-                                <p class="text-[11px] text-slate-600 mt-1">
-                                    Sh. Devender
-                                </p>
-                            </div>
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[110px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">
-                                    A.O/Supdt.
-                                </h5>
-                                <p class="text-[11px] text-slate-600 mt-1">
-                                    Sh. Dev Kant Sharma
-                                </p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                    <!-- RIGHT SIDE -->
-                    <div class="flex flex-col items-center">
-
-                        <div
-                            class="bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-xl shadow-md px-8 py-3 w-[290px] text-center font-semibold text-[13px]">
-                            Housing Board Haryana
-                        </div>
-
-                        <div class="w-[2px] h-6 bg-blue-500"></div>
-
-                        <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
-                            <h4 class="font-semibold text-[14px] text-blue-900">
-                                Chief Administrator
-                            </h4>
-                            <p class="text-slate-600 text-[12px] mt-1">
-                                Sh. Ajit Balaji Joshi, I.A.S
-                            </p>
-                        </div>
-
-                        <div class="w-[2px] h-6 bg-blue-500"></div>
-
-                        <div class="bg-white border border-blue-100 rounded-2xl shadow-md px-5 py-4 text-center w-[290px]">
-                            <h4 class="font-semibold text-[14px] text-blue-900">
-                                Secretary
-                            </h4>
-                            <p class="text-slate-600 text-[12px] mt-1">
-                                Sh. Rakesh Sandhu, H.C.S.
-                            </p>
-                        </div>
-
-                        <!-- Bottom connector -->
-                        <div class="relative w-[470px] h-[50px]">
-
-                            <div class="absolute left-1/2 top-0 w-[2px] h-[20px] bg-blue-500"></div>
-
-                            <div class="absolute top-[20px] left-[25px] w-[420px] h-[2px] bg-blue-500"></div>
-
-                            <div class="absolute left-[25px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-                            <div class="absolute left-[155px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-                            <div class="absolute right-[155px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-                            <div class="absolute right-[25px] top-[20px] w-[2px] h-[30px] bg-blue-500"></div>
-
-                        </div>
-
-                        <!-- Officers -->
-                        <div class="flex gap-3">
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">Chief Engineer</h5>
-                                <p class="text-[11px] text-slate-600">Sh. Kabul Singh</p>
-                            </div>
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">CRO (PM)</h5>
-                                <p class="text-[11px] text-slate-600">Sh. Lalit</p>
-                            </div>
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">CAO</h5>
-                                <p class="text-[11px] text-slate-600">Sh. Chander Mohan</p>
-                            </div>
-
-                            <div class="bg-white border border-blue-100 rounded-xl shadow p-3 w-[105px] text-center">
-                                <h5 class="font-semibold text-[13px] text-blue-900">STP</h5>
-                                <p class="text-[11px] text-slate-600">Sh. Satish Punia</p>
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
+                </select>
 
             </div>
-        </section>
-    </main>
-    {{-- Right Sidebar --}}
-    @include('partials.rightSidebar')
+
+        </div>
+
+        <div class="org-chart">
+
+            {{-- Root --}}
+            <div class="org-box org-root">
+
+                <span data-org-lang="en">
+                    Director General / Director (IAS)
+                </span>
+
+                <span data-org-lang="hi" hidden>
+                    महानिदेशक / निदेशक (आई.ए.एस.)
+                </span>
+
+            </div>
+
+            <div class="org-root-arrow">↓</div>           
+
+            {{-- Six Branches --}}
+            <div class="org-branches">
+
+                @foreach($branches as $branch)
+
+                    <div class="org-branch">
+
+                        {{-- Main Position --}}
+                        <div class="org-box">
+
+                            <span data-org-lang="en">
+                                {{ $branch['en'] }}
+                            </span>
+
+                            <span data-org-lang="hi" hidden>
+                                {{ $branch['hi'] }}
+                            </span>
+
+                        </div>
+
+                        {{-- Sub Positions --}}
+                        @foreach($branch['children'] as $child)
+
+                            <div class="org-arrow">↓</div>
+
+                            <div class="org-box">
+
+                                <span data-org-lang="en">
+                                    {{ $child['en'] }}
+                                </span>
+
+                                <span data-org-lang="hi" hidden>
+                                    {{ $child['hi'] }}
+                                </span>
+
+                            </div>
+
+                        @endforeach
+
+                    </div>
+
+                @endforeach
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+@include('partials.rightSidebar')
+
 @endsection
+
+@push('scripts')
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const dropdown = document.getElementById('orgLanguage');
+
+    const elements = document.querySelectorAll('[data-org-lang]');
+
+    if (!dropdown) return;
+
+    function changeOrgLanguage(language) {
+
+        elements.forEach(function (element) {
+
+            element.hidden = element.dataset.orgLang !== language;
+
+        });
+
+    }
+
+    dropdown.addEventListener('change', function () {
+
+        changeOrgLanguage(this.value);
+
+    });
+
+    // Default language
+    changeOrgLanguage('en');
+
+});
+</script>
+
+@endpush
