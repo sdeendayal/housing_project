@@ -22,5 +22,5 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Default language
-    changeLanguage(languageDropdown.value || 'en');
+    changeLanguage(languageDropdown.value || 'hi');
 });
