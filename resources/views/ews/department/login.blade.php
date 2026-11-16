@@ -30,8 +30,14 @@
             <div class="relative z-10 flex items-center gap-3">
                 <img src="{{ asset('Haryana_emblem.png') }}" class="w-10 h-10 object-contain" alt="Haryana Govt Emblem">
                 <div>
-                    <h3 class="text-xs font-black tracking-widest uppercase text-emerald-450">Department of Housing</h3>
-                    <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold">Government of Haryana</p>
+                    <h3 class="text-xs font-black tracking-widest uppercase text-emerald-450 notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing</span>
+                        <span class="lang-show-hi">आवास विभाग</span>
+                    </h3>
+                    <p class="text-[9px] uppercase tracking-wider text-slate-400 font-bold notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
 

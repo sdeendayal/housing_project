@@ -127,9 +127,13 @@
                         <div class="flex items-center gap-3 mb-4">
                             <img src="{{ asset('Haryana_emblem.png') }}" class="w-8 h-8 object-contain" alt="Haryana Government Emblem">
                             <div>
-                                <span class="block text-[8px] font-bold text-slate-400 tracking-wider uppercase leading-none">Government of Haryana</span>
-                                <h3 class="text-[10px] font-extrabold text-[#1960a3] tracking-wide uppercase mt-1 leading-none">
-                                    Department of Housing For All
+                                <span class="block text-[8px] font-bold text-slate-400 tracking-wider uppercase leading-none notranslate" translate="no">
+                                    <span class="lang-show-en">Government of Haryana</span>
+                                    <span class="lang-show-hi">हरियाणा सरकार</span>
+                                </span>
+                                <h3 class="text-[10px] font-extrabold text-[#1960a3] tracking-wide uppercase mt-1 leading-none notranslate" translate="no">
+                                    <span class="lang-show-en">Department of Housing For All</span>
+                                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
                                 </h3>
                             </div>
                         </div>

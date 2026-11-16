@@ -7,8 +7,14 @@
                 <img alt="Department Logo" class="h-14 w-14 sm:h-16 sm:w-16 object-contain drop-shadow" src="{{ asset('Haryana_emblem.png') }}" />
             </a>
             <div>
-                <h1 class="text-lg sm:text-2xl font-bold leading-tight notranslate text-white tracking-tight" translate="no">Department of Housing For All</h1>
-                <p class="text-xs sm:text-sm text-sky-100 font-medium">Government of Haryana</p>
+                <h1 class="text-lg sm:text-2xl font-bold leading-tight notranslate text-white tracking-tight" translate="no">
+                    <span class="lang-show-en">Department of Housing For All</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                </h1>
+                <p class="text-xs sm:text-sm text-sky-100 font-medium notranslate" translate="no">
+                    <span class="lang-show-en">Government of Haryana</span>
+                    <span class="lang-show-hi">हरियाणा सरकार</span>
+                </p>
             </div>
         </div>
 

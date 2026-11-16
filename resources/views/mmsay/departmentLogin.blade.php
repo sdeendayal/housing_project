@@ -684,8 +684,14 @@
                 <div class="branding-header d-flex align-items-center gap-3">
                     <img src="{{ asset('Haryana_emblem.png') }}" alt="Haryana Emblem" class="emblem-img">
                     <div>
-                        <h2 class="dept-title notranslate" translate="no">Housing For All</h2>
-                        <p class="dept-sub">Government of Haryana</p>
+                        <h2 class="dept-title notranslate" translate="no">
+                            <span class="lang-show-en">Housing For All</span>
+                            <span class="lang-show-hi">हाउसिंग फॉर ऑल</span>
+                        </h2>
+                        <p class="dept-sub notranslate" translate="no">
+                            <span class="lang-show-en">Government of Haryana</span>
+                            <span class="lang-show-hi">हरियाणा सरकार</span>
+                        </p>
                     </div>
                 </div>
 
@@ -802,7 +808,11 @@
 
                 <!-- Simple Left Footer -->
                 <div class="left-footer">
-                    <p>© 2026 <span class="notranslate" translate="no">Department of Housing For All</span>, Haryana. Designed by CRID.</p>
+                    <p class="notranslate" translate="no">
+                        © 2026 
+                        <span class="lang-show-en">Department of Housing For All, Haryana. Designed by CRID.</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा। Designed by CRID.</span>
+                    </p>
                 </div>
             </div>
         </div>
@@ -818,8 +828,14 @@
             <div class="mobile-branding d-none">
                 <img src="{{ asset('Haryana_emblem.png') }}" alt="Haryana Emblem" class="emblem-img-mobile">
                 <div>
-                    <h2 class="dept-title-mobile notranslate" translate="no">Department of Housing For All</h2>
-                    <p class="dept-sub-mobile">Government of Haryana</p>
+                    <h2 class="dept-title-mobile notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                    </h2>
+                    <p class="dept-sub-mobile notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
 

@@ -41,13 +41,15 @@
                 first.text = 'भाषा (Language)';
             }
 
-            // Hook into change event for instant Home/Scheme updates
+            // Hook into change event for instant Home/Scheme/Dept updates
             sel.addEventListener('change', function () {
-                setTimeout(function () {
-                    if (typeof window.fastProtectUI === 'function') {
-                        window.fastProtectUI();
-                    }
-                }, 80);
+                [50, 150, 350, 800].forEach(function (ms) {
+                    setTimeout(function () {
+                        if (typeof window.fastProtectUI === 'function') {
+                            window.fastProtectUI();
+                        }
+                    }, ms);
+                });
             });
 
             return true; // Successfully tidied!

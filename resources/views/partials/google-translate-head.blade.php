@@ -114,6 +114,20 @@
     .goog-te-gadget-icon {
         display: none !important;
     }
+
+    /* 7. Fast bilingual visibility for marked elements without JS wait */
+    html.lang-hi .lang-show-en {
+        display: none !important;
+    }
+    html.lang-hi .lang-show-hi {
+        display: inline !important;
+    }
+    html.lang-en .lang-show-en {
+        display: inline !important;
+    }
+    html.lang-en .lang-show-hi {
+        display: none !important;
+    }
 </style>
 
 <script>
@@ -134,6 +148,30 @@
             }
         }
 
+        // Helper to check language and toggle html.lang-hi / html.lang-en immediately
+        function updateLangClass() {
+            var isHindi = true;
+            var cookies = document.cookie.split(';');
+            for (var c = 0; c < cookies.length; c++) {
+                var ck = cookies[c].trim();
+                if (ck.indexOf('googtrans=') === 0) {
+                    isHindi = (ck.indexOf('/en/hi') !== -1 || ck.indexOf('/auto/hi') !== -1);
+                    break;
+                }
+            }
+            if (isHindi) {
+                document.documentElement.classList.add('lang-hi');
+                document.documentElement.classList.remove('lang-en');
+            } else {
+                document.documentElement.classList.add('lang-en');
+                document.documentElement.classList.remove('lang-hi');
+            }
+            return isHindi;
+        }
+
+        // Apply class immediately in <head> before <body> renders
+        updateLangClass();
+
         var isProtecting = false;
         var HINDI_RESTORE_REGEX = /एमएमएसवाई|एमएमजीए|एमएमजीवाय|एमएमजीएवी|ईडब्ल्यूएस|पीएमएवाई/;
         var HINDI_RESTORE_MAP = [
@@ -145,24 +183,80 @@
             { regex: /पीएमएवाई/g, replace: 'PMAY' }
         ];
 
+        // Replacement maps for Department of Housing For All & Housing For All
+        var HINDI_DEPT_REPLACEMENTS = [
+            // Google Translate literal translations to official Hindi
+            { regex: /सभी के लिए आवास विभाग,\s*हरियाणा सरकार/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार' },
+            { regex: /सभी के लिए आवास विभाग,\s*हरियाणा/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा' },
+            { regex: /सभी के लिए आवास विभाग/g, replace: 'हाउसिंग फॉर ऑल विभाग' },
+            { regex: /सबके लिए आवास विभाग/g, replace: 'हाउसिंग फॉर ऑल विभाग' },
+            { regex: /सभी के लिए आवास,\s*हरियाणा/g, replace: 'हाउसिंग फॉर ऑल, हरियाणा' },
+            { regex: /सभी के लिए आवास/g, replace: 'हाउसिंग फॉर ऑल' },
+            { regex: /सबके लिए आवास/g, replace: 'हाउसिंग फॉर ऑल' },
+
+            // English phrases to official Hindi
+            { regex: /Department of Housing [Ff]or All,\s*Government of Haryana/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार' },
+            { regex: /Department of Housing [Ff]or All\s*•\s*Government of Haryana/g, replace: 'हाउसिंग फॉर ऑल विभाग • हरियाणा सरकार' },
+            { regex: /Department of Housing [Ff]or All,\s*Haryana/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा' },
+            { regex: /Department of Housing [Ff]or All/g, replace: 'हाउसिंग फॉर ऑल विभाग' },
+            { regex: /DEPARTMENT OF HOUSING FOR ALL,\s*HARYANA/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा' },
+            { regex: /DEPARTMENT OF HOUSING FOR ALL/g, replace: 'हाउसिंग फॉर ऑल विभाग' },
+            { regex: /Housing [Ff]or All Department,\s*Haryana/g, replace: 'हाउसिंग फॉर ऑल विभाग, हरियाणा' },
+            { regex: /Housing [Ff]or All Department/g, replace: 'हाउसिंग फॉर ऑल विभाग' },
+            { regex: /Directorate of Housing [Ff]or All/g, replace: 'हाउसिंग फॉर ऑल निदेशालय' },
+            { regex: /Housing [Ff]or All,\s*Haryana/g, replace: 'हाउसिंग फॉर ऑल, हरियाणा' },
+            { regex: /Housing [Ff]or All Haryana/g, replace: 'हाउसिंग फॉर ऑल, हरियाणा' },
+            { regex: /Housing [Ff]or All/g, replace: 'हाउसिंग फॉर ऑल' },
+            { regex: /HOUSING FOR ALL/g, replace: 'हाउसिंग फॉर ऑल' },
+
+            // Location name corrections (Charkhi Dadri & Jagadhri)
+            { regex: /चरकी[\s\-]*दादरी/g, replace: 'चरखी दादरी' },
+            { regex: /जगधरी/g, replace: 'जगाधरी' },
+            { regex: /Charki[\s\-]*Dadri/gi, replace: 'चरखी दादरी' },
+            { regex: /Charkhi[\s\-]*Dadri/gi, replace: 'चरखी दादरी' },
+            { regex: /Jagadhri/gi, replace: 'जगाधरी' },
+
+            // Vision, Help, Org Chart & Who's Who corrections
+            { regex: /हमारा\s+नज़रिया|हमारा\s+नजरिया/g, replace: 'हमारा लक्ष्य' },
+            { regex: /(^|[^\u0900-\u097F])मदद([^\u0900-\u097F]|$)/g, replace: '$1सहायता$2' },
+            { regex: /नियमावली/g, replace: 'विभागीय संरचना' },
+            { regex: /संगठन चार्ट/g, replace: 'विभागीय संरचना' },
+            { regex: /Organisation Chart/gi, replace: 'विभागीय संरचना' },
+            { regex: /कौन कौन है/g, replace: 'कौन क्या है' },
+            { regex: /Who's Who/gi, replace: 'कौन क्या है' },
+
+            // Director General corrections
+            { regex: /निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/g, replace: 'महानिदेशक' },
+            { regex: /Director[\s\-]+General/gi, replace: 'महानिदेशक' }
+        ];
+
+        var ENGLISH_DEPT_REPLACEMENTS = [
+            { regex: /हाउसिंग फॉर ऑल विभाग,\s*हरियाणा सरकार/g, replace: 'Department of Housing For All, Government of Haryana' },
+            { regex: /हाउसिंग फॉर ऑल विभाग\s*•\s*हरियाणा सरकार/g, replace: 'Department of Housing for All • Government of Haryana' },
+            { regex: /हाउसिंग फॉर ऑल विभाग,\s*हरियाणा/g, replace: 'Department of Housing For All, Haryana' },
+            { regex: /हाउसिंग फॉर ऑल विभाग/g, replace: 'Department of Housing For All' },
+            { regex: /हाउसिंग फॉर ऑल निदेशालय/g, replace: 'Directorate of Housing For All' },
+            { regex: /हाउसिंग फॉर ऑल,\s*हरियाणा/g, replace: 'Housing For All, Haryana' },
+            { regex: /हाउसिंग फॉर ऑल/g, replace: 'Housing For All' },
+            { regex: /चरखी दादरी/g, replace: 'Charkhi Dadri' },
+            { regex: /जगाधरी/g, replace: 'Jagadhri' },
+            { regex: /हमारा लक्ष्य/g, replace: 'Our Vision' },
+            { regex: /सहायता/g, replace: 'Help' },
+            { regex: /विभागीय संरचना/g, replace: 'Organisation Chart' },
+            { regex: /कौन क्या है/g, replace: "Who's Who" },
+            { regex: /महानिदेशक/g, replace: 'Director General' }
+        ];
+
         // 2. High-performance targeted protection
         function fastProtectUI() {
             if (isProtecting) return;
             isProtecting = true;
 
             try {
-                // Check if current mode is Hindi
-                var isHindi = true;
-                var cookies = document.cookie.split(';');
-                for (var c = 0; c < cookies.length; c++) {
-                    var ck = cookies[c].trim();
-                    if (ck.indexOf('googtrans=') === 0) {
-                        isHindi = (ck.indexOf('/en/hi') !== -1 || ck.indexOf('/auto/hi') !== -1);
-                        break;
-                    }
-                }
+                // Check if current mode is Hindi and update root class
+                var isHindi = updateLangClass();
 
-                // 2A. Update 'Home' navigation tab ('होम' in Hindi, 'Home' in English)
+                // 2A. Update 'Home', 'Our Vision', and 'Help' navigation links
                 var homeEls = document.querySelectorAll('.nav-home-text');
                 for (var h = 0; h < homeEls.length; h++) {
                     var hel = homeEls[h];
@@ -174,6 +268,33 @@
                     } else {
                         if (htxt === 'होम' || htxt === 'घर') {
                             hel.innerHTML = '<span class="notranslate" translate="no">Home</span>';
+                        }
+                    }
+                }
+
+                // Protect and update any Our Vision / Help navigation links without bilingual wrapper
+                var visionLinks = document.querySelectorAll('a[href*="vision"]:not(.notranslate)');
+                for (var vl = 0; vl < visionLinks.length; vl++) {
+                    var vnode = visionLinks[vl];
+                    var vtxt = vnode.textContent.trim();
+                    if (isHindi) {
+                        if (vtxt === 'Our Vision' || vtxt === 'हमारा नज़रिया' || vtxt === 'हमारा नजरिया') {
+                            vnode.innerHTML = '<span class="material-symbols-outlined notranslate text-[18px]" translate="no">visibility</span> <span class="notranslate" translate="no">हमारा लक्ष्य</span>';
+                            vnode.classList.add('notranslate');
+                            vnode.setAttribute('translate', 'no');
+                        }
+                    }
+                }
+
+                var helpLinks = document.querySelectorAll('a[href*="help"]:not(.notranslate)');
+                for (var hl = 0; hl < helpLinks.length; hl++) {
+                    var hnode = helpLinks[hl];
+                    var htxt = hnode.textContent.trim();
+                    if (isHindi) {
+                        if (htxt === 'Help' || htxt === 'मदद' || htxt === 'HELP') {
+                            hnode.innerHTML = '<span class="material-symbols-outlined notranslate text-[18px]" translate="no">help</span> <span class="notranslate" translate="no">सहायता</span>';
+                            hnode.classList.add('notranslate');
+                            hnode.setAttribute('translate', 'no');
                         }
                     }
                 }
@@ -192,20 +313,97 @@
                     captchas[cap].setAttribute('translate', 'no');
                 }
 
-                // 2D. Reverse-restore scheme names only if present on page
-                if (document.body && HINDI_RESTORE_REGEX.test(document.body.innerText)) {
+                // 2D. Update document title
+                if (document.title) {
+                    if (isHindi) {
+                        if (/Department of Housing [Ff]or All|Housing [Ff]or All/i.test(document.title)) {
+                            document.title = document.title
+                                .replace(/Department of Housing [Ff]or All/gi, 'हाउसिंग फॉर ऑल विभाग')
+                                .replace(/Housing [Ff]or All/gi, 'हाउसिंग फॉर ऑल');
+                        }
+                    } else {
+                        if (/हाउसिंग फॉर ऑल विभाग|हाउसिंग फॉर ऑल/.test(document.title)) {
+                            document.title = document.title
+                                .replace(/हाउसिंग फॉर ऑल विभाग/g, 'Department of Housing For All')
+                                .replace(/हाउसिंग फॉर ऑल/g, 'Housing For All');
+                        }
+                    }
+                }
+
+                // 2E. Sync local page selectors if present
+                var localSelectors = ['aboutLanguage', 'whoLanguage', 'orgLanguage', 'visionLanguage'];
+                for (var s = 0; s < localSelectors.length; s++) {
+                    var selEl = document.getElementById(localSelectors[s]);
+                    if (selEl) {
+                        var targetVal = isHindi ? 'hi' : 'en';
+                        if (selEl.value !== targetVal) {
+                            selEl.value = targetVal;
+                            selEl.dispatchEvent(new Event('change'));
+                        }
+                    }
+                }
+
+                // 2F. Process text nodes across body for Department of Housing For All, Locations, Nav & Schemes
+                var targetDeptRegex = isHindi
+                    ? /Department of Housing|Housing [Ff]or All|HOUSING FOR ALL|सभी के लिए आवास|सबके लिए आवास|चरकी|जगधरी|Charkhi|Charki|Jagadhri|हमारा\s+नज़रिया|हमारा\s+नजरिया|मदद|नियमावली|संगठन चार्ट|Organisation Chart|कौन कौन है|Who's Who|Director[\s\-]+General|निदेशक[\s\-]+जनरल|डायरेक्टर[\s\-]+जनरल/i
+                    : /हाउसिंग फॉर ऑल|चरखी दादरी|जगाधरी|हमारा लक्ष्य|सहायता|विभागीय संरचना|कौन क्या है|महानिदेशक/;
+
+                var bodyText = document.body ? (document.body.innerText || '') : '';
+                var shouldProcessDept = targetDeptRegex.test(bodyText);
+                var shouldProcessSchemes = isHindi && HINDI_RESTORE_REGEX.test(bodyText);
+
+                if (document.body && (shouldProcessDept || shouldProcessSchemes)) {
                     var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
                     var node;
                     while ((node = walker.nextNode())) {
-                        if (HINDI_RESTORE_REGEX.test(node.nodeValue)) {
-                            var text = node.nodeValue;
+                        var parent = node.parentElement;
+                        if (!parent) continue;
+
+                        var tag = parent.tagName;
+                        if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'TEXTAREA' || tag === 'INPUT' || tag === 'CODE' || tag === 'PRE') {
+                            continue;
+                        }
+
+                        // Skip elements inside bilingual containers with specific data-attributes if in English mode
+                        if (!isHindi && parent.closest && parent.closest('[data-about-language="hi"], [data-org-lang="hi"], [data-vision-lang="hi"], [data-vision-content="hi"], [data-who-lang="hi"]')) {
+                            continue;
+                        }
+
+                        // Skip elements that already have dedicated bilingual classes
+                        if (parent.closest && parent.closest('.lang-show-en, .lang-show-hi')) {
+                            continue;
+                        }
+
+                        var text = node.nodeValue;
+                        var originalText = text;
+
+                        // Restore English scheme acronyms (MMSAY, etc.) if translated
+                        if (isHindi && HINDI_RESTORE_REGEX.test(text)) {
                             for (var m = 0; m < HINDI_RESTORE_MAP.length; m++) {
                                 text = text.replace(HINDI_RESTORE_MAP[m].regex, HINDI_RESTORE_MAP[m].replace);
                             }
+                        }
+
+                        // Department of Housing For All & Housing For All translations
+                        if (isHindi) {
+                            if (targetDeptRegex.test(text)) {
+                                for (var d = 0; d < HINDI_DEPT_REPLACEMENTS.length; d++) {
+                                    text = text.replace(HINDI_DEPT_REPLACEMENTS[d].regex, HINDI_DEPT_REPLACEMENTS[d].replace);
+                                }
+                            }
+                        } else {
+                            if (targetDeptRegex.test(text)) {
+                                for (var e = 0; e < ENGLISH_DEPT_REPLACEMENTS.length; e++) {
+                                    text = text.replace(ENGLISH_DEPT_REPLACEMENTS[e].regex, ENGLISH_DEPT_REPLACEMENTS[e].replace);
+                                }
+                            }
+                        }
+
+                        if (text !== originalText) {
                             node.nodeValue = text;
-                            if (node.parentElement) {
-                                node.parentElement.classList.add('notranslate');
-                                node.parentElement.setAttribute('translate', 'no');
+                            if (isHindi) {
+                                parent.classList.add('notranslate');
+                                parent.setAttribute('translate', 'no');
                             }
                         }
                     }

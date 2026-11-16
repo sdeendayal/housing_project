@@ -73,7 +73,11 @@
 
             <!-- Left Footer guidelines -->
             <div class="flex items-center justify-between text-[10px] text-slate-400 border-t border-white/10 pt-4">
-                <span>© 2026 <span class="notranslate" translate="no">Housing For All</span>, Haryana. Protected by NIC.</span>
+                <span class="notranslate" translate="no">
+                    © 2026 
+                    <span class="lang-show-en">Housing For All, Haryana. Protected by NIC.</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल, हरियाणा। Protected by NIC.</span>
+                </span>
                 <span class="font-mono text-[9px] text-amber-400">v4.8.x-ews</span>
             </div>
         </div>

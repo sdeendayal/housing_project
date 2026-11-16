@@ -118,7 +118,10 @@
                     <span class="material-symbols-outlined text-[22px]">verified_user</span>
                     <div>
                         <p class="text-[11px] font-extrabold m-0">MMSAY Secure Payment</p>
-                        <p class="text-[9px] text-white/70 m-0">Housing For All · Govt. of Haryana</p>
+                        <p class="text-[9px] text-white/70 m-0 notranslate" translate="no">
+                            <span class="lang-show-en">Housing For All · Govt. of Haryana</span>
+                            <span class="lang-show-hi">हाउसिंग फॉर ऑल · हरियाणा सरकार</span>
+                        </p>
                     </div>
                 </div>
                 <div class="pg-timer">

@@ -427,7 +427,11 @@
                <span class="material-symbols-outlined notranslate" translate="no">apartment</span>
             </div>
             <div>
-               <p class="cl-brand__title"><span class="notranslate" translate="no">Housing For All</span> (MMGAV)</p>
+               <p class="cl-brand__title notranslate" translate="no">
+                  <span class="lang-show-en">Housing For All</span>
+                  <span class="lang-show-hi">हाउसिंग फॉर ऑल</span> 
+                  (MMGAV)
+               </p>
                <p class="cl-brand__sub">Citizen Portal</p>
             </div>
          </div>

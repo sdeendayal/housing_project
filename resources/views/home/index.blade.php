@@ -45,7 +45,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/docs/news/Strategy_to_Implement_AHP-PMAY_(U).pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Strategy to implement AHP-PMAY(U) in Haryana-comments/suggestions thereof
@@ -62,16 +62,16 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193400381597606378.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Draw Results of Charki Dadri under <span class="notranslate" translate="no">MMSAY</span>
+                                        Draw Results of Charki Dadri under MMSAY <span class="notranslate" translate="no">MMSAY</span>
                                     </span>
                                 </a>
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/1719340119512277784.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Fatehabad under <span class="notranslate" translate="no">MMSAY</span>
@@ -87,7 +87,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193401541393039896.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Gohana under <span class="notranslate" translate="no">MMSAY</span>
@@ -103,7 +103,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193401961697747858.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Jagadhri under <span class="notranslate" translate="no">MMSAY</span>
@@ -112,7 +112,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/1719340231306711584.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Jhajjar under <span class="notranslate" translate="no">MMSAY</span>
@@ -121,7 +121,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-start space-x-2" href="#">
+                                <a class="flex items-start space-x-2" href="https://hfa.haryana.gov.in/announcement_images/17193404852005126767.pdf" target="_blank">
                                     <span class="text-green-500 mt-0.5">●</span>
                                     <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
                                         Draw Results of Rohtak under <span class="notranslate" translate="no">MMSAY</span>
@@ -551,7 +551,10 @@
                                 <div class="px-3 py-1.5 bg-slate-50/80 border-t border-slate-100 text-center">
                                     <span class="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-1">
                                         <span class="material-symbols-outlined notranslate text-slate-400 text-[13px]" translate="no">verified_user</span>
-                                        <span class="notranslate" translate="no">Department of Housing For All</span>, Haryana
+                                        <span class="notranslate" translate="no">
+                                            <span class="lang-show-en">Department of Housing For All, Haryana</span>
+                                            <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा</span>
+                                        </span>
                                     </span>
                                 </div>
 
@@ -700,7 +703,7 @@
                         <ul class="divide-y divide-slate-100 text-sm animate-news-scroll">
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/_Hindi_ARHC_Scheme_Guideline.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
@@ -717,8 +720,9 @@
                                         description
                                     </span>
 
-                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                        Redesignation of <span class="notranslate" translate="no">Department of Housing for All</span>
+                                    <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200 notranslate" translate="no">
+                                        <span class="lang-show-en">Redesignation of Department of Housing for All</span>
+                                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग का पुन:नामकरण</span>
                                     </span>
                                 </a>
                             </li>
@@ -741,7 +745,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/Final_English_ARHC_User_Guide_12Oct2020.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
@@ -770,7 +774,7 @@
                             </li>
 
                             <li class="p-3 hover:bg-slate-50">
-                                <a class="flex items-center space-x-3 no-underline" href="#">
+                                <a class="flex items-center space-x-3 no-underline" href="https://hfa.haryana.gov.in/docs/news/MMGAY.pdf" target="_blank" rel="noopener noreferrer">
                                     <span class="material-symbols-outlined notranslate text-sky-500 text-[20px]" translate="no">
                                         description
                                     </span>
@@ -866,7 +870,8 @@
 
                     <!-- Heading -->
                     <h2 class="text-[30px] font-bold text-slate-800 text-center notranslate" translate="no">
-                        Department of Housing For All
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
                     </h2>
 
                     <!-- Underline -->
@@ -882,7 +887,8 @@
                         that there will be a department namely
 
                         <span class="font-semibold text-slate-800 notranslate" translate="no">
-                            ‘Department of Housing for All’
+                            <span class="lang-show-en">‘Department of Housing for All’</span>
+                            <span class="lang-show-hi">‘हाउसिंग फॉर ऑल विभाग’</span>
                         </span>
 
                         by subsuming various housing schemes currently undertaken by

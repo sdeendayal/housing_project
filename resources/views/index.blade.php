@@ -104,8 +104,14 @@
                 <!-- Placeholder for Department Logo -->
                 <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All</h1>
-                    <p class="text-sm opacity-90">Government of Haryana</p>
+                    <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                    </h1>
+                    <p class="text-sm opacity-90 notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
             <!-- National Emblem Placeholder -->
@@ -311,7 +317,7 @@
                             <a class="flex items-start space-x-2" href="#">
                                 <span class="text-green-500 mt-0.5">●</span>
                                 <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                    Draw Results of Charki Dadri under MMSAY
+                                    Draw Results of Charkhi Dadri under MMSAY
                                 </span>
                             </a>
                         </li>
@@ -794,8 +800,11 @@
                                 <!-- Footer Helper -->
                                 <div class="px-3 py-1.5 bg-slate-50/80 border-t border-slate-100 text-center">
                                     <span class="text-[10px] text-slate-500 font-medium flex items-center justify-center gap-1">
-                                        <span class="material-symbols-outlined text-slate-400 text-[13px]">verified_user</span>
-                                        Department of Housing For All, Haryana
+                                        <span class="material-symbols-outlined notranslate text-slate-400 text-[13px]" translate="no">verified_user</span>
+                                        <span class="notranslate" translate="no">
+                                            <span class="lang-show-en">Department of Housing For All, Haryana</span>
+                                            <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा</span>
+                                        </span>
                                     </span>
                                 </div>
 
@@ -952,8 +961,9 @@
                                     description
                                 </span>
 
-                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200">
-                                    Redesignation of Department of Housing for All
+                                <span class="text-slate-700 hover:text-civic-blue transition-colors duration-200 notranslate" translate="no">
+                                    <span class="lang-show-en">Redesignation of Department of Housing for All</span>
+                                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग का पुन:नामकरण</span>
                                 </span>
                             </a>
                         </li>
@@ -1092,8 +1102,9 @@
                 class="bg-white rounded-[28px] border border-slate-200 shadow-lg p-8 md:p-10 hover:shadow-xl transition duration-300">
 
                 <!-- Heading -->
-                <h2 class="text-[30px] font-bold text-slate-800 text-center">
-                    Department of Housing For All
+                <h2 class="text-[30px] font-bold text-slate-800 text-center notranslate" translate="no">
+                    <span class="lang-show-en">Department of Housing For All</span>
+                    <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
                 </h2>
 
                 <!-- Underline -->
@@ -1108,8 +1119,9 @@
                     Speech of the financial year 2020–2021 on 28.02.2020 had stated
                     that there will be a department namely
 
-                    <span class="font-semibold text-slate-800">
-                        ‘Department of Housing for All’
+                    <span class="font-semibold text-slate-800 notranslate" translate="no">
+                        <span class="lang-show-en">‘Department of Housing for All’</span>
+                        <span class="lang-show-hi">‘हाउसिंग फॉर ऑल विभाग’</span>
                     </span>
 
                     by subsuming various housing schemes currently undertaken by
@@ -1392,8 +1404,10 @@
 
                 <div>
 
-                    <p class="text-base font-semibold text-white">
-                        © 2026 Department of Housing For All, Government of Haryana
+                    <p class="text-base font-semibold text-white notranslate" translate="no">
+                        © 2026 
+                        <span class="lang-show-en">Department of Housing For All, Government of Haryana</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार</span>
                     </p>
 
                     <p class="text-sm text-slate-400 mt-1">

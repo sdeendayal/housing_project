@@ -239,8 +239,14 @@
                 <!-- Placeholder for Department Logo -->
                 <img alt="Department Logo" class="h-16 w-16 object-contain" src="{{ asset('Haryana_emblem.png') }}" />
                 <div>
-                    <h1 class="text-2xl font-bold leading-tight">Department of Housing For All</h1>
-                    <p class="text-sm opacity-90">Government of Haryana</p>
+                    <h1 class="text-2xl font-bold leading-tight notranslate" translate="no">
+                        <span class="lang-show-en">Department of Housing For All</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग</span>
+                    </h1>
+                    <p class="text-sm opacity-90 notranslate" translate="no">
+                        <span class="lang-show-en">Government of Haryana</span>
+                        <span class="lang-show-hi">हरियाणा सरकार</span>
+                    </p>
                 </div>
             </div>
             <!-- National Emblem Placeholder -->
@@ -473,7 +479,10 @@
                             <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
                                 <td class="px-4 py-4 font-medium">5</td>
                                 <td class="px-4 py-4 font-medium">Sh. J. Ganesan, IAS</td>
-                                <td class="px-4 py-4">Director General</td>
+                                <td class="px-4 py-4">
+                                    <span class="lang-show-en">Director General</span>
+                                    <span class="lang-show-hi notranslate" translate="no">महानिदेशक</span>
+                                </td>
                                 <td class="px-4 py-4">-</td>
                                 <td class="px-4 py-4">0172-2568006, 0172-2568005 Fax</td>
                                 <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
@@ -482,7 +491,10 @@
                             <tr class="border-b border-slate-100 hover:bg-blue-50 transition">
                                 <td class="px-4 py-4 font-medium">6</td>
                                 <td class="px-4 py-4 font-medium">Sh. Roop Kishore and Smt. Nancy</td>
-                                <td class="px-4 py-4">PA to Director General</td>
+                                <td class="px-4 py-4">
+                                    <span class="lang-show-en">PA to Director General</span>
+                                    <span class="lang-show-hi notranslate" translate="no">पी.ए. से महानिदेशक</span>
+                                </td>
                                 <td class="px-4 py-4">-</td>
                                 <td class="px-4 py-4">0172-2568006</td>
                                 <td class="px-4 py-4 text-blue-700">admin-hfa@hry.gov.in</td>
@@ -734,8 +746,10 @@
 
                 <div>
 
-                    <p class="text-base font-semibold text-white">
-                        © 2026 Department of Housing For All, Government of Haryana
+                    <p class="text-base font-semibold text-white notranslate" translate="no">
+                        © 2026 
+                        <span class="lang-show-en">Department of Housing For All, Government of Haryana</span>
+                        <span class="lang-show-hi">हाउसिंग फॉर ऑल विभाग, हरियाणा सरकार</span>
                     </p>
 
                     <p class="text-sm text-slate-400 mt-1">
