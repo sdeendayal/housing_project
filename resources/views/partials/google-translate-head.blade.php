@@ -276,6 +276,7 @@
             { regex: /चरखी दादरी/g, replace: 'Charkhi Dadri' },
             { regex: /जगाधरी/g, replace: 'Jagadhri' },
             { regex: /हमारा लक्ष्य/g, replace: 'Our Vision' },
+            { regex: /सम्मानजनक आवास/g, replace: 'Housing with Dignity' },
             { regex: /सहायता/g, replace: 'Help' },
             { regex: /विभागीय संरचना/g, replace: 'Organisation Chart' },
             { regex: /कौन क्या है/g, replace: "Who's Who" },
