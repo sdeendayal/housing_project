@@ -237,6 +237,8 @@
             { regex: /Jagadhri/gi, replace: 'जगाधरी' },
 
             // Vision, Help, Org Chart & Who's Who corrections
+            { regex: /गहना\s*आवास/g, replace: 'सम्मानजनक आवास' },
+            { regex: /Housing with Dignity/gi, replace: 'सम्मानजनक आवास' },
             { regex: /हमारा\s+नज़रिया|हमारा\s+नजरिया/g, replace: 'हमारा लक्ष्य' },
             { regex: /(^|[^\u0900-\u097F])मदद([^\u0900-\u097F]|$)/g, replace: '$1सहायता$2' },
             { regex: /नियमावली/g, replace: 'विभागीय संरचना' },
