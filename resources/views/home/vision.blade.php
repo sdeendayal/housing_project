@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Our Vision - Department of Housing For All')
@@ -93,9 +92,9 @@
 
                             </div>
 
-                            <h2 class="text-xl font-bold text-civic-blue">
-                                <!-- Housing with Dignity -->
-                            </h2>
+                            {{-- <h2 class="text-xl font-bold text-civic-blue">
+                                Housing with Dignity
+                            </h2> --}}
 
                         </div>
 
@@ -119,7 +118,7 @@
                             </div>
 
                             <h2 class="text-xl font-bold text-civic-blue">
-                                Policies
+                             Policies
                             </h2>
 
                         </div>
@@ -243,9 +242,9 @@
 
                             </div>
 
-                            <h2 class="text-xl font-bold text-civic-blue">
+                            {{-- <h2 class="text-xl font-bold text-civic-blue">
                                 सम्मानजनक आवास
-                            </h2>
+                            </h2> --}}
 
                         </div>
 
@@ -269,7 +268,7 @@
                             </div>
 
                             <h2 class="text-xl font-bold text-civic-blue">
-                                समावेशी नीतियाँ
+                                 नीतियाँ
                             </h2>
 
                         </div>
