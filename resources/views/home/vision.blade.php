@@ -94,7 +94,7 @@
                             </div>
 
                             <h2 class="text-xl font-bold text-civic-blue">
-                                Housing with Dignity
+                                <!-- Housing with Dignity -->
                             </h2>
 
                         </div>
@@ -119,7 +119,7 @@
                             </div>
 
                             <h2 class="text-xl font-bold text-civic-blue">
-                                Inclusive Policies
+                                Policies
                             </h2>
 
                         </div>
