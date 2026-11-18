@@ -165,18 +165,19 @@
 
                         <!-- Row 1: Register Flat & Zone -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Step 1: Register Flat Input Field -->
+                            <!-- Step 1: Register Flat Dropdown -->
                             <div class="space-y-1">
                                 <label for="register_flat" class="block text-[10px] font-black uppercase text-slate-500 tracking-wider flex items-center">
                                     <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 me-1.5">Step 1</span>
                                     <span>Register Flat</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
                                 <div class="relative">
-                                    <input type="text" id="register_flat" name="register_flat" value="{{ old('register_flat') }}" placeholder="Enter flat name / registry title" required autocomplete="off"
+                                    <select id="register_flat" name="register_flat" required
                                         class="w-full bg-white border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
-                                    <span class="absolute right-3 top-2.5 text-slate-400">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </span>
+                                        <option value="" disabled {{ old('register_flat') ? '' : 'selected' }}>Choose Flat or Plot...</option>
+                                        <option value="Flat" {{ strtolower(old('register_flat', '')) == 'flat' ? 'selected' : '' }}>Flat</option>
+                                        <option value="Plot" {{ strtolower(old('register_flat', '')) == 'plot' ? 'selected' : '' }}>Plot</option>
+                                    </select>
                                 </div>
                             </div>
 
@@ -188,7 +189,7 @@
                                 </label>
                                 <select id="zone_id" name="zone_id" required
                                     class="w-full bg-slate-50 border border-slate-250 rounded-lg px-3 py-2 text-xs text-slate-800 focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none font-bold">
-                                    <option value="" disabled {{ old('zone_id') ? '' : 'selected' }}>{{ old('register_flat') ? 'Choose Zone...' : '🔒 Step 1: Enter Register Flat First...' }}</option>
+                                    <option value="" disabled {{ old('zone_id') ? '' : 'selected' }}>{{ old('register_flat') ? 'Choose Zone...' : '🔒 Step 1: Select Flat / Plot First...' }}</option>
                                     @if(isset($zones))
                                         @foreach($zones as $z)
                                             <option value="{{ $z->id }}" {{ old('zone_id') == $z->id ? 'selected' : '' }}>
@@ -1643,7 +1644,7 @@
                     zoneSelect.value = '';
                     $(zoneSelect).val('');
                 }
-                updateSelectLock(zoneSelect, false, "🔒 Step 1: Enter Register Flat First...");
+                updateSelectLock(zoneSelect, false, "🔒 Step 1: Select Flat / Plot First...");
             }
 
             // Step 3: District Lock State (requires Step 1 & Step 2)
@@ -1651,7 +1652,7 @@
                 updateSelectLock(districtSelect, true, "Choose a district...");
             } else {
                 let placeholder = "🔒 Step 2: Select Zone First...";
-                if (!hasRegFlat) placeholder = "🔒 Step 1: Enter Register Flat First...";
+                if (!hasRegFlat) placeholder = "🔒 Step 1: Select Flat / Plot First...";
                 updateSelectLock(districtSelect, false, placeholder);
             }
 
@@ -1660,7 +1661,7 @@
                 updateSelectLock(townSelect, true, "Choose a town...");
             } else {
                 let placeholder = "🔒 Step 3: Select District First...";
-                if (!hasRegFlat) placeholder = "🔒 Step 1: Enter Register Flat First...";
+                if (!hasRegFlat) placeholder = "🔒 Step 1: Select Flat / Plot First...";
                 else if (!hasZone) placeholder = "🔒 Step 2: Select Zone First...";
                 updateSelectLock(townSelect, false, placeholder);
             }
@@ -1670,7 +1671,7 @@
                 updateInputLock(devNameInput, true, "Enter Developer Name...");
             } else {
                 let placeholder = "🔒 Step 4: Select Town First...";
-                if (!hasRegFlat) placeholder = "🔒 Step 1: Enter Register Flat First...";
+                if (!hasRegFlat) placeholder = "🔒 Step 1: Select Flat / Plot First...";
                 else if (!hasZone) placeholder = "🔒 Step 2: Select Zone First...";
                 else if (!hasDist) placeholder = "🔒 Step 3: Select District First...";
                 updateInputLock(devNameInput, false, placeholder);
@@ -1686,7 +1687,7 @@
                 }
             } else {
                 let placeholder = "🔒 Step 5: Enter Developer Name First...";
-                if (!hasRegFlat) placeholder = "🔒 Step 1: Enter Register Flat First...";
+                if (!hasRegFlat) placeholder = "🔒 Step 1: Select Flat / Plot First...";
                 else if (!hasZone) placeholder = "🔒 Step 2: Select Zone First...";
                 else if (!hasDist) placeholder = "🔒 Step 3: Select District First...";
                 else if (!hasTown) placeholder = "🔒 Step 4: Select Town First...";
@@ -3348,7 +3349,7 @@
 
             if (!regFlatVal) {
                 e.preventDefault();
-                Swal.fire({ icon: 'warning', title: 'Step 1 Incomplete', text: 'Please enter Register Flat name or title.', confirmButtonColor: '#0284c7' });
+                Swal.fire({ icon: 'warning', title: 'Step 1 Incomplete', text: 'Please select Flat or Plot for Register Flat.', confirmButtonColor: '#0284c7' });
                 const el = document.getElementById('register_flat'); if (el) el.focus();
                 return;
             }

@@ -514,7 +514,7 @@ class EwsDeveloperDashboardController extends Controller
 
         // Validate basic parameters
         $request->validate([
-            'register_flat' => 'nullable|string|max:255',
+            'register_flat' => 'required|string|in:Flat,Plot,flat,plot',
             'district_id' => 'required|exists:ews_districts,id',
             'zone_id' => 'nullable',
             'developer_name' => 'required|string|max:255',
@@ -545,6 +545,10 @@ class EwsDeveloperDashboardController extends Controller
             'flats_offered_for_draw' => 'nullable|numeric',
             'remaining_flats_for_oc' => 'nullable|numeric',
         ]);
+
+        $registeredFlatType = in_array(strtolower($request->register_flat), ['flat', 'plot'])
+            ? ucfirst(strtolower(trim($request->register_flat)))
+            : $request->register_flat;
 
         $district = DB::table('ews_districts')->where('id', $request->district_id)->first();
         if (!$district) {
@@ -869,7 +873,7 @@ class EwsDeveloperDashboardController extends Controller
                     }
 
                     $flatData = [
-                        'register_flat' => $request->register_flat,
+                        'register_flat' => $registeredFlatType,
                         'zone_id' => $zoneId,
                         'zone_name' => $zoneName,
                         'district_id' => $district->id,
@@ -979,7 +983,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $flat = EwsBuilderFlat::create([
-            'register_flat' => $request->register_flat,
+            'register_flat' => $registeredFlatType,
             'zone_id' => $zoneId,
             'zone_name' => $zoneName,
             'district_id' => $district->id,
@@ -1240,7 +1244,7 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         $request->validate([
-            'register_flat' => 'nullable|string|max:255',
+            'register_flat' => 'required|string|max:255',
             'district_id' => 'required|exists:ews_districts,id',
             'town_id' => 'required',
             'new_town_name' => 'required_if:town_id,new|nullable|string|max:255',
@@ -1450,7 +1454,9 @@ class EwsDeveloperDashboardController extends Controller
         }
 
         // Update Flat Attributes
-        $flat->register_flat = $request->register_flat;
+        $flat->register_flat = in_array(strtolower($request->register_flat), ['flat', 'plot'])
+            ? ucfirst(strtolower(trim($request->register_flat)))
+            : $request->register_flat;
         $flat->district_id = $district->id;
         $flat->dist_id = $district->id;
         $flat->district_name = $district->name;

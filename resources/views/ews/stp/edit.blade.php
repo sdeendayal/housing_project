@@ -163,20 +163,22 @@
 
                         <!-- Row 1: Register Flat & Zone -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- Step 1: Register Flat Input Field -->
+                            <!-- Step 1: Register Flat Dropdown -->
                             <div class="space-y-1">
                                 <label for="register_flat" class="block text-[10px] font-black uppercase text-slate-600 tracking-wider flex items-center">
                                     <span class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase bg-emerald-100 text-emerald-800 me-1.5">Step 1</span>
-                                    <span>Register Flat / Title</span> <span class="text-red-500 ms-0.5">*</span>
+                                    <span>Register Flat</span> <span class="text-red-500 ms-0.5">*</span>
                                 </label>
                                 <div class="relative">
-                                    <input type="text" id="register_flat" name="register_flat" 
-                                        value="{{ old('register_flat', $flat->register_flat ?: ($flat->flat_code ?: ('Flat Unit ' . $flat->flat_number))) }}" 
-                                        placeholder="Enter flat title / registry name" required autocomplete="off"
+                                    <select id="register_flat" name="register_flat" required
                                         class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-800 font-bold focus:border-sky-500 focus:ring-1 focus:ring-sky-500 focus:outline-none">
-                                    <span class="absolute right-3 top-2.5 text-slate-400">
-                                        <i class="bi bi-pencil-square"></i>
-                                    </span>
+                                        <option value="" disabled>Choose Flat or Plot...</option>
+                                        <option value="Flat" {{ strtolower(old('register_flat', $flat->register_flat)) == 'flat' ? 'selected' : '' }}>Flat</option>
+                                        <option value="Plot" {{ strtolower(old('register_flat', $flat->register_flat)) == 'plot' ? 'selected' : '' }}>Plot</option>
+                                        @if(!empty($flat->register_flat) && !in_array(strtolower($flat->register_flat), ['flat', 'plot']))
+                                            <option value="{{ $flat->register_flat }}" selected>{{ $flat->register_flat }}</option>
+                                        @endif
+                                    </select>
                                 </div>
                             </div>
 
