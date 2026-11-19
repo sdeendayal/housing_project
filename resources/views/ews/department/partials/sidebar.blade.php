@@ -1,3 +1,8 @@
+<!-- Ensure Material Symbols font is loaded wherever this sidebar is included -->
+@once
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+@endonce
+
 <!-- Left Sidebar Partial with Glassmorphic theme & Profile Card -->
 <aside class="fixed left-3 top-3 bottom-3 w-[240px] flex flex-col py-4 z-40 bg-white/20 backdrop-blur-xl border border-white/30 rounded-[24px] shadow-xl shadow-slate-200/40 text-slate-700 select-none transition-all duration-300 ease-in-out">
     
@@ -414,6 +419,24 @@
 </aside>
 
 <style>
+    /* Material Symbols Font Rule */
+    .material-symbols-outlined {
+        font-family: 'Material Symbols Outlined' !important;
+        font-weight: normal;
+        font-style: normal;
+        font-size: 18px;
+        line-height: 1;
+        letter-spacing: normal;
+        text-transform: none;
+        display: inline-block;
+        white-space: nowrap;
+        word-wrap: normal;
+        direction: ltr;
+        vertical-align: middle;
+        -webkit-font-feature-settings: 'liga';
+        -webkit-font-smoothing: antialiased;
+    }
+
     /* Collapsed Sidebar CSS overrides */
     aside.collapsed {
         width: 72px !important;
