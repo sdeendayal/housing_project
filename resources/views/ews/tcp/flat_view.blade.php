@@ -408,7 +408,7 @@
                                 </span>
                             </div>
                             <div class="flex items-center justify-between text-xs text-slate-600">
-                                <span>Date: <strong class="font-mono text-slate-800 font-bold" id="card-building-plan-date">{{ $flat->building_plan_approval_date ?? '—' }}</strong></span>
+                                <span>Date: <strong class="font-mono text-slate-800 font-bold" id="card-building-plan-date">{{ $cleanDate($flat->building_plan_approval_date) ?: '—' }}</strong></span>
                                 @php
                                     $bldgPlanRaw = $flat->building_plan_copy ?: ($project->building_plan_copy ?? null);
                                     $bldgPlanUrl = null;
@@ -443,7 +443,7 @@
                                 </span>
                             </div>
                             <div class="flex items-center justify-between text-xs text-slate-600">
-                                <span>Date: <strong class="font-mono text-slate-800 font-bold" id="card-oc-date">{{ $flat->oc_date ?? '—' }}</strong></span>
+                                <span>Date: <strong class="font-mono text-slate-800 font-bold" id="card-oc-date">{{ $cleanDate($flat->oc_date) ?: '—' }}</strong></span>
                                 @php
                                     $ocRaw = $flat->oc_copy_file ?: ($flat->oc_copy ?: ($project->oc_copy ?? null));
                                     $ocFileUrl = null;
@@ -511,8 +511,45 @@
 
             </div>
 
+            <!-- STP Statutory Verification & Certification Remarks (Read-Only) -->
+            @if($flat->is_aproved_by_dtp)
+                <div class="bg-white border border-emerald-200 rounded-xl p-4 shadow-xs">
+                    <div class="flex items-center justify-between pb-2 mb-2 border-b border-emerald-100 flex-wrap gap-2">
+                        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-900 flex items-center gap-1.5">
+                            <i class="bi bi-patch-check-fill text-emerald-600 text-sm"></i>
+                            <span>Senior Town Planner (STP) Certification &amp; Approval Remarks</span>
+                        </h3>
+                        <span class="text-xs font-mono font-bold text-emerald-700">
+                            Certified by {{ $flat->dtp_user_name ?? 'STP Official' }}
+                            @if($flat->dtp_approved_at)
+                                • {{ date('d M, Y h:i A', strtotime($flat->dtp_approved_at)) }}
+                            @endif
+                        </span>
+                    </div>
+                    <p class="text-xs text-emerald-950 font-medium whitespace-pre-wrap leading-relaxed">
+                        {{ $flat->dtp_remarks ?: 'Dossier certified and approved in accordance with Haryana Town and Country Planning (TCP) statutory norms.' }}
+                    </p>
+                </div>
+            @endif
+
+            <!-- Dossier Source & Audit Info Bar (Read-Only) -->
+            <div class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500">
+                <div class="flex items-center gap-2">
+                    <i class="bi bi-database-check text-emerald-600"></i>
+                    <span>EWS Master Database Record: <strong class="text-slate-700 font-mono">#{{ $flat->id }}</strong> (UUID: <span class="font-mono text-slate-600">{{ $flat->secure_id }}</span>)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span>Registered by: <strong class="text-slate-700">{{ $creator->name ?? ($flat->developer_name ?? 'Developer') }}</strong></span>
+                    @if($flat->created_at)
+                        <span class="text-slate-400">•</span>
+                        <span class="font-mono text-slate-600">{{ $flat->created_at->format('d M, Y h:i A') }}</span>
+                    @endif
+                </div>
+            </div>
+
+            @if($isStp)
             <!-- ========================================================================= -->
-            <!-- 3. DEDICATED HARYANA TCP (EODB) LIVE GATEWAY & RECONCILIATION SUITE -->
+            <!-- 3. DEDICATED HARYANA TCP (EODB) LIVE GATEWAY & RECONCILIATION SUITE (STP ONLY) -->
             <!-- ========================================================================= -->
             <section id="section-tcp-suite" class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 
@@ -1304,6 +1341,7 @@
 
 
             </section>
+            @endif
 
             <!-- ========================================================================= -->
             <!-- 4. RECENT AUDIT TRAIL / MODIFICATION LOGS (Collapsible) -->
@@ -1730,7 +1768,8 @@
         }
 
         function scrollToTcpSuite() {
-            document.getElementById('section-tcp-suite').scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById('section-tcp-suite') || document.getElementById('section-department-dossier');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
         }
 
         function openReconcileModal() {
