@@ -23,6 +23,24 @@
         .custom-scroll::-webkit-scrollbar-track { background: #f8fafc; }
         .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Ultra-Premium Full Page Loader Animations */
+        @keyframes indeterminate {
+            0% { transform: translateX(-100%) scaleX(0.2); }
+            50% { transform: translateX(0%) scaleX(0.6); }
+            100% { transform: translateX(100%) scaleX(0.2); }
+        }
+        .animate-indeterminate {
+            animation: indeterminate 1.4s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+            transform-origin: left;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.15); opacity: 0.65; }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2.5s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="h-full flex overflow-hidden bg-[#f4f7fa]">
@@ -1333,6 +1351,16 @@
                 $('#flats_offered_for_draw').val('');
                 $('#remaining_flats_for_oc').val('');
             }
+
+            // Trigger Ultra-Premium Full Page Loader
+            showFullPageLoader('Updating Flat Details...', 'Saving changes, verifying records & updating database...', 'Update Processing');
+            const btn = $('#btn_submit_changes');
+            if (btn.length) {
+                btn.html('<i class="bi bi-arrow-repeat animate-spin"></i> Updating...');
+                setTimeout(() => {
+                    btn.prop('disabled', true).addClass('opacity-75 cursor-not-allowed');
+                }, 10);
+            }
         });
 
         // Helper to format any date string into YYYY-MM-DD for date inputs
@@ -1434,6 +1462,102 @@
                 }
             });
         }
+
+        // Full-Page Overlay Loader Controller
+        function showFullPageLoader(title = 'Saving Flat Details...', subtitle = 'Validating statutory parameters, securing documents & updating EWS records...', badge = 'Processing Registry') {
+            const loader = document.getElementById('full-page-loader');
+            const card = document.getElementById('full-page-loader-card');
+            if (!loader) return;
+
+            const titleEl = document.getElementById('full-loader-title');
+            const subtitleEl = document.getElementById('full-loader-subtitle');
+            const badgeEl = document.getElementById('full-loader-badge');
+
+            if (titleEl) titleEl.textContent = title;
+            if (subtitleEl) subtitleEl.textContent = subtitle;
+            if (badgeEl) badgeEl.textContent = badge;
+
+            loader.classList.remove('hidden', 'pointer-events-none');
+            loader.classList.add('flex');
+            void loader.offsetWidth; // Force reflow
+            loader.classList.remove('opacity-0');
+            loader.classList.add('opacity-100');
+            if (card) {
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }
+        }
+
+        function hideFullPageLoader() {
+            const loader = document.getElementById('full-page-loader');
+            const card = document.getElementById('full-page-loader-card');
+            if (!loader) return;
+
+            loader.classList.remove('opacity-100');
+            loader.classList.add('opacity-0');
+            if (card) {
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+            }
+            setTimeout(() => {
+                loader.classList.remove('flex');
+                loader.classList.add('hidden', 'pointer-events-none');
+            }, 300);
+        }
+
+        // Hide loader when navigating back via browser history / bfcache
+        window.addEventListener('pageshow', function() {
+            hideFullPageLoader();
+        });
     </script>
+
+    <!-- Full-Page Ultra-Premium Loader Overlay -->
+    <div id="full-page-loader" class="fixed inset-0 z-[999999] hidden items-center justify-center bg-slate-950/70 backdrop-blur-md transition-all duration-300 opacity-0 pointer-events-none select-none" aria-live="assertive" aria-busy="true">
+        <div class="relative bg-white/95 backdrop-blur-xl border border-sky-100 rounded-3xl p-7 sm:p-9 shadow-2xl flex flex-col items-center justify-center max-w-sm w-full mx-4 text-center transform scale-95 transition-all duration-300" id="full-page-loader-card">
+            <!-- Ambient Background Glows -->
+            <div class="absolute -top-10 -left-10 w-36 h-36 bg-sky-400/25 rounded-full blur-2xl pointer-events-none animate-pulse-glow"></div>
+            <div class="absolute -bottom-10 -right-10 w-36 h-36 bg-indigo-500/25 rounded-full blur-2xl pointer-events-none animate-pulse-glow" style="animation-delay: 1.2s;"></div>
+
+            <!-- Multi-ring Spinner with Haryana Emblem / Icon -->
+            <div class="relative w-20 h-20 flex items-center justify-center mb-4">
+                <!-- Outer gradient spinning ring -->
+                <div class="absolute inset-0 rounded-full border-4 border-transparent border-t-sky-500 border-r-indigo-600 animate-spin" style="animation-duration: 1.1s;"></div>
+                <!-- Inner reverse spinning ring -->
+                <div class="absolute inset-2 rounded-full border-3 border-transparent border-b-emerald-500 border-l-sky-400 animate-spin" style="animation-direction: reverse; animation-duration: 0.9s;"></div>
+                <!-- Center Emblem / Building Badge -->
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-900 via-sky-950 to-slate-900 text-white flex items-center justify-center shadow-lg shadow-sky-500/30 ring-2 ring-white/80 z-10">
+                    @if(file_exists(public_path('Haryana_emblem.png')))
+                        <img src="{{ asset('Haryana_emblem.png') }}" class="w-7 h-7 object-contain brightness-0 invert drop-shadow" alt="Haryana">
+                    @else
+                        <i class="bi bi-buildings-fill text-sky-400 text-lg"></i>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Status Pill Badge -->
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-[10px] font-black uppercase tracking-wider mb-2">
+                <span class="w-2 h-2 rounded-full bg-sky-500 animate-ping"></span>
+                <span id="full-loader-badge">Processing Update</span>
+            </div>
+
+            <!-- Loading Title -->
+            <h3 class="text-sm font-black uppercase tracking-wider text-slate-800" id="full-loader-title">
+                Updating Flat Details...
+            </h3>
+            <p class="text-[10.5px] text-slate-500 font-medium mt-1 leading-relaxed px-2" id="full-loader-subtitle">
+                Saving changes, verifying records & updating database...
+            </p>
+
+            <!-- Animated Gradient Progress Bar -->
+            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-5 overflow-hidden border border-slate-200/60 p-[1px]">
+                <div class="h-full bg-gradient-to-r from-sky-500 via-indigo-500 to-emerald-400 rounded-full animate-indeterminate"></div>
+            </div>
+
+            <!-- Safe Guard Notice -->
+            <p class="text-[9px] text-slate-400 font-mono mt-3.5 flex items-center gap-1">
+                <i class="bi bi-shield-lock-fill text-emerald-500"></i> Please do not refresh or close this window
+            </p>
+        </div>
+    </div>
 </body>
 </html>
