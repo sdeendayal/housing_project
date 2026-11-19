@@ -13,7 +13,7 @@
     $isDashboardActive = $isDashboardRoute && (!$currentViewParam || $currentViewParam === 'dashboard');
     $isDistrictActive = ($isDashboardRoute && $currentViewParam === 'district') || request()->routeIs('ews.developer.districts-stats');
     $isMyFlatsActive = $isDashboardRoute && ($currentViewParam === 'my_flats' || $ownershipScopeParam === 'my_flats');
-    $isRegisterFlatActive = request()->routeIs('ews.developer.flats.create') || request()->routeIs('ews.developer.flats.edit');
+    $isRegisterFlatActive = request()->routeIs('ews.developer.flats.create');
     $isDeveloperLogsActive = request()->routeIs('ews.developer.logs');
 @endphp
 

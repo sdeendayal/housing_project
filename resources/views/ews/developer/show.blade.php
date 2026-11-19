@@ -75,13 +75,6 @@
                         <span class="hidden md:inline">Print</span>
                     </button>
 
-                    <!-- Edit Flat Button -->
-                    <a href="{{ route('ews.developer.flats.edit', $flat->secure_id ?? \App\Helpers\EwsHelper::encodeSecureId($flat->id)) }}" title="Edit Flat Specifications"
-                        class="px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white rounded-lg text-xs font-black uppercase flex items-center gap-1.5 transition-all shadow-xs shrink-0 whitespace-nowrap">
-                        <i class="bi bi-pencil-square text-xs"></i>
-                        <span>Edit Flat</span>
-                    </a>
-
                     <!-- STP Status Badge (Read-Only for Developer) -->
                     @if($flat->is_aproved_by_dtp)
                         <div class="px-3 py-1.5 bg-emerald-50 border border-emerald-300 rounded-lg flex items-center gap-1.5 shadow-2xs shrink-0 whitespace-nowrap">

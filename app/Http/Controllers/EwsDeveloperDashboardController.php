@@ -1046,8 +1046,8 @@ class EwsDeveloperDashboardController extends Controller
     public function edit($secureId)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
-            abort(403);
+        if (!$user || $user->role === 'ews_developer' || !in_array($user->role, ['ews_stp', 'stp'])) {
+            abort(403, 'Developers are not authorized to edit flat records after submission.');
         }
 
         // Strict security: Primary ID access blocked - strictly secure_id only
@@ -1195,8 +1195,8 @@ class EwsDeveloperDashboardController extends Controller
     public function update(Request $request, $secureId)
     {
         $user = Auth::user();
-        if (!$user || !in_array($user->role, ['ews_developer', 'ews_stp', 'stp'])) {
-            abort(403);
+        if (!$user || $user->role === 'ews_developer' || !in_array($user->role, ['ews_stp', 'stp'])) {
+            abort(403, 'Developers are not authorized to edit flat records after submission.');
         }
 
         $flat = EwsBuilderFlat::where('secure_id', $secureId)->first();
