@@ -28,3 +28,6 @@ Thumbs.db
 /storage/logs/*
 /storage/app/public/*
 !/storage/app/public/.gitkeep
+database/seeders/data/payment_detail_hfa/*.xlsx
+database/seeders/data/payment_detail_hfa/*.csv
+!database/seeders/data/payment_detail_hfa/*.csv.gz
