@@ -546,7 +546,7 @@ class PaymentController extends Controller
                 DB::table('payment_transactions')
                     ->where('merchant_txn_no', $merchantTxnNo)
                     ->update([
-                        'status' => 'FAIL',
+                        'status' => ($status === 'REJ' ? 'REJ' : 'FAIL'),
                         'gateway_txn_id' => $responseParams['txnID'] ?? null,
                         'payment_id' => $responseParams['paymentID'] ?? null,
                         'payment_mode' => $responseParams['paymentMode'] ?? null,
@@ -848,11 +848,11 @@ class PaymentController extends Controller
                 }
 
                 if ($responseCode === 'P0020' || $txnStatus === 'REJ' || $txnResponseCode === '039') {
-                    // Update to FAIL
+                    // Update to REJ/FAIL
                     DB::table('payment_transactions')
                         ->where('id', $tx->id)
                         ->update([
-                            'status' => 'FAIL',
+                            'status' => ($txnStatus === 'REJ' ? 'REJ' : 'FAIL'),
                             'response_code' => $txnResponseCode ?: $responseCode,
                             'response_description' => $txnRespDescription ?: ($respDescription ?: 'Transaction Cancelled/Rejected'),
                             'response_payload_dump' => json_encode($data),
