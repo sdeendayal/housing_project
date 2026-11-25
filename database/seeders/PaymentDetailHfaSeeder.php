@@ -19,12 +19,63 @@ class PaymentDetailHfaSeeder extends Seeder
         DB::connection()->disableQueryLog();
 
         $baseDir = database_path('seeders/data/payment_detail_hfa');
+        $this->ensureDataReady($baseDir);
 
         $this->withoutForeignKeyChecks(function () use ($baseDir) {
             $this->seedCashReceiptDetails($baseDir . '/cash_receipt_details.csv');
             $this->seedInstallmentDue($baseDir . '/installment_due.csv');
             $this->seedLedger($baseDir . '/ledger.csv');
         });
+    }
+
+    private function ensureDataReady(string $baseDir): void
+    {
+        $zipCandidates = [
+            $baseDir . '/payment detail HFA.zip',
+            $baseDir . '/payment_detail_hfa.zip',
+            database_path('seeders/data/payment detail HFA.zip'),
+        ];
+
+        $zipPath = null;
+        foreach ($zipCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                $zipPath = $candidate;
+                break;
+            }
+        }
+
+        $gzFiles = [
+            $baseDir . '/cash_receipt_details.csv.gz',
+            $baseDir . '/installment_due.csv.gz',
+            $baseDir . '/ledger.csv.gz',
+        ];
+
+        $needsConversion = false;
+        foreach ($gzFiles as $gz) {
+            if (! file_exists($gz)) {
+                $needsConversion = true;
+                break;
+            }
+            if ($zipPath && filemtime($zipPath) > filemtime($gz)) {
+                $needsConversion = true;
+                break;
+            }
+        }
+
+        if ($needsConversion && $zipPath) {
+            $this->command?->info("Converting data from {$zipPath}...");
+            $script = database_path('seeders/scripts/convert_payment_hfa.py');
+            if (file_exists($script)) {
+                $output = [];
+                $returnVar = 0;
+                exec("python3 " . escapeshellarg($script) . " " . escapeshellarg($baseDir) . " 2>&1", $output, $returnVar);
+                if ($returnVar !== 0) {
+                    $this->command?->warn("Python conversion returned code {$returnVar}: " . implode("\n", $output));
+                } else {
+                    $this->command?->info("Data converted successfully from zip.");
+                }
+            }
+        }
     }
 
     private function openCsvStream(string $basePath)
@@ -66,16 +117,16 @@ class PaymentDetailHfaSeeder extends Seeder
                 'id' => (int) $row[0],
                 'asset_number' => (int) ($row[1] ?? 0),
                 'total_paid_amount' => (float) ($row[2] ?? 0),
-                'receipt_number' => !empty($row[3]) && $row[3] !== 'NULL' ? $row[3] : null,
+                'receipt_number' => $this->cleanStr($row[3] ?? null),
                 'BranchId' => (int) ($row[4] ?? 0),
                 'DistrictId' => (int) ($row[5] ?? 0),
                 'CityId' => (int) ($row[6] ?? 0),
                 'SectorId' => (int) ($row[7] ?? 0),
                 'IsActive' => isset($row[8]) && $row[8] !== '' ? (int) $row[8] : 1,
                 'IsDeleted' => isset($row[9]) && $row[9] !== '' ? (int) $row[9] : 0,
-                'created_date' => !empty($row[10]) && $row[10] !== 'NULL' ? $row[10] : null,
+                'created_date' => $this->cleanDate($row[10] ?? null),
                 'CreatedBy' => !empty($row[11]) && $row[11] !== 'NULL' ? (int) $row[11] : null,
-                'ModifiedDate' => !empty($row[12]) && $row[12] !== 'NULL' ? $row[12] : null,
+                'ModifiedDate' => $this->cleanDate($row[12] ?? null),
                 'ModifiedBy' => !empty($row[13]) && $row[13] !== 'NULL' ? (int) $row[13] : null,
                 'CompanyId' => !empty($row[14]) && $row[14] !== 'NULL' ? (int) $row[14] : 544,
             ];
@@ -126,9 +177,9 @@ class PaymentDetailHfaSeeder extends Seeder
                 'DueInstallmentId' => (int) $row[0],
                 'PropertyAuctionId' => (int) ($row[1] ?? 0),
                 'AssetId' => (int) ($row[2] ?? 0),
-                'OfferOfPossessionDate' => !empty($row[3]) && $row[3] !== 'NULL' ? $row[3] : null,
+                'OfferOfPossessionDate' => $this->cleanDate($row[3] ?? null),
                 'InstallmentNumber' => (int) ($row[4] ?? 0),
-                'DueDate' => !empty($row[5]) && $row[5] !== 'NULL' ? $row[5] : '2000-01-01',
+                'DueDate' => $this->cleanDate($row[5] ?? null) ?? '2000-01-01',
                 'RunningBalance' => (int) ($row[6] ?? 0),
                 'EMIAmount' => (int) ($row[7] ?? 0),
                 'PrincipleAmount' => (int) ($row[8] ?? 0),
@@ -137,11 +188,11 @@ class PaymentDetailHfaSeeder extends Seeder
                 'InsuranceAmout' => (int) ($row[11] ?? 0),
                 'DueAmount' => (float) ($row[12] ?? 0),
                 'RunningClosingBalance' => (int) ($row[13] ?? 0),
-                'LastSettledDate' => !empty($row[14]) && $row[14] !== 'NULL' ? $row[14] : null,
+                'LastSettledDate' => $this->cleanDate($row[14] ?? null),
                 'CompanyId' => !empty($row[15]) && $row[15] !== 'NULL' ? (int) $row[15] : 544,
-                'CreatedDate' => !empty($row[16]) && $row[16] !== 'NULL' ? $row[16] : null,
+                'CreatedDate' => $this->cleanDate($row[16] ?? null),
                 'CreatedBy' => !empty($row[17]) && $row[17] !== 'NULL' ? (int) $row[17] : null,
-                'ModifiedDate' => !empty($row[18]) && $row[18] !== 'NULL' ? $row[18] : null,
+                'ModifiedDate' => $this->cleanDate($row[18] ?? null),
                 'ModifiedBy' => !empty($row[19]) && $row[19] !== 'NULL' ? (int) $row[19] : null,
                 'IsDeleted' => isset($row[20]) && $row[20] !== '' ? (int) $row[20] : 0,
                 'IsActive' => isset($row[21]) && $row[21] !== '' ? (int) $row[21] : 1,
@@ -194,7 +245,7 @@ class PaymentDetailHfaSeeder extends Seeder
             $buffer[] = [
                 'Id' => (int) $row[0],
                 'InstallmentNumber' => (int) ($row[1] ?? 0),
-                'DueDate' => !empty($row[2]) && $row[2] !== 'NULL' ? $row[2] : '2000-01-01',
+                'DueDate' => $this->cleanDate($row[2] ?? null) ?? '2000-01-01',
                 'PrincipalAmount' => (int) ($row[3] ?? 0),
                 'InterestAmount' => (int) ($row[4] ?? 0),
                 'GSTAmount' => (int) ($row[5] ?? 0),
@@ -221,9 +272,9 @@ class PaymentDetailHfaSeeder extends Seeder
                 'Is_Active' => isset($row[26]) && $row[26] !== '' ? (int) $row[26] : 1,
                 'Is_Deleted' => isset($row[27]) && $row[27] !== '' ? (int) $row[27] : 0,
                 'CreatedBy' => !empty($row[28]) && $row[28] !== 'NULL' ? (int) $row[28] : null,
-                'CreateDate' => !empty($row[29]) && $row[29] !== 'NULL' ? $row[29] : null,
+                'CreateDate' => $this->cleanDate($row[29] ?? null),
                 'AuthorizedBy' => !empty($row[30]) && $row[30] !== 'NULL' ? (int) $row[30] : null,
-                'AuthorizedDate' => !empty($row[31]) && $row[31] !== 'NULL' ? $row[31] : null,
+                'AuthorizedDate' => $this->cleanDate($row[31] ?? null),
                 'AssetId' => (int) ($row[32] ?? 0),
                 'PaneltyOnAmount' => !empty($row[33]) && $row[33] !== 'NULL' ? (float) $row[33] : null,
                 'InstallmentPhase' => !empty($row[34]) && $row[34] !== 'NULL' ? (float) $row[34] : null,
@@ -248,5 +299,23 @@ class PaymentDetailHfaSeeder extends Seeder
 
         fclose($file);
         $this->command?->info("Successfully imported {$total} rows into ledger.");
+    }
+
+    private function cleanDate($val): ?string
+    {
+        if ($val === null) {
+            return null;
+        }
+        $val = trim($val, "\"' \t\n\r\0\x0B");
+        return (!empty($val) && strtoupper($val) !== 'NULL') ? $val : null;
+    }
+
+    private function cleanStr($val): ?string
+    {
+        if ($val === null) {
+            return null;
+        }
+        $val = trim($val, "\"' \t\n\r\0\x0B");
+        return (!empty($val) && strtoupper($val) !== 'NULL') ? $val : null;
     }
 }
