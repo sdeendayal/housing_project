@@ -16,7 +16,15 @@ class LedgerSeeder extends Seeder
 
     public function run(): void
     {
-        ini_set('memory_limit', '512M');
+        ini_set('memory_limit', '-1');
+
+        $hfaGz = database_path('seeders/data/payment_detail_hfa/ledger.csv.gz');
+        $hfaZip = database_path('seeders/data/payment_detail_hfa/payment detail HFA.zip');
+        if (file_exists($hfaGz) || file_exists($hfaZip)) {
+            $this->command?->info("Using payment detail HFA data...");
+            $this->call(PaymentDetailHfaSeeder::class);
+            return;
+        }
 
         $csvFile = $this->csvPath('Ledger.csv');
 
