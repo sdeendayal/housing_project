@@ -119,3 +119,9 @@ Route::prefix('possession')->group(function () {
 Route::post('/mmsay/citizen/payment/callback', [App\Http\Controllers\PaymentController::class, 'payCallback'])
     ->name('citizen.payment.callback');
 
+// Phicommerce server-to-server (S2S) payment advice / webhook routes
+Route::post('/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook'])
+    ->name('payment.webhook');
+Route::post('/mmsay/citizen/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook']);
+
+

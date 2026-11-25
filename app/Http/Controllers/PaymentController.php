@@ -224,7 +224,8 @@ class PaymentController extends Controller
 
         $amount = number_format((float)$amountRaw, 2, '.', '');
         
-        $merchantTxnNo = 'MMSAY-TXN-' . now()->format('YmdHis') . rand(100, 999);
+        // PhiCommerce requirement: strictly alphanumeric, max 20 characters
+        $merchantTxnNo = 'MSY' . now()->format('ymdHis') . sprintf('%05d', mt_rand(0, 99999));
         $currencyCode = '356'; // INR
         $payType = '0';
         $customerEmailID = $user->email;
@@ -564,6 +565,162 @@ class PaymentController extends Controller
                 'amount' => '₹ ' . number_format((float)($responseParams['amount'] ?? 0), 2),
                 'mode' => $responseParams['paymentMode'] ?? 'N/A',
             ]);
+        }
+    }
+
+    /**
+     * Server-to-Server (S2S) Payment Advice / Webhook API from PhiCommerce
+     */
+    public function webhook(Request $request)
+    {
+        Log::info('PhiCommerce Payment Advice / Webhook received', $request->all());
+
+        $responseParams = $request->all();
+
+        if (!$responseParams || !isset($responseParams['secureHash'])) {
+            Log::error('PhiCommerce Webhook secureHash missing', ['params' => $responseParams]);
+            return response()->json([
+                'status' => 'FAIL',
+                'message' => 'Missing secureHash'
+            ], 400);
+        }
+
+        $receivedHash = $responseParams['secureHash'];
+        unset($responseParams['secureHash']);
+
+        // Sort keys case-sensitively
+        ksort($responseParams);
+
+        // Concatenate values
+        $hashText = '';
+        foreach ($responseParams as $k => $v) {
+            if (is_bool($v)) {
+                $hashText .= $v ? 'true' : 'false';
+            } else {
+                $hashText .= (string)$v;
+            }
+        }
+
+        $secretKey = config('services.phicommerce.secret_key', 'abc');
+        $calculatedHash = hash_hmac('sha256', $hashText, $secretKey);
+
+        if ($calculatedHash !== $receivedHash) {
+            Log::error('PhiCommerce Webhook secureHash verification failed', [
+                'calculated' => $calculatedHash,
+                'received' => $receivedHash,
+            ]);
+
+            return response()->json([
+                'status' => 'FAIL',
+                'message' => 'Signature verification failed'
+            ], 400);
+        }
+
+        $merchantTxnNo = $responseParams['merchantTxnNo'] ?? null;
+        $status = $responseParams['status'] ?? '';
+        $isSuccess = ($status === 'SUC' || ($responseParams['responseCode'] ?? '') === '0000');
+
+        if ($isSuccess) {
+            $alreadySuccess = false;
+            if ($merchantTxnNo) {
+                $txLog = DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->first();
+                if ($txLog && $txLog->status === 'SUCCESS') {
+                    $alreadySuccess = true;
+                }
+            }
+
+            if (!$alreadySuccess) {
+                $assetId = (int)($responseParams['addlParam1'] ?? 0);
+                $userId = (int)($responseParams['addlParam2'] ?? 0);
+
+                DB::beginTransaction();
+                try {
+                    if ($merchantTxnNo) {
+                        DB::table('payment_transactions')
+                            ->where('merchant_txn_no', $merchantTxnNo)
+                            ->update([
+                                'status' => 'SUCCESS',
+                                'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                                'payment_id' => $responseParams['paymentID'] ?? null,
+                                'payment_mode' => $responseParams['paymentMode'] ?? null,
+                                'response_code' => $responseParams['responseCode'] ?? null,
+                                'response_description' => $responseParams['respDescription'] ?? null,
+                                'response_payload_dump' => json_encode($request->all()),
+                                'updated_at' => now(),
+                            ]);
+                    }
+
+                    $property = DB::table('property_registration')
+                        ->where('AssetId', $assetId)
+                        ->first();
+
+                    if ($property) {
+                        $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $merchantTxnNo);
+                        $existingReceipt = DB::table('cash_receipt_details')
+                            ->where('receipt_number', $receiptNo)
+                            ->first();
+
+                        if (!$existingReceipt) {
+                            $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
+                            $newId = $maxId + 1;
+
+                            DB::table('cash_receipt_details')->insert([
+                                'id' => $newId,
+                                'asset_number' => $assetId,
+                                'total_paid_amount' => (float)$responseParams['amount'],
+                                'receipt_number' => $receiptNo,
+                                'BranchId' => $property->BranchId,
+                                'DistrictId' => $property->DistrictId,
+                                'CityId' => $property->CityId,
+                                'SectorId' => $property->SectorId,
+                                'IsActive' => 1,
+                                'IsDeleted' => 0,
+                                'created_date' => Carbon::now(),
+                                'CreatedBy' => $userId ?: null,
+                                'CompanyId' => $property->CompanyId ?? 544,
+                            ]);
+
+                            \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
+                        }
+                    }
+
+                    DB::commit();
+                    Log::info('Webhook payment processed successfully', ['merchantTxnNo' => $merchantTxnNo]);
+                } catch (\Throwable $e) {
+                    DB::rollBack();
+                    Log::error('Webhook payment processing error', ['error' => $e->getMessage()]);
+                    return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 500);
+                }
+            }
+
+            return response()->json([
+                'status' => 'SUCCESS',
+                'message' => 'Payment Advice processed successfully'
+            ], 200);
+        } else {
+            // Transaction failed or timeout / rejected -> Mark as REJ (AutoRefund handled by PhiCommerce)
+            if ($merchantTxnNo) {
+                DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->update([
+                        'status' => 'REJ',
+                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                        'payment_id' => $responseParams['paymentID'] ?? null,
+                        'payment_mode' => $responseParams['paymentMode'] ?? null,
+                        'response_code' => $responseParams['responseCode'] ?? 'REJ',
+                        'response_description' => $responseParams['respDescription'] ?? 'Transaction Rejected / Timeout (AutoRefund handled by PhiCommerce)',
+                        'response_payload_dump' => json_encode($request->all()),
+                        'updated_at' => now(),
+                    ]);
+                Log::info('Webhook marked transaction as REJ', ['merchantTxnNo' => $merchantTxnNo]);
+            }
+
+            return response()->json([
+                'status' => 'SUCCESS',
+                'message' => 'Rejection / Timeout status updated successfully'
+            ], 200);
         }
     }
 
