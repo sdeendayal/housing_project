@@ -182,6 +182,7 @@ class PaymentController extends Controller
             );
             
             $totalPaid = (float) $paymentSummary['totalPaid'];
+            $outstanding = (float) ($paymentSummary['outstanding'] ?? 0.0);
             $maxAllowedAmount = max(0.0, 100000.00 - $totalPaid);
 
             if ($maxAllowedAmount <= 0) {
@@ -227,6 +228,7 @@ class PaymentController extends Controller
         // PhiCommerce requirement: strictly alphanumeric, max 20 characters
         $merchantTxnNo = 'MSY' . now()->format('ymdHis') . sprintf('%05d', mt_rand(0, 99999));
         $currencyCode = '356'; // INR
+        $payType = '0';
         // Customer details with smart fallbacks (does not modify database records)
         $customerEmailID = !empty($user->email) ? $user->email : (!empty($user->mobile) ? ($user->mobile . '@hfa.haryana.gov.in') : 'citizen.hfa@haryana.gov.in');
         $transactionType = 'SALE';
