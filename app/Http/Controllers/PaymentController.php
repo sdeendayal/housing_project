@@ -381,7 +381,7 @@ class PaymentController extends Controller
         $secretKey = config('services.phicommerce.secret_key', 'abc');
         $calculatedHash = hash_hmac('sha256', $hashText, $secretKey);
 
-        if ($calculatedHash !== $receivedHash) {
+        if (!hash_equals(strtolower($calculatedHash), strtolower((string)$receivedHash))) {
             Log::error('Phicommerce Callback secureHash verification failed', [
                 'calculated' => $calculatedHash,
                 'received' => $receivedHash,
@@ -567,7 +567,7 @@ class PaymentController extends Controller
         $secretKey = config('services.phicommerce.secret_key', 'abc');
         $calculatedHash = hash_hmac('sha256', $hashText, $secretKey);
 
-        if ($calculatedHash !== $receivedHash) {
+        if (!hash_equals(strtolower($calculatedHash), strtolower((string)$receivedHash))) {
             Log::error('PhiCommerce Webhook secureHash verification failed', [
                 'calculated' => $calculatedHash,
                 'received' => $receivedHash,
