@@ -194,8 +194,8 @@
                 <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center">
                     <span class="material-symbols-outlined text-[36px]">hourglass_top</span>
                 </div>
-                <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Gateway Integration Under Process</h2>
-                <p class="text-[11px] text-slate-500 m-0 mb-4">Online Payment Facility Will Be Available Soon</p>
+                <h2 class="text-base font-extrabold text-slate-800 m-0 mb-1">Payment Status Pending</h2>
+                <p class="text-[11px] text-slate-500 m-0 mb-4">{{ $payment['message'] ?? 'Transaction status is being confirmed by the bank.' }}</p>
 
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-[10px] space-y-2 mb-4">
                     <div class="flex justify-between gap-2">
@@ -216,17 +216,15 @@
                     </div>
                     <div class="flex justify-between gap-2">
                         <span class="text-slate-500">Status</span>
-                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[9px]">RECORDED — PENDING GATEWAY</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-bold text-[9px]">{{ $payment['status'] ?? 'PENDING' }}</span>
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 mb-4">
-                    <p class="text-[11px] font-bold text-emerald-800 m-0">
-                        Your payment request has been recorded successfully.
+                <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 mb-4">
+                    <p class="text-[11px] font-bold text-amber-800 m-0">
+                        Please check your transaction logs in the dashboard to verify status if needed.
                     </p>
                 </div>
-
-                <p class="text-[9px] text-slate-400 m-0 mb-4">Demo transaction — no real amount deducted.</p>
             @endif
 
             <div class="flex flex-wrap justify-center gap-2">

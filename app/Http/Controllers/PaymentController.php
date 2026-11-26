@@ -227,17 +227,15 @@ class PaymentController extends Controller
         // PhiCommerce requirement: strictly alphanumeric, max 20 characters
         $merchantTxnNo = 'MSY' . now()->format('ymdHis') . sprintf('%05d', mt_rand(0, 99999));
         $currencyCode = '356'; // INR
-        $payType = '0';
-        $customerEmailID = $user->email;
+        // Customer details with smart fallbacks (does not modify database records)
+        $customerEmailID = !empty($user->email) ? $user->email : (!empty($user->mobile) ? ($user->mobile . '@hfa.haryana.gov.in') : 'citizen.hfa@haryana.gov.in');
         $transactionType = 'SALE';
         $returnURL = route('citizen.payment.callback');
         $txnDate = now()->format('YmdHis');
-        // $customerMobileNo = $user->mobile ?? ($purchaser->MobileNo ?? '9146153247');
-        $customerMobileNo = $user->mobile ?? $purchaser->MobileNo;
+        $customerMobileNo = !empty($user->mobile) ? $user->mobile : (!empty($purchaser->MobileNo) ? $purchaser->MobileNo : '9999999999');
 
-        
         // Strip out any non-alphanumeric chars for name
-        $customerName = preg_replace('/[^A-Za-z0-9 ]/', '', $purchaser->PrivatePurchaserName ?? ($user->name ?? 'Citizen'));
+        $customerName = trim(preg_replace('/[^A-Za-z0-9 ]/', '', $purchaser->PrivatePurchaserName ?? ($user->name ?? 'Citizen'))) ?: 'Citizen';
         
         // Context parameters to help preserve state in webhook/callback
         $addlParam1 = (string)$assetId;
@@ -311,18 +309,44 @@ class PaymentController extends Controller
                 }
                 
                 Log::error('Phicommerce response missing redirectURI or tranCtx', ['response' => $data]);
-                return redirect()->back()->with('error', 'Unable to initiate gateway redirection.');
+                DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->update([
+                        'status' => 'FAIL',
+                        'response_code' => $data['responseCode'] ?? 'INIT_FAIL',
+                        'response_description' => $data['respDescription'] ?? 'Gateway initiation failed (missing redirect URL)',
+                        'response_payload_dump' => json_encode($data),
+                        'updated_at' => now(),
+                    ]);
+                return redirect()->back()->with('error', 'Unable to initiate payment: ' . ($data['respDescription'] ?? 'Gateway redirection error.'));
             }
 
             Log::error('Phicommerce initiation API error', [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
+
+            DB::table('payment_transactions')
+                ->where('merchant_txn_no', $merchantTxnNo)
+                ->update([
+                    'status' => 'FAIL',
+                    'response_code' => 'GATEWAY_ERROR_' . $response->status(),
+                    'response_description' => 'Payment gateway connection error (' . $response->status() . ')',
+                    'updated_at' => now(),
+                ]);
             
             return redirect()->back()->with('error', 'Gateway error. Please try again later.');
 
         } catch (\Exception $e) {
             Log::error('Phicommerce request exception', ['message' => $e->getMessage()]);
+            DB::table('payment_transactions')
+                ->where('merchant_txn_no', $merchantTxnNo)
+                ->update([
+                    'status' => 'FAIL',
+                    'response_code' => 'CONNECTION_EXCEPTION',
+                    'response_description' => $e->getMessage(),
+                    'updated_at' => now(),
+                ]);
             return redirect()->back()->with('error', 'Payment gateway connection failed.');
         }
     }
@@ -388,27 +412,27 @@ class PaymentController extends Controller
             ]);
         }
 
-        $status = $request->input('status');
+        $status = $responseParams['status'] ?? $request->input('status', '');
         $isSuccess = ($status === 'SUC' || ($responseParams['responseCode'] ?? '') === '0000');
-
-        // Update transaction log status
         $merchantTxnNo = $responseParams['merchantTxnNo'] ?? null;
-        $alreadySuccess = false;
-        if ($merchantTxnNo) {
-            $txLog = DB::table('payment_transactions')
-                ->where('merchant_txn_no', $merchantTxnNo)
-                ->first();
-            if ($txLog && $txLog->status === 'SUCCESS') {
-                $alreadySuccess = true;
-            }
-        }
 
-        if ($isSuccess) {
-            $assetId = (int)($responseParams['addlParam1'] ?? 0);
-            $userId = (int)($responseParams['addlParam2'] ?? 0);
-            
-            DB::beginTransaction();
-            try {
+        DB::beginTransaction();
+        try {
+            $txLog = null;
+            if ($merchantTxnNo) {
+                $txLog = DB::table('payment_transactions')
+                    ->where('merchant_txn_no', $merchantTxnNo)
+                    ->lockForUpdate()
+                    ->first();
+            }
+
+            $alreadySuccess = ($txLog && $txLog->status === 'SUCCESS');
+
+            if ($isSuccess) {
+                // Kami 1 Fix: Fallback to txLog asset_id / user_id if gateway omitted addlParam
+                $assetId = (int)($responseParams['addlParam1'] ?? 0) ?: (int)($txLog->asset_id ?? 0);
+                $userId = (int)($responseParams['addlParam2'] ?? 0) ?: (int)($txLog->user_id ?? 0);
+
                 if ($merchantTxnNo && !$alreadySuccess) {
                     DB::table('payment_transactions')
                         ->where('merchant_txn_no', $merchantTxnNo)
@@ -424,115 +448,69 @@ class PaymentController extends Controller
                         ]);
                 }
 
-                // Fetch property registration details to populate cash receipt correctly
-                $property = DB::table('property_registration')
-                    ->where('AssetId', $assetId)
+                $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $responseParams['merchantTxnNo']);
+                $existingReceipt = DB::table('cash_receipt_details')
+                    ->where('receipt_number', $receiptNo)
                     ->first();
 
-                $sendSms = false;
-                $receiptNo = null;
-                if ($property) {
-                    $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $responseParams['merchantTxnNo']);
-                    $existingReceipt = DB::table('cash_receipt_details')
-                        ->where('receipt_number', $receiptNo)
-                        ->first();
+                if (!$existingReceipt && $assetId > 0) {
+                    $property = DB::table('property_registration')->where('AssetId', $assetId)->first();
 
-                    if (!$existingReceipt) {
-                        $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
-                        $newId = $maxId + 1;
+                    $branchId = $property->BranchId ?? 0;
+                    $districtId = $property->DistrictId ?? 0;
+                    $cityId = $property->CityId ?? 0;
+                    $sectorId = $property->SectorId ?? 0;
+                    $companyId = $property->CompanyId ?? 544;
 
-                        DB::table('cash_receipt_details')->insert([
-                            'id' => $newId,
-                            'asset_number' => $assetId,
-                            'total_paid_amount' => (float)$responseParams['amount'],
-                            'receipt_number' => $receiptNo,
-                            'BranchId' => $property->BranchId,
-                            'DistrictId' => $property->DistrictId,
-                            'CityId' => $property->CityId,
-                            'SectorId' => $property->SectorId,
-                            'IsActive' => 1,
-                            'IsDeleted' => 0,
-                            'created_date' => Carbon::now(),
-                            'CreatedBy' => $userId ?: null,
-                            'CompanyId' => $property->CompanyId ?? 544,
-                        ]);
+                    $maxId = DB::table('cash_receipt_details')->lockForUpdate()->max('id') ?? 0;
+                    $newId = $maxId + 1;
 
-                        // Record payment in ledger
-                        \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
+                    DB::table('cash_receipt_details')->insert([
+                        'id' => $newId,
+                        'asset_number' => $assetId,
+                        'total_paid_amount' => (float)$responseParams['amount'],
+                        'receipt_number' => $receiptNo,
+                        'BranchId' => $branchId,
+                        'DistrictId' => $districtId,
+                        'CityId' => $cityId,
+                        'SectorId' => $sectorId,
+                        'IsActive' => 1,
+                        'IsDeleted' => 0,
+                        'created_date' => Carbon::now(),
+                        'CreatedBy' => $userId ?: null,
+                        'CompanyId' => $companyId,
+                    ]);
 
-                        $sendSms = true;
-                    }
+                    // Record payment in ledger
+                    \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
                 }
 
                 DB::commit();
                 Log::info('Payment successfully registered in database', ['txn' => $responseParams['txnID'] ?? $merchantTxnNo]);
 
-                // SMS notification temporarily commented out as requested
-                /*
-                if ($sendSms) {
-                    // Send SMS success message to citizen
-                    try {
-                        $user = User::find($userId);
-                        $purchaser = $user ? $this->findPurchaserForUser($user) : null;
-                        $mobile = null;
-                        $applicationId = '—';
-
-                        if ($purchaser) {
-                            $submittedAt = $purchaser->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
-                            $applicationNo = $purchaser->ApplicationNo;
-                            $applicationId = $applicationNo
-                                ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
-                                : ($purchaser->PPPId ?? '—');
-                            $mobile = $user->mobile ?? $purchaser->MobileNo;
-                        } elseif ($user) {
-                            $mobile = $user->mobile;
-                        }
-
-                        if (!empty($mobile)) {
-                            $smsService = app(\App\Services\LoginOtpSmsService::class);
-                            $smsConfig = config('otp-login.mmsay_payment_success_sms');
-                            if ($smsConfig) {
-                                $amount = number_format((float)$responseParams['amount'], 2, '.', '');
-                                $message = $smsConfig['message'];
-
-                                // Replace {#num#} with amount
-                                $message = str_replace('{#num#}', $amount, $message);
-
-                                // Replace first {#alp#} with Application ID
-                                $pos = strpos($message, '{#alp#}');
-                                if ($pos !== false) {
-                                    $message = substr_replace($message, $applicationId, $pos, strlen('{#alp#}'));
-                                }
-
-                                // Replace second {#alp#} with Receipt No
-                                $pos = strpos($message, '{#alp#}');
-                                if ($pos !== false) {
-                                    $message = substr_replace($message, $receiptNo, $pos, strlen('{#alp#}'));
-                                }
-
-                                $smsService->sendCustomMessage(
-                                    $mobile,
-                                    $message,
-                                    $smsConfig['template_id'],
-                                    'MMSAY Payment Success ' . $applicationId
-                                );
-                            }
-                        }
-                    } catch (\Exception $smsEx) {
-                        Log::error('Error sending payment success SMS', [
-                            'error' => $smsEx->getMessage(),
-                            'asset_id' => $assetId,
-                            'user_id' => $userId
+            } else {
+                if ($merchantTxnNo && !$alreadySuccess) {
+                    DB::table('payment_transactions')
+                        ->where('merchant_txn_no', $merchantTxnNo)
+                        ->update([
+                            'status' => ($status === 'REJ' ? 'REJ' : 'FAIL'),
+                            'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                            'payment_id' => $responseParams['paymentID'] ?? null,
+                            'payment_mode' => $responseParams['paymentMode'] ?? null,
+                            'response_code' => $responseParams['responseCode'] ?? ($status === 'REJ' ? 'REJ' : 'FAIL'),
+                            'response_description' => $responseParams['respDescription'] ?? ($status === 'REJ' ? 'Transaction Rejected / Timeout' : 'Transaction Failed'),
+                            'response_payload_dump' => json_encode($request->all()),
+                            'updated_at' => now(),
                         ]);
-                    }
                 }
-                */
-
-            } catch (\Exception $e) {
-                DB::rollBack();
-                Log::error('Error storing cash receipt in callback', ['message' => $e->getMessage()]);
+                DB::commit();
             }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error storing cash receipt in callback', ['message' => $e->getMessage()]);
+        }
 
+        if ($isSuccess) {
             return redirect()->route('citizen.payment.result', [
                 'status' => 'SUCCESS',
                 'txn_id' => $responseParams['txnID'] ?? 'N/A',
@@ -542,21 +520,6 @@ class PaymentController extends Controller
                 'date' => Carbon::parse($responseParams['paymentDateTime'] ?? now())->format('d M Y H:i:s'),
             ]);
         } else {
-            if ($merchantTxnNo && !$alreadySuccess) {
-                DB::table('payment_transactions')
-                    ->where('merchant_txn_no', $merchantTxnNo)
-                    ->update([
-                        'status' => ($status === 'REJ' ? 'REJ' : 'FAIL'),
-                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
-                        'payment_id' => $responseParams['paymentID'] ?? null,
-                        'payment_mode' => $responseParams['paymentMode'] ?? null,
-                        'response_code' => $responseParams['responseCode'] ?? null,
-                        'response_description' => $responseParams['respDescription'] ?? null,
-                        'response_payload_dump' => json_encode($request->all()),
-                        'updated_at' => now(),
-                    ]);
-            }
-
             return redirect()->route('citizen.payment.result', [
                 'status' => 'FAIL',
                 'message' => $responseParams['respDescription'] ?? ($request->input('respDescription') ?? 'Transaction Failed'),
@@ -620,23 +583,24 @@ class PaymentController extends Controller
         $status = $responseParams['status'] ?? '';
         $isSuccess = ($status === 'SUC' || ($responseParams['responseCode'] ?? '') === '0000');
 
-        if ($isSuccess) {
-            $alreadySuccess = false;
+        DB::beginTransaction();
+        try {
+            $txLog = null;
             if ($merchantTxnNo) {
                 $txLog = DB::table('payment_transactions')
                     ->where('merchant_txn_no', $merchantTxnNo)
+                    ->lockForUpdate()
                     ->first();
-                if ($txLog && $txLog->status === 'SUCCESS') {
-                    $alreadySuccess = true;
-                }
             }
 
-            if (!$alreadySuccess) {
-                $assetId = (int)($responseParams['addlParam1'] ?? 0);
-                $userId = (int)($responseParams['addlParam2'] ?? 0);
+            $alreadySuccess = ($txLog && $txLog->status === 'SUCCESS');
 
-                DB::beginTransaction();
-                try {
+            if ($isSuccess) {
+                if (!$alreadySuccess) {
+                    // Kami 1 Fix: Fallback to txLog asset_id / user_id if gateway omitted addlParam
+                    $assetId = (int)($responseParams['addlParam1'] ?? 0) ?: (int)($txLog->asset_id ?? 0);
+                    $userId = (int)($responseParams['addlParam2'] ?? 0) ?: (int)($txLog->user_id ?? 0);
+
                     if ($merchantTxnNo) {
                         DB::table('payment_transactions')
                             ->where('merchant_txn_no', $merchantTxnNo)
@@ -652,81 +616,93 @@ class PaymentController extends Controller
                             ]);
                     }
 
-                    $property = DB::table('property_registration')
-                        ->where('AssetId', $assetId)
+                    $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $merchantTxnNo);
+                    $existingReceipt = DB::table('cash_receipt_details')
+                        ->where('receipt_number', $receiptNo)
                         ->first();
 
-                    if ($property) {
-                        $receiptNo = $responseParams['paymentID'] ?? ($responseParams['txnID'] ?? $merchantTxnNo);
-                        $existingReceipt = DB::table('cash_receipt_details')
-                            ->where('receipt_number', $receiptNo)
+                    if (!$existingReceipt && $assetId > 0) {
+                        $property = DB::table('property_registration')
+                            ->where('AssetId', $assetId)
                             ->first();
 
-                        if (!$existingReceipt) {
-                            $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
-                            $newId = $maxId + 1;
+                        $branchId = $property->BranchId ?? 0;
+                        $districtId = $property->DistrictId ?? 0;
+                        $cityId = $property->CityId ?? 0;
+                        $sectorId = $property->SectorId ?? 0;
+                        $companyId = $property->CompanyId ?? 544;
 
-                            DB::table('cash_receipt_details')->insert([
-                                'id' => $newId,
-                                'asset_number' => $assetId,
-                                'total_paid_amount' => (float)$responseParams['amount'],
-                                'receipt_number' => $receiptNo,
-                                'BranchId' => $property->BranchId,
-                                'DistrictId' => $property->DistrictId,
-                                'CityId' => $property->CityId,
-                                'SectorId' => $property->SectorId,
-                                'IsActive' => 1,
-                                'IsDeleted' => 0,
-                                'created_date' => Carbon::now(),
-                                'CreatedBy' => $userId ?: null,
-                                'CompanyId' => $property->CompanyId ?? 544,
-                            ]);
+                        $maxId = DB::table('cash_receipt_details')->lockForUpdate()->max('id') ?? 0;
+                        $newId = $maxId + 1;
 
-                            \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
-                        }
+                        DB::table('cash_receipt_details')->insert([
+                            'id' => $newId,
+                            'asset_number' => $assetId,
+                            'total_paid_amount' => (float)$responseParams['amount'],
+                            'receipt_number' => $receiptNo,
+                            'BranchId' => $branchId,
+                            'DistrictId' => $districtId,
+                            'CityId' => $cityId,
+                            'SectorId' => $sectorId,
+                            'IsActive' => 1,
+                            'IsDeleted' => 0,
+                            'created_date' => Carbon::now(),
+                            'CreatedBy' => $userId ?: null,
+                            'CompanyId' => $companyId,
+                        ]);
+
+                        \App\Services\LedgerService::recordPayment($assetId, (float)$responseParams['amount']);
                     }
-
-                    DB::commit();
-                    Log::info('Webhook payment processed successfully', ['merchantTxnNo' => $merchantTxnNo]);
-                } catch (\Throwable $e) {
-                    DB::rollBack();
-                    Log::error('Webhook payment processing error', ['error' => $e->getMessage()]);
-                    return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 500);
                 }
-            }
 
-            return response()->json([
-                'status' => 'SUCCESS',
-                'message' => 'Payment Advice processed successfully'
-            ], 200);
-        } else {
-            // Transaction failed or timeout / rejected -> Mark as REJ (AutoRefund handled by PhiCommerce)
-            if ($merchantTxnNo) {
-                DB::table('payment_transactions')
-                    ->where('merchant_txn_no', $merchantTxnNo)
-                    ->update([
-                        'status' => 'REJ',
-                        'gateway_txn_id' => $responseParams['txnID'] ?? null,
-                        'payment_id' => $responseParams['paymentID'] ?? null,
-                        'payment_mode' => $responseParams['paymentMode'] ?? null,
-                        'response_code' => $responseParams['responseCode'] ?? 'REJ',
-                        'response_description' => $responseParams['respDescription'] ?? 'Transaction Rejected / Timeout (AutoRefund handled by PhiCommerce)',
-                        'response_payload_dump' => json_encode($request->all()),
-                        'updated_at' => now(),
-                    ]);
-                Log::info('Webhook marked transaction as REJ', ['merchantTxnNo' => $merchantTxnNo]);
-            }
+                DB::commit();
+                Log::info('Webhook payment processed successfully', ['merchantTxnNo' => $merchantTxnNo]);
 
-            return response()->json([
-                'status' => 'SUCCESS',
-                'message' => 'Rejection / Timeout status updated successfully'
-            ], 200);
+                return response()->json([
+                    'status' => 'SUCCESS',
+                    'message' => 'Payment Advice processed successfully'
+                ], 200);
+            } else {
+                // Transaction failed or timeout / rejected -> Mark as REJ (AutoRefund handled by PhiCommerce)
+                if ($merchantTxnNo && !$alreadySuccess) {
+                    DB::table('payment_transactions')
+                        ->where('merchant_txn_no', $merchantTxnNo)
+                        ->update([
+                            'status' => 'REJ',
+                            'gateway_txn_id' => $responseParams['txnID'] ?? null,
+                            'payment_id' => $responseParams['paymentID'] ?? null,
+                            'payment_mode' => $responseParams['paymentMode'] ?? null,
+                            'response_code' => $responseParams['responseCode'] ?? 'REJ',
+                            'response_description' => $responseParams['respDescription'] ?? 'Transaction Rejected / Timeout (AutoRefund handled by PhiCommerce)',
+                            'response_payload_dump' => json_encode($request->all()),
+                            'updated_at' => now(),
+                        ]);
+                    Log::info('Webhook marked transaction as REJ', ['merchantTxnNo' => $merchantTxnNo]);
+                }
+
+                DB::commit();
+
+                return response()->json([
+                    'status' => 'SUCCESS',
+                    'message' => 'Rejection / Timeout status updated successfully'
+                ], 200);
+            }
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Webhook payment processing error', ['error' => $e->getMessage()]);
+            return response()->json(['status' => 'ERROR', 'message' => $e->getMessage()], 500);
         }
     }
 
     public function result(Request $request): View
     {
         $user = Auth::user();
+        $purchaser = $user ? $this->findPurchaserForUser($user) : null;
+        $submittedAt = $purchaser?->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
+        $applicationNo = $purchaser?->ApplicationNo;
+        $applicationId = $applicationNo
+            ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
+            : ($purchaser?->PPPId ?? '—');
         
         $paymentResult = null;
         if ($request->has('status')) {
@@ -738,27 +714,28 @@ class PaymentController extends Controller
                 'mode' => $request->query('mode'),
                 'message' => $request->query('message'),
                 'date' => $request->query('date'),
+                'applicant' => $purchaser?->PrivatePurchaserName ?? ($user?->name ?? 'Citizen'),
             ];
         } else {
             $paymentResult = session('payment_result');
         }
 
         if (!$paymentResult) {
-            // Fallback for demo or direct visit
             $paymentResult = [
-                'status' => 'DEMO',
-                'txn_id' => 'TXN' . now()->format('YmdHis'),
-                'order_id' => 'MMSAY-DEMO-001',
-                'amount' => '₹ 2,222.00',
-                'mode' => 'UPI',
-                'applicant' => $user->name ?? 'Citizen',
+                'status' => 'FAIL',
+                'txn_id' => '—',
+                'order_id' => '—',
+                'amount' => '₹ 0.00',
+                'mode' => 'Online',
+                'message' => 'No active payment transaction found.',
+                'applicant' => $purchaser?->PrivatePurchaserName ?? ($user?->name ?? 'Citizen'),
             ];
         }
 
         return view('payment.result', [
             'pageTitle' => 'Payment Status Details',
-            'displayName' => $user->name ?? 'Citizen',
-            'applicationId' => 'HR-MMSAY-2024-211707',
+            'displayName' => $user?->name ?? 'Citizen',
+            'applicationId' => $applicationId,
             'payment' => $paymentResult,
         ]);
     }
@@ -783,20 +760,27 @@ class PaymentController extends Controller
             return redirect()->back()->with('warning', 'This transaction status is already finalized.');
         }
 
-        // Backend Validation: Verification is only allowed after 24 hours of initiation
+        // Backend Validation: In UAT / Staging, allow verification after 30 seconds for testing.
+        // In Production, verification is allowed after 24 hours of initiation.
+        $isUatOrStaging = app()->environment('local', 'staging') 
+            || request()->getHost() === '13.203.102.149'
+            || str_contains(config('services.phicommerce.url', ''), 'uat')
+            || str_contains(config('services.phicommerce.url', ''), 'stage');
+
         $createdAt = $tx->created_at ? Carbon::parse($tx->created_at) : null;
         if ($createdAt) {
-            $canVerifyAt = $createdAt->copy()->addHours(24);
+            $canVerifyAt = $isUatOrStaging ? $createdAt->copy()->addSeconds(30) : $createdAt->copy()->addHours(24);
             if (now()->lessThan($canVerifyAt)) {
                 $remTotalSeconds = max(0, (int) now()->diffInSeconds($canVerifyAt, false));
                 $remHours = (int) floor($remTotalSeconds / 3600);
                 $remMins = (int) floor(($remTotalSeconds % 3600) / 60);
                 $remSecs = (int) ($remTotalSeconds % 60);
-                $remTimeStr = "{$remHours}h {$remMins}min {$remSecs}sec";
+                $remTimeStr = $isUatOrStaging ? "{$remSecs}sec" : "{$remHours}h {$remMins}min {$remSecs}sec";
 
+                $ruleDesc = $isUatOrStaging ? '30 seconds (Testing Mode)' : '24 hours';
                 return redirect()->back()->with(
                     'warning',
-                    "पेंडिंग पेमेंट स्टेटस भुगतान प्रयास के 24 घंटे बाद ही Verify / Refresh किया जा सकता है। कृपया {$canVerifyAt->format('d M Y, h:i A')} के बाद ({$remTimeStr} शेष) पुनः प्रयास करें। (Pending payment status can only be verified after 24 hours. Available in {$remTimeStr})."
+                    "पेंडिंग पेमेंट स्टेटस भुगतान प्रयास के {$ruleDesc} बाद ही Verify / Refresh किया जा सकता है। कृपया {$canVerifyAt->format('d M Y, h:i:s A')} के बाद ({$remTimeStr} शेष) पुनः प्रयास करें。"
                 );
             }
         }
@@ -876,36 +860,40 @@ class PaymentController extends Controller
                             ->first();
 
                         $sendSms = false;
-                        if (!$existingReceipt) {
+                        if (!$existingReceipt && $assetId > 0) {
                             $property = DB::table('property_registration')
                                 ->where('AssetId', $assetId)
                                 ->first();
 
-                            if ($property) {
-                                $maxId = DB::table('cash_receipt_details')->max('id') ?? 0;
-                                $newId = $maxId + 1;
+                            $branchId = $property->BranchId ?? 0;
+                            $districtId = $property->DistrictId ?? 0;
+                            $cityId = $property->CityId ?? 0;
+                            $sectorId = $property->SectorId ?? 0;
+                            $companyId = $property->CompanyId ?? 544;
 
-                                DB::table('cash_receipt_details')->insert([
-                                    'id' => $newId,
-                                    'asset_number' => $assetId,
-                                    'total_paid_amount' => (float)$tx->amount,
-                                    'receipt_number' => $receiptNo,
-                                    'BranchId' => $property->BranchId,
-                                    'DistrictId' => $property->DistrictId,
-                                    'CityId' => $property->CityId,
-                                    'SectorId' => $property->SectorId,
-                                    'IsActive' => 1,
-                                    'IsDeleted' => 0,
-                                    'created_date' => Carbon::now(),
-                                    'CreatedBy' => $userId ?: null,
-                                    'CompanyId' => $property->CompanyId ?? 544,
-                                ]);
+                            $maxId = DB::table('cash_receipt_details')->lockForUpdate()->max('id') ?? 0;
+                            $newId = $maxId + 1;
 
-                                // Record payment in ledger
-                                \App\Services\LedgerService::recordPayment($assetId, (float)$tx->amount);
+                            DB::table('cash_receipt_details')->insert([
+                                'id' => $newId,
+                                'asset_number' => $assetId,
+                                'total_paid_amount' => (float)$tx->amount,
+                                'receipt_number' => $receiptNo,
+                                'BranchId' => $branchId,
+                                'DistrictId' => $districtId,
+                                'CityId' => $cityId,
+                                'SectorId' => $sectorId,
+                                'IsActive' => 1,
+                                'IsDeleted' => 0,
+                                'created_date' => Carbon::now(),
+                                'CreatedBy' => $userId ?: null,
+                                'CompanyId' => $companyId,
+                            ]);
 
-                                $sendSms = true;
-                            }
+                            // Record payment in ledger
+                            \App\Services\LedgerService::recordPayment($assetId, (float)$tx->amount);
+
+                            $sendSms = true;
                         }
 
                         DB::table('payment_transactions')
@@ -923,67 +911,6 @@ class PaymentController extends Controller
 
                         DB::commit();
 
-                        // SMS notification on verification temporarily commented out as requested
-                        /*
-                        if ($sendSms) {
-                            // Send SMS success message to citizen
-                            try {
-                                $user = User::find($userId);
-                                $purchaser = $user ? $this->findPurchaserForUser($user) : null;
-                                $mobile = null;
-                                $applicationId = '—';
-
-                                if ($purchaser) {
-                                    $submittedAt = $purchaser->CreateDate ? Carbon::parse($purchaser->CreateDate) : null;
-                                    $applicationNo = $purchaser->ApplicationNo;
-                                    $applicationId = $applicationNo
-                                        ? 'HR-MMSAY-'.($submittedAt?->format('Y') ?? now()->format('Y')).'-'.$applicationNo
-                                        : ($purchaser->PPPId ?? '—');
-                                    $mobile = $user->mobile ?? $purchaser->MobileNo;
-                                } elseif ($user) {
-                                    $mobile = $user->mobile;
-                                }
-
-                                if (!empty($mobile)) {
-                                    $smsService = app(\App\Services\LoginOtpSmsService::class);
-                                    $smsConfig = config('otp-login.mmsay_payment_success_sms');
-                                    if ($smsConfig) {
-                                        $amount = number_format((float)$tx->amount, 2, '.', '');
-                                        $message = $smsConfig['message'];
-
-                                        // Replace {#num#} with amount
-                                        $message = str_replace('{#num#}', $amount, $message);
-
-                                        // Replace first {#alp#} with Application ID
-                                        $pos = strpos($message, '{#alp#}');
-                                        if ($pos !== false) {
-                                            $message = substr_replace($message, $applicationId, $pos, strlen('{#alp#}'));
-                                        }
-
-                                        // Replace second {#alp#} with Receipt No
-                                        $pos = strpos($message, '{#alp#}');
-                                        if ($pos !== false) {
-                                            $message = substr_replace($message, $receiptNo, $pos, strlen('{#alp#}'));
-                                        }
-
-                                        $smsService->sendCustomMessage(
-                                            $mobile,
-                                            $message,
-                                            $smsConfig['template_id'],
-                                            'MMSAY Payment Success ' . $applicationId
-                                        );
-                                    }
-                                }
-                            } catch (\Exception $smsEx) {
-                                Log::error('Error sending payment success SMS', [
-                                    'error' => $smsEx->getMessage(),
-                                    'asset_id' => $assetId,
-                                    'user_id' => $userId
-                                ]);
-                            }
-                        }
-                        */
-
                         return redirect()->back()->with('success', 'Success! Transaction status resolved, and cash receipt has been generated.');
 
                     } catch (\Exception $ex) {
@@ -996,14 +923,15 @@ class PaymentController extends Controller
                 // If still pending (P0030 / Awaiting user action / REQ)
                 $createdAt = $tx->created_at ? \Carbon\Carbon::parse($tx->created_at) : null;
                 $diffInHours = $createdAt ? $createdAt->diffInHours(now()) : 9999;
+                $isOldEnoughToFail = $diffInHours >= 24 || ($isUatOrStaging && $createdAt && $createdAt->diffInMinutes(now()) >= 5);
 
-                if ($diffInHours >= 24) {
+                if ($isOldEnoughToFail) {
                     DB::table('payment_transactions')
                         ->where('id', $tx->id)
                         ->update([
                             'status' => 'FAIL',
                             'response_code' => $txnResponseCode ?: ($responseCode ?: 'INCOMPLETE'),
-                            'response_description' => $txnRespDescription ?: ($respDescription ?: 'Payment was not completed within 24 hours.'),
+                            'response_description' => $txnRespDescription ?: ($respDescription ?: 'Payment was not completed within the allowed time limit.'),
                             'response_payload_dump' => json_encode($data),
                             'updated_at' => now(),
                         ]);
@@ -1011,7 +939,11 @@ class PaymentController extends Controller
                     return redirect()->back()->with('error', 'Payment was not completed. This transaction has been marked as failed.');
                 }
 
-                return redirect()->back()->with('warning', 'This transaction is still awaiting action from the user or bank. Please try verifying again after 24 hours of initiation.');
+                $pendingWaitMsg = $isUatOrStaging 
+                    ? 'This transaction is still awaiting action from the user or bank. Please try verifying again shortly.'
+                    : 'This transaction is still awaiting action from the user or bank. Please try verifying again after 24 hours of initiation.';
+
+                return redirect()->back()->with('warning', $pendingWaitMsg);
             }
 
             Log::error('Phicommerce status check API failed response', [

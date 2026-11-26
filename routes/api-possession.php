@@ -116,12 +116,12 @@ Route::prefix('possession')->group(function () {
 });
 
 // Phicommerce payment gateway callback route (outside web session scope)
-Route::post('/mmsay/citizen/payment/callback', [App\Http\Controllers\PaymentController::class, 'payCallback'])
+Route::match(['get', 'post'], '/mmsay/citizen/payment/callback', [App\Http\Controllers\PaymentController::class, 'payCallback'])
     ->name('citizen.payment.callback');
 
 // Phicommerce server-to-server (S2S) payment advice / webhook routes
-Route::post('/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook'])
+Route::match(['get', 'post'], '/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook'])
     ->name('payment.webhook');
-Route::post('/mmsay/citizen/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook']);
+Route::match(['get', 'post'], '/mmsay/citizen/payment/webhook', [App\Http\Controllers\PaymentController::class, 'webhook']);
 
 

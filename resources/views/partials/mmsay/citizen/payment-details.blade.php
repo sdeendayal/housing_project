@@ -128,9 +128,19 @@
             <p class="text-[9px] font-bold uppercase text-slate-500 m-0">Online Transaction Logs (Gateway Attempts)</p>
             <p class="text-[9px] text-slate-400 m-0">Track payments, status checks, and failures</p>
         </div>
+        @php
+            $isUatOrStaging = app()->environment('local', 'staging') 
+                || request()->getHost() === '13.203.102.149'
+                || str_contains(config('services.phicommerce.url', ''), 'uat')
+                || str_contains(config('services.phicommerce.url', ''), 'stage');
+        @endphp
         <div class="px-2.5 py-1.5 bg-amber-50 border-b border-amber-100 flex items-center gap-1.5 text-amber-800 text-[9px] font-medium">
             <span class="material-symbols-outlined text-[13px] text-amber-600 shrink-0">schedule</span>
-            <span><strong>Note:</strong> Pending transactions can only be verified / refreshed <strong>24 hours</strong> after the payment attempt. (पेंडिंग पेमेंट स्टेटस 24 घंटे बाद ही Verify / Refresh किया जा सकता है।)</span>
+            @if ($isUatOrStaging)
+                <span><strong>Testing / UAT Mode:</strong> Pending transactions can be verified after 30 seconds for testing. (UAT मोड: 30 सेकंड बाद Verify कर सकते हैं।)</span>
+            @else
+                <span><strong>Note:</strong> Pending transactions can only be verified / refreshed <strong>24 hours</strong> after the payment attempt. (पेंडिंग पेमेंट स्टेटस 24 घंटे बाद ही Verify / Refresh किया जा सकता है।)</span>
+            @endif
         </div>
         <div @class([
             'overflow-x-auto',
@@ -155,12 +165,12 @@
                     @php
                         $statusClass = match($tx->status) {
                             'SUCCESS' => 'bg-emerald-100 text-emerald-700',
-                            'FAIL' => 'bg-red-100 text-red-700',
+                            'FAIL', 'REJ', 'REJECTED' => 'bg-red-100 text-red-700',
                             default => 'bg-amber-100 text-amber-700', // PENDING
                         };
 
                         $txCreatedAt = $tx->created_at ? \Carbon\Carbon::parse($tx->created_at) : null;
-                        $canVerifyAt = $txCreatedAt ? $txCreatedAt->copy()->addHours(24) : null;
+                        $canVerifyAt = $txCreatedAt ? ($isUatOrStaging ? $txCreatedAt->copy()->addSeconds(30) : $txCreatedAt->copy()->addHours(24)) : null;
                         $canVerify = $canVerifyAt ? now()->greaterThanOrEqualTo($canVerifyAt) : true;
 
                         $remainingTimeStr = '';
@@ -169,7 +179,7 @@
                             $remHours = (int) floor($remTotalSeconds / 3600);
                             $remMins = (int) floor(($remTotalSeconds % 3600) / 60);
                             $remSecs = (int) ($remTotalSeconds % 60);
-                            $remainingTimeStr = "{$remHours}h {$remMins}min {$remSecs}sec";
+                            $remainingTimeStr = $isUatOrStaging ? "{$remSecs}sec" : "{$remHours}h {$remMins}min {$remSecs}sec";
                         }
                     @endphp
                     <tr class="hover:bg-slate-50/80">
@@ -203,14 +213,14 @@
                                         <button type="button"
                                             disabled
                                             class="inline-flex items-center gap-0.5 px-2 py-1 rounded bg-slate-100 text-[9px] font-bold text-slate-400 border border-slate-200 cursor-not-allowed select-none opacity-80"
-                                            title="Verification available 24 hours after payment attempt (Available on {{ $canVerifyAt?->format('d M Y h:i A') }})">
+                                            title="Verification available {{ $isUatOrStaging ? 'after 30 seconds' : '24 hours after payment attempt' }} (Available on {{ $canVerifyAt?->format('d M Y h:i A') }})">
                                             <span class="material-symbols-outlined text-[10px]">lock_clock</span>
                                             Verify
                                         </button>
                                         <span class="text-[8px] text-amber-600 font-semibold mt-0.5 whitespace-nowrap tx-countdown-timer"
                                             data-target-time="{{ $canVerifyAt?->toIso8601String() }}"
                                             title="Available at {{ $canVerifyAt?->format('d M Y h:i A') }}">
-                                            In <span class="tx-countdown-text">{{ $remainingTimeStr }}</span> (24h rule)
+                                            In <span class="tx-countdown-text">{{ $remainingTimeStr }}</span> ({{ $isUatOrStaging ? '30s UAT rule' : '24h rule' }})
                                         </span>
                                     </div>
                                 @endif

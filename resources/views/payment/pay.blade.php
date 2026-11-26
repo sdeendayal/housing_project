@@ -240,6 +240,14 @@
                 alert('Payment amount cannot be less than the minimum required installment of ₹' + minAllowed.toLocaleString('en-IN', { minimumFractionDigits: 2 }));
                 return false;
             }
+
+            const payBtn = form.querySelector('.pg-pay-btn');
+            if (payBtn) {
+                payBtn.disabled = true;
+                payBtn.style.opacity = '0.7';
+                payBtn.style.cursor = 'not-allowed';
+                payBtn.innerHTML = '<span>Processing... Please wait</span>';
+            }
         });
     }
 
